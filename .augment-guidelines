@@ -1,0 +1,1060 @@
+# GUIDELINES: OpenSCAD Babylon
+
+<context>
+**Project Purpose**: Create a robust, type-safe parser for OpenSCAD files using Tree-sitter and functional programming principles
+**Target Audience**: TypeScript developers working on parsing, AST manipulation, and code analysis tools
+**Workflow Integration**: These guidelines are part of the development process for building maintainable, testable, and scalable parsing infrastructure
+**Success Criteria**: Produce code that is pure, composable, immutable, and follows functional programming best practices while maintaining high performance and reliability
+</context>
+
+## CRITICAL REQUIREMENTS - NEVER SKIP:
+
+<instructions>
+**Sequential Development Process:**
+1. **ALWAYS START** with Planning and Refining phases
+2. **ALWAYS FOLLOW** the structured workflows: [Development Workflow](#development-workflow), [Documentation Best Practices](#documentation-best-practices), and [Mandatory Workflows](#mandatory-workflows)
+3. **ALWAYS MAINTAIN** context documents: docs/current-context.md, docs/TODO.md, and docs/PROGRESS.md
+4. **ALWAYS APPLY** functional programming principles as outlined in [Functional Programming Guidelines](#functional-programming-guidelines)
+</instructions>
+
+## AI Assistant Role & Responsibilities
+
+<role>
+You are the SuperCoder AI assistant for the OpenSCAD Tree-sitter project. Your primary responsibility is to guide developers in creating high-quality, functional TypeScript code that follows best practices and design patterns.
+</role>
+
+<core_responsibilities>
+1. **Workflow Adherence** - Never skip development steps; ensure each phase is completed thoroughly
+2. **Progress Tracking** - Always state your current step: "I am on step X, doing Y"
+3. **Context Management** - Update context documents at each step to maintain project continuity
+4. **Code Quality** - Enforce documentation standards and functional programming principles
+5. **Decision Guidance** - Help developers think through design decisions using structured approaches
+</core_responsibilities>
+
+
+## Table of Contents
+
+1. [Brief Overview](#brief-overview)
+2. [Functional Programming Guidelines](#functional-programming-guidelines)
+3. [Development Workflow](#development-workflow)
+5. [Testing Guidelines](#testing-guidelines)
+6. [Script Commands](#script-commands)
+7. [Coding Best Practices](#coding-best-practices)
+8. [Documentation Best Practices](#documentation-best-practices)
+9. [Mandatory Workflows](#mandatory-workflows)
+10. [Project Context](#project-context)
+
+
+## Functional Programming Guidelines
+
+<context>
+**Purpose**: Enable developers to write maintainable, testable, and type-safe functional code in TypeScript for the OpenSCAD Tree-sitter project
+**Audience**: TypeScript developers working on parsing, AST manipulation, and code analysis tools
+**Workflow Integration**: These guidelines are integral to the development process for implementing robust, scalable parsing infrastructure
+**Success Criteria**: Produce code that is pure, composable, immutable, and follows functional programming principles while maintaining high performance and reliability
+**Why This Matters**: Functional programming reduces bugs, improves testability, enhances code reusability, and makes complex parsing logic more manageable and predictable
+</context>
+
+### Core Principles
+
+<instructions>
+**When implementing any feature, follow this sequential thinking process:**
+
+1. **Design & Architecture Analysis**
+   <thinking>
+   - What is the single responsibility of this function/module?
+   - Can this be decomposed into smaller, pure functions?
+   - What are the explicit inputs and outputs?
+   - Are there any side effects that need to be isolated or eliminated?
+   - How does this fit into the larger functional composition?
+   </thinking>
+
+2. **Implementation Strategy**
+   <thinking>
+   - How can I make this function pure (same input → same output, no side effects)?
+   - What immutable data structures should I use?
+   - How can I compose smaller functions into this larger operation?
+   - What error handling pattern (Either/Result) fits best?
+   - Can I use higher-order functions to eliminate duplication?
+   </thinking>
+
+3. **Multiple Approaches Evaluation**
+   <thinking>
+   - Compare imperative vs functional approach
+   - Evaluate mutable vs immutable data handling
+   - Consider direct implementation vs function composition
+   - Assess synchronous vs asynchronous patterns
+   - Analyze performance implications of each approach
+   </thinking>
+
+4. **DRY Patterns Application**
+   <thinking>
+   - Can I extract common patterns into reusable higher-order functions?
+   - Are there opportunities for function composition to eliminate repetition?
+   - Can I create generic utility functions that work across different types?
+   - How can I leverage TypeScript's type system to ensure reusability?
+   </thinking>
+
+5. **Testing & Debugging Strategy**
+   <thinking>
+   - How do I test pure functions effectively (easier due to predictability)?
+   - What edge cases and boundary conditions need coverage?
+   - How do I debug functional compositions and pipelines?
+   - What property-based tests can I write to verify behavior?
+   - How do I ensure error handling paths are properly tested?
+   </thinking>
+</instructions>
+
+### Functional Programming Patterns
+
+<examples>
+<example name="pure-vs-impure-functions">
+<description>Demonstrates the critical difference between pure and impure functions in parsing contexts</description>
+<why_important>Pure functions are predictable, testable, and cacheable. They eliminate hidden dependencies and make debugging easier.</why_important>
+
+<bad_example>
+```typescript
+// Impure function - modifies external state, unpredictable behavior
+let parseErrors: string[] = [];
+let nodeCount = 0;
+
+function parseNode(node: TreeSitterNode): ASTNode | null {
+  nodeCount++; // Side effect: modifies global state
+
+  if (!node.isValid) {
+    parseErrors.push(`Invalid node: ${node.type}`); // Side effect: modifies external array
+    return null;
+  }
+
+  console.log(`Parsing node: ${node.type}`); // Side effect: I/O operation
+  return createASTNode(node);
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Pure function - predictable, testable, composable
+type ParseResult<T> = {
+  readonly success: boolean;
+  readonly data?: T;
+  readonly error?: ParseError;
+  readonly metadata: {
+    readonly nodeType: string;
+    readonly processed: boolean;
+  };
+};
+
+function parseNode(node: TreeSitterNode): ParseResult<ASTNode> {
+  if (!node.isValid) {
+    return {
+      success: false,
+      error: new ParseError(`Invalid node: ${node.type}`),
+      metadata: {
+        nodeType: node.type,
+        processed: false
+      }
+    };
+  }
+
+  return {
+    success: true,
+    data: createASTNode(node),
+    metadata: {
+      nodeType: node.type,
+      processed: true
+    }
+  };
+}
+```
+</good_example>
+</example>
+
+<example name="immutable-data-structures">
+<description>Shows how to handle data immutably in parsing contexts</description>
+<why_important>Immutability prevents accidental mutations, enables safe sharing of data structures, and makes debugging easier by eliminating temporal coupling.</why_important>
+
+<bad_example>
+```typescript
+// Mutable approach - dangerous, hard to debug
+interface MutableScope {
+  variables: { [key: string]: any };
+  functions: { [key: string]: Function };
+}
+
+function addVariable(scope: MutableScope, name: string, value: any): void {
+  scope.variables[name] = value; // Mutates input - dangerous!
+  // Other code might be surprised by this change
+}
+
+function processVariables(scope: MutableScope, assignments: Assignment[]): void {
+  assignments.forEach(assignment => {
+    addVariable(scope, assignment.name, assignment.value);
+    // scope is being mutated in each iteration
+  });
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Immutable approach - safe, predictable, debuggable
+interface ImmutableScope {
+  readonly variables: ReadonlyMap<string, any>;
+  readonly functions: ReadonlyMap<string, Function>;
+}
+
+function addVariable(scope: ImmutableScope, name: string, value: any): ImmutableScope {
+  return {
+    variables: new Map(scope.variables).set(name, value),
+    functions: scope.functions
+  };
+}
+
+function processVariables(scope: ImmutableScope, assignments: readonly Assignment[]): ImmutableScope {
+  return assignments.reduce(
+    (currentScope, assignment) => addVariable(currentScope, assignment.name, assignment.value),
+    scope
+  );
+}
+
+// Alternative using functional pipeline
+const processVariablesPipeline = (assignments: readonly Assignment[]) =>
+  (scope: ImmutableScope): ImmutableScope =>
+    assignments.reduce(
+      (currentScope, assignment) => addVariable(currentScope, assignment.name, assignment.value),
+      scope
+    );
+```
+</good_example>
+</example>
+
+<example name="function-composition">
+<description>Demonstrates how to compose functions for complex parsing operations</description>
+<why_important>Function composition creates reusable, testable pipelines that are easier to understand and maintain than monolithic functions.</why_important>
+
+<bad_example>
+```typescript
+// Monolithic approach - hard to test and reuse
+function parseAndValidateExpression(input: string): ValidationResult<Expression> {
+  // Parse the input
+  const tokens = input.split(/\s+/).filter(token => token.length > 0);
+  if (tokens.length === 0) {
+    return { success: false, error: "Empty input" };
+  }
+
+  // Validate syntax
+  const hasValidOperators = tokens.every(token =>
+    /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token) ||
+    /^[+\-*/()]$/.test(token) ||
+    /^\d+(\.\d+)?$/.test(token)
+  );
+  if (!hasValidOperators) {
+    return { success: false, error: "Invalid characters" };
+  }
+
+  // Build AST
+  try {
+    const ast = buildExpressionAST(tokens);
+    return { success: true, data: ast };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Functional composition approach - modular, testable, reusable
+type Result<T, E = string> = { success: true; data: T } | { success: false; error: E };
+
+const tokenize = (input: string): string[] =>
+  input.split(/\s+/).filter(token => token.length > 0);
+
+const validateTokens = (tokens: string[]): Result<string[]> =>
+  tokens.length === 0
+    ? { success: false, error: "Empty input" }
+    : tokens.every(token =>
+        /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token) ||
+        /^[+\-*/()]$/.test(token) ||
+        /^\d+(\.\d+)?$/.test(token)
+      )
+    ? { success: true, data: tokens }
+    : { success: false, error: "Invalid characters" };
+
+const buildAST = (tokens: string[]): Result<Expression> => {
+  try {
+    return { success: true, data: buildExpressionAST(tokens) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Function composition using a pipeline
+const parseAndValidateExpression = (input: string): Result<Expression> =>
+  pipe(
+    input,
+    tokenize,
+    validateTokens,
+    flatMap(buildAST)
+  );
+
+// Utility functions for composition
+const pipe = <T>(value: T, ...fns: Array<(arg: any) => any>) =>
+  fns.reduce((acc, fn) => fn(acc), value);
+
+const flatMap = <T, U>(fn: (value: T) => Result<U>) =>
+  (result: Result<T>): Result<U> =>
+    result.success ? fn(result.data) : result;
+```
+</good_example>
+</example>
+
+<example name="error-handling-patterns">
+<description>Shows functional error handling using Either/Result types</description>
+<why_important>Functional error handling makes error paths explicit, eliminates exceptions, and enables better composition of error-prone operations.</why_important>
+
+<bad_example>
+```typescript
+// Exception-based error handling - unpredictable, hard to compose
+function parseVariableDeclaration(node: TreeSitterNode): VariableDeclaration {
+  if (!node.isValid) {
+    throw new Error("Invalid node");
+  }
+
+  const nameNode = node.child(0);
+  if (!nameNode) {
+    throw new Error("Missing variable name");
+  }
+
+  const valueNode = node.child(2);
+  if (!valueNode) {
+    throw new Error("Missing variable value");
+  }
+
+  return {
+    name: nameNode.text,
+    value: parseExpression(valueNode), // This might also throw!
+    type: inferType(valueNode)
+  };
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Result-based error handling - explicit, composable, predictable
+type ParseError = {
+  readonly message: string;
+  readonly location?: SourceLocation;
+  readonly context?: string;
+};
+
+type Result<T> =
+  | { readonly success: true; readonly data: T }
+  | { readonly success: false; readonly error: ParseError };
+
+const parseVariableDeclaration = (node: TreeSitterNode): Result<VariableDeclaration> => {
+  if (!node.isValid) {
+    return { success: false, error: { message: "Invalid node" } };
+  }
+
+  return pipe(
+    validateNodeStructure(node),
+    flatMap(extractVariableName),
+    flatMap(extractVariableValue),
+    map(({ name, value }) => ({
+      name,
+      value,
+      type: inferType(value)
+    }))
+  );
+};
+
+const validateNodeStructure = (node: TreeSitterNode): Result<TreeSitterNode> =>
+  node.childCount >= 3
+    ? { success: true, data: node }
+    : { success: false, error: { message: "Invalid variable declaration structure" } };
+
+const extractVariableName = (node: TreeSitterNode): Result<{ node: TreeSitterNode; name: string }> => {
+  const nameNode = node.child(0);
+  return nameNode
+    ? { success: true, data: { node, name: nameNode.text } }
+    : { success: false, error: { message: "Missing variable name" } };
+};
+
+// Utility functions for Result composition
+const map = <T, U>(fn: (value: T) => U) =>
+  (result: Result<T>): Result<U> =>
+    result.success
+      ? { success: true, data: fn(result.data) }
+      : result;
+
+const flatMap = <T, U>(fn: (value: T) => Result<U>) =>
+  (result: Result<T>): Result<U> =>
+    result.success ? fn(result.data) : result;
+```
+</good_example>
+</example>
+
+<example name="advanced-type-patterns">
+<description>Demonstrates advanced TypeScript patterns for domain modeling and type safety</description>
+<why_important>Advanced type patterns enable compile-time guarantees, prevent runtime errors, and create self-documenting code that's impossible to misuse.</why_important>
+
+<bad_example>
+```typescript
+// Primitive obsession - easy to mix up similar values
+function transferMoney(fromAccount: string, toAccount: string, amount: number): void {
+  // Easy to accidentally swap parameters
+  processTransfer(toAccount, fromAccount, amount); // Bug!
+}
+
+// Weak typing allows invalid states
+interface User {
+  id: string;
+  email: string;
+  status: string; // Could be anything!
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Branded types prevent mixing up similar values
+type AccountId = string & { readonly brand: unique symbol };
+type UserId = string & { readonly brand: unique symbol };
+type Amount = number & { readonly brand: unique symbol };
+
+// Factory functions with validation
+function createAccountId(id: string): AccountId {
+  if (!id.match(/^ACC-\d{6}$/)) {
+    throw new Error('Invalid account ID format');
+  }
+  return id as AccountId;
+}
+
+function createAmount(value: number): Amount {
+  if (value < 0) {
+    throw new Error('Amount cannot be negative');
+  }
+  return value as Amount;
+}
+
+// Type-safe transfer function
+function transferMoney(
+  fromAccount: AccountId,
+  toAccount: AccountId,
+  amount: Amount
+): Result<TransferReceipt, TransferError> {
+  // Impossible to mix up parameters due to type system
+  return processTransfer(fromAccount, toAccount, amount);
+}
+
+// Discriminated unions for state management
+type UserStatus =
+  | { type: 'active'; lastLogin: Date }
+  | { type: 'inactive'; reason: string }
+  | { type: 'suspended'; until: Date; reason: string };
+
+interface User {
+  readonly id: UserId;
+  readonly email: string;
+  readonly status: UserStatus;
+}
+
+// Type-safe status checking
+function canUserLogin(user: User): boolean {
+  switch (user.status.type) {
+    case 'active':
+      return true;
+    case 'inactive':
+      return false;
+    case 'suspended':
+      return new Date() > user.status.until;
+    default:
+      // TypeScript ensures exhaustive checking
+      const _exhaustive: never = user.status;
+      return false;
+  }
+}
+```
+</good_example>
+</example>
+
+<example name="utility-types-and-composition">
+<description>Shows how to create reusable utility types and compose them for complex scenarios</description>
+<why_important>Utility types eliminate boilerplate, ensure consistency, and create reusable patterns that scale across the codebase.</why_important>
+
+<bad_example>
+```typescript
+// Repetitive type definitions
+interface CreateUserRequest {
+  name: string;
+  email: string;
+  age?: number;
+}
+
+interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  age?: number;
+}
+
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  age?: number;
+  createdAt: Date;
+}
+
+// Manual validation for each type
+function validateCreateUser(data: any): CreateUserRequest {
+  // Repetitive validation logic...
+}
+```
+</bad_example>
+
+<good_example>
+```typescript
+// Base domain model
+interface User {
+  readonly id: UserId;
+  readonly name: string;
+  readonly email: string;
+  readonly age?: number;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+// Utility types for API contracts
+type CreateUserRequest = Pick<User, 'name' | 'email' | 'age'>;
+type UpdateUserRequest = Partial<CreateUserRequest>;
+type UserResponse = Omit<User, 'updatedAt'>;
+
+// Generic validation utility
+type Validator<T> = (data: unknown) => Result<T, ValidationError>;
+
+// Composable validation functions
+const validateString = (value: unknown): Result<string, ValidationError> =>
+  typeof value === 'string'
+    ? Ok(value)
+    : Err(new ValidationError('Expected string'));
+
+const validateEmail = (value: string): Result<string, ValidationError> =>
+  value.includes('@')
+    ? Ok(value)
+    : Err(new ValidationError('Invalid email format'));
+
+const validateOptionalNumber = (value: unknown): Result<number | undefined, ValidationError> =>
+  value === undefined
+    ? Ok(undefined)
+    : typeof value === 'number'
+    ? Ok(value)
+    : Err(new ValidationError('Expected number or undefined'));
+
+// Composed validator using function composition
+const validateCreateUserRequest: Validator<CreateUserRequest> = (data: unknown) => {
+  if (typeof data !== 'object' || data === null) {
+    return Err(new ValidationError('Expected object'));
+  }
+
+  const obj = data as Record<string, unknown>;
+
+  return pipe(
+    validateString(obj.name),
+    flatMap(name =>
+      pipe(
+        validateEmail(obj.email),
+        flatMap(email =>
+          pipe(
+            validateOptionalNumber(obj.age),
+            map(age => ({ name, email, age }))
+          )
+        )
+      )
+    )
+  );
+};
+
+// Generic API response wrapper
+type ApiResponse<T> = {
+  readonly success: true;
+  readonly data: T;
+  readonly timestamp: Date;
+} | {
+  readonly success: false;
+  readonly error: string;
+  readonly timestamp: Date;
+};
+
+// Higher-order function for API endpoints
+const createApiEndpoint = <TRequest, TResponse>(
+  validator: Validator<TRequest>,
+  handler: (request: TRequest) => Promise<Result<TResponse, Error>>
+) =>
+  async (rawRequest: unknown): Promise<ApiResponse<TResponse>> => {
+    const validationResult = validator(rawRequest);
+
+    if (!validationResult.success) {
+      return {
+        success: false,
+        error: validationResult.error.message,
+        timestamp: new Date()
+      };
+    }
+
+    const handlerResult = await handler(validationResult.data);
+
+    return handlerResult.success
+      ? {
+          success: true,
+          data: handlerResult.data,
+          timestamp: new Date()
+        }
+      : {
+          success: false,
+          error: handlerResult.error.message,
+          timestamp: new Date()
+        };
+  };
+```
+</good_example>
+</example>
+</examples>
+
+### Advanced TypeScript Patterns for Functional Programming
+
+<context>
+**Purpose**: Leverage TypeScript's advanced type system to create robust, self-documenting functional code
+**Audience**: Developers building complex parsing and AST manipulation tools
+**Integration**: These patterns work together with the core functional programming principles
+**Success Criteria**: Code that is impossible to misuse and catches errors at compile time
+</context>
+
+<advanced_patterns>
+<pattern name="template-literal-types">
+<description>Use template literal types for type-safe string manipulation and API design</description>
+
+<example>
+```typescript
+// Type-safe route definitions
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type ApiVersion = 'v1' | 'v2';
+type ApiEndpoint<Version extends ApiVersion, Resource extends string> =
+  `/api/${Version}/${Resource}`;
+
+// Type-safe API client
+type ApiRoutes = {
+  readonly [K in `${HttpMethod} ${ApiEndpoint<'v1', 'users' | 'posts'>}`]: (
+    params?: Record<string, string>
+  ) => Promise<unknown>;
+};
+
+// Template literal types for OpenSCAD node types
+type OpenSCADNodeType =
+  | 'module_definition'
+  | 'function_definition'
+  | 'variable_assignment'
+  | 'function_call'
+  | 'binary_expression';
+
+type NodeVisitorMethod<T extends OpenSCADNodeType> =
+  `visit${Capitalize<T>}`;
+
+// Generates: 'visitModuleDefinition', 'visitFunctionDefinition', etc.
+type VisitorMethods = {
+  readonly [K in OpenSCADNodeType as NodeVisitorMethod<K>]: (
+    node: ASTNode
+  ) => Result<VisitResult, ParseError>;
+};
+```
+</example>
+</pattern>
+
+<pattern name="conditional-types-for-inference">
+<description>Use conditional types to infer and transform types based on structure</description>
+
+<example>
+```typescript
+// Extract function parameter types
+type ExtractParams<T> = T extends (...args: infer P) => any ? P : never;
+
+// Extract return type from async functions
+type ExtractAsyncReturn<T> = T extends (...args: any[]) => Promise<infer R> ? R : never;
+
+// Deep readonly utility
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+
+// Flatten nested arrays
+type Flatten<T> = T extends readonly (infer U)[]
+  ? U extends readonly any[]
+    ? Flatten<U>
+    : U
+  : T;
+
+// Type-safe path access for nested objects
+type PathKeys<T> = T extends object
+  ? {
+      [K in keyof T]: K extends string
+        ? T[K] extends object
+          ? `${K}` | `${K}.${PathKeys<T[K]>}`
+          : `${K}`
+        : never;
+    }[keyof T]
+  : never;
+
+type GetByPath<T, P extends string> = P extends `${infer K}.${infer Rest}`
+  ? K extends keyof T
+    ? GetByPath<T[K], Rest>
+    : never
+  : P extends keyof T
+  ? T[P]
+  : never;
+
+// Usage for type-safe AST navigation
+interface ASTNode {
+  type: string;
+  children?: ASTNode[];
+  properties?: {
+    name?: string;
+    value?: string | number;
+  };
+}
+
+type ASTPath = PathKeys<ASTNode>; // 'type' | 'children' | 'properties' | 'properties.name' | 'properties.value'
+
+function getASTProperty<P extends ASTPath>(
+  node: ASTNode,
+  path: P
+): GetByPath<ASTNode, P> | undefined {
+  // Implementation with type safety
+  const keys = path.split('.');
+  let current: any = node;
+
+  for (const key of keys) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
+}
+```
+</example>
+</pattern>
+</advanced_patterns>
+
+### Chained Workflows for Complex Functional Programming Tasks
+
+<chained_workflows>
+**Purpose**: Break down complex functional programming implementations into manageable, sequential steps
+**Integration**: Each workflow builds upon the core principles and advanced patterns
+**Success Criteria**: Clear handoffs between steps with well-defined inputs and outputs
+</chained_workflows>
+
+<workflow name="implementing-type-safe-domain-model">
+<subtask name="domain-analysis">
+<goal>Understand the domain and identify type safety requirements</goal>
+<instructions>
+1. Identify core domain entities and their relationships
+2. Determine which values should be branded types to prevent mixing
+3. Map out error conditions and edge cases
+4. Plan validation requirements and business rules
+5. Document invariants that must be maintained
+</instructions>
+<output>Domain analysis document with type requirements in XML format</output>
+</subtask>
+
+<subtask name="type-design">
+<goal>Create type-safe domain model using advanced TypeScript features</goal>
+<instructions>
+1. Define branded types for domain identifiers (UserId, AccountId, etc.)
+2. Create utility types for common patterns (Result, Option, etc.)
+3. Design discriminated unions for state management
+4. Implement type guards and assertion functions
+5. Create template literal types for type-safe APIs
+</instructions>
+<output>Complete type definitions with examples and documentation</output>
+</subtask>
+
+<subtask name="functional-implementation">
+<goal>Implement domain logic using pure functional patterns</goal>
+<instructions>
+1. Create pure functions for all domain operations
+2. Implement function composition patterns for complex workflows
+3. Add runtime validation with type assertions
+4. Use Result/Either types for error handling
+5. Ensure all functions are testable and composable
+</instructions>
+<output>Tested, type-safe domain implementation with examples</output>
+</subtask>
+
+<subtask name="validation-and-testing">
+<goal>Ensure type safety and correctness through comprehensive testing</goal>
+<instructions>
+1. Write property-based tests for type-level logic
+2. Test edge cases and boundary conditions
+3. Verify error handling paths work correctly
+4. Ensure type constraints prevent invalid usage
+5. Document usage examples and common patterns
+</instructions>
+<output>Comprehensive test suite with documentation</output>
+</subtask>
+</workflow>
+
+<workflow name="implementing-visitor-pattern-functionally">
+<subtask name="analyze-ast-requirements">
+<goal>Understand the AST structure and visitor requirements</goal>
+<instructions>
+1. Identify all AST node types that need visiting
+2. Define the expected output type for each visitor
+3. Determine error handling requirements
+4. Plan for extensibility and composition
+5. Map out dependencies between visitors
+</instructions>
+<output>AST analysis with visitor requirements specification</output>
+</subtask>
+
+<subtask name="design-visitor-types">
+<goal>Create type-safe visitor interfaces using advanced TypeScript</goal>
+<instructions>
+1. Define visitor method signatures using template literal types
+2. Create Result types for visitor outputs
+3. Design composition patterns for visitor chaining
+4. Implement type-safe visitor registration
+5. Add generic constraints for visitor extensibility
+</instructions>
+<output>Type-safe visitor interfaces and utilities</output>
+</subtask>
+
+<subtask name="implement-pure-visitors">
+<goal>Build visitors using pure functional patterns</goal>
+<instructions>
+1. Implement each visitor as a pure function
+2. Use function composition for complex visitor logic
+3. Handle errors functionally with Result types
+4. Ensure visitors are composable and reusable
+5. Add context passing for stateful operations
+</instructions>
+<output>Complete visitor implementation with composition utilities</output>
+</subtask>
+
+<subtask name="test-and-optimize">
+<goal>Ensure visitor correctness and performance</goal>
+<instructions>
+1. Test each visitor with representative AST nodes
+2. Verify composition patterns work correctly
+3. Test error handling and edge cases
+4. Measure performance with large ASTs
+5. Document usage patterns and best practices
+</instructions>
+<output>Tested, optimized visitor system with documentation</output>
+</subtask>
+</workflow>
+
+<workflow name="building-functional-api-layer">
+<subtask name="api-design-analysis">
+<goal>Design type-safe API contracts using functional principles</goal>
+<instructions>
+1. Define API endpoints using template literal types
+2. Create request/response type contracts
+3. Plan error handling strategy with Result types
+4. Design validation pipeline using function composition
+5. Map out authentication and authorization requirements
+</instructions>
+<output>API design specification with type contracts</output>
+</subtask>
+
+<subtask name="validation-pipeline">
+<goal>Build composable validation using functional patterns</goal>
+<instructions>
+1. Create atomic validation functions for each field
+2. Implement validation composition utilities
+3. Build type-safe validation pipelines
+4. Add custom validation rules with proper typing
+5. Ensure validation errors are descriptive and actionable
+</instructions>
+<output>Reusable validation system with composition utilities</output>
+</subtask>
+
+<subtask name="handler-implementation">
+<goal>Implement API handlers using pure functional patterns</goal>
+<instructions>
+1. Create pure handler functions for each endpoint
+2. Use function composition for request processing
+3. Implement error handling with Result types
+4. Add logging and monitoring as pure functions
+5. Ensure handlers are testable and composable
+</instructions>
+<output>Complete API handler implementation with utilities</output>
+</subtask>
+
+<subtask name="integration-and-testing">
+<goal>Integrate API layer with comprehensive testing</goal>
+<instructions>
+1. Test API contracts with property-based testing
+2. Verify error handling paths work correctly
+3. Test validation pipeline with edge cases
+4. Ensure type safety prevents runtime errors
+5. Document API usage and integration patterns
+</instructions>
+<output>Fully tested API layer with integration documentation</output>
+</subtask>
+</workflow>
+
+## Development Workflow
+
+This project follows an incremental development workflow with a strong emphasis on Test-Driven Development (TDD) and automated documentation. The process is broken down into distinct stages to ensure short, incremental changes, thorough testing, and up-to-date documentation.
+
+<workflow_context>
+**Why This Workflow Matters**: Incremental development with TDD reduces bugs, improves code quality, and ensures maintainability. Each step builds upon the previous one, creating a robust foundation for complex parsing logic.
+**Integration Point**: This workflow integrates with functional programming principles to create predictable, testable code.
+</workflow_context>
+
+<core_principles>
+**ALWAYS USE TDD, DRY and SRP files principles approach:**
+
+ALWAYS USE DRY and KISS rules and algoritm improvements, split the code in smaller and manageable code, reason multiple options of improvements;
+use SRP of solid for any function and utils, use TDD approach;
+search in the web for more context;
+do not use __tests__ folder, use:
+EACH SRP file must have its own folder and the its tests should be in the same folder, e.g. of file structure:
+
+```jsx
+new-srp-file/
+├── new-srp-file-with-single-small-test-files-example/
+│   ├── new-srp-file.ts
+│   └── new-srp-file.test.ts
+└── new-srp-file-with-muilple-small-test-files-example/
+    ├── new-srp-file.ts
+    ├── new-srp-file-[siminalar-scenario1].test.ts
+    ├── new-srp-file-[siminalar-scenario2].test.ts
+    ├── ...
+    └── new-srp-file-[siminalar-scenarioX].test.ts
+```
+</core_principles>
+
+### Context Management
+
+<context_management>
+**Purpose**: Maintain project continuity and knowledge sharing across development sessions
+**Location**: Each package maintains its own context documents in `docs/`
+**Why Package-Specific**: Different packages have different concerns, dependencies, and development contexts
+**Integration**: Context documents should reference each other when there are cross-package dependencies
+</context_management>
+
+Maintain these context documents throughout development:
+
+- **docs/PROGRESS.md**: Contains previous completed task information, key decisions, and implementation details for the specific package
+- **docs/current-context.md**: Contains current task information, key decisions, and implementation details for the specific package
+- **docs/TODO.md**: Lists all tasks/subtasks with pending status or in progress, links to documentation, dependencies, code samples, and priorities for the specific package
+
+
+### Development Process
+
+<workflow_instructions>
+**Follow these sequential phases for every development task:**
+</workflow_instructions>
+
+#### Planning Phase
+
+<planning_thinking>
+**Before starting any implementation, think through these questions:**
+- What is the core problem I'm trying to solve?
+- How does this fit into the larger system architecture?
+- What are the functional and non-functional requirements?
+- What are the potential risks and constraints?
+- How will I measure success?
+</planning_thinking>
+
+<planning_steps>
+1. **Project Documentation Review**: Review existing documentation and gather context
+2. **Requirements Gathering**: Document functional/non-functional requirements and constraints
+3. **Problem Analysis**: Break down the problem and identify dependencies
+4. **Solution Exploration**: Brainstorm multiple approaches (2-3 alternatives)
+5. **Approach Evaluation**: Create a decision matrix, conduct 50/50 analysis of top approaches
+6. **High-Level Design**: Create architecture diagram, define components, document decisions
+</planning_steps>
+
+#### Refining Phase
+
+1. **Module Design**: Define module purpose, boundaries, interfaces, and dependencies
+2. **Interface Definition**: Define APIs, parameters, error handling, and contracts
+3. **Algorithm Selection**: Evaluate algorithms considering complexity and performance
+4. **Task Breakdown**: Create detailed tasks with estimates, dependencies, and priorities
+5. **Document the refined tasks**:
+    - tasks/subtasks with pending status or in progress, links to documentation, dependencies, code samples, and priorities must be documented in docs/TODO.md;
+
+#### Development with TDD
+
+Follow this cycle for each task:
+
+1. **Understand Task**: Review requirements and context
+    - Read docs/TODO.md for context;
+    - Read docs/current-context.md for context and keep it updated each TDD cycle for future context;
+2. **Write Failing Test**: Create test that verifies expected behavior
+3. **Run Test to Verify Failure**: Confirm test fails for expected reason
+4. **Implement Minimal Code**: Write just enough code to make test pass
+5. **Run Tests**: Verify new test passes and existing tests still pass
+6. **Refactor Code**: Improve implementation while maintaining behavior
+7. **Run Tests Again**: Ensure refactoring didn't break anything
+8. **Document Code**: Add JSDoc comments with descriptions and examples
+9. **Next Task**: Update context documents and move to next task
+
+#### Delivering Phase
+
+<delivering_instructions>
+**Context Document Management for Package-Specific Development:**
+</delivering_instructions>
+
+- **ALWAYS KEEP** the docs/PROGRESS.md updated with completed tasks;
+- **ALWAYS MOVE** completed tasks FROM `docs/TODO.md` TO `docs/PROGRESS.md`, when moving information remove verbose context and code samples;
+- **ALWAYS UPDATE** docs/TODO.md with new tasks and subtasks, must add context and code samples;
+- **ALWAYS REMOVE** unnecessary information and old context not necessary for docs/TODO.md tasks and subtasks FROM docs/current-context.md;
+
+
+## Mandatory Workflows
+
+These workflows must never be skipped:
+
+### TDD Workflow
+1. **Understand Requirements**: Define goals and identify edge cases
+2. **Write Failing Test**: Create test for expected behavior
+3. **Verify Failure**: Confirm test fails for expected reason
+4. **Write Minimal Code**: Just enough to make test pass
+5. **Verify Pass**: Confirm implementation works
+6. **Refactor**: Improve code while maintaining behavior
+7. **Test Again**: Ensure refactoring didn't break anything
+8. **Document**: Add JSDoc comments with examples
+9. **Commit**: Include implementation and tests together
+
+### Refactoring Workflow
+1. **Identify Need**: Code smells, performance issues, technical debt
+2. **Write Tests**: Ensure adequate coverage before changes
+3. **Establish Baseline**: Verify all tests pass initially
+4. **Make Small Changes**: Focus on one improvement at a time
+5. **Run Tests**: Verify changes don't break functionality
+6. **Document**: Update documentation to reflect changes
+7. **Commit**: Use "REFACTOR:" prefix in commit message
+
+### Documentation Workflow
+1. **Identify Need**: New code, unclear docs, missing examples
+2. **Update JSDoc**: Add/update comments with examples
+3. **Update Module Docs**: Document purpose and architecture
+6. **Commit**: Use "DOCS:" prefix in commit message
+
+### Debugging Workflow
+1. **Reproduce Issue**: Create reliable reproduction steps
+2. **Isolate Problem**: Narrow down problematic code
+3. **Analyze Root Cause**: Determine why issue occurs
+4. **Create Failing Test**: Write test that reproduces issue
+5. **Fix Issue**: Implement minimal fix following TDD
+6. **Verify Fix**: Confirm test passes and issue is resolved
+7. **Document**: Explain issue and solution
+8. **Commit**: Use "FIX:" prefix in commit message
