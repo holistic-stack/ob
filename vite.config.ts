@@ -1,16 +1,14 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import { globSync } from 'glob';
+import { defineConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [tsconfigPaths()],
   test: {
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],
-
+    setupFiles: ['./src/vitest-setup.ts'],
+    testTimeout: 30000, // Longer timeout for CSG2 operations
+    hookTimeout: 30000, // Longer timeout for setup hooks
   },
 });

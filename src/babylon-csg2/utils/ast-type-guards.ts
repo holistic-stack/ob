@@ -351,10 +351,10 @@ export function extractCylinderParams(
   if (!cylinderNode.h) {
     return { success: false, error: 'Cylinder node missing height parameter' };
   }
-  
-  const heightResult = extractNumber(cylinderNode.h, 1);
+    const heightResult = extractNumber(cylinderNode.h, 1);
   if (!heightResult.success) {
-    return { success: false, error: `Invalid height parameter: ${heightResult.error}` };
+    const errorMessage = `Invalid height parameter: ${heightResult.error}`;
+    return { success: false, error: errorMessage };
   }
   
   // Radius calculation (prefer radius over diameter)

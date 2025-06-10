@@ -10,7 +10,7 @@ import { NullEngine, Scene, StandardMaterial, Color3 } from '@babylonjs/core';
 import { PrimitiveConverter } from './primitive-converter.js';
 import type { ConversionContext } from '../../types/converter-types.js';
 import { createConversionContext } from '../../types/converter-types.js';
-import type { OpenSCADPrimitive } from '../../types/openscad-types.js';
+import type { OpenSCADPrimitiveNodeNode } from '../../types/openscad-types.js';
 
 describe('[INIT] PrimitiveConverter', () => {
   let engine: NullEngine;
@@ -60,7 +60,7 @@ describe('[INIT] PrimitiveConverter', () => {
 
   describe('Type Guard', () => {
     it('[DEBUG] should identify cube nodes', () => {
-      const cubeNode: OpenSCADPrimitive = {
+      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
         parameters: { size: [10, 10, 10] },
         location: mockLocation
@@ -70,7 +70,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should identify sphere nodes', () => {
-      const sphereNode: OpenSCADPrimitive = {
+      const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
         parameters: { radius: 5 },
         location: mockLocation
@@ -80,7 +80,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should identify cylinder nodes', () => {
-      const cylinderNode: OpenSCADPrimitive = {
+      const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
         parameters: { height: 10, radius: 3 },
         location: mockLocation
@@ -102,7 +102,7 @@ describe('[INIT] PrimitiveConverter', () => {
 
   describe('Cube Conversion', () => {
     it('[DEBUG] should convert cube with array size', async () => {
-      const cubeNode: OpenSCADPrimitive = {
+      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
         parameters: { size: [10, 20, 30] },
         location: mockLocation
@@ -120,7 +120,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should convert cube with single size value', async () => {
-      const cubeNode: OpenSCADPrimitive = {
+      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
         parameters: { size: 15 },
         location: mockLocation
@@ -135,7 +135,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should use default size for cube without parameters', async () => {
-      const cubeNode: OpenSCADPrimitive = {
+      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
         parameters: {},
         location: mockLocation
@@ -150,7 +150,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should handle invalid cube parameters', async () => {
-      const cubeNode: OpenSCADPrimitive = {
+      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
         parameters: { size: 'invalid' },
         location: mockLocation
@@ -168,7 +168,7 @@ describe('[INIT] PrimitiveConverter', () => {
 
   describe('Sphere Conversion', () => {
     it('[DEBUG] should convert sphere with radius', async () => {
-      const sphereNode: OpenSCADPrimitive = {
+      const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
         parameters: { radius: 5 },
         location: mockLocation
@@ -184,7 +184,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should convert sphere with r parameter', async () => {
-      const sphereNode: OpenSCADPrimitive = {
+      const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
         parameters: { r: 3 },
         location: mockLocation
@@ -199,7 +199,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should use default radius for sphere without parameters', async () => {
-      const sphereNode: OpenSCADPrimitive = {
+      const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
         parameters: {},
         location: mockLocation
@@ -211,7 +211,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should handle invalid sphere radius', async () => {
-      const sphereNode: OpenSCADPrimitive = {
+      const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
         parameters: { radius: -5 },
         location: mockLocation
@@ -228,7 +228,7 @@ describe('[INIT] PrimitiveConverter', () => {
 
   describe('Cylinder Conversion', () => {
     it('[DEBUG] should convert cylinder with height and radius', async () => {
-      const cylinderNode: OpenSCADPrimitive = {
+      const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
         parameters: { height: 10, radius: 3 },
         location: mockLocation
@@ -244,7 +244,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should convert cylinder with h and r parameters', async () => {
-      const cylinderNode: OpenSCADPrimitive = {
+      const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
         parameters: { h: 8, r: 2 },
         location: mockLocation
@@ -256,7 +256,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should use default values for cylinder without parameters', async () => {
-      const cylinderNode: OpenSCADPrimitive = {
+      const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
         parameters: {},
         location: mockLocation
@@ -268,7 +268,7 @@ describe('[INIT] PrimitiveConverter', () => {
     });
 
     it('[DEBUG] should handle invalid cylinder parameters', async () => {
-      const cylinderNode: OpenSCADPrimitive = {
+      const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
         parameters: { height: -5, radius: 3 },
         location: mockLocation
@@ -285,7 +285,7 @@ describe('[INIT] PrimitiveConverter', () => {
 
   describe('Error Handling', () => {
     it('[DEBUG] should handle unsupported primitive types', async () => {
-      const unsupportedNode: OpenSCADPrimitive = {
+      const unsupportedNode: OpenSCADPrimitiveNode = {
         type: 'text' as any,
         parameters: { text: 'hello' },
         location: mockLocation

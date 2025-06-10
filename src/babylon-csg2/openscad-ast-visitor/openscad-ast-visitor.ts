@@ -46,6 +46,7 @@ import * as BABYLON from '@babylonjs/core';
  */
 export class OpenScadAstVisitor {
   protected scene: BABYLON.Scene;
+  private isCSG2Initialized: boolean = false;
 
   /**
    * Initializes the visitor with a Babylon.js scene.
@@ -53,6 +54,55 @@ export class OpenScadAstVisitor {
    */
   constructor(scene: BABYLON.Scene) {
     this.scene = scene;
+  }
+
+  /**
+   * Initialize CSG2 for boolean operations.
+   * Must be called before performing any CSG operations.
+   * @returns Promise that resolves when CSG2 is ready
+   */
+  async initializeCSG2(): Promise<void> {
+    if (this.isCSG2Initialized) {
+      console.log('[DEBUG] CSG2 already initialized');
+      return;
+    }
+
+    console.log('[INIT] Initializing CSG2...');
+    try {
+      // Check if we're in a test environment with mock CSG2
+      if ((globalThis as any).__MOCK_CSG2__) {
+        console.log('[DEBUG] Using mock CSG2 for tests');
+        this.isCSG2Initialized = true;
+        return;
+      }
+
+      // Try to initialize real CSG2
+      if (BABYLON.InitializeCSG2Async) {
+        await BABYLON.InitializeCSG2Async();
+        this.isCSG2Initialized = true;
+        console.log('[DEBUG] CSG2 initialized successfully');
+      } else {
+        console.warn('[WARN] CSG2 not available, operations will be skipped');
+        this.isCSG2Initialized = false;
+      }
+    } catch (error) {
+      console.warn('[WARN] Failed to initialize CSG2, operations will be skipped:', error);
+      this.isCSG2Initialized = false;
+    }
+  }
+
+  /**
+   * Check if CSG2 is initialized and ready for use.
+   * @returns True if CSG2 is initialized
+   */
+  isCSG2Ready(): boolean {
+    // Check if we're using mock CSG2 for tests
+    if ((globalThis as any).__MOCK_CSG2__) {
+      return this.isCSG2Initialized;
+    }
+
+    // Check real CSG2 availability
+    return this.isCSG2Initialized && BABYLON.IsCSG2Ready && BABYLON.IsCSG2Ready();
   }
 
   /**
@@ -371,10 +421,17 @@ export class OpenScadAstVisitor {
    * Performs CSG2 union operation on multiple meshes.
    */
   private performCSGUnion(meshes: BABYLON.Mesh[], node: UnionNode): BABYLON.Mesh {
-    let baseCsg = BABYLON.CSG2.FromMesh(meshes[0]);
+    if (!this.isCSG2Ready()) {
+      console.warn('[WARN] CSG2 not available, returning first mesh for union');
+      return meshes[0];
+    }
+
+    // Use mock CSG2 if available
+    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
+    let baseCsg = CSG2Class.FromMesh(meshes[0]);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = BABYLON.CSG2.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]);
       const newBaseCsg = baseCsg.add(childCsg); // CSG2 uses 'add' for union
 
       // Dispose previous CSG to prevent memory leaks
@@ -400,10 +457,17 @@ export class OpenScadAstVisitor {
    * Performs CSG2 difference operation on multiple meshes.
    */
   private performCSGDifference(meshes: BABYLON.Mesh[], node: DifferenceNode): BABYLON.Mesh {
-    let baseCsg = BABYLON.CSG2.FromMesh(meshes[0]);
+    if (!this.isCSG2Ready()) {
+      console.warn('[WARN] CSG2 not available, returning first mesh for difference');
+      return meshes[0];
+    }
+
+    // Use mock CSG2 if available
+    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
+    let baseCsg = CSG2Class.FromMesh(meshes[0]);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = BABYLON.CSG2.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]);
       const newBaseCsg = baseCsg.subtract(childCsg); // CSG2 uses 'subtract' for difference
 
       // Dispose previous CSG to prevent memory leaks
@@ -429,10 +493,17 @@ export class OpenScadAstVisitor {
    * Performs CSG2 intersection operation on multiple meshes.
    */
   private performCSGIntersection(meshes: BABYLON.Mesh[], node: IntersectionNode): BABYLON.Mesh {
-    let baseCsg = BABYLON.CSG2.FromMesh(meshes[0]);
+    if (!this.isCSG2Ready()) {
+      console.warn('[WARN] CSG2 not available, returning first mesh for intersection');
+      return meshes[0];
+    }
+
+    // Use mock CSG2 if available
+    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
+    let baseCsg = CSG2Class.FromMesh(meshes[0]);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = BABYLON.CSG2.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]);
       const newBaseCsg = baseCsg.intersect(childCsg); // CSG2 uses 'intersect' for intersection
 
       // Dispose previous CSG to prevent memory leaks

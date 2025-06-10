@@ -61,15 +61,26 @@ export class ParserResourceManager {
     }
 
     try {
+      // Check if we're in test environment with mock parser
+      const mockParser = (globalThis as any).__MOCK_OPENSCAD_PARSER__;
+      if (mockParser) {
+        if (this.config.enableLogging) {
+          this.logger.log('[ParserResourceManager] Using mock parser for tests');
+        }
+        this.parser = mockParser as EnhancedOpenscadParser;
+        await this.parser.init();
+        return { success: true, value: this.parser };
+      }
+
       // Create error handler for parser
       const errorHandler = new SimpleErrorHandler();
-      
+
       // Create parser instance
       const parser = new EnhancedOpenscadParser(errorHandler);
-      
+
       // Initialize WASM resources
       await parser.init(this.config.wasmPath, this.config.treeSitterWasmPath);
-      
+
       this.parser = parser;
       
       if (this.config.enableLogging) {
@@ -128,11 +139,10 @@ export class ParserResourceManager {
    */
   async withParser<T>(
     operation: (parser: EnhancedOpenscadParser) => Promise<Result<T, string>>
-  ): Promise<Result<T, string>> {
-    // Initialize parser
+  ): Promise<Result<T, string>> {    // Initialize parser
     const initResult = await this.initializeParser();
     if (!initResult.success) {
-      return initResult;
+      return initResult as Result<T, string>;
     }
 
     try {
@@ -202,11 +212,19 @@ export class ParserResourceManager {
 
   /**
    * Check if parser is currently initialized
-   * 
+   *
    * @returns True if parser is active
    */
   isParserActive(): boolean {
     return this.parser !== null;
+  }
+
+  /**
+   * Public dispose method for external resource cleanup
+   * Disposes any active parser and cleans up resources
+   */
+  async dispose(): Promise<void> {
+    await this.disposeParser();
   }
 }
 
