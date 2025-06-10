@@ -10,7 +10,7 @@ import { NullEngine, Scene, StandardMaterial, Color3 } from '@babylonjs/core';
 import { PrimitiveConverter } from './primitive-converter.js';
 import type { ConversionContext } from '../../types/converter-types.js';
 import { createConversionContext } from '../../types/converter-types.js';
-import type { OpenSCADPrimitiveNodeNode } from '../../types/openscad-types.js';
+import type { OpenSCADPrimitiveNode } from '../../types/openscad-types.js';
 
 describe('[INIT] PrimitiveConverter', () => {
   let engine: NullEngine;
@@ -18,10 +18,9 @@ describe('[INIT] PrimitiveConverter', () => {
   let context: ConversionContext;
   let converter: PrimitiveConverter;
   let defaultMaterial: StandardMaterial;
-
   const mockLocation = {
-    start: { line: 1, column: 0 },
-    end: { line: 1, column: 10 }
+    start: { line: 1, column: 0, offset: 0 },
+    end: { line: 1, column: 10, offset: 10 }
   };
 
   beforeEach(async () => {
@@ -59,20 +58,17 @@ describe('[INIT] PrimitiveConverter', () => {
   });
 
   describe('Type Guard', () => {
-    it('[DEBUG] should identify cube nodes', () => {
-      const cubeNode: OpenSCADPrimitiveNode = {
+    it('[DEBUG] should identify cube nodes', () => {      const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
-        parameters: { size: [10, 10, 10] },
+        size: [10, 10, 10],
         location: mockLocation
       };
 
       expect(converter.canConvert(cubeNode)).toBe(true);
-    });
-
-    it('[DEBUG] should identify sphere nodes', () => {
+    });    it('[DEBUG] should identify sphere nodes', () => {
       const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
-        parameters: { radius: 5 },
+        radius: 5,
         location: mockLocation
       };
 

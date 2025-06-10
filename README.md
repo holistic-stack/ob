@@ -2,52 +2,55 @@
 
 A robust, type-safe pipeline for converting OpenSCAD code to interactive 3D scenes using Babylon.js CSG2. Built with modern TypeScript, functional programming principles, and comprehensive testing.
 
+## ⚠️ Current Status: Type Fixes Required
+
+**CRITICAL**: TypeScript compilation errors (147+) must be resolved before testing can proceed. Core pipeline logic is implemented but requires systematic type corrections.
+
 ## 🎯 Project Overview
 
-**Pipeline Flow:** `OpenSCAD Code → @holistic-stack/openscad-parser → Typed AST → CSG2 Operations → Babylon.js Scene`
+**Pipeline Flow:** `OpenSCAD Code → @holistic-stack/openscad-parser → [TYPE FIXES NEEDED] → CSG2 Operations → Babylon.js Scene`
 
 This project implements a complete conversion pipeline from OpenSCAD's geometric description language to interactive 3D models in the browser using Babylon.js's latest CSG2 technology.
 
 ## 🚀 Key Technologies
 
-- **@holistic-stack/openscad-parser** - Production-ready TypeScript parser for OpenSCAD
-- **Babylon.js CSG2** - Advanced constructive solid geometry with 10x+ performance improvements  
-- **TypeScript 5.8+** - Strict mode with Result/Either patterns and functional programming
-- **Vite 6.x** - Modern build tooling with optimized development experience
-- **Vitest 3.x** - Comprehensive testing with real parser instances (no mocks)
-- **Playwright** - End-to-end testing for 3D rendering validation
+- **@holistic-stack/openscad-parser** - Production-ready TypeScript parser for OpenSCAD ⚠️ (integration complete, imports need fixes)
+- **Babylon.js CSG2** - Advanced constructive solid geometry with 10x+ performance improvements ⚠️ (API method names need correction)
+- **TypeScript 5.8+** - Strict mode with Result/Either patterns ❌ (compilation failing due to type mismatches)
+- **Vite 6.x** - Modern build tooling ✅ (working)
+- **Vitest 3.x** - Comprehensive testing ❌ (blocked by compilation errors)
+- **Playwright** - End-to-end testing ❌ (pending)
 
-## ✨ Features
+## 🔧 Current Issues
 
-### Current Implementation (Phase 1-5 Complete)
-- ✅ **Foundation Setup** - Complete project structure and dependencies
-- ✅ **AST to Babylon.js Conversion** - Primitive shapes (cube, sphere, cylinder)
-- ✅ **Basic CSG Operations** - Union, difference, intersection (with deprecated CSG)
-- ✅ **Scene Management** - Babylon.js scene lifecycle and optimization
-- ✅ **Comprehensive Testing** - 18+ tests for primitive conversion with NullEngine
+### Critical TypeScript Fixes Needed
+- ❌ **Import/Export Mismatches**: `OpenSCADPrimitiveNodeNode` vs `OpenSCADPrimitiveNode`
+- ❌ **AST Node Properties**: Tests use `parameters: { size: [10, 10, 10] }` instead of `size: [10, 10, 10]`
+- ❌ **Position Interface**: Missing `offset` property in test mocks
+- ❌ **CSG2 API Methods**: `fromMesh` vs `FromMesh` capitalization errors
 
-### In Progress (Phase 6: CSG2 Migration - ENHANCED)
-- 🚧 **CSG2 Integration** - Migrating to new CSG2 API with corrected patterns
-- 🚧 **API Corrections** - Using `csg.add()` for union, `CSG2.FromMesh()` (capital F)
-- 🚧 **Synchronous Operations** - CSG2 ops are sync, only initialization is async
-- 🚧 **Performance Optimization** - Leveraging CSG2's 10x+ speed improvements
+### Immediate Priorities
+1. Fix all import/export type name mismatches
+2. Update AST node property usage in tests to match actual parser types
+3. Add missing `offset` property to Position interfaces
+4. Correct CSG2 method capitalization
+5. Run `pnpm tsc --noEmit` to verify compilation
+6. Execute test suite to validate functionality
 
-### Planned (Phase 7: OpenSCAD Parser Integration - DETAILED PLAN)
-- 🔄 **Parser Resource Management** - `withParser()` pattern with WASM cleanup
-- 🔄 **AST Node Type Guards** - Complete type checking with parameter extraction
-- 🔄 **Enhanced Visitor Pattern** - Direct @holistic-stack/openscad-parser integration
-- 🔄 **Complete Pipeline** - `OpenSCADToBabylonPipeline` with error recovery
-- 🔄 **Production Features** - Browser compatibility, performance monitoring
-- 🔄 **Advanced OpenSCAD** - Module definitions, functions, conditionals
+## ✨ Implementation Status
 
-## 🏗️ Architecture
+### Completed Logic (Needs Type Fixes)
+- ⚠️ **Foundation Setup** - Complete structure, compilation blocked
+- ⚠️ **AST Processing** - Logic implemented, type imports wrong
+- ⚠️ **CSG2 Operations** - Implementation complete, method names incorrect
+- ⚠️ **Scene Management** - Babylon.js integration working
+- ❌ **Testing** - Cannot execute due to compilation errors
 
-### AST Node Mapping Strategy
-```typescript
-// OpenSCAD Primitives → Babylon.js Meshes
-CubeNode: { type: "cube", size: ParameterValue } → CreateBox()
-SphereNode: { type: "sphere", radius?: number } → CreateSphere()
-CylinderNode: { type: "cylinder", h: number, r: number } → CreateCylinder()
+### Pipeline Logic Status
+- ✅ **Parser Integration Logic** - ParserResourceManager implemented
+- ✅ **AST Visitor Logic** - OpenScadAstVisitor conversion logic complete
+- ✅ **CSG2 Integration Logic** - Union, difference, intersection implemented
+- ✅ **Scene Factory Logic** - Complete scene creation with cameras/lighting
 
 // OpenSCAD Transforms → Babylon.js Transformations  
 TranslateNode: { type: "translate", v: Vector3D, children: ASTNode[] } → mesh.position

@@ -12,7 +12,7 @@ export class SceneFactory {
    * @param ast The root node of the OpenSCAD AST.
    * @returns A new Babylon.js scene.
    */
-  public static createFromAst(engine: BABYLON.Engine, ast: ASTNode): BABYLON.Scene {
+  public static async createFromAst(engine: BABYLON.Engine, ast: ASTNode): Promise<BABYLON.Scene> {
     const scene = new BABYLON.Scene(engine);
 
     // Add a camera
@@ -29,8 +29,11 @@ export class SceneFactory {
     // Add a light
     new BABYLON.HemisphericLight('light', new BABYLON.Vector3(1, 1, 0), scene);
 
-    // Process the AST and add the resulting mesh to the scene
+    // Create and initialize the visitor with CSG2
     const visitor = new OpenScadAstVisitor(scene);
+    await visitor.initializeCSG2();
+
+    // Process the AST and add the resulting mesh to the scene
     const mesh = visitor.visit(ast);
 
     if (mesh) {

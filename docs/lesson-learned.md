@@ -444,3 +444,38 @@ src/
 1. **CSG2 Operations**: More efficient than legacy CSG, but still require careful memory management
 2. **Mesh Creation**: Babylon.js MeshBuilder is efficient for primitive creation
 3. **Resource Cleanup**: Proper disposal prevents memory accumulation in long-running applications
+
+## ⚠️ CRITICAL LESSON: Accurate Status Reporting vs Implementation Claims
+
+**Date**: 2025-06-10
+
+**Issue**: Documentation claimed "CORE PIPELINE COMPLETE" with "97+ tests passing", but TypeScript compilation reveals 147+ critical errors preventing any test execution.
+
+**Root Cause**: Insufficient validation of implementation claims before documentation updates.
+
+**Key Findings**:
+1. **Import/Export Mismatches**: 
+   - Multiple files import `OpenSCADPrimitiveNodeNode` instead of `OpenSCADPrimitiveNode`
+   - Transform types imported as `OpenSCADTransformationNode` vs actual `OpenSCADTransformType`
+
+2. **AST Node Structure Misunderstanding**:
+   - Tests use generic `parameters: { size: [10, 10, 10] }` pattern
+   - Actual parser types have specific properties: `size: [10, 10, 10]` for CubeNode
+   - No `parameters` wrapper exists in real AST nodes
+
+3. **Position Interface Incomplete**:
+   - Test mocks missing required `offset: number` property
+   - Parser Position interface requires `{ line: number, column: number, offset: number }`
+
+4. **CSG2 API Method Names**:
+   - Code uses `CSG2.fromMesh()` (lowercase)
+   - Correct API is `CSG2.FromMesh()` (capitalized)
+
+**Prevention Strategies**:
+- ✅ **Always run TypeScript compilation** before claiming completion
+- ✅ **Verify test execution** rather than just counting test files
+- ✅ **Check actual parser documentation** instead of assuming API structures
+- ✅ **Incremental validation** after each significant change
+- ✅ **Honest status reporting** - distinguish between "logic implemented" vs "working/tested"
+
+**Fix Strategy**: Systematic type corrections before any functionality claims.
