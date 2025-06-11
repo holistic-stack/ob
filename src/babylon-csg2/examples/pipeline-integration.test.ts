@@ -33,10 +33,13 @@ describe('OpenSCAD Pipeline Integration', () => {
     // Setup conversion context
     context = {
       scene,
+      // engine, // TODO: Add engine to context if needed by converters
       defaultMaterial,
-      parentTransform: BABYLON.Matrix.Identity(),
-      debug: true
-    };
+      // errorHandler, // TODO: Add a real error handler
+      // options: { enableLogging: true }, // TODO: Configure options properly
+      // meshCache: new Map(), // TODO: Initialize caches if used
+      // materialCache: new Map()
+    } as unknown as ConversionContext; // TODO: Remove 'as unknown as ConversionContext' by providing all required properties
     
     // Initialize parser
     parser = new OpenscadParser();
@@ -61,19 +64,26 @@ describe('OpenSCAD Pipeline Integration', () => {
     
     // Step 1: Parse OpenSCAD code
     console.log('[DEBUG] Step 1: Parsing OpenSCAD code');
-    const astNodes = parser.parseAST(openscadCode);
-      expect(astNodes).toBeDefined();
-    expect(Array.isArray(astNodes)).toBe(true);
-    expect(astNodes.length).toBeGreaterThan(0);
+    const astNodes = parser.parseAST(openscadCode); // Use parseAST which returns ASTNode[]
     
-    const astNode = astNodes[0];
-    expect(astNode).toBeDefined();
+    expect(astNodes).toBeDefined();
+    expect(Array.isArray(astNodes)).toBe(true);
+    expect(astNodes.length).toBeGreaterThan(0); // Ensure AST is not empty
+    
+    const astNode = astNodes[0]; // Get the first node
+    // Add a check to ensure astNode is defined before using it
+    if (!astNode) {
+      // Fail the test if astNode is undefined, as we expect a node for valid code
+      expect(astNode).toBeDefined(); 
+      return; // Exit test if astNode is not defined
+    }
     console.log('[DEBUG] Parsed AST node type:', astNode.type);
     
     // Step 2: Verify AST structure for cube
+    // Ensure astNode is not null or undefined before accessing its properties
     if (astNode && astNode.type === 'cube') {
       console.log('[DEBUG] Step 2: Verifying cube AST structure');
-      const cubeNode = astNode as any;
+      const cubeNode = astNode as any; // Cast to any for simplicity, or define a proper type
       
       expect(cubeNode.size).toBeDefined();
       expect(Array.isArray(cubeNode.size)).toBe(true);
@@ -90,6 +100,9 @@ describe('OpenSCAD Pipeline Integration', () => {
         
         console.log('[DEBUG] Mesh created successfully:', conversionResult.data.name);
       }
+    } else {
+      // Fail the test if the AST node is not as expected
+      expect(astNode?.type).toBe('cube');
     }
     
     console.log('[END] Pipeline integration test completed successfully');
@@ -102,21 +115,25 @@ describe('OpenSCAD Pipeline Integration', () => {
     
     // Step 1: Parse OpenSCAD code
     console.log('[DEBUG] Step 1: Parsing OpenSCAD code');
-    const parseResult = await parser.parse(openscadCode);
+    const astNodes = parser.parseAST(openscadCode); // Use parseAST which returns ASTNode[]
     
-    expect(parseResult.success).toBe(true);
-    expect(parseResult.ast).toBeDefined();
-    expect(parseResult.ast.length).toBeGreaterThan(0);
+    expect(astNodes).toBeDefined();
+    expect(Array.isArray(astNodes)).toBe(true);
+    expect(astNodes.length).toBeGreaterThan(0);
     
-    const astNode = parseResult.ast[0];
+    const astNode = astNodes[0]; // Get the first node
+    // Add a check to ensure astNode is defined
+    if (!astNode) {
+      expect(astNode).toBeDefined();
+      return; // Exit test if astNode is not defined
+    }
     console.log('[DEBUG] Parsed AST node type:', astNode.type);
     
     // Step 2: Verify AST structure for sphere
-    if (astNode.type === 'sphere') {
+    if (astNode && astNode.type === 'sphere') {
       console.log('[DEBUG] Step 2: Verifying sphere AST structure');
-      const sphereNode = astNode as any;
+      const sphereNode = astNode as any; // Cast to any for simplicity
       
-      // Note: The parser might use 'radius' or 'r' property
       const hasRadius = 'radius' in sphereNode || 'r' in sphereNode;
       expect(hasRadius).toBe(true);
       
@@ -131,6 +148,8 @@ describe('OpenSCAD Pipeline Integration', () => {
         
         console.log('[DEBUG] Mesh created successfully:', conversionResult.data.name);
       }
+    } else {
+      expect(astNode?.type).toBe('sphere');
     }
     
     console.log('[END] Pipeline integration test completed successfully');
@@ -142,19 +161,35 @@ describe('OpenSCAD Pipeline Integration', () => {
     const invalidCode = 'invalid_function([1, 2, 3]);';
     
     // Step 1: Parse invalid OpenSCAD code
-    const parseResult = await parser.parse(invalidCode);
+    const astNodes = parser.parseAST(invalidCode);
     
-    // The parser should either fail or return an error node
-    if (!parseResult.success) {
-      console.log('[DEBUG] Parser correctly rejected invalid code');
-      expect(parseResult.success).toBe(false);
+    // The parser should return an empty array or an array with error/unknown nodes
+    // For this test, we expect an empty array or a node that is not a standard primitive
+    // depending on how the parser handles errors.
+    // If the parser is robust, it might return a specific error node type.
+    // For now, let's assume it might return an empty array or a non-primitive node.
+    
+    expect(astNodes).toBeDefined();
+    expect(Array.isArray(astNodes)).toBe(true);
+
+    if (astNodes.length > 0) {
+      const firstNode = astNodes[0];
+      // Add a check to ensure firstNode is defined before using it
+      if (!firstNode) {
+        expect(firstNode).toBeDefined();
+        return; // Exit test if firstNode is not defined
+      }
+      // Check if it's a known primitive, if so, it's an unexpected success
+      const knownPrimitives = ['cube', 'sphere', 'cylinder'];
+      expect(knownPrimitives.includes(firstNode.type)).toBe(false);
+      console.log('[DEBUG] Parser returned a non-primitive node for invalid code:', firstNode.type);
     } else {
-      console.log('[DEBUG] Parser returned AST, checking for error nodes');
-      // If parsing succeeded, there might be error nodes in the AST
-      expect(parseResult.ast).toBeDefined();
+      console.log('[DEBUG] Parser returned an empty AST for invalid code, as expected.');
+      expect(astNodes.length).toBe(0);
     }
     
-    console.log('[END] Invalid code test completed');
+    // Further checks can be added if the parser has specific error reporting in the AST
+    console.log('[END] Invalid code handling test completed');
   });
 });
 
