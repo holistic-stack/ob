@@ -248,6 +248,58 @@ test.describe('Complete OpenSCAD to Babylon.js Pipeline E2E', () => {
     console.log('[END] Complete pipeline integration test finished successfully');
   });
 
+  test('should process a complex model and verify performance metrics', async ({ page }) => {
+    console.log('[DEBUG] Testing complex model processing and performance metrics');
+
+    const complexScadCode = `
+      union() {
+        cube([10, 10, 10], center = true);
+        translate([15, 0, 0]) sphere(r = 7);
+        difference() {
+          cylinder(h = 20, r = 5);
+          translate([0, 0, -1]) cylinder(h = 22, r = 4);
+        }
+        translate([-15, 0, 0]) {
+          union() {
+            cube([3, 3, 3]);
+            translate([1, 1, 1]) sphere(r = 2);
+          }
+        }
+      }
+    `;
+
+    const editor = page.locator('[data-testid="openscad-editor"]');
+    await editor.clear();
+    await editor.fill(complexScadCode);
+
+    await page.click('[data-testid="process-button"]');
+    await expect(page.locator('[data-testid="status-indicator"]')).toContainText('Success', { timeout: 60000 }); // Increased timeout for complex model
+
+    const metricsPanel = page.locator('[data-testid="performance-metrics"]');
+    await expect(metricsPanel).toBeVisible();
+
+    const parseTime = await metricsPanel.locator('p:has-text("Parse Time") span').textContent();
+    const visitTime = await metricsPanel.locator('p:has-text("Visit Time") span').textContent();
+    const totalTime = await metricsPanel.locator('p:has-text("Total Time") span').textContent();
+    const nodeCount = await metricsPanel.locator('p:has-text("Node Count") span').textContent();
+    const meshCount = await metricsPanel.locator('p:has-text("Mesh Count") span').textContent();
+
+    expect(parseTime).not.toBeNull();
+    expect(visitTime).not.toBeNull();
+    expect(totalTime).not.toBeNull();
+    expect(nodeCount).not.toBeNull();
+    expect(meshCount).not.toBeNull();
+
+    // Convert to numbers and assert they are valid
+    expect(Number(parseTime)).toBeGreaterThanOrEqual(0);
+    expect(Number(visitTime)).toBeGreaterThanOrEqual(0);
+    expect(Number(totalTime)).toBeGreaterThanOrEqual(0);
+    expect(Number(nodeCount)).toBeGreaterThan(0); // Should be more than 0 nodes for a complex model
+    expect(Number(meshCount)).toBeGreaterThan(0); // Should result in at least one mesh
+
+    console.log('[END] Complex model performance metrics test completed');
+  });
+
   test('should verify 3D camera controls work', async ({ page }) => {
     console.log('[DEBUG] Testing 3D camera controls');
     

@@ -13,6 +13,11 @@ This document outlines the current state of the `OpenScadAstVisitor` implementat
     - **Primitives:** `cube`, `sphere`, `cylinder`.
     - **CSG Operations:** `union`, `difference`, `intersection`.
     - **Transformations:** `translate`.
+    - **Module Support:**
+        - **Definition Resolution:** Collects and stores `module` definitions from the AST.
+        - **Parameter Passing:** Handles formal and actual parameters, including default values and expression evaluation.
+        - **Scoping:** Manages variable scopes for module calls, allowing for proper variable isolation and shadowing.
+        - **Body Execution:** Executes the children of a module definition within its defined scope.
 - **Key Logic:**
     - **Dispatch:** A `visit` method dispatches to specific `visit<NodeType>` methods.
     - **CSG Operations:**
@@ -36,11 +41,23 @@ This document outlines the current state of the `OpenScadAstVisitor` implementat
 
 ## Dependencies
 - **`@babylonjs/core`**: For 3D mesh creation and scene management.
-- **`@babylonjs/csg`**: For performing Constructive Solid Geometry (CSG) operations.
+- **`@babylonjs/core`**: For performing Constructive Solid Geometry (CSG2) operations.
 - **`@holistic-stack/openscad-parser`**: For AST node type definitions.
+- **`ExpressionEvaluator`**: Custom utility for evaluating OpenSCAD expressions within a given scope.
 - **`vitest`**: For running the test suite.
 
 ## Current Status
-- The implementation is stable and fully tested.
-- All core requirements for primitives, CSG operations, and translation have been met.
+- The implementation is stable and fully tested for primitives, CSG operations, and transformations.
+- Initial support for OpenSCAD modules, including parameter passing and scoping, has been implemented.
+- All TypeScript compilation errors (117+) have been resolved, ensuring a robust and type-safe pipeline.
 - The codebase adheres to the project's functional programming guidelines by isolating logic and ensuring proper memory management.
+
+## Next Steps: Variable Support
+
+- **Objective**: Implement variable definition and usage support in the OpenSCAD to Babylon.js CSG2 pipeline.
+- **Key AST Node**: `AssignmentNode` has been identified as the primary AST node for handling variable assignments (e.g., `x = 10;`).
+    - `AssignmentNode` properties include `variable` (an `IdentifierNode` for the variable name) and `value` (a `ParameterValue` representing the assigned expression).
+- **Implementation Plan**:
+    1. **Extend `OpenScadAstVisitor`**: Add a `visitAssignmentNode` method to handle `AssignmentNode` instances.
+    2. **Utilize `ExpressionEvaluator`**: Integrate `ExpressionEvaluator` to manage variable scopes and store assigned values.
+    3. **Update Documentation**: Ensure `TODO.md`, `PROGRESS.md`, and `README.md` reflect the progress and next steps for variable support.

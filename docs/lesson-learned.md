@@ -399,6 +399,15 @@ src/
     └── ast-visitor.test.ts
 ```
 
+## CSG2 Migration - Asynchronous Initialization, Synchronous Operations
+
+**Date:** 2025-06-11
+
+**Finding:** When migrating to Babylon.js CSG2, it's crucial to understand that `BABYLON.InitializeCSG2Async()` is an asynchronous operation that needs to be awaited and typically called once at the application's start. However, once initialized, the core CSG2 operations such as `CSG2.FromMesh()`, `.add()` (for union), `.subtract()`, and `.intersect()` are synchronous. This clarifies that while the setup is async, the actual boolean operations are not, which impacts how the AST visitor and pipeline should handle these calls.
+
+**Impact on Pipeline:** The AST visitor methods that perform CSG operations do not need to be `async` themselves, as the `CSG2` operations are synchronous after initialization. The `initializeCSG2()` call within the visitor (or a higher-level component) should handle the initial `await BABYLON.InitializeCSG2Async()`.
+
+
 ### Common Pitfalls to Avoid
 
 **CSG2 Pitfalls:**

@@ -11,19 +11,23 @@
  * @author Luciano Júnior
  */
 
-import type { 
-  ASTNode, 
-  CubeNode, 
-  SphereNode, 
-  CylinderNode, 
-  UnionNode, 
-  DifferenceNode, 
-  IntersectionNode, 
-  ScaleNode, 
-  TranslateNode 
+import type {
+  ASTNode,
+  CubeNode,
+  SphereNode,
+  CylinderNode,
+  UnionNode,
+  DifferenceNode,
+  IntersectionNode,
+  ScaleNode,
+  TranslateNode,
+  ModuleCallNode,
+  ModuleDefinitionNode,
+  Parameter,
+  AssignmentNode
 } from '@holistic-stack/openscad-parser';
 
-import { 
+import {
   isCubeNode,
   isSphereNode,
   isCylinderNode,
@@ -31,13 +35,19 @@ import {
   isDifferenceNode,
   isIntersectionNode,
   isTranslateNode,
+  isModuleCallNode,
+  isModuleDefinitionNode,
+  isScaleNode,
+  isAssignmentNode,
   extractCubeSize,
   extractSphereRadius,
   extractCylinderParams,
-  extractTranslationVector
+  extractTranslationVector,
+  extractScaleVector
 } from '../utils/ast-type-guards';
 
 import * as BABYLON from '@babylonjs/core';
+import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator';
 
 /**
  * Enhanced OpenSCAD AST visitor that converts AST nodes to Babylon.js meshes
@@ -47,13 +57,26 @@ import * as BABYLON from '@babylonjs/core';
 export class OpenScadAstVisitor {
   protected scene: BABYLON.Scene;
   private isCSG2Initialized: boolean = false;
+  private moduleDefinitions: Map<string, ModuleDefinitionNode>;
+  private expressionEvaluator: ExpressionEvaluator;
+  private currentScope: Scope;
 
   /**
-   * Initializes the visitor with a Babylon.js scene.
+   * Initializes the visitor with a Babylon.js scene and module definitions.
    * @param scene The Babylon.js scene to which objects will be added.
+   * @param moduleDefinitions A map of module names to their definitions.
+   * @param initialScope The initial scope for the expression evaluator.
    */
-  constructor(scene: BABYLON.Scene) {
+  constructor(
+    scene: BABYLON.Scene,
+    moduleDefinitions: Map<string, ModuleDefinitionNode> = new Map(),
+    initialScope: Scope = new Map()
+  ) {
     this.scene = scene;
+    this.moduleDefinitions = moduleDefinitions;
+    this.currentScope = initialScope;
+    this.expressionEvaluator = new ExpressionEvaluator(this.currentScope);
+    this.log('[INIT] OpenScadAstVisitor initialized.');
   }
 
   /**
@@ -136,15 +159,123 @@ export class OpenScadAstVisitor {
     if (isTranslateNode(node)) {
       return this.visitTranslate(node);
     }
-
-    // Handle other node types via switch for now
-    switch (node.type) {
-      case 'scale':
-        return this.visitScale(node as ScaleNode);
-      default:
-        console.warn(`[WARN] Unhandled node type: ${node.type}`);
-        return null;
+    if (isModuleCallNode(node)) {
+      return this.visitModuleCall(node);
     }
+    if (isModuleDefinitionNode(node)) {
+      this.moduleDefinitions.set(node.name, node);
+      console.log(`[DEBUG] Stored module definition: ${node.name}`);
+      return null; // Module definitions don't produce meshes directly
+    }
+    if (isScaleNode(node)) {
+      return this.visitScale(node);
+    }
+
+    if (isAssignmentNode(node)) {
+      return this.visitAssignment(node);
+    }
+
+    // If no specific visitor found, log a warning and return null
+    console.warn('[WARN] No visitor found for node type:', node.type, node);
+    return null;
+  }
+
+  /**
+   * Visits an AssignmentNode and processes the variable assignment.
+   * @param node The AssignmentNode to visit.
+   * @returns Null, as assignments do not produce a mesh directly.
+   */
+  protected visitAssignment(node: AssignmentNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting AssignmentNode:', node.variable.name, '=', node.value);
+
+    try {
+      const evaluatedValue = this.expressionEvaluator.evaluate(node.value);
+      this.expressionEvaluator.setVariable(node.variable.name, evaluatedValue);
+      console.log(`[DEBUG] Variable '${node.variable.name}' assigned value:`, evaluatedValue);
+    } catch (error) {
+      console.error(`[ERROR] Failed to evaluate or assign variable '${node.variable.name}':`, error);
+    }
+
+    return null; // Assignments do not produce a mesh directly
+  }
+
+  /**
+   * Visits a ModuleCallNode.
+   * @param node The ModuleCallNode to visit.
+   * @returns A Babylon.js mesh representing the module call, or null.
+   */
+  protected visitModuleCall(node: ModuleCallNode): BABYLON.Mesh | null {
+    console.warn(`[WARN] Module calls are not yet fully supported. Module: ${node.name}`);
+
+    const moduleDefinition = this.moduleDefinitions.get(node.name);
+    if (!moduleDefinition) {
+      console.warn(`[WARN] Module definition for '${node.name}' not found.`);
+      return null;
+    }
+
+    console.log(`[DEBUG] Module '${node.name}' definition parameters:`, moduleDefinition.parameters);
+    console.log(`[DEBUG] Module '${node.name}' call parameters:`, node.parameters);
+
+    // Create a new scope for the module call
+    const newScope = new Map<string, ParameterValue>();
+
+    // Map formal parameters to actual arguments
+    for (const formalParam of moduleDefinition.parameters) {
+      const actualArg = node.parameters.find(arg => arg.name === formalParam.name);
+
+      let paramValue: ParameterValue | undefined;
+
+      if (actualArg) {
+        // If an actual argument is provided, evaluate its value
+        paramValue = this.expressionEvaluator.evaluate(actualArg.value as ExpressionNode);
+      } else if (formalParam.value) {
+        // If no actual argument, use the formal parameter's default value
+        paramValue = this.expressionEvaluator.evaluate(formalParam.value as ExpressionNode);
+      }
+
+      if (formalParam.name && paramValue !== undefined) {
+        newScope.set(formalParam.name, paramValue);
+      }
+    }
+
+    // Save current scope and evaluator, then set new ones for module execution
+    const originalScope = this.currentScope;
+    const originalEvaluator = this.expressionEvaluator;
+
+    this.currentScope = this.expressionEvaluator.extendScope(newScope);
+    this.expressionEvaluator = new ExpressionEvaluator(this.currentScope);
+
+    let resultMesh: BABYLON.Mesh | null = null;
+    const childMeshes: BABYLON.Mesh[] = [];
+
+    if (moduleDefinition.children && moduleDefinition.children.length > 0) {
+      // Visit all children of the module definition within the new scope
+      for (const childNode of moduleDefinition.children) {
+        const childMesh = this.visit(childNode);
+        if (childMesh) {
+          childMeshes.push(childMesh);
+        }
+      }
+    }
+
+    if (childMeshes.length > 0) {
+      // If multiple meshes are generated, union them together
+      if (childMeshes.length > 1) {
+        resultMesh = childMeshes[0]!;
+        for (let i = 1; i < childMeshes.length; i++) {
+          resultMesh = resultMesh.union(childMeshes[i]!); // Assuming union returns a new mesh
+        }
+      } else {
+        resultMesh = childMeshes[0]!;
+      }
+    }
+
+    // Restore original scope and evaluator
+    this.expressionEvaluator = originalEvaluator;
+    this.currentScope = originalScope;
+
+    return resultMesh;
+  }
   }
 
   /**
@@ -338,9 +469,26 @@ export class OpenScadAstVisitor {
       return null;
     }
 
-    // TODO: Implement scale parameter extraction similar to translation
-    const scale = [1, 1, 1]; // Default scale for now
-      const childMesh = this.visit(node.children[0]!);
+    const scaleResult = extractScaleVector(node);
+    if (!scaleResult.success) {
+      console.warn(`[WARN] Failed to extract scale vector: ${scaleResult.error}`);
+      // Use default scale as fallback
+      const scale = [1, 1, 1] as const;
+      return this.applyScale(node.children[0]!, scale, node);
+    }
+    const scale = scaleResult.value;
+    return this.applyScale(node.children[0]!, scale, node);
+  }
+
+  /**
+   * Applies scaling to a child node.
+   */
+  private applyScale(
+    childNode: ASTNode,
+    scale: readonly [number, number, number],
+    node: ScaleNode
+  ): BABYLON.Mesh | null {
+    const childMesh = this.visit(childNode);
     if (!childMesh) {
       console.warn('[WARN] Scale has no valid child mesh.');
       return null;

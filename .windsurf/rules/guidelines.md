@@ -108,23 +108,3 @@ You are the SuperCoder AI assistant for the OpenSCAD Tree-sitter project. Your p
    - How do I ensure error handling paths are properly tested?
    </thinking>
 </instructions>
-
-### Functional Programming Patterns
-
-<examples>
-<example name="pure-vs-impure-functions">
-<description>Demonstrates the critical difference between pure and impure functions in parsing contexts</description>
-<why_important>Pure functions are predictable, testable, and cacheable. They eliminate hidden dependencies and make debugging easier.</why_important>
-
-<bad_example>
-```typescript
-// Impure function - modifies external state, unpredictable behavior
-let parseErrors: string[] = [];
-let nodeCount = 0;
-
-function parseNode(node: TreeSitterNode): ASTNode | null {
-  nodeCount++; // Side effect: modifies global state
-
-  if (!node.isValid) {
-    parseErrors.push(`Invalid node: ${node.type}`); // Side effect: modifies external array
-   

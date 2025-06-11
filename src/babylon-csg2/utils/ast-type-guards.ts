@@ -27,7 +27,8 @@ import type {
   Vector3D,
   SourceLocation,
   ExpressionNode,
-  ErrorNode
+  ErrorNode,
+  AssignmentNode
 } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
@@ -395,6 +396,22 @@ export function extractTranslationVector(
   }
   
   return extractVector3D(translateNode.v, [0, 0, 0]);
+}
+
+/**
+ * Extract scale vector from ScaleNode
+ * 
+ * @param scaleNode - ScaleNode to extract vector from
+ * @returns Extraction result with scale vector
+ */
+export function extractScaleVector(
+  scaleNode: ScaleNode
+): ExtractionResult<readonly [number, number, number]> {
+  if (!scaleNode.v) {
+    return { success: false, error: 'Scale node missing vector parameter' };
+  }
+  
+  return extractVector3D(scaleNode.v, [1, 1, 1]); // Default scale is [1,1,1]
 }
 
 // ============================================================================

@@ -100,5 +100,11 @@ OpenSCAD Code → @holistic-stack/openscad-parser → Enhanced AST Visitor → C
 - Pipeline Metrics (1/1 tests)
 - Resource Management (1/1 tests)
 
+#### 6. **Advanced OpenSCAD Features - Modules** ✅
+- **Module Definition Resolution**: Implemented collection of `ModuleDefinitionNode`s during AST traversal in `OpenScadPipeline`.
+- **Parameter Passing**: Enhanced `OpenScadAstVisitor` to handle parameter passing for module calls, including default values and expression evaluation.
+- **Module Body Execution & Scoping**: Implemented dynamic scope management for module calls, allowing proper execution of module bodies with their own variable contexts.
+- **Expression Evaluator**: Developed a basic `ExpressionEvaluator` for evaluating `ExpressionNode`s within a given scope.
+
 ### Outcome
-The OpenSCAD to Babylon.js pipeline is now **COMPLETE** and production-ready. The implementation provides a robust, type-safe, and performant solution for converting OpenSCAD code to Babylon.js 3D scenes with comprehensive error handling and testing coverage.
+The OpenSCAD to Babylon.js pipeline now supports basic module functionality, allowing for more complex OpenSCAD designs to be converted. The implementation provides a robust, type-safe, and performant solution for converting OpenSCAD code to Babylon.js 3D scenes with comprehensive error handling and testing coverage.

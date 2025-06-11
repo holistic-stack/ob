@@ -31,7 +31,6 @@ export class SceneFactory {
 
     // Create and initialize the visitor with CSG2
     const visitor = new OpenScadAstVisitor(scene);
-    await visitor.initializeCSG2();
 
     // Process the AST and add the resulting mesh to the scene
     const mesh = visitor.visit(ast);

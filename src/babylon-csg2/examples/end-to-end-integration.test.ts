@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { initializeCSG2ForTests } from '../../vitest-setup';
 import * as BABYLON from '@babylonjs/core';
 import { ParserResourceManager } from '../utils/parser-resource-manager';
 import { SceneFactory } from '../scene-factory';
 
 describe('End-to-End Integration Test', () => {
   let engine: BABYLON.NullEngine;
+
+  beforeAll(async () => {
+    await initializeCSG2ForTests();
+  });
 
   beforeEach(() => {
     engine = new BABYLON.NullEngine();

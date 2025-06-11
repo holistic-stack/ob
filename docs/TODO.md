@@ -36,17 +36,21 @@ This document tracks pending tasks and their current status.
 - [ ] **Implement `mirror` transformation:** Add mirroring support
 - [ ] **Matrix transformations:** Support for `multmatrix()` operations
 
-### Enhancement 2: Advanced OpenSCAD Features 📋 FUTURE
-**Priority**: Low
-**Context**: Support for more complex OpenSCAD features
+### Enhancement 2: Advanced OpenSCAD Features ✅ COMPLETED (Initial Support)
+**Status**: ✅ **PARTIALLY IMPLEMENTED**
+**Context**: Initial support for core module functionality.
 
-**Potential Features**:
+**Implemented Features**:
+- ✅ **Module System:** Basic support for module definition, parameter passing, and execution.
+- ✅ **Variables and Functions:** Initial support for variable evaluation within module scopes.
+
+**Remaining Potential Features**:
 - [ ] **2D Shapes:** Add visitors for `square`, `circle`, `polygon`
 - [ ] **Extrusion Operations:** Implement `linear_extrude` and `rotate_extrude`
 - [ ] **Advanced Operations:** Support for `hull`, `minkowski`, `offset`
 - [ ] **Special Variables:** Handle `$fa`, `$fs`, `$fn` for resolution control
-- [ ] **Module System:** Support for `use` and `include` statements
-- [ ] **Variables and Functions:** Symbol table and evaluation logic
+- [ ] **Full Module System:** Advanced features like `use` and `include` statements, `children()`.
+- [ ] **Full Variables and Functions:** Comprehensive symbol table and evaluation logic for all expression types.
 - [ ] **Control Structures:** For loops, conditionals, list comprehensions
 
 ### Enhancement 3: Performance and Quality 📋 FUTURE

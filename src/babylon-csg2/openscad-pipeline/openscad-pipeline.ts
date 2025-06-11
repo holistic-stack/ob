@@ -34,6 +34,8 @@ import { EnhancedOpenscadParser } from '@holistic-stack/openscad-parser';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { ParserResourceManager } from '../utils/parser-resource-manager';
 import { OpenScadAstVisitor } from '../openscad-ast-visitor/openscad-ast-visitor';
+import type { ModuleDefinitionNode } from '@holistic-stack/openscad-parser';
+import { isModuleDefinitionNode } from '../utils/ast-type-guards';
 
 /**
  * Result type for pipeline operations
@@ -149,12 +151,24 @@ export class OpenScadPipeline {
       const parseTime = performance.now();
       this.log('[DEBUG] Parsing completed, AST nodes:', parseResult.value.length);
 
-      // Step 2: Create visitor for this scene
-      this.visitor = new OpenScadAstVisitor(scene);
-      await this.visitor.initializeCSG2();
+      // Step 2: Collect module definitions and filter out non-executable nodes
+      const moduleDefinitions = new Map<string, ModuleDefinitionNode>();
+      const executableNodes: ASTNode[] = [];
 
-      // Step 3: Process AST nodes to generate meshes
-      const visitResult = await this.processASTNodes([...parseResult.value]); // Convert readonly to mutable
+      for (const node of parseResult.value) {
+        if (isModuleDefinitionNode(node)) {
+          moduleDefinitions.set(node.name, node);
+          this.log(`[DEBUG] Collected module definition: ${node.name}`);
+        } else {
+          executableNodes.push(node);
+        }
+      }
+
+      // Step 3: Create visitor for this scene, passing collected module definitions
+      this.visitor = new OpenScadAstVisitor(scene, moduleDefinitions);
+
+      // Step 4: Process executable AST nodes to generate meshes
+      const visitResult = await this.processASTNodes(executableNodes); // Pass only executable nodes
       if (!visitResult.success) {
         return visitResult;
       }
