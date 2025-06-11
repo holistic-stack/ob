@@ -7,10 +7,18 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadAstVisitor } from './openscad-ast-visitor';
 import { initializeCSG2ForTests, createTestScene, disposeTestScene } from '../../vitest-setup';
-import type { CubeNode, SphereNode, UnionNode } from '@holistic-stack/openscad-parser';
+import type { CubeNode, SphereNode, UnionNode, AssignmentNode, IdentifierNode, LiteralExpressionNode } from '@holistic-stack/openscad-parser';
+import { Scope } from '../utils/expression-evaluator';
+
+// Extended visitor to expose protected members for testing
+class TestOpenScadAstVisitor extends OpenScadAstVisitor {
+  public getScope(): Scope {
+    return (this as any).currentScope;
+  }
+}
 
 describe('OpenScadAstVisitor with CSG2', () => {
-  let visitor: OpenScadAstVisitor;
+  let visitor: TestOpenScadAstVisitor;
   let scene: BABYLON.Scene;
   let engine: BABYLON.NullEngine;
 
@@ -24,7 +32,7 @@ describe('OpenScadAstVisitor with CSG2', () => {
     const testScene = createTestScene();
     engine = testScene.engine;
     scene = testScene.scene;
-    visitor = new OpenScadAstVisitor(scene);
+    visitor = new TestOpenScadAstVisitor(scene);
   });
 
   afterEach(() => {
@@ -170,6 +178,39 @@ describe('OpenScadAstVisitor with CSG2', () => {
       expect(result).toBeInstanceOf(BABYLON.Mesh);
       expect(result?.name).toContain('cube_');
       console.log('[DEBUG] CSG2 not initialized graceful handling test passed');
+    });
+  });
+
+  describe('Variable Support', () => {
+    beforeEach(async () => {
+      await visitor.initializeCSG2();
+    });
+
+    it('should assign a variable and store it in the scope', () => {
+      console.log('[DEBUG] Testing variable assignment');
+
+      const assignmentNode: AssignmentNode = {
+        type: 'assignment',
+        variable: {
+          type: 'expression',
+          expressionType: 'identifier',
+          name: 'x',
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 2, offset: 1 } }
+        } as IdentifierNode,
+        value: {
+          type: 'expression',
+          expressionType: 'literal',
+          value: 10,
+          location: { start: { line: 1, column: 5, offset: 4 }, end: { line: 1, column: 7, offset: 6 } }
+        } as LiteralExpressionNode,
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 7, offset: 6 } }
+      };
+
+      const mesh = visitor.visit(assignmentNode);
+
+      expect(mesh).toBeNull(); // Assignments do not produce meshes
+      expect(visitor.getScope().get('x')).toBe(10);
+      console.log('[DEBUG] Variable assignment test passed');
     });
   });
 });

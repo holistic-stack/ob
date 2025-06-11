@@ -21,10 +21,12 @@ import type {
   IntersectionNode,
   ScaleNode,
   TranslateNode,
-  ModuleCallNode,
+  ModuleInstantiationNode,
   ModuleDefinitionNode,
   Parameter,
-  AssignmentNode
+  AssignmentNode,
+  ParameterValue,
+  ExpressionNode
 } from '@holistic-stack/openscad-parser';
 
 import {
@@ -35,7 +37,7 @@ import {
   isDifferenceNode,
   isIntersectionNode,
   isTranslateNode,
-  isModuleCallNode,
+  isModuleInstantiationNode,
   isModuleDefinitionNode,
   isScaleNode,
   isAssignmentNode,
@@ -76,7 +78,7 @@ export class OpenScadAstVisitor {
     this.moduleDefinitions = moduleDefinitions;
     this.currentScope = initialScope;
     this.expressionEvaluator = new ExpressionEvaluator(this.currentScope);
-    this.log('[INIT] OpenScadAstVisitor initialized.');
+    console.log('[INIT] OpenScadAstVisitor initialized.');
   }
 
   /**
@@ -159,12 +161,12 @@ export class OpenScadAstVisitor {
     if (isTranslateNode(node)) {
       return this.visitTranslate(node);
     }
-    if (isModuleCallNode(node)) {
-      return this.visitModuleCall(node);
+    if (isModuleInstantiationNode(node)) {
+      return this.visitModuleInstantiation(node);
     }
     if (isModuleDefinitionNode(node)) {
-      this.moduleDefinitions.set(node.name, node);
-      console.log(`[DEBUG] Stored module definition: ${node.name}`);
+      this.moduleDefinitions.set(node.name.name, node);
+      console.log(`[DEBUG] Stored module definition: ${node.name.name}`);
       return null; // Module definitions don't produce meshes directly
     }
     if (isScaleNode(node)) {
@@ -189,8 +191,9 @@ export class OpenScadAstVisitor {
     console.log('[INIT] Visiting AssignmentNode:', node.variable.name, '=', node.value);
 
     try {
-      const evaluatedValue = this.expressionEvaluator.evaluate(node.value);
-      this.expressionEvaluator.setVariable(node.variable.name, evaluatedValue);
+      const evaluatedValue = this.expressionEvaluator.evaluate(node.value as ExpressionNode);
+      // Note: ExpressionEvaluator doesn't have setVariable method, so we'll update the scope directly
+      this.currentScope.set(node.variable.name, evaluatedValue);
       console.log(`[DEBUG] Variable '${node.variable.name}' assigned value:`, evaluatedValue);
     } catch (error) {
       console.error(`[ERROR] Failed to evaluate or assign variable '${node.variable.name}':`, error);
@@ -200,11 +203,11 @@ export class OpenScadAstVisitor {
   }
 
   /**
-   * Visits a ModuleCallNode.
-   * @param node The ModuleCallNode to visit.
-   * @returns A Babylon.js mesh representing the module call, or null.
+   * Visits a ModuleInstantiationNode.
+   * @param node The ModuleInstantiationNode to visit.
+   * @returns A Babylon.js mesh representing the module instantiation, or null.
    */
-  protected visitModuleCall(node: ModuleCallNode): BABYLON.Mesh | null {
+  protected visitModuleInstantiation(node: ModuleInstantiationNode): BABYLON.Mesh | null {
     console.warn(`[WARN] Module calls are not yet fully supported. Module: ${node.name}`);
 
     const moduleDefinition = this.moduleDefinitions.get(node.name);
@@ -214,23 +217,23 @@ export class OpenScadAstVisitor {
     }
 
     console.log(`[DEBUG] Module '${node.name}' definition parameters:`, moduleDefinition.parameters);
-    console.log(`[DEBUG] Module '${node.name}' call parameters:`, node.parameters);
+    console.log(`[DEBUG] Module '${node.name}' call parameters:`, node.args);
 
     // Create a new scope for the module call
     const newScope = new Map<string, ParameterValue>();
 
     // Map formal parameters to actual arguments
     for (const formalParam of moduleDefinition.parameters) {
-      const actualArg = node.parameters.find(arg => arg.name === formalParam.name);
+      const actualArg = node.args.find((arg: any) => arg.name === formalParam.name);
 
       let paramValue: ParameterValue | undefined;
 
       if (actualArg) {
         // If an actual argument is provided, evaluate its value
         paramValue = this.expressionEvaluator.evaluate(actualArg.value as ExpressionNode);
-      } else if (formalParam.value) {
+      } else if (formalParam.defaultValue) {
         // If no actual argument, use the formal parameter's default value
-        paramValue = this.expressionEvaluator.evaluate(formalParam.value as ExpressionNode);
+        paramValue = this.expressionEvaluator.evaluate(formalParam.defaultValue as ExpressionNode);
       }
 
       if (formalParam.name && paramValue !== undefined) {
@@ -248,9 +251,9 @@ export class OpenScadAstVisitor {
     let resultMesh: BABYLON.Mesh | null = null;
     const childMeshes: BABYLON.Mesh[] = [];
 
-    if (moduleDefinition.children && moduleDefinition.children.length > 0) {
+    if (moduleDefinition.body && moduleDefinition.body.length > 0) {
       // Visit all children of the module definition within the new scope
-      for (const childNode of moduleDefinition.children) {
+      for (const childNode of moduleDefinition.body) {
         const childMesh = this.visit(childNode);
         if (childMesh) {
           childMeshes.push(childMesh);
@@ -261,10 +264,13 @@ export class OpenScadAstVisitor {
     if (childMeshes.length > 0) {
       // If multiple meshes are generated, union them together
       if (childMeshes.length > 1) {
-        resultMesh = childMeshes[0]!;
-        for (let i = 1; i < childMeshes.length; i++) {
-          resultMesh = resultMesh.union(childMeshes[i]!); // Assuming union returns a new mesh
-        }
+        // Create a union node to handle the CSG operation
+        const unionNode: UnionNode = {
+          type: 'union',
+          children: [],
+          location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } }
+        };
+        resultMesh = this.performCSGUnion(childMeshes, unionNode);
       } else {
         resultMesh = childMeshes[0]!;
       }
@@ -275,7 +281,6 @@ export class OpenScadAstVisitor {
     this.currentScope = originalScope;
 
     return resultMesh;
-  }
   }
 
   /**
@@ -293,7 +298,9 @@ export class OpenScadAstVisitor {
       // Use default size
       const defaultSize = [1, 1, 1] as const;
       return this.createBox(defaultSize, node.center ?? false, node);
-    }    const size = sizeResult.value;
+    }
+
+    const size = sizeResult.value;
     const center = node.center ?? false;
 
     console.log(`[DEBUG] Creating cube with size: [${size.join(', ')}], center: ${center}`);
@@ -314,7 +321,9 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract sphere radius: ${radiusResult.error}`);
       // Use default radius
       return this.createSphere(1, node);
-    }    const radius = radiusResult.value;
+    }
+
+    const radius = radiusResult.value;
     console.log(`[DEBUG] Creating sphere with radius: ${radius}`);
     return this.createSphere(radius, node);
   }
@@ -451,7 +460,9 @@ export class OpenScadAstVisitor {
       // Use zero translation as fallback
       const translation = [0, 0, 0] as const;
       return this.applyTranslation(node.children[0]!, translation, node);
-    }    const translation = translationResult.value;
+    }
+
+    const translation = translationResult.value;
     console.log(`[DEBUG] Applying translation: [${translation.join(', ')}]`);
     return this.applyTranslation(node.children[0]!, translation, node);
   }

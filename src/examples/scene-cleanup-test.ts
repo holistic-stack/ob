@@ -113,7 +113,7 @@ export async function testSceneCleanup(): Promise<void> {
         }
 
       } else {
-        console.error('[ERROR] Failed to process', shape.name, ':', result.error);
+        console.error('[ERROR] Failed to process', shape.name);
       }
 
       // Small delay between shapes

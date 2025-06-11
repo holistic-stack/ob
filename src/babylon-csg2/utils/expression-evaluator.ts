@@ -25,18 +25,20 @@ export class ExpressionEvaluator {
    * @throws Error if the expression type is unsupported or a variable is not found.
    */
   evaluate(expression: ExpressionNode): ParameterValue {
-    switch (expression.type) {
+    switch (expression.expressionType) {
       case 'literal':
-        return expression.value;
-      case 'variable':
-        if (this.scope.has(expression.name)) {
-          return this.scope.get(expression.name)!;
+        return (expression as any).value;
+      case 'identifier':
+        const identifierExpr = expression as any;
+        const varName = identifierExpr.text || identifierExpr.name;
+        if (varName && this.scope.has(varName)) {
+          return this.scope.get(varName)!;
         } else {
-          throw new Error(`Variable '${expression.name}' not found in scope.`);
+          throw new Error(`Variable '${varName}' not found in scope.`);
         }
       // TODO: Add cases for binary_expression, unary_expression, function_call, etc.
       default:
-        throw new Error(`Unsupported expression type: ${expression.type}`);
+        throw new Error(`Unsupported expression type: ${expression.expressionType}`);
     }
   }
 

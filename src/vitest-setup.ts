@@ -1,277 +1,213 @@
 import '@testing-library/jest-dom';
 import * as BABYLON from '@babylonjs/core';
+import createFetchMock from 'vitest-fetch-mock';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { findUpSync } from 'find-up';
+
+// Use resolve.sync for robust module resolution following Node.js algorithm
+import resolve from 'resolve';
+
+
+
+const __dirname = import.meta.dirname;
+
+const fetchMocker = createFetchMock(vi);
+fetchMocker.enableMocks();
 
 /**
- * Global test setup for Babylon.js and CSG2
- * Initializes CSG2 once for all tests to avoid repeated initialization
+ * Advanced WASM file resolution using multiple strategies
+ * Combines Node.js module resolution with directory traversal for maximum robustness
  */
+function resolveWasmPath(urlPath: string): string {
+  // Normalize the path - remove leading ./ or /
+  const normalizedPath = urlPath.replace(/^\.?\//, '');
 
-// Global CSG2 initialization flag
-let isCSG2GloballyInitialized = false;
+  console.log(`Resolving WASM file: ${normalizedPath}`);
+  console.log(`__dirname: ${__dirname}`);
 
-/**
- * Initialize CSG2 globally for all tests
- * This prevents the need to initialize CSG2 in every test file
- * Uses a mock implementation in test environment to avoid WASM loading issues
- */
-export async function initializeCSG2ForTests(): Promise<void> {
-  if (isCSG2GloballyInitialized) {
-    console.log('[DEBUG] CSG2 already initialized globally');
-    return;
-  }
 
-  console.log('[INIT] Initializing CSG2 globally for tests...');
-  try {
-    // Always use mocks in test environment to avoid WASM issues
-    console.log('[DEBUG] Setting up mock CSG2 and parser for test environment');
-    setupMockParser();
-    setupMockCSG2();
-    isCSG2GloballyInitialized = true;
-    console.log('[DEBUG] Mock CSG2 and parser initialized successfully for tests');
-  } catch (error) {
-    console.warn('[WARN] Failed to setup mocks, continuing without them:', error);
-    isCSG2GloballyInitialized = true; // Mark as initialized anyway
-  }
-}
+  // Strategy 1: Use Node.js module resolution algorithm (most reliable)
+  const moduleResolutionStrategies = [
+    // Try @openscad/tree-sitter-openscad package
+    () => {
+      try {
+        console.log(`Attempting @openscad/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`);
+        const packagePath = resolve.sync('@openscad/tree-sitter-openscad/package.json', {
+          basedir: __dirname
+        });
+        const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
-/**
- * Check if CSG2 is ready for use in tests
- */
-export function isCSG2ReadyForTests(): boolean {
-  return isCSG2GloballyInitialized && BABYLON.IsCSG2Ready();
-}
+        return resolvedWasmPath;
+      } catch (e) {
 
-/**
- * Create a test scene with NullEngine for headless testing
- */
-export function createTestScene(): { engine: BABYLON.NullEngine; scene: BABYLON.Scene } {
-  const engine = new BABYLON.NullEngine();
-  const scene = new BABYLON.Scene(engine);
-  return { engine, scene };
-}
-
-/**
- * Dispose test scene and engine
- */
-export function disposeTestScene(engine: BABYLON.NullEngine, scene: BABYLON.Scene): void {
-  scene.dispose();
-  engine.dispose();
-}
-
-/**
- * Mock OpenSCAD Parser for testing
- * Provides basic parsing functionality without WASM dependencies
- */
-function setupMockParser(): void {
-  // Store mock parser in global for access by ParserResourceManager
-  (globalThis as any).__MOCK_OPENSCAD_PARSER__ = {
-    parseAST: (code: string) => {
-      // Simple mock parsing - return basic AST based on code content
-      if (!code || !code.trim()) {
-        return [];
+        return null;
       }
-
-      // Mock translate parsing (check FIRST since it contains other primitives)
-      if (code.includes('translate')) {
-        return [{
-          type: 'translate',
-          v: [5, 10, 15],
-          children: [{
-            type: 'cube',
-            size: [5, 5, 5],
-            center: false,
-            location: { start: { line: 2, column: 3 }, end: { line: 2, column: 15 } }
-          }],
-          location: { start: { line: 1, column: 1 }, end: { line: 3, column: 1 } }
-        }];
-      }
-
-      // Mock cube parsing
-      if (code.includes('cube')) {
-        return [{
-          type: 'cube',
-          size: [10, 10, 10],
-          center: false,
-          location: { start: { line: 1, column: 1 }, end: { line: 1, column: 20 } }
-        }];
-      }
-
-      // Mock sphere parsing
-      if (code.includes('sphere')) {
-        return [{
-          type: 'sphere',
-          radius: 5,
-          location: { start: { line: 1, column: 1 }, end: { line: 1, column: 15 } }
-        }];
-      }
-
-      // Mock cylinder parsing
-      if (code.includes('cylinder')) {
-        return [{
-          type: 'cylinder',
-          h: 10,
-          r: 3,
-          location: { start: { line: 1, column: 1 }, end: { line: 1, column: 20 } }
-        }];
-      }
-
-      // Mock union parsing
-      if (code.includes('union')) {
-        return [{
-          type: 'union',
-          children: [
-            {
-              type: 'cube',
-              size: [10, 10, 10],
-              center: false,
-              location: { start: { line: 2, column: 3 }, end: { line: 2, column: 20 } }
-            },
-            {
-              type: 'sphere',
-              radius: 5,
-              location: { start: { line: 3, column: 3 }, end: { line: 3, column: 15 } }
-            }
-          ],
-          location: { start: { line: 1, column: 1 }, end: { line: 4, column: 1 } }
-        }];
-      }
-
-      // Mock difference parsing
-      if (code.includes('difference')) {
-        return [{
-          type: 'difference',
-          children: [
-            {
-              type: 'cube',
-              size: [10, 10, 10],
-              center: false,
-              location: { start: { line: 2, column: 3 }, end: { line: 2, column: 20 } }
-            },
-            {
-              type: 'sphere',
-              radius: 3,
-              location: { start: { line: 3, column: 3 }, end: { line: 3, column: 15 } }
-            }
-          ],
-          location: { start: { line: 1, column: 1 }, end: { line: 4, column: 1 } }
-        }];
-      }
-
-      // Mock intersection parsing
-      if (code.includes('intersection')) {
-        return [{
-          type: 'intersection',
-          children: [
-            {
-              type: 'cube',
-              size: [10, 10, 10],
-              center: false,
-              location: { start: { line: 2, column: 3 }, end: { line: 2, column: 20 } }
-            },
-            {
-              type: 'sphere',
-              radius: 8,
-              location: { start: { line: 3, column: 3 }, end: { line: 3, column: 15 } }
-            }
-          ],
-          location: { start: { line: 1, column: 1 }, end: { line: 4, column: 1 } }
-        }];
-      }
-
-
-
-      // Default: return empty AST for unknown code
-      return [];
     },
-    init: async () => {
-      // Mock initialization - just resolve
-      return Promise.resolve();
+
+    // Try web-tree-sitter package
+    () => {
+      console.log(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
+      try {
+        const packagePath = resolve.sync('web-tree-sitter/package.json', {
+          basedir: __dirname
+        });
+        const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
+
+        return resolvedWasmPath;
+      } catch (e) {
+
+        return null;
+      }
     },
-    dispose: () => {
-      // Mock disposal - no-op
+
+    // Try web-tree-sitter/lib subdirectory
+    () => {
+      console.log(`Attempting web-tree-sitter strategy 3 (lib) for ${normalizedPath}`);
+      try {
+        const packagePath = resolve.sync('web-tree-sitter/package.json', {
+          basedir: __dirname
+        });
+        const resolvedWasmPath = join(dirname(packagePath), 'lib', normalizedPath);
+        console.log(`  - packagePath: ${packagePath}`);
+        console.log(`  - dirname(packagePath): ${dirname(packagePath)}`);
+        console.log(`  - normalizedPath: ${normalizedPath}`);
+        console.log(`  - resolvedWasmPath: ${resolvedWasmPath}`);
+        console.log(`Attempting web-tree-sitter strategy 3 (lib): ${resolvedWasmPath}`);
+        return resolvedWasmPath;
+      } catch (e) {
+
+        return null;
+      }
     }
-  };
+  ];
 
-  console.log('[DEBUG] Mock OpenSCAD parser setup complete');
-}
+  // Strategy 2: Use find-up to locate package.json files and resolve from there
+  const findUpStrategies = [
+    // Find @openscad/tree-sitter-openscad package.json using matcher function
+    () => {
+      try {
+        console.log(`Attempting @openscad/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`);
+        const packageJson = findUpSync((directory: string) => {
+          const packagePath = join(directory, 'package.json');
+          try {
+            const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+            return pkg.name === '@openscad/tree-sitter-openscad' ? packagePath : undefined;
+          } catch {
+            return undefined;
+          }
+        }, {
+          cwd: __dirname,
+          type: 'file'
+        });
 
-/**
- * Mock CSG2 implementation for testing
- * Provides the same API as real CSG2 but with simplified behavior
- */
-function setupMockCSG2(): void {
-  // Mock CSG2 class
-  class MockCSG2 {
-    private mesh: BABYLON.Mesh;
+        if (packageJson) {
+          const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
 
-    constructor(mesh: BABYLON.Mesh) {
-      this.mesh = mesh;
+          return resolvedWasmPath;
+        }
+        return null;
+      } catch (e) {
+
+        return null;
+      }
+    },
+
+    // Find web-tree-sitter package.json using matcher function
+    () => {
+      try {
+        console.log(`Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`);
+        const packageJson = findUpSync((directory: string) => {
+          const packagePath = join(directory, 'package.json');
+          try {
+            const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+            return pkg.name === 'web-tree-sitter' ? packagePath : undefined;
+          } catch {
+            return undefined;
+          }
+        }, {
+          cwd: __dirname,
+          type: 'file'
+        });
+
+        if (packageJson) {
+          const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
+
+          return resolvedWasmPath;
+        }
+        return null;
+      } catch (e) {
+
+        return null;
+      }
     }
+  ];
 
-    static FromMesh(mesh: BABYLON.Mesh): MockCSG2 {
-      return new MockCSG2(mesh);
-    }
+  // Try all strategies in order of preference
+  const allStrategies = [...moduleResolutionStrategies, ...findUpStrategies];
 
-    add(other: MockCSG2): MockCSG2 {
-      // For testing, just return a new mesh with combined name
-      const newMesh = this.mesh.clone(`union_${this.mesh.name}_${other.mesh.name}`);
-      return new MockCSG2(newMesh);
-    }
+  for (const [index, strategy] of allStrategies.entries()) {
+    const resolvedPath = strategy();
+    if (resolvedPath) {
+      try {
+        // Test if file exists by attempting to read it
+        readFileSync(resolvedPath, { flag: 'r' });
+        console.log(`✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`);
 
-    subtract(other: MockCSG2): MockCSG2 {
-      // For testing, just return a new mesh with difference name
-      const newMesh = this.mesh.clone(`difference_${this.mesh.name}_${other.mesh.name}`);
-      return new MockCSG2(newMesh);
-    }
-
-    intersect(other: MockCSG2): MockCSG2 {
-      // For testing, just return a new mesh with intersection name
-      const newMesh = this.mesh.clone(`intersection_${this.mesh.name}_${other.mesh.name}`);
-      return new MockCSG2(newMesh);
-    }
-
-    toMesh(name: string, scene: BABYLON.Scene): BABYLON.Mesh {
-      const newMesh = this.mesh.clone(name);
-      return newMesh;
-    }
-
-    dispose(): void {
-      // Mock disposal
+        return `${resolvedPath}`;
+      } catch {
+        // File doesn't exist, continue to next strategy
+        console.log(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
+        continue;
+      }
     }
   }
 
-  // Try to mock global functions using Object.defineProperty
+  throw new Error(`WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`);
+}
+
+vi.mocked(fetch).mockImplementation(url => {
+  console.log('using local fetch mock', url);
+
+  // Handle both string and URL objects
+  let urlPath: string;
+  if (typeof url === 'string') {
+    urlPath = url;
+  } else if (url instanceof URL) {
+    urlPath = url.href; // Use href to get the full file:// URL
+  } else {
+    // Handle other URL-like objects
+    urlPath = String(url);
+  }
+
+  console.log(`URL path: ${urlPath}`);
+
+
+  const resolvedPath = resolveWasmPath(urlPath);
+
+  console.log(`Resolved WASM file path: ${resolvedPath}`);
+
   try {
-    Object.defineProperty(BABYLON, 'CSG2', {
-      value: MockCSG2,
-      writable: true,
-      configurable: true
-    });
+    // Resolve the actual file path
 
-    Object.defineProperty(BABYLON, 'InitializeCSG2Async', {
-      value: async () => {
-        console.log('[DEBUG] Mock InitializeCSG2Async called');
-        return Promise.resolve();
-      },
-      writable: true,
-      configurable: true
-    });
+    // Read file as Uint8Array
+    const localFile = readFileSync(resolvedPath);
+    const uint8Array = new Uint8Array(localFile);
 
-    Object.defineProperty(BABYLON, 'IsCSG2Ready', {
-      value: () => {
-        console.log('[DEBUG] Mock IsCSG2Ready called');
-        return true;
-      },
-      writable: true,
-      configurable: true
-    });
+    console.log(`Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
 
-    console.log('[DEBUG] Mock CSG2 setup complete');
+    return Promise.resolve({
+      ok: true,
+      arrayBuffer: () => Promise.resolve(uint8Array.buffer),
+      bytes: () => Promise.resolve(uint8Array),
+    } as unknown as Response);
   } catch (error) {
-    console.warn('[WARN] Could not setup mock CSG2:', error);
-    // Store mock in global for fallback
-    (globalThis as any).__MOCK_CSG2__ = MockCSG2;
-    (globalThis as any).__MOCK_INIT_CSG2__ = async () => Promise.resolve();
-    (globalThis as any).__MOCK_IS_CSG2_READY__ = () => true;
+    console.error('Failed to read WASM file:', urlPath, error);
+    return Promise.resolve({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      text: () => Promise.resolve(`WASM file not found: ${urlPath}`),
+    } as unknown as Response);
   }
-}
+});

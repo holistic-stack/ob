@@ -8,7 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/vitest-setup.ts'],
-    testTimeout: 30000, // Longer timeout for CSG2 operations
-    hookTimeout: 30000, // Longer timeout for setup hooks
+    testTimeout: 1000, // Longer timeout for CSG2 operations
+    hookTimeout: 1000, // Longer timeout for setup hooks
+    reporters: 'verbose',
   },
 });

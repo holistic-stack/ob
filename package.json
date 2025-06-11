@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npx vitest run src/babylon-csg2/openscad-ast-visitor --reporter verbose",
     "test:run": "vitest run",
     "test:e2e": "npx vitest run src/babylon-csg2/e2e-tests --reporter=verbose",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
@@ -22,7 +21,12 @@
     "lint:fix": "eslint src --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "test:e2e:playwright": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
@@ -31,12 +35,15 @@
     "@holistic-stack/openscad-parser": "0.1.2",
     "@holistic-stack/tree-sitter-openscad": "0.1.0",
     "@playwright/experimental-ct-react": "^1.52.0",
+    "find-up": "^7.0.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
     "react-babylonjs": "latest",
+    "react-dom": "19.0.0",
+    "react-error-boundary": "^6.0.0",
     "web-tree-sitter": "0.25.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.0",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",
@@ -53,6 +60,7 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "glob": "^11.0.2",
     "jsdom": "^24.1.1",
+    "manifold-3d": "^3.1.1",
     "prettier": "^3.3.3",
     "shx": "^0.3.4",
     "typescript": "^5.8.3",
@@ -60,7 +68,8 @@
     "vite-plugin-dts": "^4.5.0",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "vitest-fetch-mock": "^0.4.5"
   },
   "keywords": [],
   "author": "",

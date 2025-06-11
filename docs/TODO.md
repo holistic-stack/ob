@@ -32,6 +32,11 @@ This document tracks pending tasks and their current status.
 
 **Potential Features**:
 - [ ] **Implement `scale` transformation:** Add a `visitScale` method to handle scaling operations
+- [x] Implement variable definition and usage support
+  - [x] Add `AssignmentNode` handling to visitor
+  - [x] Integrate `ExpressionEvaluator` for variable assignment
+  - [x] Add `isAssignmentNode` type guard
+  - [x] Test variable assignment and lookup in visitor
 - [ ] **Implement `rotate` transformation:** Add a `visitRotate` method to handle rotations
 - [ ] **Implement `mirror` transformation:** Add mirroring support
 - [ ] **Matrix transformations:** Support for `multmatrix()` operations

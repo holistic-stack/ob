@@ -28,7 +28,9 @@ import type {
   SourceLocation,
   ExpressionNode,
   ErrorNode,
-  AssignmentNode
+  AssignmentNode,
+  ModuleDefinitionNode,
+  ModuleInstantiationNode
 } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
@@ -172,6 +174,40 @@ export function isIntersectionNode(node: ASTNode): node is IntersectionNode {
  */
 export function isCSGOperationNode(node: ASTNode): node is UnionNode | DifferenceNode | IntersectionNode {
   return isUnionNode(node) || isDifferenceNode(node) || isIntersectionNode(node);
+}
+
+// ============================================================================
+// GENERAL NODE TYPE GUARDS
+// ============================================================================
+
+/**
+ * Type guard for AssignmentNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is an AssignmentNode
+ */
+export function isAssignmentNode(node: ASTNode): node is AssignmentNode {
+  return node.type === 'assignment';
+}
+
+/**
+ * Type guard for ModuleDefinitionNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is a ModuleDefinitionNode
+ */
+export function isModuleDefinitionNode(node: ASTNode): node is ModuleDefinitionNode {
+  return node.type === 'module_definition';
+}
+
+/**
+ * Type guard for ModuleInstantiationNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is a ModuleInstantiationNode
+ */
+export function isModuleInstantiationNode(node: ASTNode): node is ModuleInstantiationNode {
+  return node.type === 'module_instantiation';
 }
 
 // ============================================================================

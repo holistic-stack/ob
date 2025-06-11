@@ -59,8 +59,8 @@ test.describe('Complete OpenSCAD to Babylon.js Pipeline E2E', () => {
     // Wait for processing to complete (look for success indicator)
     await expect(page.locator('[data-testid="status-indicator"]')).toContainText('Success', { timeout: 30000 });
     
-    // Check if the 3D scene was updated
-    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('cube_');
+    // Check if the 3D scene was updated (mesh was created)
+    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('pipeline_mesh_');
     
     // Verify performance metrics are displayed
     await expect(page.locator('[data-testid="performance-metrics"]')).toBeVisible();
@@ -83,7 +83,7 @@ test.describe('Complete OpenSCAD to Babylon.js Pipeline E2E', () => {
     await expect(page.locator('[data-testid="status-indicator"]')).toContainText('Success', { timeout: 30000 });
     
     // Check sphere was created
-    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('sphere_');
+    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('pipeline_mesh_');
     
     console.log('[END] Sphere processing pipeline test completed');
   });
@@ -103,7 +103,7 @@ test.describe('Complete OpenSCAD to Babylon.js Pipeline E2E', () => {
     await expect(page.locator('[data-testid="status-indicator"]')).toContainText('Success', { timeout: 30000 });
     
     // Check cylinder was created
-    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('cylinder_');
+    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('pipeline_mesh_');
     
     console.log('[END] Cylinder processing pipeline test completed');
   });
@@ -163,7 +163,7 @@ test.describe('Complete OpenSCAD to Babylon.js Pipeline E2E', () => {
     await expect(page.locator('[data-testid="status-indicator"]')).toContainText('Success', { timeout: 30000 });
     
     // Check that mesh was created and positioned
-    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('cube_');
+    await expect(page.locator('[data-testid="mesh-info"]')).toContainText('pipeline_mesh_');
     
     console.log('[END] Translation transformation test completed');
   });

@@ -87,9 +87,9 @@ export function BabylonRenderer({
       <div className="renderer-header">
         <h3>Modern 3D Renderer</h3>
         <div className="renderer-status">
-          {isProcessing && <span className="status-badge processing">Processing...</span>}
-          {!isProcessing && pipelineResult?.success && <span className="status-badge success">✓ Ready</span>}
-          {error && <span className="status-badge error">✗ Error</span>}
+          {isProcessing && <span className="status-badge processing" data-testid="status-indicator">Processing...</span>}
+          {!isProcessing && pipelineResult?.success && <span className="status-badge success" data-testid="status-indicator">Success</span>}
+          {error && <span className="status-badge error" data-testid="status-indicator">Error</span>}
         </div>
       </div>
 
@@ -114,6 +114,28 @@ export function BabylonRenderer({
           </div>
         )}
       </div>
+
+      {/* Mesh Information Panel */}
+      {currentMesh && (
+        <div className="mesh-info-panel" data-testid="mesh-info">
+          <h4>Mesh Information</h4>
+          <p>Name: <span>{currentMesh.name}</span></p>
+          <p>Vertices: <span>{currentMesh.getTotalVertices()}</span></p>
+          <p>Indices: <span>{currentMesh.getTotalIndices()}</span></p>
+        </div>
+      )}
+
+      {/* Performance Metrics Panel */}
+      {pipelineResult?.success && pipelineResult.metadata && (
+        <div className="performance-metrics" data-testid="performance-metrics">
+          <h4>Performance Metrics</h4>
+          <p>Parse Time: <span>{pipelineResult.metadata.parseTimeMs}ms</span></p>
+          <p>Visit Time: <span>{pipelineResult.metadata.visitTimeMs}ms</span></p>
+          <p>Total Time: <span>{pipelineResult.metadata.totalTimeMs}ms</span></p>
+          <p>Node Count: <span>{pipelineResult.metadata.nodeCount}</span></p>
+          <p>Mesh Count: <span>{pipelineResult.metadata.meshCount}</span></p>
+        </div>
+      )}
 
       <div className="debug-controls" style={{ padding: '10px', border: '1px solid #ccc' }}>
         <button

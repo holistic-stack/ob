@@ -136,6 +136,7 @@ export function OpenSCADInput({
 
       <textarea
         id="openscad-code"
+        data-testid="openscad-editor"
         className={`openscad-textarea ${validationResult.valid ? 'valid' : 'invalid'}`}
         value={value}
         onChange={handleChange}

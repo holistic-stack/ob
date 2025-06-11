@@ -54,7 +54,7 @@ function App(): React.JSX.Element {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>OpenSCAD to Babylon.js Pipeline Tester</h1>
+        <h1>OpenSCAD to Babylon.js Pipeline</h1>
         <p className="pipeline-description">
           OpenSCAD Code → @holistic-stack/openscad-parser:parseAST → CSG2 Babylon JS → Babylon JS Scene
         </p>

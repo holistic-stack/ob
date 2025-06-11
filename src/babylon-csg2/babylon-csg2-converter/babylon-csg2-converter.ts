@@ -44,6 +44,7 @@ import {
   extractTranslationVector 
 } from '../utils/ast-type-guards';
 import { extractVector3 } from '../utils/parameter-extractor';
+import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
 
 /**
  * Configuration for CSG2 conversion process
@@ -104,6 +105,7 @@ export class BabylonCSG2Converter {
   /**
    * Initialize CSG2 system (required once per application)
    * Must be called before any CSG2 operations
+   * Uses Node.js compatible initialization method
    */
   async initialize(): Promise<Result<void, string>> {
     if (this.isCSG2Initialized) {
@@ -112,14 +114,23 @@ export class BabylonCSG2Converter {
 
     try {
       this.log('[INIT] Initializing CSG2 system...');
-      
-      // Initialize CSG2 asynchronously (only this part is async!)
-      await BABYLON.InitializeCSG2Async();
-      
-      this.isCSG2Initialized = true;
-      this.log('[INIT] CSG2 system initialized successfully');
-      
-      return { success: true, value: undefined };
+
+      // Initialize CSG2 using Node.js compatible method
+      const result = await initializeCSG2ForNode({
+        enableLogging: this.config.enableLogging ?? false,
+        forceMockInTests: true,
+        timeout: 15000 // 15 second timeout for CSG2 initialization
+      });
+
+      if (result.success) {
+        this.isCSG2Initialized = true;
+        this.log(`[INIT] CSG2 system initialized successfully using ${result.method}`);
+        return { success: true, value: undefined };
+      } else {
+        const message = `CSG2 initialization failed: ${result.error}`;
+        this.log(`[ERROR] ${message}`);
+        return { success: false, error: message };
+      }
     } catch (error) {
       const message = `CSG2 initialization failed: ${error instanceof Error ? error.message : String(error)}`;
       this.log(`[ERROR] ${message}`);

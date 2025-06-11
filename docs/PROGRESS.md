@@ -99,6 +99,7 @@ OpenSCAD Code → @holistic-stack/openscad-parser → Enhanced AST Visitor → C
 - Error Handling (2/2 tests)
 - Pipeline Metrics (1/1 tests)
 - Resource Management (1/1 tests)
+- Variable Assignment and Lookup (2/2 tests)
 
 #### 6. **Advanced OpenSCAD Features - Modules** ✅
 - **Module Definition Resolution**: Implemented collection of `ModuleDefinitionNode`s during AST traversal in `OpenScadPipeline`.

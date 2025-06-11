@@ -8,7 +8,7 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import { OpenScadPipeline } from './openscad-pipeline/openscad-pipeline';
+import { OpenScadPipeline } from '../openscad-pipeline/openscad-pipeline';
 
 /**
  * Complete end-to-end test for the OpenSCAD to Babylon.js pipeline

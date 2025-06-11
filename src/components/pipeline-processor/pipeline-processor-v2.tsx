@@ -14,18 +14,23 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadPipeline } from '../../babylon-csg2/openscad-pipeline/openscad-pipeline';
-import { PipelineProcessorProps, PipelineResult, createPipelineSuccess, createPipelineError } from '../../types/pipeline-types';
+import { PipelineProcessorProps, PipelineResult, createPipelineSuccess, createPipelineFailure } from '../../types/pipeline-types';
 
 /**
  * Modern pipeline processor with React 19 patterns
  */
+interface PipelineProcessorV2Props extends PipelineProcessorProps {
+  readonly onProcessingEnd?: () => void;
+  readonly autoProcess?: boolean;
+}
+
 export function PipelineProcessorV2({
   openscadCode,
   onResult,
   onProcessingStart,
   onProcessingEnd,
   autoProcess = false
-}: PipelineProcessorProps): React.JSX.Element {
+}: PipelineProcessorV2Props): React.JSX.Element {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastProcessedCode, setLastProcessedCode] = useState<string>('');
@@ -178,8 +183,11 @@ export function PipelineProcessorV2({
         }));
 
         const successResult = createPipelineSuccess(simpleMesh, {
-          ...result.metadata,
-          totalTimeMs: processingTime
+          parseTimeMs: result.metadata?.parseTimeMs || 0,
+          visitTimeMs: result.metadata?.visitTimeMs || 0,
+          totalTimeMs: processingTime,
+          nodeCount: result.metadata?.nodeCount || 1,
+          meshCount: result.metadata?.meshCount || 1
         });
 
         setLastProcessedCode(code);
@@ -193,7 +201,7 @@ export function PipelineProcessorV2({
         }, 1000);
 
       } else {
-        throw new Error(result.error || 'Processing failed');
+        throw new Error('Processing failed');
       }
 
     } catch (error) {
@@ -210,7 +218,7 @@ export function PipelineProcessorV2({
         averageTime: (prev.averageTime * prev.totalRuns + processingTime) / (prev.totalRuns + 1)
       }));
 
-      const errorResult = createPipelineError(errorMessage, {
+      const errorResult = createPipelineFailure<BABYLON.Mesh | null>(errorMessage, {
         parseTimeMs: 0,
         visitTimeMs: 0,
         totalTimeMs: processingTime,
@@ -222,7 +230,7 @@ export function PipelineProcessorV2({
 
     } finally {
       setIsProcessing(false);
-      onProcessingEnd();
+      onProcessingEnd?.();
       abortControllerRef.current = null;
       console.log('[END] Pipeline processing completed');
     }
@@ -237,6 +245,7 @@ export function PipelineProcessorV2({
 
       return () => clearTimeout(timeoutId);
     }
+    return undefined; // Explicit return for all code paths
   }, [autoProcess, openscadCode, lastProcessedCode, isProcessing, processCode]);
 
   // Manual process handler

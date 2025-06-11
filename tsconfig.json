@@ -4,7 +4,7 @@
     // Application-specific settings
     "lib": ["es2022", "dom", "dom.iterable"],
     "jsx": "react-jsx",
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["node", "vite/client", "vitest/globals", "vitest"]
   },
   "include": [
     "src/**/*.ts",

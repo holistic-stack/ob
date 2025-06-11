@@ -11,10 +11,11 @@
  * @date June 2025
  */
 
-import React, { useState, useCallback, useMemo, ErrorBoundary } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { BabylonRendererV2 } from './components/babylon-renderer/babylon-renderer-v2';
 import { PipelineProcessorV2 } from './components/pipeline-processor/pipeline-processor-v2';
-import { CodeEditor } from './components/code-editor/code-editor';
+import { OpenSCADInput } from './components/openscad-input';
 import { PipelineResult } from './types/pipeline-types';
 import './App.css';
 
@@ -49,7 +50,7 @@ class RenderingErrorBoundary extends React.Component<
             <pre>{this.state.error?.message}</pre>
           </details>
           <button 
-            onClick={() => this.setState({ hasError: false, error: undefined })}
+            onClick={() => this.setState({ hasError: false })}
             className="reset-button"
           >
             Reset Renderer
@@ -96,10 +97,7 @@ export function AppV2(): React.JSX.Element {
     setIsProcessing(true);
   }, []);
 
-  const handleProcessingEnd = useCallback(() => {
-    console.log('[DEBUG] Processing ended');
-    setIsProcessing(false);
-  }, []);
+
 
   const handleReset = useCallback(() => {
     setOpenscadCode('cube([10, 10, 10]);');
@@ -123,8 +121,8 @@ export function AppV2(): React.JSX.Element {
 
   // Performance stats
   const performanceStats = useMemo(() => {
-    if (!pipelineResult?.metadata) return null;
-    
+    if (!pipelineResult?.success || !pipelineResult.metadata) return null;
+
     return {
       parseTime: pipelineResult.metadata.parseTimeMs,
       visitTime: pipelineResult.metadata.visitTimeMs,
@@ -183,11 +181,9 @@ export function AppV2(): React.JSX.Element {
               </div>
             </div>
             
-            <CodeEditor
+            <OpenSCADInput
               value={openscadCode}
               onChange={handleCodeChange}
-              language="openscad"
-              placeholder="Enter your OpenSCAD code here..."
             />
           </section>
 
@@ -218,8 +214,8 @@ export function AppV2(): React.JSX.Element {
             openscadCode={openscadCode}
             onResult={handlePipelineResult}
             onProcessingStart={handleProcessingStart}
-            onProcessingEnd={handleProcessingEnd}
-            autoProcess={autoProcess}
+
+
           />
         </section>
 

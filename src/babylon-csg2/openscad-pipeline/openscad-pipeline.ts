@@ -36,6 +36,7 @@ import { ParserResourceManager } from '../utils/parser-resource-manager';
 import { OpenScadAstVisitor } from '../openscad-ast-visitor/openscad-ast-visitor';
 import type { ModuleDefinitionNode } from '@holistic-stack/openscad-parser';
 import { isModuleDefinitionNode } from '../utils/ast-type-guards';
+import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
 
 /**
  * Result type for pipeline operations
@@ -157,8 +158,8 @@ export class OpenScadPipeline {
 
       for (const node of parseResult.value) {
         if (isModuleDefinitionNode(node)) {
-          moduleDefinitions.set(node.name, node);
-          this.log(`[DEBUG] Collected module definition: ${node.name}`);
+          moduleDefinitions.set(node.name.name, node);
+          this.log(`[DEBUG] Collected module definition: ${node.name.name}`);
         } else {
           executableNodes.push(node);
         }
@@ -266,29 +267,23 @@ export class OpenScadPipeline {
   }
 
   /**
-   * Initialize CSG2 with timeout protection
+   * Initialize CSG2 with Node.js compatibility and timeout protection
    */
   private async initializeCSG2WithTimeout(): Promise<void> {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('CSG2 initialization timeout')), this.options.csg2Timeout);
-    });
-
     try {
-      // Check if we're in test environment
-      if ((globalThis as any).__MOCK_CSG2__) {
-        this.log('[DEBUG] Using mock CSG2 for tests');
-        return;
-      }
+      this.log('[DEBUG] Initializing CSG2 using Node.js compatible method...');
 
-      // Try real CSG2 initialization with timeout
-      if (BABYLON.InitializeCSG2Async) {
-        await Promise.race([
-          BABYLON.InitializeCSG2Async(),
-          timeoutPromise
-        ]);
-        this.log('[DEBUG] CSG2 initialized successfully');
+      const result = await initializeCSG2ForNode({
+        enableLogging: this.options.enableLogging,
+        forceMockInTests: true,
+        timeout: this.options.csg2Timeout
+      });
+
+      if (result.success) {
+        this.log(`[DEBUG] CSG2 initialized successfully using ${result.method}`);
       } else {
-        this.log('[WARN] CSG2 not available, operations will use fallbacks');
+        this.log('[WARN] CSG2 initialization failed, using fallbacks:', result.error);
+        // Don't throw - allow pipeline to continue with fallback behavior
       }
     } catch (error) {
       this.log('[WARN] CSG2 initialization failed, using fallbacks:', error);

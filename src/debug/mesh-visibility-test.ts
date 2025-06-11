@@ -103,7 +103,7 @@ export async function testMeshVisibility(): Promise<void> {
         });
       }
     } else {
-      console.error('[ERROR] Pipeline failed:', result.error);
+      console.error('[ERROR] Pipeline failed');
     }
 
     // Test 3: Check scene contents

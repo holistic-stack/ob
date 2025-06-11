@@ -149,7 +149,7 @@ export function PipelineProcessor({
         }, 1000);
 
       } else {
-        throw new Error(result.error || 'Processing failed');
+        throw new Error('Processing failed');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
@@ -181,6 +181,7 @@ export function PipelineProcessor({
         <button
           type="button"
           className="process-button"
+          data-testid="process-button"
           onClick={handleProcess}
           disabled={!canProcess}
           aria-describedby="process-status"

@@ -10,12 +10,13 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
-import { 
-  BabylonCSG2Converter, 
-  createBabylonCSG2Converter, 
+import {
+  BabylonCSG2Converter,
+  createBabylonCSG2Converter,
   convertOpenSCADToBabylon,
-  type CSG2ConverterConfig 
+  type CSG2ConverterConfig
 } from './babylon-csg2-converter';
+import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
 
 describe('BabylonCSG2Converter', () => {
   let engine: BABYLON.NullEngine;
@@ -24,15 +25,25 @@ describe('BabylonCSG2Converter', () => {
 
   beforeAll(async () => {
     console.log('[INIT] Initializing CSG2 for tests...');
-    // Initialize CSG2 once for all tests
+    // Initialize CSG2 once for all tests using Node.js compatible method
     try {
-      await BABYLON.InitializeCSG2Async();
-      console.log('[INIT] CSG2 initialized successfully');
+      const result = await initializeCSG2ForNode({
+        enableLogging: true,
+        forceMockInTests: true,
+        timeout: 15000 // Increased timeout for CI environments
+      });
+
+      if (result.success) {
+        console.log(`[INIT] CSG2 initialized successfully using ${result.method}`);
+      } else {
+        console.error('[ERROR] Failed to initialize CSG2:', result.error);
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('[ERROR] Failed to initialize CSG2:', error);
       throw error;
     }
-  });
+  }, 20000); // Increased timeout for beforeAll hook
 
   beforeEach(() => {
     console.log('[DEBUG] Setting up test environment...');

@@ -61,3 +61,4 @@ This document outlines the current state of the `OpenScadAstVisitor` implementat
     1. **Extend `OpenScadAstVisitor`**: Add a `visitAssignmentNode` method to handle `AssignmentNode` instances.
     2. **Utilize `ExpressionEvaluator`**: Integrate `ExpressionEvaluator` to manage variable scopes and store assigned values.
     3. **Update Documentation**: Ensure `TODO.md`, `PROGRESS.md`, and `README.md` reflect the progress and next steps for variable support.
+
