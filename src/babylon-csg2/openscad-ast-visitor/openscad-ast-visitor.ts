@@ -21,12 +21,15 @@ import type {
   IntersectionNode,
   ScaleNode,
   TranslateNode,
+  RotateNode,
+  MirrorNode,
   ModuleInstantiationNode,
   ModuleDefinitionNode,
-  Parameter,
   AssignmentNode,
   ParameterValue,
-  ExpressionNode
+  ExpressionNode,
+  SpecialVariableAssignment, // Added for $fa, $fs, $fn
+  IfNode // Added for conditional logic
 } from '@holistic-stack/openscad-parser';
 
 import {
@@ -37,6 +40,8 @@ import {
   isDifferenceNode,
   isIntersectionNode,
   isTranslateNode,
+  isRotateNode,
+  isMirrorNode,
   isModuleInstantiationNode,
   isModuleDefinitionNode,
   isScaleNode,
@@ -45,10 +50,24 @@ import {
   extractSphereRadius,
   extractCylinderParams,
   extractTranslationVector,
-  extractScaleVector
+  extractScaleVector,
+  isSpecialVariableAssignmentNode, // Added for $fa, $fs, $fn
+  isIfNode // Added for conditional logic
 } from '../utils/ast-type-guards';
 
 import * as BABYLON from '@babylonjs/core';
+
+// Type definition for storing special variable context ($fa, $fs, $fn)
+type TessellationOptions = {
+  segments?: number;
+  rings?: number; 
+};
+
+type SpecialVariablesContext = {
+  $fa: number | undefined; // Default: 12 degrees
+  $fs: number | undefined; // Default: 2 mm
+  $fn: number | undefined; // Default: 0 (auto-calculated), stored as undefined if not explicitly set by user to > 0
+};
 import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator';
 
 /**
@@ -62,6 +81,7 @@ export class OpenScadAstVisitor {
   private moduleDefinitions: Map<string, ModuleDefinitionNode>;
   private expressionEvaluator: ExpressionEvaluator;
   private currentScope: Scope;
+  private specialVariablesContext: SpecialVariablesContext;
 
   /**
    * Initializes the visitor with a Babylon.js scene and module definitions.
@@ -78,7 +98,13 @@ export class OpenScadAstVisitor {
     this.moduleDefinitions = moduleDefinitions;
     this.currentScope = initialScope;
     this.expressionEvaluator = new ExpressionEvaluator(this.currentScope);
-    console.log('[INIT] OpenScadAstVisitor initialized.');
+    // Initialize special variables with OpenSCAD defaults
+    this.specialVariablesContext = {
+      $fa: 12, // degrees
+      $fs: 2,  // mm
+      $fn: undefined, // Represents OpenSCAD $fn=0 (auto-calculate based on $fa/$fs)
+    };
+    console.log('[INIT] OpenScadAstVisitor initialized. Special variables context:', this.specialVariablesContext);
   }
 
   /**
@@ -161,6 +187,12 @@ export class OpenScadAstVisitor {
     if (isTranslateNode(node)) {
       return this.visitTranslate(node);
     }
+    if (isRotateNode(node)) {
+      return this.visitRotate(node);
+    }
+    if (isMirrorNode(node)) {
+      return this.visitMirror(node);
+    }
     if (isModuleInstantiationNode(node)) {
       return this.visitModuleInstantiation(node);
     }
@@ -171,10 +203,12 @@ export class OpenScadAstVisitor {
     }
     if (isScaleNode(node)) {
       return this.visitScale(node);
-    }
-
-    if (isAssignmentNode(node)) {
+    } else if (isAssignmentNode(node)) {
       return this.visitAssignment(node);
+    } else if (isSpecialVariableAssignmentNode(node)) { // Handle $fa, $fs, $fn
+      return this.visitSpecialVariableAssignment(node);
+    } else if (isIfNode(node)) {
+      return this.visitIfNode(node);
     }
 
     // If no specific visitor found, log a warning and return null
@@ -188,18 +222,136 @@ export class OpenScadAstVisitor {
    * @returns Null, as assignments do not produce a mesh directly.
    */
   protected visitAssignment(node: AssignmentNode): BABYLON.Mesh | null {
-    console.log('[INIT] Visiting AssignmentNode:', node.variable.name, '=', node.value);
-
+    const variableName = node.variable.name;
+    console.log('[DEBUG] Visiting AssignmentNode:', variableName, '=', node.value);
+    // Attempt to evaluate the expression if it's an ExpressionNode
+    // The parser ensures 'value' is an ExpressionNode for assignments.
     try {
+      // Ensure node.value is treated as ExpressionNode for evaluation
       const evaluatedValue = this.expressionEvaluator.evaluate(node.value as ExpressionNode);
-      // Note: ExpressionEvaluator doesn't have setVariable method, so we'll update the scope directly
-      this.currentScope.set(node.variable.name, evaluatedValue);
-      console.log(`[DEBUG] Variable '${node.variable.name}' assigned value:`, evaluatedValue);
+      this.currentScope.set(variableName, evaluatedValue); // Update current scope
+      console.log(`[DEBUG] Variable '${variableName}' assigned value:`, evaluatedValue, 'in scope:', this.currentScope);
     } catch (error) {
-      console.error(`[ERROR] Failed to evaluate or assign variable '${node.variable.name}':`, error);
+      console.error(`[ERROR] Failed to evaluate or assign variable '${variableName}':`, error);
+      // Decide if to throw, or just log and continue. For now, log and continue.
+    }
+    return null; // Assignments do not produce a mesh directly
+  }
+
+  /**
+   * Visits a SpecialVariableAssignment and updates the special variables context.
+   * These variables ($fa, $fs, $fn) affect the tessellation of subsequent primitives.
+   * @param node The SpecialVariableAssignment to visit.
+   * @returns Null, as this assignment does not produce a mesh directly.
+   */
+  public visitSpecialVariableAssignment(node: SpecialVariableAssignment): BABYLON.Mesh | null {
+    console.log(`[DEBUG] Visiting SpecialVariableAssignmentNode: ${node.variable} = ${node.value}`);
+    // Ensure the value is a number, as $fa, $fs, $fn expect numeric values.
+    // The parser should enforce this, but an extra check is good.
+    if (typeof node.value !== 'number') {
+      console.warn(`[WARN] Special variable ${node.variable} received non-numeric value: ${JSON.stringify(node.value)}. Expected a number. Ignoring assignment.`);
+      return null;
     }
 
-    return null; // Assignments do not produce a mesh directly
+    switch (node.variable) {
+      case '$fa':
+        this.specialVariablesContext.$fa = node.value > 0 ? node.value : 12; // Min value for $fa is typically small but positive
+        if (node.value <= 0) console.warn(`[WARN] $fa value ${node.value} is not positive, using default 12.`);
+        break;
+      case '$fs':
+        this.specialVariablesContext.$fs = node.value > 0 ? node.value : 2; // Min value for $fs is typically small but positive
+        if (node.value <= 0) console.warn(`[WARN] $fs value ${node.value} is not positive, using default 2.`);
+        break;
+      case '$fn':
+        // $fn must be an integer >= 0. If 0, it's auto-calculated. Store undefined for auto.
+        // If positive, it's an explicit segment count.
+        this.specialVariablesContext.$fn = node.value > 0 ? Math.round(node.value) : undefined;
+        if (node.value < 0) console.warn(`[WARN] $fn value ${node.value} is negative, treating as auto (undefined).`);
+        else if (node.value > 0 && node.value !== Math.round(node.value)) console.warn(`[WARN] $fn value ${node.value} is not an integer, rounded to ${Math.round(node.value)}.`);
+        else if (node.value === 0) this.specialVariablesContext.$fn = undefined; // Explicitly $fn=0 means auto
+        break;
+      default:
+        // This case should ideally not be reached if the parser only allows valid special variables ($fa, $fs, $fn).
+        console.warn(`[WARN] Encountered an unknown or unhandled special variable: ${node.variable}. Ignoring assignment.`);
+        break;
+    }
+    console.log('[DEBUG] Updated specialVariablesContext:', this.specialVariablesContext);
+    return null; // This operation does not produce a mesh.
+  }
+
+  /**
+   * Visits an IfNode and processes its conditional logic.
+   * Evaluates the condition and visits either the 'then' or 'else' branch.
+   * @param node The IfNode to visit.
+   * @returns A Babylon.js mesh from the executed branch, or null.
+   */
+  protected visitIfNode(node: IfNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting IfNode', node);
+
+    const conditionValue = this.expressionEvaluator.evaluate(node.condition);
+    console.log(`[DEBUG] IfNode condition '${node.condition.type}' evaluated to:`, conditionValue);
+
+    if (typeof conditionValue !== 'boolean') {
+      console.warn(`[WARN] IfNode condition did not evaluate to a boolean. Got: ${typeof conditionValue} (${conditionValue}). Assuming false.`);
+      // OpenSCAD treats non-boolean conditions as false, except for numbers (0 is false, non-zero is true)
+      // For simplicity here, non-booleans other than numbers could be treated as false or an error.
+      // Let's refine this based on OpenSCAD's exact behavior for various types if needed.
+      if (typeof conditionValue === 'number') {
+        if (conditionValue !== 0) {
+          console.log('[DEBUG] Condition (number) is non-zero, executing thenBranch.');
+          return this.visitBranch(node.thenBranch);
+        } else {
+          console.log('[DEBUG] Condition (number) is zero, attempting elseBranch.');
+          return node.elseBranch ? this.visitBranch(node.elseBranch) : null;
+        }
+      }
+      // Default for other non-boolean types: execute else branch or return null
+      console.log('[DEBUG] Condition (non-boolean, non-number) is false, attempting elseBranch.');
+      return node.elseBranch ? this.visitBranch(node.elseBranch) : null;
+    }
+
+    if (conditionValue) {
+      console.log('[DEBUG] Condition is true, executing thenBranch.');
+      return this.visitBranch(node.thenBranch);
+    } else {
+      console.log('[DEBUG] Condition is false, attempting elseBranch.');
+      return node.elseBranch ? this.visitBranch(node.elseBranch) : null;
+    }
+  }
+
+  /**
+   * Visits a branch (array of AST nodes) and returns the first mesh found,
+   * or combines multiple meshes if needed.
+   * @param branch Array of AST nodes to visit
+   * @returns A Babylon.js mesh or null
+   */
+  private visitBranch(branch: ASTNode[]): BABYLON.Mesh | null {
+    if (!branch || branch.length === 0) {
+      return null;
+    }
+
+    const meshes: BABYLON.Mesh[] = [];
+    for (const node of branch) {
+      const mesh = this.visit(node);
+      if (mesh) {
+        meshes.push(mesh);
+      }
+    }
+
+    if (meshes.length === 0) {
+      return null;
+    } else if (meshes.length === 1) {
+      return meshes[0]!;
+    } else {
+      // Multiple meshes - union them together
+      console.log(`[DEBUG] Branch produced ${meshes.length} meshes, combining with union`);
+      const unionNode: UnionNode = {
+        type: 'union',
+        children: [],
+        location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } }
+      };
+      return this.performCSGUnion(meshes, unionNode);
+    }
   }
 
   /**
@@ -313,19 +465,63 @@ export class OpenScadAstVisitor {
    * @param node The SphereNode to visit.
    * @returns A Babylon.js mesh representing the sphere.
    */
+
+
+  private _calculateTessellationParameters(
+    node: SphereNode | CylinderNode,
+    characteristicDimension: number, // e.g., radius for sphere/cylinder
+    isSphere: boolean = false
+  ): TessellationOptions {
+    const options: TessellationOptions = {};
+    const minSegments = 3; // OpenSCAD minimum is 3
+    const defaultSegments = 32; // A reasonable default if nothing else is specified
+
+    // Extract tessellation parameters directly from the node
+    // Note: Property names might be different, using safe access
+    let fnFromParams = (node as any).$fn || (node as any).fn;
+    let faFromParams = (node as any).$fa || (node as any).fa;
+    let fsFromParams = (node as any).$fs || (node as any).fs;
+
+    let fn = fnFromParams !== undefined && fnFromParams > 0 ? Math.round(fnFromParams) :
+             this.specialVariablesContext.$fn;
+    let fa = faFromParams !== undefined && faFromParams > 0 ? faFromParams :
+             this.specialVariablesContext.$fa;
+    let fs = fsFromParams !== undefined && fsFromParams > 0 ? fsFromParams :
+             this.specialVariablesContext.$fs;
+
+    if (fn !== undefined && fn > 0) {
+      options.segments = Math.max(minSegments, fn);
+    } else if (fa !== undefined && fa > 0) {
+      options.segments = Math.max(minSegments, Math.round(360 / fa));
+    } else if (fs !== undefined && fs > 0 && characteristicDimension > 0) {
+      options.segments = Math.max(minSegments, Math.round((characteristicDimension * 2 * Math.PI) / fs));
+    } else {
+      options.segments = defaultSegments;
+    }
+
+    if (isSphere) {
+      options.rings = Math.max(Math.round(minSegments / 2), Math.round(options.segments / 2)); // Often half of segments for spheres
+    }
+    
+    console.log(`[DEBUG] Tessellation calculated for dim ${characteristicDimension}: segments=${options.segments}, rings=${options.rings} (fn=${fn}, fa=${fa}, fs=${fs}, p_fn=${fnFromParams}, p_fa=${faFromParams}, p_fs=${fsFromParams})`);
+    return options;
+  }
+
   protected visitSphere(node: SphereNode): BABYLON.Mesh {
     console.log('[INIT] Visiting SphereNode', node);
 
     const radiusResult = extractSphereRadius(node);
     if (!radiusResult.success) {
-      console.warn(`[WARN] Failed to extract sphere radius: ${radiusResult.error}`);
-      // Use default radius
-      return this.createSphere(1, node);
+      console.warn(`[WARN] Failed to extract sphere radius: ${radiusResult.error}. Using default radius 1.`);
+      // For default, calculate tessellation based on default radius 1
+      const tessellationParams = this._calculateTessellationParameters(node, 1, true);
+      return this.createSphere(1, tessellationParams, node);
     }
 
     const radius = radiusResult.value;
     console.log(`[DEBUG] Creating sphere with radius: ${radius}`);
-    return this.createSphere(radius, node);
+    const tessellationParams = this._calculateTessellationParameters(node, radius, true);
+    return this.createSphere(radius, tessellationParams, node);
   }
 
   /**
@@ -338,24 +534,35 @@ export class OpenScadAstVisitor {
     console.log('[INIT] Visiting CylinderNode', node);
 
     const paramsResult = extractCylinderParams(node);
+    const center = node.center ?? false; // Default to false if not specified
+
     if (!paramsResult.success) {
-      console.warn(`[WARN] Failed to extract cylinder params: ${paramsResult.error}`);
-      // Use default params
-      return this.createCylinder({ height: 1, radiusTop: 1, radiusBottom: 1 }, node.center ?? false, node);
+      console.warn(`[WARN] Failed to extract cylinder params: ${paramsResult.error}. Using default params.`);
+      // For default, calculate tessellation based on default radius 1
+      const babylonParamsForCreate = { height: 1, radiusTop: 1, radiusBottom: 1 };
+      const tessellationParams = this._calculateTessellationParameters(node, 1, false); // Use r=1 for default
+      return this.createCylinder(babylonParamsForCreate, center, tessellationParams, node);
     }
 
-    const extractedParams = paramsResult.value;
-    const center = node.center ?? false;
+    const extractedParams = paramsResult.value; // { radius: number; height: number }
 
-    // Convert extracted params to Babylon.js cylinder format
-    const params = {
-      height: extractedParams.height,
-      radiusTop: extractedParams.radius,
-      radiusBottom: extractedParams.radius
+    // For now, use the same radius for top and bottom (simple cylinder)
+    // TODO: Add support for cones (r1, r2) in the future
+    const radius = extractedParams.radius;
+    const height = extractedParams.height;
+
+    const babylonParams = {
+      height: height,
+      radiusTop: radius,
+      radiusBottom: radius
     };
 
-    console.log(`[DEBUG] Creating cylinder with params:`, params, `center: ${center}`);
-    return this.createCylinder(params, center, node);
+    // Use radius as the characteristic dimension for tessellation calculation
+    const characteristicRadius = radius;
+    const tessellationParams = this._calculateTessellationParameters(node, characteristicRadius, false);
+    
+    console.log(`[DEBUG] Creating cylinder with Babylon params:`, babylonParams, `center: ${center}`);
+    return this.createCylinder(babylonParams, center, tessellationParams, node);
   }
 
   /**
@@ -497,7 +704,7 @@ export class OpenScadAstVisitor {
   private applyScale(
     childNode: ASTNode,
     scale: readonly [number, number, number],
-    node: ScaleNode
+    _node: ScaleNode
   ): BABYLON.Mesh | null {
     const childMesh = this.visit(childNode);
     if (!childMesh) {
@@ -507,6 +714,219 @@ export class OpenScadAstVisitor {
 
     childMesh.scaling = new BABYLON.Vector3(scale[0], scale[1], scale[2]);
     console.log(`[DEBUG] Applied scaling: [${scale.join(', ')}]`);
+    return childMesh;
+  }
+
+  /**
+   * Visits a RotateNode and applies rotation to its child.
+   * @param node The RotateNode to visit.
+   * @returns A Babylon.js mesh with rotation applied, or null.
+   */
+  protected visitRotate(node: RotateNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting RotateNode', node);
+
+    if (!node.children || node.children.length === 0) {
+      console.warn('[WARN] Rotate has no children.');
+      return null;
+    }
+
+    // Extract rotation parameters
+    const rotationResult = this.extractRotationParameters(node);
+    if (!rotationResult.success) {
+      console.warn(`[WARN] Failed to extract rotation parameters: ${rotationResult.error}`);
+      // Use zero rotation as fallback
+      const rotation = [0, 0, 0] as const;
+      return this.applyRotation(node.children[0]!, rotation, node);
+    }
+
+    const rotation = rotationResult.value;
+    console.log(`[DEBUG] Applying rotation: [${rotation.join(', ')}] degrees`);
+    return this.applyRotation(node.children[0]!, rotation, node);
+  }
+
+  /**
+   * Extracts rotation parameters from a RotateNode.
+   * Handles both Euler angles and axis-angle rotation.
+   */
+  private extractRotationParameters(node: RotateNode): { success: true; value: readonly [number, number, number] } | { success: false; error: string } {
+    try {
+      // Case 1: Euler angles - 'a' is a Vector3D [x, y, z]
+      if (Array.isArray(node.a)) {
+        if (node.a.length === 3) {
+          return { success: true, value: [node.a[0], node.a[1], node.a[2]] as const };
+        } else {
+          return { success: false, error: `Invalid Euler angles array length: ${node.a.length}, expected 3` };
+        }
+      }
+
+      // Case 2: Axis-angle rotation - 'a' is a number (angle) and 'v' is the axis
+      if (typeof node.a === 'number') {
+        if (node.v && Array.isArray(node.v) && node.v.length === 3) {
+          // Convert axis-angle to Euler angles (simplified approach)
+          // For now, we'll apply the rotation around the specified axis
+          const angle = node.a;
+          const axis = node.v;
+
+          // Determine which axis has the highest component and apply rotation there
+          const absX = Math.abs(axis[0]);
+          const absY = Math.abs(axis[1]);
+          const absZ = Math.abs(axis[2]);
+
+          if (absX >= absY && absX >= absZ) {
+            // Primarily X-axis rotation
+            return { success: true, value: [angle * Math.sign(axis[0]), 0, 0] as const };
+          } else if (absY >= absX && absY >= absZ) {
+            // Primarily Y-axis rotation
+            return { success: true, value: [0, angle * Math.sign(axis[1]), 0] as const };
+          } else {
+            // Primarily Z-axis rotation
+            return { success: true, value: [0, 0, angle * Math.sign(axis[2])] as const };
+          }
+        } else {
+          // Single angle without axis - assume Z-axis rotation (OpenSCAD default)
+          return { success: true, value: [0, 0, node.a] as const };
+        }
+      }
+
+      return { success: false, error: `Invalid rotation parameter type: ${typeof node.a}` };
+    } catch (error) {
+      return { success: false, error: `Error extracting rotation parameters: ${error}` };
+    }
+  }
+
+  /**
+   * Applies rotation to a child node.
+   */
+  private applyRotation(
+    childNode: ASTNode,
+    rotation: readonly [number, number, number],
+    _node: RotateNode
+  ): BABYLON.Mesh | null {
+    const childMesh = this.visit(childNode);
+    if (!childMesh) {
+      console.warn('[WARN] Rotate has no valid child mesh.');
+      return null;
+    }
+
+    // Convert degrees to radians and apply rotation
+    const rotationRadians = [
+      (rotation[0] * Math.PI) / 180,
+      (rotation[1] * Math.PI) / 180,
+      (rotation[2] * Math.PI) / 180
+    ];
+
+    childMesh.rotation = new BABYLON.Vector3(rotationRadians[0], rotationRadians[1], rotationRadians[2]);
+    console.log(`[DEBUG] Applied rotation to mesh: ${childMesh.name}, rotation: [${rotation.join(', ')}] degrees`);
+    return childMesh;
+  }
+
+  /**
+   * Visits a MirrorNode and applies mirroring to its child.
+   * @param node The MirrorNode to visit.
+   * @returns A Babylon.js mesh with mirroring applied, or null.
+   */
+  protected visitMirror(node: MirrorNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting MirrorNode', node);
+
+    if (!node.children || node.children.length === 0) {
+      console.warn('[WARN] Mirror has no children.');
+      return null;
+    }
+
+    // Extract mirror normal vector
+    const mirrorResult = this.extractMirrorParameters(node);
+    if (!mirrorResult.success) {
+      console.warn(`[WARN] Failed to extract mirror parameters: ${mirrorResult.error}`);
+      // Use default X-axis mirror as fallback
+      const normal = [1, 0, 0] as const;
+      return this.applyMirror(node.children[0]!, normal, node);
+    }
+
+    const normal = mirrorResult.value;
+    console.log(`[DEBUG] Applying mirror with normal: [${normal.join(', ')}]`);
+    return this.applyMirror(node.children[0]!, normal, node);
+  }
+
+  /**
+   * Extracts mirror normal vector from a MirrorNode.
+   */
+  private extractMirrorParameters(node: MirrorNode): { success: true; value: readonly [number, number, number] } | { success: false; error: string } {
+    try {
+      if (!node.v) {
+        return { success: false, error: 'Mirror node missing normal vector (v)' };
+      }
+
+      if (!Array.isArray(node.v) || node.v.length !== 3) {
+        return { success: false, error: `Invalid mirror normal vector: expected [x,y,z], got ${JSON.stringify(node.v)}` };
+      }
+
+      const [x, y, z] = node.v;
+      if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
+        return { success: false, error: `Mirror normal vector contains non-numeric values: [${x}, ${y}, ${z}]` };
+      }
+
+      // Check for zero vector (invalid)
+      if (x === 0 && y === 0 && z === 0) {
+        return { success: false, error: 'Mirror normal vector cannot be zero vector [0,0,0]' };
+      }
+
+      return { success: true, value: [x, y, z] as const };
+    } catch (error) {
+      return { success: false, error: `Error extracting mirror parameters: ${error}` };
+    }
+  }
+
+  /**
+   * Applies mirroring to a child node using reflection matrix.
+   * Mirror always works around the origin (0,0,0) with the given normal vector.
+   */
+  private applyMirror(
+    childNode: ASTNode,
+    normal: readonly [number, number, number],
+    _node: MirrorNode
+  ): BABYLON.Mesh | null {
+    const childMesh = this.visit(childNode);
+    if (!childMesh) {
+      console.warn('[WARN] Mirror has no valid child mesh.');
+      return null;
+    }
+
+    // Normalize the normal vector
+    const [nx, ny, nz] = normal;
+    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    const nnx = nx / length;
+    const nny = ny / length;
+    const nnz = nz / length;
+
+    // Create reflection matrix for mirroring across plane with given normal
+    // Formula: I - 2 * n * n^T where n is the unit normal vector
+
+    // Reflection matrix components
+    const m11 = 1 - 2 * nnx * nnx;
+    const m12 = -2 * nnx * nny;
+    const m13 = -2 * nnx * nnz;
+    const m21 = -2 * nny * nnx;
+    const m22 = 1 - 2 * nny * nny;
+    const m23 = -2 * nny * nnz;
+    const m31 = -2 * nnz * nnx;
+    const m32 = -2 * nnz * nny;
+    const m33 = 1 - 2 * nnz * nnz;
+
+    // Create Babylon.js transformation matrix
+    const reflectionMatrix = BABYLON.Matrix.FromValues(
+      m11, m12, m13, 0,
+      m21, m22, m23, 0,
+      m31, m32, m33, 0,
+      0,   0,   0,   1
+    );
+
+    // Apply the reflection matrix to the mesh
+    childMesh.setPreTransformMatrix(reflectionMatrix);
+
+    // Note: Mirroring can flip face normals, so we might need to flip them back
+    // For now, we'll let Babylon.js handle this automatically
+
+    console.log(`[DEBUG] Applied mirror transformation to mesh: ${childMesh.name}, normal: [${normal.join(', ')}]`);
     return childMesh;
   }
 
@@ -557,12 +977,17 @@ export class OpenScadAstVisitor {
   /**
    * Creates a Babylon.js sphere mesh with the specified radius.
    */
-  private createSphere(radius: number, node: SphereNode): BABYLON.Mesh {
+  private createSphere(radius: number, tessOptions: TessellationOptions, node: SphereNode): BABYLON.Mesh {
+
+
+    console.log(`[DEBUG] Creating sphere: r=${radius}, segments=${tessOptions.segments || 32}, rings=${tessOptions.rings || (tessOptions.segments ? Math.max(2, Math.round(tessOptions.segments / 2)) : 16)}`);
+
     const sphere = BABYLON.MeshBuilder.CreateSphere(
       `sphere_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
       {
-        diameter: radius * 2, // Babylon uses diameter
-        segments: 32, // Default segments for sphere
+        diameter: radius * 2,
+        segments: tessOptions.segments || 32
+        // Note: Babylon's 'segments' for CreateSphere controls both latitude and longitude divisions
       },
       this.scene
     );
@@ -583,8 +1008,9 @@ export class OpenScadAstVisitor {
    * Creates a Babylon.js cylinder mesh with the specified parameters.
    */
   private createCylinder(
-    params: { height: number; radiusTop: number; radiusBottom: number }, 
-    center: boolean, 
+    params: { height: number; radiusTop: number; radiusBottom: number },
+    center: boolean,
+    tessOptions: TessellationOptions,
     node: CylinderNode
   ): BABYLON.Mesh {
     const cylinder = BABYLON.MeshBuilder.CreateCylinder(
@@ -593,7 +1019,7 @@ export class OpenScadAstVisitor {
         height: params.height,
         diameterTop: params.radiusTop * 2,
         diameterBottom: params.radiusBottom * 2,
-        tessellation: 32, // Default tessellation for cylinder
+        tessellation: tessOptions.segments || 32, // Use calculated segments
       },
       this.scene
     );
@@ -729,9 +1155,9 @@ export class OpenScadAstVisitor {
    * Applies translation to a child node.
    */
   private applyTranslation(
-    childNode: ASTNode, 
-    translation: readonly [number, number, number], 
-    node: TranslateNode
+    childNode: ASTNode,
+    translation: readonly [number, number, number],
+    _node: TranslateNode
   ): BABYLON.Mesh | null {
     const childMesh = this.visit(childNode);
     if (!childMesh) {

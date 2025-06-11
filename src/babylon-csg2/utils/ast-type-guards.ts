@@ -19,18 +19,19 @@ import type {
   TranslateNode,
   RotateNode,
   ScaleNode,
+  MirrorNode,
   UnionNode,
   DifferenceNode,
   IntersectionNode,
   ParameterValue,
-  Vector2D,
-  Vector3D,
   SourceLocation,
   ExpressionNode,
   ErrorNode,
   AssignmentNode,
   ModuleDefinitionNode,
-  ModuleInstantiationNode
+  ModuleInstantiationNode,
+  SpecialVariableAssignment,
+  IfNode
 } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
@@ -114,7 +115,7 @@ export function isRotateNode(node: ASTNode): node is RotateNode {
 
 /**
  * Type guard for ScaleNode
- * 
+ *
  * @param node - AST node to check
  * @returns True if node is a ScaleNode
  */
@@ -123,13 +124,23 @@ export function isScaleNode(node: ASTNode): node is ScaleNode {
 }
 
 /**
- * Type guard for transformation nodes (translate, rotate, scale)
- * 
+ * Type guard for MirrorNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is a MirrorNode
+ */
+export function isMirrorNode(node: ASTNode): node is MirrorNode {
+  return node.type === 'mirror';
+}
+
+/**
+ * Type guard for transformation nodes (translate, rotate, scale, mirror)
+ *
  * @param node - AST node to check
  * @returns True if node is a transformation
  */
-export function isTransformNode(node: ASTNode): node is TranslateNode | RotateNode | ScaleNode {
-  return isTranslateNode(node) || isRotateNode(node) || isScaleNode(node);
+export function isTransformNode(node: ASTNode): node is TranslateNode | RotateNode | ScaleNode | MirrorNode {
+  return isTranslateNode(node) || isRotateNode(node) || isScaleNode(node) || isMirrorNode(node);
 }
 
 // ============================================================================
@@ -209,6 +220,28 @@ export function isModuleDefinitionNode(node: ASTNode): node is ModuleDefinitionN
 export function isModuleInstantiationNode(node: ASTNode): node is ModuleInstantiationNode {
   return node.type === 'module_instantiation';
 }
+
+/**
+ * Type guard for SpecialVariableAssignment
+ *
+ * @param node - AST node to check
+ * @returns True if node is a SpecialVariableAssignment
+ */
+export function isSpecialVariableAssignmentNode(node: ASTNode): node is SpecialVariableAssignment {
+  return node.type === 'specialVariableAssignment';
+}
+
+/**
+ * Type guard for IfNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is an IfNode
+ */
+export function isIfNode(node: ASTNode): node is IfNode {
+  return node.type === 'if';
+}
+
+
 
 // ============================================================================
 // PARAMETER VALUE UTILITIES

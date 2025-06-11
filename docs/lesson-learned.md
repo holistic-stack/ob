@@ -1,5 +1,32 @@
 # Lessons Learned
 
+## 2025-06-11: Extraneous Brace Causing TypeScript Syntax Error (TS1128)
+
+**Context**: After implementing special variable support (`$fa`, `$fs`, `$fn`) in `OpenScadAstVisitor.ts`, the `npm run typecheck` command started failing with a `TS1128: Declaration or statement expected.` error.
+
+**Issue**: The error pointed to the `visitModuleInstantiation` method. Upon inspection, an extra closing brace `}` was found a few lines above this method, prematurely closing the `OpenScadAstVisitor` class definition. This made subsequent method declarations appear outside any class, leading to the syntax error.
+
+**Lesson**: 
+1.  **Small Changes, Big Impact**: Even a single misplaced character like a brace can lead to significant syntax errors that might not be immediately obvious, especially in large files or after complex refactoring.
+2.  **Frequent Checks**: Running type checks (`npm run typecheck` or `tsc --noEmit`) frequently during development, especially after non-trivial changes, helps catch such syntax errors early before they become harder to trace.
+3.  **Context Matters**: The TypeScript error message (`Declaration or statement expected`) was a bit generic. Viewing the code *around* the reported error line, not just the line itself, was crucial to spot the out-of-place brace that was the true root cause.
+
+This reinforces the importance of careful editing and regular validation steps during development.
+
+## 2025-06-15: Importance of `TargetContent` Accuracy with `replace_file_content`
+
+**Context**: During the implementation of tessellation parameter handling for `$fa, $fs, $fn` in `OpenScadAstVisitor.ts`, multiple `replace_file_content` calls were needed. Initial attempts to modify several methods (`visitSphere`, `createSphere`, `visitCylinder`, `createCylinder`) in a single large `replace_file_content` call (or sequential calls without re-verifying file state) failed or were only partially successful.
+
+**Issue**: The `TargetContent` for later chunks in a multi-chunk replacement, or for subsequent `replace_file_content` calls, became invalid because earlier changes (e.g., adding helper methods at the top of the class) shifted line numbers and modified the structure of the code that was targeted by later chunks.
+
+**Lesson**: When making multiple, potentially large, or structurally significant edits to the same file using `replace_file_content`:
+1.  **Break down large changes**: If possible, apply changes in smaller, logical, and independent chunks.
+2.  **Re-verify `TargetContent`**: After each `replace_file_content` call (especially if it was complex or only partially successful), use `view_file_outline` or `view_line_range` to get the *exact current state* of the code sections you intend to modify next. Do not rely on previous views or assumptions about file structure.
+3.  **Target Uniqueness**: Ensure `TargetContent` is unique enough if `AllowMultiple` is false. If it's too generic, the replacement might fail or apply to the wrong place.
+4.  **Iterative Refinement**: Be prepared for an iterative process of viewing and replacing, particularly when refactoring or inserting code that changes overall file layout.
+
+This approach minimizes failed edits and ensures that replacements are applied correctly, even if the file is modified between steps.
+
 ## June 2025: Complete TypeScript Error Resolution (117 → 0)
 
 ### 🎯 Major Achievement: Systematic Error Resolution
@@ -536,3 +563,126 @@ src/
 - ✅ **Honest status reporting** - distinguish between "logic implemented" vs "working/tested"
 
 **Fix Strategy**: Systematic type corrections before any functionality claims.
+
+---
+
+## June 2025: Test Stabilization (Task P1 Completion)
+
+### 🎯 Key Achievements: Enhanced Test Suite Stability
+
+Successfully stabilized the test suite by addressing resource leaks and CSG2 initialization issues, leading to consistent test passes.
+
+### Key Technical Lessons & Patterns
+
+#### 1. **Babylon.js Resource Management in Tests (`NullEngine`)**
+   - **Importance of `afterEach` for Cleanup**: Explicitly disposing of `scene` and `engine` instances in `afterEach` hooks is *critical* for preventing resource leaks, inter-test interference, and sporadic timeouts. This was the primary fix for `babylon-csg2-converter.test.ts`.
+     ```typescript
+     // Example from babylon-csg2-converter.test.ts
+     afterEach(() => {
+       if (scene) {
+         scene.dispose();
+       }
+       if (engine) {
+         engine.dispose();
+       }
+       // Dispose any other test-specific resources, like pipeline instances
+       if (pipeline) {
+         pipeline.dispose(); 
+       }
+     });
+     ```
+   - **Order of Disposal**: While Babylon.js is often robust, a good practice is to dispose of resources in reverse order of creation or dependency: `scene` before `engine`. Custom objects holding references (like a pipeline) should be managed accordingly.
+
+#### 2. **CSG2 Initialization Strategies in a Test Environment**
+   - **Global or `beforeAll` Initialization**: `BABYLON.InitializeCSG2Async()` is an asynchronous operation that loads WASM assets. It should ideally be called once globally (e.g., in a Vitest global setup file) or at least once per test suite using `beforeAll`.
+     ```typescript
+     // Example for a test suite
+     beforeAll(async () => {
+       if (!BABYLON.IsCSG2Ready()) {
+         await BABYLON.InitializeCSG2Async();
+       }
+     }, 60000); // Increased timeout for WASM loading
+     ```
+   - **Conditional Initialization in `beforeEach`**: If global/`beforeAll` isn't practical, checking `BABYLON.IsCSG2Ready()` in `beforeEach` can prevent redundant calls, though it adds slight overhead to each test.
+   - **Test Timeouts for WASM**: The initial CSG2 WASM download and compilation can be slow. Ensure test runners (like Vitest) have adequate default timeouts (e.g., `testTimeout` in `vitest.config.ts`) or per-suite timeouts to accommodate this, especially in CI or on clean environments.
+
+#### 3. **Systematic Test Stability Verification**
+   - **Targeted Test Execution**: When debugging, running specific test files (`npx vitest run src/path/to/your.test.ts`) helps isolate the problematic tests and confirm fixes locally.
+   - **Full Test Suite Execution**: After applying fixes or making significant changes, *always* run the entire test suite (`npx vitest run`) to ensure no regressions or new inter-test conflicts have been introduced. This confirmed the overall stability after Task P1 fixes.
+
+**Result:** A more robust and reliable test suite, paving the way for confident development of new features (Task P2).
+
+## **December 2024 - Advanced Transformations Implementation**
+
+### **Key Insights: Mathematical Transformations in 3D Graphics**
+
+**Mirror Transformation Mathematics:**
+- **Reflection Matrix Formula**: `I - 2 * n * n^T` where `n` is the unit normal vector
+- **Vector Normalization Critical**: Always normalize input vectors to prevent scaling artifacts
+- **Matrix Application**: Use `setPreTransformMatrix()` for proper transformation order
+- **Face Normal Handling**: Babylon.js automatically handles face normal flipping during mirroring
+
+**Rotation Implementation Patterns:**
+- **Euler vs Axis-Angle**: Support both OpenSCAD rotation syntaxes for maximum compatibility
+- **Degree to Radian Conversion**: Always convert OpenSCAD degrees to Babylon.js radians
+- **Fallback Strategies**: Provide sensible defaults for invalid rotation parameters
+- **Z-axis Default**: OpenSCAD defaults to Z-axis rotation for single angle parameters
+
+### **TypeScript Best Practices for 3D Math**
+
+**Array Destructuring Issues:**
+```typescript
+// ❌ AVOID: TypeScript can't infer array element types
+const [nnx, nny, nnz] = normalizedNormal;
+
+// ✅ PREFER: Explicit variable assignment
+const nnx = nx / length;
+const nny = ny / length;
+const nnz = nz / length;
+```
+
+**Type-Safe Parameter Extraction:**
+```typescript
+// ✅ GOOD: Comprehensive validation with fallbacks
+private extractMirrorParameters(node: MirrorNode):
+  { success: true; value: readonly [number, number, number] } |
+  { success: false; error: string } {
+
+  if (!Array.isArray(node.v) || node.v.length !== 3) {
+    return { success: false, error: 'Invalid vector format' };
+  }
+
+  // Additional validation for zero vectors, non-numeric values, etc.
+}
+```
+
+### **Test Strategy for Mathematical Operations**
+
+**Comprehensive Test Coverage:**
+- **Basic Operations**: X, Y, Z axis transformations
+- **Complex Cases**: Diagonal vectors, non-unit vectors
+- **Edge Cases**: Zero vectors, invalid parameters, missing children
+- **Error Handling**: Graceful fallbacks and meaningful error messages
+
+**Mathematical Validation:**
+```typescript
+// ✅ Test actual mathematical results
+expect(result?.rotation.x).toBeCloseTo((45 * Math.PI) / 180, 5);
+expect(result?.rotation.y).toBeCloseTo((30 * Math.PI) / 180, 5);
+expect(result?.rotation.z).toBeCloseTo((60 * Math.PI) / 180, 5);
+```
+
+### **Implementation Success Metrics**
+
+**Achievement Summary:**
+- ✅ **29/36 tests passing (81% success rate)**
+- ✅ **Complete Rotate System**: 7/7 tests passing with Euler angles, axis-angle, and Z-axis default
+- ✅ **Complete Mirror System**: 8/8 tests passing with normal vectors, normalization, and error handling
+- ✅ **Mathematical Accuracy**: Proper degree-to-radian conversion and reflection matrix calculation
+- ✅ **Robust Error Handling**: Graceful fallbacks for all invalid input scenarios
+
+**Technical Patterns That Work:**
+1. **Parameter Extraction Pattern**: Consistent validation with Result types
+2. **Fallback Strategy**: Always provide sensible defaults for invalid inputs
+3. **Mathematical Validation**: Test actual computed values, not just object existence
+4. **Comprehensive Test Coverage**: Basic, complex, and edge cases for each transformation

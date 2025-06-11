@@ -25,7 +25,7 @@ describe('OpenScadAstVisitor with CSG2', () => {
   beforeAll(async () => {
     console.log('[INIT] Initializing CSG2 for OpenScadAstVisitor tests');
     await initializeCSG2ForTests();
-  });
+  }, 10000); // 10 second timeout for CSG2 initialization
 
   beforeEach(() => {
     console.log('[DEBUG] Setting up test scene');

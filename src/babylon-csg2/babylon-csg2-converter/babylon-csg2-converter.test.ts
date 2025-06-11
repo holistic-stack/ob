@@ -66,6 +66,19 @@ describe('BabylonCSG2Converter', () => {
     console.log('[DEBUG] Test environment ready');
   });
 
+  afterEach(() => {
+    console.log('[DEBUG] Tearing down test environment...');
+    if (scene) {
+      scene.dispose();
+      console.log('[DEBUG] Scene disposed');
+    }
+    if (engine) {
+      engine.dispose();
+      console.log('[DEBUG] Engine disposed');
+    }
+    console.log('[DEBUG] Test environment torn down');
+  });
+
   describe('Initialization', () => {
     it('[INIT] should initialize CSG2 successfully', async () => {
       console.log('[DEBUG] Testing CSG2 initialization...');
