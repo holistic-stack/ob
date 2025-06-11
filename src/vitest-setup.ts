@@ -7,11 +7,11 @@ import { findUpSync } from 'find-up';
 
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-
-const __dirname = import.meta.dirname;
-
+// Initialize vitest-fetch-mock properly
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
 
@@ -166,8 +166,12 @@ function resolveWasmPath(urlPath: string): string {
   throw new Error(`WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`);
 }
 
-vi.mocked(fetch).mockImplementation(url => {
-  console.log('using local fetch mock', url);
+/**
+ * Custom fetch mock handler for WASM files using vitest-fetch-mock
+ * Handles loading local WASM files during testing
+ */
+function createWasmFetchHandler(url: string | URL | Request): Promise<Response> {
+  console.log('[DEBUG] Using vitest-fetch-mock for WASM loading:', url);
 
   // Handle both string and URL objects
   let urlPath: string;
@@ -175,39 +179,120 @@ vi.mocked(fetch).mockImplementation(url => {
     urlPath = url;
   } else if (url instanceof URL) {
     urlPath = url.href; // Use href to get the full file:// URL
+  } else if (url instanceof Request) {
+    urlPath = url.url;
   } else {
     // Handle other URL-like objects
     urlPath = String(url);
   }
 
-  console.log(`URL path: ${urlPath}`);
-
-
-  const resolvedPath = resolveWasmPath(urlPath);
-
-  console.log(`Resolved WASM file path: ${resolvedPath}`);
+  console.log(`[DEBUG] URL path: ${urlPath}`);
 
   try {
-    // Resolve the actual file path
+    const resolvedPath = resolveWasmPath(urlPath);
+    console.log(`[DEBUG] Resolved WASM file path: ${resolvedPath}`);
 
     // Read file as Uint8Array
     const localFile = readFileSync(resolvedPath);
     const uint8Array = new Uint8Array(localFile);
 
-    console.log(`Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
+    console.log(`[DEBUG] Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
 
-    return Promise.resolve({
-      ok: true,
-      arrayBuffer: () => Promise.resolve(uint8Array.buffer),
-      bytes: () => Promise.resolve(uint8Array),
-    } as unknown as Response);
+    return Promise.resolve(new Response(uint8Array.buffer, {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        'Content-Type': 'application/wasm',
+        'Content-Length': uint8Array.length.toString()
+      }
+    }));
   } catch (error) {
-    console.error('Failed to read WASM file:', urlPath, error);
-    return Promise.resolve({
-      ok: false,
+    console.error('[ERROR] Failed to read WASM file:', urlPath, error);
+    return Promise.resolve(new Response(`WASM file not found: ${urlPath}`, {
       status: 404,
       statusText: 'Not Found',
-      text: () => Promise.resolve(`WASM file not found: ${urlPath}`),
-    } as unknown as Response);
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    }));
   }
+}
+
+// Configure vitest-fetch-mock to handle WASM files
+fetchMocker.mockResponse((req) => {
+  const url = req.url;
+
+  // Check if this is a WASM file request
+  if (url.includes('.wasm') || url.includes('tree-sitter')) {
+    return createWasmFetchHandler(url);
+  }
+
+  // For non-WASM requests, return a default mock response
+  console.log('[DEBUG] Non-WASM fetch request:', url);
+  return Promise.resolve(new Response('Mock response', { status: 200 }));
 });
+
+/**
+ * Initialize CSG2 for testing environments
+ * Provides fallback mock CSG2 if real CSG2 initialization fails
+ */
+export async function initializeCSG2ForTests(): Promise<void> {
+  console.log('[INIT] Initializing CSG2 for tests');
+
+  try {
+    // Try to initialize real CSG2 with a timeout
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('CSG2 initialization timeout')), 3000)
+    );
+
+    await Promise.race([
+      BABYLON.InitializeCSG2Async(),
+      timeoutPromise
+    ]);
+
+    console.log('[DEBUG] ✅ Real CSG2 initialized successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn('[WARN] Real CSG2 initialization failed, using mock CSG2:', errorMessage);
+
+    // Set up mock CSG2 for testing
+    (globalThis as any).__MOCK_CSG2__ = {
+      FromMesh: () => ({
+        add: () => ({ toMesh: () => null }),
+        subtract: () => ({ toMesh: () => null }),
+        intersect: () => ({ toMesh: () => null })
+      })
+    };
+
+    console.log('[DEBUG] ✅ Mock CSG2 initialized for testing');
+  }
+}
+
+/**
+ * Create a test scene with NullEngine for headless testing
+ * Following the pattern used in existing tests
+ */
+export function createTestScene(): { engine: BABYLON.NullEngine; scene: BABYLON.Scene } {
+  console.log('[DEBUG] Creating test scene with NullEngine');
+
+  const engine = new BABYLON.NullEngine();
+  const scene = new BABYLON.Scene(engine);
+
+  return { engine, scene };
+}
+
+/**
+ * Dispose test scene resources properly
+ * Following the pattern used in existing tests
+ */
+export function disposeTestScene(engine: BABYLON.NullEngine, scene: BABYLON.Scene): void {
+  console.log('[DEBUG] Disposing test scene resources');
+
+  if (scene) {
+    scene.dispose();
+  }
+
+  if (engine) {
+    engine.dispose();
+  }
+}
