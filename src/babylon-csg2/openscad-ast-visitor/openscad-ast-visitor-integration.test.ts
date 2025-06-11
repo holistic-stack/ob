@@ -52,7 +52,7 @@ describe('Enhanced OpenScadAstVisitor', () => {
       
       const sphereNode: SphereNode = {
         type: 'sphere',
-        r: 5, // Radius parameter
+        radius: 5, // Radius parameter
         location: {
           start: { line: 1, column: 0, offset: 11 },
           end: { line: 1, column: 12, offset: 23 }

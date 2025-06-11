@@ -20,15 +20,24 @@ importers:
       '@holistic-stack/openscad-parser':
         specifier: 0.1.2
         version: 0.1.2
+      '@holistic-stack/tree-sitter-openscad':
+        specifier: 0.1.0
+        version: 0.1.0(web-tree-sitter@0.25.3)
       '@playwright/experimental-ct-react':
         specifier: ^1.52.0
         version: 1.52.0(vite@6.3.5)
       react:
         specifier: 19.0.0
         version: 19.0.0
+      react-babylonjs:
+        specifier: latest
+        version: 3.2.5-beta.2(@babylonjs/core@8.11.0)(@babylonjs/gui@8.11.0(@babylonjs/core@8.11.0))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0)
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
+      web-tree-sitter:
+        specifier: 0.25.3
+        version: 0.25.3
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.4.8
@@ -200,6 +209,11 @@ packages:
 
   '@babylonjs/core@8.11.0':
     resolution: {integrity: sha512-f80gaa+bdf+vqwGFaHlLlMQ/360smh/9g0nZCWSCdBZZ0+ZdwHWwaLMoigtgEglZbRWTbVnNJcs9arfa+Lupkg==}
+
+  '@babylonjs/gui@8.11.0':
+    resolution: {integrity: sha512-TIQ6GJ7/nIyJEgBtTxR4JiMsG6IdPuVRbbZAJOAirryTY9MypEa7XsFZdzH4nmg0bjYGvRoLstOsC3rbMQYU3g==}
+    peerDependencies:
+      '@babylonjs/core': ^8.0.0
 
   '@babylonjs/loaders@8.11.0':
     resolution: {integrity: sha512-yyLHdNy5/OrS0fMI4Auz5kENvoQdJXawL1dKfI0NaWyfmpw7V3pPMAuKkzDJa7oZh7T/aTkJDhXqH2ZnJtF1pA==}
@@ -2221,6 +2235,19 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  react-babylonjs@3.2.5-beta.2:
+    resolution: {integrity: sha512-loYNlDCVj9MK8ftd5Tmyzp/iZtmVM7jk314kCQOSDubnw63OvOiwlPeY8s8bptLLIHSnSLyYQB8Tos6A275o8A==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@babylonjs/core': 5.x || 6.x || 7.x || 8.x
+      '@babylonjs/gui': 5.x || 6.x || 7.x || 8.x
+      react: '>=17'
+      react-dom: '>=17'
+      react-reconciler: 0.29.2 || 0.31.0
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
   react-dom@19.0.0:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
     peerDependencies:
@@ -2234,6 +2261,12 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
+
+  react-reconciler@0.31.0:
+    resolution: {integrity: sha512-7Ob7Z+URmesIsIVRjnLoDGwBEG/tVitidU0nMsqX/eeJaLY89RISO/10ERe0MqmzuKUUB1rmY+h1itMbUHg9BQ==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^19.0.0
 
   react-refresh@0.17.0:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
@@ -2955,6 +2988,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@babylonjs/core@8.11.0': {}
+
+  '@babylonjs/gui@8.11.0(@babylonjs/core@8.11.0)':
+    dependencies:
+      '@babylonjs/core': 8.11.0
 
   '@babylonjs/loaders@8.11.0(@babylonjs/core@8.11.0)(babylonjs-gltf2interface@8.11.0)':
     dependencies:
@@ -5103,6 +5140,15 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
+  react-babylonjs@3.2.5-beta.2(@babylonjs/core@8.11.0)(@babylonjs/gui@8.11.0(@babylonjs/core@8.11.0))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      '@babylonjs/core': 8.11.0
+      '@babylonjs/gui': 8.11.0(@babylonjs/core@8.11.0)
+      react: 19.0.0
+      react-reconciler: 0.31.0(react@19.0.0)
+    optionalDependencies:
+      react-dom: 19.0.0(react@19.0.0)
+
   react-dom@19.0.0(react@19.0.0):
     dependencies:
       react: 19.0.0
@@ -5113,6 +5159,11 @@ snapshots:
   react-is@17.0.2: {}
 
   react-is@18.3.1: {}
+
+  react-reconciler@0.31.0(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      scheduler: 0.25.0
 
   react-refresh@0.17.0: {}
 

@@ -204,8 +204,15 @@ export class OpenScadAstVisitor {
       return this.createCylinder({ height: 1, radiusTop: 1, radiusBottom: 1 }, node.center ?? false, node);
     }
 
-    const params = paramsResult.value;
+    const extractedParams = paramsResult.value;
     const center = node.center ?? false;
+
+    // Convert extracted params to Babylon.js cylinder format
+    const params = {
+      height: extractedParams.height,
+      radiusTop: extractedParams.radius,
+      radiusBottom: extractedParams.radius
+    };
 
     console.log(`[DEBUG] Creating cylinder with params:`, params, `center: ${center}`);
     return this.createCylinder(params, center, node);
@@ -235,7 +242,7 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length === 1) {
       console.log('[DEBUG] Union has only one child, returning it directly.');
-      return childMeshes[0];
+      return childMeshes[0]!; // Safe access - length check ensures element exists
     }
 
     console.log(`[DEBUG] Merging ${childMeshes.length} child meshes using CSG2 union operations.`);
@@ -261,7 +268,7 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length < 2) {
       console.warn('[WARN] Difference has insufficient valid child meshes.');
-      return childMeshes.length === 1 ? childMeshes[0] : null;
+      return childMeshes.length === 1 ? childMeshes[0]! : null;
     }
 
     console.log(`[DEBUG] Performing CSG2 difference operation on ${childMeshes.length} meshes.`);
@@ -287,7 +294,7 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length < 2) {
       console.warn('[WARN] Intersection has insufficient valid child meshes.');
-      return childMeshes.length === 1 ? childMeshes[0] : null;
+      return childMeshes.length === 1 ? childMeshes[0]! : null;
     }
 
     console.log(`[DEBUG] Performing CSG2 intersection operation on ${childMeshes.length} meshes.`);
@@ -312,7 +319,7 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract translation vector: ${translationResult.error}`);
       // Use zero translation as fallback
       const translation = [0, 0, 0] as const;
-      return this.applyTranslation(node.children[0], translation, node);
+      return this.applyTranslation(node.children[0]!, translation, node);
     }    const translation = translationResult.value;
     console.log(`[DEBUG] Applying translation: [${translation.join(', ')}]`);
     return this.applyTranslation(node.children[0]!, translation, node);
@@ -366,7 +373,25 @@ export class OpenScadAstVisitor {
       box.position = new BABYLON.Vector3(size[0] / 2, size[1] / 2, size[2] / 2);
     }
 
-    console.log('[DEBUG] Created box mesh:', box.name);
+    // Add a default material for visibility
+    if (!box.material) {
+      const material = new BABYLON.StandardMaterial(`${box.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.8, 0.6, 0.4); // Orange-ish color
+      material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+      box.material = material;
+    }
+
+    console.log('[DEBUG] Created box mesh:', {
+      name: box.name,
+      vertices: box.getTotalVertices(),
+      indices: box.getTotalIndices(),
+      isVisible: box.isVisible,
+      isEnabled: box.isEnabled(),
+      hasGeometry: box.geometry !== null,
+      hasMaterial: box.material !== null,
+      scene: box.getScene()?.constructor.name,
+      sceneUid: box.getScene()?.uid
+    });
     return box;
   }
 
@@ -378,12 +403,20 @@ export class OpenScadAstVisitor {
       `sphere_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
       {
         diameter: radius * 2, // Babylon uses diameter
-        segments: (node as any).$fn ?? 32, // Use $fn if provided, default to 32
+        segments: 32, // Default segments for sphere
       },
       this.scene
     );
 
-    console.log('[DEBUG] Created sphere mesh:', sphere.name);
+    // Add a default material for visibility
+    if (!sphere.material) {
+      const material = new BABYLON.StandardMaterial(`${sphere.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.6, 0.8, 0.4); // Green-ish color
+      material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+      sphere.material = material;
+    }
+
+    console.log('[DEBUG] Created sphere mesh:', sphere.name, 'with material');
     return sphere;
   }
 
@@ -401,7 +434,7 @@ export class OpenScadAstVisitor {
         height: params.height,
         diameterTop: params.radiusTop * 2,
         diameterBottom: params.radiusBottom * 2,
-        tessellation: node.$fn ?? 32, // Use $fn if provided
+        tessellation: 32, // Default tessellation for cylinder
       },
       this.scene
     );
@@ -411,7 +444,15 @@ export class OpenScadAstVisitor {
       cylinder.position = new BABYLON.Vector3(0, params.height / 2, 0);
     }
 
-    console.log('[DEBUG] Created cylinder mesh:', cylinder.name);
+    // Add a default material for visibility
+    if (!cylinder.material) {
+      const material = new BABYLON.StandardMaterial(`${cylinder.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.4, 0.6, 0.8); // Blue-ish color
+      material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+      cylinder.material = material;
+    }
+
+    console.log('[DEBUG] Created cylinder mesh:', cylinder.name, 'with material');
     return cylinder;
   }
 
@@ -423,15 +464,15 @@ export class OpenScadAstVisitor {
   private performCSGUnion(meshes: BABYLON.Mesh[], node: UnionNode): BABYLON.Mesh {
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for union');
-      return meshes[0];
+      return meshes[0]!; // Safe access - caller ensures non-empty array
     }
 
     // Use mock CSG2 if available
     const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]);
+    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]!);
       const newBaseCsg = baseCsg.add(childCsg); // CSG2 uses 'add' for union
 
       // Dispose previous CSG to prevent memory leaks
@@ -459,15 +500,15 @@ export class OpenScadAstVisitor {
   private performCSGDifference(meshes: BABYLON.Mesh[], node: DifferenceNode): BABYLON.Mesh {
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for difference');
-      return meshes[0];
+      return meshes[0]!; // Safe access - caller ensures non-empty array
     }
 
     // Use mock CSG2 if available
     const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]);
+    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]!);
       const newBaseCsg = baseCsg.subtract(childCsg); // CSG2 uses 'subtract' for difference
 
       // Dispose previous CSG to prevent memory leaks
@@ -495,15 +536,15 @@ export class OpenScadAstVisitor {
   private performCSGIntersection(meshes: BABYLON.Mesh[], node: IntersectionNode): BABYLON.Mesh {
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for intersection');
-      return meshes[0];
+      return meshes[0]!; // Safe access - caller ensures non-empty array
     }
 
     // Use mock CSG2 if available
     const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]);
+    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]);
+      const childCsg = CSG2Class.FromMesh(meshes[i]!);
       const newBaseCsg = baseCsg.intersect(childCsg); // CSG2 uses 'intersect' for intersection
 
       // Dispose previous CSG to prevent memory leaks

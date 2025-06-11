@@ -124,13 +124,13 @@ describe('OpenScadAstVisitor with CSG2', () => {
         type: 'cube',
         size: [5, 5, 5],
         center: false,
-        location: { start: { line: 2, column: 3 }, end: { line: 2, column: 15 } }
+        location: { start: { line: 2, column: 3, offset: 25 }, end: { line: 2, column: 15, offset: 37 } }
       };
 
       const unionNode: UnionNode = {
         type: 'union',
         children: [cubeNode],
-        location: { start: { line: 1, column: 1 }, end: { line: 3, column: 1 } }
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 3, column: 1, offset: 60 } }
       };
 
       const mesh = visitor.visit(unionNode);
@@ -149,20 +149,20 @@ describe('OpenScadAstVisitor with CSG2', () => {
         type: 'cube',
         size: [5, 5, 5],
         center: false,
-        location: { start: { line: 2, column: 3 }, end: { line: 2, column: 15 } }
+        location: { start: { line: 2, column: 3, offset: 25 }, end: { line: 2, column: 15, offset: 37 } }
       };
 
       const cubeNode2: CubeNode = {
         type: 'cube',
         size: [3, 3, 3],
         center: false,
-        location: { start: { line: 3, column: 3 }, end: { line: 3, column: 15 } }
+        location: { start: { line: 3, column: 3, offset: 45 }, end: { line: 3, column: 15, offset: 57 } }
       };
 
       const unionNode: UnionNode = {
         type: 'union',
         children: [cubeNode1, cubeNode2],
-        location: { start: { line: 1, column: 1 }, end: { line: 4, column: 1 } }
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 4, column: 1, offset: 80 } }
       };
 
       // Should return a fallback mesh instead of throwing

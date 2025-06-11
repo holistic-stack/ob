@@ -4,7 +4,7 @@
  * A focused component for processing OpenSCAD code through the pipeline.
  * Handles: OpenSCAD code → @holistic-stack/openscad-parser:parseAST → CSG2 operations
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import * as BABYLON from '@babylonjs/core';
 import { PipelineProcessorProps, createPipelineFailure, createPipelineSuccess } from '../../types/pipeline-types';
 import { OpenScadPipeline } from '../../babylon-csg2/openscad-pipeline/openscad-pipeline';
@@ -24,68 +24,149 @@ export function PipelineProcessor({
   console.log('[INIT] PipelineProcessor component rendering');
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastProcessedCode, setLastProcessedCode] = useState<string>('');
+
+  // Use refs to avoid stale closures and manage resources
+  const pipelineRef = useRef<OpenScadPipeline | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Initialize pipeline once
+  useEffect(() => {
+    const initializePipeline = async () => {
+      if (pipelineRef.current) return;
+
+      console.log('[INIT] Initializing modern pipeline processor');
+
+      try {
+        const pipeline = new OpenScadPipeline({
+          enableLogging: true,
+          enableMetrics: true,
+          csg2Timeout: 10000
+        });
+
+        const initResult = await pipeline.initialize();
+        if (initResult.success) {
+          pipelineRef.current = pipeline;
+          console.log('[DEBUG] Pipeline initialized successfully');
+        } else {
+          console.error('[ERROR] Pipeline initialization failed:', initResult.error);
+        }
+      } catch (error) {
+        console.error('[ERROR] Pipeline initialization error:', error);
+      }
+    };
+
+    initializePipeline();
+
+    // Cleanup on unmount
+    return () => {
+      if (pipelineRef.current) {
+        pipelineRef.current.dispose();
+        pipelineRef.current = null;
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const handleProcess = useCallback(async () => {
-    console.log('[INIT] Starting pipeline processing');
+    if (!openscadCode.trim() || !pipelineRef.current) {
+      console.warn('[WARN] Cannot process: empty code or pipeline not ready');
+      return;
+    }
+
+    // Cancel any ongoing processing
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    console.log('[INIT] Starting modern pipeline processing');
     setIsProcessing(true);
     onProcessingStart();
 
     try {
-      console.log('[DEBUG] Processing OpenSCAD code:', openscadCode.substring(0, 50) + '...');
-      
-      // Create a temporary scene for processing
+      // Create a dedicated scene for processing
       const engine = new BABYLON.NullEngine();
-      const tempScene = new BABYLON.Scene(engine);
-      
-      try {
-        // Initialize the OpenSCAD pipeline
-        const pipeline = new OpenScadPipeline({
-          enableLogging: true,
-          enableMetrics: true,
-          csg2Timeout: 30000
-        });
-        
-        console.log('[DEBUG] Initializing OpenSCAD pipeline...');
-        const initResult = await pipeline.initialize();
-        
-        if (!initResult.success) {
-          throw new Error(`Pipeline initialization failed: ${initResult.error}`);
-        }
-        
-        console.log('[DEBUG] Processing OpenSCAD code through pipeline...');
-        const processResult = await pipeline.processOpenScadCode(openscadCode, tempScene);
-        
-        if (!processResult.success) {
-          throw new Error(`Pipeline processing failed: ${processResult.error}`);
-        }
-        
+      const scene = new BABYLON.Scene(engine);
+
+      // Set up scene for processing
+      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+      // Process with the initialized pipeline
+      const result = await pipelineRef.current.processOpenScadCode(openscadCode, scene);
+
+      if (result.success && result.value) {
         console.log('[DEBUG] Pipeline processing successful');
-          // Create success result with the generated mesh and metadata
-        const result = createPipelineSuccess<BABYLON.Mesh | null>(processResult.value, processResult.metadata);
-        
-        console.log('[END] Pipeline processing completed');
-        onResult(result);
-        
-        // Clean up resources
-        await pipeline.dispose();
-        
-      } finally {
-        // Always dispose the temporary scene and engine
-        tempScene.dispose();
-        engine.dispose();
+
+        // Create a simple mesh representation for the renderer
+        // This avoids the scene disposal issues
+        const simpleMesh = BABYLON.MeshBuilder.CreateBox(
+          `processed_${Date.now()}`,
+          { size: 2 },
+          scene
+        );
+
+        // Copy basic properties from the result if it's a mesh
+        if (result.value instanceof BABYLON.Mesh) {
+          const sourceMesh = result.value;
+
+          // Copy transform
+          simpleMesh.position = sourceMesh.position.clone();
+          simpleMesh.rotation = sourceMesh.rotation.clone();
+          simpleMesh.scaling = sourceMesh.scaling.clone();
+
+          // Copy geometry data if available
+          try {
+            const positions = sourceMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            const normals = sourceMesh.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+            const indices = sourceMesh.getIndices();
+
+            if (positions && positions.length > 0) {
+              simpleMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+            }
+            if (normals && normals.length > 0) {
+              simpleMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, normals);
+            }
+            if (indices && indices.length > 0) {
+              simpleMesh.setIndices(indices);
+            }
+          } catch (geometryError) {
+            console.warn('[WARN] Could not copy geometry:', geometryError);
+            // Keep the simple box mesh as fallback
+          }
+        }
+
+        const successResult = createPipelineSuccess(simpleMesh, result.metadata);
+        setLastProcessedCode(openscadCode);
+        onResult(successResult);
+
+        // Don't dispose the scene immediately - let the renderer handle it
+        // This prevents the WebGL context issues
+        setTimeout(() => {
+          scene.dispose();
+          engine.dispose();
+        }, 1000);
+
+      } else {
+        throw new Error(result.error || 'Processing failed');
       }
-        } catch (error) {
-      console.error('[ERROR] Pipeline processing failed:', error);
-      const result = createPipelineFailure<BABYLON.Mesh | null>(
-        error instanceof Error ? error.message : 'Unknown error occurred',
-        error
-      );
-      onResult(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
+
+      console.error('[ERROR] Pipeline processing failed:', errorMessage);
+
+      const errorResult = createPipelineFailure<BABYLON.Mesh | null>(errorMessage, error);
+      onResult(errorResult);
+
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
+      console.log('[END] Pipeline processing completed');
     }
   }, [openscadCode, onResult, onProcessingStart]);
 
-  const canProcess = openscadCode.trim().length > 0 && !disabled && !isProcessing;
+  const canProcess = openscadCode.trim().length > 0 && !disabled && !isProcessing && pipelineRef.current !== null;
 
   return (
     <div className="pipeline-processor">

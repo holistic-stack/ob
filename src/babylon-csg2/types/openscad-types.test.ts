@@ -14,7 +14,7 @@ import {
   isOpenSCADModuleCall,
   createSuccess,
   createFailure,
-  type OpenSCADPrimitive,
+  type OpenSCADPrimitiveNode,
   type OpenSCADTransform,
   type OpenSCADCSG,
   type OpenSCADModuleCall,
@@ -23,22 +23,22 @@ import {
 
 describe('[INIT] OpenSCAD Types', () => {
   const mockLocation = {
-    start: { line: 1, column: 0 },
-    end: { line: 1, column: 10 }
+    start: { line: 1, column: 0, offset: 0 },
+    end: { line: 1, column: 10, offset: 10 }
   };
 
   describe('Type Guards', () => {
     describe('isOpenSCADPrimitive', () => {
       it('[DEBUG] should identify valid primitive nodes', () => {
-        const cubeNode: OpenSCADPrimitive = {
+        const cubeNode: OpenSCADPrimitiveNode = {
           type: 'cube',
-          parameters: { size: [10, 10, 10] },
+          size: [10, 10, 10],
           location: mockLocation
         };
 
-        const sphereNode: OpenSCADPrimitive = {
+        const sphereNode: OpenSCADPrimitiveNode = {
           type: 'sphere',
-          parameters: { radius: 5 },
+          radius: 5,
           location: mockLocation
         };
 
@@ -142,7 +142,9 @@ describe('[INIT] OpenSCAD Types', () => {
         const result = createSuccess(data);
 
         expect(result.success).toBe(true);
-        expect(result.data).toEqual(data);
+        if (result.success) {
+          expect(result.data).toEqual(data);
+        }
         expect(Object.isFrozen(result)).toBe(true);
       });
 
@@ -153,10 +155,10 @@ describe('[INIT] OpenSCAD Types', () => {
         const objectResult = createSuccess({ key: 'value' });
 
         expect(stringResult.success).toBe(true);
-        expect(stringResult.data).toBe('test');
-        expect(numberResult.data).toBe(123);
-        expect(arrayResult.data).toEqual([1, 2, 3]);
-        expect(objectResult.data).toEqual({ key: 'value' });
+        if (stringResult.success) expect(stringResult.data).toBe('test');
+        if (numberResult.success) expect(numberResult.data).toBe(123);
+        if (arrayResult.success) expect(arrayResult.data).toEqual([1, 2, 3]);
+        if (objectResult.success) expect(objectResult.data).toEqual({ key: 'value' });
       });
     });
 
@@ -166,7 +168,9 @@ describe('[INIT] OpenSCAD Types', () => {
         const result = createFailure(error);
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe(error);
+        if (!result.success) {
+          expect(result.error).toBe(error);
+        }
         expect(Object.isFrozen(result)).toBe(true);
       });
 
@@ -175,8 +179,8 @@ describe('[INIT] OpenSCAD Types', () => {
         const detailedError = createFailure('Detailed error message');
 
         expect(stringError.success).toBe(false);
-        expect(stringError.error).toBe('String error');
-        expect(detailedError.error).toBe('Detailed error message');
+        if (!stringError.success) expect(stringError.error).toBe('String error');
+        if (!detailedError.success) expect(detailedError.error).toBe('Detailed error message');
       });
     });
   });

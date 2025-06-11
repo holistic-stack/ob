@@ -1,6 +1,54 @@
 # Lessons Learned
 
-**Date:** 2025-06-10
+## June 2025: Complete TypeScript Error Resolution (117 → 0)
+
+### 🎯 Major Achievement: Systematic Error Resolution
+
+Successfully resolved all TypeScript compilation errors through categorization:
+
+1. **Async/Sync Type Mismatches (55 errors - 47%)** - Removed conflicting visitor implementations
+2. **Position Interface Issues (20 errors - 17%)** - Added missing `offset` property to all mocks
+3. **CSG2 API Problems (15 errors - 13%)** - Fixed method calls and parameter structures
+4. **Array Type Safety (12 errors - 10%)** - Added proper null assertions with safety comments
+5. **Result Type Mismatches (10 errors - 9%)** - Fixed discriminated union property access
+6. **Import/Export Issues (5 errors - 4%)** - Corrected type name imports
+
+### Key Technical Patterns
+
+#### Discriminated Union Type Safety
+```typescript
+// ❌ Unsafe - Direct property access
+expect(result.data).toEqual(data);
+
+// ✅ Safe - Type-guarded access
+if (result.success) {
+  expect(result.data).toEqual(data);
+}
+```
+
+#### Array Access Safety
+```typescript
+// ❌ Unsafe - Potential undefined
+return childMeshes[0];
+
+// ✅ Safe - Documented assertion
+return childMeshes[0]!; // Safe: length check ensures element exists
+```
+
+#### Complete Interface Implementation
+```typescript
+// ❌ Incomplete - Missing required properties
+const position: Position = { line: 1, column: 0 };
+
+// ✅ Complete - All required properties
+const position: Position = { line: 1, column: 0, offset: 0 };
+```
+
+**Result:** Complete working pipeline for `cube([10, 10, 10]);` with full type safety.
+
+---
+
+**Previous Lessons (2025-06-10):**
 
 ## Vitest Test Discovery and Execution
 

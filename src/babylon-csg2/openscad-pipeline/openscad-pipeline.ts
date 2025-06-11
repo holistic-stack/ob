@@ -154,7 +154,7 @@ export class OpenScadPipeline {
       await this.visitor.initializeCSG2();
 
       // Step 3: Process AST nodes to generate meshes
-      const visitResult = await this.processASTNodes(parseResult.value);
+      const visitResult = await this.processASTNodes([...parseResult.value]); // Convert readonly to mutable
       if (!visitResult.success) {
         return visitResult;
       }
@@ -162,7 +162,7 @@ export class OpenScadPipeline {
       const endTime = performance.now();
       
       // Step 4: Generate metadata if enabled
-      const metadata = this.options.enableMetrics ? {
+      const metadata: PipelineMetadata | undefined = this.options.enableMetrics ? {
         parseTimeMs: parseTime - startTime,
         visitTimeMs: endTime - parseTime,
         totalTimeMs: endTime - startTime,
@@ -171,11 +171,11 @@ export class OpenScadPipeline {
       } : undefined;
 
       this.log('[END] Pipeline processing completed successfully');
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         value: visitResult.value,
-        metadata 
+        ...(metadata && { metadata })
       };
 
     } catch (error) {
@@ -229,9 +229,9 @@ export class OpenScadPipeline {
         return { success: true, value: null };
       }
 
-      const firstNode = astNodes[0];
+      const firstNode = astNodes[0]!; // Safe access - length check ensures element exists
       this.log('[DEBUG] Processing first AST node of type:', firstNode.type);
-      
+
       const mesh = this.visitor.visit(firstNode);
       
       if (mesh) {

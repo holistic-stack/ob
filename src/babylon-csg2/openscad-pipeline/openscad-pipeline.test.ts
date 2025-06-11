@@ -71,7 +71,9 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode('cube([1,1,1]);', scene);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('not initialized');
+      if (!result.success) {
+        expect(result.error).toContain('not initialized');
+      }
       console.log('[DEBUG] Processing without initialization test passed');
     });
   });
@@ -88,12 +90,14 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
-      expect(result.value?.name).toContain('cube_');
-      
-      if (result.metadata) {
-        expect(result.metadata.nodeCount).toBeGreaterThan(0);
-        expect(result.metadata.totalTimeMs).toBeGreaterThan(0);
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+        expect(result.value?.name).toContain('cube_');
+
+        if (result.metadata) {
+          expect(result.metadata.nodeCount).toBeGreaterThan(0);
+          expect(result.metadata.totalTimeMs).toBeGreaterThan(0);
+        }
       }
       
       console.log('[DEBUG] Simple cube processing test passed');
@@ -106,8 +110,10 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
-      expect(result.value?.name).toContain('sphere_');
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+        expect(result.value?.name).toContain('sphere_');
+      }
       console.log('[DEBUG] Simple sphere processing test passed');
     });
 
@@ -118,8 +124,10 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
-      expect(result.value?.name).toContain('cylinder_');
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+        expect(result.value?.name).toContain('cylinder_');
+      }
       console.log('[DEBUG] Simple cylinder processing test passed');
     });
   });
@@ -142,7 +150,9 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      }
       console.log('[DEBUG] Union operation processing test passed');
     });
 
@@ -159,7 +169,9 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      }
       console.log('[DEBUG] Difference operation processing test passed');
     });
 
@@ -176,7 +188,9 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+      }
       console.log('[DEBUG] Intersection operation processing test passed');
     });
   });
@@ -198,13 +212,15 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.value).toBeInstanceOf(BABYLON.Mesh);
-      
-      // Check if translation was applied
-      if (result.value) {
-        expect(result.value.position.x).toBe(5);
-        expect(result.value.position.y).toBe(10);
-        expect(result.value.position.z).toBe(15);
+      if (result.success) {
+        expect(result.value).toBeInstanceOf(BABYLON.Mesh);
+
+        // Check if translation was applied
+        if (result.value) {
+          expect(result.value.position.x).toBe(5);
+          expect(result.value.position.y).toBe(10);
+          expect(result.value.position.z).toBe(15);
+        }
       }
       
       console.log('[DEBUG] Translate operation processing test passed');
@@ -261,14 +277,16 @@ describe('OpenScadPipeline Integration Tests', () => {
       const result = await pipeline.processOpenScadCode(openscadCode, scene);
       
       expect(result.success).toBe(true);
-      expect(result.metadata).toBeDefined();
-      
-      if (result.metadata) {
-        expect(result.metadata.parseTimeMs).toBeGreaterThanOrEqual(0);
-        expect(result.metadata.visitTimeMs).toBeGreaterThanOrEqual(0);
-        expect(result.metadata.totalTimeMs).toBeGreaterThanOrEqual(0);
-        expect(result.metadata.nodeCount).toBeGreaterThan(0);
-        expect(result.metadata.meshCount).toBeGreaterThanOrEqual(0);
+      if (result.success) {
+        expect(result.metadata).toBeDefined();
+
+        if (result.metadata) {
+          expect(result.metadata.parseTimeMs).toBeGreaterThanOrEqual(0);
+          expect(result.metadata.visitTimeMs).toBeGreaterThanOrEqual(0);
+          expect(result.metadata.totalTimeMs).toBeGreaterThanOrEqual(0);
+          expect(result.metadata.nodeCount).toBeGreaterThan(0);
+          expect(result.metadata.meshCount).toBeGreaterThanOrEqual(0);
+        }
       }
       
       console.log('[DEBUG] Pipeline metrics test passed');
