@@ -172,14 +172,12 @@ export class OpenScadAstVisitorCSG2 {
     if (childMeshes.length === 1) {
       console.log('[DEBUG] Single child mesh, returning as-is');
       return childMeshes[0];
-    }
-
-    // Perform CSG2 union operations
+    }    // Perform CSG2 union operations
     try {
-      let baseCsg = await BABYLON.CSG2.fromMesh(childMeshes[0]);
+      let baseCsg = await BABYLON.CSG2.FromMesh(childMeshes[0]);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = await BABYLON.CSG2.fromMesh(childMeshes[i]);
+        const childCsg = await BABYLON.CSG2.FromMesh(childMeshes[i]);
         const newBaseCsg = await baseCsg.union(childCsg);
         
         // Dispose previous CSG objects to prevent memory leaks
@@ -234,14 +232,12 @@ export class OpenScadAstVisitorCSG2 {
       // Dispose any created meshes
       childMeshes.forEach(mesh => mesh.dispose());
       return null;
-    }
-
-    // Perform CSG2 difference operations
+    }    // Perform CSG2 difference operations
     try {
-      let baseCsg = await BABYLON.CSG2.fromMesh(childMeshes[0]);
+      let baseCsg = await BABYLON.CSG2.FromMesh(childMeshes[0]);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = await BABYLON.CSG2.fromMesh(childMeshes[i]);
+        const childCsg = await BABYLON.CSG2.FromMesh(childMeshes[i]);
         const newBaseCsg = await baseCsg.subtract(childCsg);
         
         // Dispose previous CSG objects to prevent memory leaks
@@ -296,14 +292,12 @@ export class OpenScadAstVisitorCSG2 {
       // Dispose any created meshes
       childMeshes.forEach(mesh => mesh.dispose());
       return null;
-    }
-
-    // Perform CSG2 intersection operations
+    }    // Perform CSG2 intersection operations
     try {
-      let baseCsg = await BABYLON.CSG2.fromMesh(childMeshes[0]);
+      let baseCsg = await BABYLON.CSG2.FromMesh(childMeshes[0]);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = await BABYLON.CSG2.fromMesh(childMeshes[i]);
+        const childCsg = await BABYLON.CSG2.FromMesh(childMeshes[i]);
         const newBaseCsg = await baseCsg.intersect(childCsg);
         
         // Dispose previous CSG objects to prevent memory leaks

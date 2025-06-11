@@ -10,7 +10,7 @@ import { NullEngine, Scene, StandardMaterial, Color3 } from '@babylonjs/core';
 import { PrimitiveConverter } from './primitive-converter.js';
 import type { ConversionContext } from '../../types/converter-types.js';
 import { createConversionContext } from '../../types/converter-types.js';
-import type { OpenSCADPrimitiveNode } from '../../types/openscad-types.js';
+import type { OpenSCADPrimitiveNode, SphereNode, CubeNode, CylinderNode } from '../../types/openscad-types.js';
 
 describe('[INIT] PrimitiveConverter', () => {
   let engine: NullEngine;
@@ -73,12 +73,11 @@ describe('[INIT] PrimitiveConverter', () => {
       };
 
       expect(converter.canConvert(sphereNode)).toBe(true);
-    });
-
-    it('[DEBUG] should identify cylinder nodes', () => {
+    });    it('[DEBUG] should identify cylinder nodes', () => {
       const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
-        parameters: { height: 10, radius: 3 },
+        h: 10,
+        r: 3,
         location: mockLocation
       };
 
@@ -96,19 +95,17 @@ describe('[INIT] PrimitiveConverter', () => {
     });
   });
 
-  describe('Cube Conversion', () => {
-    it('[DEBUG] should convert cube with array size', async () => {
+  describe('Cube Conversion', () => {    it('[DEBUG] should convert cube with array size', async () => {
       const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
-        parameters: { size: [10, 20, 30] },
+        size: [10, 20, 30], // Vector3D
         location: mockLocation
       };
 
       const result = await converter.convert(cubeNode, context);
 
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.name).toContain('cube_');
+      if (result.success) {        expect(result.data.name).toContain('cube_');
         expect(result.data.material).toBe(defaultMaterial);
         // Note: In NullEngine, we can't easily test mesh dimensions
         // but we can verify the mesh was created successfully
@@ -118,7 +115,7 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should convert cube with single size value', async () => {
       const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
-        parameters: { size: 15 },
+        size: 15,
         location: mockLocation
       };
 
@@ -133,7 +130,7 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should use default size for cube without parameters', async () => {
       const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
-        parameters: {},
+        size: 1, // Default size
         location: mockLocation
       };
 
@@ -148,7 +145,7 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should handle invalid cube parameters', async () => {
       const cubeNode: OpenSCADPrimitiveNode = {
         type: 'cube',
-        parameters: { size: 'invalid' },
+        size: 'invalid' as any, // Invalid size type
         location: mockLocation
       };
 
@@ -166,7 +163,7 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should convert sphere with radius', async () => {
       const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
-        parameters: { radius: 5 },
+        radius: 5,
         location: mockLocation
       };
 
@@ -179,10 +176,10 @@ describe('[INIT] PrimitiveConverter', () => {
       }
     });
 
-    it('[DEBUG] should convert sphere with r parameter', async () => {
+    it('[DEBUG] should convert sphere with diameter', async () => {
       const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
-        parameters: { r: 3 },
+        diameter: 10,
         location: mockLocation
       };
 
@@ -197,7 +194,6 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should use default radius for sphere without parameters', async () => {
       const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
-        parameters: {},
         location: mockLocation
       };
 
@@ -209,7 +205,7 @@ describe('[INIT] PrimitiveConverter', () => {
     it('[DEBUG] should handle invalid sphere radius', async () => {
       const sphereNode: OpenSCADPrimitiveNode = {
         type: 'sphere',
-        parameters: { radius: -5 },
+        radius: -5,
         location: mockLocation
       };
 
@@ -222,11 +218,11 @@ describe('[INIT] PrimitiveConverter', () => {
     });
   });
 
-  describe('Cylinder Conversion', () => {
-    it('[DEBUG] should convert cylinder with height and radius', async () => {
+  describe('Cylinder Conversion', () => {    it('[DEBUG] should convert cylinder with height and radius', async () => {
       const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
-        parameters: { height: 10, radius: 3 },
+        h: 10,
+        r: 3,
         location: mockLocation
       };
 
@@ -237,36 +233,32 @@ describe('[INIT] PrimitiveConverter', () => {
         expect(result.data.name).toContain('cylinder_');
         expect(result.data.material).toBe(defaultMaterial);
       }
-    });
-
-    it('[DEBUG] should convert cylinder with h and r parameters', async () => {
+    });    it('[DEBUG] should convert cylinder with h and r parameters', async () => {
       const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
-        parameters: { h: 8, r: 2 },
+        h: 8,
+        r: 2,
         location: mockLocation
       };
 
       const result = await converter.convert(cylinderNode, context);
 
       expect(result.success).toBe(true);
-    });
-
-    it('[DEBUG] should use default values for cylinder without parameters', async () => {
+    });    it('[DEBUG] should use default values for cylinder without parameters', async () => {
       const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
-        parameters: {},
+        h: 1, // minimal required height
         location: mockLocation
       };
 
       const result = await converter.convert(cylinderNode, context);
 
       expect(result.success).toBe(true);
-    });
-
-    it('[DEBUG] should handle invalid cylinder parameters', async () => {
+    });    it('[DEBUG] should handle invalid cylinder parameters', async () => {
       const cylinderNode: OpenSCADPrimitiveNode = {
         type: 'cylinder',
-        parameters: { height: -5, radius: 3 },
+        h: -5,
+        r: 3,
         location: mockLocation
       };
 
@@ -279,13 +271,11 @@ describe('[INIT] PrimitiveConverter', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('[DEBUG] should handle unsupported primitive types', async () => {
+  describe('Error Handling', () => {    it('[DEBUG] should handle unsupported primitive types', async () => {
       const unsupportedNode: OpenSCADPrimitiveNode = {
-        type: 'text' as any,
-        parameters: { text: 'hello' },
+        type: 'unsupported' as any,
         location: mockLocation
-      };
+      } as any;
 
       const result = await converter.convert(unsupportedNode, context);
 

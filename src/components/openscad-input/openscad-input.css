@@ -1,0 +1,165 @@
+/**
+ * OpenSCAD Input Component Styles
+ */
+
+.openscad-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.openscad-input-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.openscad-input-label {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  color: var(--text-color);
+}
+
+.example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.example-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-right: var(--spacing-sm);
+}
+
+.example-button {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--secondary-color);
+  border-radius: calc(var(--border-radius) * 0.75);
+  transition: all 0.2s ease;
+}
+
+.example-button:hover:not(:disabled) {
+  background-color: var(--secondary-color);
+  color: white;
+  border-color: var(--secondary-color);
+}
+
+.openscad-textarea {
+  width: 100%;
+  min-height: 300px;
+  resize: vertical;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  background-color: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  transition: border-color 0.2s ease;
+}
+
+.openscad-textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1);
+}
+
+.openscad-textarea.valid {
+  border-color: var(--success-color);
+}
+
+.openscad-textarea.invalid {
+  border-color: var(--error-color);
+}
+
+.openscad-textarea.invalid:focus {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.validation-errors {
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--error-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+}
+
+.validation-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--error-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.validation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.validation-error {
+  font-size: var(--font-size-sm);
+  color: var(--error-color);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.validation-error:last-child {
+  border-bottom: none;
+}
+
+.validation-error::before {
+  content: "• ";
+  margin-right: var(--spacing-xs);
+}
+
+.input-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.char-count {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: 500;
+}
+
+.status-indicator.valid {
+  color: var(--success-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .example-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .example-label {
+    margin-right: 0;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .openscad-textarea {
+    min-height: 200px;
+    font-size: 14px;
+  }
+  
+  .input-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}

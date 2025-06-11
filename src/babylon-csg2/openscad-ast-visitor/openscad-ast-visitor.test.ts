@@ -70,7 +70,7 @@ describe('OpenScadAstVisitor with CSG2', () => {
         type: 'cube',
         size: [10, 20, 30],
         center: false,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 20 } }
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 20, offset: 20 } }
       };
 
       const mesh = visitor.visit(cubeNode);
@@ -86,7 +86,7 @@ describe('OpenScadAstVisitor with CSG2', () => {
       const sphereNode: SphereNode = {
         type: 'sphere',
         radius: 5,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 15 } }
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 15, offset: 15 } }
       };
 
       const mesh = visitor.visit(sphereNode);
@@ -108,7 +108,7 @@ describe('OpenScadAstVisitor with CSG2', () => {
       const unionNode: UnionNode = {
         type: 'union',
         children: [],
-        location: { start: { line: 1, column: 1 }, end: { line: 3, column: 1 } }
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 3, column: 1, offset: 40 } }
       };
 
       const mesh = visitor.visit(unionNode);

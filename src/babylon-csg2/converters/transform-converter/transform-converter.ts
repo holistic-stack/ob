@@ -15,7 +15,13 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { 
+  ASTNode, 
+  TranslateNode, 
+  RotateNode, 
+  ScaleNode,
+  Vector3D
+} from '@holistic-stack/openscad-parser';
 import type {
   ConversionContext,
   MeshConversionResult,
@@ -27,10 +33,8 @@ import {
   createConverterFailure,
   createConversionError
 } from '../../types/converter-types.js';
-import {
-  isOpenSCADTransformation,
-  type OpenSCADTransformationNode
-} from '../../types/openscad-types.js';
+
+export type TransformASTNode = TranslateNode | RotateNode | ScaleNode;
 
 /**
  * Converter for OpenSCAD transformation operations to Babylon.js mesh transformations
@@ -40,21 +44,20 @@ import {
  * - rotate([x, y, z]) → mesh.rotation  
  * - scale([x, y, z]) → mesh.scaling
  */
-export class TransformConverter implements OpenSCADConverter<OpenSCADTransformationNode> {
+export class TransformConverter implements OpenSCADConverter<TransformASTNode> {
   readonly priority = 200; // Lower priority than primitives, higher than CSG operations
 
   /**
    * [DEBUG] Type guard to check if node can be converted by this converter
-   */
-  canConvert(node: ASTNode): node is OpenSCADTransformationNode {
+   */  canConvert(node: ASTNode): node is TransformASTNode {
     console.log('[DEBUG] TransformConverter checking node type:', node.type);
-    return isOpenSCADTransformation(node);
+    return node.type === 'translate' || node.type === 'rotate' || node.type === 'scale';
   }
 
   /**
    * [DEBUG] Convert OpenSCAD transformation to transformed Babylon.js mesh
    */
-  async convert(node: OpenSCADTransformationNode, context: ConversionContext): Promise<MeshConversionResult> {
+  async convert(node: TransformASTNode, context: ConversionContext): Promise<MeshConversionResult> {
     console.log('[INIT] Converting transformation:', node.type);
     
     try {
@@ -64,16 +67,17 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
         case 'rotate':
           return this.convertRotate(node, context);
         case 'scale':
-          return this.convertScale(node, context);
-        default:
-          console.log('[WARN] Unsupported transformation type:', node.type);
+          return this.convertScale(node, context);        default: {
+          const unknownNode = node as ASTNode;
+          console.log('[WARN] Unsupported transformation type:', unknownNode.type);
           return createConverterFailure(
             createConversionError(
               'unsupported_operation',
-              `Unsupported transformation type: ${node.type}`,
-              { location: node.location, astNode: node }
+              `Unsupported transformation type: ${unknownNode.type}`,
+              { ...(unknownNode.location && { location: unknownNode.location }), astNode: unknownNode }
             )
           );
+        }
       }
     } catch (error) {
       console.log('[ERROR] Failed to convert transformation:', error);
@@ -81,7 +85,11 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
         createConversionError(
           'babylon_error',
           `Failed to apply transformation: ${error instanceof Error ? error.message : String(error)}`,
-          { location: node.location, astNode: node, cause: error instanceof Error ? error : undefined }
+          { 
+            ...(node.location && { location: node.location }), 
+            astNode: node, 
+            ...(error instanceof Error && { cause: error })
+          }
         )
       );
     }
@@ -89,38 +97,47 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
 
   /**
    * [DEBUG] Convert OpenSCAD translate to Babylon.js mesh with position
-   */
-  private async convertTranslate(node: OpenSCADTransformationNode, context: ConversionContext): Promise<MeshConversionResult> {
-    console.log('[DEBUG] Converting translate with parameters:', node.parameters);
-    
-    // First, convert the child node to a mesh
+   */  private async convertTranslate(node: TranslateNode, context: ConversionContext): Promise<MeshConversionResult> {
+    console.log('[DEBUG] Converting translate with vector:', node.v);
+      // First, convert the child node to a mesh
     if (!node.children || node.children.length === 0) {
       return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Translate operation must have at least one child',
-          { location: node.location, astNode: node }
+          { ...(node.location && { location: node.location }), astNode: node }
         )
       );
     }
 
     // For now, handle single child - later we'll implement multi-child union
     const childNode = node.children[0];
+    if (!childNode) {
+      return createConverterFailure(
+        createConversionError(
+          'invalid_parameters',
+          'Translate operation child node is undefined',
+          { ...(node.location && { location: node.location }), astNode: node }
+        )
+      );
+    }
+    
     const childResult = await this.convertChild(childNode, context);
     
     if (!childResult.success) {
       return childResult;
-    }
-
-    const mesh = childResult.data;
-    const translation = this.extractTranslation(node.parameters);
+    }    const mesh = childResult.data;
+    const translation = this.extractTranslation(node);
     
     if (!translation) {
       return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid or missing translation vector',
-          { location: node.location, astNode: node }
+          { 
+            ...(node.location && { location: node.location }),
+            astNode: node 
+          }
         )
       );
     }
@@ -131,12 +148,11 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
 
     return createConverterSuccess(mesh);
   }
-
   /**
    * [DEBUG] Convert OpenSCAD rotate to Babylon.js mesh with rotation
    */
-  private async convertRotate(node: OpenSCADTransformationNode, context: ConversionContext): Promise<MeshConversionResult> {
-    console.log('[DEBUG] Converting rotate with parameters:', node.parameters);
+  private async convertRotate(node: RotateNode, context: ConversionContext): Promise<MeshConversionResult> {
+    console.log('[DEBUG] Converting rotate with angle:', node.a, 'axis:', node.v);
     
     // First, convert the child node to a mesh
     if (!node.children || node.children.length === 0) {
@@ -144,12 +160,21 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
         createConversionError(
           'invalid_parameters',
           'Rotate operation must have at least one child',
-          { location: node.location, astNode: node }
+          { ...(node.location && { location: node.location }), astNode: node }
+        )
+      );    }
+
+    const childNode = node.children[0];
+    if (!childNode) {
+      return createConverterFailure(
+        createConversionError(
+          'invalid_parameters',
+          'Rotate operation child node is undefined',
+          { ...(node.location && { location: node.location }), astNode: node }
         )
       );
     }
-
-    const childNode = node.children[0];
+    
     const childResult = await this.convertChild(childNode, context);
     
     if (!childResult.success) {
@@ -157,14 +182,14 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
     }
 
     const mesh = childResult.data;
-    const rotation = this.extractRotation(node.parameters);
+    const rotation = this.extractRotation(node.a, node.v);
     
     if (!rotation) {
       return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid or missing rotation vector',
-          { location: node.location, astNode: node }
+          { ...(node.location && { location: node.location }), astNode: node }
         )
       );
     }
@@ -176,25 +201,33 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
 
     return createConverterSuccess(mesh);
   }
-
   /**
    * [DEBUG] Convert OpenSCAD scale to Babylon.js mesh with scaling
    */
-  private async convertScale(node: OpenSCADTransformationNode, context: ConversionContext): Promise<MeshConversionResult> {
-    console.log('[DEBUG] Converting scale with parameters:', node.parameters);
-    
-    // First, convert the child node to a mesh
+  private async convertScale(node: ScaleNode, context: ConversionContext): Promise<MeshConversionResult> {
+    console.log('[DEBUG] Converting scale with vector:', node.v);
+      // First, convert the child node to a mesh
     if (!node.children || node.children.length === 0) {
       return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Scale operation must have at least one child',
-          { location: node.location, astNode: node }
+          { ...(node.location && { location: node.location }), astNode: node }
         )
       );
     }
 
     const childNode = node.children[0];
+    if (!childNode) {
+      return createConverterFailure(
+        createConversionError(
+          'invalid_parameters',
+          'Scale operation child node is undefined',
+          { ...(node.location && { location: node.location }), astNode: node }
+        )
+      );
+    }
+    
     const childResult = await this.convertChild(childNode, context);
     
     if (!childResult.success) {
@@ -202,14 +235,14 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
     }
 
     const mesh = childResult.data;
-    const scaling = this.extractScaling(node.parameters);
+    const scaling = this.extractScaling(node.v);
     
     if (!scaling) {
       return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid or missing scaling vector',
-          { location: node.location, astNode: node }
+          { ...(node.location && { location: node.location }), astNode: node }
         )
       );
     }
@@ -238,12 +271,11 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
       )
     );
   }
-
   /**
-   * Extract translation vector from parameters
+   * Extract translation vector from TranslateNode
    */
-  private extractTranslation(parameters: Record<string, unknown>): [number, number, number] | null {
-    const v = parameters.v;
+  private extractTranslation(node: TranslateNode): [number, number, number] | null {
+    const v = node.v;
     
     if (Array.isArray(v) && v.length >= 3) {
       const x = typeof v[0] === 'number' ? v[0] : 0;
@@ -254,13 +286,11 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
     
     return [0, 0, 0]; // Default to no translation
   }
-
   /**
-   * Extract rotation vector from parameters
+   * Extract rotation vector from RotateNode properties
    */
-  private extractRotation(parameters: Record<string, unknown>): [number, number, number] | null {
-    const a = parameters.a;
-    
+  private extractRotation(a: number | Vector3D, v?: Vector3D): [number, number, number] | null {
+    // If 'a' is a vector, it represents [x, y, z] rotation angles
     if (Array.isArray(a) && a.length >= 3) {
       const x = typeof a[0] === 'number' ? a[0] : 0;
       const y = typeof a[1] === 'number' ? a[1] : 0;
@@ -268,30 +298,38 @@ export class TransformConverter implements OpenSCADConverter<OpenSCADTransformat
       return [x, y, z];
     }
     
-    // Handle single angle rotation around Z-axis
+    // Handle single angle rotation
     if (typeof a === 'number') {
+      // If axis vector is provided, calculate rotation around that axis
+      if (v && Array.isArray(v) && v.length >= 3) {
+        // For now, simplify by applying rotation to the axis with the largest component
+        const absX = Math.abs(v[0]);
+        const absY = Math.abs(v[1]);
+        const absZ = Math.abs(v[2]);
+        
+        if (absX >= absY && absX >= absZ) {
+          return [a, 0, 0];  // Rotate around X-axis
+        } else if (absY >= absZ) {
+          return [0, a, 0];  // Rotate around Y-axis
+        } else {
+          return [0, 0, a];  // Rotate around Z-axis
+        }
+      }
+      // Default to Z-axis rotation for single angle
       return [0, 0, a];
     }
     
     return [0, 0, 0]; // Default to no rotation
   }
-
   /**
-   * Extract scaling vector from parameters
+   * Extract scaling vector from ScaleNode properties
    */
-  private extractScaling(parameters: Record<string, unknown>): [number, number, number] | null {
-    const v = parameters.v;
-    
+  private extractScaling(v: Vector3D): [number, number, number] | null {
     if (Array.isArray(v) && v.length >= 3) {
       const x = typeof v[0] === 'number' ? v[0] : 1;
       const y = typeof v[1] === 'number' ? v[1] : 1;
       const z = typeof v[2] === 'number' ? v[2] : 1;
       return [x, y, z];
-    }
-    
-    // Handle uniform scaling
-    if (typeof v === 'number' && v > 0) {
-      return [v, v, v];
     }
     
     return [1, 1, 1]; // Default to no scaling

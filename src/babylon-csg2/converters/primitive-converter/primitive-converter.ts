@@ -64,24 +64,29 @@ export class PrimitiveConverter implements OpenSCADConverter<OpenSCADPrimitiveNo
         case 'sphere':
           return this.convertSphere(node, context);
         case 'cylinder':
-          return this.convertCylinder(node, context);
-        default:
-          console.log('[WARN] Unsupported primitive type:', node.type);
+          return this.convertCylinder(node, context);        default:
+          console.log('[WARN] Unsupported primitive type:', (node as any).type);
           return createConverterFailure(
             createConversionError(
               'unsupported_operation',
-              `Unsupported primitive type: ${node.type}`,
-              { location: node.location, astNode: node }
+              `Unsupported primitive type: ${(node as any).type}`,
+              { 
+                ...((node as any).location && { location: (node as any).location }),
+                astNode: node 
+              }
             )
           );
       }
     } catch (error) {
-      console.log('[ERROR] Failed to convert primitive:', error);
-      return createConverterFailure(
+      console.log('[ERROR] Failed to convert primitive:', error);      return createConverterFailure(
         createConversionError(
           'babylon_error',
           `Failed to create Babylon.js mesh: ${error instanceof Error ? error.message : String(error)}`,
-          { location: node.location, astNode: node, cause: error instanceof Error ? error : undefined }
+          { 
+            ...(node.location && { location: node.location }),
+            astNode: node,
+            ...(error instanceof Error && { cause: error })
+          }
         )
       );
     }
@@ -89,17 +94,18 @@ export class PrimitiveConverter implements OpenSCADConverter<OpenSCADPrimitiveNo
 
   /**
    * [DEBUG] Convert OpenSCAD cube to Babylon.js box mesh
-   */
-  private convertCube(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
-    console.log('[DEBUG] Converting cube with parameters:', node.parameters);
+   */  private convertCube(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
+    console.log('[DEBUG] Converting cube with size:', (node as any).size);
     
-    const size = this.extractCubeSize(node.parameters);
-    if (!size) {
-      return createConverterFailure(
+    const size = this.extractCubeSize(node as any);
+    if (!size) {      return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid cube size parameters',
-          { location: node.location, astNode: node }
+          { 
+            ...(node.location && { location: node.location }),
+            astNode: node 
+          }
         )
       );
     }
@@ -123,17 +129,18 @@ export class PrimitiveConverter implements OpenSCADConverter<OpenSCADPrimitiveNo
 
   /**
    * [DEBUG] Convert OpenSCAD sphere to Babylon.js sphere mesh
-   */
-  private convertSphere(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
-    console.log('[DEBUG] Converting sphere with parameters:', node.parameters);
+   */  private convertSphere(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
+    console.log('[DEBUG] Converting sphere with properties:', node);
     
-    const radius = this.extractSphereRadius(node.parameters);
-    if (radius === null) {
-      return createConverterFailure(
+    const radius = this.extractSphereRadius(node as any);
+    if (radius === null) {      return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid sphere radius parameter',
-          { location: node.location, astNode: node }
+          { 
+            ...(node.location && { location: node.location }),
+            astNode: node 
+          }
         )
       );
     }
@@ -156,17 +163,18 @@ export class PrimitiveConverter implements OpenSCADConverter<OpenSCADPrimitiveNo
 
   /**
    * [DEBUG] Convert OpenSCAD cylinder to Babylon.js cylinder mesh
-   */
-  private convertCylinder(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
-    console.log('[DEBUG] Converting cylinder with parameters:', node.parameters);
+   */  private convertCylinder(node: OpenSCADPrimitiveNode, context: ConversionContext): MeshConversionResult {
+    console.log('[DEBUG] Converting cylinder with properties:', node);
     
-    const { height, radius } = this.extractCylinderParams(node.parameters);
-    if (height === null || radius === null) {
-      return createConverterFailure(
+    const { height, radius } = this.extractCylinderParams(node as any);
+    if (height === null || radius === null) {      return createConverterFailure(
         createConversionError(
           'invalid_parameters',
           'Invalid cylinder parameters',
-          { location: node.location, astNode: node }
+          { 
+            ...(node.location && { location: node.location }),
+            astNode: node 
+          }
         )
       );
     }
@@ -186,54 +194,58 @@ export class PrimitiveConverter implements OpenSCADConverter<OpenSCADPrimitiveNo
 
     console.log('[DEBUG] Created cylinder mesh with height:', height, 'radius:', radius);
     return createConverterSuccess(mesh);
-  }
-
-  /**
-   * [DEBUG] Extract cube size from parameters
+  }  /**
+   * [DEBUG] Extract cube size from CubeNode properties
    */
-  private extractCubeSize(parameters: Readonly<Record<string, unknown>>): readonly [number, number, number] | null {
-    const size = parameters.size;
+  private extractCubeSize(node: any): readonly [number, number, number] | null {
+    const size = node.size;
     
-    if (Array.isArray(size) && size.length === 3 && size.every(v => typeof v === 'number')) {
-      return [size[0], size[1], size[2]] as const;
+    if (Array.isArray(size) && size.length === 3) {
+      const [x, y, z] = size;
+      if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
+        return [x, y, z] as const;
+      }
     }
     
     if (typeof size === 'number') {
       return [size, size, size] as const;
     }
     
-    // Default cube size if no parameters
+    // Default cube size if no size specified
     if (!size) {
       return [1, 1, 1] as const;
     }
     
     return null;
   }
-
   /**
-   * [DEBUG] Extract sphere radius from parameters
+   * [DEBUG] Extract sphere radius from SphereNode properties
    */
-  private extractSphereRadius(parameters: Readonly<Record<string, unknown>>): number | null {
-    const radius = parameters.radius || parameters.r;
+  private extractSphereRadius(node: any): number | null {
+    const radius = node.radius;
+    const diameter = node.diameter;
     
     if (typeof radius === 'number' && radius > 0) {
       return radius;
     }
     
-    // Default sphere radius if no parameters
-    if (!radius) {
+    if (typeof diameter === 'number' && diameter > 0) {
+      return diameter / 2;
+    }
+    
+    // Default sphere radius if no radius/diameter specified
+    if (!radius && !diameter) {
       return 1;
     }
     
     return null;
   }
-
   /**
-   * [DEBUG] Extract cylinder parameters
+   * [DEBUG] Extract cylinder parameters from CylinderNode properties
    */
-  private extractCylinderParams(parameters: Readonly<Record<string, unknown>>): { height: number | null; radius: number | null } {
-    const height = parameters.height || parameters.h;
-    const radius = parameters.radius || parameters.r;
+  private extractCylinderParams(node: any): { height: number | null; radius: number | null } {
+    const height = node.h;
+    const radius = node.r || node.radius;
     
     return {
       height: typeof height === 'number' && height > 0 ? height : (height === undefined ? 1 : null),

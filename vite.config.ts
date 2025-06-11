@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/vitest-setup.ts'],
     testTimeout: 30000, // Longer timeout for CSG2 operations
     hookTimeout: 30000, // Longer timeout for setup hooks
