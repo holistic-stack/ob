@@ -16,6 +16,9 @@ import type {
   CubeNode,
   SphereNode,
   CylinderNode,
+  CircleNode,
+  SquareNode,
+  PolygonNode,
   UnionNode,
   DifferenceNode,
   IntersectionNode,
@@ -37,6 +40,9 @@ import {
   isCubeNode,
   isSphereNode,
   isCylinderNode,
+  isCircleNode,
+  isSquareNode,
+  isPolygonNode,
   isUnionNode,
   isDifferenceNode,
   isIntersectionNode,
@@ -50,6 +56,9 @@ import {
   extractCubeSize,
   extractSphereRadius,
   extractCylinderParams,
+  extractCircleRadius,
+  extractSquareSize,
+  extractPolygonPoints,
   extractTranslationVector,
   extractScaleVector,
   isSpecialVariableAssignmentNode, // Added for $fa, $fs, $fn
@@ -168,6 +177,7 @@ export class OpenScadAstVisitor {
     console.log(`[DEBUG] Visiting node type: ${node.type}`);
 
     // Use type guards for safe dispatching
+    // 3D Primitives
     if (isCubeNode(node)) {
       return this.visitCube(node);
     }
@@ -177,6 +187,19 @@ export class OpenScadAstVisitor {
     if (isCylinderNode(node)) {
       return this.visitCylinder(node);
     }
+
+    // 2D Primitives
+    if (isCircleNode(node)) {
+      return this.visitCircle(node);
+    }
+    if (isSquareNode(node)) {
+      return this.visitSquare(node);
+    }
+    if (isPolygonNode(node)) {
+      return this.visitPolygon(node);
+    }
+
+    // CSG Operations
     if (isUnionNode(node)) {
       return this.visitUnion(node);
     }
@@ -186,6 +209,8 @@ export class OpenScadAstVisitor {
     if (isIntersectionNode(node)) {
       return this.visitIntersection(node);
     }
+
+    // Transformations
     if (isTranslateNode(node)) {
       return this.visitTranslate(node);
     }
@@ -195,6 +220,11 @@ export class OpenScadAstVisitor {
     if (isMirrorNode(node)) {
       return this.visitMirror(node);
     }
+    if (isScaleNode(node)) {
+      return this.visitScale(node);
+    }
+
+    // Module System
     if (isModuleInstantiationNode(node)) {
       return this.visitModuleInstantiation(node);
     }
@@ -203,13 +233,15 @@ export class OpenScadAstVisitor {
       console.log(`[DEBUG] Stored module definition: ${node.name.name}`);
       return null; // Module definitions don't produce meshes directly
     }
-    if (isScaleNode(node)) {
-      return this.visitScale(node);
-    } else if (isAssignmentNode(node)) {
+
+    // Variables and Control Flow
+    if (isAssignmentNode(node)) {
       return this.visitAssignment(node);
-    } else if (isSpecialVariableAssignmentNode(node)) { // Handle $fa, $fs, $fn
+    }
+    if (isSpecialVariableAssignmentNode(node)) { // Handle $fa, $fs, $fn
       return this.visitSpecialVariableAssignment(node);
-    } else if (isIfNode(node)) {
+    }
+    if (isIfNode(node)) {
       return this.visitIfNode(node);
     }
 
@@ -574,6 +606,73 @@ export class OpenScadAstVisitor {
     
     console.log(`[DEBUG] Creating cylinder with Babylon params:`, babylonParams, `center: ${center}`);
     return this.createCylinder(babylonParams, center, tessellationParams, node);
+  }
+
+  // ============================================================================
+  // 2D PRIMITIVE VISITOR METHODS
+  // ============================================================================
+
+  /**
+   * Visits a CircleNode and creates a Babylon.js 2D circle mesh.
+   * Uses the extractCircleRadius utility for safe parameter extraction.
+   * @param node The CircleNode to visit.
+   * @returns A Babylon.js mesh representing the 2D circle.
+   */
+  protected visitCircle(node: CircleNode): BABYLON.Mesh {
+    console.log('[INIT] Visiting CircleNode', node);
+
+    const radiusResult = extractCircleRadius(node);
+    if (!radiusResult.success) {
+      console.warn(`[WARN] Failed to extract circle radius: ${radiusResult.error}. Using default radius 1.`);
+      return this.createCircle(1, node);
+    }
+
+    const radius = radiusResult.value;
+    console.log(`[DEBUG] Creating circle with radius: ${radius}`);
+    return this.createCircle(radius, node);
+  }
+
+  /**
+   * Visits a SquareNode and creates a Babylon.js 2D square/rectangle mesh.
+   * Uses the extractSquareSize utility for safe parameter extraction.
+   * @param node The SquareNode to visit.
+   * @returns A Babylon.js mesh representing the 2D square/rectangle.
+   */
+  protected visitSquare(node: SquareNode): BABYLON.Mesh {
+    console.log('[INIT] Visiting SquareNode', node);
+
+    const sizeResult = extractSquareSize(node);
+    if (!sizeResult.success) {
+      console.warn(`[WARN] Failed to extract square size: ${sizeResult.error}. Using default size [1, 1].`);
+      return this.createSquare([1, 1], node.center ?? false, node);
+    }
+
+    const size = sizeResult.value;
+    const center = node.center ?? false;
+    console.log(`[DEBUG] Creating square with size: [${size.join(', ')}], center: ${center}`);
+    return this.createSquare(size, center, node);
+  }
+
+  /**
+   * Visits a PolygonNode and creates a Babylon.js 2D polygon mesh.
+   * Uses the extractPolygonPoints utility for safe parameter extraction.
+   * @param node The PolygonNode to visit.
+   * @returns A Babylon.js mesh representing the 2D polygon.
+   */
+  protected visitPolygon(node: PolygonNode): BABYLON.Mesh {
+    console.log('[INIT] Visiting PolygonNode', node);
+
+    const pointsResult = extractPolygonPoints(node);
+    if (!pointsResult.success) {
+      console.warn(`[WARN] Failed to extract polygon points: ${pointsResult.error}. Creating default triangle.`);
+      // Create a default triangle
+      const defaultPoints: readonly (readonly [number, number])[] = [[0, 0], [1, 0], [0.5, 1]];
+      return this.createPolygon(defaultPoints, node);
+    }
+
+    const points = pointsResult.value;
+    console.log(`[DEBUG] Creating polygon with ${points.length} points`);
+    return this.createPolygon(points, node);
   }
 
   /**
@@ -1231,5 +1330,130 @@ export class OpenScadAstVisitor {
     childMesh.position = new BABYLON.Vector3(translation[0], translation[1], translation[2]);
     console.log(`[DEBUG] Applied translation to mesh: ${childMesh.name}`);
     return childMesh;
+  }
+
+  // ============================================================================
+  // 2D PRIMITIVE HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Creates a Babylon.js 2D circle mesh using GroundBuilder.
+   * @param radius The radius of the circle
+   * @param node The CircleNode for naming and location
+   * @returns A Babylon.js mesh representing the 2D circle
+   */
+  private createCircle(radius: number, node: CircleNode): BABYLON.Mesh {
+    // Create a circular ground mesh using disc geometry
+    const circle = BABYLON.MeshBuilder.CreateDisc(
+      `circle_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+      {
+        radius: radius,
+        tessellation: 32 // Number of segments around the circle
+      },
+      this.scene
+    );
+
+    // Add a default material for visibility
+    if (!circle.material) {
+      const material = new BABYLON.StandardMaterial(`${circle.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.9, 0.7, 0.3); // Yellow-ish color for 2D shapes
+      material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+      circle.material = material;
+    }
+
+    console.log(`[DEBUG] Created circle mesh: ${circle.name} with radius ${radius}`);
+    return circle;
+  }
+
+  /**
+   * Creates a Babylon.js 2D square/rectangle mesh using GroundBuilder.
+   * @param size The size [width, height] of the square/rectangle
+   * @param center Whether to center the square at the origin
+   * @param node The SquareNode for naming and location
+   * @returns A Babylon.js mesh representing the 2D square/rectangle
+   */
+  private createSquare(size: readonly [number, number], center: boolean, node: SquareNode): BABYLON.Mesh {
+    const square = BABYLON.MeshBuilder.CreateGround(
+      `square_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+      {
+        width: size[0],
+        height: size[1]
+      },
+      this.scene
+    );
+
+    // OpenSCAD's default is center: false, placing one corner at the origin.
+    // Babylon's CreateGround defaults to center: true.
+    if (!center) {
+      square.position = new BABYLON.Vector3(size[0] / 2, 0, size[1] / 2);
+    }
+
+    // Add a default material for visibility
+    if (!square.material) {
+      const material = new BABYLON.StandardMaterial(`${square.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.7, 0.9, 0.3); // Light green color for 2D shapes
+      material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+      square.material = material;
+    }
+
+    console.log(`[DEBUG] Created square mesh: ${square.name} with size [${size.join(', ')}], center: ${center}`);
+    return square;
+  }
+
+  /**
+   * Creates a Babylon.js 2D polygon mesh from a set of points.
+   * @param points Array of 2D points defining the polygon
+   * @param node The PolygonNode for naming and location
+   * @returns A Babylon.js mesh representing the 2D polygon
+   */
+  private createPolygon(points: readonly (readonly [number, number])[], node: PolygonNode): BABYLON.Mesh {
+    try {
+      // Convert 2D points to Vector3 (with z=0 for 2D)
+      const vector3Points = points.map(point => new BABYLON.Vector3(point[0], 0, point[1]));
+
+      // Try to create polygon using ExtrudePolygon with minimal depth for 2D appearance
+      const polygon = BABYLON.MeshBuilder.ExtrudePolygon(
+        `polygon_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+        {
+          shape: vector3Points,
+          depth: 0.001 // Very small depth to create a 2D-like appearance
+        },
+        this.scene
+      );
+
+      // Add a default material for visibility
+      if (!polygon.material) {
+        const material = new BABYLON.StandardMaterial(`${polygon.name}_material`, this.scene);
+        material.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.9); // Light blue color for 2D shapes
+        material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        polygon.material = material;
+      }
+
+      console.log(`[DEBUG] Created polygon mesh: ${polygon.name} with ${points.length} points`);
+      return polygon;
+    } catch (error) {
+      console.warn(`[WARN] Failed to create polygon with ExtrudePolygon: ${error}. Creating fallback ground mesh.`);
+
+      // Fallback: Create a simple ground mesh as a placeholder
+      const fallbackPolygon = BABYLON.MeshBuilder.CreateGround(
+        `polygon_fallback_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+        {
+          width: 2,
+          height: 2
+        },
+        this.scene
+      );
+
+      // Add a default material for visibility
+      if (!fallbackPolygon.material) {
+        const material = new BABYLON.StandardMaterial(`${fallbackPolygon.name}_material`, this.scene);
+        material.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.9); // Light blue color for 2D shapes
+        material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        fallbackPolygon.material = material;
+      }
+
+      console.log(`[DEBUG] Created fallback polygon mesh: ${fallbackPolygon.name}`);
+      return fallbackPolygon;
+    }
   }
 }

@@ -16,6 +16,9 @@ import type {
   CubeNode,
   SphereNode,
   CylinderNode,
+  CircleNode,
+  SquareNode,
+  PolygonNode,
   TranslateNode,
   RotateNode,
   ScaleNode,
@@ -80,13 +83,63 @@ export function isCylinderNode(node: ASTNode): node is CylinderNode {
 }
 
 /**
- * Type guard for primitive nodes (cube, sphere, cylinder)
- * 
+ * Type guard for CircleNode
+ *
  * @param node - AST node to check
- * @returns True if node is a primitive
+ * @returns True if node is a CircleNode
  */
-export function isPrimitiveNode(node: ASTNode): node is CubeNode | SphereNode | CylinderNode {
+export function isCircleNode(node: ASTNode): node is CircleNode {
+  return node.type === 'circle';
+}
+
+/**
+ * Type guard for SquareNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is a SquareNode
+ */
+export function isSquareNode(node: ASTNode): node is SquareNode {
+  return node.type === 'square';
+}
+
+/**
+ * Type guard for PolygonNode
+ *
+ * @param node - AST node to check
+ * @returns True if node is a PolygonNode
+ */
+export function isPolygonNode(node: ASTNode): node is PolygonNode {
+  return node.type === 'polygon';
+}
+
+/**
+ * Type guard for 2D primitive nodes (circle, square, polygon)
+ *
+ * @param node - AST node to check
+ * @returns True if node is a 2D primitive
+ */
+export function is2DPrimitiveNode(node: ASTNode): node is CircleNode | SquareNode | PolygonNode {
+  return isCircleNode(node) || isSquareNode(node) || isPolygonNode(node);
+}
+
+/**
+ * Type guard for 3D primitive nodes (cube, sphere, cylinder)
+ *
+ * @param node - AST node to check
+ * @returns True if node is a 3D primitive
+ */
+export function is3DPrimitiveNode(node: ASTNode): node is CubeNode | SphereNode | CylinderNode {
   return isCubeNode(node) || isSphereNode(node) || isCylinderNode(node);
+}
+
+/**
+ * Type guard for all primitive nodes (2D and 3D)
+ *
+ * @param node - AST node to check
+ * @returns True if node is any primitive
+ */
+export function isPrimitiveNode(node: ASTNode): node is CubeNode | SphereNode | CylinderNode | CircleNode | SquareNode | PolygonNode {
+  return is3DPrimitiveNode(node) || is2DPrimitiveNode(node);
 }
 
 // ============================================================================
@@ -347,23 +400,31 @@ export function extractVector3D(
  * @returns Extraction result with Vector2D value
  */
 export function extractVector2D(
-  param: ParameterValue, 
+  param: ParameterValue,
   defaultValue: readonly [number, number] = [0, 0]
 ): ExtractionResult<readonly [number, number]> {  // Handle Vector2D type
   if (Array.isArray(param) && param.length >= 2) {
-    const x = typeof param[0] === 'number' ? param[0] : 0;
-    const y = typeof param[1] === 'number' ? param[1] : 0;
+    // Validate that both elements are numbers
+    if (typeof param[0] !== 'number' || typeof param[1] !== 'number') {
+      return {
+        success: false,
+        error: `Vector2D elements must be numbers, got: [${typeof param[0]}, ${typeof param[1]}]`
+      };
+    }
+
+    const x = param[0];
+    const y = param[1];
     return { success: true, value: Object.freeze([x, y]) };
   }
-  
+
   // Handle single number (uniform scaling)
   if (typeof param === 'number') {
     return { success: true, value: Object.freeze([param, param]) };
   }
-  
-  return { 
-    success: false, 
-    error: `Cannot extract Vector2D from parameter: ${JSON.stringify(param)}. Using default: [${defaultValue.join(', ')}]` 
+
+  return {
+    success: false,
+    error: `Cannot extract Vector2D from parameter: ${JSON.stringify(param)}. Using default: [${defaultValue.join(', ')}]`
   };
 }
 
@@ -469,7 +530,7 @@ export function extractTranslationVector(
 
 /**
  * Extract scale vector from ScaleNode
- * 
+ *
  * @param scaleNode - ScaleNode to extract vector from
  * @returns Extraction result with scale vector
  */
@@ -479,8 +540,81 @@ export function extractScaleVector(
   if (!scaleNode.v) {
     return { success: false, error: 'Scale node missing vector parameter' };
   }
-  
+
   return extractVector3D(scaleNode.v, [1, 1, 1]); // Default scale is [1,1,1]
+}
+
+// ============================================================================
+// 2D PRIMITIVE PARAMETER EXTRACTORS
+// ============================================================================
+
+/**
+ * Extract circle radius with validation
+ *
+ * @param circleNode - CircleNode to extract radius from
+ * @returns Extraction result with circle radius
+ */
+export function extractCircleRadius(circleNode: CircleNode): ExtractionResult<number> {
+  // Prefer radius over diameter
+  if (circleNode.r !== undefined) {
+    return extractNumber(circleNode.r, 1);
+  }
+
+  if (circleNode.d !== undefined) {
+    const diameterResult = extractNumber(circleNode.d, 2);
+    if (diameterResult.success) {
+      return { success: true, value: diameterResult.value / 2 };
+    }
+    return { success: false, error: 'Invalid diameter parameter' };
+  }
+
+  return { success: false, error: 'Circle node missing radius/diameter parameter' };
+}
+
+/**
+ * Extract square size parameters with validation
+ *
+ * @param squareNode - SquareNode to extract size from
+ * @returns Extraction result with square dimensions
+ */
+export function extractSquareSize(squareNode: SquareNode): ExtractionResult<readonly [number, number]> {
+  if (!squareNode.size) {
+    return { success: false, error: 'Square node missing size parameter' };
+  }
+
+  return extractVector2D(squareNode.size, [1, 1]);
+}
+
+/**
+ * Extract polygon points with validation
+ *
+ * @param polygonNode - PolygonNode to extract points from
+ * @returns Extraction result with polygon points
+ */
+export function extractPolygonPoints(
+  polygonNode: PolygonNode
+): ExtractionResult<readonly (readonly [number, number])[]> {
+  if (!polygonNode.points || !Array.isArray(polygonNode.points)) {
+    return { success: false, error: 'Polygon node missing points parameter' };
+  }
+
+  const points: (readonly [number, number])[] = [];
+
+  for (let i = 0; i < polygonNode.points.length; i++) {
+    const point = polygonNode.points[i];
+    const pointResult = extractVector2D(point, [0, 0]);
+
+    if (!pointResult.success) {
+      return {
+        success: false,
+        error: `Invalid point at index ${i}: ${pointResult.error}`
+      };
+    }
+
+    points.push(pointResult.value);
+  }
+
+  return { success: true, value: Object.freeze(points) };
 }
 
 // ============================================================================
@@ -524,7 +658,7 @@ export function hasValidChildren(node: ASTNode & { children: ASTNode[] }): boole
 
 /**
  * Get a human-readable description of an AST node
- * 
+ *
  * @param node - AST node to describe
  * @returns Human-readable description
  */
@@ -536,6 +670,12 @@ export function getNodeDescription(node: ASTNode): string {
       return `Sphere primitive`;
     case 'cylinder':
       return `Cylinder primitive`;
+    case 'circle':
+      return `Circle 2D primitive`;
+    case 'square':
+      return `Square 2D primitive`;
+    case 'polygon':
+      return `Polygon 2D primitive`;
     case 'translate':
       return `Translation transformation`;
     case 'rotate':
