@@ -17,17 +17,13 @@
  * ```
  */
 
-import type {
-  Scene,
-  Mesh,
-  Material,
-  CSG2,
-  NullEngine,
-  Engine
+import {
+  type Mesh,
+  type Material,
+  type NullEngine,
+  type Engine,
+  Vector3
 } from '@babylonjs/core';
-
-// Import Vector3 as value for runtime usage
-import { Vector3 } from '@babylonjs/core';
 
 /**
  * Babylon.js CSG2 operation types

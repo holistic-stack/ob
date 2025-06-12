@@ -1,4 +1,10 @@
-import type { ExpressionNode, ParameterValue } from '@holistic-stack/openscad-parser';
+import type {
+  ExpressionNode,
+  ParameterValue,
+  BinaryExpressionNode,
+  UnaryExpressionNode,
+  FunctionCallNode
+} from '@holistic-stack/openscad-parser';
 
 /**
  * Represents a scope for variable lookup during expression evaluation.
@@ -26,20 +32,76 @@ export class ExpressionEvaluator {
    */
   evaluate(expression: ExpressionNode): ParameterValue {
     switch (expression.expressionType) {
-      case 'literal':
-        return (expression as any).value;
-      case 'identifier':
-        const identifierExpr = expression as any;
-        const varName = identifierExpr.text || identifierExpr.name;
+      case 'literal': {
+        const literalExpr = expression as { value: ParameterValue };
+        return literalExpr.value;
+      }
+      case 'identifier': {
+        const identifierExpr = expression as { text?: string; name?: string };
+        const varName = identifierExpr.text ?? identifierExpr.name;
         if (varName && this.scope.has(varName)) {
-          return this.scope.get(varName)!;
+          const value = this.scope.get(varName);
+          if (value === undefined) {
+            throw new Error(`Variable '${varName}' not found in scope.`);
+          }
+          return value;
         } else {
           throw new Error(`Variable '${varName}' not found in scope.`);
         }
-      // TODO: Add cases for binary_expression, unary_expression, function_call, etc.
+      }
+      case 'binary_expression':
+      case 'binary':
+        return this._evaluateBinaryExpression(expression as BinaryExpressionNode);
+      case 'unary_expression':
+      case 'unary':
+        return this._evaluateUnaryExpression(expression as UnaryExpressionNode);
+      case 'function_call':
+        return this._evaluateFunctionCall(expression as FunctionCallNode);
       default:
         throw new Error(`Unsupported expression type: ${expression.expressionType}`);
     }
+  }
+
+  private _evaluateBinaryExpression(node: BinaryExpressionNode): ParameterValue {
+    const leftValue = this.evaluate(node.left);
+    const rightValue = this.evaluate(node.right);
+
+    // Basic arithmetic operations for now. Need to handle other types and operators.
+    switch (node.operator) {
+      case '+': return (leftValue as number) + (rightValue as number);
+      case '-': return (leftValue as number) - (rightValue as number);
+      case '*': return (leftValue as number) * (rightValue as number);
+      case '/': return (leftValue as number) / (rightValue as number);
+      case '%': return (leftValue as number) % (rightValue as number);
+      case '&&': return (leftValue as boolean) && (rightValue as boolean);
+      case '||': return (leftValue as boolean) || (rightValue as boolean);
+      case '<': return (leftValue as number) < (rightValue as number);
+      case '<=': return (leftValue as number) <= (rightValue as number);
+      case '>': return (leftValue as number) > (rightValue as number);
+      case '>=': return (leftValue as number) >= (rightValue as number);
+      case '==': return leftValue === rightValue;
+      case '!=': return leftValue !== rightValue;
+      default:
+        throw new Error(`Unsupported binary operator: ${node.operator}`);
+    }
+  }
+
+  private _evaluateUnaryExpression(node: UnaryExpressionNode): ParameterValue {
+    const operandValue = this.evaluate(node.operand);
+
+    switch (node.operator) {
+      case '-': return -(operandValue as number);
+      case '!': return !(operandValue as boolean);
+      default:
+        throw new Error(`Unsupported unary operator: ${node.operator}`);
+    }
+  }
+
+  private _evaluateFunctionCall(node: FunctionCallNode): ParameterValue {
+    // This is a complex one. For now, let's just throw an error or return a placeholder.
+    // Real implementation would involve looking up the function, evaluating its arguments,
+    // and executing its logic.
+    throw new Error(`Function calls are not yet supported: ${node.functionName}`);
   }
 
   /**

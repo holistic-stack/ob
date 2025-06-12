@@ -18,7 +18,7 @@ describe('SceneManager', () => {
     it('should be able to create a basic scene', () => {
       const scene = new BABYLON.Scene(engine);
       expect(scene).toBeInstanceOf(BABYLON.Scene);
-      expect(scene.meshes.length).toBe(0);
+      expect(scene.meshes).toHaveLength(0);
     });
 
     it('should handle engine disposal', () => {

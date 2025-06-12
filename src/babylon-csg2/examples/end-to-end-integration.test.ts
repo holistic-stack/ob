@@ -48,8 +48,8 @@ describe('End-to-End Integration Test', () => {
 
     // Validate the scene
     expect(scene).toBeInstanceOf(BABYLON.Scene);
-    expect(scene.cameras.length).toBe(1);
-    expect(scene.lights.length).toBe(1);
+    expect(scene.cameras).toHaveLength(1);
+    expect(scene.lights).toHaveLength(1);
 
     // Check that we have at least one mesh from our operations
     expect(scene.meshes.length).toBeGreaterThan(0);

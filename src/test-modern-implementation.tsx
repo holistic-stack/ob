@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { AppV2 } from './App-v2';
+import { App } from './App';
 
 /**
  * Test the modern implementation
@@ -36,7 +36,7 @@ function TestModernImplementation() {
         </p>
       </div>
       
-      <AppV2 />
+      <App />
     </div>
   );
 }

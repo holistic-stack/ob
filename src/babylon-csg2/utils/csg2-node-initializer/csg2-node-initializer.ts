@@ -264,9 +264,8 @@ async function initializeMockCSG2(config: Required<CSG2InitConfig>): Promise<CSG
  * Check if running in Node.js environment
  */
 function isNodeEnvironment(): boolean {
-  return typeof process !== 'undefined' && 
-         process.versions != null && 
-         process.versions.node != null;
+  return typeof process !== 'undefined' &&
+         process.versions?.node !== null;
 }
 
 /**
@@ -276,7 +275,7 @@ function isTestEnvironment(): boolean {
   return process.env.NODE_ENV === 'test' || 
          process.env.VITEST === 'true' || 
          typeof global !== 'undefined' && 
-         (global as any).__VITEST__ === true;
+         (global as typeof global & { __VITEST__?: boolean }).__VITEST__ === true;
 }
 
 /**
@@ -284,8 +283,8 @@ function isTestEnvironment(): boolean {
  */
 export function isCSG2Ready(): boolean {
   // In test environment, check if mock is available
-  if (isTestEnvironment() && (globalThis as any).__MOCK_IS_CSG2_READY__) {
-    return isCSG2Initialized && (globalThis as any).__MOCK_IS_CSG2_READY__();
+  if (isTestEnvironment() && (globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__) {
+    return isCSG2Initialized && ((globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__?.() ?? false);
   }
 
   // In normal environment, check Babylon.js CSG2

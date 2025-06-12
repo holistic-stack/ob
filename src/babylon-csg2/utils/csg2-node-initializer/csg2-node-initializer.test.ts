@@ -7,13 +7,12 @@
  * @date June 2025
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  initializeCSG2ForNode, 
-  isCSG2Ready, 
-  resetCSG2State, 
-  createCSG2Initializer,
-  type CSG2InitConfig 
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import {
+  initializeCSG2ForNode,
+  isCSG2Ready,
+  resetCSG2State,
+  createCSG2Initializer
 } from './csg2-node-initializer';
 
 describe('[INIT] CSG2 Node.js Initializer', () => {
@@ -39,7 +38,9 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
       
       expect(result.success).toBe(true);
       expect(result.method).toBe('mock-fallback');
-      expect(result.message).toContain('Mock CSG2 initialized');
+      if (result.success) {
+        expect(result.message).toContain('Mock CSG2 initialized');
+      }
       
       console.log('[DEBUG] CSG2 initialization test completed successfully');
     });

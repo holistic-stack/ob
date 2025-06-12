@@ -237,7 +237,7 @@ describe('Basic Pipeline Validation', () => {
       ];
 
       let successCount = 0;
-      let totalCount = testCases.length;
+      const totalCount = testCases.length;
 
       for (const testCase of testCases) {
         console.log(`[DEBUG] Testing ${testCase.name}: ${testCase.code}`);

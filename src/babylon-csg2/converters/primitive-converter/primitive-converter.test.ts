@@ -8,9 +8,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { NullEngine, Scene, StandardMaterial, Color3 } from '@babylonjs/core';
 import { PrimitiveConverter } from './primitive-converter.js';
-import type { ConversionContext } from '../../types/converter-types.js';
-import { createConversionContext } from '../../types/converter-types.js';
-import type { OpenSCADPrimitiveNode, SphereNode, CubeNode, CylinderNode } from '../../types/openscad-types.js';
+import { type ConversionContext, createConversionContext } from '../../types/converter-types.js';
+import type { OpenSCADPrimitiveNode } from '../../types/openscad-types.js';
 
 describe('[INIT] PrimitiveConverter', () => {
   let engine: NullEngine;

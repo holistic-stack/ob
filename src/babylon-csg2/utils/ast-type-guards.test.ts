@@ -18,6 +18,9 @@ import type {
   ScaleNode,
   UnionNode,
   DifferenceNode,
+  ErrorNode,
+  ExpressionNode,
+  BinaryExpressionNode,
   IntersectionNode,
   ParameterValue,
   SourceLocation,
@@ -31,8 +34,8 @@ import {
   isCylinderNode,
   isPrimitiveNode,
   isTranslateNode,
-  isRotateNode,
-  isScaleNode,
+  isRotateNode as _isRotateNode,
+  isScaleNode as _isScaleNode,
   isTransformNode,
   isUnionNode,
   isDifferenceNode,
@@ -59,7 +62,7 @@ import {
   isExpressionParameter,
   isErrorParameter,
   
-  type ExtractionResult
+  type ExtractionResult as _ExtractionResult
 } from './ast-type-guards';
 
 describe('AST Type Guards and Utilities', () => {
@@ -295,7 +298,7 @@ describe('AST Type Guards and Utilities', () => {
       it('should handle missing cube size', () => {
         const cubeNode: CubeNode = {
           type: 'cube',
-          size: undefined as any,
+          size: undefined,
           location: mockLocation
         };
 
@@ -384,12 +387,15 @@ describe('AST Type Guards and Utilities', () => {
       });
 
       it('should handle missing height', () => {
-        const cylinderNode: CylinderNode = {
+        // To test missing 'h', we create a node that omits 'h' if the type allows,
+        // or use a type assertion if we are specifically testing runtime behavior
+        // against a loosely typed object that might come from a less strict source.
+        // Assuming CylinderNode requires 'h', but we test the extractor's robustness.
+        const cylinderNode = { // Removed 'h' property entirely to test extractor's handling of absence
           type: 'cylinder',
-          h: undefined as any,
           r: 5,
           location: mockLocation
-        };
+        } as unknown as CylinderNode; // Use 'as unknown as CylinderNode' to bypass strict checks for test setup
 
         const result = extractCylinderParams(cylinderNode);
         expect(result.success).toBe(false);
@@ -416,12 +422,12 @@ describe('AST Type Guards and Utilities', () => {
       });
 
       it('should handle missing translation vector', () => {
-        const translateNode: TranslateNode = {
+        // Similar to above, omit 'v' to test extractor's handling of its absence.
+        const translateNode = { // Removed 'v' property
           type: 'translate',
-          v: undefined as any,
           children: [],
           location: mockLocation
-        };
+        } as unknown as TranslateNode; // Use 'as unknown as TranslateNode' for test setup
 
         const result = extractTranslationVector(translateNode);
         expect(result.success).toBe(false);
@@ -469,9 +475,19 @@ describe('AST Type Guards and Utilities', () => {
         location: mockLocation
       };
 
+      // If ASTNode[] is strictly an array of ASTNode, then null/undefined are not allowed by type.
+      // To test hasValidChildren's filtering, the input array must be typed to allow these.
+      // The 'children' property of UnionNode is ASTNode[].
+      // If the goal is to test a scenario where the parser *might* produce this,
+      // we cast the specific children array for this test case.
+      const invalidChildrenArray: Array<ASTNode | null | undefined> = [
+        { type: 'cube', size: 10 } as CubeNode,
+        null,
+        undefined
+      ];
       const nodeWithInvalidChildren: UnionNode = {
         type: 'union',
-        children: [{ type: 'cube', size: 10 } as CubeNode, null, undefined] as any[],
+        children: invalidChildrenArray as ASTNode[], // Cast for the test, hasValidChildren should handle it
         location: mockLocation
       };
 
@@ -500,7 +516,9 @@ describe('AST Type Guards and Utilities', () => {
 
     it('should identify expression parameters correctly', () => {
       const numberParam: ParameterValue = 42;
-      const expressionParam: ParameterValue = { type: 'binary_expression' } as any;
+      // Using a minimal mock for ExpressionNode if specific properties of left/right are not tested
+      const mockExpressionNode = { type: 'expression', expressionType: 'literal_expression', value: 0 } as ExpressionNode;
+      const expressionParam: BinaryExpressionNode = { type: 'expression', expressionType: 'binary_expression', left: mockExpressionNode, right: mockExpressionNode, operator: '+' } as BinaryExpressionNode;
       const nullParam: ParameterValue = null;
 
       expect(isExpressionParameter(numberParam)).toBe(false);
@@ -510,8 +528,10 @@ describe('AST Type Guards and Utilities', () => {
 
     it('should identify error parameters correctly', () => {
       const numberParam: ParameterValue = 42;
-      const errorParam: ParameterValue = { type: 'error' } as any;
-      const expressionParam: ParameterValue = { type: 'binary_expression' } as any;
+      const errorParam: ErrorNode = { type: 'error', errorCode: 'TEST_ERROR', message: 'Test error message' };
+      // Using a minimal mock for ExpressionNode
+      const mockExpressionNode = { type: 'expression', expressionType: 'literal_expression', value: 0 } as ExpressionNode;
+      const expressionParam: BinaryExpressionNode = { type: 'expression', expressionType: 'binary_expression', left: mockExpressionNode, right: mockExpressionNode, operator: '+' };
 
       expect(isErrorParameter(numberParam)).toBe(false);
       expect(isErrorParameter(errorParam)).toBe(true);
@@ -541,19 +561,15 @@ describe('AST Type Guards and Utilities', () => {
       
       expect(result.success).toBe(true);
       if (result.success) {
-        // Result should be readonly - test that it's actually frozen
         expect(Object.isFrozen(result.value)).toBe(true);
         
-        // Attempting to modify should fail silently in non-strict mode
-        // or throw in strict mode, but the value shouldn't change
         const originalValue = [...result.value];
         try {
-          (result.value as any)[0] = 999;
-        } catch {
-          // Expected in strict mode
+          // Cast to unknown first, then to number[] to bypass stricter type checking for this runtime test
+          (result.value as unknown as number[])[0] = 999;
+        } catch (_e) {
+          // Expected in strict mode or if the object is truly frozen.
         }
-        
-        // Value should remain unchanged
         expect(result.value).toEqual(originalValue);
       }
     });

@@ -189,7 +189,7 @@ describe('OpenSCAD Pipeline Integration', () => {
       console.log('[DEBUG] Parser returned a non-primitive node for invalid code:', firstNode.type);
     } else {
       console.log('[DEBUG] Parser returned an empty AST for invalid code, as expected.');
-      expect(astNodes.length).toBe(0);
+      expect(astNodes).toHaveLength(0);
     }
     
     // Further checks can be added if the parser has specific error reporting in the AST
@@ -232,7 +232,7 @@ function resolveWasmPath(urlPath: string): string {
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -248,7 +248,7 @@ function resolveWasmPath(urlPath: string): string {
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -268,7 +268,7 @@ function resolveWasmPath(urlPath: string): string {
         console.log(`  - resolvedWasmPath: ${resolvedWasmPath}`);
         console.log(`Attempting web-tree-sitter strategy 3 (lib): ${resolvedWasmPath}`);
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -300,7 +300,7 @@ function resolveWasmPath(urlPath: string): string {
           return resolvedWasmPath;
         }
         return null;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -329,7 +329,7 @@ function resolveWasmPath(urlPath: string): string {
           return resolvedWasmPath;
         }
         return null;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -369,8 +369,14 @@ vi.mocked(fetch).mockImplementation(url => {
   } else if (url instanceof URL) {
     urlPath = url.href; // Use href to get the full file:// URL
   } else {
-    // Handle other URL-like objects
-    urlPath = String(url);
+    // Handle other URL-like objects - check for common properties
+    if (typeof url === 'object' && url !== null && 'href' in url) {
+      urlPath = String((url as { href: unknown }).href);
+    } else if (typeof url === 'object' && url !== null && 'toString' in url) {
+      urlPath = String((url as { toString: () => string }).toString());
+    } else {
+      urlPath = JSON.stringify(url);
+    }
   }
 
   console.log(`URL path: ${urlPath}`);

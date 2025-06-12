@@ -39,20 +39,20 @@ export function OpenSCADInput({
     }
     
     // Check for basic bracket matching
-    const openBrackets = (code.match(/\{/g) || []).length;
-    const closeBrackets = (code.match(/\}/g) || []).length;
+    const openBrackets = (code.match(/\{/g) ?? []).length;
+    const closeBrackets = (code.match(/\}/g) ?? []).length;
     if (openBrackets !== closeBrackets) {
       errors.push('Mismatched curly brackets');
     }
-    
-    const openParens = (code.match(/\(/g) || []).length;
-    const closeParens = (code.match(/\)/g) || []).length;
+
+    const openParens = (code.match(/\(/g) ?? []).length;
+    const closeParens = (code.match(/\)/g) ?? []).length;
     if (openParens !== closeParens) {
       errors.push('Mismatched parentheses');
     }
-    
-    const openSquare = (code.match(/\[/g) || []).length;
-    const closeSquare = (code.match(/\]/g) || []).length;
+
+    const openSquare = (code.match(/\[/g) ?? []).length;
+    const closeSquare = (code.match(/\]/g) ?? []).length;
     if (openSquare !== closeSquare) {
       errors.push('Mismatched square brackets');
     }

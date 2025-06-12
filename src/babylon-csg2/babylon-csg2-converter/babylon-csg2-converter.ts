@@ -43,7 +43,6 @@ import {
   extractCylinderParams,
   extractTranslationVector 
 } from '../utils/ast-type-guards';
-import { extractVector3 } from '../utils/parameter-extractor';
 import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
 
 /**
@@ -586,6 +585,14 @@ export class BabylonCSG2Converter {
       this.logger.log(message);
     }
   }
+
+  /**
+   * Clean up resources used by this converter
+   */
+  public dispose(): void {
+    this.log('[DEBUG] Disposing BabylonCSG2Converter');
+    // Add any necessary cleanup here
+  }
 }
 
 /**
@@ -616,7 +623,10 @@ export async function convertOpenSCADToBabylon(
   config?: CSG2ConverterConfig
 ): Promise<CSG2ConversionResult> {
   const converter = createBabylonCSG2Converter(scene, config);
-  await converter.initialize();
-  return converter.convertOpenSCAD(openscadCode);
+  try {
+    await converter.initialize();
+    return await converter.convertOpenSCAD(openscadCode);
+  } finally {
+    converter.dispose();
+  }
 }
-

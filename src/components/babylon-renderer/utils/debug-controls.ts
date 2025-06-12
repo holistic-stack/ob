@@ -51,7 +51,34 @@ export function createTestCube(scene: BABYLON.Scene): BABYLON.Mesh {
  * Get comprehensive scene debug information
  * Pure function - returns debug data without side effects
  */
-export function getSceneDebugInfo(scene: BABYLON.Scene): Record<string, any> {
+interface MeshDebugInfo {
+  name: string;
+  isVisible: boolean;
+  isEnabled: boolean;
+  vertices: number;
+  indices: number;
+  position: number[];
+  hasGeometry: boolean;
+}
+
+interface LightDebugInfo {
+  name: string;
+  type: string;
+  intensity: number | 'N/A';
+}
+
+export interface SceneDebugInfo {
+  meshCount: number;
+  meshes: MeshDebugInfo[];
+  camera: string | undefined;
+  cameraPosition: number[] | undefined;
+  lights: LightDebugInfo[];
+  isReady: boolean;
+  totalVertices: number;
+  totalIndices: number;
+}
+
+export function getSceneDebugInfo(scene: BABYLON.Scene): SceneDebugInfo {
   return {
     meshCount: scene.meshes.length,
     meshes: scene.meshes.map(m => ({
@@ -68,7 +95,7 @@ export function getSceneDebugInfo(scene: BABYLON.Scene): Record<string, any> {
     lights: scene.lights.map(l => ({
       name: l.name,
       type: l.getClassName(),
-      intensity: 'intensity' in l ? (l as any).intensity : 'N/A'
+      intensity: 'intensity' in l ? l.intensity : 'N/A'
     })),
     isReady: scene.isReady(),
     totalVertices: scene.meshes.reduce((total, mesh) => total + mesh.getTotalVertices(), 0),

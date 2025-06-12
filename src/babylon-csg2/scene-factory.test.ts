@@ -21,8 +21,8 @@ describe('SceneFactory', () => {
     const scene = await SceneFactory.createFromAst(engine, ast);
 
     expect(scene).toBeInstanceOf(BABYLON.Scene);
-    expect(scene.cameras.length).toBe(1);
-    expect(scene.lights.length).toBe(1);
+    expect(scene.cameras).toHaveLength(1);
+    expect(scene.lights).toHaveLength(1);
   });
 
   it('should add a mesh to the scene if the AST is valid', async () => {
@@ -30,7 +30,7 @@ describe('SceneFactory', () => {
     const scene = await SceneFactory.createFromAst(engine, ast);
 
     // The root mesh and the light/camera placeholders
-    expect(scene.meshes.length).toBe(1);
+    expect(scene.meshes).toHaveLength(1);
     expect(scene.meshes[0]?.name).toContain('cube');
   });
 
@@ -38,6 +38,6 @@ describe('SceneFactory', () => {
     const ast: ASTNode = { type: 'union', children: [] }; // An empty union
     const scene = await SceneFactory.createFromAst(engine, ast);
 
-    expect(scene.meshes.length).toBe(0);
+    expect(scene.meshes).toHaveLength(0);
   });
 });

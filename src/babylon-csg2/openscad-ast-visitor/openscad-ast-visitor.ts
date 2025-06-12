@@ -29,7 +29,8 @@ import type {
   ParameterValue,
   ExpressionNode,
   SpecialVariableAssignment, // Added for $fa, $fs, $fn
-  IfNode // Added for conditional logic
+  IfNode, // Added for conditional logic
+  IdentifierNode // Added for completeness if used in Scope
 } from '@holistic-stack/openscad-parser';
 
 import {
@@ -56,19 +57,19 @@ import {
 } from '../utils/ast-type-guards';
 
 import * as BABYLON from '@babylonjs/core';
+import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator';
 
 // Type definition for storing special variable context ($fa, $fs, $fn)
 type TessellationOptions = {
-  segments?: number;
-  rings?: number; 
+  segments?: number; // Removed readonly
+  rings?: number; // Removed readonly
 };
 
 type SpecialVariablesContext = {
-  $fa: number | undefined; // Default: 12 degrees
-  $fs: number | undefined; // Default: 2 mm
-  $fn: number | undefined; // Default: 0 (auto-calculated), stored as undefined if not explicitly set by user to > 0
+  $fa: number | undefined; // Removed readonly
+  $fs: number | undefined; // Removed readonly
+  $fn: number | undefined; // Removed readonly
 };
-import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator';
 
 /**
  * Enhanced OpenSCAD AST visitor that converts AST nodes to Babylon.js meshes
@@ -76,11 +77,11 @@ import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator';
  * and uses type-safe parameter extraction.
  */
 export class OpenScadAstVisitor {
-  protected scene: BABYLON.Scene;
+  protected readonly scene: BABYLON.Scene; // Added readonly
   private isCSG2Initialized: boolean = false;
-  private moduleDefinitions: Map<string, ModuleDefinitionNode>;
+  private moduleDefinitions: Map<string, ModuleDefinitionNode>; // Kept as mutable Map
   private expressionEvaluator: ExpressionEvaluator;
-  private currentScope: Scope;
+  private currentScope: Scope; 
   private specialVariablesContext: SpecialVariablesContext;
 
   /**
@@ -91,18 +92,17 @@ export class OpenScadAstVisitor {
    */
   constructor(
     scene: BABYLON.Scene,
-    moduleDefinitions: Map<string, ModuleDefinitionNode> = new Map(),
+    moduleDefinitions: Map<string, ModuleDefinitionNode> = new Map(), // Kept as mutable Map
     initialScope: Scope = new Map()
   ) {
     this.scene = scene;
-    this.moduleDefinitions = moduleDefinitions;
-    this.currentScope = initialScope;
+    this.moduleDefinitions = moduleDefinitions; 
+    this.currentScope = new Map(initialScope); 
     this.expressionEvaluator = new ExpressionEvaluator(this.currentScope);
-    // Initialize special variables with OpenSCAD defaults
     this.specialVariablesContext = {
-      $fa: 12, // degrees
-      $fs: 2,  // mm
-      $fn: undefined, // Represents OpenSCAD $fn=0 (auto-calculate based on $fa/$fs)
+      $fa: 12, 
+      $fs: 2,
+      $fn: undefined,
     };
     console.log('[INIT] OpenScadAstVisitor initialized. Special variables context:', this.specialVariablesContext);
   }
@@ -121,7 +121,8 @@ export class OpenScadAstVisitor {
     console.log('[INIT] Initializing CSG2...');
     try {
       // Check if we're in a test environment with mock CSG2
-      if ((globalThis as any).__MOCK_CSG2__) {
+      const globalWithMock = globalThis as { __MOCK_CSG2__?: unknown };
+      if (globalWithMock.__MOCK_CSG2__) {
         console.log('[DEBUG] Using mock CSG2 for tests');
         this.isCSG2Initialized = true;
         return;
@@ -148,12 +149,13 @@ export class OpenScadAstVisitor {
    */
   isCSG2Ready(): boolean {
     // Check if we're using mock CSG2 for tests
-    if ((globalThis as any).__MOCK_CSG2__) {
+    const globalWithMock = globalThis as { __MOCK_CSG2__?: unknown };
+    if (globalWithMock.__MOCK_CSG2__) {
       return this.isCSG2Initialized;
     }
 
     // Check real CSG2 availability
-    return this.isCSG2Initialized && BABYLON.IsCSG2Ready && BABYLON.IsCSG2Ready();
+    return this.isCSG2Initialized && BABYLON.IsCSG2Ready?.() === true;
   }
 
   /**
@@ -292,7 +294,10 @@ export class OpenScadAstVisitor {
     console.log(`[DEBUG] IfNode condition '${node.condition.type}' evaluated to:`, conditionValue);
 
     if (typeof conditionValue !== 'boolean') {
-      console.warn(`[WARN] IfNode condition did not evaluate to a boolean. Got: ${typeof conditionValue} (${conditionValue}). Assuming false.`);
+      const valueStr = typeof conditionValue === 'object' && conditionValue !== null
+        ? JSON.stringify(conditionValue)
+        : String(conditionValue);
+      console.warn(`[WARN] IfNode condition did not evaluate to a boolean. Got: ${typeof conditionValue} (${valueStr}). Assuming false.`);
       // OpenSCAD treats non-boolean conditions as false, except for numbers (0 is false, non-zero is true)
       // For simplicity here, non-booleans other than numbers could be treated as false or an error.
       // Let's refine this based on OpenSCAD's exact behavior for various types if needed.
@@ -325,7 +330,7 @@ export class OpenScadAstVisitor {
    * @param branch Array of AST nodes to visit
    * @returns A Babylon.js mesh or null
    */
-  private visitBranch(branch: ASTNode[]): BABYLON.Mesh | null {
+  private visitBranch(branch: ReadonlyArray<ASTNode>): BABYLON.Mesh | null { // Added ReadonlyArray
     if (!branch || branch.length === 0) {
       return null;
     }
@@ -341,7 +346,8 @@ export class OpenScadAstVisitor {
     if (meshes.length === 0) {
       return null;
     } else if (meshes.length === 1) {
-      return meshes[0]!;
+      const firstMesh = meshes[0];
+      return firstMesh ?? null;
     } else {
       // Multiple meshes - union them together
       console.log(`[DEBUG] Branch produced ${meshes.length} meshes, combining with union`);
@@ -371,21 +377,24 @@ export class OpenScadAstVisitor {
     console.log(`[DEBUG] Module '${node.name}' definition parameters:`, moduleDefinition.parameters);
     console.log(`[DEBUG] Module '${node.name}' call parameters:`, node.args);
 
-    // Create a new scope for the module call
-    const newScope = new Map<string, ParameterValue>();
+    const newScope: Map<string, ParameterValue> = new Map<string, ParameterValue>(); // Explicitly type newScope
 
     // Map formal parameters to actual arguments
-    for (const formalParam of moduleDefinition.parameters) {
-      const actualArg = node.args.find((arg: any) => arg.name === formalParam.name);
+    // Assuming moduleDefinition.parameters and node.args are ReadonlyArray from parser types or should be treated so
+    for (const formalParam of (moduleDefinition.parameters as ReadonlyArray<{name: string, defaultValue?: ExpressionNode}>)) {
+      const actualArg = (node.args as ReadonlyArray<{name?: IdentifierNode | string, value: ExpressionNode}>).find((arg) => {
+        const argName = typeof arg.name === 'string' ? arg.name : arg.name?.name;
+        return argName === formalParam.name;
+      });
 
       let paramValue: ParameterValue | undefined;
 
       if (actualArg) {
         // If an actual argument is provided, evaluate its value
-        paramValue = this.expressionEvaluator.evaluate(actualArg.value as ExpressionNode);
+        paramValue = this.expressionEvaluator.evaluate(actualArg.value);
       } else if (formalParam.defaultValue) {
         // If no actual argument, use the formal parameter's default value
-        paramValue = this.expressionEvaluator.evaluate(formalParam.defaultValue as ExpressionNode);
+        paramValue = this.expressionEvaluator.evaluate(formalParam.defaultValue);
       }
 
       if (formalParam.name && paramValue !== undefined) {
@@ -404,8 +413,8 @@ export class OpenScadAstVisitor {
     const childMeshes: BABYLON.Mesh[] = [];
 
     if (moduleDefinition.body && moduleDefinition.body.length > 0) {
-      // Visit all children of the module definition within the new scope
-      for (const childNode of moduleDefinition.body) {
+      // Assuming moduleDefinition.body is ReadonlyArray from parser types or should be treated so
+      for (const childNode of (moduleDefinition.body as ReadonlyArray<ASTNode>)) {
         const childMesh = this.visit(childNode);
         if (childMesh) {
           childMeshes.push(childMesh);
@@ -424,7 +433,8 @@ export class OpenScadAstVisitor {
         };
         resultMesh = this.performCSGUnion(childMeshes, unionNode);
       } else {
-        resultMesh = childMeshes[0]!;
+        const firstChildMesh = childMeshes[0];
+        resultMesh = firstChildMesh ?? null;
       }
     }
 
@@ -478,15 +488,16 @@ export class OpenScadAstVisitor {
 
     // Extract tessellation parameters directly from the node
     // Note: Property names might be different, using safe access
-    let fnFromParams = (node as any).$fn || (node as any).fn;
-    let faFromParams = (node as any).$fa || (node as any).fa;
-    let fsFromParams = (node as any).$fs || (node as any).fs;
+    const nodeWithParams = node as { $fn?: number; fn?: number; $fa?: number; fa?: number; $fs?: number; fs?: number };
+    const fnFromParams = nodeWithParams.$fn ?? nodeWithParams.fn;
+    const faFromParams = nodeWithParams.$fa ?? nodeWithParams.fa;
+    const fsFromParams = nodeWithParams.$fs ?? nodeWithParams.fs;
 
-    let fn = fnFromParams !== undefined && fnFromParams > 0 ? Math.round(fnFromParams) :
+    const fn = fnFromParams !== undefined && fnFromParams > 0 ? Math.round(fnFromParams) :
              this.specialVariablesContext.$fn;
-    let fa = faFromParams !== undefined && faFromParams > 0 ? faFromParams :
+    const fa = faFromParams !== undefined && faFromParams > 0 ? faFromParams :
              this.specialVariablesContext.$fa;
-    let fs = fsFromParams !== undefined && fsFromParams > 0 ? fsFromParams :
+    const fs = fsFromParams !== undefined && fsFromParams > 0 ? fsFromParams :
              this.specialVariablesContext.$fs;
 
     if (fn !== undefined && fn > 0) {
@@ -589,7 +600,8 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length === 1) {
       console.log('[DEBUG] Union has only one child, returning it directly.');
-      return childMeshes[0]!; // Safe access - length check ensures element exists
+      const firstChildMesh = childMeshes[0];
+      return firstChildMesh ?? null;
     }
 
     console.log(`[DEBUG] Merging ${childMeshes.length} child meshes using CSG2 union operations.`);
@@ -615,7 +627,8 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length < 2) {
       console.warn('[WARN] Difference has insufficient valid child meshes.');
-      return childMeshes.length === 1 ? childMeshes[0]! : null;
+      const firstMesh = childMeshes[0];
+      return childMeshes.length === 1 && firstMesh ? firstMesh : null;
     }
 
     console.log(`[DEBUG] Performing CSG2 difference operation on ${childMeshes.length} meshes.`);
@@ -641,7 +654,8 @@ export class OpenScadAstVisitor {
 
     if (childMeshes.length < 2) {
       console.warn('[WARN] Intersection has insufficient valid child meshes.');
-      return childMeshes.length === 1 ? childMeshes[0]! : null;
+      const firstMesh = childMeshes[0];
+      return childMeshes.length === 1 && firstMesh ? firstMesh : null;
     }
 
     console.log(`[DEBUG] Performing CSG2 intersection operation on ${childMeshes.length} meshes.`);
@@ -666,12 +680,14 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract translation vector: ${translationResult.error}`);
       // Use zero translation as fallback
       const translation = [0, 0, 0] as const;
-      return this.applyTranslation(node.children[0]!, translation, node);
+      const firstChild = node.children[0];
+      return firstChild ? this.applyTranslation(firstChild, translation, node) : null;
     }
 
     const translation = translationResult.value;
     console.log(`[DEBUG] Applying translation: [${translation.join(', ')}]`);
-    return this.applyTranslation(node.children[0]!, translation, node);
+    const firstChild = node.children[0];
+    return firstChild ? this.applyTranslation(firstChild, translation, node) : null;
   }
 
   /**
@@ -692,10 +708,12 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract scale vector: ${scaleResult.error}`);
       // Use default scale as fallback
       const scale = [1, 1, 1] as const;
-      return this.applyScale(node.children[0]!, scale, node);
+      const firstChild = node.children[0];
+      return firstChild ? this.applyScale(firstChild, scale, node) : null;
     }
     const scale = scaleResult.value;
-    return this.applyScale(node.children[0]!, scale, node);
+    const firstChild = node.children[0];
+    return firstChild ? this.applyScale(firstChild, scale, node) : null;
   }
 
   /**
@@ -736,19 +754,21 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract rotation parameters: ${rotationResult.error}`);
       // Use zero rotation as fallback
       const rotation = [0, 0, 0] as const;
-      return this.applyRotation(node.children[0]!, rotation, node);
+      const firstChild = node.children[0];
+      return firstChild ? this.applyRotation(firstChild, rotation, node) : null;
     }
 
     const rotation = rotationResult.value;
     console.log(`[DEBUG] Applying rotation: [${rotation.join(', ')}] degrees`);
-    return this.applyRotation(node.children[0]!, rotation, node);
+    const firstChild = node.children[0];
+    return firstChild ? this.applyRotation(firstChild, rotation, node) : null;
   }
 
   /**
    * Extracts rotation parameters from a RotateNode.
    * Handles both Euler angles and axis-angle rotation.
    */
-  private extractRotationParameters(node: RotateNode): { success: true; value: readonly [number, number, number] } | { success: false; error: string } {
+  private extractRotationParameters(node: RotateNode): { success: true; value: readonly [number, number, number] } | { success: false, error: string } {
     try {
       // Case 1: Euler angles - 'a' is a Vector3D [x, y, z]
       if (Array.isArray(node.a)) {
@@ -839,18 +859,20 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract mirror parameters: ${mirrorResult.error}`);
       // Use default X-axis mirror as fallback
       const normal = [1, 0, 0] as const;
-      return this.applyMirror(node.children[0]!, normal, node);
+      const firstChild = node.children[0];
+      return firstChild ? this.applyMirror(firstChild, normal, node) : null;
     }
 
     const normal = mirrorResult.value;
     console.log(`[DEBUG] Applying mirror with normal: [${normal.join(', ')}]`);
-    return this.applyMirror(node.children[0]!, normal, node);
+    const firstChild = node.children[0];
+    return firstChild ? this.applyMirror(firstChild, normal, node) : null;
   }
 
   /**
    * Extracts mirror normal vector from a MirrorNode.
    */
-  private extractMirrorParameters(node: MirrorNode): { success: true; value: readonly [number, number, number] } | { success: false; error: string } {
+  private extractMirrorParameters(node: MirrorNode): { success: true; value: readonly [number, number, number] } | { success: false, error: string } {
     try {
       if (!node.v) {
         return { success: false, error: 'Mirror node missing normal vector (v)' };
@@ -980,13 +1002,13 @@ export class OpenScadAstVisitor {
   private createSphere(radius: number, tessOptions: TessellationOptions, node: SphereNode): BABYLON.Mesh {
 
 
-    console.log(`[DEBUG] Creating sphere: r=${radius}, segments=${tessOptions.segments || 32}, rings=${tessOptions.rings || (tessOptions.segments ? Math.max(2, Math.round(tessOptions.segments / 2)) : 16)}`);
+    console.log(`[DEBUG] Creating sphere: r=${radius}, segments=${tessOptions.segments ?? 32}, rings=${tessOptions.rings ?? (tessOptions.segments ? Math.max(2, Math.round(tessOptions.segments / 2)) : 16)}`);
 
     const sphere = BABYLON.MeshBuilder.CreateSphere(
       `sphere_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
       {
         diameter: radius * 2,
-        segments: tessOptions.segments || 32
+        segments: tessOptions.segments ?? 32
         // Note: Babylon's 'segments' for CreateSphere controls both latitude and longitude divisions
       },
       this.scene
@@ -1019,7 +1041,7 @@ export class OpenScadAstVisitor {
         height: params.height,
         diameterTop: params.radiusTop * 2,
         diameterBottom: params.radiusBottom * 2,
-        tessellation: tessOptions.segments || 32, // Use calculated segments
+        tessellation: tessOptions.segments ?? 32, // Use calculated segments
       },
       this.scene
     );
@@ -1049,15 +1071,32 @@ export class OpenScadAstVisitor {
   private performCSGUnion(meshes: BABYLON.Mesh[], node: UnionNode): BABYLON.Mesh {
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for union');
-      return meshes[0]!; // Safe access - caller ensures non-empty array
+      const firstMesh = meshes[0];
+      if (!firstMesh) {
+        console.error('[ERROR] No meshes available for union operation');
+        return BABYLON.MeshBuilder.CreateBox('union_error', { size: 1 }, this.scene);
+      }
+      return firstMesh;
     }
 
     // Use mock CSG2 if available
-    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
+    const globalWithMock = globalThis as { __MOCK_CSG2__?: typeof BABYLON.CSG2 };
+    const CSG2Class = globalWithMock.__MOCK_CSG2__ ?? BABYLON.CSG2;
+    const firstMesh = meshes[0];
+    if (!firstMesh) {
+      console.error('[ERROR] No meshes available for union operation');
+      // Create a simple fallback box mesh
+      return BABYLON.MeshBuilder.CreateBox('union_error', { size: 1 }, this.scene);
+    }
+    let baseCsg = CSG2Class.FromMesh(firstMesh);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]!);
+      const currentMesh = meshes[i];
+      if (!currentMesh) {
+        console.warn(`[WARN] Mesh at index ${i} is undefined, skipping`);
+        continue;
+      }
+      const childCsg = CSG2Class.FromMesh(currentMesh);
       const newBaseCsg = baseCsg.add(childCsg); // CSG2 uses 'add' for union
 
       // Dispose previous CSG to prevent memory leaks
@@ -1083,17 +1122,29 @@ export class OpenScadAstVisitor {
    * Performs CSG2 difference operation on multiple meshes.
    */
   private performCSGDifference(meshes: BABYLON.Mesh[], node: DifferenceNode): BABYLON.Mesh {
+    const firstMesh = meshes[0];
+    if (!firstMesh) {
+      console.error('[ERROR] No meshes available for difference operation');
+      return BABYLON.MeshBuilder.CreateBox('difference_error', { size: 1 }, this.scene);
+    }
+
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for difference');
-      return meshes[0]!; // Safe access - caller ensures non-empty array
+      return firstMesh;
     }
 
     // Use mock CSG2 if available
-    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
+    const globalWithMock = globalThis as { __MOCK_CSG2__?: typeof BABYLON.CSG2 };
+    const CSG2Class = globalWithMock.__MOCK_CSG2__ ?? BABYLON.CSG2;
+    let baseCsg = CSG2Class.FromMesh(firstMesh);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]!);
+      const currentMesh = meshes[i];
+      if (!currentMesh) {
+        console.warn(`[WARN] Mesh at index ${i} is undefined, skipping`);
+        continue;
+      }
+      const childCsg = CSG2Class.FromMesh(currentMesh);
       const newBaseCsg = baseCsg.subtract(childCsg); // CSG2 uses 'subtract' for difference
 
       // Dispose previous CSG to prevent memory leaks
@@ -1119,17 +1170,29 @@ export class OpenScadAstVisitor {
    * Performs CSG2 intersection operation on multiple meshes.
    */
   private performCSGIntersection(meshes: BABYLON.Mesh[], node: IntersectionNode): BABYLON.Mesh {
+    const firstMesh = meshes[0];
+    if (!firstMesh) {
+      console.error('[ERROR] No meshes available for intersection operation');
+      return BABYLON.MeshBuilder.CreateBox('intersection_error', { size: 1 }, this.scene);
+    }
+
     if (!this.isCSG2Ready()) {
       console.warn('[WARN] CSG2 not available, returning first mesh for intersection');
-      return meshes[0]!; // Safe access - caller ensures non-empty array
+      return firstMesh;
     }
 
     // Use mock CSG2 if available
-    const CSG2Class = (globalThis as any).__MOCK_CSG2__ || BABYLON.CSG2;
-    let baseCsg = CSG2Class.FromMesh(meshes[0]!);
+    const globalWithMock = globalThis as { __MOCK_CSG2__?: typeof BABYLON.CSG2 };
+    const CSG2Class = globalWithMock.__MOCK_CSG2__ ?? BABYLON.CSG2;
+    let baseCsg = CSG2Class.FromMesh(firstMesh);
 
     for (let i = 1; i < meshes.length; i++) {
-      const childCsg = CSG2Class.FromMesh(meshes[i]!);
+      const currentMesh = meshes[i];
+      if (!currentMesh) {
+        console.warn(`[WARN] Mesh at index ${i} is undefined, skipping`);
+        continue;
+      }
+      const childCsg = CSG2Class.FromMesh(currentMesh);
       const newBaseCsg = baseCsg.intersect(childCsg); // CSG2 uses 'intersect' for intersection
 
       // Dispose previous CSG to prevent memory leaks

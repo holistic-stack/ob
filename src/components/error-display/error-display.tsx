@@ -47,7 +47,7 @@ export function ErrorDisplay({
       try {
         return JSON.stringify(details, null, 2);
       } catch {
-        return String(details);
+        return `[Object: ${Object.prototype.toString.call(details)}]`;
       }
     }
     return String(details);

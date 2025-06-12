@@ -1,33 +1,54 @@
 /**
- * @file Pipeline Processor Component
+ * @file Modern Pipeline Processor Component (React 19)
  * 
- * A focused component for processing OpenSCAD code through the pipeline.
- * Handles: OpenSCAD code → @holistic-stack/openscad-parser:parseAST → CSG2 operations
+ * A React 19 compatible pipeline processor following modern patterns:
+ * - Proper async handling with React 19 patterns
+ * - Optimized resource management
+ * - Better error handling and recovery
+ * - No scene disposal issues
+ * 
+ * @author Luciano Júnior
+ * @date June 2025
  */
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import * as BABYLON from '@babylonjs/core';
-import { PipelineProcessorProps, createPipelineFailure, createPipelineSuccess } from '../../types/pipeline-types';
 import { OpenScadPipeline } from '../../babylon-csg2/openscad-pipeline/openscad-pipeline';
-import './pipeline-processor.css';
+import { PipelineProcessorProps as BasePipelineProcessorProps, PipelineResult as _PipelineResult, createPipelineSuccess, createPipelineFailure } from '../../types/pipeline-types';
 
 /**
- * Pipeline processor component that orchestrates the conversion process
- * 
- * This is a placeholder implementation - will be enhanced with actual pipeline logic
+ * Modern pipeline processor with React 19 patterns
  */
-export function PipelineProcessor({ 
-  openscadCode, 
-  onResult, 
-  onProcessingStart, 
-  disabled = false 
+interface PipelineProcessorProps extends BasePipelineProcessorProps {
+  readonly onProcessingEnd?: () => void;
+  readonly autoProcess?: boolean;
+}
+
+export function PipelineProcessor({
+  openscadCode,
+  onResult,
+  onProcessingStart,
+  onProcessingEnd,
+  autoProcess = false
 }: PipelineProcessorProps): React.JSX.Element {
-  console.log('[INIT] PipelineProcessor component rendering');
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastProcessedCode, setLastProcessedCode] = useState<string>('');
+  const [processingStats, setProcessingStats] = useState<{
+    totalRuns: number;
+    successCount: number;
+    errorCount: number;
+    averageTime: number;
+  }>({
+    totalRuns: 0,
+    successCount: 0,
+    errorCount: 0,
+    averageTime: 0
+  });
 
-  // Use refs to avoid stale closures and manage resources
+  // Use refs to avoid stale closures
   const pipelineRef = useRef<OpenScadPipeline | null>(null);
+  const processingTimeRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize pipeline once
@@ -36,7 +57,7 @@ export function PipelineProcessor({
       if (pipelineRef.current) return;
 
       console.log('[INIT] Initializing modern pipeline processor');
-
+      
       try {
         const pipeline = new OpenScadPipeline({
           enableLogging: true,
@@ -56,12 +77,16 @@ export function PipelineProcessor({
       }
     };
 
-    initializePipeline();
+    void initializePipeline().catch(error => {
+      console.error('[ERROR] Failed to initialize pipeline:', error);
+    });
 
     // Cleanup on unmount
     return () => {
       if (pipelineRef.current) {
-        pipelineRef.current.dispose();
+        void pipelineRef.current.dispose().catch(error => {
+          console.error('[ERROR] Failed to dispose pipeline:', error);
+        });
         pipelineRef.current = null;
       }
       if (abortControllerRef.current) {
@@ -70,8 +95,9 @@ export function PipelineProcessor({
     };
   }, []);
 
-  const handleProcess = useCallback(async () => {
-    if (!openscadCode.trim() || !pipelineRef.current) {
+  // Process OpenSCAD code with modern async patterns
+  const processCode = useCallback(async (code: string): Promise<void> => {
+    if (!code.trim() || !pipelineRef.current) {
       console.warn('[WARN] Cannot process: empty code or pipeline not ready');
       return;
     }
@@ -81,9 +107,11 @@ export function PipelineProcessor({
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
+
     console.log('[INIT] Starting modern pipeline processing');
     setIsProcessing(true);
     onProcessingStart();
+    processingTimeRef.current = Date.now();
 
     try {
       // Create a dedicated scene for processing
@@ -93,8 +121,19 @@ export function PipelineProcessor({
       // Set up scene for processing
       scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-      // Process with the initialized pipeline
-      const result = await pipelineRef.current.processOpenScadCode(openscadCode, scene);
+      // Process with timeout and abort signal
+      const processPromise = pipelineRef.current.processOpenScadCode(code, scene);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Processing timeout')), 30000);
+      });
+
+      const abortPromise = new Promise<never>((_, reject) => {
+        abortControllerRef.current?.signal.addEventListener('abort', () => {
+          reject(new Error('Processing aborted'));
+        });
+      });
+
+      const result = await Promise.race([processPromise, timeoutPromise, abortPromise]);
 
       if (result.success && result.value) {
         console.log('[DEBUG] Pipeline processing successful');
@@ -110,7 +149,7 @@ export function PipelineProcessor({
         // Copy basic properties from the result if it's a mesh
         if (result.value instanceof BABYLON.Mesh) {
           const sourceMesh = result.value;
-
+          
           // Copy transform
           simpleMesh.position = sourceMesh.position.clone();
           simpleMesh.rotation = sourceMesh.rotation.clone();
@@ -137,8 +176,25 @@ export function PipelineProcessor({
           }
         }
 
-        const successResult = createPipelineSuccess(simpleMesh, result.metadata);
-        setLastProcessedCode(openscadCode);
+        const processingTime = Date.now() - processingTimeRef.current;
+        
+        // Update stats
+        setProcessingStats(prev => ({
+          totalRuns: prev.totalRuns + 1,
+          successCount: prev.successCount + 1,
+          errorCount: prev.errorCount,
+          averageTime: (prev.averageTime * prev.totalRuns + processingTime) / (prev.totalRuns + 1)
+        }));
+
+        const successResult = createPipelineSuccess(simpleMesh, {
+          parseTimeMs: result.metadata?.parseTimeMs ?? 0,
+          visitTimeMs: result.metadata?.visitTimeMs ?? 0,
+          totalTimeMs: processingTime,
+          nodeCount: result.metadata?.nodeCount ?? 1,
+          meshCount: result.metadata?.meshCount ?? 1
+        });
+
+        setLastProcessedCode(code);
         onResult(successResult);
 
         // Don't dispose the scene immediately - let the renderer handle it
@@ -151,87 +207,139 @@ export function PipelineProcessor({
       } else {
         throw new Error('Processing failed');
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
 
+    } catch (error) {
+      const processingTime = Date.now() - processingTimeRef.current;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
+      
       console.error('[ERROR] Pipeline processing failed:', errorMessage);
 
-      const errorResult = createPipelineFailure<BABYLON.Mesh | null>(errorMessage, error);
+      // Update stats
+      setProcessingStats(prev => ({
+        totalRuns: prev.totalRuns + 1,
+        successCount: prev.successCount,
+        errorCount: prev.errorCount + 1,
+        averageTime: (prev.averageTime * prev.totalRuns + processingTime) / (prev.totalRuns + 1)
+      }));
+
+      const errorResult = createPipelineFailure<BABYLON.Mesh | null>(errorMessage, {
+        parseTimeMs: 0,
+        visitTimeMs: 0,
+        totalTimeMs: processingTime,
+        nodeCount: 0,
+        meshCount: 0
+      });
+
       onResult(errorResult);
 
     } finally {
       setIsProcessing(false);
+      onProcessingEnd?.();
       abortControllerRef.current = null;
       console.log('[END] Pipeline processing completed');
     }
-  }, [openscadCode, onResult, onProcessingStart]);
+  }, [onResult, onProcessingStart, onProcessingEnd]);
 
-  const canProcess = openscadCode.trim().length > 0 && !disabled && !isProcessing && pipelineRef.current !== null;
+  // Auto-process when code changes
+  useEffect(() => {
+    if (autoProcess && openscadCode !== lastProcessedCode && !isProcessing) {
+      const timeoutId = setTimeout(() => {
+        void processCode(openscadCode).catch(error => {
+          console.error('[ERROR] Auto-process failed:', error);
+        });
+      }, 500); // Debounce auto-processing
+
+      return () => clearTimeout(timeoutId);
+    }
+    return undefined; // Explicit return for all code paths
+  }, [autoProcess, openscadCode, lastProcessedCode, isProcessing, processCode]);
+
+  // Manual process handler
+  const handleManualProcess = useCallback(() => {
+    if (!isProcessing) {
+      void processCode(openscadCode).catch(error => {
+        console.error('[ERROR] Manual process failed:', error);
+      });
+    }
+  }, [openscadCode, isProcessing, processCode]);
+
+  // Cancel processing
+  const handleCancel = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }, []);
+
+  const canProcess = openscadCode.trim().length > 0 && pipelineRef.current !== null;
 
   return (
     <div className="pipeline-processor">
       <div className="processor-header">
-        <h3 className="processor-title">Pipeline Processing</h3>
-        <p className="processor-description">
-          Convert OpenSCAD code to 3D scene using CSG2 operations
-        </p>
+        <h3>Modern Pipeline Processor</h3>
+        <div className="processor-stats">
+          <span>Runs: {processingStats.totalRuns}</span>
+          <span>Success: {processingStats.successCount}</span>
+          <span>Errors: {processingStats.errorCount}</span>
+          <span>Avg Time: {Math.round(processingStats.averageTime)}ms</span>
+        </div>
       </div>
 
-      <div className="processor-actions">
+      <div className="processor-controls">
         <button
-          type="button"
-          className="process-button"
-          data-testid="process-button"
-          onClick={handleProcess}
-          disabled={!canProcess}
-          aria-describedby="process-status"
+          onClick={handleManualProcess}
+          disabled={!canProcess || isProcessing}
+          className={`process-button ${isProcessing ? 'processing' : ''}`}
         >
           {isProcessing ? (
             <>
-              <span className="spinner" aria-hidden="true">⟳</span>
+              <span className="spinner">⟳</span>
               Processing...
             </>
           ) : (
             'Process OpenSCAD Code'
           )}
         </button>
-      </div>
 
-      <div id="process-status" className="processor-status">
         {isProcessing && (
-          <div className="status-message processing">
-            <span className="status-icon">⚙️</span>
-            Processing OpenSCAD code through pipeline...
-          </div>
+          <button
+            onClick={handleCancel}
+            className="cancel-button"
+          >
+            Cancel
+          </button>
         )}
-        {!canProcess && !isProcessing && openscadCode.trim().length === 0 && (
-          <div className="status-message info">
-            <span className="status-icon">ℹ️</span>
-            Enter OpenSCAD code to process
-          </div>
-        )}
+
+        <label className="auto-process-toggle">
+          <input
+            type="checkbox"
+            checked={autoProcess}
+            onChange={(e) => {
+              // This would need to be passed up to parent component
+              console.log('Auto-process toggled:', e.target.checked);
+            }}
+          />
+          Auto-process on code change
+        </label>
       </div>
 
-      <div className="pipeline-info">
-        <h4 className="pipeline-stages-title">Pipeline Stages:</h4>
-        <ol className="pipeline-stages">
-          <li className="pipeline-stage">
-            <span className="stage-name">Parse OpenSCAD</span>
-            <span className="stage-description">@holistic-stack/openscad-parser</span>
-          </li>
-          <li className="pipeline-stage">
-            <span className="stage-name">Generate AST</span>
-            <span className="stage-description">Abstract Syntax Tree</span>
-          </li>
-          <li className="pipeline-stage">
-            <span className="stage-name">Convert to CSG2</span>
-            <span className="stage-description">Babylon.js CSG2 operations</span>
-          </li>
-          <li className="pipeline-stage">
-            <span className="stage-name">Create Scene</span>
-            <span className="stage-description">3D Babylon.js scene</span>
-          </li>
-        </ol>
+      <div className="processor-status">
+        {!pipelineRef.current && (
+          <div className="status-message warning">
+            ⚠️ Pipeline initializing...
+          </div>
+        )}
+        
+        {!canProcess && pipelineRef.current && (
+          <div className="status-message info">
+            ℹ️ Enter OpenSCAD code to process
+          </div>
+        )}
+
+        {lastProcessedCode && (
+          <div className="status-message success">
+            ✓ Last processed: {lastProcessedCode.substring(0, 50)}...
+          </div>
+        )}
       </div>
     </div>
   );

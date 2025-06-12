@@ -4,7 +4,7 @@
  * Type definitions for the OpenSCAD to Babylon.js pipeline testing interface.
  * Follows functional programming patterns with Result types for error handling.
  */
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { ASTNode as _ASTNode } from '@holistic-stack/openscad-parser';
 import type { Scene, Mesh } from '@babylonjs/core';
 
 /**

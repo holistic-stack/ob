@@ -271,7 +271,7 @@ export function extractNumber(
   
   return { 
     success: false, 
-    error: `Cannot extract number from parameter: ${String(param)}. Using default: ${defaultValue}` 
+    error: `Cannot extract number from parameter: ${JSON.stringify(param)}. Using default: ${defaultValue}` 
   };
 }
 
@@ -306,7 +306,7 @@ export function extractBoolean(
   
   return { 
     success: false, 
-    error: `Cannot extract boolean from parameter: ${String(param)}. Using default: ${defaultValue}` 
+    error: `Cannot extract boolean from parameter: ${JSON.stringify(param)}. Using default: ${defaultValue}` 
   };
 }
 
@@ -325,17 +325,17 @@ export function extractVector3D(
     const x = typeof param[0] === 'number' ? param[0] : 0;
     const y = typeof param[1] === 'number' ? param[1] : 0;
     const z = typeof param[2] === 'number' ? param[2] : 0;
-    return { success: true, value: Object.freeze([x, y, z]) as readonly [number, number, number] };
+    return { success: true, value: Object.freeze([x, y, z]) };
   }
   
   // Handle single number (uniform scaling)
   if (typeof param === 'number') {
-    return { success: true, value: Object.freeze([param, param, param]) as readonly [number, number, number] };
+    return { success: true, value: Object.freeze([param, param, param]) };
   }
   
   return { 
     success: false, 
-    error: `Cannot extract Vector3D from parameter: ${String(param)}. Using default: [${defaultValue.join(', ')}]` 
+    error: `Cannot extract Vector3D from parameter: ${JSON.stringify(param)}. Using default: [${defaultValue.join(', ')}]` 
   };
 }
 
@@ -353,17 +353,17 @@ export function extractVector2D(
   if (Array.isArray(param) && param.length >= 2) {
     const x = typeof param[0] === 'number' ? param[0] : 0;
     const y = typeof param[1] === 'number' ? param[1] : 0;
-    return { success: true, value: Object.freeze([x, y]) as readonly [number, number] };
+    return { success: true, value: Object.freeze([x, y]) };
   }
   
   // Handle single number (uniform scaling)
   if (typeof param === 'number') {
-    return { success: true, value: Object.freeze([param, param]) as readonly [number, number] };
+    return { success: true, value: Object.freeze([param, param]) };
   }
   
   return { 
     success: false, 
-    error: `Cannot extract Vector2D from parameter: ${String(param)}. Using default: [${defaultValue.join(', ')}]` 
+    error: `Cannot extract Vector2D from parameter: ${JSON.stringify(param)}. Using default: [${defaultValue.join(', ')}]` 
   };
 }
 
@@ -494,8 +494,7 @@ export function extractScaleVector(
  * @returns True if node has valid location
  */
 export function hasValidLocation(node: BaseNode): node is BaseNode & { location: SourceLocation } {
-  return node.location !== undefined && 
-         node.location.start !== undefined && 
+  return node.location?.start !== undefined && 
          node.location.end !== undefined;
 }
 
@@ -506,7 +505,7 @@ export function hasValidLocation(node: BaseNode): node is BaseNode & { location:
  * @returns True if node has children array
  */
 export function hasChildren(node: ASTNode): node is ASTNode & { children: ASTNode[] } {
-  return 'children' in node && Array.isArray((node as any).children);
+  return 'children' in node && Array.isArray(node.children);
 }
 
 /**
@@ -565,7 +564,7 @@ export function isExpressionParameter(param: ParameterValue): param is Expressio
          param !== undefined && 
          typeof param === 'object' && 
          'type' in param &&
-         typeof (param as any).type === 'string';
+         typeof param.type === 'string';
 }
 
 /**
@@ -575,5 +574,5 @@ export function isExpressionParameter(param: ParameterValue): param is Expressio
  * @returns True if parameter is an error node
  */
 export function isErrorParameter(param: ParameterValue): param is ErrorNode {
-  return isExpressionParameter(param) && (param as any).type === 'error';
+  return typeof param === 'object' && param !== null && 'type' in param && param.type === 'error';
 }

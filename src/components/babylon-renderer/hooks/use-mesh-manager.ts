@@ -10,13 +10,13 @@
  * @date June 2025
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo as _useMemo } from 'react';
 import * as BABYLON from '@babylonjs/core';
 import { PipelineResult } from '../../../types/pipeline-types';
 
 interface MeshManagerState {
   currentMesh: BABYLON.Mesh | null;
-  updateMesh: (pipelineResult: PipelineResult<any>) => void;
+  updateMesh: (pipelineResult: PipelineResult) => void;
   clearMesh: () => void;
 }
 
@@ -89,7 +89,7 @@ export function useMeshManager(scene: BABYLON.Scene | null): MeshManagerState {
   }, []);
 
   // Update mesh from pipeline result (avoiding useEffect - using event handler pattern)
-  const updateMesh = useCallback((pipelineResult: PipelineResult<any>) => {
+  const updateMesh = useCallback((pipelineResult: PipelineResult) => {
     if (!pipelineResult?.success || !pipelineResult.value || !scene) {
       console.log('[DEBUG] Cannot update mesh: invalid result or scene not ready');
       return;

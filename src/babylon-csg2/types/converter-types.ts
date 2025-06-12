@@ -16,14 +16,7 @@
 
 import type { Scene, Mesh, Material, Engine } from '@babylonjs/core';
 import type { ASTNode, SourceLocation } from '@holistic-stack/openscad-parser';
-import type { 
-  OpenSCADOperationNode,
-  ConversionResult 
-} from './openscad-types.js';
-import type { 
-  BabylonMeshConfig,
-  BabylonResult 
-} from './babylon-types.js';
+import type { ConversionResult } from './openscad-types.js';
 
 /**
  * Error types that can occur during conversion

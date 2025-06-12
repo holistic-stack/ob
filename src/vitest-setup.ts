@@ -39,7 +39,7 @@ function resolveWasmPath(urlPath: string): string {
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -55,7 +55,7 @@ function resolveWasmPath(urlPath: string): string {
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -75,7 +75,7 @@ function resolveWasmPath(urlPath: string): string {
         console.log(`  - resolvedWasmPath: ${resolvedWasmPath}`);
         console.log(`Attempting web-tree-sitter strategy 3 (lib): ${resolvedWasmPath}`);
         return resolvedWasmPath;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -107,7 +107,7 @@ function resolveWasmPath(urlPath: string): string {
           return resolvedWasmPath;
         }
         return null;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -136,7 +136,7 @@ function resolveWasmPath(urlPath: string): string {
           return resolvedWasmPath;
         }
         return null;
-      } catch (e) {
+      } catch (_e) {
 
         return null;
       }
@@ -256,7 +256,14 @@ export async function initializeCSG2ForTests(): Promise<void> {
     console.warn('[WARN] Real CSG2 initialization failed, using mock CSG2:', errorMessage);
 
     // Set up mock CSG2 for testing
-    (globalThis as any).__MOCK_CSG2__ = {
+    interface MockCSG2 {
+      FromMesh: () => {
+        add: () => { toMesh: () => null };
+        subtract: () => { toMesh: () => null };
+        intersect: () => { toMesh: () => null };
+      };
+    }
+    (globalThis as typeof globalThis & { __MOCK_CSG2__?: MockCSG2 }).__MOCK_CSG2__ = {
       FromMesh: () => ({
         add: () => ({ toMesh: () => null }),
         subtract: () => ({ toMesh: () => null }),

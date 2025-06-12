@@ -8,8 +8,7 @@
  * @version 1.0.0
  */
 
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
 
 /**
  * Result type for functional error handling
@@ -62,12 +61,12 @@ export class ParserResourceManager {
 
     try {
       // Check if we're in test environment with mock parser
-      const mockParser = (globalThis as any).__MOCK_OPENSCAD_PARSER__;
+      const mockParser = (globalThis as typeof globalThis & { __MOCK_OPENSCAD_PARSER__?: EnhancedOpenscadParser }).__MOCK_OPENSCAD_PARSER__;
       if (mockParser) {
         if (this.config.enableLogging) {
           this.logger.log('[ParserResourceManager] Using mock parser for tests');
         }
-        this.parser = mockParser as EnhancedOpenscadParser;
+        this.parser = mockParser;
         await this.parser.init();
         return { success: true, value: this.parser };
       }
@@ -193,7 +192,7 @@ export class ParserResourceManager {
         }
 
         // Return immutable copy of AST
-        const immutableAST = Object.freeze([...ast]) as ReadonlyArray<ASTNode>;
+        const immutableAST = Object.freeze([...ast]);
         
         if (this.config.enableLogging) {
           this.logger.log(`[ParserResourceManager] Successfully parsed ${immutableAST.length} AST nodes`);

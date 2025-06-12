@@ -22,13 +22,10 @@ import type {
   ScaleNode,
   Vector3D
 } from '@holistic-stack/openscad-parser';
-import type {
-  ConversionContext,
-  MeshConversionResult,
-  OpenSCADConverter,
-  ConversionError
-} from '../../types/converter-types.js';
 import {
+  type ConversionContext,
+  type MeshConversionResult,
+  type OpenSCADConverter,
   createConverterSuccess,
   createConverterFailure,
   createConversionError
@@ -257,7 +254,7 @@ export class TransformConverter implements OpenSCADConverter<TransformASTNode> {
   /**
    * Convert a child node using the appropriate converter
    */
-  private async convertChild(childNode: ASTNode, context: ConversionContext): Promise<MeshConversionResult> {
+  private async convertChild(childNode: ASTNode, _context: ConversionContext): Promise<MeshConversionResult> {
     // This would typically use a converter registry
     // For now, we'll implement a basic dispatch mechanism
     

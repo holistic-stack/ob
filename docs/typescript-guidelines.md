@@ -1416,3 +1416,344 @@ if (status === Status.Active) {}
 ```
 
 This migration checklist ensures a smooth transition from TypeScript 4.8 to 5.8 while adopting the latest best practices and performance improvements.
+
+## Project-Specific Lint Rules and Guidelines
+
+### ESLint Configuration for OpenSCAD-Babylon Project
+
+This section provides project-specific guidelines for fixing common lint issues in the OpenSCAD-Babylon project.
+
+#### 1. Handling `@typescript-eslint/no-explicit-any`
+
+**Problem**: Using `any` type defeats TypeScript's type safety.
+
+**Solutions by Context**:
+
+```typescript
+// ❌ Avoid any
+function processData(data: any): any {
+  return data.someProperty;
+}
+
+// ✅ Use proper types for OpenSCAD AST nodes
+interface OpenSCADNode {
+  type: string;
+  children?: OpenSCADNode[];
+  parameters?: Record<string, unknown>;
+}
+
+function processNode(node: OpenSCADNode): ProcessedNode {
+  return {
+    type: node.type,
+    processed: true
+  };
+}
+
+// ✅ For CSG2 operations with unknown structure
+function processCSG2Operation(operation: unknown): CSG2Result {
+  if (typeof operation === 'object' && operation !== null) {
+    return processValidOperation(operation as Record<string, unknown>);
+  }
+  throw new Error('Invalid CSG2 operation');
+}
+
+// ✅ For Babylon.js mesh properties
+interface BabylonMeshData {
+  position?: Vector3;
+  rotation?: Vector3;
+  scaling?: Vector3;
+  material?: Material;
+}
+
+function updateMesh(mesh: Mesh, data: BabylonMeshData): void {
+  if (data.position) mesh.position = data.position;
+  if (data.rotation) mesh.rotation = data.rotation;
+  // ... etc
+}
+```
+
+#### 2. Handling `@typescript-eslint/no-unused-vars`
+
+**Problem**: Variables defined but never used.
+
+**Solutions**:
+
+```typescript
+// ❌ Unused imports
+import { Mesh, StandardMaterial, Color3 } from '@babylonjs/core';
+import { SphereNode, CubeNode, CylinderNode } from './types.js';
+
+// ✅ Remove unused imports or prefix with underscore
+import { Mesh } from '@babylonjs/core';
+import type { SphereNode } from './types.js'; // Use type-only import if only for typing
+
+// ✅ For intentionally unused parameters
+function processNode(_unusedParam: string, usedParam: number): number {
+  return usedParam * 2;
+}
+
+// ✅ For destructuring with unused properties
+const { used, _unused } = someObject;
+```
+
+#### 3. Handling `@typescript-eslint/no-non-null-assertion`
+
+**Problem**: Non-null assertions (`!`) can cause runtime errors.
+
+**Solutions**:
+
+```typescript
+// ❌ Dangerous non-null assertion
+const value = node.children![0]!.parameters!.value;
+
+// ✅ Safe property access with validation
+function getNodeValue(node: OpenSCADNode): unknown {
+  if (!node.children || node.children.length === 0) {
+    throw new Error('Node has no children');
+  }
+
+  const firstChild = node.children[0];
+  if (!firstChild.parameters) {
+    throw new Error('Child node has no parameters');
+  }
+
+  return firstChild.parameters.value;
+}
+
+// ✅ Using optional chaining
+const value = node.children?.[0]?.parameters?.value;
+if (value === undefined) {
+  throw new Error('Required value not found');
+}
+
+// ✅ Type guards for better safety
+function hasRequiredStructure(node: unknown): node is RequiredNode {
+  return typeof node === 'object' &&
+         node !== null &&
+         'children' in node &&
+         Array.isArray((node as any).children);
+}
+```
+
+#### 4. Handling `@typescript-eslint/no-floating-promises`
+
+**Problem**: Promises that aren't properly handled.
+
+**Solutions**:
+
+```typescript
+// ❌ Floating promise
+processOpenSCADFile(content);
+
+// ✅ Properly handle async operations
+try {
+  await processOpenSCADFile(content);
+} catch (error) {
+  console.error('Failed to process OpenSCAD file:', error);
+}
+
+// ✅ For fire-and-forget operations
+void processOpenSCADFile(content).catch(error => {
+  console.error('Background processing failed:', error);
+});
+
+// ✅ In React components
+const handleProcess = useCallback(async () => {
+  try {
+    await processOpenSCADFile(content);
+  } catch (error) {
+    setError(error instanceof Error ? error.message : 'Unknown error');
+  }
+}, [content]);
+```
+
+#### 5. Handling `@typescript-eslint/no-base-to-string`
+
+**Problem**: Objects being stringified without proper toString method.
+
+**Solutions**:
+
+```typescript
+// ❌ Object stringification
+console.log(`Processing: ${someObject}`);
+
+// ✅ Proper stringification for OpenSCAD nodes
+function nodeToString(node: OpenSCADNode): string {
+  return `${node.type}(${Object.keys(node.parameters || {}).join(', ')})`;
+}
+
+console.log(`Processing: ${nodeToString(node)}`);
+
+// ✅ For error objects
+function errorToString(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return JSON.stringify(error);
+}
+
+// ✅ For complex objects
+function formatCSG2Result(result: CSG2Result): string {
+  return JSON.stringify(result, null, 2);
+}
+```
+
+#### 6. Handling `no-duplicate-imports`
+
+**Problem**: Multiple import statements from the same module.
+
+**Solutions**:
+
+```typescript
+// ❌ Duplicate imports
+import { Vector3 } from '@babylonjs/core';
+import { Mesh, Scene } from '@babylonjs/core';
+import type { Material } from '@babylonjs/core';
+
+// ✅ Consolidated imports
+import { Vector3, Mesh, Scene } from '@babylonjs/core';
+import type { Material } from '@babylonjs/core';
+
+// ✅ Or combine type and value imports
+import { Vector3, Mesh, Scene, type Material } from '@babylonjs/core';
+```
+
+#### 7. Handling `@typescript-eslint/prefer-nullish-coalescing`
+
+**Problem**: Using `||` instead of `??` for null/undefined checks.
+
+**Solutions**:
+
+```typescript
+// ❌ Logical OR can have unexpected behavior
+const value = config.timeout || 5000; // 0 would become 5000
+
+// ✅ Nullish coalescing for null/undefined only
+const value = config.timeout ?? 5000; // 0 stays 0, only null/undefined becomes 5000
+
+// ✅ For OpenSCAD parameter defaults
+function getParameter(params: Record<string, unknown>, key: string, defaultValue: unknown): unknown {
+  return params[key] ?? defaultValue;
+}
+```
+
+#### 8. Handling `@typescript-eslint/prefer-optional-chain`
+
+**Problem**: Verbose null/undefined checking.
+
+**Solutions**:
+
+```typescript
+// ❌ Verbose checking
+if (node && node.children && node.children.length > 0) {
+  // process children
+}
+
+// ✅ Optional chaining
+if (node?.children?.length) {
+  // process children
+}
+
+// ✅ For method calls
+node?.children?.[0]?.process?.();
+```
+
+### Project-Specific Type Definitions
+
+#### OpenSCAD AST Types
+
+```typescript
+// Base types for OpenSCAD AST
+interface BaseOpenSCADNode {
+  readonly type: string;
+  readonly children?: readonly OpenSCADNode[];
+  readonly parameters?: Readonly<Record<string, unknown>>;
+  readonly location?: SourceLocation;
+}
+
+// Specific node types
+interface PrimitiveNode extends BaseOpenSCADNode {
+  readonly type: 'cube' | 'sphere' | 'cylinder';
+  readonly parameters: Readonly<{
+    size?: Vector3Like;
+    radius?: number;
+    height?: number;
+    center?: boolean;
+  }>;
+}
+
+interface TransformNode extends BaseOpenSCADNode {
+  readonly type: 'translate' | 'rotate' | 'scale';
+  readonly parameters: Readonly<{
+    v?: Vector3Like;
+    a?: Vector3Like;
+  }>;
+  readonly children: readonly [OpenSCADNode];
+}
+```
+
+#### CSG2 Integration Types
+
+```typescript
+// Result types for CSG2 operations
+type CSG2Result<T = unknown> =
+  | { readonly success: true; readonly data: T; readonly method: string }
+  | { readonly success: false; readonly error: string; readonly method: string };
+
+// Conversion context
+interface ConversionContext {
+  readonly scene: Scene;
+  readonly materials: Map<string, Material>;
+  readonly meshes: Map<string, Mesh>;
+  readonly logger: Logger;
+}
+```
+
+### Testing Guidelines
+
+#### Test Structure
+
+```typescript
+// ✅ Proper test structure
+describe('PrimitiveConverter', () => {
+  let converter: PrimitiveConverter;
+  let mockScene: Scene;
+
+  beforeEach(() => {
+    mockScene = new Scene(new NullEngine());
+    converter = new PrimitiveConverter();
+  });
+
+  afterEach(() => {
+    mockScene.dispose();
+  });
+
+  describe('convertCube', () => {
+    it('should create cube mesh with correct dimensions', () => {
+      // Test implementation
+    });
+
+    it('should handle missing size parameter', () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+#### Avoiding Test Lint Issues
+
+```typescript
+// ✅ Use underscore prefix for intentionally unused test variables
+it('should handle error case', () => {
+  const _unusedResult = converter.convert(invalidNode);
+  expect(() => converter.validate()).toThrow();
+});
+
+// ✅ Proper async test handling
+it('should process async operations', async () => {
+  await expect(converter.processAsync(node)).resolves.toBeDefined();
+});
+```

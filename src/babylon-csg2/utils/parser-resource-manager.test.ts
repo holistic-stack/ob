@@ -12,13 +12,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler, IErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
 import {
   ParserResourceManager,
   createParserResourceManager,
   parseOpenSCADCode,
-  type Result,
   type ParserConfig
 } from './parser-resource-manager';
 
@@ -34,7 +32,7 @@ describe('ParserResourceManager', () => {
     parseAST: Mock;
     dispose: Mock;
   };
-  let mockErrorHandler: any;
+  let mockErrorHandler: IErrorHandler;
   let consoleSpy: {
     log: Mock;
     error: Mock;
@@ -56,7 +54,17 @@ describe('ParserResourceManager', () => {
     };
 
     // Mock error handler
-    mockErrorHandler = {};
+    mockErrorHandler = {
+      logInfo: vi.fn(),
+      logWarning: vi.fn(),
+      handleError: vi.fn(),
+      getErrors: vi.fn(() => []), // Return empty array by default
+      getWarnings: vi.fn(() => []), // Return empty array by default
+      getInfos: vi.fn(() => []), // Return empty array by default
+      hasErrors: vi.fn(() => false), // Return false by default
+      hasWarnings: vi.fn(() => false), // Return false by default
+      clear: vi.fn(),
+    } as IErrorHandler;
 
     // Mock constructors
     (EnhancedOpenscadParser as Mock).mockImplementation(() => mockParser);

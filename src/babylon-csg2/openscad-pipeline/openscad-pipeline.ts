@@ -30,11 +30,9 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import { EnhancedOpenscadParser } from '@holistic-stack/openscad-parser';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { ASTNode, ModuleDefinitionNode } from '@holistic-stack/openscad-parser';
 import { ParserResourceManager } from '../utils/parser-resource-manager';
 import { OpenScadAstVisitor } from '../openscad-ast-visitor/openscad-ast-visitor';
-import type { ModuleDefinitionNode } from '@holistic-stack/openscad-parser';
 import { isModuleDefinitionNode } from '../utils/ast-type-guards';
 import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
 
@@ -244,7 +242,11 @@ export class OpenScadPipeline {
         return { success: true, value: null };
       }
 
-      const firstNode = astNodes[0]!; // Safe access - length check ensures element exists
+      const firstNode = astNodes[0]; // Safe access - length check ensures element exists
+      if (!firstNode) {
+        this.log('[WARN] First AST node is undefined');
+        return { success: true, value: null };
+      }
       this.log('[DEBUG] Processing first AST node of type:', firstNode.type);
 
       const mesh = this.visitor.visit(firstNode);

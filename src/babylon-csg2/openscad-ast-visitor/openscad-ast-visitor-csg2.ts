@@ -43,21 +43,21 @@ export class OpenScadAstVisitorCSG2 {
     try {
       switch (node.type) {
         case 'cube':
-          return this.visitCube(node as CubeNode);
+          return this.visitCube(node);
         case 'sphere':
-          return this.visitSphere(node as SphereNode);
+          return this.visitSphere(node);
         case 'cylinder':
-          return this.visitCylinder(node as CylinderNode);
+          return this.visitCylinder(node);
         case 'union':
-          return this.visitUnion(node as UnionNode);
+          return this.visitUnion(node);
         case 'difference':
-          return this.visitDifference(node as DifferenceNode);
+          return this.visitDifference(node);
         case 'intersection':
-          return this.visitIntersection(node as IntersectionNode);
+          return this.visitIntersection(node);
         case 'translate':
-          return this.visitTranslate(node as TranslateNode);
+          return this.visitTranslate(node);
         case 'scale':
-          return this.visitScale(node as ScaleNode);
+          return this.visitScale(node);
         default:
           console.warn(`[WARNING] Unsupported node type: ${node.type}`);
           return null;
@@ -101,9 +101,9 @@ export class OpenScadAstVisitorCSG2 {
    */
   protected visitSphere(node: SphereNode): BABYLON.Mesh {
     console.log('[DEBUG] Converting SphereNode to mesh:', node);
-    
-    // Extract radius from node properties (need to check actual AST structure)
-    const radius = (node as any).radius || (node as any).r || 1;
+
+    // Extract radius from node properties using proper type checking
+    const radius = this.extractSphereRadius(node);
     
     const mesh = BABYLON.MeshBuilder.CreateSphere(
       `sphere_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`, 
@@ -125,10 +125,9 @@ export class OpenScadAstVisitorCSG2 {
    */
   protected visitCylinder(node: CylinderNode): BABYLON.Mesh {
     console.log('[DEBUG] Converting CylinderNode to mesh:', node);
-    
-    // Extract height and radius from node properties (need to check actual AST structure)
-    const height = (node as any).height || (node as any).h || 1;
-    const radius = (node as any).radius || (node as any).r || 1;
+
+    // Extract height and radius from node properties using proper type checking
+    const { height, radius } = this.extractCylinderParams(node);
     
     const mesh = BABYLON.MeshBuilder.CreateCylinder(
       `cylinder_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`, 
@@ -167,15 +166,30 @@ export class OpenScadAstVisitorCSG2 {
       return null;
     }    if (childMeshes.length === 1) {
       console.log('[DEBUG] Single child mesh, returning as-is');
-      return childMeshes[0]!; // TypeScript assertion - we know it exists
+      const firstMesh = childMeshes[0];
+      if (!firstMesh) {
+        console.error('[ERROR] First mesh is unexpectedly undefined');
+        return null;
+      }
+      return firstMesh;
     }
 
     // Perform CSG2 union operations (using correct API)
     try {
-      let baseCsg = BABYLON.CSG2.FromMesh(childMeshes[0]!); // TypeScript assertion - we know it exists
+      const firstMesh = childMeshes[0];
+      if (!firstMesh) {
+        console.error('[ERROR] First mesh is undefined');
+        return null;
+      }
+      let baseCsg = BABYLON.CSG2.FromMesh(firstMesh);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = BABYLON.CSG2.FromMesh(childMeshes[i]!); // TypeScript assertion - we know it exists
+        const currentMesh = childMeshes[i];
+        if (!currentMesh) {
+          console.error(`[ERROR] Mesh at index ${i} is undefined`);
+          continue;
+        }
+        const childCsg = BABYLON.CSG2.FromMesh(currentMesh);
         const newBaseCsg = baseCsg.add(childCsg); // CSG2 uses 'add' for union
         
         // Dispose previous CSG objects to prevent memory leaks
@@ -228,12 +242,24 @@ export class OpenScadAstVisitorCSG2 {
       // Dispose any created meshes
       childMeshes.forEach(mesh => mesh.dispose());
       return null;
-    }    // Perform CSG2 difference operations
+    }
+
+    // Perform CSG2 difference operations
     try {
-      let baseCsg = BABYLON.CSG2.FromMesh(childMeshes[0]!); // TypeScript assertion - we know it exists
+      const firstMesh = childMeshes[0];
+      if (!firstMesh) {
+        console.error('[ERROR] First mesh is undefined');
+        return null;
+      }
+      let baseCsg = BABYLON.CSG2.FromMesh(firstMesh);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = BABYLON.CSG2.FromMesh(childMeshes[i]!); // TypeScript assertion - we know it exists
+        const currentMesh = childMeshes[i];
+        if (!currentMesh) {
+          console.error(`[ERROR] Mesh at index ${i} is undefined`);
+          continue;
+        }
+        const childCsg = BABYLON.CSG2.FromMesh(currentMesh);
         const newBaseCsg = baseCsg.subtract(childCsg);
         
         // Dispose previous CSG objects to prevent memory leaks
@@ -286,12 +312,24 @@ export class OpenScadAstVisitorCSG2 {
       // Dispose any created meshes
       childMeshes.forEach(mesh => mesh.dispose());
       return null;
-    }    // Perform CSG2 intersection operations
+    }
+
+    // Perform CSG2 intersection operations
     try {
-      let baseCsg = BABYLON.CSG2.FromMesh(childMeshes[0]!); // TypeScript assertion - we know it exists
+      const firstMesh = childMeshes[0];
+      if (!firstMesh) {
+        console.error('[ERROR] First mesh is undefined');
+        return null;
+      }
+      let baseCsg = BABYLON.CSG2.FromMesh(firstMesh);
 
       for (let i = 1; i < childMeshes.length; i++) {
-        const childCsg = BABYLON.CSG2.FromMesh(childMeshes[i]!); // TypeScript assertion - we know it exists
+        const currentMesh = childMeshes[i];
+        if (!currentMesh) {
+          console.error(`[ERROR] Mesh at index ${i} is undefined`);
+          continue;
+        }
+        const childCsg = BABYLON.CSG2.FromMesh(currentMesh);
         const newBaseCsg = baseCsg.intersect(childCsg);
         
         // Dispose previous CSG objects to prevent memory leaks
@@ -349,7 +387,7 @@ export class OpenScadAstVisitorCSG2 {
     }
 
     // Extract translation vector
-    const translation = extractVector3(node.v) || [0, 0, 0];
+    const translation = this.extractVector3(node.v);
     const [x, y, z] = translation;
 
     // Apply translation
@@ -390,7 +428,7 @@ export class OpenScadAstVisitorCSG2 {
     }
 
     // Extract scale vector
-    const scale = extractVector3(node.v) || [1, 1, 1];
+    const scale = this.extractVector3(node.v);
     const [x, y, z] = scale;
 
     // Apply scaling
@@ -401,5 +439,66 @@ export class OpenScadAstVisitorCSG2 {
     
     console.log('[DEBUG] Applied scaling:', scale, 'to mesh:', childMesh.name);
     return childMesh;
+  }
+
+  /**
+   * Extract sphere radius from SphereNode
+   */
+  private extractSphereRadius(node: SphereNode): number {
+    // Check radius first
+    if (typeof node.radius === 'number' && node.radius > 0) {
+      return node.radius;
+    }
+
+    // Check diameter
+    if (typeof node.diameter === 'number' && node.diameter > 0) {
+      return node.diameter / 2;
+    }
+
+    // Default sphere radius
+    return 1;
+  }
+
+  /**
+   * Extract cylinder parameters from CylinderNode
+   */
+  private extractCylinderParams(node: CylinderNode): { height: number; radius: number } {
+    // Extract height
+    const height = typeof node.h === 'number' && node.h > 0 ? node.h : 1;
+
+    // Extract radius - prefer r, then r1, then d/2, then d1/2
+    let radius = 1; // Default radius
+    if (typeof node.r === 'number' && node.r > 0) {
+      radius = node.r;
+    } else if (typeof node.r1 === 'number' && node.r1 > 0) {
+      radius = node.r1;
+    } else if (typeof node.d === 'number' && node.d > 0) {
+      radius = node.d / 2;
+    } else if (typeof node.d1 === 'number' && node.d1 > 0) {
+      radius = node.d1 / 2;
+    }
+
+    return { height, radius };
+  }
+
+  /**
+   * Extract Vector3 from various input types
+   */
+  private extractVector3(v: unknown): [number, number, number] {
+    if (Array.isArray(v) && v.length >= 3) {
+      const [x, y, z] = v;
+      return [
+        typeof x === 'number' ? x : 0,
+        typeof y === 'number' ? y : 0,
+        typeof z === 'number' ? z : 0
+      ];
+    }
+
+    if (typeof v === 'number') {
+      return [v, v, v];
+    }
+
+    // Default vector
+    return [0, 0, 0];
   }
 }

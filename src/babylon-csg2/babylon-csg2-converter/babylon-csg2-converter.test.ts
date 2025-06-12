@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import {
   BabylonCSG2Converter,
@@ -108,6 +108,8 @@ describe('BabylonCSG2Converter', () => {
       const factoryConverter = createBabylonCSG2Converter(scene);
       
       expect(factoryConverter).toBeInstanceOf(BabylonCSG2Converter);
+      // Ensure proper cleanup
+      factoryConverter.dispose();
       console.log('[END] Factory function test passed');
     });
 
@@ -120,7 +122,10 @@ describe('BabylonCSG2Converter', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.value).toHaveLength(1);
-        expect(result.value[0]).toBeInstanceOf(BABYLON.Mesh);
+        const mesh = result.value[0];
+        expect(mesh).toBeInstanceOf(BABYLON.Mesh);
+        // Clean up
+        mesh?.dispose();
       }
       console.log('[END] Convenience function test passed');
     });

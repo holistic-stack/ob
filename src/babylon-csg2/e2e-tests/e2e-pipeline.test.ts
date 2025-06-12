@@ -48,7 +48,7 @@ async function testCubePipeline(): Promise<void> {
     }
 
     console.log('[DEBUG] Pipeline processing successful!');
-    console.log(`[DEBUG] Generated mesh: ${result.value?.name || 'null'}`);
+    console.log(`[DEBUG] Generated mesh: ${result.value?.name ?? 'null'}`);
     
     if (result.metadata) {
       console.log('[DEBUG] Performance metrics:');

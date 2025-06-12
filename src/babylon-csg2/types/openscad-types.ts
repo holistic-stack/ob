@@ -119,7 +119,7 @@ export function isOpenSCADPrimitive(node: unknown): node is OpenSCADPrimitiveNod
   return typeof node === 'object' &&
          node !== null &&
          'type' in node &&
-         ['cube', 'sphere', 'cylinder'].includes((node as any).type);
+         ['cube', 'sphere', 'cylinder'].includes((node as { type: string }).type);
 }
 
 /**
@@ -129,7 +129,7 @@ export function isOpenSCADTransform(node: unknown): node is OpenSCADTransform {
   return typeof node === 'object' && 
          node !== null && 
          'type' in node &&
-         ['translate', 'rotate', 'scale', 'mirror', 'resize', 'color', 'hull', 'minkowski'].includes((node as any).type);
+         ['translate', 'rotate', 'scale', 'mirror', 'resize', 'color', 'hull', 'minkowski'].includes((node as { type: string }).type);
 }
 
 /**
@@ -139,7 +139,7 @@ export function isOpenSCADCSG(node: unknown): node is OpenSCADCSG {
   return typeof node === 'object' && 
          node !== null && 
          'type' in node &&
-         ['union', 'difference', 'intersection'].includes((node as any).type);
+         ['union', 'difference', 'intersection'].includes((node as { type: string }).type);
 }
 
 /**
@@ -149,7 +149,7 @@ export function isOpenSCADModuleCall(node: unknown): node is OpenSCADModuleCall 
   return typeof node === 'object' && 
          node !== null && 
          'type' in node &&
-         (node as any).type === 'module_call';
+         (node as { type: string }).type === 'module_call';
 }
 
 /**

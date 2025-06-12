@@ -26,7 +26,7 @@ export async function testSceneCleanup(): Promise<void> {
     scene.clearColor = new BABYLON.Color4(0.2, 0.2, 0.3, 1.0);
 
     // Add camera
-    const camera = new BABYLON.ArcRotateCamera(
+    const _camera = new BABYLON.ArcRotateCamera(
       'camera',
       -Math.PI / 2,
       Math.PI / 2.5,
@@ -62,7 +62,11 @@ export async function testSceneCleanup(): Promise<void> {
     ];
 
     for (let i = 0; i < testShapes.length; i++) {
-      const shape = testShapes[i]!;
+      const shape = testShapes[i];
+      if (!shape) {
+        console.error(`[ERROR] Shape at index ${i} is undefined`);
+        continue;
+      }
       console.log(`\n[DEBUG] === Processing ${shape.name} (${i + 1}/${testShapes.length}) ===`);
       
       // Count meshes before processing

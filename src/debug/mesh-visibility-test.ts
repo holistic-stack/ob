@@ -25,7 +25,7 @@ export async function testMeshVisibility(): Promise<void> {
     scene.clearColor = new BABYLON.Color4(0.2, 0.2, 0.3, 1.0);
 
     // Add camera
-    const camera = new BABYLON.ArcRotateCamera(
+    const _camera = new BABYLON.ArcRotateCamera(
       'camera',
       -Math.PI / 2,
       Math.PI / 2.5,
