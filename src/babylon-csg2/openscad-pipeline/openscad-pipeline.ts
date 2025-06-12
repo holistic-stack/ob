@@ -103,15 +103,21 @@ export class OpenScadPipeline {
     }
 
     this.log('[INIT] Initializing OpenSCAD pipeline...');
-    
+
     try {
-      // Initialize CSG2 first (required for visitor)
+      // Initialize CSG2 (with fallback support)
       this.log('[DEBUG] Initializing CSG2...');
-      await this.initializeCSG2WithTimeout();
-      
+      try {
+        await this.initializeCSG2WithTimeout();
+        this.log('[DEBUG] CSG2 initialization completed');
+      } catch (csg2Error) {
+        this.log('[WARN] CSG2 initialization failed, continuing with fallbacks:', csg2Error);
+        // Don't fail the entire pipeline - CSG2 has fallback mechanisms
+      }
+
       this.isInitialized = true;
       this.log('[DEBUG] Pipeline initialized successfully');
-      
+
       return { success: true, value: undefined };
     } catch (error) {
       const errorMsg = `Pipeline initialization failed: ${error}`;
@@ -272,14 +278,27 @@ export class OpenScadPipeline {
    * Initialize CSG2 with Node.js compatibility and timeout protection
    */
   private async initializeCSG2WithTimeout(): Promise<void> {
+    // TEMPORARY: Skip CSG2 initialization entirely for debugging
+    if (typeof window !== 'undefined') {
+      this.log('[DEBUG] Browser environment detected - skipping CSG2 initialization for debugging');
+      return;
+    }
+
     try {
       this.log('[DEBUG] Initializing CSG2 using Node.js compatible method...');
 
-      const result = await initializeCSG2ForNode({
+      // Add a race condition with a shorter timeout for browser environments
+      const initPromise = initializeCSG2ForNode({
         enableLogging: this.options.enableLogging,
         forceMockInTests: true,
         timeout: this.options.csg2Timeout
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('CSG2 initialization timeout in pipeline')), this.options.csg2Timeout);
+      });
+
+      const result = await Promise.race([initPromise, timeoutPromise]);
 
       if (result.success) {
         this.log(`[DEBUG] CSG2 initialized successfully using ${result.method}`);

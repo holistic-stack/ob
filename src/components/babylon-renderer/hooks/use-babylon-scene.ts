@@ -80,44 +80,83 @@ export function useBabylonScene(
 
       // Add camera if enabled
       if (sceneConfig.enableCamera) {
+        console.log('[DEBUG] Setting up ArcRotate camera');
+
         const camera = new BABYLON.ArcRotateCamera(
           'camera',
-          -Math.PI / 2,
-          Math.PI / 2.5,
-          15,
+          -Math.PI / 4,    // Alpha: 45 degrees around Y axis
+          Math.PI / 3,     // Beta: 60 degrees from horizontal
+          20,              // Radius: increased distance for better view
           BABYLON.Vector3.Zero(),
           scene
         );
-        
-        // Smooth camera controls
+
+        // Enhanced camera controls for better user experience
         camera.inertia = 0.9;
         camera.angularSensibilityX = 1000;
         camera.angularSensibilityY = 1000;
         camera.panningSensibility = 1000;
         camera.wheelPrecision = 50;
-        
+
+        // Set camera limits for better control
+        camera.lowerRadiusLimit = 2;   // Minimum zoom distance
+        camera.upperRadiusLimit = 100; // Maximum zoom distance
+        camera.lowerBetaLimit = 0.1;   // Prevent camera from going below ground
+        camera.upperBetaLimit = Math.PI - 0.1; // Prevent camera from flipping
+
         // Position camera
         if (sceneConfig.cameraPosition) {
           const [x, y, z] = sceneConfig.cameraPosition;
           camera.position = new BABYLON.Vector3(x, y, z);
+          console.log('[DEBUG] Camera positioned at:', camera.position.toString());
         }
+
+        console.log('[DEBUG] Camera setup complete:', {
+          alpha: camera.alpha,
+          beta: camera.beta,
+          radius: camera.radius,
+          target: camera.target.toString()
+        });
       }
 
       // Add lighting if enabled
       if (sceneConfig.enableLighting) {
+        console.log('[DEBUG] Setting up scene lighting');
+
+        // Ambient light for overall illumination
         const ambientLight = new BABYLON.HemisphericLight(
           'ambientLight',
           new BABYLON.Vector3(0, 1, 0),
           scene
         );
-        ambientLight.intensity = 0.7;
+        ambientLight.intensity = 0.8; // Increased for better visibility
+        ambientLight.diffuse = new BABYLON.Color3(1, 1, 1);
+        ambientLight.specular = new BABYLON.Color3(1, 1, 1);
 
+        // Directional light for shadows and definition
         const directionalLight = new BABYLON.DirectionalLight(
           'directionalLight',
           new BABYLON.Vector3(-1, -1, -1),
           scene
         );
-        directionalLight.intensity = 0.5;
+        directionalLight.intensity = 0.6; // Increased for better visibility
+        directionalLight.diffuse = new BABYLON.Color3(1, 1, 1);
+        directionalLight.specular = new BABYLON.Color3(1, 1, 1);
+
+        // Additional point light for better illumination
+        const pointLight = new BABYLON.PointLight(
+          'pointLight',
+          new BABYLON.Vector3(10, 10, 10),
+          scene
+        );
+        pointLight.intensity = 0.4;
+        pointLight.diffuse = new BABYLON.Color3(1, 1, 1);
+
+        console.log('[DEBUG] Lighting setup complete:', {
+          ambientIntensity: ambientLight.intensity,
+          directionalIntensity: directionalLight.intensity,
+          pointIntensity: pointLight.intensity
+        });
       }
 
       // Start render loop

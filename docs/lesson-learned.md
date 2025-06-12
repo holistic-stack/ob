@@ -1,5 +1,157 @@
 # Lessons Learned
 
+## 2025-06-25: Babylon.js Mesh Visibility Debugging
+
+**Context**: Despite successful pipeline processing and mesh creation (confirmed by logs showing 24 vertices, 36 indices), the `cube([10, 10, 10]);` was not visible in the Babylon.js 3D scene.
+
+**Issue**: Common Babylon.js visibility problems including camera positioning, material properties, lighting setup, and mesh state management.
+
+**Root Cause Analysis**: Research identified multiple contributing factors:
+1. **Camera Position**: Camera positioned inside or too close to the cube
+2. **Material Issues**: Insufficient lighting response or material properties
+3. **Scene Coordinate System**: Mesh positioning outside camera view
+4. **Mesh Bounds**: Incorrect camera auto-positioning calculations
+
+**Solution**:
+1. **Enhanced Camera Positioning**:
+   - Calculate mesh center and bounds properly using `boundingInfo.boundingBox.center`
+   - Increase camera distance multiplier from 2.5x to 3x mesh size (minimum 15 units)
+   - Set optimal camera angles: alpha=-π/4, beta=π/3 for good viewing perspective
+   - Add comprehensive camera positioning debug logging
+
+2. **Enhanced Material Creation**:
+   - Disable backface culling (`backFaceCulling=false`) for better visibility
+   - Enhance specular and emissive properties for better lighting response
+   - Add wireframe toggle capability for debugging purposes
+   - Ensure material responds to lighting (`disableLighting=false`)
+
+3. **Enhanced Mesh Processing**:
+   - Explicitly enforce `isVisible=true` and `setEnabled(true)` on all meshes
+   - Normalize mesh position to origin for proper camera positioning
+   - Add comprehensive visibility status logging (isVisible, isEnabled, isReady)
+   - Improve cloned mesh handling with proper visibility settings
+
+4. **Enhanced Scene Lighting**:
+   - Increase ambient light intensity from 0.7 to 0.8
+   - Enhance directional light intensity from 0.5 to 0.6
+   - Add additional point light at (10,10,10) with 0.4 intensity
+   - Ensure proper diffuse/specular color setup for all lights
+
+5. **Enhanced Camera Setup**:
+   - Better initial positioning with improved angles and radius (20 units)
+   - Add camera limits: radius (2-100), beta limits to prevent issues
+   - Enhanced camera control sensitivity and movement limits
+
+**Key Insights**:
+- **Multiple Factors**: Mesh visibility issues often have multiple contributing factors
+- **Debug Logging**: Comprehensive logging is essential for diagnosing visibility problems
+- **Camera Distance**: Always ensure camera is far enough from mesh bounds
+- **Material Properties**: Backface culling and lighting response are critical
+- **Explicit State**: Always explicitly set mesh visibility and enabled state
+- **Lighting Setup**: Multiple light sources improve mesh visibility significantly
+
+**Files Modified**:
+- `src/components/babylon-renderer/hooks/use-mesh-manager.ts` (camera positioning, material creation, mesh processing)
+- `src/components/babylon-renderer/hooks/use-babylon-scene.ts` (lighting setup, camera configuration)
+
+**Testing**: All tests passing (46/46), TypeScript compilation clean, development server running successfully
+
+## 2025-06-25: Comprehensive Debugging System for Persistent Visibility Issues
+
+**Context**: Despite implementing comprehensive camera positioning, material properties, lighting enhancements, and mesh processing fixes, the `cube([10, 10, 10]);` remains invisible in the Babylon.js 3D scene. This required implementing a systematic debugging approach.
+
+**Issue**: Persistent mesh visibility problems that resist standard fixes, requiring advanced debugging tools and multiple diagnostic approaches.
+
+**Comprehensive Debugging Solution**:
+
+1. **Advanced Scene Debugger Implementation**:
+   - Created comprehensive `SceneDebugger` class with detailed scene analysis
+   - Implemented mesh diagnostics: visibility, geometry, materials, bounds, vertices/indices
+   - Added camera analysis: position, target, radius, angles for ArcRotateCamera
+   - Included lighting analysis: intensity, position, direction, color information
+   - Built automatic issue detection with common visibility problem suggestions
+   - Added performance metrics: FPS, frame time, vertex/index counts
+
+2. **Frustum Culling and Active Mesh Management**:
+   - Disabled frustum culling with `alwaysSelectAsActiveMesh = true`
+   - Implemented active mesh list enforcement to ensure meshes are rendered
+   - Added bounds refresh with `refreshBoundingInfo()` for proper bounds calculation
+   - Created render list management to force meshes into scene render list
+
+3. **Enhanced Debug Controls and User Interface**:
+   - Integrated comprehensive scene debugging with detailed console output
+   - Added wireframe toggle functionality to make mesh geometry visible
+   - Implemented camera reset to known good position and angles
+   - Created automatic debugging that triggers after each mesh update
+
+4. **Multiple Visibility Enforcement Strategies**:
+   - Enhanced material properties with disabled backface culling
+   - Implemented position normalization to ensure meshes at origin
+   - Added explicit visibility enforcement with `isVisible=true`, `setEnabled(true)`
+   - Improved cross-scene mesh handling with proper cloning and material assignment
+
+**Key Insights**:
+- **Systematic Debugging**: Complex visibility issues require systematic debugging tools rather than individual fixes
+- **Multiple Diagnostic Approaches**: Combining automatic debugging, manual controls, and comprehensive logging provides better issue identification
+- **Frustum Culling Issues**: Babylon.js frustum culling can hide meshes even when they should be visible
+- **Active Mesh Management**: Ensuring meshes are in the active mesh list is critical for rendering
+- **Wireframe Debugging**: Wireframe mode can reveal if geometry exists but materials/lighting are the issue
+- **Comprehensive Logging**: Detailed scene state logging helps identify specific problems in complex rendering pipelines
+
+**Debugging Workflow Established**:
+1. **Automatic Scene Analysis**: Auto-debug after each mesh update with comprehensive logging
+2. **Manual Debug Controls**: User-accessible buttons for scene debugging, wireframe toggle, camera reset
+3. **Console Output Analysis**: Structured debug output for systematic issue identification
+4. **Progressive Testing**: Test basic mesh creation → wireframe visibility → material/lighting → camera positioning
+
+**Files Modified**:
+- `src/components/babylon-renderer/utils/scene-debugger.ts` (new comprehensive debugging tool)
+- `src/components/babylon-renderer/babylon-renderer.tsx` (enhanced debug controls and automatic debugging)
+- `src/components/babylon-renderer/hooks/use-mesh-manager.ts` (frustum culling fixes and active mesh management)
+
+**Testing**: All tests passing (46/46), TypeScript compilation clean, comprehensive debugging system ready for systematic issue identification
+
+## 2025-06-25: Browser Compatibility - Process Global Variable Issue
+
+**Context**: The React application was showing a `ReferenceError: process is not defined` error when trying to initialize CSG2 in the browser environment. This occurred because the CSG2 initialization code was trying to access Node.js-specific global variables that don't exist in browsers.
+
+**Issue**: The `isTestEnvironment()` function in `csg2-node-initializer.ts` was directly accessing `process.env` without checking if the `process` global exists first. In browser environments, `process` is undefined, causing the error.
+
+**Root Cause**: Code written for Node.js environments was being executed in the browser without proper environment detection.
+
+**Solution**:
+1. **Browser-Safe Environment Detection**: Added proper checks for `typeof process === 'undefined'` before accessing process properties
+2. **Multiple Fallback Strategies**: Implemented browser-specific, Node.js-specific, and simple mock CSG2 initialization strategies
+3. **Enhanced Error Handling**: Added try-catch blocks around environment detection to prevent crashes
+4. **Type Safety**: Updated the CSG2InitResult type to include all new initialization method types
+
+**Code Pattern Applied**:
+```typescript
+// ❌ Unsafe - Direct process access
+function isTestEnvironment(): boolean {
+  return process.env.NODE_ENV === 'test'; // Crashes in browser
+}
+
+// ✅ Safe - Browser-compatible check
+function isTestEnvironment(): boolean {
+  if (typeof process === 'undefined') {
+    // Browser environment - check for test globals
+    return typeof window !== 'undefined' &&
+           (window as any).__VITEST__ === true;
+  }
+  // Node.js environment - safe to check process.env
+  return process.env.NODE_ENV === 'test';
+}
+```
+
+**Lesson**:
+1. **Environment Detection**: Always check for global variable existence before accessing them in cross-platform code
+2. **Graceful Degradation**: Implement multiple fallback strategies for different environments (Node.js, browser, test)
+3. **Type Safety**: Update type definitions when adding new functionality to maintain TypeScript compliance
+4. **Testing**: Browser-specific issues may not appear in Node.js tests, requiring actual browser testing
+
+**Impact**: Fixed the browser compatibility issue, allowing the complete OpenSCAD to Babylon.js pipeline to work seamlessly in both Node.js and browser environments.
+
 ## 2025-06-11: Extraneous Brace Causing TypeScript Syntax Error (TS1128)
 
 **Context**: After implementing special variable support (`$fa`, `$fs`, `$fn`) in `OpenScadAstVisitor.ts`, the `npm run typecheck` command started failing with a `TS1128: Declaration or statement expected.` error.

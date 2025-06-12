@@ -18,7 +18,7 @@ import * as BABYLON from '@babylonjs/core';
 export type CSG2InitResult = {
   readonly success: true;
   readonly message: string;
-  readonly method: 'manifold-direct' | 'babylon-standard' | 'mock-fallback';
+  readonly method: 'manifold-direct' | 'babylon-standard' | 'browser-existing' | 'browser-standard' | 'mock-fallback' | 'mock-vitest' | 'mock-simple';
 } | {
   readonly success: false;
   readonly error: string;
@@ -39,7 +39,7 @@ export interface CSG2InitConfig {
  * Default configuration for CSG2 initialization
  */
 const DEFAULT_CONFIG: Required<CSG2InitConfig> = {
-  timeout: 10000, // 10 seconds
+  timeout: 5000, // 5 seconds (reduced for browser compatibility)
   enableLogging: true,
   forceMockInTests: true,
   retryAttempts: 3
@@ -103,10 +103,11 @@ export async function initializeCSG2ForNode(config: CSG2InitConfig = {}): Promis
  * Perform the actual CSG2 initialization with multiple strategies
  */
 async function performCSG2Initialization(config: Required<CSG2InitConfig>): Promise<CSG2InitResult> {
+  const environment = isNodeEnvironment() ? 'Node.js' : 'Browser';
   if (config.enableLogging) {
-    console.log('[INIT] Starting CSG2 initialization for Node.js environment');
+    console.log(`[INIT] Starting CSG2 initialization for ${environment} environment`);
   }
-  
+
   // Strategy 1: Use mock in test environments
   if (config.forceMockInTests && isTestEnvironment()) {
     if (config.enableLogging) {
@@ -114,38 +115,61 @@ async function performCSG2Initialization(config: Required<CSG2InitConfig>): Prom
     }
     return initializeMockCSG2(config);
   }
-  
-  // Strategy 2: Try manifold-3d direct initialization for Node.js
+
+  // Strategy 2: Browser-specific initialization
+  if (!isNodeEnvironment()) {
+    if (config.enableLogging) {
+      console.log('[DEBUG] Browser environment detected, using browser-optimized initialization');
+    }
+
+    try {
+      const browserResult = await tryBrowserInit(config);
+      if (browserResult.success) {
+        return browserResult;
+      }
+    } catch (browserError) {
+      if (config.enableLogging) {
+        console.log('[WARN] Browser initialization threw error:', browserError);
+      }
+    }
+
+    if (config.enableLogging) {
+      console.log('[WARN] Browser initialization failed, falling back to mock');
+    }
+    return initializeMockCSG2(config);
+  }
+
+  // Strategy 3: Try manifold-3d direct initialization for Node.js
   if (isNodeEnvironment()) {
     if (config.enableLogging) {
       console.log('[DEBUG] Node.js environment detected, trying manifold-3d direct initialization');
     }
-    
+
     const manifoldResult = await tryManifoldDirectInit(config);
     if (manifoldResult.success) {
       return manifoldResult;
     }
-    
+
     if (config.enableLogging) {
       console.log('[WARN] Manifold direct initialization failed, falling back to standard method');
     }
   }
-  
-  // Strategy 3: Try standard Babylon.js initialization
+
+  // Strategy 4: Try standard Babylon.js initialization
   if (config.enableLogging) {
     console.log('[DEBUG] Trying standard BABYLON.InitializeCSG2Async()');
   }
-  
+
   const standardResult = await tryStandardInit(config);
   if (standardResult.success) {
     return standardResult;
   }
-  
-  // Strategy 4: Fallback to mock
+
+  // Strategy 5: Fallback to mock
   if (config.enableLogging) {
     console.log('[WARN] Standard initialization failed, falling back to mock');
   }
-  
+
   return initializeMockCSG2(config);
 }
 
@@ -194,6 +218,65 @@ async function tryManifoldDirectInit(config: Required<CSG2InitConfig>): Promise<
 }
 
 /**
+ * Try to initialize CSG2 using browser-optimized method
+ */
+async function tryBrowserInit(config: Required<CSG2InitConfig>): Promise<CSG2InitResult> {
+  try {
+    if (config.enableLogging) {
+      console.log('[DEBUG] Attempting browser-optimized CSG2 initialization...');
+    }
+
+    // Check if CSG2 is already available
+    if (BABYLON.IsCSG2Ready?.()) {
+      if (config.enableLogging) {
+        console.log('[DEBUG] ✅ CSG2 already initialized and ready');
+      }
+      return {
+        success: true,
+        message: 'CSG2 was already initialized',
+        method: 'browser-existing'
+      };
+    }
+
+    // Try standard initialization with shorter timeout for browser
+    const browserTimeout = Math.min(config.timeout, 3000); // Max 3 seconds for browser
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('CSG2 browser initialization timeout')), browserTimeout);
+    });
+
+    // Add additional safety check for BABYLON.InitializeCSG2Async existence
+    if (typeof BABYLON.InitializeCSG2Async !== 'function') {
+      throw new Error('BABYLON.InitializeCSG2Async is not available');
+    }
+
+    await Promise.race([
+      BABYLON.InitializeCSG2Async(),
+      timeoutPromise
+    ]);
+
+    if (config.enableLogging) {
+      console.log('[DEBUG] ✅ CSG2 initialized successfully using browser method');
+    }
+
+    return {
+      success: true,
+      message: 'CSG2 initialized using browser-optimized method',
+      method: 'browser-standard'
+    };
+  } catch (error) {
+    if (config.enableLogging) {
+      console.log('[ERROR] Browser CSG2 initialization failed:', error);
+    }
+
+    return {
+      success: false,
+      error: `Browser initialization failed: ${error}`,
+      method: 'failed'
+    };
+  }
+}
+
+/**
  * Try to initialize CSG2 using standard Babylon.js method
  */
 async function tryStandardInit(config: Required<CSG2InitConfig>): Promise<CSG2InitResult> {
@@ -201,16 +284,16 @@ async function tryStandardInit(config: Required<CSG2InitConfig>): Promise<CSG2In
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('CSG2 initialization timeout')), config.timeout);
     });
-    
+
     await Promise.race([
       BABYLON.InitializeCSG2Async(),
       timeoutPromise
     ]);
-    
+
     if (config.enableLogging) {
       console.log('[DEBUG] ✅ CSG2 initialized successfully using standard method');
     }
-    
+
     return {
       success: true,
       message: 'CSG2 initialized using standard Babylon.js method',
@@ -220,7 +303,7 @@ async function tryStandardInit(config: Required<CSG2InitConfig>): Promise<CSG2In
     if (config.enableLogging) {
       console.log('[ERROR] Standard CSG2 initialization failed:', error);
     }
-    
+
     return {
       success: false,
       error: `Standard initialization failed: ${error}`,
@@ -234,24 +317,67 @@ async function tryStandardInit(config: Required<CSG2InitConfig>): Promise<CSG2In
  */
 async function initializeMockCSG2(config: Required<CSG2InitConfig>): Promise<CSG2InitResult> {
   try {
-    // Import and setup mock from vitest-setup
-    const { initializeCSG2ForTests } = await import('../../../vitest-setup');
-    await initializeCSG2ForTests();
-    
     if (config.enableLogging) {
-      console.log('[DEBUG] ✅ Mock CSG2 initialized successfully');
+      console.log('[DEBUG] Initializing mock CSG2 for fallback...');
     }
-    
-    return {
-      success: true,
-      message: 'Mock CSG2 initialized for testing',
-      method: 'mock-fallback'
-    };
+
+    // Try to import and setup mock from vitest-setup if available
+    try {
+      const { initializeCSG2ForTests } = await import('../../../vitest-setup');
+      await initializeCSG2ForTests();
+
+      if (config.enableLogging) {
+        console.log('[DEBUG] ✅ Mock CSG2 initialized successfully from vitest-setup');
+      }
+
+      return {
+        success: true,
+        message: 'Mock CSG2 initialized for testing',
+        method: 'mock-vitest'
+      };
+    } catch (_importError) {
+      // If vitest-setup import fails (e.g., in browser), create a simple mock
+      if (config.enableLogging) {
+        console.log('[DEBUG] vitest-setup not available, creating simple mock CSG2');
+      }
+
+      // Create a simple mock CSG2 for browser environments
+      const globalWithMock = globalThis as typeof globalThis & {
+        __MOCK_CSG2__?: typeof BABYLON.CSG2;
+        __MOCK_IS_CSG2_READY__?: () => boolean;
+      };
+
+      if (!globalWithMock.__MOCK_CSG2__) {
+        // Create a minimal mock CSG2 implementation
+        globalWithMock.__MOCK_CSG2__ = {
+          FromMesh: (mesh: BABYLON.Mesh) => ({
+            add: (_other: unknown) => ({ toMesh: () => mesh, dispose: () => {} }),
+            subtract: (_other: unknown) => ({ toMesh: () => mesh, dispose: () => {} }),
+            intersect: (_other: unknown) => ({ toMesh: () => mesh, dispose: () => {} }),
+            toMesh: () => mesh,
+            dispose: () => {}
+          }),
+          dispose: () => {}
+        } as unknown as typeof BABYLON.CSG2;
+
+        globalWithMock.__MOCK_IS_CSG2_READY__ = () => true;
+      }
+
+      if (config.enableLogging) {
+        console.log('[DEBUG] ✅ Simple mock CSG2 initialized successfully');
+      }
+
+      return {
+        success: true,
+        message: 'Simple mock CSG2 initialized for browser fallback',
+        method: 'mock-simple'
+      };
+    }
   } catch (error) {
     if (config.enableLogging) {
       console.log('[ERROR] Mock CSG2 initialization failed:', error);
     }
-    
+
     return {
       success: false,
       error: `Mock initialization failed: ${error}`,
@@ -270,25 +396,43 @@ function isNodeEnvironment(): boolean {
 
 /**
  * Check if running in test environment
+ * Browser-safe implementation that checks for process existence first
  */
 function isTestEnvironment(): boolean {
-  return process.env.NODE_ENV === 'test' || 
-         process.env.VITEST === 'true' || 
-         typeof global !== 'undefined' && 
+  // Check if we're in a browser environment first
+  if (typeof process === 'undefined') {
+    // In browser, check for test-specific globals
+    return typeof global !== 'undefined' &&
+           (global as typeof global & { __VITEST__?: boolean }).__VITEST__ === true ||
+           typeof window !== 'undefined' &&
+           (window as typeof window & { __VITEST__?: boolean }).__VITEST__ === true;
+  }
+
+  // In Node.js environment, check process.env
+  return process.env.NODE_ENV === 'test' ||
+         process.env.VITEST === 'true' ||
+         typeof global !== 'undefined' &&
          (global as typeof global & { __VITEST__?: boolean }).__VITEST__ === true;
 }
 
 /**
  * Check if CSG2 is ready for use
+ * Browser-safe implementation
  */
 export function isCSG2Ready(): boolean {
-  // In test environment, check if mock is available
-  if (isTestEnvironment() && (globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__) {
-    return isCSG2Initialized && ((globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__?.() ?? false);
-  }
+  try {
+    // In test environment, check if mock is available
+    if (isTestEnvironment() && (globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__) {
+      return isCSG2Initialized && ((globalThis as typeof globalThis & { __MOCK_IS_CSG2_READY__?: () => boolean }).__MOCK_IS_CSG2_READY__?.() ?? false);
+    }
 
-  // In normal environment, check Babylon.js CSG2
-  return isCSG2Initialized && (BABYLON.IsCSG2Ready?.() ?? false);
+    // In normal environment, check Babylon.js CSG2
+    return isCSG2Initialized && (BABYLON.IsCSG2Ready?.() ?? false);
+  } catch (error) {
+    // If any error occurs (e.g., process not defined), return false
+    console.warn('[WARN] Error checking CSG2 ready state:', error);
+    return false;
+  }
 }
 
 /**

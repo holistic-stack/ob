@@ -9,11 +9,10 @@
  * @version 1.0.0
  */
 
-import type { 
-  ASTNode, 
-  LinearExtrudeNode, 
-  RotateExtrudeNode,
-  Vector2D 
+import type {
+  ASTNode,
+  LinearExtrudeNode,
+  RotateExtrudeNode
 } from '@holistic-stack/openscad-parser';
 
 /**

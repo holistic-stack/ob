@@ -67,6 +67,8 @@ class RenderingErrorBoundary extends React.Component<
  * Modern App component with React 19 patterns
  */
 export function App(): React.JSX.Element {
+  console.log('[DEBUG] 🎯 App component rendering - timestamp:', new Date().toISOString());
+
   // State management
   const [openscadCode, setOpenscadCode] = useState('cube([10, 10, 10]);');
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
@@ -122,6 +124,8 @@ export function App(): React.JSX.Element {
     const code = examples[example as keyof typeof examples] || examples.cube;
     setOpenscadCode(code);
   }, []);
+
+  console.log('[DEBUG] 🚀 Rendering full App component with refactored PipelineProcessor');
 
   return (
     <div className="app">

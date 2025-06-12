@@ -8,11 +8,13 @@
  * - Proper separation of concerns
  */
 import React, { useRef, useMemo, useEffect } from 'react';
+import * as BABYLON from '@babylonjs/core';
 import { BabylonRendererProps } from '../../types/pipeline-types';
 import { useBabylonEngine } from './hooks/use-babylon-engine';
 import { useBabylonScene } from './hooks/use-babylon-scene';
 import { useMeshManager } from './hooks/use-mesh-manager';
 import { debugActions } from './utils/debug-controls';
+import { quickDebugScene, debugScene } from './utils/scene-debugger';
 import './babylon-renderer.css';
 
 /**
@@ -49,6 +51,19 @@ export function BabylonRenderer({
   const isInitialized = engineReady && sceneReady;
   const error = engineError;
 
+  // Debug logging for renderer status
+  React.useEffect(() => {
+    console.log('[DEBUG] Babylon Renderer Status:', {
+      canvasRef: !!canvasRef.current,
+      engine: !!engine,
+      engineReady,
+      scene: !!scene,
+      sceneReady,
+      isInitialized,
+      error
+    });
+  }, [engine, engineReady, scene, sceneReady, isInitialized, error]);
+
   // Debug controls configuration (derived state)
   const debugConfig = useMemo(() =>
     debugActions.createDebugControlsConfig(scene),
@@ -63,7 +78,13 @@ export function BabylonRenderer({
   };
 
   const handleDebugScene = () => {
-    if (scene) {
+    if (scene && engine) {
+      console.log('[DEBUG] 🔍 Running comprehensive scene debugging...');
+
+      // Use the new comprehensive scene debugger
+      quickDebugScene(scene, engine);
+
+      // Also run the original debug actions
       debugActions.logSceneDebugInfo(scene);
     }
   };
@@ -78,9 +99,18 @@ export function BabylonRenderer({
   // Use useEffect for pipeline result updates (proper React pattern)
   useEffect(() => {
     if (pipelineResult && pipelineResult.success && isInitialized) {
+      console.log('[DEBUG] 🔄 Processing pipeline result...');
       updateMesh(pipelineResult);
+
+      // Automatically debug scene after mesh update
+      setTimeout(() => {
+        if (scene && engine) {
+          console.log('[DEBUG] 🔍 Auto-debugging scene after mesh update...');
+          quickDebugScene(scene, engine);
+        }
+      }, 100); // Small delay to ensure mesh is fully processed
     }
-  }, [pipelineResult, isInitialized, updateMesh]);
+  }, [pipelineResult, isInitialized, updateMesh, scene, engine]);
 
   return (
     <div className="babylon-renderer">
@@ -158,6 +188,55 @@ export function BabylonRenderer({
           style={{ margin: '5px' }}
         >
           Clear Scene
+        </button>
+        <button
+          onClick={() => {
+            if (scene) {
+              console.log('[DEBUG] 🔍 Inspector not available (package not installed)');
+              console.log('[DEBUG] Use "Debug Scene" button for comprehensive debugging');
+            }
+          }}
+          disabled={!scene}
+          style={{ margin: '5px' }}
+        >
+          Inspector (N/A)
+        </button>
+        <button
+          onClick={() => {
+            if (scene) {
+              console.log('[DEBUG] 🔧 Toggling wireframe mode for all meshes...');
+              scene.meshes.forEach(mesh => {
+                if (mesh.material) {
+                  const material = mesh.material as any;
+                  material.wireframe = !material.wireframe;
+                  console.log(`[DEBUG] Mesh ${mesh.name} wireframe: ${material.wireframe}`);
+                }
+              });
+            }
+          }}
+          disabled={!scene}
+          style={{ margin: '5px' }}
+        >
+          Toggle Wireframe
+        </button>
+        <button
+          onClick={() => {
+            if (scene && scene.activeCamera) {
+              console.log('[DEBUG] 📷 Resetting camera position...');
+              const camera = scene.activeCamera as any;
+              if (camera.setTarget) {
+                camera.setTarget(BABYLON.Vector3.Zero());
+                camera.radius = 25;
+                camera.alpha = -Math.PI / 4;
+                camera.beta = Math.PI / 3;
+                console.log('[DEBUG] Camera reset to default position');
+              }
+            }
+          }}
+          disabled={!scene}
+          style={{ margin: '5px' }}
+        >
+          Reset Camera
         </button>
       </div>
     </div>
