@@ -110,7 +110,7 @@ export function BabylonRenderer({
         }
       }, 100); // Small delay to ensure mesh is fully processed
     }
-  }, [pipelineResult, isInitialized, updateMesh, scene, engine]);
+  }, [pipelineResult, isInitialized, scene, engine]); // Removed updateMesh from dependencies to prevent infinite loop
 
   return (
     <div className="babylon-renderer">

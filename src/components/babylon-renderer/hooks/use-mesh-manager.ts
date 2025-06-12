@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useMemo as _useMemo } from 'react';
 import * as BABYLON from '@babylonjs/core';
-import { PipelineResult } from '../../../types/pipeline-types';
+import { PipelineResult, MeshGeometryData } from '../../../types/pipeline-types';
 
 interface MeshManagerState {
   currentMesh: BABYLON.Mesh | null;
@@ -61,26 +61,72 @@ export function useMeshManager(scene: BABYLON.Scene | null): MeshManagerState {
     return material;
   }, []);
 
-  // Copy geometry data from source mesh (DRY principle)
-  const copyGeometryData = useCallback((sourceMesh: BABYLON.Mesh, targetMesh: BABYLON.Mesh): void => {
+  // Create mesh from geometry data (DRY principle)
+  const createMeshFromGeometryData = useCallback((geometryData: MeshGeometryData, scene: BABYLON.Scene): BABYLON.Mesh | null => {
     try {
-      const positions = sourceMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-      const normals = sourceMesh.getVerticesData(BABYLON.VertexBuffer.NormalKind);
-      const indices = sourceMesh.getIndices();
+      console.log('[DEBUG] Creating mesh from geometry data:', geometryData.name);
 
-      if (positions && positions.length > 0) {
-        targetMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+      // Create a new mesh
+      const mesh = new BABYLON.Mesh(geometryData.name, scene);
+
+      // Set vertex data
+      if (geometryData.positions && geometryData.positions.length > 0) {
+        mesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, geometryData.positions);
+        console.log('[DEBUG] Set positions:', geometryData.positions.length / 3, 'vertices');
       }
-      if (normals && normals.length > 0) {
-        targetMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, normals);
+
+      if (geometryData.normals && geometryData.normals.length > 0) {
+        mesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, geometryData.normals);
+        console.log('[DEBUG] Set normals:', geometryData.normals.length / 3, 'normals');
       }
-      if (indices && indices.length > 0) {
-        targetMesh.setIndices(indices);
+
+      if (geometryData.uvs && geometryData.uvs.length > 0) {
+        mesh.setVerticesData(BABYLON.VertexBuffer.UVKind, geometryData.uvs);
+        console.log('[DEBUG] Set UVs:', geometryData.uvs.length / 2, 'UV coordinates');
       }
+
+      if (geometryData.indices && geometryData.indices.length > 0) {
+        mesh.setIndices(geometryData.indices);
+        console.log('[DEBUG] Set indices:', geometryData.indices.length, 'indices');
+      }
+
+      // Create and apply material
+      const material = createMeshMaterial(`${geometryData.name}_material`, scene);
+
+      // Apply material data if available
+      if (geometryData.materialData) {
+        material.diffuseColor = new BABYLON.Color3(...geometryData.materialData.diffuseColor);
+        material.specularColor = new BABYLON.Color3(...geometryData.materialData.specularColor);
+        material.emissiveColor = new BABYLON.Color3(...geometryData.materialData.emissiveColor);
+        console.log('[DEBUG] Applied material data from geometry');
+      }
+
+      mesh.material = material;
+
+      // Ensure mesh is visible and enabled
+      mesh.isVisible = true;
+      mesh.setEnabled(true);
+
+      // Position at origin
+      mesh.position = BABYLON.Vector3.Zero();
+
+      // Force refresh of mesh bounds
+      mesh.refreshBoundingInfo();
+
+      console.log('[DEBUG] Mesh created successfully:', {
+        name: mesh.name,
+        vertices: mesh.getTotalVertices(),
+        indices: mesh.getTotalIndices(),
+        hasGeometry: mesh.geometry !== null,
+        hasMaterial: mesh.material !== null
+      });
+
+      return mesh;
     } catch (geometryError) {
-      console.warn('[WARN] Could not copy geometry data:', geometryError);
+      console.error('[ERROR] Could not create mesh from geometry data:', geometryError);
+      return null;
     }
-  }, []);
+  }, [createMeshMaterial]);
 
   // Position camera to view mesh (DRY principle)
   const positionCameraForMesh = useCallback((mesh: BABYLON.Mesh, scene: BABYLON.Scene): void => {
@@ -143,7 +189,7 @@ export function useMeshManager(scene: BABYLON.Scene | null): MeshManagerState {
     });
   }, []);
 
-  // Update mesh from pipeline result (avoiding useEffect - using event handler pattern)
+  // Update mesh from pipeline result (simplified approach using geometry data)
   const updateMesh = useCallback((pipelineResult: PipelineResult) => {
     if (!pipelineResult?.success || !scene) {
       console.log('[DEBUG] Cannot update mesh: invalid result or scene not ready');
@@ -156,51 +202,40 @@ export function useMeshManager(scene: BABYLON.Scene | null): MeshManagerState {
       // Clear previous mesh first
       clearMesh();
 
-      if (pipelineResult.value && pipelineResult.value instanceof BABYLON.Mesh) {
+      // Handle different types of pipeline results
+      if (pipelineResult.value === null) {
+        console.log('[DEBUG] Pipeline result is null (empty geometry)');
+        setCurrentMesh(null);
+        return;
+      }
+
+      // Check if the result is geometry data (new format)
+      if (pipelineResult.value && typeof pipelineResult.value === 'object' && 'positions' in pipelineResult.value) {
+        const geometryData = pipelineResult.value as MeshGeometryData;
+        console.log('[DEBUG] Processing geometry data:', geometryData.name);
+
+        // Create mesh from geometry data in the target scene
+        const newMesh = createMeshFromGeometryData(geometryData, scene);
+
+        if (newMesh) {
+          // Position camera to view the mesh
+          positionCameraForMesh(newMesh, scene);
+
+          // Update state
+          setCurrentMesh(newMesh);
+          console.log('[DEBUG] Mesh updated successfully from geometry data');
+        } else {
+          console.error('[ERROR] Failed to create mesh from geometry data');
+        }
+      }
+      // Handle legacy mesh format (for backward compatibility)
+      else if (pipelineResult.value instanceof BABYLON.Mesh) {
         const sourceMesh = pipelineResult.value;
+        console.log('[DEBUG] Processing legacy mesh format:', sourceMesh.name);
+        console.warn('[WARN] Legacy mesh format detected - this may not render correctly due to scene isolation');
 
-        console.log('[DEBUG] Source mesh details:', {
-          name: sourceMesh.name,
-          vertices: sourceMesh.getTotalVertices(),
-          indices: sourceMesh.getTotalIndices(),
-          hasGeometry: sourceMesh.geometry !== null,
-          hasMaterial: sourceMesh.material !== null,
-          position: sourceMesh.position.toString(),
-          scaling: sourceMesh.scaling.toString(),
-          isVisible: sourceMesh.isVisible,
-          isEnabled: sourceMesh.isEnabled(),
-          isReady: sourceMesh.isReady()
-        });
-
-        // Ensure mesh is visible and enabled
-        sourceMesh.isVisible = true;
-        sourceMesh.setEnabled(true);
-
-        // Disable frustum culling to ensure mesh is always rendered
-        sourceMesh.alwaysSelectAsActiveMesh = true;
-
-        // Ensure mesh is at origin for proper camera positioning
-        if (sourceMesh.position.length() > 0.1) {
-          console.log('[DEBUG] Mesh not at origin, centering it');
-          sourceMesh.position = BABYLON.Vector3.Zero();
-        }
-
-        // Force mesh to be in active meshes list
-        const activeMeshes = scene.getActiveMeshes();
-        if (activeMeshes.indexOf(sourceMesh) === -1) {
-          console.log('[DEBUG] Adding mesh to active meshes list');
-          scene.registerBeforeRender(() => {
-            const currentActiveMeshes = scene.getActiveMeshes();
-            if (currentActiveMeshes.indexOf(sourceMesh) === -1) {
-              currentActiveMeshes.push(sourceMesh);
-            }
-          });
-        }
-
-        // Check if the source mesh has the same scene
+        // Try to use the mesh directly if it's in the same scene
         if (sourceMesh.getScene() === scene) {
-          console.log('[DEBUG] Source mesh is already in target scene, using directly');
-
           // Ensure the mesh has a material
           if (!sourceMesh.material) {
             const material = createMeshMaterial(`${sourceMesh.name}_material`, scene);
@@ -212,70 +247,19 @@ export function useMeshManager(scene: BABYLON.Scene | null): MeshManagerState {
 
           // Update state
           setCurrentMesh(sourceMesh);
-          console.log('[DEBUG] Mesh updated successfully (direct use)');
+          console.log('[DEBUG] Mesh updated successfully (legacy direct use)');
         } else {
-          console.log('[DEBUG] Source mesh from different scene, cloning to target scene');
-
-          // Clone the mesh to our scene
-          const clonedMesh = sourceMesh.clone(`${sourceMesh.name}_cloned`, null);
-          if (clonedMesh) {
-            console.log('[DEBUG] Cloned mesh details:', {
-              name: clonedMesh.name,
-              vertices: clonedMesh.getTotalVertices(),
-              indices: clonedMesh.getTotalIndices(),
-              hasGeometry: clonedMesh.geometry !== null,
-              position: clonedMesh.position.toString()
-            });
-
-            // Ensure the cloned mesh is visible and enabled
-            clonedMesh.isVisible = true;
-            clonedMesh.setEnabled(true);
-
-            // Disable frustum culling for cloned mesh
-            clonedMesh.alwaysSelectAsActiveMesh = true;
-
-            // Ensure mesh is at origin for proper camera positioning
-            clonedMesh.position = BABYLON.Vector3.Zero();
-
-            // Force refresh of mesh bounds
-            clonedMesh.refreshBoundingInfo();
-
-            // Ensure mesh is in the render list
-            clonedMesh.setEnabled(true);
-            scene.registerBeforeRender(() => {
-              const currentActiveMeshes = scene.getActiveMeshes();
-              if (currentActiveMeshes.indexOf(clonedMesh) === -1) {
-                currentActiveMeshes.push(clonedMesh);
-              }
-            });
-
-            // Ensure the cloned mesh has a material
-            if (!clonedMesh.material) {
-              const material = createMeshMaterial(`${clonedMesh.name}_material`, scene);
-              clonedMesh.material = material;
-            }
-
-            // Position camera to view the mesh
-            positionCameraForMesh(clonedMesh, scene);
-
-            // Update state
-            setCurrentMesh(clonedMesh);
-            console.log('[DEBUG] Mesh updated successfully (cloned)');
-          } else {
-            console.error('[ERROR] Failed to clone mesh');
-          }
+          console.error('[ERROR] Cannot use mesh from different scene - geometry data format required');
         }
-      } else if (pipelineResult.value === null) {
-        console.log('[DEBUG] Pipeline result is null (empty geometry)');
-        setCurrentMesh(null);
-      } else {
-        console.warn('[WARN] Pipeline result value is not a Babylon.js mesh:', typeof pipelineResult.value);
+      }
+      else {
+        console.warn('[WARN] Unknown pipeline result format:', typeof pipelineResult.value);
       }
 
     } catch (processingError) {
       console.error('[ERROR] Failed to update mesh:', processingError);
     }
-  }, [scene, createMeshMaterial, positionCameraForMesh, clearMesh]);
+  }, [scene, createMeshFromGeometryData, positionCameraForMesh, clearMesh]);
 
   return {
     currentMesh,

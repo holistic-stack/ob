@@ -256,6 +256,7 @@ export function PipelineProcessor({
 
   /**
    * Pure function to process OpenSCAD code
+   * FIXED: Process without NullEngine - return geometry data that can be recreated in target scene
    */
   const processOpenSCADCode = useCallback(async (
     code: string,
@@ -265,40 +266,34 @@ export function PipelineProcessor({
     console.log('[INIT] 🔄 Starting OpenSCAD processing...');
 
     try {
-      // Create a dedicated scene for processing
-      const engine = new BABYLON.NullEngine();
-      const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-
-      // Process with the pipeline
-      const result = await pipeline.processOpenScadCode(code, scene);
+      // Process with the pipeline - let it handle scene creation internally
+      const result = await pipeline.processOpenScadCodeToGeometry(code);
 
       if (result.success) {
         console.log('[DEBUG] ✅ Pipeline processing successful');
 
         const processingTime = Date.now() - operation.startTime;
+        const geometryData = result.value;
 
-        // Return the actual mesh from the pipeline (or null if no mesh was generated)
-        const resultMesh = result.value || null;
-
-        if (resultMesh) {
-          console.log('[DEBUG] ✅ Mesh generated successfully:', resultMesh.name);
+        if (geometryData) {
+          console.log('[DEBUG] ✅ Geometry data received:', {
+            name: geometryData.name,
+            vertexCount: geometryData.positions ? geometryData.positions.length / 3 : 0,
+            indexCount: geometryData.indices ? geometryData.indices.length : 0,
+            hasNormals: !!geometryData.normals,
+            hasUVs: !!geometryData.uvs,
+            hasMaterial: !!geometryData.materialData
+          });
         } else {
-          console.log('[DEBUG] ⚠️ No mesh generated (empty result)');
+          console.log('[DEBUG] ⚠️ No geometry data generated (empty result)');
         }
 
-        // Clean up the processing scene after a delay
-        setTimeout(() => {
-          scene.dispose();
-          engine.dispose();
-        }, 1000);
-
-        return createPipelineSuccess(resultMesh, {
+        return createPipelineSuccess(geometryData, {
           parseTimeMs: result.metadata?.parseTimeMs ?? 0,
           visitTimeMs: result.metadata?.visitTimeMs ?? 0,
           totalTimeMs: processingTime,
           nodeCount: result.metadata?.nodeCount ?? 1,
-          meshCount: result.metadata?.meshCount ?? (resultMesh ? 1 : 0)
+          meshCount: result.metadata?.meshCount ?? (geometryData ? 1 : 0)
         });
       } else {
         throw new Error(`Processing failed: ${result.error || 'No valid result'}`);
@@ -308,7 +303,7 @@ export function PipelineProcessor({
       console.error('[ERROR] ❌ Pipeline processing failed:', errorMessage);
 
       const processingTime = Date.now() - operation.startTime;
-      return createPipelineFailure<BABYLON.Mesh | null>(errorMessage, {
+      return createPipelineFailure<any>(errorMessage, {
         parseTimeMs: 0,
         visitTimeMs: 0,
         totalTimeMs: processingTime,
@@ -322,8 +317,18 @@ export function PipelineProcessor({
    * Main processing function using React 19 useOptimistic
    */
   const processCode = useCallback(async (code: string): Promise<void> => {
+    console.log('[DEBUG] 🔄 processCode called with code length:', code.length);
+    console.log('[DEBUG] 🔄 processCode conditions check:');
+    console.log('[DEBUG] - code.trim():', !!code.trim());
+    console.log('[DEBUG] - pipelineState.status === "ready":', pipelineState.status === 'ready');
+    console.log('[DEBUG] - pipelineState.pipeline exists:', !!pipelineState.pipeline);
+
     if (!code.trim() || pipelineState.status !== 'ready' || !pipelineState.pipeline) {
       console.warn('[WARN] Cannot process: empty code or pipeline not ready');
+      console.warn('[WARN] Failed conditions:');
+      console.warn('[WARN] - code.trim():', !!code.trim());
+      console.warn('[WARN] - pipelineState.status:', pipelineState.status);
+      console.warn('[WARN] - pipelineState.pipeline:', !!pipelineState.pipeline);
       return;
     }
 
@@ -427,7 +432,9 @@ export function PipelineProcessor({
     console.log('[DEBUG] canProcess:', canProcess);
     console.log('[DEBUG] isProcessing:', isProcessing);
     console.log('[DEBUG] openscadCode:', openscadCode);
+    console.log('[DEBUG] openscadCode.trim().length:', openscadCode.trim().length);
     console.log('[DEBUG] pipelineState.status:', pipelineState.status);
+    console.log('[DEBUG] pipelineState.pipeline exists:', !!pipelineState.pipeline);
 
     if (canProcess && !isProcessing) {
       console.log('[DEBUG] ✅ Starting manual processing...');
@@ -436,8 +443,14 @@ export function PipelineProcessor({
       });
     } else {
       console.warn('[WARN] Cannot process - conditions not met');
+      console.warn('[WARN] Detailed conditions:');
+      console.warn('[WARN] - canProcess:', canProcess);
+      console.warn('[WARN] - isProcessing:', isProcessing);
+      console.warn('[WARN] - code.trim().length > 0:', openscadCode.trim().length > 0);
+      console.warn('[WARN] - pipelineState.status === "ready":', pipelineState.status === 'ready');
+      console.warn('[WARN] - pipelineState.pipeline exists:', !!pipelineState.pipeline);
     }
-  }, [openscadCode, canProcess, isProcessing, processCode, pipelineState.status]);
+  }, [openscadCode, canProcess, isProcessing, processCode, pipelineState.status, pipelineState.pipeline]);
 
   // Cancel processing
   const handleCancel = useCallback(() => {

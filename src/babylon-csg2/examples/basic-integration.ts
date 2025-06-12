@@ -13,60 +13,71 @@
  * ```
  */
 
-import { NullEngine } from '@babylonjs/core';
 import type { UnionNode, CubeNode, SphereNode, CylinderNode } from '@holistic-stack/openscad-parser';
-import { SceneFactory } from '../scene-factory';
+import { OpenScadPipeline } from '../openscad-pipeline/openscad-pipeline';
 
 
 
 /**
  * Run the basic integration example
+ * Updated to use geometry data approach instead of NullEngine
  */
 export async function runBasicIntegrationExample(): Promise<void> {
-  console.log('[INIT] Starting basic integration example using SceneFactory');
+  console.log('[INIT] Starting basic integration example using OpenScadPipeline');
 
-  const engine = new NullEngine();
-
-  // Create a sample AST, for example a union of a few primitives
-  const cube: CubeNode = { type: 'cube', size: [10, 10, 10] };
-  const sphere: SphereNode = { type: 'sphere', radius: 7 };
-  const cylinder: CylinderNode = { type: 'cylinder', h: 20, r: 3 };
-  const rootNode: UnionNode = { type: 'union', children: [cube, sphere, cylinder] };
+  // Create pipeline for processing
+  const pipeline = new OpenScadPipeline({
+    enableLogging: true,
+    enableMetrics: true
+  });
 
   try {
-    console.log('[DEBUG] Creating scene from AST using SceneFactory');
-    const scene = await SceneFactory.createFromAst(engine, rootNode);
-
-    // Report scene statistics
-    console.log('[DEBUG] Scene created successfully. Scene statistics:');
-    console.log(`  - Total meshes: ${scene.meshes.length}`);
-    console.log(`  - Total cameras: ${scene.cameras.length}`);
-    console.log(`  - Total lights: ${scene.lights.length}`);
-
-    // Count only user-created meshes (exclude camera/light/ground meshes)
-    const userMeshes = scene.meshes.filter(mesh => 
-      mesh.name.includes('cube') || 
-      mesh.name.includes('sphere') || 
-      mesh.name.includes('cylinder') ||
-      mesh.name.includes('union')
-    );
-
-    // In a proper CSG2 union, we should get 1 combined mesh
-    // But if CSG2 is not available, we might get multiple meshes
-    if (userMeshes.length === 0) {
-      throw new Error('No user meshes were created from the AST');
+    // Initialize the pipeline
+    console.log('[DEBUG] Initializing OpenSCAD pipeline');
+    const initResult = await pipeline.initialize();
+    if (!initResult.success) {
+      throw new Error(`Pipeline initialization failed: ${initResult.error}`);
     }
 
-    console.log(`[DEBUG] Successfully created ${userMeshes.length} user mesh(es) from union operation`);
+    // Test OpenSCAD code instead of AST
+    const openscadCode = `
+      union() {
+        cube([10, 10, 10]);
+        translate([15, 0, 0]) sphere(7);
+        translate([0, 15, 0]) cylinder(h=20, r=3);
+      }
+    `;
+
+    console.log('[DEBUG] Processing OpenSCAD code to geometry data');
+    const result = await pipeline.processOpenScadCodeToGeometry(openscadCode);
+
+    if (!result.success) {
+      throw new Error(`Processing failed: ${result.error}`);
+    }
+
+    // Report processing results
+    console.log('[DEBUG] Processing completed successfully');
+    if (result.value) {
+      console.log('[DEBUG] Geometry data generated:', {
+        name: result.value.name,
+        vertexCount: result.value.positions ? result.value.positions.length / 3 : 0,
+        indexCount: result.value.indices ? result.value.indices.length : 0,
+        hasNormals: !!result.value.normals,
+        hasUVs: !!result.value.uvs,
+        hasMaterial: !!result.value.materialData
+      });
+    } else {
+      console.log('[DEBUG] No geometry data generated (empty result)');
+    }
+
     console.log('[END] Basic integration example completed successfully');
 
-    // Clean up resources
-    scene.dispose();
   } catch (error) {
     console.log('[ERROR] Unexpected error in integration example:', error);
     throw error;
   } finally {
-    engine.dispose();
+    // Clean up pipeline
+    await pipeline.dispose();
   }
 }
 

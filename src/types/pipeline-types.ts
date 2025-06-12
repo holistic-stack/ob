@@ -5,12 +5,29 @@
  * Follows functional programming patterns with Result types for error handling.
  */
 import type { ASTNode as _ASTNode } from '@holistic-stack/openscad-parser';
-import type { Scene, Mesh } from '@babylonjs/core';
+import type { Scene, Mesh, Nullable, FloatArray, IndicesArray } from '@babylonjs/core';
+
+/**
+ * Geometry data extracted from a mesh for cross-scene transfer
+ */
+export interface MeshGeometryData {
+  readonly name: string;
+  readonly positions: Nullable<FloatArray>;
+  readonly normals: Nullable<FloatArray>;
+  readonly indices: Nullable<IndicesArray>;
+  readonly uvs: Nullable<FloatArray>;
+  readonly materialData: {
+    readonly diffuseColor: readonly [number, number, number];
+    readonly specularColor: readonly [number, number, number];
+    readonly emissiveColor: readonly [number, number, number];
+  } | null;
+}
 
 /**
  * Result type for pipeline operations following functional programming patterns
+ * Updated to support geometry data transfer instead of direct mesh transfer
  */
-export type PipelineResult<T = Mesh | Scene | null, E = string> = 
+export type PipelineResult<T = MeshGeometryData | Mesh | Scene | null, E = string> =
   | { readonly success: true; readonly value: T; readonly metadata?: PipelineMetadata }
   | { readonly success: false; readonly error: E; readonly details?: unknown };
 

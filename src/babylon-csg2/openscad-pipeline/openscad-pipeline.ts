@@ -127,6 +127,75 @@ export class OpenScadPipeline {
   }
 
   /**
+   * Process OpenSCAD code and return geometry data (no scene required)
+   * @param openscadCode The OpenSCAD code to process
+   * @returns Result containing geometry data that can be used to create meshes
+   */
+  async processOpenScadCodeToGeometry(
+    openscadCode: string
+  ): Promise<PipelineResult<any>> {
+    if (!this.isInitialized) {
+      return {
+        success: false,
+        error: 'Pipeline not initialized. Call initialize() first.'
+      };
+    }
+
+    const startTime = performance.now();
+    this.log('[INIT] Processing OpenSCAD code to geometry data:', openscadCode.substring(0, 100) + '...');
+
+    try {
+      // Create a temporary scene for processing (only for internal CSG operations)
+      const engine = new BABYLON.NullEngine();
+      const scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+      // Process with the existing method
+      const result = await this.processOpenScadCode(openscadCode, scene);
+
+      if (result.success && result.value) {
+        // Extract geometry data from the mesh
+        const mesh = result.value;
+        const geometryData = {
+          name: mesh.name,
+          positions: mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind),
+          normals: mesh.getVerticesData(BABYLON.VertexBuffer.NormalKind),
+          indices: mesh.getIndices(),
+          uvs: mesh.getVerticesData(BABYLON.VertexBuffer.UVKind),
+          materialData: mesh.material ? {
+            diffuseColor: (mesh.material as any).diffuseColor?.asArray() || [0.8, 0.6, 0.4],
+            specularColor: (mesh.material as any).specularColor?.asArray() || [0.3, 0.3, 0.3],
+            emissiveColor: (mesh.material as any).emissiveColor?.asArray() || [0.1, 0.1, 0.1]
+          } : null
+        };
+
+        // Clean up temporary scene
+        scene.dispose();
+        engine.dispose();
+
+        return result.metadata ? {
+          success: true,
+          value: geometryData,
+          metadata: result.metadata
+        } : {
+          success: true,
+          value: geometryData
+        };
+      } else {
+        // Clean up temporary scene
+        scene.dispose();
+        engine.dispose();
+
+        return result as any;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
+      this.log('[ERROR] Failed to process OpenSCAD code to geometry:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
    * Process OpenSCAD code and generate Babylon.js meshes
    * @param openscadCode The OpenSCAD code to process
    * @param scene The Babylon.js scene to add meshes to
@@ -278,11 +347,7 @@ export class OpenScadPipeline {
    * Initialize CSG2 with Node.js compatibility and timeout protection
    */
   private async initializeCSG2WithTimeout(): Promise<void> {
-    // TEMPORARY: Skip CSG2 initialization entirely for debugging
-    if (typeof window !== 'undefined') {
-      this.log('[DEBUG] Browser environment detected - skipping CSG2 initialization for debugging');
-      return;
-    }
+    this.log('[DEBUG] Initializing CSG2 for browser environment...');
 
     try {
       this.log('[DEBUG] Initializing CSG2 using Node.js compatible method...');

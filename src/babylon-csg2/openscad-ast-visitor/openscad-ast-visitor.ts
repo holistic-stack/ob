@@ -491,14 +491,14 @@ export class OpenScadAstVisitor {
       console.warn(`[WARN] Failed to extract cube size: ${sizeResult.error}`);
       // Use default size
       const defaultSize = [1, 1, 1] as const;
-      return this.createBox(defaultSize, node.center ?? false, node);
+      return this.createBoxWithCSG2(defaultSize, node.center ?? false, node);
     }
 
     const size = sizeResult.value;
     const center = node.center ?? false;
 
     console.log(`[DEBUG] Creating cube with size: [${size.join(', ')}], center: ${center}`);
-    return this.createBox(size, center, node);
+    return this.createBoxWithCSG2(size, center, node);
   }
 
   /**
@@ -1054,7 +1054,46 @@ export class OpenScadAstVisitor {
   // Helper methods for mesh creation
 
   /**
-   * Creates a Babylon.js box mesh with the specified parameters.
+   * Creates a Babylon.js box mesh with CSG2 processing (proper pipeline).
+   */
+  private createBoxWithCSG2(size: readonly [number, number, number], center: boolean, node: CubeNode): BABYLON.Mesh {
+    console.log('[DEBUG] Creating box with CSG2 pipeline...');
+
+    // Step 1: Create basic Babylon.js mesh
+    const basicMesh = this.createBox(size, center, node);
+
+    // Step 2: Process through CSG2 for pipeline consistency
+    if (this.isCSG2Ready()) {
+      try {
+        console.log('[DEBUG] Processing cube through CSG2...');
+        const globalWithMock = globalThis as { __MOCK_CSG2__?: typeof BABYLON.CSG2 };
+        const CSG2Class = globalWithMock.__MOCK_CSG2__ ?? BABYLON.CSG2;
+
+        // Convert to CSG2 and back to ensure proper pipeline processing
+        const csg = CSG2Class.FromMesh(basicMesh);
+        const processedMesh = csg.toMesh(
+          `${basicMesh.name}_csg2`,
+          this.scene
+        );
+
+        // Dispose intermediate objects
+        csg.dispose();
+        basicMesh.dispose();
+
+        console.log('[DEBUG] Cube processed through CSG2 successfully');
+        return processedMesh;
+      } catch (error) {
+        console.warn('[WARN] CSG2 processing failed, using basic mesh:', error);
+        return basicMesh;
+      }
+    } else {
+      console.log('[DEBUG] CSG2 not ready, using basic mesh');
+      return basicMesh;
+    }
+  }
+
+  /**
+   * Creates a Babylon.js box mesh with the specified parameters (basic version).
    */
   private createBox(size: readonly [number, number, number], center: boolean, node: CubeNode): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox(
