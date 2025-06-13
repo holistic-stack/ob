@@ -32,6 +32,18 @@ export default defineConfig({
     ctPort: 3100,
     viewport: { width: 800, height: 800 },
     screenshot: 'on',
+
+    /* Configure Vite for component testing */
+    ctViteConfig: {
+      optimizeDeps: {
+        include: ['react', 'react-dom'],
+        force: true,
+      },
+      define: {
+        global: 'globalThis',
+      }
+    }
+     
   },
 
   /* Configure projects for major browsers */
@@ -43,7 +55,16 @@ export default defineConfig({
         video: 'on',
         launchOptions: {
           // args: ["--headless","--no-sandbox","--use-angle=gl"]
-          args: ["--no-sandbox"]
+          args: [
+            '--enable-webgl',
+            '--enable-accelerated-2d-canvas',
+            '--enable-gpu-rasterization',
+            '--enable-zero-copy',
+            '--disable-web-security', // For local development
+            '--disable-features=VizDisplayCompositor',
+            '--no-sandbox', // For CI environments
+            '--disable-dev-shm-usage' // For CI environments
+          ]
         } },
     }
   ],
