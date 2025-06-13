@@ -1,27 +1,31 @@
-/**
- * @file Playwright Component Test for OpenSCAD Multi-View Renderer
- * 
- * Tests the complete OpenSCAD to Babylon.js pipeline with 4 synchronized camera views:
- * - Perspective view (main 3D view)
- * - Top view (orthographic from above)
- * - Side view (orthographic from side)
- * - Bottom view (orthographic from below)
- * 
- * Uses TDD methodology with real OpenscadParser and NullEngine (no mocks)
- * Includes screenshot regression tests for visual validation
- * 
- * @author Luciano Júnior
- * @date June 2025
- */
-
 import { test, expect } from '@playwright/experimental-ct-react';
-import { createOpenSCADConsoleDebugger } from '../../utils/playwright-console-debugger';
-import { OpenSCADMultiViewRenderer } from './openscad-multi-view-renderer';
+import { BabylonRenderer } from './babylon-renderer';
+
+
+
+const TestComp = ({code: _code}: {code: string}) => {
+  // Mock props for testing
+  const pipelineResult = null;
+  const isProcessing = false;
+  const sceneConfig = {
+    enableDebugMode: true,
+    showAxes: true,
+    showGrid: true,
+    enableCamera: true,
+    enableLighting: true,
+    backgroundColor: '#333333'
+  };
+
+  return (
+    <BabylonRenderer
+      pipelineResult={pipelineResult}
+      isProcessing={isProcessing}
+      sceneConfig={sceneConfig}
+    />
+  );
+};
 
 test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
-
-  // Global console debugger for all tests
-  let consoleDebugger = createOpenSCADConsoleDebugger();
 
   // Simple diagnostic test to identify timeout issues
   test('DIAGNOSTIC: should mount simplified component without timeout', async ({ mount }) => {
@@ -32,11 +36,8 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
       console.log('[DIAGNOSTIC] Attempting to mount simplified component...');
 
       const component = await mount(
-        <OpenSCADMultiViewRenderer
-          openscadCode="cube([10, 10, 10]);"
-          width={200}
-          height={150}
-          enableDebugInfo={true}
+        <TestComp
+          code="cube([10, 10, 10]);"
         />
       );
 

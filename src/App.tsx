@@ -11,10 +11,10 @@
  * @date June 2025
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
 import { BabylonRenderer } from './components/babylon-renderer/babylon-renderer';
-import { PipelineProcessor } from './components/pipeline-processor/pipeline-processor';
+import { useOpenSCADProcessor } from './hooks/use-openscad-processor';
 import { OpenSCADInput } from './components/openscad-input';
 import { PipelineResult } from './types/pipeline-types';
 import './App.css';
@@ -61,6 +61,126 @@ class RenderingErrorBoundary extends React.Component<
 
     return this.props.children;
   }
+}
+
+/**
+ * Simple wrapper component that uses the useOpenSCADProcessor hook
+ */
+interface PipelineProcessorWrapperProps {
+  readonly openscadCode: string;
+  readonly onResult: (result: PipelineResult) => void;
+  readonly onProcessingStart: () => void;
+  readonly onProcessingEnd: () => void;
+  readonly autoProcess: boolean;
+}
+
+function PipelineProcessorWrapper({
+  openscadCode,
+  onResult,
+  onProcessingStart,
+  onProcessingEnd,
+  autoProcess
+}: PipelineProcessorWrapperProps): React.JSX.Element {
+  const {
+    isInitializing,
+    isReady,
+    isProcessing,
+    error,
+    result,
+    stats,
+    processCode
+  } = useOpenSCADProcessor();
+
+  // Handle result changes
+  useEffect(() => {
+    if (result) {
+      // Convert the hook result to the expected App result format
+      onResult(result as PipelineResult);
+    }
+  }, [result, onResult]);
+
+  // Handle processing state changes
+  useEffect(() => {
+    if (isProcessing) {
+      onProcessingStart();
+    } else {
+      onProcessingEnd();
+    }
+  }, [isProcessing, onProcessingStart, onProcessingEnd]);
+
+  // Auto-process when code changes
+  useEffect(() => {
+    if (autoProcess && isReady && openscadCode.trim() && !isProcessing) {
+      const timeoutId = setTimeout(() => {
+        void processCode(openscadCode);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+    return undefined;
+  }, [autoProcess, isReady, openscadCode, isProcessing, processCode]);
+
+  const handleManualProcess = useCallback(() => {
+    if (isReady && !isProcessing && openscadCode.trim()) {
+      void processCode(openscadCode);
+    }
+  }, [isReady, isProcessing, openscadCode, processCode]);
+
+  return (
+    <div className="pipeline-processor-wrapper">
+      <div className="processor-header">
+        <h3>🔧 OpenSCAD Processor (React 19 Hook)</h3>
+        <div className="processor-stats">
+          <span>Runs: {stats.totalRuns}</span>
+          <span>Success: {stats.successCount}</span>
+          <span>Errors: {stats.errorCount}</span>
+          <span>Avg Time: {Math.round(stats.averageTime)}ms</span>
+        </div>
+      </div>
+
+      <div className="processor-controls">
+        <button
+          onClick={handleManualProcess}
+          disabled={!isReady || isProcessing || !openscadCode.trim()}
+          className={`process-button ${isProcessing ? 'processing' : ''}`}
+        >
+          {isProcessing ? (
+            <>
+              <span className="spinner">⟳</span>
+              Processing...
+            </>
+          ) : (
+            'Process OpenSCAD Code'
+          )}
+        </button>
+      </div>
+
+      <div className="processor-status">
+        {isInitializing && (
+          <div className="status-message warning">
+            ⚠️ Pipeline initializing...
+          </div>
+        )}
+
+        {error && (
+          <div className="status-message error">
+            ❌ Error: {error}
+          </div>
+        )}
+
+        {isReady && !openscadCode.trim() && (
+          <div className="status-message info">
+            ℹ️ Enter OpenSCAD code to process
+          </div>
+        )}
+
+        {result && result.success && (
+          <div className="status-message success">
+            ✅ Processing completed successfully
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -205,7 +325,7 @@ export function App(): React.JSX.Element {
 
         {/* Pipeline Processor */}
         <section className="processor-section">
-          <PipelineProcessor
+          <PipelineProcessorWrapper
             openscadCode={openscadCode}
             onResult={handlePipelineResult}
             onProcessingStart={handleProcessingStart}
