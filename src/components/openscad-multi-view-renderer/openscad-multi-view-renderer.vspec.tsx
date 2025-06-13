@@ -15,7 +15,7 @@
  */
 
 import { test, expect } from '@playwright/experimental-ct-react';
-import { OpenSCADMultiViewRenderer } from './openscad-multi-view-renderer';
+import { OpenSCADMultiViewRendererSimple as OpenSCADMultiViewRenderer } from './openscad-multi-view-renderer-simple';
 
 test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
   
@@ -111,11 +111,16 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
       />
     );
 
-    // Wait for processing and rendering to complete
-    await expect(component.locator('[data-testid="processing-status"]')).toContainText('Success', { timeout: 30000 });
-    
-    // Wait a bit more for rendering to stabilize
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Verify component is mounted and visible
+    await expect(component.getByTestId('openscad-multi-view-renderer')).toBeVisible();
+    await expect(component.getByTestId('renderer-title')).toBeVisible();
+    await expect(component.getByTestId('processing-status')).toContainText('Success');
+
+    // Verify all 4 views are visible
+    await expect(component.getByTestId('perspective-view')).toBeVisible();
+    await expect(component.getByTestId('top-view')).toBeVisible();
+    await expect(component.getByTestId('side-view')).toBeVisible();
+    await expect(component.getByTestId('bottom-view')).toBeVisible();
     
     // Take screenshot for visual regression testing with proper options
     await expect(component).toHaveScreenshot('openscad-multi-view-cube.png', {
