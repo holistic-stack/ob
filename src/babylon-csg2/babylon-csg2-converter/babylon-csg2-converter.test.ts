@@ -16,7 +16,7 @@ import {
   convertOpenSCADToBabylon,
   type CSG2ConverterConfig
 } from './babylon-csg2-converter';
-import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
+import { initializeCSG2ForTests } from '../utils/csg2-test-initializer/csg2-test-initializer';
 
 describe('BabylonCSG2Converter', () => {
   let engine: BABYLON.NullEngine;
@@ -25,9 +25,9 @@ describe('BabylonCSG2Converter', () => {
 
   beforeAll(async () => {
     console.log('[INIT] Initializing CSG2 for tests...');
-    // Initialize CSG2 once for all tests using Node.js compatible method
+    // Initialize CSG2 once for all tests using test-compatible method
     try {
-      const result = await initializeCSG2ForNode({
+      const result = await initializeCSG2ForTests({
         enableLogging: true,
         forceMockInTests: true,
         timeout: 15000 // Increased timeout for CI environments

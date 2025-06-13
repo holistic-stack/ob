@@ -1,7 +1,8 @@
 /**
- * @file CSG2 Node.js Initializer Tests
+ * @file CSG2 Test Initializer Tests
  * 
- * Tests for CSG2 initialization utility that handles Node.js environments.
+ * Tests for test-specific CSG2 initialization utility.
+ * These tests focus on Node.js and mock functionality.
  * 
  * @author Luciano Júnior
  * @date June 2025
@@ -9,53 +10,53 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
-  initializeCSG2ForNode,
-  isCSG2Ready,
-  resetCSG2State,
-  createCSG2Initializer
-} from './csg2-node-initializer';
+  initializeCSG2ForTests,
+  isCSG2ReadyForTests,
+  resetCSG2StateForTests,
+  createCSG2TestInitializer
+} from './csg2-test-initializer';
 
-describe('[INIT] CSG2 Node.js Initializer', () => {
+describe('[INIT] CSG2 Test Initializer', () => {
   beforeEach(() => {
-    console.log('[INIT] Setting up CSG2 initializer test environment');
-    resetCSG2State();
+    console.log('[INIT] Setting up CSG2 test initializer test environment');
+    resetCSG2StateForTests();
   });
 
   afterEach(() => {
-    console.log('[DEBUG] Cleaning up CSG2 initializer test environment');
-    resetCSG2State();
+    console.log('[DEBUG] Cleaning up CSG2 test initializer test environment');
+    resetCSG2StateForTests();
   });
 
-  describe('Basic Initialization', () => {
+  describe('Basic Test Initialization', () => {
     it('[DEBUG] should initialize CSG2 successfully in test environment', async () => {
-      console.log('[DEBUG] Testing CSG2 initialization in test environment');
+      console.log('[DEBUG] Testing CSG2 test initialization');
       
-      const result = await initializeCSG2ForNode({
+      const result = await initializeCSG2ForTests({
         enableLogging: true,
         forceMockInTests: true,
         timeout: 5000
       });
       
       expect(result.success).toBe(true);
-      expect(result.method).toBe('mock-fallback');
+      expect(['manifold-direct', 'babylon-standard', 'mock-vitest', 'mock-simple']).toContain(result.method);
       if (result.success) {
-        expect(result.message).toContain('Mock CSG2 initialized');
+        expect(result.message).toContain('CSG2 initialized');
       }
       
-      console.log('[DEBUG] CSG2 initialization test completed successfully');
+      console.log('[DEBUG] CSG2 test initialization completed successfully');
     });
 
     it('[DEBUG] should return already initialized result on subsequent calls', async () => {
-      console.log('[DEBUG] Testing multiple CSG2 initialization calls');
+      console.log('[DEBUG] Testing multiple CSG2 test initialization calls');
       
       // First initialization
-      const result1 = await initializeCSG2ForNode({
+      const result1 = await initializeCSG2ForTests({
         enableLogging: false,
         forceMockInTests: true
       });
       
       // Second initialization should return quickly
-      const result2 = await initializeCSG2ForNode({
+      const result2 = await initializeCSG2ForTests({
         enableLogging: false,
         forceMockInTests: true
       });
@@ -63,15 +64,15 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
       
-      console.log('[DEBUG] Multiple initialization test completed');
+      console.log('[DEBUG] Multiple test initialization completed');
     });
 
     it('[DEBUG] should handle concurrent initialization calls', async () => {
-      console.log('[DEBUG] Testing concurrent CSG2 initialization calls');
+      console.log('[DEBUG] Testing concurrent CSG2 test initialization calls');
       
       // Start multiple initializations concurrently
       const promises = Array.from({ length: 3 }, () => 
-        initializeCSG2ForNode({
+        initializeCSG2ForTests({
           enableLogging: false,
           forceMockInTests: true
         })
@@ -84,7 +85,40 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
         expect(result.success).toBe(true);
       });
       
-      console.log('[DEBUG] Concurrent initialization test completed');
+      console.log('[DEBUG] Concurrent test initialization completed');
+    });
+  });
+
+  describe('Mock Initialization', () => {
+    it('[DEBUG] should use mock when forceMockInTests is true', async () => {
+      console.log('[DEBUG] Testing forced mock initialization');
+      
+      const result = await initializeCSG2ForTests({
+        enableLogging: true,
+        forceMockInTests: true,
+        timeout: 1000
+      });
+      
+      expect(result.success).toBe(true);
+      expect(['mock-vitest', 'mock-simple']).toContain(result.method);
+      
+      console.log('[DEBUG] Forced mock initialization test completed');
+    });
+
+    it('[DEBUG] should attempt real initialization when forceMockInTests is false', async () => {
+      console.log('[DEBUG] Testing real initialization attempt');
+      
+      const result = await initializeCSG2ForTests({
+        enableLogging: false,
+        forceMockInTests: false,
+        timeout: 2000
+      });
+      
+      // Should either succeed with real method or fall back to mock
+      expect(result.success).toBe(true);
+      expect(['manifold-direct', 'babylon-standard', 'mock-vitest', 'mock-simple']).toContain(result.method);
+      
+      console.log('[DEBUG] Real initialization attempt test completed');
     });
   });
 
@@ -92,7 +126,7 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
     it('[DEBUG] should respect timeout configuration', async () => {
       console.log('[DEBUG] Testing timeout configuration');
       
-      const result = await initializeCSG2ForNode({
+      const result = await initializeCSG2ForTests({
         timeout: 100, // Very short timeout
         enableLogging: false,
         forceMockInTests: true
@@ -107,9 +141,9 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
     it('[DEBUG] should respect logging configuration', async () => {
       console.log('[DEBUG] Testing logging configuration');
       
-      // Test with logging disabled
-      const result = await initializeCSG2ForNode({
-        enableLogging: false,
+      // Test with logging enabled (default for tests)
+      const result = await initializeCSG2ForTests({
+        enableLogging: true,
         forceMockInTests: true
       });
       
@@ -121,7 +155,7 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
     it('[DEBUG] should handle custom retry attempts', async () => {
       console.log('[DEBUG] Testing retry attempts configuration');
       
-      const result = await initializeCSG2ForNode({
+      const result = await initializeCSG2ForTests({
         retryAttempts: 1,
         enableLogging: false,
         forceMockInTests: true
@@ -138,16 +172,16 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
       console.log('[DEBUG] Testing CSG2 ready state tracking');
       
       // Initially not ready
-      expect(isCSG2Ready()).toBe(false);
+      expect(isCSG2ReadyForTests()).toBe(false);
       
       // Initialize
-      await initializeCSG2ForNode({
+      await initializeCSG2ForTests({
         enableLogging: false,
         forceMockInTests: true
       });
       
       // Should be ready after initialization
-      expect(isCSG2Ready()).toBe(true);
+      expect(isCSG2ReadyForTests()).toBe(true);
       
       console.log('[DEBUG] Ready state tracking test completed');
     });
@@ -156,28 +190,28 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
       console.log('[DEBUG] Testing state reset functionality');
       
       // Initialize first
-      await initializeCSG2ForNode({
+      await initializeCSG2ForTests({
         enableLogging: false,
         forceMockInTests: true
       });
       
-      expect(isCSG2Ready()).toBe(true);
+      expect(isCSG2ReadyForTests()).toBe(true);
       
       // Reset state
-      resetCSG2State();
+      resetCSG2StateForTests();
       
       // Should not be ready after reset
-      expect(isCSG2Ready()).toBe(false);
+      expect(isCSG2ReadyForTests()).toBe(false);
       
       console.log('[DEBUG] State reset test completed');
     });
   });
 
   describe('Factory Function', () => {
-    it('[DEBUG] should create initializer with factory function', async () => {
+    it('[DEBUG] should create test initializer with factory function', async () => {
       console.log('[DEBUG] Testing factory function creation');
       
-      const initializer = createCSG2Initializer({
+      const initializer = createCSG2TestInitializer({
         enableLogging: false,
         forceMockInTests: true
       });
@@ -197,7 +231,7 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
     it('[DEBUG] should handle factory reset correctly', async () => {
       console.log('[DEBUG] Testing factory reset functionality');
       
-      const initializer = createCSG2Initializer({
+      const initializer = createCSG2TestInitializer({
         enableLogging: false,
         forceMockInTests: true
       });
@@ -218,14 +252,14 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
     it('[DEBUG] should handle initialization errors gracefully', async () => {
       console.log('[DEBUG] Testing error handling');
       
-      // Test with mock disabled to potentially trigger errors
-      const result = await initializeCSG2ForNode({
+      // Test with mock disabled and short timeout to potentially trigger errors
+      const result = await initializeCSG2ForTests({
         enableLogging: false,
-        forceMockInTests: false, // Disable mock to test real initialization
+        forceMockInTests: false,
         timeout: 100 // Short timeout to trigger timeout error
       });
       
-      // Should either succeed or fail gracefully
+      // Should either succeed or fail gracefully, but likely succeed with fallback
       expect(typeof result.success).toBe('boolean');
       expect(typeof result.method).toBe('string');
       
@@ -243,39 +277,15 @@ describe('[INIT] CSG2 Node.js Initializer', () => {
       console.log('[DEBUG] Testing environment detection');
       
       // In test environment, should use mock by default
-      const result = await initializeCSG2ForNode({
+      const result = await initializeCSG2ForTests({
         enableLogging: false
         // forceMockInTests not specified, should default to true
       });
       
       expect(result.success).toBe(true);
-      expect(result.method).toBe('mock-fallback');
+      expect(['mock-vitest', 'mock-simple']).toContain(result.method);
       
       console.log('[DEBUG] Environment detection test completed');
     });
-  });
-});
-
-describe('[INIT] CSG2 Initializer Integration', () => {
-  beforeEach(() => {
-    console.log('[INIT] Setting up integration test environment');
-    resetCSG2State();
-  });
-
-  afterEach(() => {
-    console.log('[DEBUG] Cleaning up integration test environment');
-    resetCSG2State();
-  });
-
-  it('[DEBUG] should integrate with existing test setup', async () => {
-    console.log('[DEBUG] Testing integration with existing test setup');
-    
-    // This should work with the existing vitest-setup
-    const result = await initializeCSG2ForNode();
-    
-    expect(result.success).toBe(true);
-    expect(isCSG2Ready()).toBe(true);
-    
-    console.log('[DEBUG] Integration test completed successfully');
   });
 });

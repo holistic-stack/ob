@@ -6,7 +6,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadAstVisitor } from './openscad-ast-visitor';
-import { initializeCSG2ForTests, createTestScene, disposeTestScene } from '../../vitest-setup';
+import { initializeCSG2ForTests } from '../utils/csg2-test-initializer/csg2-test-initializer';
+import { createTestScene, disposeTestScene } from '../../vitest-setup';
 import type { CubeNode, SphereNode, UnionNode, AssignmentNode, IdentifierNode, LiteralExpressionNode } from '@holistic-stack/openscad-parser';
 import { Scope } from '../utils/expression-evaluator';
 
@@ -24,8 +25,25 @@ describe('OpenScadAstVisitor with CSG2', () => {
 
   beforeAll(async () => {
     console.log('[INIT] Initializing CSG2 for OpenScadAstVisitor tests');
-    await initializeCSG2ForTests();
-  }, 10000); // 10 second timeout for CSG2 initialization
+    try {
+      // Initialize CSG2 once for all tests using test-compatible method
+      const result = await initializeCSG2ForTests({
+        enableLogging: true,
+        forceMockInTests: true,
+        timeout: 15000 // Increased timeout for CI environments
+      });
+
+      if (result.success) {
+        console.log(`[INIT] CSG2 initialized successfully using ${result.method}`);
+      } else {
+        console.error('[ERROR] Failed to initialize CSG2:', result.error);
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('[ERROR] Failed to initialize CSG2:', error);
+      throw error;
+    }
+  }, 20000); // Increased timeout for beforeAll hook
 
   beforeEach(() => {
     console.log('[DEBUG] Setting up test scene');

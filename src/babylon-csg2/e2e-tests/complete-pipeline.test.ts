@@ -11,6 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadPipeline } from '../openscad-pipeline/openscad-pipeline';
+import { initializeCSG2ForTests } from '../utils/csg2-test-initializer/csg2-test-initializer';
 
 describe('Complete OpenSCAD to Babylon.js Pipeline E2E Tests', () => {
   let engine: BABYLON.NullEngine;
@@ -20,21 +21,24 @@ describe('Complete OpenSCAD to Babylon.js Pipeline E2E Tests', () => {
   beforeAll(async () => {
     console.log('[INIT] Initializing CSG2 for E2E tests');
     try {
-      // Initialize CSG2 for all tests with timeout
-      await BABYLON.InitializeCSG2Async();
-      console.log('[DEBUG] CSG2 initialization completed successfully');
+      // Initialize CSG2 for all tests using test-compatible method
+      const result = await initializeCSG2ForTests({
+        enableLogging: true,
+        forceMockInTests: true,
+        timeout: 15000 // Increased timeout for CI environments
+      });
+
+      if (result.success) {
+        console.log(`[INIT] CSG2 initialized successfully using ${result.method}`);
+      } else {
+        console.error('[ERROR] Failed to initialize CSG2:', result.error);
+        throw new Error(result.error);
+      }
     } catch (error) {
-      console.warn('[WARN] CSG2 initialization failed, tests will use mock CSG2:', error);
-      // Set up mock CSG2 for testing
-      (globalThis as any).__MOCK_CSG2__ = {
-        FromMesh: () => ({
-          add: () => ({ toMesh: () => null }),
-          subtract: () => ({ toMesh: () => null }),
-          intersect: () => ({ toMesh: () => null })
-        })
-      };
+      console.error('[ERROR] Failed to initialize CSG2:', error);
+      throw error;
     }
-  }, 60000); // Increase timeout to 60 seconds
+  }, 20000); // Increased timeout for beforeAll hook
 
   beforeEach(async () => {
     console.log('[DEBUG] Setting up test environment');

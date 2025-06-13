@@ -3,49 +3,49 @@
  * @author Luciano Júnior
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadAstVisitorCSG2 } from './openscad-ast-visitor-csg2';
 import type { CubeNode, SphereNode, UnionNode } from '@holistic-stack/openscad-parser';
+import { initializeCSG2ForTests } from '../utils/csg2-test-initializer/csg2-test-initializer';
 
 describe('OpenScadAstVisitorCSG2', () => {
   let engine: BABYLON.NullEngine;
   let scene: BABYLON.Scene;
   let visitor: OpenScadAstVisitorCSG2;
 
+  beforeAll(async () => {
+    console.log('[INIT] Initializing CSG2 for OpenScadAstVisitorCSG2 tests');
+    try {
+      // Initialize CSG2 once for all tests using test-compatible method
+      const result = await initializeCSG2ForTests({
+        enableLogging: true,
+        forceMockInTests: true,
+        timeout: 15000 // Increased timeout for CI environments
+      });
+
+      if (result.success) {
+        console.log(`[INIT] CSG2 initialized successfully using ${result.method}`);
+      } else {
+        console.error('[ERROR] Failed to initialize CSG2:', result.error);
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('[ERROR] Failed to initialize CSG2:', error);
+      throw error;
+    }
+  }, 20000); // Increased timeout for beforeAll hook
+
   beforeEach(async () => {
     console.log('[INIT] Setting up test environment');
 
-    // Create test environment first (faster)
+    // Create test environment (faster without CSG2 initialization)
     engine = new BABYLON.NullEngine();
     scene = new BABYLON.Scene(engine);
     visitor = new OpenScadAstVisitorCSG2(scene);
 
-    // Initialize CSG2 with proper timeout and fallback
-    try {
-      // Check if CSG2 is available and ready
-      if (typeof BABYLON.IsCSG2Ready === 'function' && !BABYLON.IsCSG2Ready()) {
-        console.log('[DEBUG] Initializing CSG2 for tests');
-
-        // Use Promise.race to implement timeout
-        const initPromise = BABYLON.InitializeCSG2Async();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('CSG2 initialization timeout')), 3000)
-        );
-
-        await Promise.race([initPromise, timeoutPromise]);
-        console.log('[DEBUG] CSG2 initialized successfully');
-      } else {
-        console.log('[DEBUG] CSG2 already ready or not available');
-      }
-    } catch (error) {
-      console.warn('[WARN] CSG2 initialization failed, using mock:', error);
-      // Set up mock CSG2 for tests
-      (globalThis as unknown as { __MOCK_CSG2__?: boolean }).__MOCK_CSG2__ = true;
-    }
-
     console.log('[DEBUG] Test environment created');
-  }, 10000); // 10 second timeout for setup
+  });
 
   afterEach(() => {
     console.log('[DEBUG] Cleaning up test environment');

@@ -43,7 +43,7 @@ import {
   extractCylinderParams,
   extractTranslationVector 
 } from '../utils/ast-type-guards';
-import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
+import { initializeCSG2ForBrowser } from '../utils/csg2-browser-initializer/csg2-browser-initializer';
 
 /**
  * Configuration for CSG2 conversion process
@@ -114,10 +114,9 @@ export class BabylonCSG2Converter {
     try {
       this.log('[INIT] Initializing CSG2 system...');
 
-      // Initialize CSG2 using Node.js compatible method
-      const result = await initializeCSG2ForNode({
+      // Initialize CSG2 using browser-compatible method
+      const result = await initializeCSG2ForBrowser({
         enableLogging: this.config.enableLogging ?? false,
-        forceMockInTests: true,
         timeout: 15000 // 15 second timeout for CSG2 initialization
       });
 

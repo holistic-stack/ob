@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import type { CircleNode, SquareNode, PolygonNode } from '@holistic-stack/openscad-parser';
 import { OpenScadAstVisitor } from './openscad-ast-visitor';
-import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
+import { initializeCSG2ForTests } from '../utils/csg2-test-initializer/csg2-test-initializer';
 
 describe('[INIT] 2D Primitive Visitor Methods', () => {
   console.log('[INIT] Starting 2D primitive visitor tests');
@@ -31,7 +31,7 @@ describe('[INIT] 2D Primitive Visitor Methods', () => {
     scene = new BABYLON.Scene(engine);
 
     // Initialize CSG2 for tests with shorter timeout
-    await initializeCSG2ForNode({ timeout: 5000, enableLogging: false });
+    await initializeCSG2ForTests({ timeout: 5000, enableLogging: false });
 
     // Create visitor instance
     visitor = new OpenScadAstVisitor(scene);

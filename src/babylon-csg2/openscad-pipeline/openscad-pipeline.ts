@@ -34,7 +34,7 @@ import type { ASTNode, ModuleDefinitionNode } from '@holistic-stack/openscad-par
 import { ParserResourceManager } from '../utils/parser-resource-manager';
 import { OpenScadAstVisitor } from '../openscad-ast-visitor/openscad-ast-visitor';
 import { isModuleDefinitionNode } from '../utils/ast-type-guards';
-import { initializeCSG2ForNode } from '../utils/csg2-node-initializer/csg2-node-initializer';
+import { initializeCSG2ForBrowser } from '../utils/csg2-browser-initializer/csg2-browser-initializer';
 
 /**
  * Result type for pipeline operations
@@ -350,12 +350,11 @@ export class OpenScadPipeline {
     this.log('[DEBUG] Initializing CSG2 for browser environment...');
 
     try {
-      this.log('[DEBUG] Initializing CSG2 using Node.js compatible method...');
+      this.log('[DEBUG] Initializing CSG2 using browser compatible method...');
 
       // Add a race condition with a shorter timeout for browser environments
-      const initPromise = initializeCSG2ForNode({
+      const initPromise = initializeCSG2ForBrowser({
         enableLogging: this.options.enableLogging,
-        forceMockInTests: true,
         timeout: this.options.csg2Timeout
       });
 
