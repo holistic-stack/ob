@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "target": "ESNext",
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "sourceMap": true,
+    "outDir": "./test-results",
+    "types": ["node", "@playwright/experimental-ct-react"]
+  },
+  "include": [
+    "src/**/*.vspec.tsx",
+    "src/**/*.tsx",
+    "src/**/*.ts"
+  ]
+}

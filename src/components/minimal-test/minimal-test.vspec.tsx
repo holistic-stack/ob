@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/experimental-ct-react';
-
-function MinimalComponent() {
-  return <div data-testid="minimal">Hello World</div>;
-}
+import { MinimalComponent } from './minimal-component';
 
 test('minimal test', async ({ mount }) => {
   const component = await mount(<MinimalComponent />);
   await expect(component.getByTestId('minimal')).toBeVisible();
+  await expect(component.getByText('Minimal Test Component')).toBeVisible();
+  await expect(component.getByText('Hello World')).toBeVisible();
 });

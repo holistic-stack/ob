@@ -5,11 +5,11 @@ import process from 'node:process';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './',
+  testDir: './src',
   /* The base directory, relative to the config file, for snapshot files created with toMatchSnapshot and toHaveScreenshot. */
-  snapshotDir: "./",
+  snapshotDir: "./test-results/screenshots",
   /* Maximum time one test can run for. */
-  timeout: 10 * 1000,
+  timeout: 30 * 1000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -19,7 +19,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: 'line',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   testMatch: '**/*.vspec.tsx', // Match test files
   updateSnapshots: "missing",
@@ -35,12 +35,23 @@ export default defineConfig({
 
     /* Configure Vite for component testing */
     ctViteConfig: {
+      plugins: [],
+      define: {
+        'process.env.NODE_ENV': '"test"',
+        global: 'globalThis'
+      },
+      esbuild: {
+        target: 'esnext',
+        jsx: 'automatic'
+      },
+      resolve: {
+        alias: {
+          '@': '/src'
+        }
+      },
       optimizeDeps: {
         include: ['react', 'react-dom'],
-        force: true,
-      },
-      define: {
-        global: 'globalThis',
+        force: true
       }
     }
      

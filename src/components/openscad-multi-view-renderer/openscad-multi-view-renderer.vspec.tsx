@@ -117,8 +117,11 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
     // Wait a bit more for rendering to stabilize
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Take screenshot for visual regression testing
-    await expect(component).toHaveScreenshot('openscad-multi-view-cube.png');
+    // Take screenshot for visual regression testing with proper options
+    await expect(component).toHaveScreenshot('openscad-multi-view-cube.png', {
+      animations: 'disabled',
+      threshold: 0.2
+    });
     
     console.log('[END] Screenshot test completed successfully');
   });
@@ -149,8 +152,14 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
       // Verify mesh is created
       await expect(component.locator('[data-testid="mesh-info"]')).toBeVisible();
       
-      // Take screenshot for each primitive
-      await expect(component).toHaveScreenshot(`openscad-multi-view-${testCase.name}.png`);
+      // Wait for rendering to stabilize before screenshot
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Take screenshot for each primitive with proper naming
+      await expect(component).toHaveScreenshot(`openscad-multi-view-${testCase.name}.png`, {
+        animations: 'disabled',
+        threshold: 0.2
+      });
       
       console.log(`[DEBUG] ${testCase.name} test completed successfully`);
     }
@@ -231,7 +240,10 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Take screenshot for visual regression testing
-    await expect(component).toHaveScreenshot('openscad-multi-view-sphere.png');
+    await expect(component).toHaveScreenshot('openscad-multi-view-sphere.png', {
+      animations: 'disabled',
+      threshold: 0.2
+    });
 
     console.log('[END] Sphere visual regression test completed successfully');
   });
@@ -256,7 +268,10 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Take screenshot for visual regression testing
-    await expect(component).toHaveScreenshot('openscad-multi-view-union.png');
+    await expect(component).toHaveScreenshot('openscad-multi-view-union.png', {
+      animations: 'disabled',
+      threshold: 0.2
+    });
 
     console.log('[END] Union operation visual regression test completed successfully');
   });
@@ -281,9 +296,100 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Take screenshot for visual regression testing
-    await expect(component).toHaveScreenshot('openscad-multi-view-difference.png');
+    await expect(component).toHaveScreenshot('openscad-multi-view-difference.png', {
+      animations: 'disabled',
+      threshold: 0.2
+    });
 
     console.log('[END] Difference operation visual regression test completed successfully');
+  });
+
+  test('should take comprehensive screenshots for all view configurations', async ({ mount }) => {
+    console.log('[INIT] Taking comprehensive screenshots for all view configurations');
+
+    const configurations = [
+      {
+        name: 'debug-enabled',
+        props: {
+          openscadCode: 'cube([8, 8, 8]);',
+          width: 800,
+          height: 600,
+          enableDebugInfo: true,
+          enableCameraSynchronization: false
+        }
+      },
+      {
+        name: 'sync-enabled',
+        props: {
+          openscadCode: 'cylinder(h=12, r=4);',
+          width: 800,
+          height: 600,
+          enableDebugInfo: false,
+          enableCameraSynchronization: true
+        }
+      },
+      {
+        name: 'both-enabled',
+        props: {
+          openscadCode: 'intersection() { cube([10, 10, 10]); sphere(7); }',
+          width: 800,
+          height: 600,
+          enableDebugInfo: true,
+          enableCameraSynchronization: true
+        }
+      }
+    ];
+
+    for (const config of configurations) {
+      console.log(`[DEBUG] Testing configuration: ${config.name}`);
+
+      const component = await mount(
+        <OpenSCADMultiViewRenderer {...config.props} />
+      );
+
+      // Wait for processing and rendering to complete
+      await expect(component.locator('[data-testid="processing-status"]')).toContainText('Success', { timeout: 30000 });
+
+      // Wait for rendering to stabilize
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Take screenshot for this configuration
+      await expect(component).toHaveScreenshot(`openscad-multi-view-${config.name}.png`, {
+        animations: 'disabled',
+        threshold: 0.2
+      });
+
+      console.log(`[DEBUG] Screenshot taken for ${config.name} configuration`);
+    }
+
+    console.log('[END] Comprehensive screenshot test completed successfully');
+  });
+
+  test('should take error state screenshots', async ({ mount }) => {
+    console.log('[INIT] Taking screenshots for error states');
+
+    const component = await mount(
+      <OpenSCADMultiViewRenderer
+        openscadCode="invalid_syntax_here();"
+        width={800}
+        height={600}
+        enableDebugInfo={true}
+      />
+    );
+
+    // Wait for error processing to complete
+    await expect(component.locator('[data-testid="processing-status"]')).toContainText('Error', { timeout: 30000 });
+
+    // Wait for error state to stabilize
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Take screenshot of error state
+    await expect(component).toHaveScreenshot('openscad-multi-view-error-state.png', {
+      animations: 'disabled',
+      threshold: 0.2
+    });
+
+    console.log('[END] Error state screenshot test completed successfully');
   });
 
 });
