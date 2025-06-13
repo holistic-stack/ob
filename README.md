@@ -38,8 +38,9 @@ Babylon.js Scene: Interactive 3D mesh
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadPipeline } from './src/babylon-csg2/openscad-pipeline/openscad-pipeline';
 
-// Create Babylon.js scene
-const engine = new BABYLON.NullEngine();
+// Create Babylon.js scene with WebGL engine
+const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+const engine = new BABYLON.Engine(canvas, true);
 const scene = new BABYLON.Scene(engine);
 
 // Initialize pipeline
@@ -133,7 +134,7 @@ import { OpenSCADMultiViewRenderer } from './components/openscad-multi-view-rend
 
 #### Testing
 - **9/9 Unit Tests Passing**: Comprehensive test coverage with React Testing Library
-- **Real Dependencies**: Uses actual OpenscadParser and NullEngine (no mocks)
+- **Real Dependencies**: Uses actual OpenscadParser and NullEngine in tests only (no mocks)
 - **TDD Methodology**: Built following test-driven development principles
 
 

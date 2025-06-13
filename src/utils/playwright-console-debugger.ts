@@ -122,12 +122,13 @@ export class PlaywrightConsoleDebugger {
       return;
     }
 
+    const location = message.location()?.url;
     const capturedMessage: CapturedConsoleMessage = {
       type: messageType,
       text: message.text(),
       timestamp: new Date(),
-      location: message.location()?.url || undefined,
-      args: message.args().map(arg => arg.toString())
+      ...(location && { location }),
+      args: message.args().map(arg => String(arg))
     };
 
     // Add to messages array with size limit
@@ -230,7 +231,7 @@ export class PlaywrightConsoleDebugger {
     const summary: { [key in ConsoleMessageType]?: number } = {};
     
     for (const message of this.messages) {
-      summary[message.type] = (summary[message.type] || 0) + 1;
+      summary[message.type] = (summary[message.type] ?? 0) + 1;
     }
 
     return summary;

@@ -15,8 +15,8 @@
  */
 
 import { test, expect } from '@playwright/experimental-ct-react';
-import { OpenSCADMultiViewRenderer } from './openscad-multi-view-renderer';
 import { createOpenSCADConsoleDebugger } from '../../utils/playwright-console-debugger';
+import { OpenSCADMultiViewRenderer } from './openscad-multi-view-renderer';
 
 test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
 
@@ -32,7 +32,12 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
       console.log('[DIAGNOSTIC] Attempting to mount simplified component...');
 
       const component = await mount(
-        <div data-testid="renderer-title">Simple</div>
+        <OpenSCADMultiViewRenderer
+          openscadCode="cube([10, 10, 10]);"
+          width={200}
+          height={150}
+          enableDebugInfo={true}
+        />
       );
 
       const mountTime = Date.now() - startTime;
@@ -40,13 +45,11 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
 
       // Just check if component exists
       await expect(component).toBeVisible({ timeout: 5000 });
-      console.log(`[DIAGNOSTIC] text content`, await component.textContent());
 
-      // Check for basic elements - component IS the div with data-testid="renderer-title"
-      await expect(component).toContainText('Simple');
+      console.log('[DIAGNOSTIC] Checking for basic elements...', await component.locator('[data-testid="renderer-title"]').textContent());
 
-      // Alternative: verify the data-testid attribute exists
-      await expect(component).toHaveAttribute('data-testid', 'renderer-title');
+      // Check for basic elements
+      await expect(component.locator('[data-testid="renderer-title"]')).toContainText('OpenSCAD Multi-View Renderer');
 
       const totalTime = Date.now() - startTime;
       console.log(`[DIAGNOSTIC] Simplified test completed successfully in ${totalTime}ms`);
@@ -58,35 +61,6 @@ test.describe('OpenSCAD Multi-View Renderer Component Tests', () => {
     }
   });
 
-  // More comprehensive diagnostic test with nested elements
-  test('DIAGNOSTIC: should handle nested elements correctly', async ({ mount }) => {
-    console.log('[DIAGNOSTIC] Starting nested elements test');
 
-    const component = await mount(
-      <div data-testid="parent-container">
-        <h1 data-testid="title">OpenSCAD Renderer</h1>
-        <div data-testid="content">
-          <span data-testid="status">Ready</span>
-        </div>
-      </div>
-    );
-
-    console.log(`[DIAGNOSTIC] Parent text content:`, await component.textContent());
-
-    // Test parent component
-    await expect(component).toBeVisible();
-    await expect(component).toHaveAttribute('data-testid', 'parent-container');
-
-    // Test nested elements using locator
-    const title = component.locator('[data-testid="title"]');
-    await expect(title).toContainText('OpenSCAD Renderer');
-    console.log(`[DIAGNOSTIC] Title text:`, await title.textContent());
-
-    const status = component.locator('[data-testid="status"]');
-    await expect(status).toContainText('Ready');
-    console.log(`[DIAGNOSTIC] Status text:`, await status.textContent());
-
-    console.log('[DIAGNOSTIC] Nested elements test completed successfully');
-  });
 
 });

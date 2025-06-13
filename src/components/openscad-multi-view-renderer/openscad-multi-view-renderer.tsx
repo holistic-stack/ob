@@ -9,7 +9,7 @@
  * 
  * Features:
  * - Real OpenscadParser integration (no mocks)
- * - NullEngine for testing compatibility
+ * - WebGL Engine for production rendering
  * - Synchronized camera movements
  * - Comprehensive error handling
  * - Performance monitoring
@@ -92,7 +92,7 @@ export function OpenSCADMultiViewRenderer({
   } | null>(null);
 
   // Babylon.js state
-  const [engines, setEngines] = useState<BABYLON.NullEngine[]>([]);
+  const [engines, setEngines] = useState<BABYLON.Engine[]>([]);
   const [scenes, setScenes] = useState<BABYLON.Scene[]>([]);
   const [cameras, setCameras] = useState<BABYLON.Camera[]>([]);
   const [currentMesh, setCurrentMesh] = useState<BABYLON.Mesh | null>(null);
@@ -170,7 +170,7 @@ export function OpenSCADMultiViewRenderer({
         throw new Error('No canvas elements available for initialization');
       }
 
-      const newEngines: BABYLON.NullEngine[] = [];
+      const newEngines: BABYLON.Engine[] = [];
       const newScenes: BABYLON.Scene[] = [];
       const newCameras: BABYLON.Camera[] = [];
 
@@ -186,22 +186,22 @@ export function OpenSCADMultiViewRenderer({
           continue;
         }
 
-        // Create engine (NullEngine for testing compatibility)
-        logWithTiming('DEBUG', `Creating NullEngine for ${viewName}`, {
-          renderWidth: width,
-          renderHeight: height,
-          textureSize: 512
+        // Create WebGL engine for production rendering
+        logWithTiming('DEBUG', `Creating WebGL Engine for ${viewName}`, {
+          canvas: canvas,
+          antialias: true,
+          adaptToDeviceRatio: true
         });
 
-        const engine = new BABYLON.NullEngine({
-          renderWidth: width,
-          renderHeight: height,
-          textureSize: 512,
-          deterministicLockstep: false,
-          lockstepMaxSteps: 1
+        const engine = new BABYLON.Engine(canvas, true, {
+          antialias: true,
+          adaptToDeviceRatio: true,
+          powerPreference: 'high-performance',
+          preserveDrawingBuffer: false,
+          stencil: true
         });
 
-        logWithTiming('DEBUG', `NullEngine created for ${viewName}`);
+        logWithTiming('DEBUG', `WebGL Engine created for ${viewName}`);
 
         // Create scene
         logWithTiming('DEBUG', `Creating scene for ${viewName}`);
@@ -373,7 +373,7 @@ export function OpenSCADMultiViewRenderer({
       const pipelineProcessElapsed = performance.now() - pipelineProcessStart;
       logWithTiming('DEBUG', `Pipeline processing completed in ${pipelineProcessElapsed.toFixed(2)}ms`, {
         success: result.success,
-        hasValue: !!result.value
+        hasValue: result.success && !!result.value
       });
 
       if (result.success && result.value) {
@@ -433,10 +433,10 @@ export function OpenSCADMultiViewRenderer({
       } else {
         logWithTiming('ERROR', 'Pipeline processing failed - no result or unsuccessful', {
           success: result.success,
-          hasValue: !!result.value,
-          error: result.error || 'Unknown error'
+          hasValue: result.success && !!result.value,
+          error: result.success ? 'Unknown error' : result.error
         });
-        throw new Error(`Pipeline processing failed: ${result.error || 'Unknown error'}`);
+        throw new Error(`Pipeline processing failed: ${result.success ? 'Unknown error' : result.error}`);
       }
     } catch (error) {
       const totalElapsed = performance.now() - processingStartTime;
