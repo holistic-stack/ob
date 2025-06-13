@@ -14,7 +14,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
 import { BabylonRenderer } from './components/babylon-renderer/babylon-renderer';
-import { useOpenSCADProcessor } from './hooks/use-openscad-processor';
+import { useOpenSCADProcessor } from './features/openscad-processor';
 import { OpenSCADInput } from './components/openscad-input';
 import { PipelineResult } from './types/pipeline-types';
 import './App.css';
