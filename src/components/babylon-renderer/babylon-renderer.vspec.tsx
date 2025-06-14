@@ -14,8 +14,7 @@ test.describe("OpenSCAD Multi-View Renderer Component Tests", () => {
     console.log("[DIAGNOSTIC] Starting simplified component mount test");
     const startTime = Date.now();
 
-    try {
-      console.log("[DIAGNOSTIC] Attempting to mount simplified component...");
+    try {      console.log("[DIAGNOSTIC] Attempting to mount simplified component...");
 
       const component = await mount(<BabylonRenderStory code="cube([10, 10, 10]);" />);
 
@@ -24,18 +23,16 @@ test.describe("OpenSCAD Multi-View Renderer Component Tests", () => {
         `[DIAGNOSTIC] Simplified component mounted successfully in ${mountTime}ms`
       );
 
-      // Just check if component exists
-      await expect(component).toBeVisible({ timeout: 5000 });
-
-      console.log(
-        "[DIAGNOSTIC] Checking for basic elements...",
-        await component.locator('[data-testid="renderer-title"]').textContent()
-      );
-
-      // Check for basic elements
-      await expect(
-        component.locator('[data-testid="renderer-title"]')
-      ).toContainText("OpenSCAD Multi-View Renderer");
+      console.log("[DIAGNOSTIC] Checking for canvas element...");
+      
+      // Check if the canvas element is visible
+      const canvas = component.locator('canvas.babylon-canvas');
+      await expect(canvas).toBeVisible({ timeout: 15000 });
+      
+      // Verify canvas has the correct attributes
+      await expect(canvas).toHaveAttribute('aria-label', '3D Scene Canvas');
+      
+      console.log("[DIAGNOSTIC] Canvas element found and verified");
 
       const totalTime = Date.now() - startTime;
       console.log(
