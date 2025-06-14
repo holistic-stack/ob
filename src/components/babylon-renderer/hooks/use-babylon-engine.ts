@@ -10,7 +10,7 @@
  * @date June 2025
  */
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, RefObject } from 'react';
 import * as BABYLON from '@babylonjs/core';
 
 interface BabylonEngineConfig {
@@ -31,7 +31,7 @@ interface BabylonEngineState {
  * Follows SRP: Only handles engine creation, error handling, and cleanup
  */
 export function useBabylonEngine(
-  canvas: HTMLCanvasElement | null,
+  canvasRef: RefObject<HTMLCanvasElement | null>,
   config: BabylonEngineConfig = {}
 ): BabylonEngineState {
   const engineRef = useRef<BABYLON.Engine | null>(null);
@@ -56,6 +56,7 @@ export function useBabylonEngine(
 
   // Engine initialization effect (minimal useEffect usage)
   useEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas) {
       setIsReady(false);
       return;
@@ -113,7 +114,7 @@ export function useBabylonEngine(
       handleWebGLError(errorMessage);
       return undefined;
     }
-  }, [canvas, engineConfig.antialias, engineConfig.preserveDrawingBuffer, engineConfig.stencil, engineConfig.powerPreference, handleWebGLError]);
+  }, [canvasRef, engineConfig.antialias, engineConfig.preserveDrawingBuffer, engineConfig.stencil, engineConfig.powerPreference, handleWebGLError]);
 
   return {
     engine: engineRef.current,
