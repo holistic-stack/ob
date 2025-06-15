@@ -12,7 +12,7 @@ A robust, type-safe pipeline for converting OpenSCAD code to interactive 3D scen
 **React App**: ✅ Running at http://localhost:5173/ with full pipeline integration
 **3D Rendering**: ✅ Interactive Babylon.js scenes with camera controls
 **Multi-View Component**: ✅ NEW - 4 synchronized camera views (perspective, top, side, bottom)
-**Type Safety**: ✅ Complete TypeScript compilation without errors (117 → 0)
+**Type Safety**: ✅ Strong TypeScript integration with ongoing efforts for complete type safety
 **Pipeline**: ✅ Real-time OpenSCAD → AST → CSG2 → Babylon.js conversion
 **Error Handling**: ✅ Graceful degradation and meaningful error messages
 **Performance**: ✅ Complete metrics collection and resource management
@@ -36,7 +36,7 @@ Babylon.js Scene: Interactive 3D mesh
 
 ```typescript
 import * as BABYLON from '@babylonjs/core';
-import { OpenScadPipeline } from './src/babylon-csg2/openscad-pipeline/openscad-pipeline';
+import { OpenScadPipeline } from './src/babylon-csg2/features/openscad/pipeline/openscad-pipeline';
 
 // Create Babylon.js scene with WebGL engine
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;

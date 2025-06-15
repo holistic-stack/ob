@@ -1,3 +1,5 @@
+> **Note (June 2025):** This document reflects the project plan and status as of December 2024. Since then, the `src/babylon-csg2` directory has undergone a significant architectural refactoring to a feature-based structure. Consequently, many of the file paths and directory structures described herein may be outdated. Please refer to the current codebase and more recent documentation for the latest architectural details.
+
 # OpenSCAD to Babylon.js CSG2 Pipeline Plan
 
 ## Overview
