@@ -8,14 +8,12 @@
  * @date June 2025
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import * as BABYLON from '@babylonjs/core';
 import { BabylonCanvas } from '../babylon-canvas/babylon-canvas';
 import { SceneControls } from '../scene-controls/scene-controls';
 import { MeshDisplay } from '../mesh-display/mesh-display';
 import { DebugPanel } from '../debug-panel/debug-panel';
-import { useBabylonEngine } from '../../hooks/use-babylon-engine/use-babylon-engine';
-import { useBabylonScene } from '../../hooks/use-babylon-scene/use-babylon-scene';
 import type { BabylonRendererProps, DebugReport } from '../../types/babylon-types';
 import './babylon-renderer.css';
 
@@ -67,47 +65,36 @@ export function BabylonRenderer({
 }: BabylonRendererProps): React.JSX.Element {
   console.log('[INIT] Initializing BabylonRenderer component');
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isEngineReady, setIsEngineReady] = useState(false);
   const [isSceneReady, setIsSceneReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // Engine management
-  const { engine, dispose: disposeEngine } = useBabylonEngine(canvasRef, engineConfig);
-
-  // Scene management
-  const { scene, render, dispose: disposeScene } = useBabylonScene(engine, sceneConfig);
+  const [engine, setEngine] = useState<BABYLON.Engine | null>(null);
+  const [scene, setScene] = useState<BABYLON.Scene | null>(null);
 
   // Derived state
   const isReady = useMemo(() => {
     return isEngineReady && isSceneReady && engine && scene && !scene.isDisposed;
   }, [isEngineReady, isSceneReady, engine, scene]);
 
-  // Effect to track engine readiness
-  useEffect(() => {
-    if (engine && !engine.isDisposed) {
-      console.log('[DEBUG] Engine is ready');
-      setIsEngineReady(true);
-      if (onEngineReady) {
-        onEngineReady(engine);
-      }
-    } else {
-      setIsEngineReady(false);
+  // Handle engine ready callback from BabylonCanvas
+  const handleEngineReady = useCallback((readyEngine: BABYLON.Engine) => {
+    console.log('[DEBUG] Engine is ready in BabylonRenderer');
+    setEngine(readyEngine);
+    setIsEngineReady(true);
+    if (onEngineReady) {
+      onEngineReady(readyEngine);
     }
-  }, [engine, onEngineReady]);
+  }, [onEngineReady]);
 
-  // Effect to track scene readiness
-  useEffect(() => {
-    if (scene && !scene.isDisposed && scene.isReady()) {
-      console.log('[DEBUG] Scene is ready');
-      setIsSceneReady(true);
-      if (onSceneReady) {
-        onSceneReady(scene);
-      }
-    } else {
-      setIsSceneReady(false);
+  // Handle scene ready callback from BabylonCanvas
+  const handleSceneReady = useCallback((readyScene: BABYLON.Scene) => {
+    console.log('[DEBUG] Scene is ready in BabylonRenderer');
+    setScene(readyScene);
+    setIsSceneReady(true);
+    if (onSceneReady) {
+      onSceneReady(readyScene);
     }
-  }, [scene, onSceneReady]);
+  }, [onSceneReady]);
 
   // Effect to handle scene changes
   useEffect(() => {
@@ -200,10 +187,9 @@ export function BabylonRenderer({
   useEffect(() => {
     return () => {
       console.log('[DEBUG] Cleaning up BabylonRenderer');
-      disposeScene();
-      disposeEngine();
+      // Cleanup is handled by BabylonCanvas component
     };
-  }, [disposeScene, disposeEngine]);
+  }, []);
 
   // Combine CSS classes
   const containerClasses = [
@@ -250,9 +236,10 @@ export function BabylonRenderer({
       {/* Main Canvas Area */}
       <div className="babylon-renderer__canvas-area">
         <BabylonCanvas
-          ref={canvasRef}
           engineConfig={engineConfig}
           sceneConfig={sceneConfig}
+          onEngineReady={handleEngineReady}
+          onSceneReady={handleSceneReady}
           aria-label="Babylon Canvas"
         />
       </div>

@@ -8,7 +8,7 @@
  * @date June 2025
  */
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useBabylonEngine } from '../../hooks/use-babylon-engine/use-babylon-engine';
 import { useBabylonScene } from '../../hooks/use-babylon-scene/use-babylon-scene';
 import type { BabylonCanvasProps } from '../../types/babylon-types';
@@ -54,11 +54,22 @@ export function BabylonCanvas({
 }: BabylonCanvasProps): React.JSX.Element {
   console.log('[INIT] Initializing BabylonCanvas component');
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
+
+  // Callback ref to capture canvas element when it's created
+  const canvasRef = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (canvas && canvas !== canvasElement) {
+      console.log('[DEBUG] Canvas element became available, updating state');
+      setCanvasElement(canvas);
+    } else if (!canvas && canvasElement) {
+      console.log('[DEBUG] Canvas element removed, clearing state');
+      setCanvasElement(null);
+    }
+  }, [canvasElement]);
 
   // Initialize engine and scene using our refactored hooks
   const { engine, isReady: engineReady, error: engineError, dispose: disposeEngine } = useBabylonEngine(
-    canvasRef.current,
+    canvasElement,
     engineConfig
   );
 
@@ -114,7 +125,7 @@ export function BabylonCanvas({
   // Debug logging for component status
   useEffect(() => {
     console.log('[DEBUG] BabylonCanvas Status:', JSON.stringify({
-      canvasRef: !!canvasRef.current,
+      canvasElement: !!canvasElement,
       engine: !!engine,
       engineReady,
       engineError,
@@ -122,7 +133,7 @@ export function BabylonCanvas({
       sceneReady,
       isInitialized
     }));
-  }, [engine, engineReady, engineError, scene, sceneReady, isInitialized]);
+  }, [canvasElement, engine, engineReady, engineError, scene, sceneReady, isInitialized]);
 
   // Cleanup on unmount
   useEffect(() => {

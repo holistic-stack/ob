@@ -220,7 +220,7 @@ const getEngineInfo = (engine: BABYLON.Engine | null): {
       isValid: !engine.isDisposed,
       isDisposed: engine.isDisposed,
       canvas: engine.getRenderingCanvas(),
-      webGLVersion: engine.webGLVersion
+      webGLVersion: String(engine.webGLVersion)
     };
   } catch (error) {
     console.error('[ERROR] Failed to get engine info:', error);
