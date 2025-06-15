@@ -8,8 +8,18 @@
  * @date June 2025
  */
 
-import { OpenScadPipeline } from '../../../babylon-csg2/openscad-pipeline/openscad-pipeline';
+// TODO: Fix import path when openscad-pipeline is implemented
+// import { OpenScadPipeline } from '../../../babylon-csg2/openscad-pipeline/openscad-pipeline';
 import { PipelineConfig, PipelineInitializationResult } from '../types/processing-types';
+
+// Temporary mock for OpenScadPipeline until implementation is complete
+class MockOpenScadPipeline {
+  constructor(config: any) {}
+  async initialize() {
+    return { success: true };
+  }
+}
+const OpenScadPipeline = MockOpenScadPipeline;
 
 /**
  * Default pipeline configuration

@@ -27,7 +27,7 @@
     "test:ct:headed": "playwright test --config=playwright-ct.config.ts --headed",
     "test:ct:debug": "playwright test --config=playwright-ct.config.ts --debug",
     "test:ct:update-snapshots": "playwright test --config=playwright-ct.config.ts --update-snapshots",
-    "test:ct:hello": "playwright test src/components/hello-world/hello-world.vspec.tsx --config=playwright-ct.config.ts --reporter=line",
+    "test:ct:hello": "playwright test src/shared/components/ui/ui-components.vspec.tsx --config=playwright-ct.config.ts --reporter=line",
     "test-ct": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
