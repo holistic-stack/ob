@@ -15,33 +15,35 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import type { 
-  ASTNode, 
-  CubeNode, 
-  SphereNode, 
-  CylinderNode, 
-  UnionNode, 
-  DifferenceNode, 
-  IntersectionNode, 
+import type {
+  ASTNode,
+  CubeNode,
+  SphereNode,
+  CylinderNode,
+  UnionNode,
+  DifferenceNode,
+  IntersectionNode,
   TranslateNode,
   ScaleNode,
-  RotateNode 
+  RotateNode,
+  MirrorNode
 } from '@holistic-stack/openscad-parser';
 import { parseOpenSCADCode, type Result } from '../../openscad/utils/parser-resource-manager';
-import { 
-  isCubeNode, 
-  isSphereNode, 
-  isCylinderNode, 
-  isUnionNode, 
-  isDifferenceNode, 
-  isIntersectionNode, 
+import {
+  isCubeNode,
+  isSphereNode,
+  isCylinderNode,
+  isUnionNode,
+  isDifferenceNode,
+  isIntersectionNode,
   isTranslateNode,
   isScaleNode,
   isRotateNode,
+  isMirrorNode,
   extractCubeSize,
   extractSphereRadius,
   extractCylinderParams,
-  extractTranslationVector 
+  extractTranslationVector
 } from '../../openscad/utils/ast-type-guards';
 import { initializeCSG2ForBrowser } from '../../lib/initializers/csg2-browser-initializer/csg2-browser-initializer';
 
@@ -155,8 +157,9 @@ export class BabylonCSG2Converter {
 
     // Parse OpenSCAD code to AST
     this.log('[DEBUG] Parsing OpenSCAD code...');
-    const parseResult = await parseOpenSCADCode(openscadCode, { 
-      enableLogging: this.config.enableLogging ?? false
+    this.log(`[DEBUG] OpenSCAD code to parse: ${openscadCode}`);
+    const parseResult = await parseOpenSCADCode(openscadCode, {
+      enableLogging: true // Always enable logging for debugging
     });
 
     if (!parseResult.success) {
@@ -250,6 +253,9 @@ export class BabylonCSG2Converter {
       }
       if (isRotateNode(node)) {
         return this.createRotate(node);
+      }
+      if (isMirrorNode(node)) {
+        return this.createMirror(node);
       }
 
       // Unsupported node type
@@ -574,6 +580,74 @@ export class BabylonCSG2Converter {
     childResult.value.rotation.set(x, y, z);
     
     this.log(`[DEBUG] Applied rotation [${x}, ${y}, ${z}] radians`);
+    return { success: true, value: childResult.value };
+  }
+
+  /**
+   * Apply mirror transformation to child mesh
+   */
+  private createMirror(node: MirrorNode): Result<BABYLON.Mesh, string> {
+    this.log(`[DEBUG] Creating mirror from MirrorNode`);
+
+    if (!node.children || node.children.length === 0) {
+      return { success: false, error: 'Mirror requires at least one child' };
+    }
+
+    // Get first child safely
+    const firstChild = node.children[0];
+    if (!firstChild) {
+      return { success: false, error: 'Mirror child is undefined' };
+    }
+
+    // Convert child to mesh
+    const childResult = this.convertSingleNode(firstChild);
+    if (!childResult.success) {
+      const errorMessage = `Mirror child conversion failed: ${childResult.error}`;
+      return { success: false, error: errorMessage };
+    }
+
+    if (!childResult.value) {
+      return { success: false, error: 'Mirror child conversion produced no mesh' };
+    }
+
+    // Extract mirror normal vector from node.v
+    const normal = node.v || [1, 0, 0]; // Default to X-axis mirror
+    const [nx, ny, nz] = normal;
+
+    // Normalize the normal vector
+    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (length === 0) {
+      return { success: false, error: 'Mirror normal vector cannot be zero' };
+    }
+
+    const nnx = nx / length;
+    const nny = ny / length;
+    const nnz = nz / length;
+
+    // Create reflection matrix for mirroring across plane with given normal
+    // Formula: I - 2 * n * n^T where n is the unit normal vector
+    const m11 = 1 - 2 * nnx * nnx;
+    const m12 = -2 * nnx * nny;
+    const m13 = -2 * nnx * nnz;
+    const m21 = -2 * nny * nnx;
+    const m22 = 1 - 2 * nny * nny;
+    const m23 = -2 * nny * nnz;
+    const m31 = -2 * nnz * nnx;
+    const m32 = -2 * nnz * nny;
+    const m33 = 1 - 2 * nnz * nnz;
+
+    // Create Babylon.js transformation matrix
+    const reflectionMatrix = BABYLON.Matrix.FromValues(
+      m11, m12, m13, 0,
+      m21, m22, m23, 0,
+      m31, m32, m33, 0,
+      0,   0,   0,   1
+    );
+
+    // Apply the reflection matrix to the mesh
+    childResult.value.setPreTransformMatrix(reflectionMatrix);
+
+    this.log(`[DEBUG] Applied mirror transformation with normal [${nx}, ${ny}, ${nz}]`);
     return { success: true, value: childResult.value };
   }
 

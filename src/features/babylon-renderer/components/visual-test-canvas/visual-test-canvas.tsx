@@ -186,14 +186,46 @@ export function VisualTestCanvas({
 
               result.value.forEach((mesh, index) => {
                 if (mesh) {
+                  // Force bounding info computation to ensure it's up to date
+                  mesh.computeWorldMatrix(true);
+                  mesh.refreshBoundingInfo();
+
                   const boundingInfo = mesh.getBoundingInfo();
-                  const meshMin = boundingInfo.boundingBox.minimum;
-                  const meshMax = boundingInfo.boundingBox.maximum;
+                  const worldMatrix = mesh.getWorldMatrix();
 
-                  minBounds = BABYLON.Vector3.Minimize(minBounds, meshMin);
-                  maxBounds = BABYLON.Vector3.Maximize(maxBounds, meshMax);
+                  // Transform all 8 corners of the local bounding box to world space
+                  const localMin = boundingInfo.boundingBox.minimum;
+                  const localMax = boundingInfo.boundingBox.maximum;
 
-                  log(`[DEBUG] Mesh ${index} bounds: min=${meshMin.toString()}, max=${meshMax.toString()}`);
+                  const corners = [
+                    new BABYLON.Vector3(localMin.x, localMin.y, localMin.z),
+                    new BABYLON.Vector3(localMax.x, localMin.y, localMin.z),
+                    new BABYLON.Vector3(localMin.x, localMax.y, localMin.z),
+                    new BABYLON.Vector3(localMin.x, localMin.y, localMax.z),
+                    new BABYLON.Vector3(localMax.x, localMax.y, localMin.z),
+                    new BABYLON.Vector3(localMax.x, localMin.y, localMax.z),
+                    new BABYLON.Vector3(localMin.x, localMax.y, localMax.z),
+                    new BABYLON.Vector3(localMax.x, localMax.y, localMax.z)
+                  ];
+
+                  // Initialize mesh bounds with first corner
+                  let meshMinWorld = BABYLON.Vector3.TransformCoordinates(corners[0], worldMatrix);
+                  let meshMaxWorld = meshMinWorld.clone();
+
+                  // Transform all corners and find actual min/max in world space
+                  corners.forEach(corner => {
+                    const worldCorner = BABYLON.Vector3.TransformCoordinates(corner, worldMatrix);
+
+                    // Update mesh bounds
+                    meshMinWorld = BABYLON.Vector3.Minimize(meshMinWorld, worldCorner);
+                    meshMaxWorld = BABYLON.Vector3.Maximize(meshMaxWorld, worldCorner);
+
+                    // Update global bounds
+                    minBounds = BABYLON.Vector3.Minimize(minBounds, worldCorner);
+                    maxBounds = BABYLON.Vector3.Maximize(maxBounds, worldCorner);
+                  });
+
+                  log(`[DEBUG] Mesh ${index} world bounds: min=${meshMinWorld.toString()}, max=${meshMaxWorld.toString()}`);
                 }
               });
 
@@ -202,8 +234,8 @@ export function VisualTestCanvas({
               const size = maxBounds.subtract(minBounds);
               const maxDimension = Math.max(size.x, size.y, size.z);
 
-              // Position camera at optimal distance and angle
-              const cameraDistance = Math.max(maxDimension * 3, 10); // Ensure minimum distance
+              // Position camera at optimal distance and angle (increased multiplier for better view)
+              const cameraDistance = Math.max(maxDimension * 4, 15); // Increased distance for transformed objects
               const cameraPosition = center.add(new BABYLON.Vector3(cameraDistance, cameraDistance, cameraDistance));
 
               // Type-safe camera setup

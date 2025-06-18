@@ -183,27 +183,43 @@ export class ParserResourceManager {
       try {
         // Parse AST using the parser
         const ast = parser.parseAST(code);
-        
+
         if (!Array.isArray(ast)) {
-          return { 
-            success: false, 
-            error: 'Parser returned invalid AST structure' 
+          return {
+            success: false,
+            error: 'Parser returned invalid AST structure'
           };
         }
 
         // Return immutable copy of AST
         const immutableAST = Object.freeze([...ast]);
-        
+
         if (this.config.enableLogging) {
           this.logger.log(`[ParserResourceManager] Successfully parsed ${immutableAST.length} AST nodes`);
+          // Add detailed AST logging for debugging
+          immutableAST.forEach((node, index) => {
+            this.logger.log(`[ParserResourceManager] AST Node ${index}:`, {
+              type: node.type,
+              children: Array.isArray(node.children) ? node.children.length : 'none',
+              properties: Object.keys(node).filter(key => key !== 'type' && key !== 'children' && key !== 'location')
+            });
+
+            // Special logging for mirror nodes
+            if (node.type === 'mirror') {
+              this.logger.log(`[ParserResourceManager] Mirror node details:`, {
+                v: (node as any).v,
+                children: (node as any).children?.map((child: any) => child.type)
+              });
+            }
+          });
         }
-        
+
         return { success: true, value: immutableAST };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return { 
-          success: false, 
-          error: `AST parsing failed: ${errorMessage}` 
+        return {
+          success: false,
+          error: `AST parsing failed: ${errorMessage}`
         };
       }
     });
