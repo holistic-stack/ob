@@ -1,5 +1,33 @@
 # Lessons Learned
 
+## 2025-06-17: Playwright Component Testing Issues
+
+### Cache-Related Import Errors
+- **Issue**: `RollupError: Could not resolve "./babylon-renderer.story"` when running Playwright component tests
+- **Root Cause**: Playwright's experimental component testing caches component metadata in `playwright/.cache/metainfo.json`. When files are moved, renamed, or imports change, the cache becomes stale but isn't automatically invalidated.
+- **Solution**: Delete the `playwright/.cache` directory to clear stale cache entries
+- **Prevention**:
+  - Clear Playwright cache when encountering import resolution errors
+  - Add `playwright/.cache` to `.gitignore` to prevent cache conflicts
+  - Consider adding a script to clear cache: `"test:ct:clean": "rm -rf playwright/.cache"`
+- **Reference**: [GitHub Issue #31015](https://github.com/microsoft/playwright/issues/31015)
+
+### Component Mounting Issues in Playwright Tests
+- **Issue**: BabylonRenderer component only rendering canvas area instead of full main container in Playwright tests
+- **Symptoms**:
+  - Component logs show proper initialization (engine and scene creation working)
+  - Only `<div class="babylon-renderer__canvas-area">` rendered instead of `<main data-testid="babylon-renderer-container">`
+  - No error or loading states detected
+  - Component works correctly in regular Vitest tests
+- **Investigation Status**: Ongoing - component works correctly in regular tests but fails in Playwright component tests
+- **Potential Causes**:
+  - Playwright experimental component testing mounting behavior differences
+  - React component lifecycle issues in test environment
+  - Component re-rendering causing partial renders
+  - Possible issue with how Playwright handles complex component trees
+- **Workaround**: Use canvas area selectors (`.babylon-renderer__canvas-area`) instead of main container for now
+- **Next Steps**: Further investigation needed to understand Playwright component mounting behavior
+
 ## 2025-06-25: Babylon.js Mesh Visibility Debugging
 
 **Context**: Despite successful pipeline processing and mesh creation (confirmed by logs showing 24 vertices, 36 indices), the `cube([10, 10, 10]);` was not visible in the Babylon.js 3D scene.

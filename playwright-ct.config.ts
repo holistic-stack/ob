@@ -42,11 +42,24 @@ export default defineConfig({
     },
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for desktop browsers only */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'chromium-desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Desktop-specific viewport for Babylon.js testing
+        viewport: { width: 1280, height: 720 },
+        // Enable hardware acceleration for better 3D performance
+        launchOptions: {
+          args: [
+            '--enable-webgl',
+            '--enable-accelerated-2d-canvas',
+            '--enable-gpu-rasterization',
+            '--enable-oop-rasterization'
+          ]
+        }
+      },
     }
   ],
 });

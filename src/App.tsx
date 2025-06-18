@@ -14,9 +14,20 @@
 import React, { useState } from 'react';
 import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
 import './App.css';
-import { FullBabylonRenderer } from './features/babylon-renderer/components/babylon-renderer/babylon-renderer.story';
+import { BabylonRenderer } from './features/babylon-renderer/components/babylon-renderer/babylon-renderer';
 import { UIComponentsDemo } from './shared/components/ui/demo/ui-components-demo';
 import { Button } from './shared/components/ui';
+
+// Full Babylon Renderer component defined inline to avoid import issues with Playwright
+const FullBabylonRenderer = () => (
+  <div style={{ width: '100vw', height: '100vh' }}>
+    <BabylonRenderer
+      showSceneControls={true}
+      showMeshDisplay={true}
+      showDebugPanel={true}
+    />
+  </div>
+);
 
 /**
  * Modern App component with React 19 patterns
