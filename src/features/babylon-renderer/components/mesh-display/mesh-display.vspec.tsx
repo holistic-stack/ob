@@ -41,11 +41,11 @@ test.describe('MeshDisplay Playwright Component Tests', () => {
       BABYLON.MeshBuilder.CreateGround('TestGround1', { width: 6, height: 6 }, mockScene)
     ];
     
-    // Position meshes
-    testMeshes[1].position.x = 3;
-    testMeshes[2].position.x = -3;
-    testMeshes[3].position.y = 2;
-    testMeshes[4].position.y = -1;
+    // Position meshes with null checks
+    if (testMeshes[1]) testMeshes[1].position.x = 3;
+    if (testMeshes[2]) testMeshes[2].position.x = -3;
+    if (testMeshes[3]) testMeshes[3].position.y = 2;
+    if (testMeshes[4]) testMeshes[4].position.y = -1;
     
     // Enable console logging for debugging
     page.on('console', msg => {

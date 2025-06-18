@@ -83,7 +83,7 @@ export function DebugPanel({
   }, [scene]);
 
   const sceneInfo = useMemo(() => {
-    if (!isSceneValid) {
+    if (!isSceneValid || !scene) {
       return null;
     }
 
@@ -98,7 +98,7 @@ export function DebugPanel({
   }, [isSceneValid, scene]);
 
   const meshDetails = useMemo(() => {
-    if (!isSceneValid) {
+    if (!isSceneValid || !scene) {
       return [];
     }
 
@@ -125,11 +125,15 @@ export function DebugPanel({
   }, [isSceneValid, scene, searchTerm]);
 
   const cameraInfo = useMemo(() => {
-    if (!isSceneValid || !scene.cameras.length) {
+    if (!isSceneValid || !scene?.cameras.length) {
       return null;
     }
 
     const camera = scene.cameras[0];
+    if (!camera) {
+      return null;
+    }
+
     const info: any = {
       name: camera.name,
       type: camera.getClassName(),
@@ -147,7 +151,7 @@ export function DebugPanel({
   }, [isSceneValid, scene]);
 
   const lightingInfo = useMemo(() => {
-    if (!isSceneValid) {
+    if (!isSceneValid || !scene) {
       return [];
     }
 
@@ -164,7 +168,7 @@ export function DebugPanel({
 
   // Performance monitoring
   useEffect(() => {
-    if (!showPerformanceMetrics || !isSceneValid) {
+    if (!showPerformanceMetrics || !isSceneValid || !scene) {
       return;
     }
 
@@ -172,14 +176,14 @@ export function DebugPanel({
       const engine = scene.getEngine();
       const fps = engine.getFps();
       const frameTime = 1000 / fps;
-      
+
       setPerformanceMetrics(prev => ({
         ...prev,
         fps: Math.round(fps),
         frameTime: Math.round(frameTime * 100) / 100,
-        drawCalls: engine.drawCalls,
+        drawCalls: (engine as any)._drawCalls?.current ?? 0, // Use private property with fallback
         activeMeshes: scene.getActiveMeshes().length,
-        memoryUsage: (performance as any).memory?.usedJSHeapSize || 0
+        memoryUsage: (performance as any).memory?.usedJSHeapSize ?? 0
       }));
     }, updateInterval);
 

@@ -200,7 +200,7 @@ export class ParserResourceManager {
           immutableAST.forEach((node, index) => {
             this.logger.log(`[ParserResourceManager] AST Node ${index}:`, {
               type: node.type,
-              children: Array.isArray(node.children) ? node.children.length : 'none',
+              children: Array.isArray((node as any).children) ? (node as any).children.length : 'none',
               properties: Object.keys(node).filter(key => key !== 'type' && key !== 'children' && key !== 'location')
             });
 

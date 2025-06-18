@@ -9,3 +9,6 @@
 
 export { VisualTestCanvas } from './visual-test-canvas';
 export type { VisualTestCanvasProps } from './visual-test-canvas';
+
+export { TransformationComparisonCanvas } from './transformation-comparison-canvas';
+export type { TransformationComparisonCanvasProps } from './transformation-comparison-canvas';

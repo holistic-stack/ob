@@ -118,14 +118,17 @@ export function BabylonCanvas({
   useEffect(() => {
     if (isInitialized && engine && scene) {
       console.log('[DEBUG] Starting Babylon.js render loop');
-      
+
       engine.runRenderLoop(renderLoop);
-      
+
       return () => {
         console.log('[DEBUG] Stopping Babylon.js render loop');
         engine.stopRenderLoop(renderLoop);
       };
     }
+
+    // Return undefined for cases where condition is not met
+    return undefined;
   }, [isInitialized, engine, scene, renderLoop]);
 
   // Debug logging for component status

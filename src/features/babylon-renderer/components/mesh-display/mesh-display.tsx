@@ -82,7 +82,7 @@ export function MeshDisplay({
     setIsLoading(true);
 
     // Get all meshes from scene
-    const meshes = scene.meshes.filter(mesh => mesh.name !== '__root__');
+    const meshes = scene?.meshes.filter(mesh => mesh.name !== '__root__') ?? [];
     setMeshList(meshes);
     setIsLoading(false);
 
