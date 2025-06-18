@@ -1,9 +1,15 @@
 /**
  * @file Babylon Canvas Component
- * 
+ *
  * Core canvas component for Babylon.js rendering
  * Handles engine and scene initialization with proper lifecycle management
- * 
+ *
+ * Features:
+ * - Clean canvas rendering without UI controls (perfect for visual testing)
+ * - Proper engine and scene lifecycle management
+ * - Support for both development and testing environments
+ * - Comprehensive logging for debugging
+ *
  * @author Luciano Júnior
  * @date June 2025
  */

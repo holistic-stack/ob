@@ -1,0 +1,96 @@
+/**
+ * Visual Test Canvas Styles
+ * 
+ * Optimized styles for Playwright visual regression testing
+ * Ensures consistent rendering across different environments
+ */
+
+.visual-test-canvas {
+  /* Full canvas display without any UI interference */
+  display: block;
+  width: 100%;
+  height: 100%;
+  
+  /* Remove any default styling that could affect screenshots */
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  
+  /* Ensure consistent rendering */
+  background-color: #000000;
+  
+  /* Prevent any user interaction during testing */
+  pointer-events: auto;
+  
+  /* Ensure crisp rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
+  /* Prevent any layout shifts */
+  box-sizing: border-box;
+  
+  /* Ensure consistent font rendering (though not used in canvas) */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  
+  /* Accessibility */
+  cursor: default;
+}
+
+/* Container for full-screen testing */
+.visual-test-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000000;
+}
+
+/* Ensure no interference from parent elements */
+.visual-test-container * {
+  box-sizing: border-box;
+}
+
+/* Loading state for visual tests */
+.visual-test-canvas[data-loading="true"] {
+  background-color: #e0e0e0;
+  cursor: wait;
+}
+
+/* Error state for visual tests */
+.visual-test-canvas[data-error="true"] {
+  background-color: #ffebee;
+  border: 2px solid #f44336;
+}
+
+/* Success state for visual tests */
+.visual-test-canvas[data-ready="true"] {
+  background-color: #000000;
+}
+
+/* High contrast mode for accessibility testing */
+@media (prefers-contrast: high) {
+  .visual-test-canvas {
+    background-color: #000000;
+  }
+}
+
+/* Reduced motion for accessibility testing */
+@media (prefers-reduced-motion: reduce) {
+  .visual-test-canvas {
+    /* Disable any animations if added in the future */
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Print styles (though not typically used for canvas) */
+@media print {
+  .visual-test-canvas {
+    background-color: black;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
