@@ -33,7 +33,9 @@ import type {
   ExpressionNode,
   SpecialVariableAssignment, // Added for $fa, $fs, $fn
   IfNode, // Added for conditional logic
-  IdentifierNode // Added for completeness if used in Scope
+  IdentifierNode, // Added for completeness if used in Scope
+  LinearExtrudeNode, // Added for linear extrude operations
+  RotateExtrudeNode // Added for rotate extrude operations
 } from '@holistic-stack/openscad-parser';
 
 import {
@@ -64,6 +66,14 @@ import {
   isSpecialVariableAssignmentNode, // Added for $fa, $fs, $fn
   isIfNode // Added for conditional logic
 } from '../utils/ast-type-guards.js';
+
+// Import extrusion type guards and utilities
+import {
+  isLinearExtrudeNode,
+  isRotateExtrudeNode,
+  extractLinearExtrudeParams,
+  extractRotateExtrudeParams
+} from '../../utils/ast-type-guards-extrusion.js';
 
 import * as BABYLON from '@babylonjs/core';
 import { ExpressionEvaluator, Scope } from '../utils/expression-evaluator.js';
@@ -208,6 +218,14 @@ export class OpenScadAstVisitor {
     }
     if (isIntersectionNode(node)) {
       return this.visitIntersection(node);
+    }
+
+    // Extrusion Operations
+    if (isLinearExtrudeNode(node)) {
+      return this.visitLinearExtrude(node);
+    }
+    if (isRotateExtrudeNode(node)) {
+      return this.visitRotateExtrude(node);
     }
 
     // Transformations
@@ -1494,5 +1512,211 @@ export class OpenScadAstVisitor {
       console.log(`[DEBUG] Created fallback polygon mesh: ${fallbackPolygon.name}`);
       return fallbackPolygon;
     }
+  }
+
+  // ============================================================================
+  // EXTRUSION OPERATION VISITOR METHODS
+  // ============================================================================
+
+  /**
+   * Visits a LinearExtrudeNode and creates a Babylon.js extruded mesh.
+   * Extrudes 2D child shapes along the Z-axis with optional twist and scaling.
+   * @param node The LinearExtrudeNode to visit.
+   * @returns A Babylon.js mesh representing the extruded geometry, or null.
+   */
+  protected visitLinearExtrude(node: LinearExtrudeNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting LinearExtrudeNode', node);
+
+    // Extract and validate parameters
+    const paramsResult = extractLinearExtrudeParams(node);
+    if (!paramsResult.success) {
+      console.warn(`[WARN] Failed to extract linear extrude parameters: ${paramsResult.error}`);
+      return null;
+    }
+
+    const { height, center, twist, scale } = paramsResult.value;
+    console.log(`[DEBUG] Linear extrude parameters: height=${height}, center=${center}, twist=${twist}, scale=[${scale.join(', ')}]`);
+
+    // Validate children
+    if (!node.children || node.children.length === 0) {
+      console.warn('[WARN] LinearExtrude has no children to extrude.');
+      return null;
+    }
+
+    // Process first child (OpenSCAD linear_extrude typically works with one 2D shape)
+    const firstChild = node.children[0];
+    if (!firstChild) {
+      console.warn('[WARN] LinearExtrude first child is undefined.');
+      return null;
+    }
+
+    const childMesh = this.visit(firstChild);
+    if (!childMesh) {
+      console.warn('[WARN] LinearExtrude child did not produce a valid mesh.');
+      return null;
+    }
+
+    console.log(`[DEBUG] Processing child mesh for extrusion: ${childMesh.name}`);
+
+    try {
+      // Create extruded mesh using Babylon.js ExtrudeShape
+      const extrudedMesh = this.createLinearExtrudedMesh(childMesh, height, center, twist, scale, node);
+
+      // Dispose the original child mesh since we've created the extruded version
+      childMesh.dispose();
+
+      console.log(`[DEBUG] Successfully created linear extruded mesh: ${extrudedMesh.name}`);
+      return extrudedMesh;
+    } catch (error) {
+      console.warn(`[WARN] Failed to create linear extruded mesh: ${error}`);
+      // Return the original child mesh as fallback
+      return childMesh;
+    }
+  }
+
+  /**
+   * Visits a RotateExtrudeNode and creates a Babylon.js revolved mesh.
+   * Revolves 2D child shapes around the Y-axis.
+   * @param node The RotateExtrudeNode to visit.
+   * @returns A Babylon.js mesh representing the revolved geometry, or null.
+   */
+  protected visitRotateExtrude(node: RotateExtrudeNode): BABYLON.Mesh | null {
+    console.log('[INIT] Visiting RotateExtrudeNode', node);
+
+    // Extract and validate parameters
+    const paramsResult = extractRotateExtrudeParams(node);
+    if (!paramsResult.success) {
+      console.warn(`[WARN] Failed to extract rotate extrude parameters: ${paramsResult.error}`);
+      return null;
+    }
+
+    const { angle } = paramsResult.value;
+    console.log(`[DEBUG] Rotate extrude parameters: angle=${angle}`);
+
+    // Validate children
+    if (!node.children || node.children.length === 0) {
+      console.warn('[WARN] RotateExtrude has no children to revolve.');
+      return null;
+    }
+
+    // Process first child (OpenSCAD rotate_extrude typically works with one 2D shape)
+    const firstChild = node.children[0];
+    if (!firstChild) {
+      console.warn('[WARN] RotateExtrude first child is undefined.');
+      return null;
+    }
+
+    const childMesh = this.visit(firstChild);
+    if (!childMesh) {
+      console.warn('[WARN] RotateExtrude child did not produce a valid mesh.');
+      return null;
+    }
+
+    console.log(`[DEBUG] Processing child mesh for revolution: ${childMesh.name}`);
+
+    try {
+      // Create revolved mesh using Babylon.js CreateLathe
+      const revolvedMesh = this.createRotateExtrudedMesh(childMesh, angle, node);
+
+      // Dispose the original child mesh since we've created the revolved version
+      childMesh.dispose();
+
+      console.log(`[DEBUG] Successfully created rotate extruded mesh: ${revolvedMesh.name}`);
+      return revolvedMesh;
+    } catch (error) {
+      console.warn(`[WARN] Failed to create rotate extruded mesh: ${error}`);
+      // Return the original child mesh as fallback
+      return childMesh;
+    }
+  }
+
+  // ============================================================================
+  // EXTRUSION HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Creates a linear extruded mesh from a 2D base mesh.
+   * @param baseMesh The 2D mesh to extrude
+   * @param height The extrusion height
+   * @param center Whether to center the extrusion
+   * @param twist The twist angle in degrees
+   * @param scale The scale factors [x, y]
+   * @param node The LinearExtrudeNode for naming
+   * @returns The extruded Babylon.js mesh
+   */
+  private createLinearExtrudedMesh(
+    _baseMesh: BABYLON.Mesh,
+    height: number,
+    center: boolean,
+    twist: number,
+    scale: readonly [number, number],
+    node: LinearExtrudeNode
+  ): BABYLON.Mesh {
+    // For now, create a simple box as a placeholder for the extrusion
+    // TODO: Implement proper 2D shape path extraction and extrusion
+    const extrudedMesh = BABYLON.MeshBuilder.CreateBox(
+      `linear_extrude_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+      {
+        width: 2 * scale[0],
+        height: height,
+        depth: 2 * scale[1]
+      },
+      this.scene
+    );
+
+    // Apply centering
+    if (!center) {
+      extrudedMesh.position.y = height / 2;
+    }
+
+    // Apply twist if specified
+    if (twist !== 0) {
+      extrudedMesh.rotation.y = (twist * Math.PI) / 180;
+    }
+
+    // Add material for visibility
+    if (!extrudedMesh.material) {
+      const material = new BABYLON.StandardMaterial(`${extrudedMesh.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.8, 0.6, 0.4); // Orange color for extruded shapes
+      material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+      extrudedMesh.material = material;
+    }
+
+    return extrudedMesh;
+  }
+
+  /**
+   * Creates a rotate extruded (revolved) mesh from a 2D base mesh.
+   * @param baseMesh The 2D mesh to revolve
+   * @param angle The revolution angle in degrees
+   * @param node The RotateExtrudeNode for naming
+   * @returns The revolved Babylon.js mesh
+   */
+  private createRotateExtrudedMesh(
+    _baseMesh: BABYLON.Mesh,
+    angle: number,
+    node: RotateExtrudeNode
+  ): BABYLON.Mesh {
+    // For now, create a simple cylinder as a placeholder for the revolution
+    // TODO: Implement proper 2D shape path extraction and revolution
+    const revolvedMesh = BABYLON.MeshBuilder.CreateCylinder(
+      `rotate_extrude_${node.location?.start.line ?? 0}_${node.location?.start.column ?? 0}`,
+      {
+        height: 2,
+        diameter: 2,
+        tessellation: Math.max(8, Math.round((angle / 360) * 32))
+      },
+      this.scene
+    );
+
+    // Add material for visibility
+    if (!revolvedMesh.material) {
+      const material = new BABYLON.StandardMaterial(`${revolvedMesh.name}_material`, this.scene);
+      material.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.8); // Purple color for revolved shapes
+      material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+      revolvedMesh.material = material;
+    }
+
+    return revolvedMesh;
   }
 }

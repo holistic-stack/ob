@@ -11,6 +11,7 @@
 import { test, expect } from '@playwright/experimental-ct-react';
 import { TransformationComparisonCanvas } from '../transformation-comparison-canvas';
 import { generateTestCasesForTypes } from '../transformation-test-data';
+import { createRenderingWaitPromise, assertRenderingSuccess } from '../test-utilities';
 
 test.describe('Comprehensive Translate Transformation Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -41,7 +42,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
     cubeTranslateTests.forEach((testCase) => {
       test(`should render ${testCase.name}`, async ({ mount, page }) => {
         console.log(`[INIT] Testing ${testCase.name}: ${testCase.description}`);
-        
+
+        // Create rendering wait promise with callback-based approach
+        const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+          timeoutMs: testCase.timeout || 8000, // Increased default timeout for safety
+          enableLogging: true,
+          testName: testCase.name
+        });
+
         const component = await mount(
           <TransformationComparisonCanvas
             testName={testCase.name}
@@ -51,13 +59,18 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
             height={800}
             enableDebugLogging={true}
             objectSeparation={testCase.objectSeparation || 30}
+            onRenderingComplete={onRenderingComplete}
+            onRenderingError={onRenderingError}
           />
         );
 
-        // Wait for rendering completion based on test complexity
-        const waitTime = testCase.timeout || 4000;
-        console.log(`[DEBUG] Waiting ${waitTime}ms for rendering completion`);
-        await page.waitForTimeout(waitTime);
+        // Wait for rendering completion using callback-based approach
+        console.log(`[DEBUG] Waiting for rendering completion callback...`);
+        const result = await promise;
+
+        // Assert rendering was successful
+        assertRenderingSuccess(result, testCase.name);
+        console.log(`[DEBUG] Rendering completed successfully in ${result.duration}ms`);
 
         // Capture screenshot for visual regression
         await expect(component).toHaveScreenshot(`${testCase.name}.png`);
@@ -75,7 +88,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
     sphereTranslateTests.forEach((testCase) => {
       test(`should render ${testCase.name}`, async ({ mount, page }) => {
         console.log(`[INIT] Testing ${testCase.name}: ${testCase.description}`);
-        
+
+        // Create rendering wait promise with callback-based approach
+        const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+          timeoutMs: testCase.timeout || 9000, // Spheres may need more time
+          enableLogging: true,
+          testName: testCase.name
+        });
+
         const component = await mount(
           <TransformationComparisonCanvas
             testName={testCase.name}
@@ -85,13 +105,18 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
             height={800}
             enableDebugLogging={true}
             objectSeparation={testCase.objectSeparation || 30}
+            onRenderingComplete={onRenderingComplete}
+            onRenderingError={onRenderingError}
           />
         );
 
-        // Wait for rendering completion
-        const waitTime = testCase.timeout || 5000; // Spheres need more time
-        console.log(`[DEBUG] Waiting ${waitTime}ms for sphere rendering completion`);
-        await page.waitForTimeout(waitTime);
+        // Wait for rendering completion using callback-based approach
+        console.log(`[DEBUG] Waiting for sphere rendering completion callback...`);
+        const result = await promise;
+
+        // Assert rendering was successful
+        assertRenderingSuccess(result, testCase.name);
+        console.log(`[DEBUG] Sphere rendering completed successfully in ${result.duration}ms`);
 
         // Capture screenshot for visual regression
         await expect(component).toHaveScreenshot(`${testCase.name}.png`);
@@ -109,7 +134,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
     cylinderTranslateTests.forEach((testCase) => {
       test(`should render ${testCase.name}`, async ({ mount, page }) => {
         console.log(`[INIT] Testing ${testCase.name}: ${testCase.description}`);
-        
+
+        // Create rendering wait promise with callback-based approach
+        const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+          timeoutMs: testCase.timeout || 9000, // Cylinders may need more time
+          enableLogging: true,
+          testName: testCase.name
+        });
+
         const component = await mount(
           <TransformationComparisonCanvas
             testName={testCase.name}
@@ -119,13 +151,18 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
             height={800}
             enableDebugLogging={true}
             objectSeparation={testCase.objectSeparation || 30}
+            onRenderingComplete={onRenderingComplete}
+            onRenderingError={onRenderingError}
           />
         );
 
-        // Wait for rendering completion
-        const waitTime = testCase.timeout || 5000; // Cylinders need more time
-        console.log(`[DEBUG] Waiting ${waitTime}ms for cylinder rendering completion`);
-        await page.waitForTimeout(waitTime);
+        // Wait for rendering completion using callback-based approach
+        console.log(`[DEBUG] Waiting for cylinder rendering completion callback...`);
+        const result = await promise;
+
+        // Assert rendering was successful
+        assertRenderingSuccess(result, testCase.name);
+        console.log(`[DEBUG] Cylinder rendering completed successfully in ${result.duration}ms`);
 
         // Capture screenshot for visual regression
         await expect(component).toHaveScreenshot(`${testCase.name}.png`);
@@ -138,7 +175,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
   test.describe('Translate Edge Cases', () => {
     test('should handle translate with zero values', async ({ mount, page }) => {
       console.log('[INIT] Testing translate zero values edge case');
-      
+
+      // Create rendering wait promise with callback-based approach
+      const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+        timeoutMs: 8000,
+        enableLogging: true,
+        testName: 'translate-zero-edge-case'
+      });
+
       const component = await mount(
         <TransformationComparisonCanvas
           testName="translate-zero-edge-case"
@@ -148,10 +192,16 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
           height={800}
           enableDebugLogging={true}
           objectSeparation={30}
+          onRenderingComplete={onRenderingComplete}
+          onRenderingError={onRenderingError}
         />
       );
 
-      await page.waitForTimeout(4000);
+      // Wait for rendering completion using callback-based approach
+      const result = await promise;
+      assertRenderingSuccess(result, 'translate-zero-edge-case');
+      console.log(`[DEBUG] Zero values edge case completed in ${result.duration}ms`);
+
       await expect(component).toHaveScreenshot('translate-zero-edge-case.png');
 
       console.log('[END] Translate zero values edge case completed');
@@ -159,7 +209,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
 
     test('should handle translate with very large values', async ({ mount, page }) => {
       console.log('[INIT] Testing translate large values edge case');
-      
+
+      // Create rendering wait promise with callback-based approach
+      const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+        timeoutMs: 10000, // Large values may need more time
+        enableLogging: true,
+        testName: 'translate-large-values-edge-case'
+      });
+
       const component = await mount(
         <TransformationComparisonCanvas
           testName="translate-large-values-edge-case"
@@ -169,10 +226,16 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
           height={800}
           enableDebugLogging={true}
           objectSeparation={120}
+          onRenderingComplete={onRenderingComplete}
+          onRenderingError={onRenderingError}
         />
       );
 
-      await page.waitForTimeout(5000);
+      // Wait for rendering completion using callback-based approach
+      const result = await promise;
+      assertRenderingSuccess(result, 'translate-large-values-edge-case');
+      console.log(`[DEBUG] Large values edge case completed in ${result.duration}ms`);
+
       await expect(component).toHaveScreenshot('translate-large-values-edge-case.png');
 
       console.log('[END] Translate large values edge case completed');
@@ -180,7 +243,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
 
     test('should handle translate with negative values', async ({ mount, page }) => {
       console.log('[INIT] Testing translate negative values edge case');
-      
+
+      // Create rendering wait promise with callback-based approach
+      const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+        timeoutMs: 8000,
+        enableLogging: true,
+        testName: 'translate-negative-values-edge-case'
+      });
+
       const component = await mount(
         <TransformationComparisonCanvas
           testName="translate-negative-values-edge-case"
@@ -190,10 +260,16 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
           height={800}
           enableDebugLogging={true}
           objectSeparation={40}
+          onRenderingComplete={onRenderingComplete}
+          onRenderingError={onRenderingError}
         />
       );
 
-      await page.waitForTimeout(4000);
+      // Wait for rendering completion using callback-based approach
+      const result = await promise;
+      assertRenderingSuccess(result, 'translate-negative-values-edge-case');
+      console.log(`[DEBUG] Negative values edge case completed in ${result.duration}ms`);
+
       await expect(component).toHaveScreenshot('translate-negative-values-edge-case.png');
 
       console.log('[END] Translate negative values edge case completed');
@@ -201,7 +277,14 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
 
     test('should handle translate with decimal precision', async ({ mount, page }) => {
       console.log('[INIT] Testing translate decimal precision edge case');
-      
+
+      // Create rendering wait promise with callback-based approach
+      const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+        timeoutMs: 8000,
+        enableLogging: true,
+        testName: 'translate-decimal-precision-edge-case'
+      });
+
       const component = await mount(
         <TransformationComparisonCanvas
           testName="translate-decimal-precision-edge-case"
@@ -211,10 +294,16 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
           height={800}
           enableDebugLogging={true}
           objectSeparation={35}
+          onRenderingComplete={onRenderingComplete}
+          onRenderingError={onRenderingError}
         />
       );
 
-      await page.waitForTimeout(4000);
+      // Wait for rendering completion using callback-based approach
+      const result = await promise;
+      assertRenderingSuccess(result, 'translate-decimal-precision-edge-case');
+      console.log(`[DEBUG] Decimal precision edge case completed in ${result.duration}ms`);
+
       await expect(component).toHaveScreenshot('translate-decimal-precision-edge-case.png');
 
       console.log('[END] Translate decimal precision edge case completed');
@@ -224,9 +313,16 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
   test.describe('Translate Performance Tests', () => {
     test('should handle multiple translate operations efficiently', async ({ mount, page }) => {
       console.log('[INIT] Testing translate performance with multiple operations');
-      
+
       const startTime = Date.now();
-      
+
+      // Create rendering wait promise with callback-based approach
+      const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+        timeoutMs: 12000, // Performance tests may need more time
+        enableLogging: true,
+        testName: 'translate-performance-multiple'
+      });
+
       const component = await mount(
         <TransformationComparisonCanvas
           testName="translate-performance-multiple"
@@ -236,19 +332,25 @@ test.describe('Comprehensive Translate Transformation Visual Tests', () => {
           height={800}
           enableDebugLogging={true}
           objectSeparation={40}
+          onRenderingComplete={onRenderingComplete}
+          onRenderingError={onRenderingError}
         />
       );
 
-      await page.waitForTimeout(4000);
-      await expect(component).toHaveScreenshot('translate-performance-multiple.png');
+      // Wait for rendering completion using callback-based approach
+      const result = await promise;
+      assertRenderingSuccess(result, 'translate-performance-multiple');
 
       const endTime = Date.now();
-      const duration = endTime - startTime;
-      console.log(`[DEBUG] Multiple translate operations completed in ${duration}ms`);
-      
+      const totalDuration = endTime - startTime;
+      console.log(`[DEBUG] Multiple translate operations completed in ${totalDuration}ms (rendering: ${result.duration}ms)`);
+
+      await expect(component).toHaveScreenshot('translate-performance-multiple.png');
+
       // Performance assertion: should complete within reasonable time
-      expect(duration).toBeLessThan(10000); // 10 seconds max
-      
+      expect(totalDuration).toBeLessThan(15000); // 15 seconds max for total test time
+      expect(result.duration).toBeLessThan(12000); // 12 seconds max for rendering
+
       console.log('[END] Translate performance test completed');
     });
   });

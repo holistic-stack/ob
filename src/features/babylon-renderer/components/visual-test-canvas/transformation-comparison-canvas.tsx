@@ -41,6 +41,10 @@ export interface TransformationComparisonCanvasProps extends Omit<BabylonCanvasP
   height?: number;
   /** Separation distance between reference and transformed objects */
   objectSeparation?: number;
+  /** Callback fired when all meshes are loaded and scene is ready for screenshots */
+  onRenderingComplete?: () => void;
+  /** Callback fired when rendering fails */
+  onRenderingError?: (error: Error) => void;
 }
 
 /**
@@ -77,6 +81,8 @@ export function TransformationComparisonCanvas({
   onEngineReady,
   onSceneReady,
   onRenderFrame,
+  onRenderingComplete,
+  onRenderingError,
   ...canvasProps
 }: TransformationComparisonCanvasProps): React.JSX.Element {
   const log = useCallback((message: string) => {
@@ -118,7 +124,7 @@ export function TransformationComparisonCanvas({
   };
 
   // Initialize engine and scene
-  const { engine, isReady: engineReady, error: engineError, dispose: disposeEngine } = useBabylonEngine(
+  const { engine, isReady: engineReady, dispose: disposeEngine } = useBabylonEngine(
     canvasElement,
     testEngineConfig
   );
@@ -388,11 +394,30 @@ export function TransformationComparisonCanvas({
             log(`[DEBUG] Camera positioned: center=${centerPoint.toString()}, distance=${viewDistance}, position=${cameraPosition.toString()}`);
           }
 
-          setIsRenderingComplete(true);
-          log('[END] Transformation comparison processing complete successfully');
+          // Wait for scene to be fully ready before marking as complete
+          log('[DEBUG] Waiting for scene to be fully ready...');
+          scene.executeWhenReady(() => {
+            log('[DEBUG] Scene is fully ready, all meshes loaded and materials compiled');
+            setIsRenderingComplete(true);
+
+            // Call the rendering complete callback if provided
+            if (onRenderingComplete) {
+              log('[DEBUG] Calling onRenderingComplete callback');
+              onRenderingComplete();
+            }
+
+            log('[END] Transformation comparison processing complete successfully');
+          });
         } catch (error) {
-          log(`[ERROR] Exception during comparison processing: ${error}`);
+          const errorObj = error instanceof Error ? error : new Error(String(error));
+          log(`[ERROR] Exception during comparison processing: ${errorObj.message}`);
           setIsRenderingComplete(true);
+
+          // Call the error callback if provided
+          if (onRenderingError) {
+            log('[DEBUG] Calling onRenderingError callback');
+            onRenderingError(errorObj);
+          }
         }
       };
 

@@ -36,6 +36,8 @@ export interface VisualTestCanvasProps extends Omit<BabylonCanvasProps, 'classNa
   /** Custom canvas dimensions for testing */
   width?: number;
   height?: number;
+  /** Callback when rendering is completely finished and ready for screenshots */
+  onRenderingComplete?: () => void;
 }
 
 /**
@@ -209,7 +211,10 @@ export function VisualTestCanvas({
                   ];
 
                   // Initialize mesh bounds with first corner
-                  let meshMinWorld = BABYLON.Vector3.TransformCoordinates(corners[0], worldMatrix);
+                  if (corners.length === 0) return; // Skip if no corners
+
+                  const firstCorner = corners[0] as BABYLON.Vector3; // Safe after length check
+                  let meshMinWorld = BABYLON.Vector3.TransformCoordinates(firstCorner, worldMatrix);
                   let meshMaxWorld = meshMinWorld.clone();
 
                   // Transform all corners and find actual min/max in world space
@@ -254,15 +259,31 @@ export function VisualTestCanvas({
               log(`[DEBUG] Camera positioned: center=${center.toString()}, distance=${cameraDistance}, position=${cameraPosition.toString()}`);
             }
 
+            // Wait 4.5 seconds before marking rendering as complete to ensure all rendering is finished
+            log('[DEBUG] Waiting 4.5 seconds for rendering to stabilize before completing...');
+            await new Promise(resolve => setTimeout(resolve, 4500));
+
             setIsRenderingComplete(true);
-            log('[END] OpenSCAD processing complete successfully');
+            log('[END] OpenSCAD processing complete successfully after 4.5s wait');
           } else {
             log(`[ERROR] OpenSCAD conversion failed: ${result.error}`);
+
+            // Wait 4.5 seconds even for error scenarios
+            log('[DEBUG] Waiting 4.5 seconds for error fallback rendering to stabilize...');
+            await new Promise(resolve => setTimeout(resolve, 4500));
+
             setIsRenderingComplete(true);
+            log('[END] Error fallback rendering complete after 4.5s wait');
           }
         } catch (error) {
           log(`[ERROR] Exception during OpenSCAD processing: ${error}`);
+
+          // Wait 4.5 seconds even for exception scenarios
+          log('[DEBUG] Waiting 4.5 seconds for exception fallback rendering to stabilize...');
+          await new Promise(resolve => setTimeout(resolve, 4500));
+
           setIsRenderingComplete(true);
+          log('[END] Exception fallback rendering complete after 4.5s wait');
         }
       };
 

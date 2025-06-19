@@ -15,7 +15,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Enable console logging for debugging
     page.on('console', (msg) => {
-      if (msg.type() === 'log' && msg.text().includes('[VISUAL-TEST')) {
+      if (msg.type() === 'log' && (msg.text().includes('[VISUAL-TEST') || msg.text().includes('[INIT]') || msg.text().includes('[DEBUG]') || msg.text().includes('[ERROR]'))) {
         console.log(`Browser: ${msg.text()}`);
       }
     });
@@ -35,8 +35,8 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      // Wait for canvas to be ready and rendering to complete
-      await page.waitForTimeout(3000);
+      // Wait for rendering to complete
+      await page.waitForTimeout(4500);
 
       // Take screenshot for visual regression
       await expect(component).toHaveScreenshot('cube-basic.png');
@@ -57,15 +57,15 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cube-dimensions.png');
-      
+
       console.log('[END] Cube dimensions test completed');
     });
 
     test('should render centered cube', async ({ mount, page }) => {
       console.log('[INIT] Testing centered cube');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="cube-centered"
@@ -76,15 +76,15 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cube-centered.png');
-      
+
       console.log('[END] Centered cube test completed');
     });
 
     test('should render cube with single dimension', async ({ mount, page }) => {
       console.log('[INIT] Testing cube with single dimension');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="cube-single-dimension"
@@ -95,7 +95,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cube-single-dimension.png');
       
       console.log('[END] Single dimension cube test completed');
@@ -116,15 +116,15 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('sphere-basic.png');
-      
+
       console.log('[END] Basic sphere test completed');
     });
 
     test('should render sphere with specific radius', async ({ mount, page }) => {
       console.log('[INIT] Testing sphere with specific radius');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="sphere-radius"
@@ -135,15 +135,15 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('sphere-radius.png');
-      
+
       console.log('[END] Sphere radius test completed');
     });
 
     test('should render sphere with diameter parameter', async ({ mount, page }) => {
       console.log('[INIT] Testing sphere with diameter parameter');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="sphere-diameter"
@@ -154,7 +154,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('sphere-diameter.png');
 
       console.log('[END] Sphere diameter test completed');
@@ -173,9 +173,9 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('sphere-tessellation.png');
-      
+
       console.log('[END] Sphere tessellation test completed');
     });
   });
@@ -183,7 +183,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
   test.describe('Cylinder Primitive Tests', () => {
     test('should render basic cylinder with default parameters', async ({ mount, page }) => {
       console.log('[INIT] Testing basic cylinder rendering');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="cylinder-basic"
@@ -194,7 +194,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cylinder-basic.png');
 
       console.log('[END] Basic cylinder test completed');
@@ -213,7 +213,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cylinder-height-radius.png');
       
       console.log('[END] Cylinder height-radius test completed');
@@ -232,7 +232,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cylinder-cone.png');
 
       console.log('[END] Cone test completed');
@@ -251,7 +251,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cylinder-diameter.png');
 
       console.log('[END] Cylinder diameter test completed');
@@ -270,7 +270,7 @@ test.describe('OpenSCAD 3D Primitives Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('cylinder-centered.png');
       
       console.log('[END] Centered cylinder test completed');

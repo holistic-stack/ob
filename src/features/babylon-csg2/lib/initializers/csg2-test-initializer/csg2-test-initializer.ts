@@ -241,7 +241,7 @@ async function initializeMockCSG2ForTests(config: Required<CSG2TestInitConfig>):
 
     // Try to import and setup mock from vitest-setup if available
     try {
-      const { initializeCSG2ForTests } = await import('../../../../src/vitest-setup');
+      const { initializeCSG2ForTests } = await import('../../../../../vitest-setup');
       await initializeCSG2ForTests();
 
       if (config.enableLogging) {

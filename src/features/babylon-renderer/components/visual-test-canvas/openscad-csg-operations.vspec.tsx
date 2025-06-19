@@ -15,7 +15,7 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Enable console logging for debugging
     page.on('console', (msg) => {
-      if (msg.type() === 'log' && msg.text().includes('[VISUAL-TEST')) {
+      if (msg.type() === 'log' && (msg.text().includes('[VISUAL-TEST') || msg.text().includes('[INIT]') || msg.text().includes('[DEBUG]') || msg.text().includes('[ERROR]'))) {
         console.log(`Browser: ${msg.text()}`);
       }
     });
@@ -35,15 +35,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000); // CSG operations may take longer
+      await page.waitForTimeout(4500); // CSG operations may take longer
       await expect(component).toHaveScreenshot('union-cubes.png');
-      
+
       console.log('[END] Union cubes test completed');
     });
 
     test('should render union of cube and sphere', async ({ mount, page }) => {
       console.log('[INIT] Testing union of cube and sphere');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="union-cube-sphere"
@@ -54,15 +54,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('union-cube-sphere.png');
-      
+
       console.log('[END] Union cube-sphere test completed');
     });
 
     test('should render union of multiple primitives', async ({ mount, page }) => {
       console.log('[INIT] Testing union of multiple primitives');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="union-multiple"
@@ -73,15 +73,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('union-multiple.png');
-      
+
       console.log('[END] Union multiple test completed');
     });
 
     test('should render implicit union (no union keyword)', async ({ mount, page }) => {
       console.log('[INIT] Testing implicit union');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="union-implicit"
@@ -92,7 +92,7 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('union-implicit.png');
       
       console.log('[END] Implicit union test completed');
@@ -113,15 +113,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('difference-cubes.png');
-      
+
       console.log('[END] Difference cubes test completed');
     });
 
     test('should render cube with spherical hole', async ({ mount, page }) => {
       console.log('[INIT] Testing cube with spherical hole');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="difference-cube-sphere"
@@ -132,15 +132,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('difference-cube-sphere.png');
-      
+
       console.log('[END] Cube with spherical hole test completed');
     });
 
     test('should render cylinder with cylindrical hole', async ({ mount, page }) => {
       console.log('[INIT] Testing cylinder with cylindrical hole');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="difference-cylinders"
@@ -151,15 +151,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('difference-cylinders.png');
-      
+
       console.log('[END] Cylinder with hole test completed');
     });
 
     test('should render complex difference with multiple subtractions', async ({ mount, page }) => {
       console.log('[INIT] Testing complex difference');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="difference-complex"
@@ -170,7 +170,7 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('difference-complex.png');
       
       console.log('[END] Complex difference test completed');
@@ -191,15 +191,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('intersection-cubes.png');
-      
+
       console.log('[END] Intersection cubes test completed');
     });
 
     test('should render intersection of cube and sphere', async ({ mount, page }) => {
       console.log('[INIT] Testing intersection of cube and sphere');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="intersection-cube-sphere"
@@ -210,15 +210,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('intersection-cube-sphere.png');
-      
+
       console.log('[END] Intersection cube-sphere test completed');
     });
 
     test('should render intersection of cylinder and cube', async ({ mount, page }) => {
       console.log('[INIT] Testing intersection of cylinder and cube');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="intersection-cylinder-cube"
@@ -229,15 +229,15 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('intersection-cylinder-cube.png');
-      
+
       console.log('[END] Intersection cylinder-cube test completed');
     });
 
     test('should render intersection of three primitives', async ({ mount, page }) => {
       console.log('[INIT] Testing intersection of three primitives');
-      
+
       const component = await mount(
         <VisualTestCanvas
           testName="intersection-three"
@@ -248,7 +248,7 @@ test.describe('OpenSCAD CSG Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(4500);
       await expect(component).toHaveScreenshot('intersection-three.png');
       
       console.log('[END] Intersection three primitives test completed');

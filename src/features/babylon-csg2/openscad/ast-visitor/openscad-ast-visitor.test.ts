@@ -6,8 +6,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadAstVisitor } from './openscad-ast-visitor';
-import { initializeCSG2ForTests } from '../../../lib/initializers/csg2-test-initializer/csg2-test-initializer';
-import { createTestScene, disposeTestScene } from '../../../vitest-setup';
+import { initializeCSG2ForTests } from '../../lib/initializers/csg2-test-initializer/csg2-test-initializer';
+import { createTestScene, disposeTestScene } from '../../../../vitest-setup';
 import type { CubeNode, SphereNode, UnionNode, AssignmentNode, IdentifierNode, LiteralExpressionNode } from '@holistic-stack/openscad-parser';
 import { Scope } from '../utils/expression-evaluator';
 

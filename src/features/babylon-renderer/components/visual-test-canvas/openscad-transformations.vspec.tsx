@@ -15,7 +15,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Enable console logging for debugging
     page.on('console', (msg) => {
-      if (msg.type() === 'log' && msg.text().includes('[VISUAL-TEST')) {
+      if (msg.type() === 'log' && (msg.text().includes('[VISUAL-TEST') || msg.text().includes('[INIT]') || msg.text().includes('[DEBUG]') || msg.text().includes('[ERROR]'))) {
         console.log(`Browser: ${msg.text()}`);
       }
     });
@@ -35,7 +35,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(6000); // 6s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('translate-x.png');
 
       console.log('[END] Translate X test completed');
@@ -54,7 +54,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(6000); // 6s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('translate-y.png');
 
       console.log('[END] Translate Y test completed');
@@ -73,7 +73,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(6000); // 6s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('translate-z.png');
 
       console.log('[END] Translate Z test completed');
@@ -92,7 +92,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(6000); // 6s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('translate-xyz.png');
       
       console.log('[END] Translate XYZ test completed');
@@ -113,7 +113,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('rotate-z.png');
 
       console.log('[END] Rotate Z test completed');
@@ -132,7 +132,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('rotate-x.png');
 
       console.log('[END] Rotate X test completed');
@@ -151,7 +151,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('rotate-y.png');
 
       console.log('[END] Rotate Y test completed');
@@ -170,7 +170,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('rotate-xyz.png');
 
       console.log('[END] Rotate XYZ test completed');
@@ -189,7 +189,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('rotate-single.png');
       
       console.log('[END] Rotate single angle test completed');
@@ -210,7 +210,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('scale-uniform.png');
 
       console.log('[END] Uniform scale test completed');
@@ -229,7 +229,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('scale-non-uniform.png');
 
       console.log('[END] Non-uniform scale test completed');
@@ -248,7 +248,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('scale-single.png');
       
       console.log('[END] Single factor scale test completed');
@@ -277,7 +277,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
 
       // Log captured console messages
       console.log('[DEBUG] Captured console logs:', consoleLogs.length);
@@ -305,7 +305,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('mirror-y.png');
 
       console.log('[END] Mirror Y test completed');
@@ -324,7 +324,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('mirror-z.png');
 
       console.log('[END] Mirror Z test completed');
@@ -343,7 +343,7 @@ test.describe('OpenSCAD Transformations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5500); // 5.5s to ensure 4.5s internal wait completes
       await expect(component).toHaveScreenshot('mirror-diagonal.png');
       
       console.log('[END] Mirror diagonal test completed');

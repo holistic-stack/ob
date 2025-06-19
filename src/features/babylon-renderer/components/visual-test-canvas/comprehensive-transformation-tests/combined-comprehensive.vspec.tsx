@@ -11,6 +11,7 @@
 import { test, expect } from '@playwright/experimental-ct-react';
 import { TransformationComparisonCanvas } from '../transformation-comparison-canvas';
 import { generateTestCasesForTypes } from '../transformation-test-data';
+import { createRenderingWaitPromise, assertRenderingSuccess } from '../test-utilities';
 
 test.describe('Comprehensive Combined Transformation Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -44,7 +45,14 @@ test.describe('Comprehensive Combined Transformation Visual Tests', () => {
     basicCubeTests.forEach((testCase) => {
       test(`should render ${testCase.name}`, async ({ mount, page }) => {
         console.log(`[INIT] Testing ${testCase.name}: ${testCase.description}`);
-        
+
+        // Create rendering wait promise with callback-based approach
+        const { promise, onRenderingComplete, onRenderingError } = createRenderingWaitPromise({
+          timeoutMs: testCase.timeout || 9000, // Combined transformations need more time
+          enableLogging: true,
+          testName: testCase.name
+        });
+
         const component = await mount(
           <TransformationComparisonCanvas
             testName={testCase.name}
@@ -54,13 +62,18 @@ test.describe('Comprehensive Combined Transformation Visual Tests', () => {
             height={800}
             enableDebugLogging={true}
             objectSeparation={testCase.objectSeparation || 40}
+            onRenderingComplete={onRenderingComplete}
+            onRenderingError={onRenderingError}
           />
         );
 
-        // Wait for rendering completion based on test complexity
-        const waitTime = testCase.timeout || 5000; // Combined transformations need more time
-        console.log(`[DEBUG] Waiting ${waitTime}ms for rendering completion`);
-        await page.waitForTimeout(waitTime);
+        // Wait for rendering completion using callback-based approach
+        console.log(`[DEBUG] Waiting for combined transformation rendering completion callback...`);
+        const result = await promise;
+
+        // Assert rendering was successful
+        assertRenderingSuccess(result, testCase.name);
+        console.log(`[DEBUG] Combined transformation rendering completed successfully in ${result.duration}ms`);
 
         // Capture screenshot for visual regression
         await expect(component).toHaveScreenshot(`${testCase.name}.png`);
