@@ -22,6 +22,7 @@ export interface BabylonEngineConfig {
   readonly preserveDrawingBuffer?: boolean;
   readonly stencil?: boolean;
   readonly powerPreference?: 'default' | 'high-performance' | 'low-power';
+  readonly forceRealEngine?: boolean; // Force real engine creation even in test environments
 }
 
 /**

@@ -49,7 +49,8 @@ const createEngine = (
     const isTestEnvironment = !canvas || typeof window === 'undefined' ||
       (canvas && typeof canvas.getContext === 'function' && !canvas.getContext('webgl'));
 
-    if (isTestEnvironment) {
+    // Allow forcing real engine creation even in test environments (for visual tests)
+    if (isTestEnvironment && !config.forceRealEngine) {
       console.log('[DEBUG] Creating NullEngine for test environment');
       const nullEngine = new BABYLON.NullEngine({
         renderWidth: 800,
@@ -61,6 +62,11 @@ const createEngine = (
 
       console.log('[DEBUG] NullEngine created successfully');
       return { success: true, data: nullEngine };
+    }
+
+    // If forceRealEngine is true, proceed with real engine creation even in test environment
+    if (config.forceRealEngine && isTestEnvironment) {
+      console.log('[DEBUG] Forcing real engine creation for visual tests');
     }
 
     // Validate canvas for regular engine
