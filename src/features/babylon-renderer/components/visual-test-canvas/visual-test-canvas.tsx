@@ -1,16 +1,24 @@
 /**
- * @file Visual Test Canvas Component
- * 
- * Specialized canvas component for Playwright visual regression testing
- * Provides a clean, full-screen canvas without any UI controls or overlays
- * 
+ * @file Simplified Visual Test Canvas Component
+ *
+ * Specialized canvas component for Playwright visual regression testing with minimal, clean visual aids
+ * Provides focused visual testing with only essential comparison elements
+ *
  * Features:
- * - Full-screen canvas optimized for visual testing
- * - No UI controls or overlays that could interfere with screenshots
- * - Automatic camera positioning for optimal viewing
+ * - Black canvas background with white/colored mesh objects for maximum contrast
+ * - Transparent reference object (ghost) showing original position for transformation comparison
+ * - Clean, minimal design without cluttering visual elements
+ * - Automatic camera positioning for optimal viewing of both objects
  * - Support for OpenSCAD code rendering via pipeline
  * - Comprehensive logging for debugging test failures
- * 
+ *
+ * Visual Style Requirements:
+ * - Black canvas background (#000000)
+ * - White/colored main mesh objects that are clearly visible
+ * - Transparent gray reference object (30% alpha) for comparison
+ * - No grid lines, axes, or face markers cluttering the view
+ * - Focus purely on transformation effect comparison
+ *
  * @author OpenSCAD-Babylon Pipeline
  * @date June 2025
  */
@@ -36,6 +44,10 @@ export interface VisualTestCanvasProps extends Omit<BabylonCanvasProps, 'classNa
   /** Custom canvas dimensions for testing */
   width?: number;
   height?: number;
+  /** Whether to show transparent reference object for comparison (simplified visual aids) */
+  enableReferenceObject?: boolean;
+  /** Reference OpenSCAD code for transparent comparison object */
+  referenceOpenscadCode?: string;
   /** Callback when rendering is completely finished and ready for screenshots */
   onRenderingComplete?: () => void;
 }
@@ -66,11 +78,14 @@ export function VisualTestCanvas({
   enableDebugLogging = true,
   width = 800,
   height = 600,
+  enableReferenceObject = true,
+  referenceOpenscadCode,
   sceneConfig,
   engineConfig,
   onEngineReady,
   onSceneReady,
   onRenderFrame,
+  onRenderingComplete,
   ...canvasProps
 }: VisualTestCanvasProps): React.JSX.Element {
   const log = useCallback((message: string) => {
@@ -125,6 +140,79 @@ export function VisualTestCanvas({
   // Derived state
   const isInitialized = engineReady && sceneReady;
 
+
+
+
+
+
+
+  /**
+   * Create enhanced transparent reference object with smart positioning
+   * Shows the original position/shape as a transparent reference, positioned to avoid overlap
+   */
+  const createTransparentReferenceObject = useCallback(async (scene: BABYLON.Scene, referenceCode: string) => {
+    if (!enableReferenceObject || !referenceCode) return;
+
+    log('[DEBUG] Creating enhanced transparent reference object with smart positioning');
+
+    try {
+      // Import utilities dynamically to avoid circular dependencies
+      const { detectTransformationType, calculateGhostOffset, DEFAULT_GHOST_CONFIG } = await import('./utils/ghost-positioning');
+      const { applyGhostPositioning, formatVector3ForLogging } = await import('./utils/mesh-positioning');
+
+      // Detect transformation type from the main OpenSCAD code
+      const transformation = detectTransformationType(openscadCode ?? '');
+      log(`[DEBUG] Detected transformation: ${transformation.type} with values [${transformation.values.join(', ')}]`);
+
+      // Calculate optimal ghost positioning offset
+      const ghostOffset = calculateGhostOffset(transformation, DEFAULT_GHOST_CONFIG);
+      log(`[DEBUG] Calculated ghost offset: ${formatVector3ForLogging(ghostOffset)}`);
+
+      // Convert reference OpenSCAD code to Babylon.js meshes
+      const result = await convertOpenSCADToBabylon(referenceCode, scene, {
+        enableLogging: enableDebugLogging,
+        rebuildNormals: true,
+        centerMesh: true
+      });
+
+      if (result.success && result.value && result.value.length > 0) {
+        // Apply ghost positioning to avoid overlap
+        applyGhostPositioning(result.value, ghostOffset);
+        log(`[DEBUG] Applied ghost positioning to ${result.value.length} reference meshes`);
+
+        result.value.forEach((mesh, index) => {
+          if (mesh) {
+            // Apply transparent gray material for reference
+            const referenceMaterial = new BABYLON.StandardMaterial(`referenceMaterial_${index}`, scene);
+            referenceMaterial.diffuseColor = new BABYLON.Color3(0.7, 0.7, 0.7); // Light gray
+            referenceMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); // Low specular
+            referenceMaterial.alpha = 0.3; // Transparent
+            referenceMaterial.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+            mesh.material = referenceMaterial;
+
+            // Ensure mesh is visible
+            mesh.isVisible = true;
+            mesh.setEnabled(true);
+
+            // Add reference identifier to mesh name
+            mesh.name = `reference_${mesh.name}`;
+
+            log(`[DEBUG] Applied transparent reference material to mesh ${index}`);
+          }
+        });
+
+        log(`[DEBUG] Enhanced transparent reference object created successfully with ${result.value.length} meshes`);
+        return result.value;
+      } else {
+        log(`[ERROR] Failed to create enhanced reference object: conversion was not successful`);
+        return null;
+      }
+    } catch (error) {
+      log(`[ERROR] Exception during enhanced reference object creation: ${error}`);
+      return null;
+    }
+  }, [enableReferenceObject, enableDebugLogging, openscadCode, log]);
+
   // Enhanced callback for engine ready event
   useEffect(() => {
     if (engineReady && engine && onEngineReady) {
@@ -148,7 +236,13 @@ export function VisualTestCanvas({
 
       const processOpenSCAD = async () => {
         try {
-          log('[INIT] Starting OpenSCAD to Babylon.js conversion');
+          log('[INIT] Starting simplified OpenSCAD to Babylon.js conversion with reference object');
+
+          // Create transparent reference object (if enabled)
+          if (enableReferenceObject && referenceOpenscadCode) {
+            log('[DEBUG] Creating transparent reference object for comparison');
+            await createTransparentReferenceObject(scene, referenceOpenscadCode);
+          }
 
           // Convert OpenSCAD code to Babylon.js meshes
           const result = await convertOpenSCADToBabylon(openscadCode, scene, {
@@ -176,21 +270,33 @@ export function VisualTestCanvas({
                   log(`[DEBUG] Applied white material to mesh ${index}`);
                 }
               });
+
+              log(`[DEBUG] Simplified visual test setup complete with ${result.value.length} meshes`);
             }
 
-            // Position camera to view the generated geometry
+            // Position camera to view the generated geometry (including reference objects)
             if (scene.activeCamera && result.value && result.value.length > 0) {
-              log(`[DEBUG] Setting up camera for ${result.value.length} meshes`);
+              log(`[DEBUG] Setting up enhanced camera for ${result.value.length} meshes and any reference objects`);
 
-              // Calculate bounding box for all meshes
+              // Get all meshes in the scene (transformed + reference objects)
+              const allMeshes = scene.meshes.filter(mesh =>
+                mesh.name !== 'ground' &&
+                mesh.name !== 'skybox' &&
+                mesh.name !== 'BackgroundSkybox' &&
+                mesh.name !== 'BackgroundPlane'
+              );
+
+              log(`[DEBUG] Found ${allMeshes.length} total meshes in scene for camera positioning`);
+
+              // Calculate bounding box for all meshes (enhanced to include reference objects)
               let minBounds = new BABYLON.Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
               let maxBounds = new BABYLON.Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-              result.value.forEach((mesh, index) => {
+              allMeshes.forEach((mesh, index) => {
                 if (mesh) {
                   // Force bounding info computation to ensure it's up to date
                   mesh.computeWorldMatrix(true);
-                  mesh.refreshBoundingInfo();
+                  // Note: refreshBoundingInfo() is called automatically by getBoundingInfo()
 
                   const boundingInfo = mesh.getBoundingInfo();
                   const worldMatrix = mesh.getWorldMatrix();
@@ -239,8 +345,8 @@ export function VisualTestCanvas({
               const size = maxBounds.subtract(minBounds);
               const maxDimension = Math.max(size.x, size.y, size.z);
 
-              // Position camera at optimal distance and angle (increased multiplier for better view)
-              const cameraDistance = Math.max(maxDimension * 4, 15); // Increased distance for transformed objects
+              // Position camera at optimal distance and angle (enhanced for transformed + reference objects)
+              const cameraDistance = Math.max(maxDimension * 3.5, 20); // Enhanced distance for both objects
               const cameraPosition = center.add(new BABYLON.Vector3(cameraDistance, cameraDistance, cameraDistance));
 
               // Type-safe camera setup
@@ -256,40 +362,58 @@ export function VisualTestCanvas({
                 scene.activeCamera.position = cameraPosition;
               }
 
-              log(`[DEBUG] Camera positioned: center=${center.toString()}, distance=${cameraDistance}, position=${cameraPosition.toString()}`);
+              log(`[DEBUG] Enhanced camera positioned for ${allMeshes.length} meshes: center=${center.toString()}, distance=${cameraDistance}, position=${cameraPosition.toString()}`);
             }
 
-            // Wait 4.5 seconds before marking rendering as complete to ensure all rendering is finished
-            log('[DEBUG] Waiting 4.5 seconds for rendering to stabilize before completing...');
-            await new Promise(resolve => setTimeout(resolve, 4500));
+            // Use Babylon.js executeWhenReady to ensure all rendering is complete
+            log('[DEBUG] Waiting for scene.executeWhenReady() to ensure all rendering is complete...');
+            scene.executeWhenReady(() => {
+              setIsRenderingComplete(true);
+              log('[END] OpenSCAD processing complete successfully - scene.executeWhenReady() fired');
 
-            setIsRenderingComplete(true);
-            log('[END] OpenSCAD processing complete successfully after 4.5s wait');
+              // Call the completion callback to notify tests that rendering is ready
+              if (onRenderingComplete) {
+                log('[DEBUG] Calling onRenderingComplete callback');
+                onRenderingComplete();
+              }
+            });
           } else {
             log(`[ERROR] OpenSCAD conversion failed: ${result.error}`);
 
-            // Wait 4.5 seconds even for error scenarios
-            log('[DEBUG] Waiting 4.5 seconds for error fallback rendering to stabilize...');
-            await new Promise(resolve => setTimeout(resolve, 4500));
+            // Use executeWhenReady even for error scenarios to ensure scene is ready
+            log('[DEBUG] Error scenario - waiting for scene.executeWhenReady()...');
+            scene.executeWhenReady(() => {
+              setIsRenderingComplete(true);
+              log('[END] Error fallback rendering complete - scene.executeWhenReady() fired');
 
-            setIsRenderingComplete(true);
-            log('[END] Error fallback rendering complete after 4.5s wait');
+              // Call the completion callback even for error scenarios
+              if (onRenderingComplete) {
+                log('[DEBUG] Calling onRenderingComplete callback for error scenario');
+                onRenderingComplete();
+              }
+            });
           }
         } catch (error) {
           log(`[ERROR] Exception during OpenSCAD processing: ${error}`);
 
-          // Wait 4.5 seconds even for exception scenarios
-          log('[DEBUG] Waiting 4.5 seconds for exception fallback rendering to stabilize...');
-          await new Promise(resolve => setTimeout(resolve, 4500));
+          // Use executeWhenReady even for exception scenarios to ensure scene is ready
+          log('[DEBUG] Exception scenario - waiting for scene.executeWhenReady()...');
+          scene.executeWhenReady(() => {
+            setIsRenderingComplete(true);
+            log('[END] Exception fallback rendering complete - scene.executeWhenReady() fired');
 
-          setIsRenderingComplete(true);
-          log('[END] Exception fallback rendering complete after 4.5s wait');
+            // Call the completion callback even for exception scenarios
+            if (onRenderingComplete) {
+              log('[DEBUG] Calling onRenderingComplete callback for exception scenario');
+              onRenderingComplete();
+            }
+          });
         }
       };
 
       void processOpenSCAD();
     }
-  }, [isInitialized, scene, openscadCode, isRenderingComplete, enableDebugLogging, log]);
+  }, [isInitialized, scene, openscadCode, isRenderingComplete, enableDebugLogging, enableReferenceObject, referenceOpenscadCode, log, createTransparentReferenceObject]);
 
   // Render loop management
   const renderLoop = useCallback(() => {
@@ -352,6 +476,7 @@ export function VisualTestCanvas({
       height={height}
       aria-label={`Visual test canvas for ${testName}`}
       data-testid={`visual-test-canvas-${testName}`}
+      data-rendering-complete={isRenderingComplete ? 'true' : 'false'}
       tabIndex={0} // Make canvas focusable for keyboard accessibility
       {...canvasProps}
     />

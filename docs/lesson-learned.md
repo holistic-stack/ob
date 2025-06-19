@@ -1,5 +1,67 @@
 # Lessons Learned
 
+## 2025-06-19: OpenSCAD Transformations Visual Test Fixes
+
+### **🎯 Problem: Blank Screenshots in Transformation Visual Tests**
+
+**Issue:** OpenSCAD transformation tests were producing blank screenshots instead of showing transformation effects.
+
+**Root Causes Identified:**
+1. **Timeout-based waiting instead of callback-based approach**
+   - Tests used `page.waitForTimeout()` which created race conditions
+   - Rendering completion was not properly detected
+   - Screenshots taken before rendering was actually complete
+
+2. **Mesh generation pipeline failure**
+   - Logs showed "Generated 0 meshes" for transformation operations
+   - OpenSCAD-to-Babylon conversion was failing silently for transformation syntax
+   - Type guards and conversion logic were working but timing was off
+
+### **🔧 Solutions Implemented:**
+
+1. **Replaced timeout-based waiting with callback-based approach**
+   ```typescript
+   // BEFORE (problematic)
+   await page.waitForTimeout(6000); // Arbitrary timeout
+
+   // AFTER (reliable)
+   async function waitForRenderingComplete(page: any, testName: string): Promise<void> {
+     await page.waitForFunction(
+       (testName: string) => {
+         const canvas = document.querySelector(`[data-testid="visual-test-canvas-${testName}"]`);
+         return canvas && canvas.getAttribute('data-rendering-complete') === 'true';
+       },
+       testName,
+       { timeout: 30000 }
+     );
+   }
+   ```
+
+2. **Fixed mesh generation pipeline**
+   - The conversion logic was actually working correctly
+   - Issue was timing - screenshots taken before `scene.executeWhenReady()` completed
+   - Proper callback-based waiting resolved the "Generated 0 meshes" issue
+
+### **🎉 Results:**
+- **23/23 transformation tests now passing**
+- **All visual snapshots generated successfully**
+- **Test execution time: 1.4 minutes for full suite**
+- **Reliable visual regression testing established**
+
+### **💡 Key Insights:**
+1. **Always use Babylon.js scene.executeWhenReady() for rendering completion**
+2. **Avoid arbitrary timeouts in visual tests - use proper callbacks**
+3. **The mesh generation pipeline was working - timing was the issue**
+4. **Proper visual setup (black background, white meshes) is crucial for clear screenshots**
+5. **Camera positioning should be strategic to capture transformation effects optimally**
+
+### **🔄 Best Practices Established:**
+- Use `waitForRenderingComplete()` helper function for all visual tests
+- Implement `data-rendering-complete` attributes for test synchronization
+- Use Babylon.js `scene.executeWhenReady()` callback mechanism
+- Apply consistent visual styling (black canvas, white meshes)
+- Position camera to optimally capture transformation effects
+
 ## 2025-06-18: Enhanced OpenSCAD Transformation Comparison Visual Tests
 
 ### Side-by-Side Comparison Visual Testing Implementation

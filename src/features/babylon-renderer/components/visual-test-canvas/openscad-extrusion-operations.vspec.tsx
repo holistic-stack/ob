@@ -11,6 +11,25 @@
 import { test, expect } from '@playwright/experimental-ct-react';
 import { VisualTestCanvas } from './visual-test-canvas';
 
+/**
+ * Helper function to wait for rendering completion using Babylon.js scene.executeWhenReady()
+ */
+async function waitForRenderingComplete(page: any, testName: string) {
+  console.log(`[DEBUG] Waiting for rendering completion for test: ${testName}`);
+
+  // Wait for the canvas to have data-rendering-complete="true"
+  await page.waitForFunction(
+    (testName: string) => {
+      const canvas = document.querySelector(`[data-testid="visual-test-canvas-${testName}"]`);
+      return canvas && canvas.getAttribute('data-rendering-complete') === 'true';
+    },
+    testName,
+    { timeout: 30000 } // 30 second timeout as fallback
+  );
+
+  console.log(`[DEBUG] Rendering completion detected for test: ${testName}`);
+}
+
 test.describe('OpenSCAD Extrusion Operations Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Enable console logging for debugging
@@ -39,8 +58,8 @@ test.describe('OpenSCAD Extrusion Operations Visual Tests', () => {
         />
       );
 
-      // Wait for rendering to complete
-      await page.waitForTimeout(4500);
+      // Wait for rendering to complete using callback
+      await waitForRenderingComplete(page, 'linear-extrude-circle-basic');
       await expect(component).toHaveScreenshot('linear-extrude-circle-basic.png');
       
       console.log('[END] Basic linear extrude circle test completed');
@@ -63,7 +82,7 @@ test.describe('OpenSCAD Extrusion Operations Visual Tests', () => {
         />
       );
 
-      await page.waitForTimeout(4500);
+      await waitForRenderingComplete(page, 'linear-extrude-square-twist');
       await expect(component).toHaveScreenshot('linear-extrude-square-twist.png');
       
       console.log('[END] Linear extrude with twist test completed');
