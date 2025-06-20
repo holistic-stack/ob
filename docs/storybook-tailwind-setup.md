@@ -144,6 +144,7 @@ A sample component demonstrating Tailwind CSS v4 integration is available at:
 1. **Import Errors**: Make sure to use dynamic imports for the Tailwind Vite plugin in Storybook configuration
 2. **JSX in .ts Files**: Use `.tsx` extension for story files that contain JSX
 3. **CSS Not Loading**: Ensure the CSS import is added to both main app and Storybook preview
+4. **Addon Compatibility**: Storybook v9 has consolidated many addons into the core package. Avoid installing separate viewport, backgrounds, or controls addons as they're now built-in
 
 ### Verification
 
@@ -196,10 +197,11 @@ The component library includes a comprehensive design system with:
 Enhanced Storybook setup includes:
 
 - **Accessibility Testing**: `@storybook/addon-a11y` for WCAG compliance
-- **Viewport Testing**: `@storybook/addon-viewport` for responsive design testing
-- **Background Testing**: `@storybook/addon-backgrounds` for different background scenarios
+- **Viewport Testing**: Built-in viewport controls (part of Storybook v9 core)
+- **Background Testing**: Built-in background controls (part of Storybook v9 core)
 - **Documentation**: Auto-generated docs with `@storybook/addon-docs`
-- **Interactive Controls**: Full control over component props
+- **Interactive Controls**: Built-in controls (part of Storybook v9 core)
+- **Onboarding**: Interactive onboarding experience with `@storybook/addon-onboarding`
 - **Dark Mode Support**: Theme switching capability
 
 ### Usage Examples
