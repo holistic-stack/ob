@@ -7,6 +7,7 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
 import App from './App.tsx';
 
 console.log('[INIT] 🚀 Starting OpenSCAD Babylon Pipeline React App - timestamp:', new Date().toISOString());

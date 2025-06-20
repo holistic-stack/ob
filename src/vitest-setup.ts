@@ -5,6 +5,63 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { findUpSync } from 'find-up';
 
+// ============================================================================
+// Browser API Mocks for UI Component Testing
+// ============================================================================
+
+// Mock window.matchMedia for accessibility and responsive design tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock CSS.supports for glass morphism compatibility tests
+Object.defineProperty(window, 'CSS', {
+  writable: true,
+  value: {
+    supports: vi.fn().mockReturnValue(true),
+  },
+});
+
+// Mock document.createElementNS for SVG filter tests
+Object.defineProperty(document, 'createElementNS', {
+  writable: true,
+  value: vi.fn().mockImplementation((namespace: string, tagName: string) => {
+    const element = document.createElement(tagName);
+    // Add href property for SVG filter elements
+    if (tagName === 'filter') {
+      Object.defineProperty(element, 'href', {
+        value: 'test-href',
+        writable: true,
+      });
+    }
+    return element;
+  }),
+});
+
+// Mock ResizeObserver for responsive components
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock IntersectionObserver for visibility-based components
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
 import { fileURLToPath } from 'node:url';
