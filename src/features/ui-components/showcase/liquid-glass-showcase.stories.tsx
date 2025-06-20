@@ -55,8 +55,11 @@ A comprehensive showcase demonstrating authentic Apple Liquid Glass design patte
 4. **Grid Dock**: Multi-row app grid with rounded icons
 5. **Control Panel**: Settings interface with toggle buttons
 6. **Notification**: Message card with action buttons
+7. **Location Cards**: Multi-card layout inspired by DS
+8. **Location Detail**: Detailed location card with action buttons
+9. **Testimonial**: Customer testimonial card with avatar
 
-Each demo uses beautiful background images to showcase the transparency and blur effects that make Liquid Glass so compelling.
+Each demo uses beautiful background images to showcase the transparency and blur effects that make Liquid Glass so compelling. The new  UI components demonstrate sophisticated real-world use cases.
         `,
       },
     },
@@ -81,16 +84,19 @@ export const Complete: Story = {
     docs: {
       description: {
         story: `
-The complete showcase includes six different demo variations:
+The complete showcase includes nine different demo variations:
 
 - **Single Button**: Demonstrates basic glass morphism with hover effects
-- **Button Group**: Shows connected buttons with shared glass borders  
+- **Button Group**: Shows connected buttons with shared glass borders
 - **Horizontal Dock**: App launcher with horizontal icon layout
 - **Grid Dock**: Multi-row app grid with rounded glass icons
 - **Control Panel**: Settings interface with glass toggle buttons
 - **Notification**: Message card with glass action buttons
+- **Location Cards**: Multi-card layout inspired by DS
+- **Location Detail**: Detailed location card with action buttons
+- **Testimonial**: Customer testimonial card with avatar
 
-Each demo uses a different beautiful background image to showcase how the glass effects interact with various content underneath.
+Each demo uses a different beautiful background image to showcase how the glass effects interact with various content underneath. The new  UI components demonstrate sophisticated real-world use cases.
         `,
       },
     },
@@ -115,7 +121,7 @@ export const SingleButton: Story = {
           backgroundImage: "url('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&auto=format&fit=crop&q=90')" 
         }}
       >
-        <button className="relative inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg bg-white/2.5 border border-white/50 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none transition antialiased">
+        <button className="relative inline-flex items-center justify-center px-6 py-3 text-white text-sm font-medium rounded-lg bg-white/2.5 border border-white/50 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none transition antialiased">
           Beautiful Button
         </button>
       </div>
@@ -179,13 +185,13 @@ export const ButtonGroup: Story = {
         }}
       >
         <div className="flex rounded-lg overflow-hidden border border-white/50 backdrop-blur-sm">
-          <button className="relative inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none border-r border-white/50">
+          <button className="relative inline-flex items-center justify-center px-6 py-3 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none border-r border-white/50">
             First
           </button>
-          <button className="relative inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none border-r border-white/50">
+          <button className="relative inline-flex items-center justify-center px-6 py-3 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none border-r border-white/50">
             Second
           </button>
-          <button className="relative inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none">
+          <button className="relative inline-flex items-center justify-center px-6 py-3 text-white text-sm font-medium bg-white/2.5 backdrop-blur-sm shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] hover:bg-white/30 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none">
             Third
           </button>
         </div>
@@ -267,6 +273,104 @@ Horizontal app dock with glass morphism container and icon buttons. Each icon ha
 - Individual glass icon buttons
 - Proper z-index management with \`relative z-10\`
 - Icon and label pairing
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Location cards layout inspired by DS.
+ *
+ * Demonstrates a sophisticated multi-card layout with:
+ * - Flexible grid system with different card sizes
+ * - Detailed and compact card variants
+ * - Icon integration with glass morphism
+ * - Responsive layout adaptation
+ */
+export const LocationCards: Story = {
+  render: () => (
+    <div className="p-8">
+      <div
+        className="flex items-center justify-center w-full min-h-[400px] bg-cover bg-center bg-no-repeat rounded-md"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&auto=format&fit=crop&q=90')"
+        }}
+      >
+        <div className="flex gap-4 max-w-4xl w-full px-4">
+          {/* Left Card */}
+          <div className="flex-1 bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] p-4 text-white relative before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none">
+            <div className="relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center border border-white/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Central Park</h3>
+                  <p className="text-xs opacity-60">New York, NY</p>
+                </div>
+              </div>
+              <p className="text-xs opacity-70 mt-3">843 acres of green space in the heart of Manhattan, featuring lakes, meadows, walking paths, recreational facilities, and countless opportunities for outdoor activities.</p>
+            </div>
+          </div>
+
+          {/* Right Column with 2 Cards */}
+          <div className="flex-1 flex flex-col gap-4">
+            {/* Top Right Card */}
+            <div className="bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] p-4 text-white relative before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center border border-white/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold">Times Square</h3>
+                    <p className="text-xs opacity-60">Tourist attraction</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Right Card */}
+            <div className="bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] p-4 text-white relative before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center border border-white/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                      <path d="M8 2v2H6c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H10V2H8zm10 16H6V9h12v9z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold">Brooklyn Bridge</h3>
+                    <p className="text-xs opacity-60">Historic landmark</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: `
+Multi-card layout inspired by DS with sophisticated glass morphism effects.
+
+**Key Features:**
+- Flexible grid system with different card sizes
+- Detailed card with full description
+- Compact cards for secondary information
+- Consistent glass morphism styling
+- Responsive layout adaptation
+
+** UI Pattern:**
+This component replicates the exact CSS patterns from Creative Tim's  UI library, demonstrating how to integrate their liquid glass components into React applications.
         `,
       },
     },

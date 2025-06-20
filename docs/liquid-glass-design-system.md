@@ -17,12 +17,12 @@ The design system now includes a comprehensive **LiquidGlassShowcase** that demo
 - **Real-World Use Cases**: Six interactive demos showing practical applications
 
 ### Technical Breakthrough
-The original components were missing the authentic glass morphism complexity. The new showcase demonstrates:
+The original components were missing the authentic glass morphism complexity. The new showcase demonstrates authentic patterns, including integration with **DS's Liquid Glass library**:
 
 ```css
-/* Authentic Apple Liquid Glass Pattern */
+/* Authentic Apple Liquid Glass Pattern ( UI Inspired) */
 .authentic-glass {
-  background: rgba(255, 255, 255, 0.025); /* Extremely subtle */
+  background: rgba(0, 0, 0, 0.2); /*  UI uses black/20 for better contrast */
   border: 1px solid rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(8px);
   box-shadow:
@@ -31,9 +31,9 @@ The original components were missing the authentic glass morphism complexity. Th
     0 3px 8px rgba(0, 0, 0, 0.15);            /* Directional shadow */
 }
 
-/* Multiple refraction layers */
+/* Multiple refraction layers ( UI Pattern) */
 .authentic-glass::before {
-  background: linear-gradient(135deg,
+  background: linear-gradient(to bottom right,
     rgba(255, 255, 255, 0.6),
     transparent,
     transparent);
@@ -41,13 +41,17 @@ The original components were missing the authentic glass morphism complexity. Th
 }
 
 .authentic-glass::after {
-  background: linear-gradient(315deg,
+  background: linear-gradient(to top left,
     rgba(255, 255, 255, 0.3),
     transparent,
     transparent);
   opacity: 0.5;
 }
 ```
+
+## 🎨 **DS Integration**
+
+The design system includes components inspired by Creative Tim's  UI Liquid Glass library. For complete implementation details and code examples, see [docs/liquid-glass-component-guidelines.md](./liquid-glass-component-guidelines.md).
 
 ## Design Principles
 

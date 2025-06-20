@@ -1,11 +1,20 @@
 /**
  * Main CSS file for the OpenSCAD Babylon project
- * 
+ *
  * Includes Tailwind CSS base styles and custom glass morphism utilities
  * for the Liquid Glass UI component library.
  */
 
-/* Tailwind CSS base styles */
+/* Custom styles - Tailwind's preflight.css handles all global reset */
+/* Only add project-specific customizations here */
+
+/* Custom font family for code elements (if different from Tailwind's default) */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Tailwind CSS - includes preflight.css which handles all global reset */
 @import 'tailwindcss';
 
 /* Custom CSS for glass morphism effects and animations */
@@ -137,60 +146,8 @@
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
 }
 
-/* Ensure proper font rendering */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Code font family */
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-/* Ensure proper box-sizing */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* Remove default margins and paddings */
-* {
-  margin: 0;
-  padding: 0;
-}
-
-/* Improve text rendering */
-html {
-  text-rendering: optimizeLegibility;
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-}
-
-/* Ensure proper line height */
-body {
-  line-height: 1.5;
-}
-
-/* Improve button and input styling */
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-/* Remove button styling */
-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
+/* Additional project-specific styles can be added here */
+/* Tailwind's preflight.css handles all global reset needs */
 
 /* Improve image handling */
 img,
