@@ -157,119 +157,119 @@ export type {
 } from './async-utils';
 
 // ============================================================================
-// Common Utility Patterns
+// Common Utility Patterns (defined here since they're simple and don't need separate files)
 // ============================================================================
 
 /**
  * Identity function - returns the input unchanged
  */
-export const identity = <T>(value: T): T => value;
+const identity = <T>(value: T): T => value;
 
 /**
  * Constant function - returns a function that always returns the same value
  */
-export const constant = <T>(value: T) => (): T => value;
+const constant = <T>(value: T) => (): T => value;
 
 /**
  * Noop function - does nothing
  */
-export const noop = (): void => {};
+const noop = (): void => {};
 
 /**
  * Compose functions from right to left
  */
-export const compose = <T>(...fns: Array<(arg: T) => T>) => (value: T): T =>
+const compose = <T>(...fns: Array<(arg: T) => T>) => (value: T): T =>
   fns.reduceRight((acc, fn) => fn(acc), value);
 
 /**
  * Pipe functions from left to right
  */
-export const pipe = <T>(value: T, ...fns: Array<(arg: T) => T>): T =>
+const pipe = <T>(value: T, ...fns: Array<(arg: T) => T>): T =>
   fns.reduce((acc, fn) => fn(acc), value);
 
 /**
  * Curry a binary function
  */
-export const curry2 = <T, U, R>(fn: (a: T, b: U) => R) =>
+const curry2 = <T, U, R>(fn: (a: T, b: U) => R) =>
   (a: T) => (b: U): R => fn(a, b);
 
 /**
  * Curry a ternary function
  */
-export const curry3 = <T, U, V, R>(fn: (a: T, b: U, c: V) => R) =>
+const curry3 = <T, U, V, R>(fn: (a: T, b: U, c: V) => R) =>
   (a: T) => (b: U) => (c: V): R => fn(a, b, c);
 
 /**
  * Flip the arguments of a binary function
  */
-export const flip = <T, U, R>(fn: (a: T, b: U) => R) =>
+const flip = <T, U, R>(fn: (a: T, b: U) => R) =>
   (b: U, a: T): R => fn(a, b);
 
 /**
  * Partial application
  */
-export const partial = <TArgs extends any[], TResult>(
+const partial = <TArgs extends any[], TResult>(
   fn: (...args: TArgs) => TResult,
   ...partialArgs: Partial<TArgs>
 ) => (...remainingArgs: any[]): TResult =>
   fn(...([...partialArgs, ...remainingArgs] as TArgs));
 
 // ============================================================================
-// Type Guards and Validation
+// Type Guards and Validation (defined here since they're simple utilities)
 // ============================================================================
 
 /**
  * Check if value is null or undefined
  */
-export const isNil = (value: unknown): value is null | undefined =>
+const isNil = (value: unknown): value is null | undefined =>
   value === null || value === undefined;
 
 /**
  * Check if value is not null or undefined
  */
-export const isNotNil = <T>(value: T | null | undefined): value is T =>
+const isNotNil = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
 
 /**
  * Check if value is a string
  */
-export const isString = (value: unknown): value is string =>
+const isString = (value: unknown): value is string =>
   typeof value === 'string';
 
 /**
  * Check if value is a number
  */
-export const isNumber = (value: unknown): value is number =>
+const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
 
 /**
  * Check if value is a boolean
  */
-export const isBoolean = (value: unknown): value is boolean =>
+const isBoolean = (value: unknown): value is boolean =>
   typeof value === 'boolean';
 
 /**
  * Check if value is an object (not null, not array)
  */
-export const isObject = (value: unknown): value is object =>
+const isObject = (value: unknown): value is object =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * Check if value is an array
  */
-export const isArray = (value: unknown): value is unknown[] =>
+const isArray = (value: unknown): value is unknown[] =>
   Array.isArray(value);
 
 /**
  * Check if value is a function
  */
-export const isFunction = (value: unknown): value is Function =>
+const isFunction = (value: unknown): value is Function =>
   typeof value === 'function';
 
 /**
  * Check if value is a promise
  */
-export const isPromise = (value: unknown): value is Promise<unknown> =>
+const isPromise = (value: unknown): value is Promise<unknown> =>
   value instanceof Promise || (
     typeof value === 'object' &&
     value !== null &&
@@ -279,78 +279,78 @@ export const isPromise = (value: unknown): value is Promise<unknown> =>
 /**
  * Check if value is a date
  */
-export const isDate = (value: unknown): value is Date =>
+const isDate = (value: unknown): value is Date =>
   value instanceof Date;
 
 /**
  * Check if value is a valid date
  */
-export const isValidDate = (value: unknown): value is Date =>
+const isValidDate = (value: unknown): value is Date =>
   isDate(value) && !isNaN(value.getTime());
 
 // ============================================================================
-// String Utilities
+// String Utilities (defined here since they're simple utilities)
 // ============================================================================
 
 /**
  * Capitalize first letter of string
  */
-export const capitalize = (str: string): string =>
+const capitalize = (str: string): string =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
 /**
  * Convert string to camelCase
  */
-export const camelCase = (str: string): string =>
+const camelCase = (str: string): string =>
   str.replace(/[-_\s]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
 
 /**
  * Convert string to kebab-case
  */
-export const kebabCase = (str: string): string =>
+const kebabCase = (str: string): string =>
   str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
 /**
  * Convert string to snake_case
  */
-export const snakeCase = (str: string): string =>
+const snakeCase = (str: string): string =>
   str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
 
 /**
  * Truncate string with ellipsis
  */
-export const truncate = (str: string, length: number, suffix = '...'): string =>
+const truncate = (str: string, length: number, suffix = '...'): string =>
   str.length <= length ? str : str.slice(0, length - suffix.length) + suffix;
 
 /**
  * Remove leading and trailing whitespace
  */
-export const trim = (str: string): string => str.trim();
+const trim = (str: string): string => str.trim();
 
 /**
  * Check if string is empty or only whitespace
  */
-export const isBlank = (str: string): boolean => str.trim().length === 0;
+const isBlank = (str: string): boolean => str.trim().length === 0;
 
 /**
  * Check if string is not empty and not only whitespace
  */
-export const isNotBlank = (str: string): boolean => str.trim().length > 0;
+const isNotBlank = (str: string): boolean => str.trim().length > 0;
 
 // ============================================================================
-// Number Utilities
+// Number Utilities (defined here since they're simple utilities)
 // ============================================================================
 
 /**
  * Clamp number between min and max
  */
-export const clamp = (value: number, min: number, max: number): number =>
+const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
 /**
  * Round number to specified decimal places
  */
-export const round = (value: number, decimals = 0): number => {
+const round = (value: number, decimals = 0): number => {
   const factor = Math.pow(10, decimals);
   return Math.round(value * factor) / factor;
 };
@@ -358,29 +358,29 @@ export const round = (value: number, decimals = 0): number => {
 /**
  * Check if number is in range (inclusive)
  */
-export const inRange = (value: number, min: number, max: number): boolean =>
+const inRange = (value: number, min: number, max: number): boolean =>
   value >= min && value <= max;
 
 /**
  * Generate random number between min and max
  */
-export const randomBetween = (min: number, max: number): number =>
+const randomBetween = (min: number, max: number): number =>
   Math.random() * (max - min) + min;
 
 /**
  * Generate random integer between min and max (inclusive)
  */
-export const randomInt = (min: number, max: number): number =>
+const randomInt = (min: number, max: number): number =>
   Math.floor(randomBetween(min, max + 1));
 
 // ============================================================================
-// Performance Utilities
+// Performance Utilities (defined here since they're simple utilities)
 // ============================================================================
 
 /**
  * Measure execution time of a function
  */
-export const measureTime = <T>(fn: () => T): { result: T; duration: number } => {
+const measureTime = <T>(fn: () => T): { result: T; duration: number } => {
   const start = performance.now();
   const result = fn();
   const duration = performance.now() - start;
@@ -390,7 +390,7 @@ export const measureTime = <T>(fn: () => T): { result: T; duration: number } => 
 /**
  * Measure execution time of an async function
  */
-export const measureTimeAsync = async <T>(
+const measureTimeAsync = async <T>(
   fn: () => Promise<T>
 ): Promise<{ result: T; duration: number }> => {
   const start = performance.now();
@@ -402,9 +402,9 @@ export const measureTimeAsync = async <T>(
 /**
  * Create a simple cache with LRU eviction
  */
-export const createLRUCache = <K, V>(maxSize: number) => {
+const createLRUCache = <K, V>(maxSize: number) => {
   const cache = new Map<K, V>();
-  
+
   return {
     get: (key: K): V | undefined => {
       if (cache.has(key)) {
@@ -415,17 +415,19 @@ export const createLRUCache = <K, V>(maxSize: number) => {
       }
       return undefined;
     },
-    
+
     set: (key: K, value: V): void => {
       if (cache.has(key)) {
         cache.delete(key);
       } else if (cache.size >= maxSize) {
         const firstKey = cache.keys().next().value;
-        cache.delete(firstKey);
+        if (firstKey !== undefined) {
+          cache.delete(firstKey);
+        }
       }
       cache.set(key, value);
     },
-    
+
     has: (key: K): boolean => cache.has(key),
     delete: (key: K): boolean => cache.delete(key),
     clear: (): void => cache.clear(),
@@ -438,7 +440,7 @@ export const createLRUCache = <K, V>(maxSize: number) => {
 // ============================================================================
 
 export {
-  // Functional programming
+  // Simple utilities defined in this file
   identity,
   constant,
   noop,
@@ -448,8 +450,6 @@ export {
   curry3,
   flip,
   partial,
-  
-  // Type guards
   isNil,
   isNotNil,
   isString,
@@ -461,8 +461,6 @@ export {
   isPromise,
   isDate,
   isValidDate,
-  
-  // String utilities
   capitalize,
   camelCase,
   kebabCase,
@@ -471,15 +469,11 @@ export {
   trim,
   isBlank,
   isNotBlank,
-  
-  // Number utilities
   clamp,
   round,
   inRange,
   randomBetween,
   randomInt,
-  
-  // Performance utilities
   measureTime,
   measureTimeAsync,
   createLRUCache,

@@ -425,45 +425,5 @@ export const deserializeBranded = <T, Brand extends string>(
 };
 
 // ============================================================================
-// Export All Types and Utilities
+// All types are exported inline above where they are defined
 // ============================================================================
-
-export type {
-  Branded,
-  UnBrand,
-  IsBranded,
-  // Entity IDs
-  EngineId,
-  SceneId,
-  MeshId,
-  MaterialId,
-  CameraId,
-  LightId,
-  TextureId,
-  // Pipeline IDs
-  ASTNodeId,
-  CSGOperationId,
-  GeometryId,
-  ParseSessionId,
-  // Measurements
-  Millimeters,
-  Radians,
-  Degrees,
-  Milliseconds,
-  Percentage,
-  Normalized,
-  // Colors
-  HexColor,
-  RGBColor,
-  RGBAColor,
-  HSLColor,
-  // File System
-  AbsolutePath,
-  RelativePath,
-  FileExtension,
-  MimeType,
-  // Network
-  URL,
-  EmailAddress,
-  IPAddress,
-};

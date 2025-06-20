@@ -159,10 +159,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {/* Left icon */}
         {leftIcon && !loading && (
-          <Icon 
-            name={leftIcon} 
+          <Icon
+            name={leftIcon}
             className="button__icon button__icon--left"
-            aria-hidden="true"
+            aria-hidden={true}
           />
         )}
         
@@ -182,10 +182,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         
         {/* Right icon */}
         {rightIcon && !loading && (
-          <Icon 
-            name={rightIcon} 
+          <Icon
+            name={rightIcon}
             className="button__icon button__icon--right"
-            aria-hidden="true"
+            aria-hidden={true}
           />
         )}
       </button>
@@ -225,9 +225,8 @@ export const ButtonGroup = ({
 ButtonGroup.displayName = 'ButtonGroup';
 
 /**
- * Export types for external use
+ * Types are exported inline above where they are defined
  */
-export type { ButtonVariant, ButtonSize };
 
 /**
  * Default export for convenience

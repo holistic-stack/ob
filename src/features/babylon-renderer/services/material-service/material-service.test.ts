@@ -260,7 +260,7 @@ describe('MaterialService', () => {
         const material = result.data;
         
         // Check initial state
-        expect(material.isDisposed).toBeFalsy(); // Babylon.js may return undefined instead of false
+        expect(material.getScene()).toBeTruthy(); // Material should have a valid scene when not disposed
         expect(material.getScene()).toBe(scene);
         expect(material.name).toBe('consistencyMaterial');
         

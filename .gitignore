@@ -169,3 +169,6 @@ playwright-report/
 docs/build/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+
+*storybook.log
+storybook-static

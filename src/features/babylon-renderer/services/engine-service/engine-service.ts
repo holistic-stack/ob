@@ -26,7 +26,8 @@ const DEFAULT_ENGINE_CONFIG: Required<BabylonEngineConfig> = {
   antialias: true,
   preserveDrawingBuffer: true,
   stencil: true,
-  powerPreference: 'high-performance'
+  powerPreference: 'high-performance',
+  forceRealEngine: false
 } as const;
 
 // ============================================================================

@@ -7,7 +7,6 @@
  * @date June 2025
  */
 
-import React from 'react';
 import { BabylonRenderer } from './babylon-renderer';
 
 export function BasicBabylonRenderer() {
@@ -53,8 +52,7 @@ export function CustomBabylonRenderer() {
         showMeshDisplay={true}
         showDebugPanel={true}
         engineConfig={{
-          antialias: true,
-          adaptToDeviceRatio: true
+          antialias: true
         }}
         sceneConfig={{
           enableCamera: true,

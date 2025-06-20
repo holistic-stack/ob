@@ -18,7 +18,7 @@ import {
   createParserResourceManager,
   parseOpenSCADCode,
   type ParserConfig
-} from './parser-resource-manager';
+} from '../openscad/utils/parser-resource-manager';
 
 // Mock the OpenSCAD parser module
 vi.mock('@holistic-stack/openscad-parser', () => ({
@@ -127,7 +127,7 @@ describe('ParserResourceManager', () => {
     it('should initialize and dispose parser correctly', async () => {
       const manager = new ParserResourceManager();
 
-      const result = await manager.withParser(async (parser) => {
+      const result = await manager.withParser(async (parser: EnhancedOpenscadParser) => {
         expect(parser).toBe(mockParser);
         return { success: true, value: 'test-result' };
       });

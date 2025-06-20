@@ -175,13 +175,5 @@ export interface IconDefinition {
 export type IconRegistry = Record<IconName, IconDefinition>;
 
 /**
- * Export all types for external use
+ * All types are exported inline above where they are defined
  */
-export type {
-  IconName,
-  IconSize,
-  IconColor,
-  IconProps,
-  IconDefinition,
-  IconRegistry
-};

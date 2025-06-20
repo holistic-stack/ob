@@ -20,21 +20,4 @@ export type { IconProps, IconName, IconSize, IconColor } from './icon/icon-types
 export { LoadingSpinner } from './loading-spinner/loading-spinner';
 export type { LoadingSpinnerProps, LoadingSpinnerVariant, LoadingSpinnerSize } from './loading-spinner/loading-spinner';
 
-// Re-export all types for convenience
-export type {
-  // Button types
-  ButtonVariant,
-  ButtonSize,
-  ButtonProps,
-  
-  // Icon types
-  IconName,
-  IconSize,
-  IconColor,
-  IconProps,
-  
-  // Loading spinner types
-  LoadingSpinnerVariant,
-  LoadingSpinnerSize,
-  LoadingSpinnerProps,
-};
+// All types are already exported above with their respective components

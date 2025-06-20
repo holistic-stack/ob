@@ -31,18 +31,18 @@ export type Result<T, E = Error> =
 /**
  * Success result constructor
  */
-export const Ok = <T>(data: T): Result<T, never> => ({
+export const Ok = <T, E = never>(data: T): Result<T, E> => ({
   success: true,
   data,
-});
+} as Result<T, E>);
 
 /**
  * Error result constructor
  */
-export const Err = <E>(error: E): Result<never, E> => ({
+export const Err = <E, T = never>(error: E): Result<T, E> => ({
   success: false,
   error,
-});
+} as Result<T, E>);
 
 // ============================================================================
 // Option Type for Nullable Values
@@ -312,15 +312,15 @@ export type AsyncResult<T, E = Error> = Promise<Result<T, E>>;
 /**
  * Create successful async result
  */
-export const AsyncOk = <T>(data: T): AsyncResult<T, never> => {
-  return Promise.resolve(Ok(data));
+export const AsyncOk = <T, E = never>(data: T): AsyncResult<T, E> => {
+  return Promise.resolve(Ok<T, E>(data));
 };
 
 /**
  * Create error async result
  */
-export const AsyncErr = <E>(error: E): AsyncResult<never, E> => {
-  return Promise.resolve(Err(error));
+export const AsyncErr = <E, T = never>(error: E): AsyncResult<T, E> => {
+  return Promise.resolve(Err<E, T>(error));
 };
 
 /**

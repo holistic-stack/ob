@@ -15,8 +15,11 @@ import { PipelineConfig, PipelineInitializationResult } from '../types/processin
 // Temporary mock for OpenScadPipeline until implementation is complete
 class MockOpenScadPipeline {
   constructor(config: any) {}
-  async initialize() {
+  async initialize(): Promise<{ success: boolean; error?: string }> {
     return { success: true };
+  }
+  async processOpenScadCodeToGeometry(code: string): Promise<any> {
+    return { success: true, value: [] };
   }
 }
 const OpenScadPipeline = MockOpenScadPipeline;
@@ -37,7 +40,7 @@ const DEFAULT_PIPELINE_CONFIG: PipelineConfig = {
  * making it testable and reusable across different contexts.
  */
 export class PipelineService {
-  private pipeline: OpenScadPipeline | null = null;
+  private pipeline: InstanceType<typeof OpenScadPipeline> | null = null;
   private isInitialized = false;
   private initializationPromise: Promise<PipelineInitializationResult> | null = null;
 
@@ -105,7 +108,7 @@ export class PipelineService {
    * 
    * @throws Error if pipeline is not initialized
    */
-  getPipeline(): OpenScadPipeline {
+  getPipeline(): InstanceType<typeof OpenScadPipeline> {
     if (!this.isInitialized || !this.pipeline) {
       throw new Error('Pipeline not initialized. Call initialize() first.');
     }

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadAstVisitorCSG2 } from './openscad-ast-visitor-csg2';
 import type { CubeNode, SphereNode, UnionNode } from '@holistic-stack/openscad-parser';
-import { initializeCSG2ForTests } from '../../../lib/initializers/csg2-test-initializer/csg2-test-initializer';
+import { initializeCSG2ForTests } from '../../lib/initializers/csg2-test-initializer/csg2-test-initializer';
 
 describe('OpenScadAstVisitorCSG2', () => {
   let engine: BABYLON.NullEngine;

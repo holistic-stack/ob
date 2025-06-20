@@ -121,7 +121,7 @@ const applyMaterialData = (
   }
 
   try {
-    if (material.isDisposed) {
+    if (!material.getScene()) {
       console.log('[DEBUG] Cannot apply data to disposed material');
       return;
     }
@@ -157,7 +157,7 @@ const toggleWireframe = (material: BABYLON.StandardMaterial | null): void => {
   }
 
   try {
-    if (material.isDisposed) {
+    if (!material.getScene()) {
       console.log('[DEBUG] Cannot toggle wireframe on disposed material');
       return;
     }
@@ -216,8 +216,8 @@ const getMaterialInfo = (material: BABYLON.StandardMaterial | null): {
 
   try {
     return {
-      isValid: !material.isDisposed,
-      isDisposed: material.isDisposed,
+      isValid: !!material.getScene(),
+      isDisposed: !material.getScene(),
       name: material.name,
       wireframe: material.wireframe,
       backFaceCulling: material.backFaceCulling,
@@ -270,7 +270,7 @@ const cloneMaterial = (
       return { success: false, error };
     }
 
-    if (sourceMaterial.isDisposed) {
+    if (!sourceMaterial.getScene()) {
       const error = 'Source material is disposed';
       console.error('[ERROR]', error);
       return { success: false, error };

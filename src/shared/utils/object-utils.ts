@@ -538,44 +538,8 @@ export const matches = <T>(
 // Export All Functions
 // ============================================================================
 
-export {
-  // Core operations
-  get,
-  getPath,
-  has,
-  hasPath,
-  
-  // Transformation
-  set,
-  setPath,
-  update,
-  updatePath,
-  omit,
-  pick,
-  removePath,
-  
-  // Merging and cloning
-  merge,
-  deepMerge,
-  deepClone,
-  
-  // Mapping and transformation
-  mapValues,
-  mapKeys,
-  filter,
-  reduce,
-  toPairs,
-  fromPairs,
-  invert,
-  
-  // Validation and comparison
-  isEmpty,
-  isNotEmpty,
-  keys,
-  values,
-  entries,
-  deepEquals,
-  matches,
-};
+// ============================================================================
+// All functions are exported individually above using 'export const'
+// ============================================================================
 
-export type { DeepReadonly, Path, PathValue };
+// Types are exported inline above where they are defined

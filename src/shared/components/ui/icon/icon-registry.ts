@@ -166,6 +166,88 @@ export const iconRegistry: IconRegistry = {
     path: 'M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z',
   },
 
+  // File icons
+  'file': {
+    viewBox: '0 0 24 24',
+    path: 'M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7zM13 3.5L18.5 9H13V3.5z',
+  },
+  'folder': {
+    viewBox: '0 0 24 24',
+    path: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2v11z',
+  },
+  'image': {
+    viewBox: '0 0 24 24',
+    path: 'M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z',
+  },
+  'video': {
+    viewBox: '0 0 24 24',
+    path: 'M23 7l-7 5 7 5V7zM1 5v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H3a2 2 0 00-2 2z',
+  },
+  'audio': {
+    viewBox: '0 0 24 24',
+    path: 'M9 18V5l12-2v13M9 9l12-2M9 18a3 3 0 11-6 0 3 3 0 016 0zM21 16a3 3 0 11-6 0 3 3 0 016 0z',
+  },
+  'document': {
+    viewBox: '0 0 24 24',
+    path: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 3.5L18.5 8H14V3.5zM16 13H8v-2h8v2zm0 4H8v-2h8v2z',
+  },
+  'code': {
+    viewBox: '0 0 24 24',
+    path: 'M16 18l6-6-6-6M8 6l-6 6 6 6',
+  },
+
+  // Communication icons
+  'mail': {
+    viewBox: '0 0 24 24',
+    path: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6',
+  },
+  'phone': {
+    viewBox: '0 0 24 24',
+    path: 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z',
+  },
+  'message': {
+    viewBox: '0 0 24 24',
+    path: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z',
+  },
+  'notification': {
+    viewBox: '0 0 24 24',
+    path: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
+  },
+  'bell': {
+    viewBox: '0 0 24 24',
+    path: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
+  },
+
+  // Media icons
+  'play': {
+    viewBox: '0 0 24 24',
+    path: 'M8 5v14l11-7z',
+  },
+  'pause': {
+    viewBox: '0 0 24 24',
+    path: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
+  },
+  'stop': {
+    viewBox: '0 0 24 24',
+    path: 'M6 6h12v12H6z',
+  },
+  'volume': {
+    viewBox: '0 0 24 24',
+    path: 'M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07',
+  },
+  'volume-off': {
+    viewBox: '0 0 24 24',
+    path: 'M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6',
+  },
+  'fullscreen': {
+    viewBox: '0 0 24 24',
+    path: 'M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3M8 21H5a2 2 0 01-2-2v-3m18 0v3a2 2 0 01-2 2h-3',
+  },
+  'minimize': {
+    viewBox: '0 0 24 24',
+    path: 'M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3',
+  },
+
   // 3D/Babylon specific icons
   'cube': {
     viewBox: '0 0 24 24',

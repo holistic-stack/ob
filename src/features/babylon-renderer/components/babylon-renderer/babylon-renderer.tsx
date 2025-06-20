@@ -236,8 +236,8 @@ export function BabylonRenderer({
       {/* Main Canvas Area */}
       <div className="babylon-renderer__canvas-area">
         <BabylonCanvas
-          engineConfig={engineConfig}
-          sceneConfig={sceneConfig}
+          {...(engineConfig && { engineConfig })}
+          {...(sceneConfig && { sceneConfig })}
           onEngineReady={handleEngineReady}
           onSceneReady={handleSceneReady}
           aria-label="Babylon Canvas"

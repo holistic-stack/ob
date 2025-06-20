@@ -8,7 +8,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
 import { OpenScadPipeline } from './openscad-pipeline';
-import { initializeCSG2ForTests, createTestScene, disposeTestScene } from '../../vitest-setup';
+import { initializeCSG2ForTests } from '../../../../vitest-setup';
+import { createTestScene, disposeTestScene } from '../../../../vitest-setup';
 
 describe('OpenScadPipeline Integration Tests', () => {
   let pipeline: OpenScadPipeline;

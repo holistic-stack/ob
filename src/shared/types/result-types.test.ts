@@ -61,40 +61,46 @@ describe('Result Types', () => {
   describe('Core Result Type', () => {
     it('should create successful results with Ok', () => {
       console.log('[DEBUG] Testing Ok result creation');
-      
+
       const result = Ok(42);
-      
+
       expect(result.success).toBe(true);
-      expect(result.data).toBe(42);
+      if (result.success) {
+        expect(result.data).toBe(42);
+      }
       expect(isOk(result)).toBe(true);
       expect(isErr(result)).toBe(false);
-      
+
       console.log('[DEBUG] Ok result creation test passed');
     });
 
     it('should create error results with Err', () => {
       console.log('[DEBUG] Testing Err result creation');
-      
+
       const result = Err('Something went wrong');
-      
+
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Something went wrong');
+      if (!result.success) {
+        expect(result.error).toBe('Something went wrong');
+      }
       expect(isOk(result)).toBe(false);
       expect(isErr(result)).toBe(true);
-      
+
       console.log('[DEBUG] Err result creation test passed');
     });
 
     it('should handle complex data types', () => {
       console.log('[DEBUG] Testing complex data types in results');
-      
+
       const complexData = { id: 1, name: 'test', items: [1, 2, 3] };
       const result = Ok(complexData);
-      
+
       expect(result.success).toBe(true);
-      expect(result.data).toEqual(complexData);
-      expect(result.data.items).toHaveLength(3);
-      
+      if (result.success) {
+        expect(result.data).toEqual(complexData);
+        expect(result.data.items).toHaveLength(3);
+      }
+
       console.log('[DEBUG] Complex data types test passed');
     });
   });
@@ -170,99 +176,115 @@ describe('Result Types', () => {
   describe('Result Transformation Functions', () => {
     it('should transform successful results with map', () => {
       console.log('[DEBUG] Testing result mapping');
-      
+
       const result = Ok(42);
       const mapped = map(result, (x) => x * 2);
-      
+
       expect(mapped.success).toBe(true);
-      expect(mapped.data).toBe(84);
-      
+      if (mapped.success) {
+        expect(mapped.data).toBe(84);
+      }
+
       console.log('[DEBUG] Result mapping test passed');
     });
 
     it('should preserve errors when mapping', () => {
       console.log('[DEBUG] Testing error preservation in mapping');
-      
+
       const result = Err('Error');
       const mapped = map(result, (x: number) => x * 2);
-      
+
       expect(mapped.success).toBe(false);
-      expect(mapped.error).toBe('Error');
-      
+      if (!mapped.success) {
+        expect(mapped.error).toBe('Error');
+      }
+
       console.log('[DEBUG] Error preservation test passed');
     });
 
     it('should transform errors with mapErr', () => {
       console.log('[DEBUG] Testing error mapping');
-      
+
       const result = Err('Error');
       const mapped = mapErr(result, (error) => `Transformed: ${error}`);
-      
+
       expect(mapped.success).toBe(false);
-      expect(mapped.error).toBe('Transformed: Error');
-      
+      if (!mapped.success) {
+        expect(mapped.error).toBe('Transformed: Error');
+      }
+
       console.log('[DEBUG] Error mapping test passed');
     });
 
     it('should preserve success when mapping errors', () => {
       console.log('[DEBUG] Testing success preservation in error mapping');
-      
+
       const result = Ok(42);
       const mapped = mapErr(result, (error: string) => `Transformed: ${error}`);
-      
+
       expect(mapped.success).toBe(true);
-      expect(mapped.data).toBe(42);
-      
+      if (mapped.success) {
+        expect(mapped.data).toBe(42);
+      }
+
       console.log('[DEBUG] Success preservation test passed');
     });
 
     it('should chain operations with flatMap', () => {
       console.log('[DEBUG] Testing result chaining with flatMap');
-      
+
       const result = Ok(42);
       const chained = flatMap(result, (x) => x > 0 ? Ok(x * 2) : Err('Negative'));
-      
+
       expect(chained.success).toBe(true);
-      expect(chained.data).toBe(84);
-      
+      if (chained.success) {
+        expect(chained.data).toBe(84);
+      }
+
       console.log('[DEBUG] Result chaining test passed');
     });
 
     it('should short-circuit on error with flatMap', () => {
       console.log('[DEBUG] Testing error short-circuiting in flatMap');
-      
+
       const result = Err('Initial error');
       const chained = flatMap(result, (x: number) => Ok(x * 2));
-      
+
       expect(chained.success).toBe(false);
-      expect(chained.error).toBe('Initial error');
-      
+      if (!chained.success) {
+        expect(chained.error).toBe('Initial error');
+      }
+
       console.log('[DEBUG] Error short-circuiting test passed');
     });
 
     it('should apply functions in Result context', () => {
       console.log('[DEBUG] Testing function application in Result context');
-      
+
       const resultFn = Ok((x: number) => x * 2);
       const resultData = Ok(42);
       const applied = apply(resultFn, resultData);
-      
+
       expect(applied.success).toBe(true);
-      expect(applied.data).toBe(84);
-      
+      if (applied.success) {
+        expect(applied.data).toBe(84);
+      }
+
       console.log('[DEBUG] Function application test passed');
     });
 
     it('should handle errors in function application', () => {
       console.log('[DEBUG] Testing error handling in function application');
-      
+
       const resultFn = Err('Function error');
       const resultData = Ok(42);
       const applied = apply(resultFn, resultData);
-      
+
       expect(applied.success).toBe(false);
-      expect(applied.error).toBe('Function error');
-      
+      if (!applied.success) {
+        expect(applied.error).toBe('Function error');
+      }
+
       console.log('[DEBUG] Error handling in function application test passed');
     });
   });
@@ -274,7 +296,9 @@ describe('Result Types', () => {
       const option = Some(42);
 
       expect(option.isSome).toBe(true);
-      expect(option.value).toBe(42);
+      if (option.isSome) {
+        expect(option.value).toBe(42);
+      }
       expect(isSome(option)).toBe(true);
       expect(isNone(option)).toBe(false);
 
@@ -347,7 +371,9 @@ describe('Result Types', () => {
       const mapped = mapOption(option, (x) => x * 2);
 
       expect(mapped.isSome).toBe(true);
-      expect(mapped.value).toBe(84);
+      if (mapped.isSome) {
+        expect(mapped.value).toBe(84);
+      }
 
       console.log('[DEBUG] Option mapping test passed');
     });
@@ -370,7 +396,9 @@ describe('Result Types', () => {
       const chained = flatMapOption(option, (x) => x > 0 ? Some(x * 2) : None);
 
       expect(chained.isSome).toBe(true);
-      expect(chained.value).toBe(84);
+      if (chained.isSome) {
+        expect(chained.value).toBe(84);
+      }
 
       console.log('[DEBUG] Option chaining test passed');
     });
@@ -394,7 +422,9 @@ describe('Result Types', () => {
       const filteredFalse = filterOption(someOption, (x) => x < 0);
 
       expect(filteredTrue.isSome).toBe(true);
-      expect(filteredTrue.value).toBe(42);
+      if (filteredTrue.isSome) {
+        expect(filteredTrue.value).toBe(42);
+      }
       expect(filteredFalse.isSome).toBe(false);
 
       console.log('[DEBUG] Option filtering test passed');
@@ -421,7 +451,9 @@ describe('Result Types', () => {
       const undefinedValue = fromNullable(undefined);
 
       expect(someValue.isSome).toBe(true);
-      expect(someValue.value).toBe(42);
+      if (someValue.isSome) {
+        expect(someValue.value).toBe(42);
+      }
       expect(nullValue.isSome).toBe(false);
       expect(undefinedValue.isSome).toBe(false);
 
@@ -450,7 +482,9 @@ describe('Result Types', () => {
       const noneOption = resultToOption(errorResult);
 
       expect(someOption.isSome).toBe(true);
-      expect(someOption.value).toBe(42);
+      if (someOption.isSome) {
+        expect(someOption.value).toBe(42);
+      }
       expect(noneOption.isSome).toBe(false);
 
       console.log('[DEBUG] Result to Option conversion test passed');
@@ -466,9 +500,13 @@ describe('Result Types', () => {
       const errorResult = optionToResult(noneOption, 'Error');
 
       expect(successResult.success).toBe(true);
-      expect(successResult.data).toBe(42);
+      if (successResult.success) {
+        expect(successResult.data).toBe(42);
+      }
       expect(errorResult.success).toBe(false);
-      expect(errorResult.error).toBe('Error');
+      if (!errorResult.success) {
+        expect(errorResult.error).toBe('Error');
+      }
 
       console.log('[DEBUG] Option to Result conversion test passed');
     });
@@ -482,7 +520,9 @@ describe('Result Types', () => {
       const result = await asyncResult;
 
       expect(result.success).toBe(true);
-      expect(result.data).toBe(42);
+      if (result.success) {
+        expect(result.data).toBe(42);
+      }
 
       console.log('[DEBUG] Async Ok result creation test passed');
     });
@@ -494,7 +534,9 @@ describe('Result Types', () => {
       const result = await asyncResult;
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Error');
+      if (!result.success) {
+        expect(result.error).toBe('Error');
+      }
 
       console.log('[DEBUG] Async Err result creation test passed');
     });

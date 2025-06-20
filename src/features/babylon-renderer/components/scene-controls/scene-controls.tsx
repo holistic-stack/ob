@@ -66,10 +66,10 @@ export function SceneControls({
   }, [scene]);
 
   const cameraPosition = useMemo(() => {
-    if (!isSceneValid || !scene.cameras.length) {
+    if (!isSceneValid || !scene || !scene.cameras.length) {
       return 'No camera';
     }
-    
+
     const camera = scene.cameras[0] as BABYLON.ArcRotateCamera;
     if (camera instanceof BABYLON.ArcRotateCamera) {
       return `α: ${camera.alpha.toFixed(2)}, β: ${camera.beta.toFixed(2)}, r: ${camera.radius.toFixed(2)}`;

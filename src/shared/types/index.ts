@@ -257,33 +257,33 @@ export {
 } from './validation-types';
 
 // ============================================================================
-// Re-export Common Patterns
+// Re-export Common Patterns (using imported types)
 // ============================================================================
 
 /**
  * Common Result type for string errors
  */
-export type StringResult<T> = Result<T, string>;
+export type StringResult<T> = import('./result-types').Result<T, string>;
 
 /**
  * Common Result type for validation errors
  */
-export type ValidatedResult<T> = Result<T, ValidationError[]>;
+export type ValidatedResult<T> = import('./result-types').Result<T, import('./validation-types').ValidationError[]>;
 
 /**
  * Common async operation result
  */
-export type AsyncOperation<T> = AsyncResult<T, string>;
+export type AsyncOperation<T> = import('./result-types').AsyncResult<T, string>;
 
 /**
  * Common entity creation result
  */
-export type EntityResult<T, Id> = Result<T & { id: Id }, string>;
+export type EntityResult<T, Id> = import('./result-types').Result<T & { id: Id }, string>;
 
 /**
  * Common state update result
  */
-export type StateUpdateResult<T> = Result<T, { message: string; code: string }>;
+export type StateUpdateResult<T> = import('./result-types').Result<T, { message: string; code: string }>;
 
 // ============================================================================
 // Type Utilities
@@ -365,21 +365,5 @@ export type ExactlyOne<T> = {
 }[keyof T];
 
 // ============================================================================
-// Export Type Utilities
+// All type utilities are exported inline above where they are defined
 // ============================================================================
-
-export type {
-  DeepPartial,
-  DeepReadonly,
-  KeysOfType,
-  RequireFields,
-  OptionalFields,
-  Parameters,
-  ReturnType,
-  Awaited,
-  NonNullable,
-  ArrayElement,
-  ValueOf,
-  AtLeastOne,
-  ExactlyOne,
-};

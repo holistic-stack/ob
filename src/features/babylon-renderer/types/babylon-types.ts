@@ -213,7 +213,7 @@ export type MaterialResult = Result<BABYLON.StandardMaterial, string>;
  * Engine service interface
  */
 export interface EngineService {
-  readonly createEngine: (canvas: HTMLCanvasElement, config?: BabylonEngineConfig) => EngineResult;
+  readonly createEngine: (canvas: HTMLCanvasElement | null, config?: BabylonEngineConfig) => EngineResult;
   readonly disposeEngine: (engine: BABYLON.Engine) => void;
   readonly handleResize: (engine: BABYLON.Engine) => void;
 }
@@ -421,9 +421,9 @@ export interface BabylonRendererSubComponentConfigs {
 /**
  * Props for main BabylonRenderer component
  */
-export interface BabylonRendererProps extends React.HTMLAttributes<HTMLElement> {
-  readonly engineConfig?: EngineConfig;
-  readonly sceneConfig?: SceneConfig;
+export interface BabylonRendererProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onError'> {
+  readonly engineConfig?: BabylonEngineConfig;
+  readonly sceneConfig?: BabylonSceneConfig;
   readonly layout?: BabylonRendererLayout;
   readonly responsive?: boolean;
   readonly showSceneControls?: boolean;

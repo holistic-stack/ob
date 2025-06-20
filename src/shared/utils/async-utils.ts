@@ -583,45 +583,7 @@ export const circuitBreaker = <TArgs extends any[], TResult>(
 };
 
 // ============================================================================
-// Export All Functions
+// All functions are exported individually above using 'export const'
 // ============================================================================
 
-export {
-  // Basic utilities
-  delay,
-  timeout,
-  withTimeout,
-  promisify,
-  
-  // Retry logic
-  retry,
-  retryWithResult,
-  
-  // Parallel execution
-  parallelLimit,
-  parallelWithResults,
-  parallelFailFast,
-  parallelSettled,
-  
-  // Sequential execution
-  sequential,
-  sequentialFailFast,
-  sequentialSettled,
-  
-  // Rate limiting and throttling
-  rateLimit,
-  debounce,
-  throttle,
-  
-  // Utility functions
-  toAsync,
-  memoizeAsync,
-  circuitBreaker,
-};
-
-export type {
-  DelayFn,
-  RetryOptions,
-  TimeoutOptions,
-  RateLimitOptions,
-};
+// All types are exported inline above where they are defined

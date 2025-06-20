@@ -359,8 +359,20 @@ describe('useBabylonScene', () => {
       const firstScene = result.current.scene;
       
       // Rapid engine changes
-      const engine2 = new BABYLON.NullEngine({ renderWidth: 400, renderHeight: 300 });
-      const engine3 = new BABYLON.NullEngine({ renderWidth: 600, renderHeight: 400 });
+      const engine2 = new BABYLON.NullEngine({
+        renderWidth: 400,
+        renderHeight: 300,
+        textureSize: 512,
+        deterministicLockstep: false,
+        lockstepMaxSteps: 1
+      });
+      const engine3 = new BABYLON.NullEngine({
+        renderWidth: 600,
+        renderHeight: 400,
+        textureSize: 512,
+        deterministicLockstep: false,
+        lockstepMaxSteps: 1
+      });
       
       rerender({ engine: engine2 });
       rerender({ engine: engine3 });

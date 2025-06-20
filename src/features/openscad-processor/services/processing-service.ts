@@ -78,7 +78,7 @@ export class ProcessingService {
       // Validate geometry data
       if (result.value) {
         const geometryArray = Array.isArray(result.value) ? result.value : [result.value];
-        const invalidGeometry = geometryArray.find(geo => !isValidGeometryData(geo));
+        const invalidGeometry = geometryArray.find((geo: any) => !isValidGeometryData(geo));
         
         if (invalidGeometry) {
           console.warn('[ProcessingService] ⚠️ Invalid geometry data detected:', invalidGeometry.name);

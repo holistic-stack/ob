@@ -182,9 +182,8 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 };
 
 /**
- * Export types for external use
+ * Types are exported inline above where they are defined
  */
-export type { LoadingSpinnerVariant, LoadingSpinnerSize };
 
 /**
  * Default export for convenience
