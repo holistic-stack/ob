@@ -25,7 +25,7 @@ const parser = new EnhancedOpenscadParser(errorHandler?: IErrorHandler);
 
 **Example:**
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 const errorHandler = new SimpleErrorHandler();
 const parser = new EnhancedOpenscadParser(errorHandler);

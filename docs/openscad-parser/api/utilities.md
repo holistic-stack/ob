@@ -23,7 +23,7 @@ Checks if a node is a cube primitive.
 
 **Example:**
 ```typescript
-import { isCubeNode } from '@openscad/parser';
+import { isCubeNode } from '@holistic-stack/openscad-parser';
 
 function processCube(node: ASTNode) {
   if (isCubeNode(node)) {
@@ -102,7 +102,7 @@ Recursively walks through an AST and calls the visitor function for each node.
 
 **Example:**
 ```typescript
-import { walkAST } from '@openscad/parser';
+import { walkAST } from '@holistic-stack/openscad-parser';
 
 const ast = parser.parseAST(`
   translate([10, 0, 0]) {
@@ -132,7 +132,7 @@ Finds all nodes matching a predicate function.
 
 **Example:**
 ```typescript
-import { findNodes, isCubeNode } from '@openscad/parser';
+import { findNodes, isCubeNode } from '@holistic-stack/openscad-parser';
 
 const ast = parser.parseAST(`
   union() {
@@ -179,7 +179,7 @@ Extracts a numeric vector from various input formats.
 
 **Example:**
 ```typescript
-import { extractVector } from '@openscad/parser';
+import { extractVector } from '@holistic-stack/openscad-parser';
 
 const vector1 = extractVector([1, 2, 3]); // [1, 2, 3]
 const vector2 = extractVector(5); // [5, 5, 5] (expanded to 3D)
@@ -222,7 +222,7 @@ Creates a deep copy of an AST node.
 
 **Example:**
 ```typescript
-import { cloneNode } from '@openscad/parser';
+import { cloneNode } from '@holistic-stack/openscad-parser';
 
 const originalCube: CubeNode = {
   type: 'cube',
@@ -274,7 +274,7 @@ Validates an AST for common issues.
 
 **Example:**
 ```typescript
-import { validateAST } from '@openscad/parser';
+import { validateAST } from '@holistic-stack/openscad-parser';
 
 const ast = parser.parseAST('cube([10, -5, 30]);'); // Negative dimension
 
@@ -326,7 +326,7 @@ Formats an AST back to OpenSCAD code.
 
 **Example:**
 ```typescript
-import { formatAST } from '@openscad/parser';
+import { formatAST } from '@holistic-stack/openscad-parser';
 
 const ast = parser.parseAST('cube(10);sphere(5);');
 
@@ -366,7 +366,7 @@ Measures the time taken to parse OpenSCAD code.
 
 **Example:**
 ```typescript
-import { measureParsingTime } from '@openscad/parser';
+import { measureParsingTime } from '@holistic-stack/openscad-parser';
 
 const result = measureParsingTime(parser, 'cube(10);');
 console.log(`Parsing took ${result.time}ms`);
@@ -401,7 +401,7 @@ import {
   walkAST,
   findNodes,
   validateAST
-} from '@openscad/parser';
+} from '@holistic-stack/openscad-parser';
 
 async function processOpenSCAD(code: string) {
   const errorHandler = new SimpleErrorHandler();

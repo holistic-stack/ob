@@ -4,7 +4,7 @@
 
 # OpenSCAD Parser
 
-[![npm](https://img.shields.io/npm/v/@openscad/parser.svg)](https://www.npmjs.com/package/@openscad/parser)
+[![npm](https://img.shields.io/npm/v/@holistic-stack/openscad-parser.svg)](https://www.npmjs.com/package/@holistic-stack/openscad-parser)
 [![Build Status](https://github.com/lucianotonet/openscad-tree-sitter/workflows/CI/badge.svg)](https://github.com/lucianotonet/openscad-tree-sitter/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -70,13 +70,13 @@ The OpenSCAD Parser is built on solid functional programming principles:
 
 ```bash
 # Using npm
-npm install @openscad/parser
+npm install@holistic-stack/openscad-parser
 
 # Using pnpm
-pnpm add @openscad/parser
+pnpm add@holistic-stack/openscad-parser
 
 # Using yarn
-yarn add @openscad/parser
+yarn add@holistic-stack/openscad-parser
 ```
 
 ## 🚀 Quick Start
@@ -84,7 +84,7 @@ yarn add @openscad/parser
 ### Basic Usage
 
 ```typescript
-import { EnhancedOpenscadParser } from '@openscad/parser';
+import { EnhancedOpenscadParser } from '@holistic-stack/openscad-parser';
 
 // Initialize the parser with async init pattern for better resource management
 const parseOpenSCAD = async (source: string) => {
@@ -136,7 +136,7 @@ import {
   type ASTNode,
   type ParserError,
   type ParserWarning
-} from '@openscad/parser';
+} from '@holistic-stack/openscad-parser';
 
 // Using the Result/Either pattern for functional error handling
 type Result<T, E> = Success<T, E> | Failure<T, E>;
@@ -321,7 +321,7 @@ import {
   ASTNode,
   SymbolInfo,
   HoverInfo
-} from '@openscad/parser';
+} from '@holistic-stack/openscad-parser';
 
 // Pure function to extract symbols from AST
 const extractSymbols = (ast: ASTNode[]): SymbolInfo[] => {
@@ -711,7 +711,7 @@ class ExpressionVisitor extends BaseASTVisitor {
 Extend the parser with custom visitors using functional composition:
 
 ```typescript
-import { BaseASTVisitor, EnhancedOpenscadParser } from '@openscad/parser';
+import { BaseASTVisitor, EnhancedOpenscadParser } from '@holistic-stack/openscad-parser';
 
 // Custom visitor implementation
 class ListComprehensionVisitor extends BaseASTVisitor {
@@ -821,7 +821,7 @@ nx test openscad-parser && nx typecheck openscad-parser && nx lint openscad-pars
 ### Writing Tests
 
 ```typescript
-import { OpenscadParser } from '@openscad/parser';
+import { OpenscadParser } from '@holistic-stack/openscad-parser';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('OpenSCAD Parser', () => {
@@ -1100,9 +1100,9 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 
 ## 🔗 Related Projects
 
-- **[@openscad/tree-sitter-openscad](../tree-sitter-openscad)**: Tree-sitter grammar for OpenSCAD
-- **[@openscad/editor](../openscad-editor)**: Monaco editor integration
-- **[@openscad/demo](../openscad-demo)**: Interactive demo application
+- **[@holistic-stack/tree-sitter-openscad](../tree-sitter-openscad)**: Tree-sitter grammar for OpenSCAD
+- **[@holistic-stack/openscad-editor](../openscad-editor)**: Monaco editor integration
+- **[@holistic-stack/openscad-demo](../openscad-demo)**: Interactive demo application
 
 ---
 

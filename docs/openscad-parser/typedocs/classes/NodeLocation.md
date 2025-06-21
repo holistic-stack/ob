@@ -35,7 +35,7 @@ console.log(`Token spans ${location.endIndex - location.startIndex} characters`)
 ```
 
 ```typescript
-import { NodeLocation } from '@openscad/parser';
+import { NodeLocation } from '@holistic-stack/openscad-parser';
 
 function createLocationFromNode(node: TreeSitter.SyntaxNode): NodeLocation {
   return new NodeLocation(

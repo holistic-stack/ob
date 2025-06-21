@@ -1995,7 +1995,7 @@ assign(r = 10) { sphere(r); translate([r*2, 0, 0]) sphere(r); }
 The library provides type guards for safe type checking:
 
 ```typescript
-import { isCubeNode, isSphereNode, isTransformNode } from '@openscad/parser';
+import { isCubeNode, isSphereNode, isTransformNode } from '@holistic-stack/openscad-parser';
 
 function processNode(node: ASTNode) {
   if (isCubeNode(node)) {

@@ -32,14 +32,14 @@ The OpenSCAD Tree-sitter Parser is a production-ready parsing solution that comb
 
 ```bash
 # Install the parser package
-npm install @openscad/parser
+npm install@holistic-stack/openscad-parser
 
 # Or with pnpm
-pnpm add @openscad/parser
+pnpm add@holistic-stack/openscad-parser
 ```
 
 ```typescript
-import { EnhancedOpenscadParser } from '@openscad/parser';
+import { EnhancedOpenscadParser } from '@holistic-stack/openscad-parser';
 
 // Initialize the parser
 const parser = new EnhancedOpenscadParser();
@@ -89,25 +89,25 @@ pnpm dev
 
 This monorepo contains four main packages:
 
-### [`@openscad/tree-sitter-openscad`](./packages/tree-sitter-openscad)
+### [`@holistic-stack/tree-sitter-openscad`](./packages/tree-sitter-openscad)
 The core Tree-sitter grammar for OpenSCAD language parsing.
 - **Purpose**: Provides the fundamental parsing rules and syntax definitions
 - **Output**: Concrete Syntax Tree (CST) from OpenSCAD source code
 - **Usage**: Foundation for all other packages
 
-### [`@openscad/parser`](./packages/openscad-parser)
+### [`@holistic-stack/openscad-parser`](./packages/openscad-parser)
 TypeScript parser with AST generation and error handling.
 - **Purpose**: Converts CST to semantic AST with comprehensive error reporting
 - **Features**: Expression evaluation, visitor pattern, incremental parsing
 - **Usage**: Primary package for applications requiring OpenSCAD code analysis
 
-### [`@openscad/editor`](./packages/openscad-editor)
+### [`@holistic-stack/openscad-editor`](./packages/openscad-editor)
 Monaco editor integration with OpenSCAD language support.
 - **Purpose**: Provides rich editing experience with syntax highlighting
 - **Features**: IntelliSense, error highlighting, code completion
 - **Usage**: Embedding OpenSCAD editors in web applications
 
-### [`@openscad/demo`](./packages/openscad-demo)
+### [`@holistic-stack/openscad-demo`](./packages/openscad-demo)
 Interactive demo application showcasing parser capabilities.
 - **Purpose**: Demonstrates real-time parsing and AST visualization
 - **Features**: Live code editing, AST explorer, error display

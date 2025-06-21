@@ -29,7 +29,7 @@ const parser = new EnhancedOpenscadParser(errorHandler?: IErrorHandler);
 **Functional Resource Management Pattern:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Pure function for parser lifecycle management
 const withParser = async <T>(fn: (parser: EnhancedOpenscadParser) => Promise<T>): Promise<T> => {
@@ -67,7 +67,7 @@ For complete API details, see the [TypeDocs for init method](../typedocs/classes
 **Functional Initialization Pattern with Result Type:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Define Result type for pure error handling
 type Result<T, E = Error> = 
@@ -127,7 +127,7 @@ For complete API details, see the [TypeDocs for parseAST method](../typedocs/cla
 **Functional Parsing Pattern:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler, ASTNode } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler, ASTNode } from '@holistic-stack/openscad-parser';
 
 // Pure function for parsing that guarantees immutability
 const parseOpenSCAD = async (code: string): Promise<ReadonlyArray<ASTNode>> => {
@@ -190,7 +190,7 @@ For complete API details, see the [TypeDocs for update](../typedocs/classes/enha
 **Functional Incremental Parsing Pattern:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler, ASTNode } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler, ASTNode } from '@holistic-stack/openscad-parser';
 
 // Immutable document state type
 type DocumentState = Readonly<{
@@ -269,7 +269,7 @@ For complete API details, see the [TypeDocs for dispose method](../typedocs/clas
 **Functional Resource Lifecycle Pattern:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Resource acquisition is initialization (RAII) pattern adapted to functional JS/TS
 const withResourceSafely = async <T, R extends { dispose(): void }>(
@@ -316,7 +316,7 @@ For complete API details, see the [TypeDocs for getErrorHandler method](../typed
 **Functional Error Collection Pattern:**
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Pure function for error collection
 const collectParsingDiagnostics = async (code: string): Promise<{

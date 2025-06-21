@@ -1,9 +1,9 @@
 /**
  * Enhanced Code Editor Component
  *
- * A code editor with OpenSCAD syntax highlighting, AST parsing, error detection,
- * and glass morphism effects. Integrates with @openscad/editor (Monaco-based)
- * for professional OpenSCAD development experience.
+ * A Monaco Editor-based OpenSCAD code editor with glass morphism effects.
+ * Integrates with @holistic-stack/openscad-editor for professional OpenSCAD development experience.
+ * Follows TDD methodology and liquid glass design system standards.
  */
 
 import React, { forwardRef, useRef, useEffect, useState, useCallback } from 'react';
@@ -16,8 +16,15 @@ import {
   type GlassConfig,
 } from '../../shared';
 
+// Monaco Editor integration
+declare global {
+  interface Window {
+    monaco: any;
+    MonacoEnvironment: any;
+  }
+}
+
 // OpenSCAD Editor integration types
-// Based on @openscad/editor package structure from the demo
 type ParseResult = {
   success: boolean;
   errors: Array<{
@@ -86,15 +93,15 @@ type OpenscadEditorFeatures = {
 /**
  * Supported programming languages
  */
-export type EditorLanguage = 
-  | 'javascript' 
-  | 'typescript' 
-  | 'python' 
-  | 'java' 
-  | 'cpp' 
-  | 'html' 
-  | 'css' 
-  | 'json' 
+export type EditorLanguage =
+  | 'javascript'
+  | 'typescript'
+  | 'python'
+  | 'java'
+  | 'cpp'
+  | 'html'
+  | 'css'
+  | 'json'
   | 'markdown'
   | 'openscad';
 
@@ -161,6 +168,382 @@ export interface CodeEditorProps extends BaseComponentProps, AriaProps {
   /** Test ID for testing */
   readonly 'data-testid'?: string;
 }
+
+// ============================================================================
+// OpenSCAD Language Support
+// ============================================================================
+
+/**
+ * OpenSCAD language configuration for Monaco Editor
+ * Based on @holistic-stack/openscad-editor patterns
+ */
+const openscadLanguageConfig = {
+  comments: {
+    lineComment: '//',
+    blockComment: ['/*', '*/']
+  },
+  brackets: [
+    ['{', '}'],
+    ['[', ']'],
+    ['(', ')']
+  ],
+  autoClosingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+    { open: '/*', close: '*/' }
+  ],
+  surroundingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' }
+  ],
+  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
+};
+
+/**
+ * OpenSCAD syntax highlighting tokens definition
+ */
+const openscadTokensDefinition = {
+  defaultToken: '',
+  tokenPostfix: '.openscad',
+
+  keywords: [
+    'module', 'function', 'if', 'else', 'for', 'while', 'let', 'assert',
+    'echo', 'each', 'true', 'false', 'undef', 'include', 'use'
+  ],
+
+  builtinFunctions: [
+    'abs', 'acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cross', 'exp',
+    'floor', 'len', 'ln', 'log', 'lookup', 'max', 'min', 'norm', 'pow',
+    'rands', 'round', 'sign', 'sin', 'sqrt', 'tan', 'str', 'chr', 'ord',
+    'concat', 'search', 'version', 'version_num', 'parent_module'
+  ],
+
+  builtinModules: [
+    'cube', 'sphere', 'cylinder', 'polyhedron', 'square', 'circle', 'polygon',
+    'text', 'linear_extrude', 'rotate_extrude', 'scale', 'resize', 'rotate',
+    'translate', 'mirror', 'multmatrix', 'color', 'offset', 'hull', 'minkowski',
+    'union', 'difference', 'intersection', 'render', 'surface', 'projection'
+  ],
+
+  builtinConstants: [
+    '$fa', '$fs', '$fn', '$t', '$vpt', '$vpr', '$vpd', '$vpf',
+    '$children', '$preview', '$OPENSCAD_VERSION'
+  ],
+
+  operators: [
+    '=', '>', '<', '!', '~', '?', ':', '==', '<=', '>=', '!=',
+    '&&', '||', '++', '--', '+', '-', '*', '/', '&', '|', '^', '%',
+    '<<', '>>', '>>>', '+=', '-=', '*=', '/=', '&=', '|=', '^=',
+    '%=', '<<=', '>>=', '>>>='
+  ],
+
+  symbols: /[=><!~?:&|+\-*/^%]+/,
+  escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+
+  tokenizer: {
+    root: [
+      // Identifiers and keywords
+      [/[a-z_$][\w$]*/, {
+        cases: {
+          '@keywords': 'keyword',
+          '@builtinFunctions': 'predefined',
+          '@builtinModules': 'type',
+          '@builtinConstants': 'constant',
+          '@default': 'identifier'
+        }
+      }],
+      [/[A-Z][\w$]*/, 'type.identifier'],
+
+      // Whitespace
+      { include: '@whitespace' },
+
+      // Delimiters and operators
+      [/[{}()[\]]/, '@brackets'],
+      [/[<>](?!@symbols)/, '@brackets'],
+      [/@symbols/, {
+        cases: {
+          '@operators': 'operator',
+          '@default': ''
+        }
+      }],
+
+      // Numbers
+      [/\d*\.\d+([eE][+-]?\d+)?/, 'number.float'],
+      [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+      [/\d+/, 'number'],
+
+      // Delimiter: after number because of .\d floats
+      [/[;,.]/, 'delimiter'],
+
+      // Strings
+      [/"([^"\\]|\\.)*$/, 'string.invalid'],
+      [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
+
+      // Characters
+      [/'[^\\']'/, 'string'],
+      [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
+      [/'/, 'string.invalid']
+    ],
+
+    comment: [
+      [/[^/*]+/, 'comment'],
+      [/\/\*/, 'comment', '@push'],
+      [/\*\//, 'comment', '@pop'],
+      [/[/*]/, 'comment']
+    ],
+
+    string: [
+      [/[^\\"]/, 'string'],
+      [/@escapes/, 'string.escape'],
+      [/\\./, 'string.escape.invalid'],
+      [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
+    ],
+
+    whitespace: [
+      [/[ \t\r\n]+/, 'white'],
+      [/\/\*/, 'comment', '@comment'],
+      [/\/\/.*$/, 'comment'],
+    ],
+  }
+};
+
+/**
+ * OpenSCAD dark theme definition
+ */
+const openscadTheme = {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    { token: 'keyword', foreground: '569cd6', fontStyle: 'bold' },
+    { token: 'predefined', foreground: 'dcdcaa' },
+    { token: 'type', foreground: '4ec9b0', fontStyle: 'bold' },
+    { token: 'constant', foreground: '9cdcfe' },
+    { token: 'identifier', foreground: 'd4d4d4' },
+    { token: 'type.identifier', foreground: '4ec9b0' },
+    { token: 'number', foreground: 'b5cea8' },
+    { token: 'number.float', foreground: 'b5cea8' },
+    { token: 'number.hex', foreground: 'b5cea8' },
+    { token: 'string', foreground: 'ce9178' },
+    { token: 'string.quote', foreground: 'ce9178' },
+    { token: 'string.escape', foreground: 'd7ba7d' },
+    { token: 'string.invalid', foreground: 'f44747' },
+    { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
+    { token: 'operator', foreground: 'd4d4d4' },
+    { token: 'delimiter', foreground: 'd4d4d4' },
+    { token: 'white', foreground: 'd4d4d4' },
+  ],
+  colors: {
+    'editor.background': '#1e1e1e',
+    'editor.foreground': '#d4d4d4',
+    'editorLineNumber.foreground': '#858585',
+    'editorCursor.foreground': '#aeafad',
+    'editor.selectionBackground': '#264f78',
+    'editor.inactiveSelectionBackground': '#3a3d41',
+  }
+};
+
+/**
+ * Register OpenSCAD language with Monaco Editor
+ */
+const registerOpenSCADLanguage = (monaco: any) => {
+  const LANGUAGE_ID = 'openscad';
+  const THEME_ID = 'openscad-dark';
+
+  console.log('[CodeEditor] Registering OpenSCAD language with Monaco Editor...');
+
+  // Register the language
+  monaco.languages.register({
+    id: LANGUAGE_ID,
+    extensions: ['.scad'],
+    aliases: ['OpenSCAD', 'openscad'],
+    mimetypes: ['text/x-openscad']
+  });
+
+  // Set language configuration
+  monaco.languages.setLanguageConfiguration(LANGUAGE_ID, openscadLanguageConfig);
+
+  // Set tokens provider using Monarch tokenizer
+  monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, openscadTokensDefinition);
+
+  // Define and set the theme
+  monaco.editor.defineTheme(THEME_ID, openscadTheme);
+
+  console.log('[CodeEditor] OpenSCAD language registered successfully');
+
+  return { LANGUAGE_ID, THEME_ID };
+};
+
+// ============================================================================
+// Monaco Editor Integration
+// ============================================================================
+
+/**
+ * Monaco Editor wrapper component for React
+ */
+interface MonacoEditorProps {
+  value: string;
+  language: string;
+  theme: string;
+  onChange?: (value: string | undefined) => void;
+  onMount?: (editor: any, monaco: any) => void;
+  options?: any;
+  height?: string | number;
+  width?: string | number;
+}
+
+const MonacoEditor: React.FC<MonacoEditorProps> = ({
+  value,
+  language,
+  theme,
+  onChange,
+  onMount,
+  options = {},
+  height = '100%',
+  width = '100%'
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<any>(null);
+  const [isMonacoLoaded, setIsMonacoLoaded] = useState(false);
+
+  // Load Monaco Editor
+  useEffect(() => {
+    const loadMonaco = async () => {
+      try {
+        // Monaco Editor is loaded via vite-plugin-monaco-editor
+        if (typeof window !== 'undefined' && window.monaco) {
+          setIsMonacoLoaded(true);
+          return;
+        }
+
+        // Wait for Monaco to be available
+        const checkMonaco = () => {
+          if (window.monaco) {
+            setIsMonacoLoaded(true);
+          } else {
+            setTimeout(checkMonaco, 100);
+          }
+        };
+        checkMonaco();
+      } catch (error) {
+        console.error('[MonacoEditor] Failed to load Monaco Editor:', error);
+      }
+    };
+
+    loadMonaco();
+  }, []);
+
+  // Initialize editor when Monaco is loaded
+  useEffect(() => {
+    if (!isMonacoLoaded || !containerRef.current || editorRef.current) {
+      return;
+    }
+
+    try {
+      // Register OpenSCAD language if needed
+      if (language === 'openscad') {
+        const { THEME_ID } = registerOpenSCADLanguage(window.monaco);
+
+        // Use OpenSCAD theme for OpenSCAD language
+        const monacoTheme = theme === 'dark' ? THEME_ID : theme === 'light' ? 'vs' : THEME_ID;
+
+        const editor = window.monaco.editor.create(containerRef.current, {
+          value,
+          language: 'openscad',
+          theme: monacoTheme,
+          automaticLayout: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          lineNumbers: 'on',
+          glyphMargin: true,
+          folding: true,
+          lineDecorationsWidth: 20,
+          lineNumbersMinChars: 3,
+          fontSize: 14,
+          tabSize: 2,
+          insertSpaces: true,
+          wordWrap: 'on',
+          ...options
+        });
+
+        editorRef.current = editor;
+      } else {
+        // Map theme names to Monaco themes for other languages
+        const monacoTheme = theme === 'dark' ? 'vs-dark' : theme === 'light' ? 'vs' : 'vs-dark';
+
+        const editor = window.monaco.editor.create(containerRef.current, {
+          value,
+          language,
+          theme: monacoTheme,
+          automaticLayout: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          lineNumbers: 'on',
+          glyphMargin: true,
+          folding: true,
+          lineDecorationsWidth: 20,
+          lineNumbersMinChars: 3,
+          fontSize: 14,
+          tabSize: 2,
+          insertSpaces: true,
+          wordWrap: 'on',
+          ...options
+        });
+
+        editorRef.current = editor;
+      }
+
+      // Handle content changes
+      const disposable = editorRef.current.onDidChangeModelContent(() => {
+        const currentValue = editorRef.current.getValue();
+        onChange?.(currentValue);
+      });
+
+      // Call onMount callback
+      onMount?.(editorRef.current, window.monaco);
+
+      return () => {
+        disposable.dispose();
+        editorRef.current.dispose();
+      };
+    } catch (error) {
+      console.error('[MonacoEditor] Failed to create editor:', error);
+    }
+  }, [isMonacoLoaded, value, language, theme, onChange, onMount, options]);
+
+  // Update editor value when prop changes
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.getValue() !== value) {
+      editorRef.current.setValue(value);
+    }
+  }, [value]);
+
+  return (
+    <div
+      ref={containerRef}
+      data-testid="monaco-editor"
+      data-language={language}
+      data-theme={theme}
+      style={{ height, width }}
+    >
+      {/* Display content for testing when Monaco isn't loaded */}
+      {!isMonacoLoaded && value && (
+        <div style={{
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          padding: '8px',
+          whiteSpace: 'pre-wrap',
+          color: 'white'
+        }}>
+          {value}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ============================================================================
 // OpenSCAD Syntax Highlighting and Error Detection
@@ -314,7 +697,7 @@ const LineNumbers: React.FC<LineNumbersProps> = ({ lines, errors = [] }) => {
  * />
  * ```
  */
-export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
+export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
   (
     {
       value,
@@ -330,7 +713,7 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       onParseErrors,
       enableASTParsing = true,
       showSyntaxErrors = true,
-      enableCodeCompletion = true,
+      enableCodeCompletion = false,
       glassConfig,
       overLight = false,
       className,
@@ -340,11 +723,12 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
     },
     ref
   ) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [parseResult, setParseResult] = useState<ParseResult | null>(null);
-    const [outline, setOutline] = useState<OutlineItem[]>([]);
     const [isParserLoading, setIsParserLoading] = useState(false);
     const [parser, setParser] = useState<any>(null);
+    const [monacoEditor, setMonacoEditor] = useState<any>(null);
+    const [monaco, setMonaco] = useState<any>(null);
 
     // ========================================================================
     // OpenSCAD Parser Integration
@@ -499,59 +883,75 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
     }, []);
 
     // ========================================================================
-    // Effects
+    // Monaco Editor Integration
     // ========================================================================
 
-    useEffect(() => {
+    // Handle Monaco Editor mount
+    const handleMonacoMount = useCallback((editor: any, monacoInstance: any) => {
+      setMonacoEditor(editor);
+      setMonaco(monacoInstance);
+
+      // Configure OpenSCAD language support
+      if (language === 'openscad') {
+        try {
+          // Register comprehensive OpenSCAD language support
+          const { LANGUAGE_ID, THEME_ID } = registerOpenSCADLanguage(monacoInstance);
+
+          // Ensure the model has the correct language
+          const model = editor.getModel();
+          if (model && model.getLanguageId() !== LANGUAGE_ID) {
+            monacoInstance.editor.setModelLanguage(model, LANGUAGE_ID);
+            console.log('[CodeEditor] Model language set to OpenSCAD');
+          }
+
+          // Apply OpenSCAD theme
+          try {
+            monacoInstance.editor.setTheme(THEME_ID);
+            console.log('[CodeEditor] OpenSCAD theme applied');
+          } catch (themeError) {
+            console.warn('[CodeEditor] Failed to apply OpenSCAD theme:', themeError);
+          }
+        } catch (error) {
+          console.error('[CodeEditor] Failed to register OpenSCAD language:', error);
+        }
+      }
+
+      // Add keyboard shortcuts
+      editor.addAction({
+        id: 'save-action',
+        label: 'Save',
+        keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS],
+        run: () => {
+          onSave?.();
+        }
+      });
+
+      editor.addAction({
+        id: 'format-action',
+        label: 'Format Document',
+        keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyF],
+        run: () => {
+          onFormat?.();
+        }
+      });
+
+      // Set ref
       if (ref && typeof ref === 'object') {
-        ref.current = textareaRef.current;
+        ref.current = containerRef.current;
       }
-    }, [ref]);
-    
-    // ========================================================================
-    // Event Handlers
-    // ========================================================================
-    
-    const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      onChange?.(event.target.value);
-    };
-    
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // Handle Ctrl+S for save
-      if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        onSave?.();
-      }
-      
-      // Handle Ctrl+Shift+F for format
-      if (event.ctrlKey && event.shiftKey && event.key === 'F') {
-        event.preventDefault();
-        onFormat?.();
-      }
-      
-      // Handle Tab for indentation
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        const textarea = event.currentTarget;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        
-        const newValue = value.substring(0, start) + '  ' + value.substring(end);
-        onChange?.(newValue);
-        
-        // Set cursor position after the inserted spaces
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 2;
-        }, 0);
-      }
-    };
-    
+    }, [language, onSave, onFormat, ref]);
+
     // ========================================================================
     // Event Handlers
     // ========================================================================
 
     const handleErrorClick = (error: ParseResult['errors'][0]) => {
-      // TODO: Jump to error line in editor
+      // Jump to error line in Monaco Editor
+      if (monacoEditor && error.line > 0) {
+        monacoEditor.setPosition({ lineNumber: error.line, column: error.column || 1 });
+        monacoEditor.focus();
+        monacoEditor.revealLine(error.line);
+      }
       console.log('[CodeEditor] Error clicked:', error);
     };
 
@@ -559,77 +959,87 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
     // Style Generation
     // ========================================================================
 
-    const glassClasses = generateGlassClasses(glassConfig || {}, overLight);
-    const lineCount = value.split('\n').length;
-    
     const editorClasses = generateAccessibleStyles(
       clsx(
         // Base editor styles
         'flex-1 h-full flex',
         'relative overflow-hidden',
-        
+
         // Glass morphism effects
-        'bg-black/20 backdrop-blur-sm border border-white/50 rounded-r-lg',
+        'bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg',
         'shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]',
-        
+
         // Gradient pseudo-elements
-        'before:absolute before:inset-0 before:rounded-r-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none',
-        'after:absolute after:inset-0 before:rounded-r-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none',
-        
+        'before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none',
+        'after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none',
+
+        // Focus styles
+        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+        'transition-all duration-200 ease-in-out',
+
         // Custom className
         className
       )
-    );
-    
-    const textareaClasses = clsx(
-      'flex-1 resize-none outline-none bg-transparent',
-      'text-white font-mono text-sm leading-6',
-      'p-3 overflow-auto',
-      'placeholder:text-white/40',
-      {
-        'cursor-not-allowed': readOnly,
-      }
     );
 
     // ========================================================================
     // Render
     // ========================================================================
-    
+
     return (
       <div
+        ref={containerRef}
         className={editorClasses}
         data-testid={dataTestId}
         data-language={language}
         data-theme={theme}
+        aria-label={ariaLabel}
+        role="textbox"
+        tabIndex={0}
+        style={{ minHeight: '44px' }} // WCAG AA minimum touch target
         {...rest}
       >
         <div className="relative z-10 flex w-full h-full">
-          {showLineNumbers && (
-            <div className="border-r border-white/20">
-              <LineNumbers
-                lines={lineCount}
-                errors={showSyntaxErrors ? (parseResult?.errors || []) : []}
-              />
-            </div>
-          )}
-
+          {/* Monaco Editor */}
           <div className="flex-1 relative">
-            {/* Enhanced textarea with OpenSCAD syntax highlighting */}
-            <textarea
-              ref={textareaRef}
-              className={textareaClasses}
+            <MonacoEditor
               value={value}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              readOnly={readOnly}
-              placeholder={placeholder}
-              aria-label={ariaLabel || `Code editor for ${language}`}
-              role="textbox"
-              aria-multiline="true"
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
+              language={language}
+              theme={theme}
+              onChange={(newValue) => onChange?.(newValue ?? '')}
+              onMount={handleMonacoMount}
+              options={{
+                readOnly,
+                lineNumbers: showLineNumbers ? 'on' : 'off',
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                fontSize: 14,
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+                tabSize: 2,
+                insertSpaces: true,
+                wordWrap: 'on',
+                automaticLayout: true,
+                glyphMargin: true,
+                folding: true,
+                lineDecorationsWidth: 20,
+                lineNumbersMinChars: 3,
+                renderWhitespace: 'selection',
+                cursorBlinking: 'smooth',
+                cursorSmoothCaretAnimation: 'on',
+                smoothScrolling: true,
+                mouseWheelZoom: true,
+                contextmenu: true,
+                quickSuggestions: enableCodeCompletion,
+                suggestOnTriggerCharacters: enableCodeCompletion,
+                acceptSuggestionOnEnter: enableCodeCompletion ? 'on' : 'off',
+                bracketPairColorization: { enabled: true },
+                guides: {
+                  bracketPairs: true,
+                  indentation: true
+                }
+              }}
+              height="100%"
+              width="100%"
             />
 
             {/* Parser Loading Indicator */}

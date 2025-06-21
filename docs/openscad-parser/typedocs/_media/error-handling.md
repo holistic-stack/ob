@@ -76,7 +76,7 @@ Clear all collected errors and warnings.
 ### Example Usage
 
 ```typescript
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Functional approach with explicit resource management and immutable error handling
 const parseOpenSCADWithValidation = async (source: string): Promise<{
@@ -234,7 +234,7 @@ interface ParseWarning {
 You can create custom error handlers by implementing the `IErrorHandler` interface:
 
 ```typescript
-import { type IErrorHandler } from '@openscad/parser';
+import { type IErrorHandler } from '@holistic-stack/openscad-parser';
 
 /**
  * Functional error handler implementation with immutable state management

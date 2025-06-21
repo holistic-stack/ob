@@ -48,13 +48,13 @@ When looking for specific API details:
 ### Installation
 
 ```bash
-npm install @openscad/parser
+npm install@holistic-stack/openscad-parser
 ```
 
 ### Basic Usage
 
 ```typescript
-import { OpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Create error handler and parser
 const errorHandler = new SimpleErrorHandler();
@@ -170,7 +170,7 @@ parser.dispose();
 The library follows the "Real Parser Pattern" - no mocks are used in tests. Instead, real parser instances are created with proper lifecycle management:
 
 ```typescript
-import { OpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 describe('OpenSCAD Parser Tests', () => {
   let parser: OpenscadParser;
@@ -199,7 +199,7 @@ describe('OpenSCAD Parser Tests', () => {
 ### Advanced Usage
 
 ```typescript
-import { OpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Custom error handling
 const errorHandler = new SimpleErrorHandler();
@@ -351,7 +351,7 @@ The parser is optimized for performance with:
 The parser provides comprehensive error handling:
 
 ```typescript
-import { OpenscadParser, SimpleErrorHandler } from '@openscad/parser';
+import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 
 const errorHandler = new SimpleErrorHandler();
 const parser = new OpenscadParser(errorHandler);

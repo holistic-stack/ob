@@ -32,7 +32,7 @@ to efficiently update only the changed portions of the syntax tree.
 ## Example
 
 ```typescript
-import { EnhancedOpenscadParser, ConsoleErrorHandler } from '@openscad/parser';
+import { EnhancedOpenscadParser, ConsoleErrorHandler } from '@holistic-stack/openscad-parser';
 
 // Setup with custom error handling
 const errorHandler = new ConsoleErrorHandler();

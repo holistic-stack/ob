@@ -1,0 +1,109 @@
+{
+  "name": "openscad-editor",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/openscad-editor/src",
+  "projectType": "library",
+  "tags": ["type:library", "scope:editor", "platform:web", "framework:react"],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "{projectRoot}/dist",
+        "main": "packages/openscad-editor/src/index.ts",
+        "tsConfig": "packages/openscad-editor/tsconfig.lib.json",
+        "assets": [
+          "packages/openscad-editor/README.md",
+          {
+            "glob": "**/*",
+            "input": "packages/openscad-editor/public/",
+            "output": "./public/"
+          }
+        ]
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    },
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "openscad-editor:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "openscad-editor:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "openscad-editor:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --reporter=verbose --no-coverage",
+        "cwd": "packages/openscad-editor",
+        "env": {
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_SKIP_LOG_GROUPING": "true",
+          "FORCE_COLOR": "1"
+        }
+      },
+      "configurations": {
+        "watch": {
+          "command": "vitest watch --reporter=verbose --no-coverage",
+          "cwd": "packages/openscad-editor",
+          "env": {
+            "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+            "NX_SKIP_LOG_GROUPING": "true",
+            "FORCE_COLOR": "1"
+          }
+        },
+        "coverage": {
+          "command": "vitest run --reporter=verbose --coverage",
+          "cwd": "packages/openscad-editor",
+          "env": {
+            "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+            "NX_SKIP_LOG_GROUPING": "true",
+            "FORCE_COLOR": "1"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx eslint src/ --config eslint.config.mjs",
+        "cwd": "packages/openscad-editor"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/openscad-editor/tsconfig.json"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  },
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  }
+}

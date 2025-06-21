@@ -83,7 +83,7 @@ interface RangeExpressionNode extends ExpressionNode {
 ### Basic Range Parsing
 
 ```typescript
-import { OpenSCADParser } from '@openscad/parser';
+import { OpenSCADParser } from '@holistic-stack/openscad-parser';
 
 const parser = new OpenSCADParser();
 await parser.init();

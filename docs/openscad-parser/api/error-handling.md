@@ -273,7 +273,7 @@ interface ParseWarning {
 You can create custom error handlers by implementing the `IErrorHandler` interface:
 
 ```typescript
-import { type IErrorHandler } from '@openscad/parser';
+import { type IErrorHandler } from '@holistic-stack/openscad-parser';
 
 /**
  * Functional error handler implementation with immutable state management
