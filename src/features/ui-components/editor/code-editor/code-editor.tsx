@@ -48,43 +48,8 @@ type OutlineItem = {
   children?: OutlineItem[];
 };
 
-type FeaturePreset = 'BASIC' | 'STANDARD' | 'IDE' | 'FULL';
-
-type OpenscadEditorFeatures = {
-  core: {
-    syntaxHighlighting: boolean;
-    basicCompletion: boolean;
-    bracketMatching: boolean;
-    commentCommands: boolean;
-  };
-  parser: {
-    realTimeValidation: boolean;
-    astGeneration: boolean;
-    errorReporting: boolean;
-    symbolExtraction: boolean;
-  };
-  ide: {
-    outline: boolean;
-    hover: boolean;
-    gotoDefinition: boolean;
-    findReferences: boolean;
-    documentSymbols: boolean;
-    workspaceSymbols: boolean;
-    codeActions: boolean;
-    rename: boolean;
-  };
-  advanced: {
-    semanticHighlighting: boolean;
-    advancedCompletion: boolean;
-    parameterHints: boolean;
-    signatureHelp: boolean;
-    codeLens: boolean;
-    inlayHints: boolean;
-    foldingRanges: boolean;
-    documentFormatting: boolean;
-    rangeFormatting: boolean;
-  };
-};
+// Feature configuration types (for future use)
+// type FeaturePreset = 'BASIC' | 'STANDARD' | 'IDE' | 'FULL';
 
 // ============================================================================
 // Types and Interfaces
@@ -347,9 +312,625 @@ const openscadTheme = {
 };
 
 /**
- * Register OpenSCAD language with Monaco Editor
+ * OpenSCAD completion provider for Monaco Editor
  */
-const registerOpenSCADLanguage = (monaco: any) => {
+class OpenSCADCompletionProvider {
+  private parser: any = null;
+
+  constructor(parser?: any) {
+    this.parser = parser;
+  }
+
+  setParser(parser: any) {
+    this.parser = parser;
+  }
+
+  triggerCharacters = ['.', '(', '[', ' '];
+
+  async provideCompletionItems(
+    model: any,
+    position: any,
+    _context: any
+  ): Promise<any> {
+    const lineContent = model.getLineContent(position.lineNumber);
+    const wordInfo = model.getWordAtPosition(position);
+    const wordAtPosition = wordInfo?.word || '';
+
+    // Skip completion in strings and comments
+    const beforeCursor = lineContent.substring(0, position.column - 1);
+    if (this.isInsideString(beforeCursor) || this.isInsideComment(beforeCursor)) {
+      return { suggestions: [] };
+    }
+
+    const suggestions: any[] = [];
+
+    // Add OpenSCAD built-in symbols
+    const builtinSymbols = this.getBuiltinSymbols(wordAtPosition);
+    suggestions.push(...builtinSymbols);
+
+    // Add user-defined symbols from AST if parser is available
+    if (this.parser) {
+      try {
+        const userSymbols = await this.getUserDefinedSymbols(model, position, wordAtPosition);
+        suggestions.push(...userSymbols);
+      } catch (error) {
+        console.warn('[OpenSCADCompletionProvider] Error getting user symbols:', error);
+      }
+    }
+
+    return { suggestions };
+  }
+
+  private isInsideString(text: string): boolean {
+    let inString = false;
+    let escaped = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = !inString;
+      }
+    }
+
+    return inString;
+  }
+
+  private isInsideComment(text: string): boolean {
+    if (text.includes('//')) {
+      const commentIndex = text.lastIndexOf('//');
+      const beforeComment = text.substring(0, commentIndex);
+      if (!this.isInsideString(beforeComment)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private getBuiltinSymbols(filter: string): any[] {
+    const symbols = [
+      // 3D Primitives
+      { name: 'cube', type: 'module', category: '3D Primitives', description: 'Creates a cube or rectangular prism' },
+      { name: 'sphere', type: 'module', category: '3D Primitives', description: 'Creates a sphere' },
+      { name: 'cylinder', type: 'module', category: '3D Primitives', description: 'Creates a cylinder or cone' },
+      { name: 'polyhedron', type: 'module', category: '3D Primitives', description: 'Creates a polyhedron from points and faces' },
+
+      // 2D Primitives
+      { name: 'square', type: 'module', category: '2D Primitives', description: 'Creates a square or rectangle' },
+      { name: 'circle', type: 'module', category: '2D Primitives', description: 'Creates a circle' },
+      { name: 'polygon', type: 'module', category: '2D Primitives', description: 'Creates a polygon from points' },
+      { name: 'text', type: 'module', category: '2D Primitives', description: 'Creates text as a 2D shape' },
+
+      // Transformations
+      { name: 'translate', type: 'module', category: 'Transformations', description: 'Moves objects in 3D space' },
+      { name: 'rotate', type: 'module', category: 'Transformations', description: 'Rotates objects around axes' },
+      { name: 'scale', type: 'module', category: 'Transformations', description: 'Scales objects by factors' },
+      { name: 'resize', type: 'module', category: 'Transformations', description: 'Resizes objects to specific dimensions' },
+      { name: 'mirror', type: 'module', category: 'Transformations', description: 'Mirrors objects across a plane' },
+      { name: 'multmatrix', type: 'module', category: 'Transformations', description: 'Applies transformation matrix' },
+
+      // Boolean Operations
+      { name: 'union', type: 'module', category: 'Boolean Operations', description: 'Combines multiple objects' },
+      { name: 'difference', type: 'module', category: 'Boolean Operations', description: 'Subtracts objects from the first' },
+      { name: 'intersection', type: 'module', category: 'Boolean Operations', description: 'Keeps only overlapping parts' },
+
+      // 2D to 3D
+      { name: 'linear_extrude', type: 'module', category: '2D to 3D', description: 'Extrudes 2D shapes into 3D' },
+      { name: 'rotate_extrude', type: 'module', category: '2D to 3D', description: 'Rotates 2D shapes around an axis' },
+
+      // Control Structures
+      { name: 'if', type: 'keyword', category: 'Control', description: 'Conditional execution' },
+      { name: 'else', type: 'keyword', category: 'Control', description: 'Alternative execution' },
+      { name: 'for', type: 'keyword', category: 'Control', description: 'Loop iteration' },
+      { name: 'module', type: 'keyword', category: 'Control', description: 'Define a module' },
+      { name: 'function', type: 'keyword', category: 'Control', description: 'Define a function' },
+
+      // Math Functions
+      { name: 'abs', type: 'function', category: 'Math', description: 'Absolute value' },
+      { name: 'cos', type: 'function', category: 'Math', description: 'Cosine function' },
+      { name: 'sin', type: 'function', category: 'Math', description: 'Sine function' },
+      { name: 'tan', type: 'function', category: 'Math', description: 'Tangent function' },
+      { name: 'sqrt', type: 'function', category: 'Math', description: 'Square root' },
+      { name: 'pow', type: 'function', category: 'Math', description: 'Power function' },
+      { name: 'min', type: 'function', category: 'Math', description: 'Minimum value' },
+      { name: 'max', type: 'function', category: 'Math', description: 'Maximum value' }
+    ];
+
+    return symbols
+      .filter(symbol => !filter || symbol.name.toLowerCase().startsWith(filter.toLowerCase()))
+      .map(symbol => ({
+        label: symbol.name,
+        kind: this.getCompletionKind(symbol.type),
+        detail: `${symbol.type} - ${symbol.category}`,
+        documentation: symbol.description,
+        insertText: symbol.type === 'module' ? `${symbol.name}()` : symbol.name,
+        insertTextRules: 4, // InsertAsSnippet
+        sortText: `${symbol.category}_${symbol.name}`
+      }));
+  }
+
+  private async getUserDefinedSymbols(model: any, position: any, filter: string): Promise<any[]> {
+    if (!this.parser) return [];
+
+    try {
+      const code = model.getValue();
+      const ast = this.parser.parseAST(code);
+
+      if (!ast || !Array.isArray(ast)) return [];
+
+      const symbols: any[] = [];
+
+      // Extract user-defined modules and functions
+      this.extractSymbolsFromAST(ast, symbols, position.lineNumber);
+
+      return symbols
+        .filter(symbol => !filter || symbol.name.toLowerCase().startsWith(filter.toLowerCase()))
+        .map(symbol => ({
+          label: symbol.name,
+          kind: this.getCompletionKind(symbol.type),
+          detail: `${symbol.type} (user-defined)`,
+          documentation: `User-defined ${symbol.type}: ${symbol.name}`,
+          insertText: symbol.name,
+          sortText: `0_${symbol.name}` // Prioritize user symbols
+        }));
+    } catch (error) {
+      console.warn('[OpenSCADCompletionProvider] Error parsing AST:', error);
+      return [];
+    }
+  }
+
+  private extractSymbolsFromAST(nodes: any[], symbols: any[], currentLine: number) {
+    for (const node of nodes) {
+      if (node.type === 'module_definition' && node.name) {
+        // Only include symbols defined before current position
+        if (!node.location || node.location.start.line < currentLine - 1) {
+          symbols.push({
+            name: node.name,
+            type: 'module',
+            line: node.location?.start.line || 0
+          });
+        }
+      } else if (node.type === 'function_definition' && node.name) {
+        if (!node.location || node.location.start.line < currentLine - 1) {
+          symbols.push({
+            name: node.name,
+            type: 'function',
+            line: node.location?.start.line || 0
+          });
+        }
+      }
+
+      // Recursively process child nodes
+      if (node.children && Array.isArray(node.children)) {
+        this.extractSymbolsFromAST(node.children, symbols, currentLine);
+      }
+    }
+  }
+
+  private getCompletionKind(type: string): number {
+    switch (type) {
+      case 'module': return 9; // Module
+      case 'function': return 3; // Function
+      case 'keyword': return 17; // Keyword
+      default: return 1; // Text
+    }
+  }
+}
+
+/**
+ * OpenSCAD hover provider for Monaco Editor
+ */
+class OpenSCADHoverProvider {
+  private parser: any = null;
+
+  constructor(parser?: any) {
+    this.parser = parser;
+  }
+
+  setParser(parser: any) {
+    this.parser = parser;
+  }
+
+  async provideHover(model: any, position: any): Promise<any> {
+    const wordInfo = model.getWordAtPosition(position);
+    if (!wordInfo) return null;
+
+    const word = wordInfo.word;
+
+    // Check built-in symbols first
+    const builtinHover = this.getBuiltinHover(word);
+    if (builtinHover) return builtinHover;
+
+    // Check user-defined symbols if parser is available
+    if (this.parser) {
+      try {
+        const userHover = await this.getUserDefinedHover(model, position, word);
+        if (userHover) return userHover;
+      } catch (error) {
+        console.warn('[OpenSCADHoverProvider] Error getting user hover:', error);
+      }
+    }
+
+    return null;
+  }
+
+  private getBuiltinHover(word: string): any {
+    const builtinDocs: Record<string, { signature: string; description: string; examples?: string[] }> = {
+      cube: {
+        signature: 'cube(size, center = false)',
+        description: 'Creates a cube or rectangular prism. Size can be a single value for a cube or [x, y, z] for a rectangular prism.',
+        examples: ['cube(10);', 'cube([10, 20, 30]);', 'cube(10, center = true);']
+      },
+      sphere: {
+        signature: 'sphere(r, $fn, $fa, $fs)',
+        description: 'Creates a sphere with the specified radius.',
+        examples: ['sphere(10);', 'sphere(r = 5, $fn = 50);']
+      },
+      cylinder: {
+        signature: 'cylinder(h, r, r1, r2, center = false, $fn, $fa, $fs)',
+        description: 'Creates a cylinder or cone. Use r for uniform radius, or r1/r2 for different top/bottom radii.',
+        examples: ['cylinder(h = 10, r = 5);', 'cylinder(h = 10, r1 = 5, r2 = 2);']
+      },
+      translate: {
+        signature: 'translate(v)',
+        description: 'Moves objects by the specified vector [x, y, z].',
+        examples: ['translate([10, 0, 0]) cube(5);', 'translate([0, 10, 5]) sphere(3);']
+      },
+      rotate: {
+        signature: 'rotate(a, v)',
+        description: 'Rotates objects. a can be [x, y, z] angles or single angle with v as axis vector.',
+        examples: ['rotate([0, 0, 45]) cube(10);', 'rotate(45, [0, 0, 1]) cube(10);']
+      },
+      union: {
+        signature: 'union()',
+        description: 'Combines multiple objects into one. This is the default operation.',
+        examples: ['union() { cube(10); translate([5, 5, 0]) sphere(5); }']
+      },
+      difference: {
+        signature: 'difference()',
+        description: 'Subtracts all subsequent objects from the first object.',
+        examples: ['difference() { cube(10); translate([5, 5, 5]) sphere(3); }']
+      },
+      intersection: {
+        signature: 'intersection()',
+        description: 'Keeps only the overlapping parts of all objects.',
+        examples: ['intersection() { cube(10); translate([5, 5, 5]) sphere(8); }']
+      }
+    };
+
+    const doc = builtinDocs[word];
+    if (!doc) return null;
+
+    const contents = [
+      { value: `\`\`\`openscad\n${doc.signature}\n\`\`\`` },
+      { value: doc.description }
+    ];
+
+    if (doc.examples) {
+      contents.push({
+        value: `**Examples:**\n\`\`\`openscad\n${doc.examples.join('\n')}\n\`\`\``
+      });
+    }
+
+    return { contents };
+  }
+
+  private async getUserDefinedHover(model: any, _position: any, word: string): Promise<any> {
+    if (!this.parser) return null;
+
+    try {
+      const code = model.getValue();
+      const ast = this.parser.parseAST(code);
+
+      if (!ast || !Array.isArray(ast)) return null;
+
+      const symbol = this.findSymbolDefinition(ast, word);
+      if (!symbol) return null;
+
+      const contents = [
+        { value: `\`\`\`openscad\n${symbol.type} ${symbol.name}\n\`\`\`` },
+        { value: `**Type:** ${symbol.type}  \n**Line:** ${symbol.line + 1}` }
+      ];
+
+      if (symbol.parameters) {
+        contents.push({
+          value: `**Parameters:** ${symbol.parameters.join(', ')}`
+        });
+      }
+
+      return { contents };
+    } catch (error) {
+      console.warn('[OpenSCADHoverProvider] Error in user hover:', error);
+      return null;
+    }
+  }
+
+  private findSymbolDefinition(nodes: any[], name: string): any {
+    for (const node of nodes) {
+      if ((node.type === 'module_definition' || node.type === 'function_definition') && node.name === name) {
+        return {
+          name: node.name,
+          type: node.type === 'module_definition' ? 'module' : 'function',
+          line: node.location?.start.line || 0,
+          parameters: node.parameters?.map((p: any) => p.name) || []
+        };
+      }
+
+      if (node.children && Array.isArray(node.children)) {
+        const found = this.findSymbolDefinition(node.children, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+}
+
+/**
+ * OpenSCAD definition provider for Monaco Editor
+ */
+class OpenSCADDefinitionProvider {
+  private parser: any = null;
+
+  constructor(parser?: any) {
+    this.parser = parser;
+  }
+
+  setParser(parser: any) {
+    this.parser = parser;
+  }
+
+  async provideDefinition(model: any, position: any): Promise<any> {
+    const wordInfo = model.getWordAtPosition(position);
+    if (!wordInfo || !this.parser) return null;
+
+    const word = wordInfo.word;
+
+    try {
+      const code = model.getValue();
+      const ast = this.parser.parseAST(code);
+
+      if (!ast || !Array.isArray(ast)) return null;
+
+      const definition = this.findSymbolDefinition(ast, word);
+      if (!definition) return null;
+
+      return {
+        uri: model.uri,
+        range: {
+          startLineNumber: definition.line + 1,
+          endLineNumber: definition.line + 1,
+          startColumn: 1,
+          endColumn: definition.name.length + 1
+        }
+      };
+    } catch (error) {
+      console.warn('[OpenSCADDefinitionProvider] Error finding definition:', error);
+      return null;
+    }
+  }
+
+  private findSymbolDefinition(nodes: any[], name: string): any {
+    for (const node of nodes) {
+      if ((node.type === 'module_definition' || node.type === 'function_definition') && node.name === name) {
+        return {
+          name: node.name,
+          type: node.type === 'module_definition' ? 'module' : 'function',
+          line: node.location?.start.line || 0,
+          parameters: node.parameters?.map((p: any) => p.name) || []
+        };
+      }
+
+      if (node.children && Array.isArray(node.children)) {
+        const found = this.findSymbolDefinition(node.children, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+}
+
+/**
+ * OpenSCAD reference provider for Monaco Editor
+ */
+class OpenSCADReferenceProvider {
+  private parser: any = null;
+
+  constructor(parser?: any) {
+    this.parser = parser;
+  }
+
+  setParser(parser: any) {
+    this.parser = parser;
+  }
+
+  async provideReferences(model: any, position: any, context: any): Promise<any[]> {
+    const wordInfo = model.getWordAtPosition(position);
+    if (!wordInfo || !this.parser) return [];
+
+    const word = wordInfo.word;
+
+    try {
+      const code = model.getValue();
+      const ast = this.parser.parseAST(code);
+
+      if (!ast || !Array.isArray(ast)) return [];
+
+      const references = this.findSymbolReferences(ast, word, code);
+
+      // Include definition if requested
+      if (context.includeDeclaration) {
+        const definition = this.findSymbolDefinition(ast, word);
+        if (definition) {
+          references.unshift({
+            uri: model.uri,
+            range: {
+              startLineNumber: definition.line + 1,
+              endLineNumber: definition.line + 1,
+              startColumn: 1,
+              endColumn: definition.name.length + 1
+            }
+          });
+        }
+      }
+
+      return references;
+    } catch (error) {
+      console.warn('[OpenSCADReferenceProvider] Error finding references:', error);
+      return [];
+    }
+  }
+
+  private findSymbolReferences(_ast: any[], symbolName: string, code: string): any[] {
+    const references: any[] = [];
+    const lines = code.split('\n');
+
+    // Simple text-based search for references
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
+      if (!line) continue;
+
+      const regex = new RegExp(`\\b${this.escapeRegex(symbolName)}\\b`, 'g');
+      let match;
+
+      while ((match = regex.exec(line)) !== null) {
+        const startColumn = match.index + 1;
+        const endColumn = startColumn + symbolName.length;
+
+        references.push({
+          uri: undefined, // Will be set by Monaco
+          range: {
+            startLineNumber: lineIndex + 1,
+            endLineNumber: lineIndex + 1,
+            startColumn,
+            endColumn
+          }
+        });
+      }
+    }
+
+    return references;
+  }
+
+  private findSymbolDefinition(nodes: any[], name: string): any {
+    for (const node of nodes) {
+      if ((node.type === 'module_definition' || node.type === 'function_definition') && node.name === name) {
+        return {
+          name: node.name,
+          type: node.type === 'module_definition' ? 'module' : 'function',
+          line: node.location?.start.line || 0
+        };
+      }
+
+      if (node.children && Array.isArray(node.children)) {
+        const found = this.findSymbolDefinition(node.children, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  private escapeRegex(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+}
+
+/**
+ * OpenSCAD document symbol provider for Monaco Editor
+ */
+class OpenSCADDocumentSymbolProvider {
+  private parser: any = null;
+
+  constructor(parser?: any) {
+    this.parser = parser;
+  }
+
+  setParser(parser: any) {
+    this.parser = parser;
+  }
+
+  async provideDocumentSymbols(model: any): Promise<any[]> {
+    if (!this.parser) return [];
+
+    try {
+      const code = model.getValue();
+      const ast = this.parser.parseAST(code);
+
+      if (!ast || !Array.isArray(ast)) return [];
+
+      return this.extractSymbolsFromAST(ast);
+    } catch (error) {
+      console.warn('[OpenSCADDocumentSymbolProvider] Error extracting symbols:', error);
+      return [];
+    }
+  }
+
+  private extractSymbolsFromAST(nodes: any[]): any[] {
+    const symbols: any[] = [];
+
+    for (const node of nodes) {
+      if (node.type === 'module_definition' && node.name) {
+        symbols.push({
+          name: node.name,
+          detail: 'module',
+          kind: 5, // SymbolKind.Class
+          range: {
+            startLineNumber: (node.location?.start.line || 0) + 1,
+            endLineNumber: (node.location?.end.line || 0) + 1,
+            startColumn: (node.location?.start.column || 0) + 1,
+            endColumn: (node.location?.end.column || 0) + 1
+          },
+          selectionRange: {
+            startLineNumber: (node.location?.start.line || 0) + 1,
+            endLineNumber: (node.location?.start.line || 0) + 1,
+            startColumn: (node.location?.start.column || 0) + 1,
+            endColumn: (node.location?.start.column || 0) + node.name.length + 1
+          }
+        });
+      } else if (node.type === 'function_definition' && node.name) {
+        symbols.push({
+          name: node.name,
+          detail: 'function',
+          kind: 12, // SymbolKind.Function
+          range: {
+            startLineNumber: (node.location?.start.line || 0) + 1,
+            endLineNumber: (node.location?.end.line || 0) + 1,
+            startColumn: (node.location?.start.column || 0) + 1,
+            endColumn: (node.location?.end.column || 0) + 1
+          },
+          selectionRange: {
+            startLineNumber: (node.location?.start.line || 0) + 1,
+            endLineNumber: (node.location?.start.line || 0) + 1,
+            startColumn: (node.location?.start.column || 0) + 1,
+            endColumn: (node.location?.start.column || 0) + node.name.length + 1
+          }
+        });
+      }
+
+      // Recursively process child nodes
+      if (node.children && Array.isArray(node.children)) {
+        const childSymbols = this.extractSymbolsFromAST(node.children);
+        symbols.push(...childSymbols);
+      }
+    }
+
+    return symbols;
+  }
+}
+
+/**
+ * Register OpenSCAD language with Monaco Editor and IDE features
+ */
+const registerOpenSCADLanguage = (monaco: any, parser?: any) => {
   const LANGUAGE_ID = 'openscad';
   const THEME_ID = 'openscad-dark';
 
@@ -372,9 +953,37 @@ const registerOpenSCADLanguage = (monaco: any) => {
   // Define and set the theme
   monaco.editor.defineTheme(THEME_ID, openscadTheme);
 
-  console.log('[CodeEditor] OpenSCAD language registered successfully');
+  // Register completion provider
+  const completionProvider = new OpenSCADCompletionProvider(parser);
+  monaco.languages.registerCompletionItemProvider(LANGUAGE_ID, completionProvider);
 
-  return { LANGUAGE_ID, THEME_ID };
+  // Register hover provider
+  const hoverProvider = new OpenSCADHoverProvider(parser);
+  monaco.languages.registerHoverProvider(LANGUAGE_ID, hoverProvider);
+
+  // Register definition provider (go-to-definition)
+  const definitionProvider = new OpenSCADDefinitionProvider(parser);
+  monaco.languages.registerDefinitionProvider(LANGUAGE_ID, definitionProvider);
+
+  // Register reference provider (find all references)
+  const referenceProvider = new OpenSCADReferenceProvider(parser);
+  monaco.languages.registerReferenceProvider(LANGUAGE_ID, referenceProvider);
+
+  // Register document symbol provider (outline/symbol search)
+  const documentSymbolProvider = new OpenSCADDocumentSymbolProvider(parser);
+  monaco.languages.registerDocumentSymbolProvider(LANGUAGE_ID, documentSymbolProvider);
+
+  console.log('[CodeEditor] OpenSCAD language and advanced IDE features registered successfully');
+
+  return {
+    LANGUAGE_ID,
+    THEME_ID,
+    completionProvider,
+    hoverProvider,
+    definitionProvider,
+    referenceProvider,
+    documentSymbolProvider
+  };
 };
 
 // ============================================================================
@@ -511,6 +1120,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
       };
     } catch (error) {
       console.error('[MonacoEditor] Failed to create editor:', error);
+      return;
     }
   }, [isMonacoLoaded, value, language, theme, onChange, onMount, options]);
 
@@ -553,57 +1163,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
  * OpenSCAD syntax highlighting configuration
  * Based on the OpenSCAD language specification and @holistic-stack/openscad-editor
  */
-const OPENSCAD_KEYWORDS = [
-  // Control structures
-  'if', 'else', 'for', 'let', 'each',
-  // Modules and functions
-  'module', 'function', 'use', 'include',
-  // Built-in modules
-  'cube', 'sphere', 'cylinder', 'polyhedron', 'polygon', 'circle', 'square', 'text',
-  // Transformations
-  'translate', 'rotate', 'scale', 'resize', 'mirror', 'multmatrix',
-  // CSG operations
-  'union', 'difference', 'intersection', 'hull', 'minkowski',
-  // 2D to 3D
-  'linear_extrude', 'rotate_extrude', 'offset',
-  // Special variables
-  '$fa', '$fs', '$fn', '$t', '$vpr', '$vpt', '$vpd', '$children',
-  // Built-in functions
-  'abs', 'acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cross', 'exp', 'floor',
-  'ln', 'log', 'max', 'min', 'norm', 'pow', 'rands', 'round', 'sign', 'sin', 'sqrt', 'tan',
-  'concat', 'len', 'str', 'chr', 'ord', 'search', 'lookup',
-  // Constants
-  'true', 'false', 'undef', 'PI'
-];
-
-const OPENSCAD_OPERATORS = [
-  '+', '-', '*', '/', '%', '^', '!', '&&', '||', '==', '!=', '<', '>', '<=', '>='
-];
-
-/**
- * Syntax highlighting for OpenSCAD code
- */
-const highlightOpenSCADSyntax = (code: string): string => {
-  let highlighted = code;
-
-  // Highlight keywords
-  OPENSCAD_KEYWORDS.forEach(keyword => {
-    const regex = new RegExp(`\\b${keyword}\\b`, 'g');
-    highlighted = highlighted.replace(regex, `<span class="text-blue-400 font-semibold">${keyword}</span>`);
-  });
-
-  // Highlight comments
-  highlighted = highlighted.replace(/(\/\/.*$)/gm, '<span class="text-green-400 italic">$1</span>');
-  highlighted = highlighted.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="text-green-400 italic">$1</span>');
-
-  // Highlight strings
-  highlighted = highlighted.replace(/"([^"\\]|\\.)*"/g, '<span class="text-yellow-400">"$1"</span>');
-
-  // Highlight numbers
-  highlighted = highlighted.replace(/\b\d+\.?\d*\b/g, '<span class="text-purple-400">$&</span>');
-
-  return highlighted;
-};
+// Legacy syntax highlighting - replaced by Monaco Editor tokenization
 
 // ============================================================================
 // Error Display Component
@@ -624,14 +1184,15 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ errors, onErrorClick }) => 
           {errors.length} error{errors.length !== 1 ? 's' : ''}
         </div>
         {errors.slice(0, 3).map((error, index) => (
-          <div
+          <button
             key={index}
-            className="text-red-300 text-xs cursor-pointer hover:text-red-200 transition-colors"
+            type="button"
+            className="text-red-300 text-xs cursor-pointer hover:text-red-200 transition-colors text-left bg-transparent border-none p-0"
             onClick={() => onErrorClick?.(error)}
             title={`Line ${error.line}, Column ${error.column}`}
           >
             {error.message}
-          </div>
+          </button>
         ))}
         {errors.length > 3 && (
           <div className="text-red-400/60 text-xs">
@@ -706,7 +1267,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       theme = 'dark',
       showLineNumbers = true,
       readOnly = false,
-      placeholder = 'Enter your OpenSCAD code here...',
+      placeholder: _placeholder = 'Enter your OpenSCAD code here...',
       onSave,
       onFormat,
       onASTChange,
@@ -714,8 +1275,8 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       enableASTParsing = true,
       showSyntaxErrors = true,
       enableCodeCompletion = false,
-      glassConfig,
-      overLight = false,
+      glassConfig: _glassConfig,
+      overLight: _overLight = false,
       className,
       'data-testid': dataTestId,
       'aria-label': ariaLabel,
@@ -728,7 +1289,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
     const [isParserLoading, setIsParserLoading] = useState(false);
     const [parser, setParser] = useState<any>(null);
     const [monacoEditor, setMonacoEditor] = useState<any>(null);
-    const [monaco, setMonaco] = useState<any>(null);
+    const [, setMonaco] = useState<any>(null);
 
     // ========================================================================
     // OpenSCAD Parser Integration
@@ -746,10 +1307,17 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
             const errorHandler = new SimpleErrorHandler();
             const openscadParser = new EnhancedOpenscadParser(errorHandler);
 
-            await openscadParser.init();
-            setParser(openscadParser);
-            setIsParserLoading(false);
-            console.log('[CodeEditor] OpenSCAD Parser loaded successfully');
+            try {
+              await openscadParser.init();
+              setParser(openscadParser);
+              setIsParserLoading(false);
+              console.log('[CodeEditor] OpenSCAD Parser loaded successfully');
+            } catch (initError) {
+              console.error('[CodeEditor] Failed to initialize OpenSCAD Parser:', initError);
+              setIsParserLoading(false);
+              // Still set the parser even if init fails - it might work for basic parsing
+              setParser(openscadParser);
+            }
           })
           .catch((error) => {
             console.error('[CodeEditor] Failed to load OpenSCAD Parser:', error);
@@ -772,35 +1340,51 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       }
 
       try {
+        // Clear previous errors before parsing (if methods exist)
+        const errorHandler = parser.getErrorHandler();
+        if (typeof errorHandler.clearErrors === 'function') {
+          errorHandler.clearErrors();
+        }
+        if (typeof errorHandler.clearWarnings === 'function') {
+          errorHandler.clearWarnings();
+        }
+
         // Parse the code to AST
         const ast = parser.parseAST(code);
 
         // Get parsing errors from the error handler
-        const errorHandler = parser.getErrorHandler();
         const errors = errorHandler.getErrors();
         const warnings = errorHandler.getWarnings();
 
-        // Convert to our error format
+        // Enhanced error parsing with line/column extraction
         const parseErrors = [
-          ...errors.map((error: string) => ({
-            message: error,
-            line: 1, // TODO: Extract line number from error message
-            column: 1, // TODO: Extract column number from error message
-            severity: 'error' as const,
-          })),
-          ...warnings.map((warning: string) => ({
-            message: warning,
-            line: 1, // TODO: Extract line number from warning message
-            column: 1, // TODO: Extract column number from warning message
-            severity: 'warning' as const,
-          })),
+          ...(errors ?? []).map((error: string) => parseErrorMessage(error, 'error')),
+          ...(warnings ?? []).map((warning: string) => parseErrorMessage(warning, 'warning')),
         ];
+
+        // Filter out CST generation warnings for empty/simple code
+        const filteredErrors = parseErrors.filter(error => {
+          // Don't show CST warnings for very simple or empty code
+          if (error.severity === 'warning' &&
+              error.message.includes('Failed to generate CST')) {
+            // Only show CST warnings for complex code that should parse correctly
+            const isComplexCode = code.trim().length > 20 &&
+                                 (code.includes('module') || code.includes('function') ||
+                                  code.includes('{') || code.includes('for') || code.includes('if'));
+            return isComplexCode;
+          }
+          return true;
+        });
+
+        // Determine success based on actual errors (not warnings)
+        const actualErrors = filteredErrors.filter(e => e.severity === 'error');
+        const hasValidAST = Array.isArray(ast) && ast.length > 0;
 
         // Create parse result
         const result: ParseResult = {
-          success: errors.length === 0,
-          errors: parseErrors,
-          ast: ast
+          success: actualErrors.length === 0 && (hasValidAST || code.trim().length === 0),
+          errors: filteredErrors,
+          ast: ast ?? []
         };
 
         setParseResult(result);
@@ -815,8 +1399,9 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
 
         console.log('[CodeEditor] Parse result:', {
           success: result.success,
-          errors: result.errors.length,
-          astNodes: result.ast?.length || 0
+          errors: actualErrors.length,
+          warnings: filteredErrors.filter(e => e.severity === 'warning').length,
+          astNodes: result.ast?.length ?? 0
         });
 
       } catch (error) {
@@ -839,11 +1424,33 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       }
     }, [parser, language, enableASTParsing, onASTChange, onParseErrors]);
 
+    // Helper function to parse error messages and extract line/column info
+    const parseErrorMessage = useCallback((message: string, severity: 'error' | 'warning') => {
+      // Try to extract line and column from error message
+      // Common patterns: "line 5, column 10", "5:10", "(5,10)", etc.
+      const lineColMatch = message.match(/(?:line\s+)?(\d+)(?:\s*[,:]\s*(?:column\s+)?(\d+))?/i);
+
+      let line = 1;
+      let column = 1;
+
+      if (lineColMatch) {
+        line = parseInt(lineColMatch[1] ?? '1', 10) || 1;
+        column = parseInt(lineColMatch[2] ?? '1', 10) || 1;
+      }
+
+      return {
+        message,
+        line,
+        column,
+        severity,
+      };
+    }, []);
+
     // Parse code when value changes (debounced)
     useEffect(() => {
       if (language === 'openscad' && enableASTParsing && value.trim() && parser) {
         const timeoutId = setTimeout(() => {
-          parseOpenSCADCode(value);
+          void parseOpenSCADCode(value);
         }, 500); // 500ms debounce
 
         return () => clearTimeout(timeoutId);
@@ -851,36 +1458,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       return undefined;
     }, [value, parseOpenSCADCode, language, enableASTParsing, parser]);
 
-    // Create feature configuration for OpenSCAD Editor
-    const createFeatureConfig = useCallback((preset: FeaturePreset = 'IDE'): OpenscadEditorFeatures => {
-      const configs = {
-        BASIC: {
-          core: { syntaxHighlighting: true, basicCompletion: true, bracketMatching: true, commentCommands: true },
-          parser: { realTimeValidation: false, astGeneration: false, errorReporting: true, symbolExtraction: false },
-          ide: { outline: false, hover: false, gotoDefinition: false, findReferences: false, documentSymbols: false, workspaceSymbols: false, codeActions: false, rename: false },
-          advanced: { semanticHighlighting: false, advancedCompletion: false, parameterHints: false, signatureHelp: false, codeLens: false, inlayHints: false, foldingRanges: false, documentFormatting: false, rangeFormatting: false }
-        },
-        STANDARD: {
-          core: { syntaxHighlighting: true, basicCompletion: true, bracketMatching: true, commentCommands: true },
-          parser: { realTimeValidation: true, astGeneration: true, errorReporting: true, symbolExtraction: true },
-          ide: { outline: true, hover: false, gotoDefinition: false, findReferences: false, documentSymbols: true, workspaceSymbols: false, codeActions: false, rename: false },
-          advanced: { semanticHighlighting: false, advancedCompletion: true, parameterHints: false, signatureHelp: false, codeLens: false, inlayHints: false, foldingRanges: true, documentFormatting: true, rangeFormatting: false }
-        },
-        IDE: {
-          core: { syntaxHighlighting: true, basicCompletion: true, bracketMatching: true, commentCommands: true },
-          parser: { realTimeValidation: true, astGeneration: true, errorReporting: true, symbolExtraction: true },
-          ide: { outline: true, hover: true, gotoDefinition: true, findReferences: true, documentSymbols: true, workspaceSymbols: true, codeActions: true, rename: false },
-          advanced: { semanticHighlighting: true, advancedCompletion: true, parameterHints: true, signatureHelp: true, codeLens: false, inlayHints: false, foldingRanges: true, documentFormatting: true, rangeFormatting: true }
-        },
-        FULL: {
-          core: { syntaxHighlighting: true, basicCompletion: true, bracketMatching: true, commentCommands: true },
-          parser: { realTimeValidation: true, astGeneration: true, errorReporting: true, symbolExtraction: true },
-          ide: { outline: true, hover: true, gotoDefinition: true, findReferences: true, documentSymbols: true, workspaceSymbols: true, codeActions: true, rename: true },
-          advanced: { semanticHighlighting: true, advancedCompletion: true, parameterHints: true, signatureHelp: true, codeLens: true, inlayHints: true, foldingRanges: true, documentFormatting: true, rangeFormatting: true }
-        }
-      };
-      return configs[preset];
-    }, []);
+    // Feature configuration for OpenSCAD Editor (for future use)
 
     // ========================================================================
     // Monaco Editor Integration
@@ -894,8 +1472,25 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       // Configure OpenSCAD language support
       if (language === 'openscad') {
         try {
-          // Register comprehensive OpenSCAD language support
-          const { LANGUAGE_ID, THEME_ID } = registerOpenSCADLanguage(monacoInstance);
+          // Register comprehensive OpenSCAD language support with IDE features
+          const {
+            LANGUAGE_ID,
+            THEME_ID,
+            completionProvider,
+            hoverProvider,
+            definitionProvider,
+            referenceProvider,
+            documentSymbolProvider
+          } = registerOpenSCADLanguage(monacoInstance, parser);
+
+          // Update providers with parser when available
+          if (parser) {
+            completionProvider.setParser(parser);
+            hoverProvider.setParser(parser);
+            definitionProvider.setParser(parser);
+            referenceProvider.setParser(parser);
+            documentSymbolProvider.setParser(parser);
+          }
 
           // Ensure the model has the correct language
           const model = editor.getModel();
@@ -907,7 +1502,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
           // Apply OpenSCAD theme
           try {
             monacoInstance.editor.setTheme(THEME_ID);
-            console.log('[CodeEditor] OpenSCAD theme applied');
+            console.log('[CodeEditor] OpenSCAD theme and advanced IDE features applied');
           } catch (themeError) {
             console.warn('[CodeEditor] Failed to apply OpenSCAD theme:', themeError);
           }
