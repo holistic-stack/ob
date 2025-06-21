@@ -9,6 +9,7 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
 // Core Configuration Types
@@ -435,6 +436,12 @@ export interface BabylonRendererProps extends Omit<React.HTMLAttributes<HTMLElem
   readonly onSceneChange?: (scene: BABYLON.Scene) => void;
   readonly onMeshSelect?: (mesh: BABYLON.AbstractMesh) => void;
   readonly onDebugExport?: (report: DebugReport) => void;
+
+  // OpenSCAD AST integration props
+  readonly astData?: readonly ASTNode[];
+  readonly onASTProcessingStart?: () => void;
+  readonly onASTProcessingComplete?: (meshes: readonly BABYLON.AbstractMesh[]) => void;
+  readonly onASTProcessingError?: (error: string) => void;
   readonly onEngineReady?: (engine: BABYLON.Engine) => void;
   readonly onSceneReady?: (scene: BABYLON.Scene) => void;
   readonly onError?: (error: Error) => void;

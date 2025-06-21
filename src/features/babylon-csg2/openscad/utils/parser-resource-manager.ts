@@ -138,7 +138,8 @@ export class ParserResourceManager {
    */
   async withParser<T>(
     operation: (parser: EnhancedOpenscadParser) => Promise<Result<T, string>>
-  ): Promise<Result<T, string>> {    // Initialize parser
+  ): Promise<Result<T, string>> {
+    // Initialize parser
     const initResult = await this.initializeParser();
     if (!initResult.success) {
       return initResult as Result<T, string>;

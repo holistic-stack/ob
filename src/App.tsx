@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
 import {
   MonacoCodeEditor,
   VisualizationPanel,
+  type VisualizationMode
 } from './features/ui-components/editor';
-import type {
-  VisualizationMode
-} from './features/ui-components/editor';
+import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
+import { PerformanceDebugPanel } from './features/ui-components/shared/performance/performance-debug-panel';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
 
-// Types for AST and parse errors
+// Types for parse errors
 interface ParseError {
   readonly message: string;
   readonly line: number;
@@ -16,72 +17,20 @@ interface ParseError {
   readonly severity: 'error' | 'warning';
 }
 
-interface ASTNode {
-  readonly type: string;
-  readonly [key: string]: unknown;
-}
+// Default OpenSCAD code example - simplified for better performance
+const defaultCode = `// Simple 3D Shapes Demo
+// Basic OpenSCAD shapes to get started
 
-// Default OpenSCAD code example
-const defaultCode = `// Arduino Case Design
-// A parametric case for Arduino Uno with mounting posts and cutouts
+// Create a cube
+cube([10, 10, 10]);
 
-// Parameters
-case_width = 60;
-case_length = 40;
-case_height = 15;
-wall_thickness = 2;
-corner_radius = 3;
+// Create a sphere next to it
+translate([15, 0, 0])
+  sphere(5);
 
-// Main case module
-module arduino_case() {
-  difference() {
-    // Main case body with rounded corners
-    hull() {
-      for(x = [corner_radius, case_width - corner_radius]) {
-        for(y = [corner_radius, case_length - corner_radius]) {
-          translate([x, y, 0])
-            cylinder(h = case_height, r = corner_radius);
-        }
-      }
-    }
-
-    // Internal cavity
-    translate([wall_thickness, wall_thickness, wall_thickness])
-      hull() {
-        for(x = [corner_radius, case_width - 2*wall_thickness - corner_radius]) {
-          for(y = [corner_radius, case_length - 2*wall_thickness - corner_radius]) {
-            translate([x, y, 0])
-              cylinder(h = case_height, r = corner_radius);
-          }
-        }
-      }
-
-    // USB port cutout
-    translate([case_width - wall_thickness - 1, case_length/2 - 6, wall_thickness + 2])
-      cube([wall_thickness + 2, 12, 8]);
-
-    // Power jack cutout
-    translate([-1, case_length/2 + 8, wall_thickness + 3])
-      cube([wall_thickness + 2, 8, 6]);
-
-    // Reset button access
-    translate([case_width/2 - 1, -1, case_height - 2])
-      cube([2, wall_thickness + 2, 3]);
-  }
-
-  // Mounting posts for Arduino
-  post_positions = [
-    [14, 2.5], [14, 35.5], [66, 7.5], [66, 35.5]
-  ];
-
-  for(pos = post_positions) {
-    translate([pos[0], pos[1], wall_thickness])
-      cylinder(h = 8, r = 1.5);
-  }
-}
-
-// Generate the case
-arduino_case();`;
+// Create a cylinder
+translate([0, 15, 0])
+  cylinder(h = 10, r = 3);`;
 
 /**
  * Modern App component with OpenSCAD Editor
@@ -91,45 +40,100 @@ export function App(): React.JSX.Element {
   const [visualizationMode] = useState<VisualizationMode>('solid');
   const [ast, setAst] = useState<ASTNode[]>([]);
   const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
+  const [isEditorExpanded, setIsEditorExpanded] = useState(true);
 
-  const handleCodeChange = (newCode: string) => {
+  const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
     console.log('[App] Code changed, length:', newCode.length);
-  };
+  }, []);
 
-  const handleASTChange = (newAst: ASTNode[]) => {
+  const handleASTChange = useCallback((newAst: ASTNode[]) => {
     setAst(newAst);
     console.log('[App] AST updated:', newAst);
-  };
+  }, []);
 
-  const handleParseErrors = (errors: ParseError[]) => {
+  const handleParseErrors = useCallback((errors: ParseError[]) => {
     setParseErrors(errors);
     console.log('[App] Parse errors:', errors);
-  };
+  }, []);
 
-  const handleViewChange = (action: string) => {
+  const handleViewChange = useCallback((action: string) => {
     console.log('3D view action:', action);
-  };
+  }, []);
 
-  const handleModelClick = (point: { x: number; y: number; z: number }) => {
+  const handleModelClick = useCallback((point: { x: number; y: number; z: number }) => {
     console.log('Model clicked at:', point);
-  };
+  }, []);
+
+  const toggleEditor = useCallback(() => {
+    setIsEditorExpanded(prev => !prev);
+  }, []);
+
+  // Keyboard shortcut for toggling editor (Ctrl/Cmd + E)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        event.preventDefault();
+        toggleEditor();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleEditor]);
+
+  // Memoize Monaco editor options to prevent unnecessary re-renders
+  const monacoOptions = useMemo(() => ({
+    fontSize: 14,
+    lineNumbers: 'on' as const,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    wordWrap: 'on' as const,
+    automaticLayout: true,
+    folding: true,
+    glyphMargin: true,
+    lineDecorationsWidth: 20,
+    lineNumbersMinChars: 3,
+    tabSize: 2,
+    insertSpaces: true
+  }), []);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900">
-      <_ErrorBoundary
-        fallback={
-          <div className="flex items-center justify-center h-screen bg-red-900 text-white">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-              <p>Please refresh the page to try again.</p>
-            </div>
-          </div>
-        }
+    <div className="h-screen w-screen overflow-hidden relative">
+      <OpenSCADErrorBoundary
+        enableRecovery={true}
+        showTechnicalDetails={true}
+        onError={(error, errorInfo) => {
+          console.error('[App] Error caught by boundary:', error, errorInfo);
+        }}
+        className="h-full w-full"
       >
-        <div className="h-full flex p-4 gap-4">
-          {/* Monaco Code Editor with OpenSCAD Syntax Highlighting */}
-          <div className="flex-1">
+        {/* Full-screen 3D Visualization Panel (Background) */}
+        <div className={`absolute inset-0 z-0 transition-all duration-300 ${
+          isEditorExpanded ? 'brightness-75' : 'brightness-100'
+        }`}>
+          <VisualizationPanel
+            astData={ast}
+            parseErrors={parseErrors}
+            mode={visualizationMode}
+            width="100%"
+            height="100%"
+            showControls
+            onViewChange={handleViewChange}
+            onModelClick={handleModelClick}
+            aria-label="3D Model Visualization"
+          />
+        </div>
+
+        {/* Monaco Code Editor Drawer (Overlay) */}
+        <div
+          className={`absolute top-0 left-0 z-10 h-full transition-all duration-300 ease-in-out ${
+            isEditorExpanded ? 'translate-x-0' : '-translate-x-full'
+          } ${
+            isEditorExpanded ? 'w-full md:w-3/4 lg:w-1/2' : 'w-0'
+          }`}
+        >
+          <div className="h-full w-full relative">
             <MonacoCodeEditor
               value={code}
               onChange={handleCodeChange}
@@ -140,37 +144,47 @@ export function App(): React.JSX.Element {
               enableASTParsing
               onASTChange={handleASTChange}
               onParseErrors={handleParseErrors}
-              options={{
-                fontSize: 14,
-                lineNumbers: 'on',
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                wordWrap: 'on',
-                automaticLayout: true,
-                folding: true,
-                glyphMargin: true,
-                lineDecorationsWidth: 20,
-                lineNumbersMinChars: 3,
-                tabSize: 2,
-                insertSpaces: true
-              }}
-            />
-          </div>
-
-          {/* 3D Visualization Panel */}
-          <div className="w-96">
-            <VisualizationPanel
-              mode={visualizationMode}
-              width={384}
-              height={600}
-              showControls
-              onViewChange={handleViewChange}
-              onModelClick={handleModelClick}
-              aria-label="3D Model Visualization"
+              options={monacoOptions}
             />
           </div>
         </div>
-      </_ErrorBoundary>
+
+        {/* Drawer Toggle Button */}
+        <button
+          onClick={toggleEditor}
+          className={`fixed top-4 z-20 transition-all duration-300 ease-in-out ${
+            isEditorExpanded
+              ? 'left-[calc(100%-3rem)] md:left-[calc(75%-3rem)] lg:left-[calc(50%-3rem)]'
+              : 'left-4'
+          }`}
+          aria-label={isEditorExpanded ? 'Collapse Code Editor (Ctrl+E)' : 'Expand Code Editor (Ctrl+E)'}
+          title={isEditorExpanded ? 'Collapse Code Editor (Ctrl+E)' : 'Expand Code Editor (Ctrl+E)'}
+        >
+          <div className="bg-black/80 backdrop-blur-sm border border-white/30 rounded-lg p-3 hover:bg-black/90 transition-colors">
+            <div className="w-6 h-6 text-white flex items-center justify-center">
+              {isEditorExpanded ? (
+                // Collapse icon (chevron left)
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+              ) : (
+                // Expand icon (code)
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                  <polyline points="16,18 22,12 16,6" />
+                  <polyline points="8,6 2,12 8,18" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </button>
+
+        {/* Performance Debug Panel (development only) */}
+        <PerformanceDebugPanel
+          enabled={process.env.NODE_ENV === 'development'}
+          position="top-right"
+          maxMetrics={15}
+        />
+      </OpenSCADErrorBoundary>
     </div>
   );
 }

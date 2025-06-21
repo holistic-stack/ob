@@ -5,15 +5,18 @@
  * Supports different visualization modes, loading states, and view controls.
  */
 
-import React, { forwardRef, useRef, useEffect } from 'react';
+import React, { forwardRef } from 'react';
 import {
   clsx,
-  generateGlassClasses,
   generateAccessibleStyles,
   type BaseComponentProps,
   type AriaProps,
   type GlassConfig,
 } from '../../shared';
+import { BabylonRenderer } from '../../../babylon-renderer/components/babylon-renderer/babylon-renderer';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { ParseError } from '../code-editor/openscad-ast-service';
+import { OpenSCADErrorBoundary } from '../../shared/error-boundary/openscad-error-boundary';
 
 // ============================================================================
 // Types and Interfaces
@@ -43,42 +46,51 @@ export type ViewAction = 'reset' | 'zoom-in' | 'zoom-out' | 'rotate-left' | 'rot
  * Props for the VisualizationPanel component
  */
 export interface VisualizationPanelProps extends BaseComponentProps, AriaProps {
-  /** 3D model data to visualize */
+  /** 3D model data to visualize (legacy) */
   readonly modelData?: ModelData;
-  
+
+  /** AST data from OpenSCAD parsing */
+  readonly astData?: readonly ASTNode[];
+
+  /** Parse errors from OpenSCAD parsing */
+  readonly parseErrors?: readonly ParseError[];
+
+  /** Whether AST parsing is in progress */
+  readonly isParsing?: boolean;
+
   /** Visualization mode */
   readonly mode?: VisualizationMode;
-  
+
   /** Whether the panel is in loading state */
   readonly loading?: boolean;
-  
+
   /** Error message to display */
   readonly error?: string;
-  
+
   /** Whether to show view controls */
   readonly showControls?: boolean;
-  
+
   /** Width of the visualization panel */
-  readonly width?: number;
-  
+  readonly width?: number | string;
+
   /** Height of the visualization panel */
-  readonly height?: number;
-  
+  readonly height?: number | string;
+
   /** Callback when view changes */
   readonly onViewChange?: (action: ViewAction) => void;
-  
+
   /** Callback when model is clicked */
   readonly onModelClick?: (point: { x: number; y: number; z: number }) => void;
-  
+
   /** Glass morphism configuration */
   readonly glassConfig?: Partial<GlassConfig>;
-  
+
   /** Whether the panel is over a light background */
   readonly overLight?: boolean;
-  
+
   /** Custom CSS class name */
   readonly className?: string;
-  
+
   /** Test ID for testing */
   readonly 'data-testid'?: string;
 }
@@ -173,79 +185,61 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onViewChange }) => (
 );
 
 // ============================================================================
-// 3D Canvas Component
+// Babylon 3D Renderer Component
 // ============================================================================
 
-interface CanvasProps {
-  readonly modelData: ModelData;
+interface BabylonRendererWrapperProps {
+  readonly astData?: readonly ASTNode[];
   readonly mode: VisualizationMode;
-  readonly onModelClick?: (point: { x: number; y: number; z: number }) => void;
+  readonly onModelClick?: ((point: { x: number; y: number; z: number }) => void) | undefined;
 }
 
-const Canvas3D: React.FC<CanvasProps> = ({ modelData, mode, onModelClick }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  useEffect(() => {
-    // This would integrate with a 3D rendering library like Three.js or Babylon.js
-    // For now, we'll show a placeholder
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw placeholder 3D object (cube wireframe)
-    ctx.strokeStyle = '#60a5fa';
-    ctx.lineWidth = 2;
-    
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const size = 80;
-    
-    // Draw cube wireframe
-    ctx.beginPath();
-    ctx.rect(centerX - size/2, centerY - size/2, size, size);
-    ctx.rect(centerX - size/2 + 20, centerY - size/2 + 20, size, size);
-    
-    // Connect corners
-    ctx.moveTo(centerX - size/2, centerY - size/2);
-    ctx.lineTo(centerX - size/2 + 20, centerY - size/2 + 20);
-    ctx.moveTo(centerX + size/2, centerY - size/2);
-    ctx.lineTo(centerX + size/2 + 20, centerY - size/2 + 20);
-    ctx.moveTo(centerX - size/2, centerY + size/2);
-    ctx.lineTo(centerX - size/2 + 20, centerY + size/2 + 20);
-    ctx.moveTo(centerX + size/2, centerY + size/2);
-    ctx.lineTo(centerX + size/2 + 20, centerY + size/2 + 20);
-    
-    ctx.stroke();
-  }, [modelData, mode]);
-  
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onModelClick) return;
-    
-    const canvas = event.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    // Convert to 3D coordinates (simplified)
-    onModelClick({ x, y, z: 0 });
-  };
-  
+const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
+  astData,
+  mode,
+  onModelClick
+}) => {
   return (
-    <canvas
-      ref={canvasRef}
-      width={400}
-      height={300}
-      className="w-full h-full cursor-pointer"
-      onClick={handleCanvasClick}
-      role="img"
-      aria-label="3D visualization canvas"
-    />
+    <div className="w-full h-full">
+      <OpenSCADErrorBoundary
+        enableRecovery={true}
+        showTechnicalDetails={false}
+        onError={(error, errorInfo) => {
+          console.error('[VisualizationPanel] 3D rendering error:', error, errorInfo);
+        }}
+        className="w-full h-full"
+      >
+        <BabylonRenderer
+          layout="flex"
+          responsive={true}
+          showSceneControls={false}
+          showMeshDisplay={false}
+          showDebugPanel={false}
+          astData={astData ?? []}
+          onMeshSelect={(mesh) => {
+            // Convert Babylon.js mesh selection to 3D point
+            if (onModelClick && mesh) {
+              const position = mesh.position;
+              onModelClick({
+                x: position.x,
+                y: position.y,
+                z: position.z
+              });
+            }
+          }}
+          onASTProcessingStart={() => {
+            console.log('[VisualizationPanel] AST processing started');
+          }}
+          onASTProcessingComplete={(meshes) => {
+            console.log('[VisualizationPanel] AST processing completed with', meshes.length, 'meshes');
+          }}
+          onASTProcessingError={(error) => {
+            console.error('[VisualizationPanel] AST processing error:', error);
+          }}
+          aria-label="3D OpenSCAD Visualization"
+        />
+      </OpenSCADErrorBoundary>
+    </div>
   );
 };
 
@@ -270,6 +264,9 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
   (
     {
       modelData,
+      astData,
+      parseErrors,
+      isParsing = false,
       mode = 'solid',
       loading = false,
       error,
@@ -290,26 +287,32 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
     // ========================================================================
     // Style Generation
     // ========================================================================
-    
-    const glassClasses = generateGlassClasses(glassConfig || {}, overLight);
-    
+
     const panelClasses = generateAccessibleStyles(
       clsx(
         // Base panel styles
         'relative overflow-hidden',
-        
-        // Glass morphism effects
-        'bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg',
-        'shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]',
-        
-        // Gradient pseudo-elements
-        'before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none',
-        'after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none',
-        
+
+        // Glass morphism effects - only apply if not full screen
+        typeof width === 'string' && width === '100%'
+          ? 'bg-transparent'
+          : 'bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]',
+
+        // Gradient pseudo-elements - only for non-fullscreen
+        typeof width === 'string' && width === '100%'
+          ? ''
+          : 'before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none',
+
         // Custom className
         className
       )
     );
+
+    // Calculate style object for width and height
+    const panelStyle: React.CSSProperties = {
+      width: typeof width === 'string' ? width : `${width}px`,
+      height: typeof height === 'string' ? height : `${height}px`
+    };
 
     // ========================================================================
     // Render
@@ -319,7 +322,7 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
       <div
         ref={ref}
         className={panelClasses}
-        style={{ width: `${width}px`, height: `${height}px` }}
+        style={panelStyle}
         data-testid={dataTestId}
         data-mode={mode}
         role="region"
@@ -327,28 +330,47 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
         {...rest}
       >
         <div className="relative z-10 h-full flex flex-col">
-          {/* Header */}
-          <div className="p-3 border-b border-white/20">
-            <h3 className="text-white/90 text-sm font-medium">3D Visualization</h3>
-          </div>
-          
+          {/* Header - only show when not full screen */}
+          {!(typeof width === 'string' && width === '100%') && (
+            <div className="p-3 border-b border-white/20">
+              <h3 className="text-white/90 text-sm font-medium">3D Visualization</h3>
+            </div>
+          )}
+
           {/* Content */}
           <div className="flex-1 relative">
-            {loading && <LoadingSpinner />}
+            {/* Loading states */}
+            {(loading || isParsing) && <LoadingSpinner />}
+
+            {/* Error states */}
             {error && <ErrorDisplay message={error} />}
-            {!loading && !error && modelData && (
-              <Canvas3D 
-                modelData={modelData} 
-                mode={mode} 
+            {parseErrors && parseErrors.length > 0 && !error && (
+              <ErrorDisplay message={`Parse errors: ${parseErrors.map(e => e.message).join(', ')}`} />
+            )}
+
+            {/* 3D Rendering */}
+            {!loading && !isParsing && !error && !parseErrors?.length && astData && astData.length > 0 && (
+              <BabylonRendererWrapper
+                astData={astData}
+                mode={mode}
                 onModelClick={onModelClick}
               />
             )}
-            {!loading && !error && !modelData && (
+
+            {/* Legacy model data support */}
+            {!loading && !isParsing && !error && !parseErrors?.length && !astData && modelData && (
               <div className="flex items-center justify-center h-full">
-                <p className="text-white/60 text-sm">No model to display</p>
+                <p className="text-white/60 text-sm">Legacy model data not supported</p>
               </div>
             )}
-            
+
+            {/* No data state */}
+            {!loading && !isParsing && !error && !parseErrors?.length && !astData?.length && !modelData && (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-white/60 text-sm">No OpenSCAD code to visualize</p>
+              </div>
+            )}
+
             {/* View Controls */}
             {showControls && onViewChange && (
               <ViewControls onViewChange={onViewChange} />

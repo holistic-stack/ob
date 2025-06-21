@@ -15,7 +15,119 @@ import { SceneControls } from '../scene-controls/scene-controls';
 import { MeshDisplay } from '../mesh-display/mesh-display';
 import { DebugPanel } from '../debug-panel/debug-panel';
 import type { BabylonRendererProps, DebugReport } from '../../types/babylon-types';
+import { OpenScadAstVisitor } from '../../../babylon-csg2/openscad/ast-visitor/openscad-ast-visitor';
+import { initializeCSG2ForBrowser } from '../../../babylon-csg2/lib/initializers/csg2-browser-initializer/csg2-browser-initializer';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
 import './babylon-renderer.css';
+
+// ============================================================================
+// Performance Optimization Utilities
+// ============================================================================
+
+/**
+ * Optimized mesh disposal with batching for better performance
+ */
+async function disposeMeshesOptimized(meshes: BABYLON.AbstractMesh[]): Promise<void> {
+  if (meshes.length === 0) return;
+
+  // Batch dispose meshes to avoid blocking the main thread
+  const batchSize = 10;
+  for (let i = 0; i < meshes.length; i += batchSize) {
+    const batch = meshes.slice(i, i + batchSize);
+
+    // Dispose batch
+    batch.forEach(mesh => {
+      if (!mesh.isDisposed) {
+        // Dispose geometry and materials first
+        if (mesh.geometry) {
+          mesh.geometry.dispose();
+        }
+        if (mesh.material) {
+          mesh.material.dispose();
+        }
+        mesh.dispose();
+      }
+    });
+
+    // Yield control to prevent blocking
+    if (i + batchSize < meshes.length) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+}
+
+/**
+ * Optimize individual mesh for hardware acceleration and performance
+ */
+function optimizeMeshForPerformance(mesh: BABYLON.AbstractMesh): void {
+  // Enable hardware acceleration
+  mesh.freezeWorldMatrix();
+
+  // Optimize for static meshes
+  if (mesh instanceof BABYLON.Mesh) {
+    // Freeze normals for static geometry
+    mesh.freezeNormals();
+
+    // Enable instancing if applicable
+    mesh.alwaysSelectAsActiveMesh = true;
+
+    // Optimize material
+    if (mesh.material) {
+      // Enable material caching
+      mesh.material.freeze();
+    }
+  }
+
+  // Set culling optimization
+  mesh.cullingStrategy = BABYLON.AbstractMesh.CULLINGSTRATEGY_BOUNDINGSPHERE_ONLY;
+
+  // Enable occlusion queries for large meshes
+  if (mesh.getBoundingInfo().boundingBox.extendSize.length() > 10) {
+    mesh.occlusionQueryAlgorithmType = BABYLON.AbstractMesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+  }
+}
+
+/**
+ * Optimize entire scene for performance after mesh creation
+ */
+function optimizeSceneForPerformance(scene: BABYLON.Scene, meshes: BABYLON.AbstractMesh[]): void {
+  // Enable scene optimizations
+  scene.skipPointerMovePicking = true;
+  scene.skipPointerDownPicking = false;
+  scene.skipPointerUpPicking = true;
+
+  // Optimize rendering
+  scene.autoClear = false;
+  scene.autoClearDepthAndStencil = false;
+
+  // Enable frustum culling
+  scene.setRenderingAutoClearDepthStencil(0, true, true, true);
+
+  // Optimize for static scenes
+  if (meshes.length > 0) {
+    // Merge static meshes if beneficial
+    const staticMeshes = meshes.filter(mesh =>
+      mesh instanceof BABYLON.Mesh &&
+      !mesh.skeleton &&
+      mesh.material
+    ) as BABYLON.Mesh[];
+
+    if (staticMeshes.length > 5) {
+      console.log('[PERF] Consider mesh merging for', staticMeshes.length, 'static meshes');
+    }
+  }
+
+  // Enable hardware scaling
+  const engine = scene.getEngine();
+  if (engine) {
+    engine.setHardwareScalingLevel(1.0);
+
+    // Enable adaptive quality
+    if (meshes.length > 20) {
+      console.log('[PERF] High mesh count detected, consider LOD implementation');
+    }
+  }
+}
 
 /**
  * BabylonRenderer Component
@@ -59,6 +171,10 @@ export function BabylonRenderer({
   onEngineReady,
   onSceneReady,
   onError,
+  astData,
+  onASTProcessingStart,
+  onASTProcessingComplete,
+  onASTProcessingError,
   className = '',
   'aria-label': ariaLabel = 'Babylon Renderer',
   ...props
@@ -70,6 +186,12 @@ export function BabylonRenderer({
   const [error, setError] = useState<Error | null>(null);
   const [engine, setEngine] = useState<BABYLON.Engine | null>(null);
   const [scene, setScene] = useState<BABYLON.Scene | null>(null);
+
+  // AST processing state
+  const [isCSG2Initialized, setIsCSG2Initialized] = useState(false);
+  const [astVisitor, setAstVisitor] = useState<OpenScadAstVisitor | null>(null);
+  const [generatedMeshes, setGeneratedMeshes] = useState<BABYLON.AbstractMesh[]>([]);
+  const [isProcessingAST, setIsProcessingAST] = useState(false);
 
   // Derived state
   const isReady = useMemo(() => {
@@ -96,12 +218,116 @@ export function BabylonRenderer({
     }
   }, [onSceneReady]);
 
+  // Initialize CSG2 when scene is ready
+  useEffect(() => {
+    if (scene && !isCSG2Initialized) {
+      const initCSG2 = async () => {
+        try {
+          console.log('[DEBUG] Initializing CSG2 for AST processing...');
+          const result = await initializeCSG2ForBrowser({
+            enableLogging: true,
+            timeout: 10000
+          });
+
+          if (result.success) {
+            setIsCSG2Initialized(true);
+            console.log('[DEBUG] CSG2 initialized successfully');
+
+            // Create AST visitor
+            const visitor = new OpenScadAstVisitor(scene);
+            setAstVisitor(visitor);
+            console.log('[DEBUG] AST visitor created');
+          } else {
+            console.error('[ERROR] CSG2 initialization failed:', result.error);
+            onASTProcessingError?.(`CSG2 initialization failed: ${result.error}`);
+          }
+        } catch (error) {
+          console.error('[ERROR] CSG2 initialization exception:', error);
+          onASTProcessingError?.(`CSG2 initialization exception: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      };
+
+      void initCSG2();
+    }
+  }, [scene, isCSG2Initialized, onASTProcessingError]);
+
   // Effect to handle scene changes
   useEffect(() => {
     if (scene && onSceneChange) {
       onSceneChange(scene);
     }
   }, [scene, onSceneChange]);
+
+  // Process AST data when it changes with performance optimization
+  useEffect(() => {
+    if (astData && astData.length > 0 && astVisitor && isCSG2Initialized && !isProcessingAST) {
+      const processAST = async () => {
+        const startTime = performance.now();
+        setIsProcessingAST(true);
+        onASTProcessingStart?.();
+
+        try {
+          console.log('[PERF] Starting AST processing with', astData.length, 'nodes');
+
+          // Performance-optimized mesh disposal
+          const disposalStartTime = performance.now();
+          await disposeMeshesOptimized(generatedMeshes);
+          const disposalTime = performance.now() - disposalStartTime;
+          console.log(`[PERF] Mesh disposal completed in ${disposalTime.toFixed(2)}ms`);
+
+          setGeneratedMeshes([]);
+
+          // Process AST nodes with performance monitoring
+          const processingStartTime = performance.now();
+          const newMeshes: BABYLON.AbstractMesh[] = [];
+
+          for (const astNode of astData) {
+            const nodeStartTime = performance.now();
+            try {
+              const mesh = astVisitor.visit(astNode);
+              if (mesh) {
+                // Enable hardware acceleration for mesh
+                optimizeMeshForPerformance(mesh);
+                newMeshes.push(mesh);
+
+                const nodeTime = performance.now() - nodeStartTime;
+                console.log(`[PERF] Created mesh from ${astNode.type} in ${nodeTime.toFixed(2)}ms`);
+              }
+            } catch (nodeError) {
+              console.error('[ERROR] Failed to process AST node:', astNode.type, nodeError);
+            }
+          }
+
+          const processingTime = performance.now() - processingStartTime;
+          console.log(`[PERF] AST node processing completed in ${processingTime.toFixed(2)}ms`);
+
+          // Optimize scene after mesh creation
+          if (scene && newMeshes.length > 0) {
+            optimizeSceneForPerformance(scene, newMeshes);
+          }
+
+          setGeneratedMeshes(newMeshes);
+          onASTProcessingComplete?.(newMeshes);
+
+          const totalTime = performance.now() - startTime;
+          console.log(`[PERF] Total AST processing completed in ${totalTime.toFixed(2)}ms (target: <500ms)`);
+
+          // Performance benchmark validation
+          if (totalTime > 500) {
+            console.warn(`[PERF] AST processing exceeded target time: ${totalTime.toFixed(2)}ms > 500ms`);
+          }
+
+        } catch (error) {
+          console.error('[ERROR] AST processing failed:', error);
+          onASTProcessingError?.(error instanceof Error ? error.message : 'Unknown AST processing error');
+        } finally {
+          setIsProcessingAST(false);
+        }
+      };
+
+      void processAST();
+    }
+  }, [astData, astVisitor, isCSG2Initialized, isProcessingAST, generatedMeshes, scene, onASTProcessingStart, onASTProcessingComplete, onASTProcessingError]);
 
   // Error handling
   const handleError = useCallback((newError: Error) => {

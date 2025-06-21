@@ -20,19 +20,24 @@ import { clsx } from '../../shared';
 import { createOpenSCADCompletionProvider } from './openscad-completion-provider';
 import { createOpenSCADHoverProvider } from './openscad-hover-provider';
 import { createOpenSCADDiagnosticsProvider } from './openscad-diagnostics-provider';
+import {
+  parseOpenSCADCodeCached,
+  cancelDebouncedParsing,
+  type ParseError,
+  type ASTParseResult
+} from './openscad-ast-service';
+import { type ASTNode } from '@holistic-stack/openscad-parser';
+import { ParseErrorDisplay } from '../../shared/error-display/parse-error-display';
+import { measurePerformance } from '../../shared/performance/performance-monitor';
 
-// Types
-interface ParseError {
-  readonly message: string;
-  readonly line: number;
-  readonly column: number;
-  readonly severity: 'error' | 'warning';
-}
+// Re-export types for backward compatibility
+export type { ParseError, ASTParseResult };
 
+// Legacy ParseResult interface for backward compatibility
 interface ParseResult {
   readonly success: boolean;
   readonly errors: ParseError[];
-  readonly ast: any[];
+  readonly ast: ASTNode[];
 }
 
 interface GlassConfig {
@@ -279,10 +284,73 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
   // State
   const [parseResult, setParseResult] = useState<ParseResult>({ success: true, errors: [], ast: [] });
   const [isMonacoReady, setIsMonacoReady] = useState(false);
-  
+  const [isParsing, setIsParsing] = useState(false);
+
   // Refs
   const editorRef = useRef<monacoEditor.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const parseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasInitialParsed = useRef(false);
+
+  // AST parsing function - removed double debouncing and fixed dependencies
+  const parseCodeToAST = useCallback(async (code: string) => {
+    if (!enableASTParsing || language !== 'openscad' || !code.trim()) {
+      return;
+    }
+
+    setIsParsing(true);
+
+    try {
+      // Use cached parsing for better performance
+      const { result } = await measurePerformance('AST_PARSING', async () => {
+        return await parseOpenSCADCodeCached(code, {
+          enableLogging: false, // Reduce console noise
+          timeout: 3000 // Shorter timeout to prevent freezing
+        });
+      });
+
+      const newParseResult: ParseResult = {
+        success: result.success,
+        errors: result.errors,
+        ast: result.ast as ASTNode[]
+      };
+
+      setParseResult(newParseResult);
+
+      // Notify parent components using refs to avoid dependency issues
+      if (result.success) {
+        onASTChange?.(result.ast as ASTNode[]);
+        onParseErrors?.([]);
+      } else {
+        onASTChange?.([]);
+        onParseErrors?.(result.errors);
+      }
+
+      console.log(`[MonacoCodeEditor] AST parsing completed in ${result.parseTime.toFixed(2)}ms`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
+      const parseError: ParseError = {
+        message: errorMessage,
+        line: 1,
+        column: 1,
+        severity: 'error'
+      };
+
+      const failedResult: ParseResult = {
+        success: false,
+        errors: [parseError],
+        ast: []
+      };
+
+      setParseResult(failedResult);
+      onASTChange?.([]);
+      onParseErrors?.([parseError]);
+
+      console.error('[MonacoCodeEditor] AST parsing failed:', error);
+    } finally {
+      setIsParsing(false);
+    }
+  }, [enableASTParsing, language]); // Removed onASTChange and onParseErrors to prevent infinite loops
 
   // Handle Monaco Editor mount
   const handleEditorDidMount = useCallback((
@@ -339,6 +407,51 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
     onMount?.(editor, monaco);
   }, [language, onMount]);
 
+  // Handle code changes with debounced AST parsing
+  const handleCodeChange = useCallback((newValue: string | undefined) => {
+    const codeValue = newValue ?? '';
+
+    // Call parent onChange handler
+    onChange?.(codeValue);
+
+    // Clear existing timeout
+    if (parseTimeoutRef.current) {
+      clearTimeout(parseTimeoutRef.current);
+    }
+
+    // Set up debounced AST parsing
+    if (enableASTParsing && language === 'openscad') {
+      parseTimeoutRef.current = setTimeout(() => {
+        void parseCodeToAST(codeValue);
+      }, 500); // Increased debounce time to reduce parsing frequency
+    }
+  }, [onChange, enableASTParsing, language, parseCodeToAST]);
+
+  // Parse initial value when component mounts (only once)
+  useEffect(() => {
+    if (enableASTParsing && language === 'openscad' && value.trim() && !hasInitialParsed.current) {
+      hasInitialParsed.current = true;
+      // Use a timeout to avoid blocking the initial render
+      const timeoutId = setTimeout(() => {
+        void parseCodeToAST(value);
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    return undefined; // Explicit return for all code paths
+  }, [enableASTParsing, language]); // Only depend on enableASTParsing and language to prevent loops
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (parseTimeoutRef.current) {
+        clearTimeout(parseTimeoutRef.current);
+      }
+      cancelDebouncedParsing();
+    };
+  }, []);
+
   // Default editor options
   const defaultOptions: monacoEditor.editor.IStandaloneEditorConstructionOptions = {
     language: language === 'openscad' ? LANGUAGE_ID : language,
@@ -385,29 +498,42 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
           height="100%"
           width="100%"
           value={value}
-          onChange={onChange}
+          onChange={handleCodeChange}
           onMount={handleEditorDidMount}
           options={defaultOptions}
         />
         
-        {/* Error display */}
+        {/* Parsing indicator */}
+        {isParsing && enableASTParsing && (
+          <div className="absolute top-2 left-2 z-20">
+            <div className="bg-blue-900/80 backdrop-blur-sm border border-blue-500/50 rounded-lg p-2 flex items-center gap-2">
+              <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-blue-300 text-xs">Parsing AST...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced error display */}
         {parseResult.errors.length > 0 && (
-          <div className="absolute top-2 right-2 z-20 max-w-xs">
-            <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-lg p-2 space-y-1">
-              <div className="text-red-400 text-xs font-semibold">
-                {parseResult.errors.length} {parseResult.errors.length === 1 ? 'error' : 'errors'}
-              </div>
-              {parseResult.errors.slice(0, 3).map((error, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  className="text-red-300 text-xs cursor-pointer hover:text-red-200 transition-colors text-left bg-transparent border-none p-0"
-                  onClick={() => onErrorClick?.(error)}
-                  title={`Line ${error.line}, Column ${error.column}`}
-                >
-                  {error.message}
-                </button>
-              ))}
+          <div className="absolute top-2 right-2 z-20 max-w-sm">
+            <ParseErrorDisplay
+              errors={parseResult.errors}
+              onErrorClick={onErrorClick}
+              maxErrors={3}
+              showLineNumbers={true}
+              showSuggestions={true}
+              className="text-xs"
+            />
+          </div>
+        )}
+
+        {/* Success indicator */}
+        {parseResult.success && parseResult.ast.length > 0 && enableASTParsing && !isParsing && (
+          <div className="absolute bottom-2 right-2 z-20">
+            <div className="bg-green-900/80 backdrop-blur-sm border border-green-500/50 rounded-lg p-2">
+              <span className="text-green-300 text-xs">
+                ✓ {parseResult.ast.length} AST {parseResult.ast.length === 1 ? 'node' : 'nodes'}
+              </span>
             </div>
           </div>
         )}
