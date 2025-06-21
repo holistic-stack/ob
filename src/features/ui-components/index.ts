@@ -57,6 +57,32 @@ export type {
 // Showcase Component
 export { LiquidGlassShowcase } from './showcase';
 
+// Editor Components
+export {
+  EditorLayout,
+  FileExplorer,
+  CodeEditor,
+  VisualizationPanel,
+  ConsolePanel,
+} from './editor';
+export type {
+  EditorLayoutProps,
+  EditorLayoutVariant,
+  FileExplorerProps,
+  FileNode,
+  FileType,
+  CodeEditorProps,
+  EditorLanguage,
+  EditorTheme,
+  VisualizationPanelProps,
+  VisualizationMode,
+  ModelData,
+  ViewAction,
+  ConsolePanelProps,
+  ConsoleMessage,
+  ConsoleMessageType,
+} from './editor';
+
 // ============================================================================
 // Shared Utilities and Types
 // ============================================================================
@@ -131,7 +157,7 @@ export const LIBRARY_INFO = {
   name: 'Liquid Glass UI',
   version: '1.0.0',
   description: 'Apple Liquid Glass design system components for React',
-  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase'],
+  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase', 'EditorLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
   features: [
     'Glass morphism effects',
     'Accessibility compliance (WCAG 2.1 AA)',
@@ -181,6 +207,35 @@ export const COMPONENT_REGISTRY = {
     demos: ['Single Button', 'Button Group', 'Horizontal Dock', 'Grid Dock', 'Control Panel', 'Notification'],
     features: ['Real-world use cases', 'Beautiful backgrounds', 'Interactive demos', 'Technical documentation'],
   },
+  EditorLayout: {
+    displayName: 'Editor Layout',
+    description: 'Main layout component for code editor interface with glass morphism effects',
+    variants: ['default', 'compact', 'expanded'],
+    features: ['Responsive design', 'Glass morphism', 'Accessibility support'],
+  },
+  FileExplorer: {
+    displayName: 'File Explorer',
+    description: 'File tree navigation component with folder expansion and file selection',
+    features: ['Tree view', 'File icons', 'Keyboard navigation', 'Glass morphism'],
+  },
+  CodeEditor: {
+    displayName: 'Code Editor',
+    description: 'Code editor with syntax highlighting and line numbers',
+    languages: ['javascript', 'typescript', 'python', 'openscad', 'html', 'css'],
+    features: ['Syntax highlighting', 'Line numbers', 'Keyboard shortcuts', 'Glass morphism'],
+  },
+  VisualizationPanel: {
+    displayName: 'Visualization Panel',
+    description: '3D visualization panel for displaying 3D models',
+    modes: ['solid', 'wireframe', 'points', 'transparent'],
+    features: ['3D rendering', 'View controls', 'Model interaction', 'Glass morphism'],
+  },
+  ConsolePanel: {
+    displayName: 'Console Panel',
+    description: 'Console output panel for displaying logs and messages',
+    messageTypes: ['info', 'warning', 'error', 'success', 'debug'],
+    features: ['Message filtering', 'Timestamps', 'Auto-scroll', 'Glass morphism'],
+  },
 } as const;
 
 // ============================================================================
@@ -197,6 +252,11 @@ export default {
   Input,
   Slider,
   LiquidGlassShowcase,
+  EditorLayout,
+  FileExplorer,
+  CodeEditor,
+  VisualizationPanel,
+  ConsolePanel,
 
   // Utilities
   generateGlassClasses,
