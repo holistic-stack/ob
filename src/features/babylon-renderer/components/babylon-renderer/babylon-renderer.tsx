@@ -8,7 +8,7 @@
  * @date June 2025
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import * as BABYLON from '@babylonjs/core';
 import { BabylonCanvas } from '../babylon-canvas/babylon-canvas';
 import { SceneControls } from '../scene-controls/scene-controls';
@@ -17,6 +17,7 @@ import { DebugPanel } from '../debug-panel/debug-panel';
 import type { BabylonRendererProps, DebugReport } from '../../types/babylon-types';
 import { OpenScadAstVisitor } from '../../../babylon-csg2/openscad/ast-visitor/openscad-ast-visitor';
 import { initializeCSG2ForBrowser } from '../../../babylon-csg2/lib/initializers/csg2-browser-initializer/csg2-browser-initializer';
+import { compareASTCached } from '../../../ui-components/shared/utils/ast-comparison';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import './babylon-renderer.css';
 
@@ -193,6 +194,9 @@ export function BabylonRenderer({
   const [generatedMeshes, setGeneratedMeshes] = useState<BABYLON.AbstractMesh[]>([]);
   const [isProcessingAST, setIsProcessingAST] = useState(false);
 
+  // Ref to track previous AST for comparison
+  const previousASTRef = useRef<readonly ASTNode[]>([]);
+
   // Derived state
   const isReady = useMemo(() => {
     return isEngineReady && isSceneReady && engine && scene && !scene.isDisposed;
@@ -261,6 +265,13 @@ export function BabylonRenderer({
   // Process AST data when it changes with performance optimization
   useEffect(() => {
     if (astData && astData.length > 0 && astVisitor && isCSG2Initialized && !isProcessingAST) {
+      // Check if AST has actually changed
+      if (compareASTCached(previousASTRef.current, astData)) {
+        return;
+      }
+
+      previousASTRef.current = astData;
+
       const processAST = async () => {
         const startTime = performance.now();
         setIsProcessingAST(true);
@@ -327,11 +338,10 @@ export function BabylonRenderer({
 
       void processAST();
     }
-  }, [astData, astVisitor, isCSG2Initialized, isProcessingAST, generatedMeshes, scene, onASTProcessingStart, onASTProcessingComplete, onASTProcessingError]);
+  }, [astData, astVisitor, isCSG2Initialized, isProcessingAST, scene, onASTProcessingStart, onASTProcessingComplete, onASTProcessingError]); // Removed generatedMeshes to prevent infinite loop
 
   // Error handling
   const handleError = useCallback((newError: Error) => {
-    console.error('[ERROR] BabylonRenderer error:', newError);
     setError(newError);
     if (onError) {
       onError(newError);
@@ -340,28 +350,24 @@ export function BabylonRenderer({
 
   // Scene controls event handlers
   const handleWireframeToggle = useCallback(() => {
-    console.log('[DEBUG] Wireframe toggle requested');
     if (scene && onSceneChange) {
       onSceneChange(scene);
     }
   }, [scene, onSceneChange]);
 
   const handleCameraReset = useCallback(() => {
-    console.log('[DEBUG] Camera reset requested');
     if (scene && onSceneChange) {
       onSceneChange(scene);
     }
   }, [scene, onSceneChange]);
 
   const handleLightingToggle = useCallback(() => {
-    console.log('[DEBUG] Lighting toggle requested');
     if (scene && onSceneChange) {
       onSceneChange(scene);
     }
   }, [scene, onSceneChange]);
 
-  const handleBackgroundColorChange = useCallback((color: string) => {
-    console.log('[DEBUG] Background color change requested:', color);
+  const handleBackgroundColorChange = useCallback((_color: string) => {
     if (scene && onSceneChange) {
       onSceneChange(scene);
     }
@@ -369,14 +375,12 @@ export function BabylonRenderer({
 
   // Mesh display event handlers
   const handleMeshSelect = useCallback((mesh: BABYLON.AbstractMesh) => {
-    console.log('[DEBUG] Mesh selected:', mesh.name);
     if (onMeshSelect) {
       onMeshSelect(mesh);
     }
   }, [onMeshSelect]);
 
   const handleMeshDelete = useCallback((mesh: BABYLON.AbstractMesh) => {
-    console.log('[DEBUG] Mesh delete requested:', mesh.name);
     if (scene) {
       mesh.dispose();
       if (onSceneChange) {
@@ -386,7 +390,6 @@ export function BabylonRenderer({
   }, [scene, onSceneChange]);
 
   const handleMeshToggleVisibility = useCallback((mesh: BABYLON.AbstractMesh) => {
-    console.log('[DEBUG] Mesh visibility toggle requested:', mesh.name);
     mesh.isVisible = !mesh.isVisible;
     if (scene && onSceneChange) {
       onSceneChange(scene);
@@ -395,7 +398,6 @@ export function BabylonRenderer({
 
   // Debug panel event handlers
   const handleDebugRefresh = useCallback(() => {
-    console.log('[DEBUG] Debug refresh requested');
     // Force re-render to refresh debug information
     if (scene && onSceneChange) {
       onSceneChange(scene);
@@ -403,7 +405,6 @@ export function BabylonRenderer({
   }, [scene, onSceneChange]);
 
   const handleDebugExport = useCallback((report: DebugReport) => {
-    console.log('[DEBUG] Debug export requested');
     if (onDebugExport) {
       onDebugExport(report);
     }
@@ -412,7 +413,6 @@ export function BabylonRenderer({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('[DEBUG] Cleaning up BabylonRenderer');
       // Cleanup is handled by BabylonCanvas component
     };
   }, []);

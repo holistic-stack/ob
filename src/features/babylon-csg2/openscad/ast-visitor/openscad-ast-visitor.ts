@@ -248,7 +248,6 @@ export class OpenScadAstVisitor {
     }
     if (isModuleDefinitionNode(node)) {
       this.moduleDefinitions.set(node.name.name, node);
-      console.log(`[DEBUG] Stored module definition: ${node.name.name}`);
       return null; // Module definitions don't produce meshes directly
     }
 
@@ -263,8 +262,7 @@ export class OpenScadAstVisitor {
       return this.visitIfNode(node);
     }
 
-    // If no specific visitor found, log a warning and return null
-    console.warn('[WARN] No visitor found for node type:', node.type, node);
+    // If no specific visitor found, return null
     return null;
   }
 

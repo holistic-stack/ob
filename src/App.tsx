@@ -1,5 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   MonacoCodeEditor,
   VisualizationPanel,
@@ -7,6 +6,7 @@ import {
 } from './features/ui-components/editor';
 import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
 import { PerformanceDebugPanel } from './features/ui-components/shared/performance/performance-debug-panel';
+import { compareASTCached } from './features/ui-components/shared/utils/ast-comparison';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 
 // Types for parse errors
@@ -42,27 +42,31 @@ export function App(): React.JSX.Element {
   const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
   const [isEditorExpanded, setIsEditorExpanded] = useState(true);
 
+  // Ref to track previous AST for comparison
+  const previousASTRef = useRef<ASTNode[]>([]);
+
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
-    console.log('[App] Code changed, length:', newCode.length);
   }, []);
 
   const handleASTChange = useCallback((newAst: ASTNode[]) => {
-    setAst(newAst);
-    console.log('[App] AST updated:', newAst);
+    // Only update if AST has actually changed
+    if (!compareASTCached(previousASTRef.current, newAst)) {
+      previousASTRef.current = newAst;
+      setAst(newAst);
+    }
   }, []);
 
   const handleParseErrors = useCallback((errors: ParseError[]) => {
     setParseErrors(errors);
-    console.log('[App] Parse errors:', errors);
   }, []);
 
-  const handleViewChange = useCallback((action: string) => {
-    console.log('3D view action:', action);
+  const handleViewChange = useCallback((_action: string) => {
+    // Handle 3D view changes
   }, []);
 
-  const handleModelClick = useCallback((point: { x: number; y: number; z: number }) => {
-    console.log('Model clicked at:', point);
+  const handleModelClick = useCallback((_point: { x: number; y: number; z: number }) => {
+    // Handle model click events
   }, []);
 
   const toggleEditor = useCallback(() => {
@@ -98,6 +102,9 @@ export function App(): React.JSX.Element {
     insertSpaces: true
   }), []);
 
+  // Memoize AST data to prevent unnecessary re-renders in VisualizationPanel
+  const memoizedASTData = useMemo(() => ast, [ast]);
+
   return (
     <div className="h-screen w-screen overflow-hidden relative">
       <OpenSCADErrorBoundary
@@ -113,7 +120,7 @@ export function App(): React.JSX.Element {
           isEditorExpanded ? 'brightness-75' : 'brightness-100'
         }`}>
           <VisualizationPanel
-            astData={ast}
+            astData={memoizedASTData}
             parseErrors={parseErrors}
             mode={visualizationMode}
             width="100%"
