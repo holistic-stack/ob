@@ -1,0 +1,53 @@
+{
+  "name": "@holistic-stack/openscad-demo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "postinstall": "shx mkdir -p ./public && shx cp ./node_modules/@openscad/tree-sitter-openscad/tree-sitter-openscad.wasm ./public/tree-sitter-openscad.wasm && shx cp ./node_modules/web-tree-sitter/tree-sitter.wasm ./public/tree-sitter.wasm && shx cp ./node_modules/@openscad/tree-sitter-openscad/queries/highlights.scm ./public/highlights.scm"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@holistic-stack/openscad-editor": "0.1.0",
+    "@holistic-stack/openscad-parser": "0.1.1",
+    "@holistic-stack/tree-sitter-openscad": "0.1.0",
+    "monaco-editor": "^0.52.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "web-tree-sitter": "0.25.3"
+  },
+  "devDependencies": {
+    "@nx/eslint-plugin": "^21.1.2",
+    "@nx/react": "^21.1.2",
+    "@nx/vite": "^21.1.1",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "~9.8.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "jsdom": "^24.1.1",
+    "prettier": "^3.3.3",
+    "shx": "^0.3.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.5.0",
+    "vite-plugin-monaco-editor": "^1.1.0",
+    "vitest": "^3.2.3"
+  }
+}

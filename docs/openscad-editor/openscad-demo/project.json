@@ -1,0 +1,104 @@
+{
+  "name": "openscad-demo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/openscad-demo/src",
+  "projectType": "application",
+  "tags": ["type:application", "scope:demo", "platform:web", "framework:react"],
+  "// targets": "to see all targets run: nx show project openscad-demo --web",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "openscad-demo:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "openscad-demo:build:development",
+          "hmr": true
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "defaultConfiguration": "production",
+      "options": {
+        "command": "npx vite build",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "development": {
+          "command": "npx vite build --mode development",
+          "cwd": "{projectRoot}"
+        },
+        "production": {
+          "command": "npx vite build --mode production",
+          "cwd": "{projectRoot}"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:preview-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "openscad-demo:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "openscad-demo:build:development"
+        },
+        "production": {
+          "buildTarget": "openscad-demo:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/openscad-demo"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx eslint src/ --config eslint.config.mjs",
+        "cwd": "packages/openscad-demo"
+      }
+    },
+
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/packages/openscad-demo"],
+      "dependsOn": ["build:production"],
+      "options": {
+        "config": "{projectRoot}/playwright.config.ts",
+        "reporter": "line"
+      },
+      "configurations": {
+        "production": {
+          "config": "{projectRoot}/playwright.config.ts",
+          "reporter": "line"
+        },
+        "ci": {
+          "config": "{projectRoot}/playwright.config.ts",
+          "reporter": "line"
+        },
+        "debug": {
+          "config": "{projectRoot}/playwright.config.ts",
+          "reporter": "list"
+        }
+      },
+      "env": {
+        "DEBUG_E2E": "true"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit",
+        "cwd": "packages/openscad-demo"
+      }
+    }
+  }
+}

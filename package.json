@@ -36,6 +36,7 @@
     "@babylonjs/core": "^8.11.0",
     "@babylonjs/loaders": "^8.11.0",
     "@babylonjs/materials": "^8.11.0",
+    "@holistic-stack/openscad-editor":"0.1.0",
     "@holistic-stack/openscad-parser": "0.1.2",
     "@holistic-stack/tree-sitter-openscad": "0.1.0",
     "class-variance-authority": "^0.7.1",

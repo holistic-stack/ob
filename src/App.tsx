@@ -76,6 +76,8 @@ arduino_case();`;
 export function App(): React.JSX.Element {
   const [code, setCode] = useState(defaultCode);
   const [visualizationMode] = useState<VisualizationMode>('solid');
+  const [ast, setAst] = useState<any[]>([]);
+  const [parseErrors, setParseErrors] = useState<any[]>([]);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
@@ -87,6 +89,16 @@ export function App(): React.JSX.Element {
 
   const handleFormat = () => {
     console.log('Code formatted');
+  };
+
+  const handleASTChange = (newAst: any[]) => {
+    setAst(newAst);
+    console.log('AST updated:', newAst);
+  };
+
+  const handleParseErrors = (errors: any[]) => {
+    setParseErrors(errors);
+    console.log('Parse errors:', errors);
   };
 
   const handleViewChange = (action: string) => {
@@ -119,6 +131,11 @@ export function App(): React.JSX.Element {
               showLineNumbers
               onSave={handleSave}
               onFormat={handleFormat}
+              onASTChange={handleASTChange}
+              onParseErrors={handleParseErrors}
+              enableASTParsing
+              showSyntaxErrors
+              enableCodeCompletion
               placeholder="Enter your OpenSCAD code here..."
               aria-label="OpenSCAD Code Editor"
             />

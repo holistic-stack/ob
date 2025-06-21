@@ -1,0 +1,912 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\playwright.config.ts",
+    "rootDir": "C:/Users/luciano/git/openscad-tree-sitter/packages/openscad-demo/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 6
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report",
+          "open": "never"
+        }
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/luciano/git/openscad-tree-sitter/dist/.playwright/packages/openscad-demo/test-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/luciano/git/openscad-tree-sitter/packages/openscad-demo/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.e2e.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.52.0",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "example.e2e.ts",
+      "file": "example.e2e.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "OpenSCAD Demo - Basic Functionality",
+          "file": "example.e2e.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should load the application successfully",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3338,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                          "column": 16,
+                          "line": 30
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                            "column": 16,
+                            "line": 30
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.865Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-36622-he-application-successfully-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU2NloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOVoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-36622-he-application-successfully-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-36622-he-application-successfully-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                        "column": 16,
+                        "line": 30
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c54c5031591baf5d6319-c53e542fd6aee832603d",
+              "file": "example.e2e.ts",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "should display the main demo interface",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 3263,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                          "column": 16,
+                          "line": 30
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                            "column": 16,
+                            "line": 30
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.883Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-fe05e-lay-the-main-demo-interface-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU2NloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOVoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-fe05e-lay-the-main-demo-interface-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-fe05e-lay-the-main-demo-interface-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                        "column": 16,
+                        "line": 30
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c54c5031591baf5d6319-9002163048e5803e39b6",
+              "file": "example.e2e.ts",
+              "line": 74,
+              "column": 3
+            },
+            {
+              "title": "should display Monaco Editor container",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 3318,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                          "column": 16,
+                          "line": 30
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                            "column": 16,
+                            "line": 30
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.888Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-058f0-lay-Monaco-Editor-container-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU2NloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-058f0-lay-Monaco-Editor-container-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-058f0-lay-Monaco-Editor-container-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                        "column": 16,
+                        "line": 30
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c54c5031591baf5d6319-bf488d387599964853d9",
+              "file": "example.e2e.ts",
+              "line": 85,
+              "column": 3
+            },
+            {
+              "title": "should handle Monaco Editor interactions",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 3242,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                          "column": 16,
+                          "line": 30
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                            "column": 16,
+                            "line": 30
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.878Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-b94c6--Monaco-Editor-interactions-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU3MFoiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-b94c6--Monaco-Editor-interactions-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-b94c6--Monaco-Editor-interactions-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                        "column": 16,
+                        "line": 30
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c54c5031591baf5d6319-080bcbec0e810e06de5c",
+              "file": "example.e2e.ts",
+              "line": 101,
+              "column": 3
+            },
+            {
+              "title": "should monitor network requests for WASM loading",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 3210,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                          "column": 16,
+                          "line": 30
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                            "column": 16,
+                            "line": 30
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m     \u001b[90m// Navigate to the demo application\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 31 |\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[90m// Wait for the application to fully load\u001b[39m\n \u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts:30:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.861Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.908Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-9949a-k-requests-for-WASM-loading-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU2NloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-9949a-k-requests-for-WASM-loading-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\example.e2e.ts-OpenSCAD-De-9949a-k-requests-for-WASM-loading-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\example.e2e.ts",
+                        "column": 16,
+                        "line": 30
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c54c5031591baf5d6319-2a5f53eb2af36221daee",
+              "file": "example.e2e.ts",
+              "line": 124,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "openscad-parser.e2e.ts",
+      "file": "openscad-parser.e2e.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "OpenSCAD Parser - Real Parsing Tests",
+          "file": "openscad-parser.e2e.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should parse basic OpenSCAD code successfully",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 3240,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                          "column": 16,
+                          "line": 29
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                            "column": 16,
+                            "line": 29
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:12.910Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:15.909Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-13057--OpenSCAD-code-successfully-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjEzLjU2M1oiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE1LjkwOVoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-13057--OpenSCAD-code-successfully-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-13057--OpenSCAD-code-successfully-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                        "column": 16,
+                        "line": 29
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "72ca8311b162fcfb5157-91c8f62ee852aac5f8e8",
+              "file": "openscad-parser.e2e.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "should handle syntax errors gracefully",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:20.560Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 2824,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                          "column": 16,
+                          "line": 29
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                            "column": 16,
+                            "line": 29
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:17.791Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:20.560Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-1a7a7-le-syntax-errors-gracefully-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE4LjIyNloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjIwLjU2MFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-1a7a7-le-syntax-errors-gracefully-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-1a7a7-le-syntax-errors-gracefully-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                        "column": 16,
+                        "line": 29
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "72ca8311b162fcfb5157-d601d7cbc25d367c4b4b",
+              "file": "openscad-parser.e2e.ts",
+              "line": 81,
+              "column": 3
+            },
+            {
+              "title": "should monitor parser performance",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:20.559Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 2742,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                          "column": 16,
+                          "line": 29
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                            "column": 16,
+                            "line": 29
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:17.818Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:20.559Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-5b66f--monitor-parser-performance-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE4LjIyMloiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjIwLjU2MFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-5b66f--monitor-parser-performance-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-5b66f--monitor-parser-performance-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                        "column": 16,
+                        "line": 29
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "72ca8311b162fcfb5157-c64273bb57278094ef61",
+              "file": "openscad-parser.e2e.ts",
+              "line": 124,
+              "column": 3
+            },
+            {
+              "title": "should track WASM module loading and initialization",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "request-failed",
+                      "description": "2025-06-09T02:58:20.544Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 2796,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16",
+                        "location": {
+                          "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                          "column": 16,
+                          "line": 29
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                            "column": 16,
+                            "line": 29
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4200/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:4200/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 27 |\u001b[39m     monacoHelper \u001b[33m=\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mMonacoEditorHelper\u001b[39m(page)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m monacoHelper\u001b[33m.\u001b[39mwaitForEditorReady()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts:29:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-09T02:58:17.817Z",
+                      "annotations": [
+                        {
+                          "type": "request-failed",
+                          "description": "2025-06-09T02:58:20.544Z: GET http://localhost:4200/ - net::ERR_CONNECTION_REFUSED"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-75d3c--loading-and-initialization-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "network-logs",
+                          "contentType": "application/json",
+                          "body": "WwogIHsKICAgICJ0eXBlIjogInJlcXVlc3QiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjE4LjIwOVoiCiAgfSwKICB7CiAgICAidHlwZSI6ICJmYWlsZWQiLAogICAgInVybCI6ICJodHRwOi8vbG9jYWxob3N0OjQyMDAvIiwKICAgICJtZXRob2QiOiAiR0VUIiwKICAgICJyZXNvdXJjZVR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDI1LTA2LTA5VDAyOjU4OjIwLjU0NFoiCiAgfQpd"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-75d3c--loading-and-initialization-chromium\\video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\dist\\.playwright\\packages\\openscad-demo\\test-output\\openscad-parser.e2e.ts-Ope-75d3c--loading-and-initialization-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\luciano\\git\\openscad-tree-sitter\\packages\\openscad-demo\\e2e\\openscad-parser.e2e.ts",
+                        "column": 16,
+                        "line": 29
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "72ca8311b162fcfb5157-9f71ef1ab2e41318959c",
+              "file": "openscad-parser.e2e.ts",
+              "line": 186,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-06-09T02:58:11.093Z",
+    "duration": 9810.651000000002,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 9,
+    "flaky": 0
+  }
+}

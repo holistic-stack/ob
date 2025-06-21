@@ -3,19 +3,36 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { CodeEditor } from './code-editor';
+
+// Mock the OpenSCAD parser module
+vi.mock('@holistic-stack/openscad-parser', () => ({
+  EnhancedOpenscadParser: vi.fn().mockImplementation(() => ({
+    init: vi.fn().mockResolvedValue(undefined),
+    parseAST: vi.fn().mockReturnValue([{ type: 'cube', size: [10, 10, 10] }]),
+    getErrorHandler: vi.fn().mockReturnValue({
+      getErrors: vi.fn().mockReturnValue([]),
+      getWarnings: vi.fn().mockReturnValue([]),
+    }),
+    dispose: vi.fn(),
+  })),
+  SimpleErrorHandler: vi.fn().mockImplementation(() => ({
+    getErrors: vi.fn().mockReturnValue([]),
+    getWarnings: vi.fn().mockReturnValue([]),
+  })),
+}));
 
 describe('CodeEditor', () => {
   it('should render with default props', () => {
     render(
-      <CodeEditor value="console.log('Hello World');" />
+      <CodeEditor value="cube(10);" />
     );
-    
+
     const editor = screen.getByRole('textbox');
     expect(editor).toBeInTheDocument();
-    expect(editor).toHaveValue("console.log('Hello World');");
+    expect(editor).toHaveValue("cube(10);");
   });
 
   it('should apply glass morphism classes', () => {
@@ -114,15 +131,68 @@ describe('CodeEditor', () => {
   it('should handle keyboard shortcuts', () => {
     const onSave = vi.fn();
     render(
-      <CodeEditor 
-        value="test code" 
+      <CodeEditor
+        value="test code"
         onSave={onSave}
       />
     );
-    
+
     const editor = screen.getByRole('textbox');
     fireEvent.keyDown(editor, { key: 's', ctrlKey: true });
-    
+
     expect(onSave).toHaveBeenCalled();
+  });
+
+  it('should support OpenSCAD-specific features', () => {
+    const onASTChange = vi.fn();
+    const onParseErrors = vi.fn();
+
+    render(
+      <CodeEditor
+        value="cube(10);"
+        language="openscad"
+        enableASTParsing
+        onASTChange={onASTChange}
+        onParseErrors={onParseErrors}
+        showSyntaxErrors
+      />
+    );
+
+    const editor = screen.getByRole('textbox');
+    expect(editor).toBeInTheDocument();
+    expect(editor).toHaveAttribute('aria-label', 'Code editor for openscad');
+  });
+
+  it('should show parser loading indicator for OpenSCAD', async () => {
+    render(
+      <CodeEditor
+        value="cube(10);"
+        language="openscad"
+        enableASTParsing
+      />
+    );
+
+    // The loading indicator should appear initially
+    expect(screen.getByText('Loading OpenSCAD Parser...')).toBeInTheDocument();
+
+    // Wait for the parser to load
+    await waitFor(() => {
+      expect(screen.getByText('OpenSCAD Parser ready')).toBeInTheDocument();
+    });
+  });
+
+  it('should disable AST parsing when enableASTParsing is false', () => {
+    render(
+      <CodeEditor
+        value="cube(10);"
+        language="openscad"
+        enableASTParsing={false}
+      />
+    );
+
+    // Should not show loading indicator when AST parsing is disabled
+    expect(screen.queryByText('Loading OpenSCAD Parser...')).not.toBeInTheDocument();
+    // Should use fallback textarea instead of OpenSCAD Editor
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 });
