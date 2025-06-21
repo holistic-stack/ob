@@ -22,9 +22,10 @@ export type {
 } from './file-explorer';
 
 // Code Editor Panel
-export { CodeEditor } from './code-editor';
-export type { 
+export { CodeEditor, MonacoCodeEditor } from './code-editor';
+export type {
   CodeEditorProps,
+  MonacoCodeEditorProps,
   EditorLanguage,
   EditorTheme
 } from './code-editor';

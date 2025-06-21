@@ -1300,29 +1300,9 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       if (language === 'openscad' && enableASTParsing && !parser && !isParserLoading) {
         setIsParserLoading(true);
 
-        // Dynamically import the OpenSCAD Parser to avoid bundle bloat
-        import('@holistic-stack/openscad-parser')
-          .then(async (module) => {
-            const { EnhancedOpenscadParser, SimpleErrorHandler } = module;
-            const errorHandler = new SimpleErrorHandler();
-            const openscadParser = new EnhancedOpenscadParser(errorHandler);
-
-            try {
-              await openscadParser.init();
-              setParser(openscadParser);
-              setIsParserLoading(false);
-              console.log('[CodeEditor] OpenSCAD Parser loaded successfully');
-            } catch (initError) {
-              console.error('[CodeEditor] Failed to initialize OpenSCAD Parser:', initError);
-              setIsParserLoading(false);
-              // Still set the parser even if init fails - it might work for basic parsing
-              setParser(openscadParser);
-            }
-          })
-          .catch((error) => {
-            console.error('[CodeEditor] Failed to load OpenSCAD Parser:', error);
-            setIsParserLoading(false);
-          });
+        // OpenSCAD Parser functionality disabled - use MonacoCodeEditor for OpenSCAD support
+        console.warn('[CodeEditor] OpenSCAD Parser functionality disabled. Use MonacoCodeEditor component for OpenSCAD support with syntax highlighting.');
+        setIsParserLoading(false);
       }
 
       // Cleanup parser on unmount

@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
 import { ErrorBoundary as _ErrorBoundary } from 'react-error-boundary';
 import {
-  CodeEditor,
+  MonacoCodeEditor,
   VisualizationPanel,
 } from './features/ui-components/editor';
 import type {
   VisualizationMode
 } from './features/ui-components/editor';
+
+// Types for AST and parse errors
+interface ParseError {
+  readonly message: string;
+  readonly line: number;
+  readonly column: number;
+  readonly severity: 'error' | 'warning';
+}
+
+interface ASTNode {
+  readonly type: string;
+  readonly [key: string]: unknown;
+}
 
 // Default OpenSCAD code example
 const defaultCode = `// Arduino Case Design
@@ -76,29 +89,22 @@ arduino_case();`;
 export function App(): React.JSX.Element {
   const [code, setCode] = useState(defaultCode);
   const [visualizationMode] = useState<VisualizationMode>('solid');
-  const [ast, setAst] = useState<any[]>([]);
-  const [parseErrors, setParseErrors] = useState<any[]>([]);
+  const [ast, setAst] = useState<ASTNode[]>([]);
+  const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
+    console.log('[App] Code changed, length:', newCode.length);
   };
 
-  const handleSave = () => {
-    console.log('Code saved:', code);
-  };
-
-  const handleFormat = () => {
-    console.log('Code formatted');
-  };
-
-  const handleASTChange = (newAst: any[]) => {
+  const handleASTChange = (newAst: ASTNode[]) => {
     setAst(newAst);
-    console.log('AST updated:', newAst);
+    console.log('[App] AST updated:', newAst);
   };
 
-  const handleParseErrors = (errors: any[]) => {
+  const handleParseErrors = (errors: ParseError[]) => {
     setParseErrors(errors);
-    console.log('Parse errors:', errors);
+    console.log('[App] Parse errors:', errors);
   };
 
   const handleViewChange = (action: string) => {
@@ -122,22 +128,32 @@ export function App(): React.JSX.Element {
         }
       >
         <div className="h-full flex p-4 gap-4">
-          {/* Code Editor */}
+          {/* Monaco Code Editor with OpenSCAD Syntax Highlighting */}
           <div className="flex-1">
-            <CodeEditor
+            <MonacoCodeEditor
               value={code}
               onChange={handleCodeChange}
               language="openscad"
-              showLineNumbers
-              onSave={handleSave}
-              onFormat={handleFormat}
+              theme="dark"
+              height="100%"
+              width="100%"
+              enableASTParsing
               onASTChange={handleASTChange}
               onParseErrors={handleParseErrors}
-              enableASTParsing
-              showSyntaxErrors
-              enableCodeCompletion
-              placeholder="Enter your OpenSCAD code here..."
-              aria-label="OpenSCAD Code Editor"
+              options={{
+                fontSize: 14,
+                lineNumbers: 'on',
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                automaticLayout: true,
+                folding: true,
+                glyphMargin: true,
+                lineDecorationsWidth: 20,
+                lineNumbersMinChars: 3,
+                tabSize: 2,
+                insertSpaces: true
+              }}
             />
           </div>
 

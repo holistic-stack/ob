@@ -17,12 +17,9 @@ importers:
       '@babylonjs/materials':
         specifier: ^8.11.0
         version: 8.12.1(@babylonjs/core@8.12.1)
-      '@holistic-stack/openscad-parser':
-        specifier: 0.1.2
-        version: 0.1.2
-      '@holistic-stack/tree-sitter-openscad':
-        specifier: 0.1.0
-        version: 0.1.0(web-tree-sitter@0.25.3)
+      '@monaco-editor/react':
+        specifier: 4.7.0
+        version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -32,6 +29,9 @@ importers:
       find-up:
         specifier: ^7.0.0
         version: 7.0.0
+      monaco-editor:
+        specifier: 0.52.2
+        version: 0.52.2
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -656,22 +656,6 @@ packages:
     resolution: {integrity: sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@holistic-stack/openscad-parser@0.1.2':
-    resolution: {integrity: sha512-ZIFxAQScG0N3bfH9knSj22F/ofXAfxfmy4Qs9sDjgpSziYIc8TwsCGQj23E4Idin4xhThBoz4UzOO/3Vdm0h4g==}
-    engines: {node: '>=18.0.0', pnpm: '>=10.0.0'}
-
-  '@holistic-stack/tree-sitter-openscad@0.1.0':
-    resolution: {integrity: sha512-pINczf+WOsVIEbu0qPPPFV/+9s3pyEJuNqNXpj+6FNVKlDcjSaaV9VJID4fCdr0wKPlCAeQBVLMoSLzXXwEwRg==}
-    engines: {node: '>=18.0.0', pnpm: '>=10.0.0'}
-    peerDependencies:
-      tree-sitter: ^0.22.4
-      web-tree-sitter: 0.25.3
-    peerDependenciesMeta:
-      tree-sitter:
-        optional: true
-      web-tree-sitter:
-        optional: true
-
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
     engines: {node: '>=12.22'}
@@ -745,6 +729,16 @@ packages:
 
   '@microsoft/tsdoc@0.15.1':
     resolution: {integrity: sha512-4aErSrCR/On/e5G2hDP0wjooqDdauzEbIq8hIkIe5pXV0rtWJZvdCEKL0ykZxex+IxIwBp0eGeV48hQN07dXtw==}
+
+  '@monaco-editor/loader@1.5.0':
+    resolution: {integrity: sha512-hKoGSM+7aAc7eRTRjpqAZucPmoNOC4UUbknb/VNoTkEIkCPhqV8LfbsgM1webRM7S/z21eHEx9Fkwx8Z/C/+Xw==}
+
+  '@monaco-editor/react@4.7.0':
+    resolution: {integrity: sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA==}
+    peerDependencies:
+      monaco-editor: '>= 0.25.0 < 1'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@napi-rs/wasm-runtime@0.2.11':
     resolution: {integrity: sha512-9DPkXtvHydrcOsopiYpUgPHpmj0HWZKMUnL2dZqpvC42lsratuBG06V5ipyno0fUek5VlFsNQ+AcFATSrJXgMA==}
@@ -2678,10 +2672,6 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  node-gyp-build@4.8.4:
-    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
-    hasBin: true
-
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
 
@@ -3117,6 +3107,9 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+
+  state-local@1.0.7:
+    resolution: {integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==}
 
   std-env@3.9.0:
     resolution: {integrity: sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==}
@@ -3975,20 +3968,6 @@ snapshots:
 
   '@eslint/object-schema@2.1.6': {}
 
-  '@holistic-stack/openscad-parser@0.1.2':
-    dependencies:
-      '@holistic-stack/tree-sitter-openscad': 0.1.0(web-tree-sitter@0.25.3)
-      find-up: 7.0.0
-      resolve: 1.22.10
-      web-tree-sitter: 0.25.3
-    transitivePeerDependencies:
-      - tree-sitter
-
-  '@holistic-stack/tree-sitter-openscad@0.1.0(web-tree-sitter@0.25.3)':
-    optionalDependencies:
-      node-gyp-build: 4.8.4
-      web-tree-sitter: 0.25.3
-
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.3.1': {}
@@ -4082,6 +4061,17 @@ snapshots:
       resolve: 1.22.10
 
   '@microsoft/tsdoc@0.15.1': {}
+
+  '@monaco-editor/loader@1.5.0':
+    dependencies:
+      state-local: 1.0.7
+
+  '@monaco-editor/react@4.7.0(monaco-editor@0.52.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      '@monaco-editor/loader': 1.5.0
+      monaco-editor: 0.52.2
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   '@napi-rs/wasm-runtime@0.2.11':
     dependencies:
@@ -6224,9 +6214,6 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  node-gyp-build@4.8.4:
-    optional: true
-
   node-releases@2.0.19: {}
 
   npm-run-path@5.3.0:
@@ -6703,6 +6690,8 @@ snapshots:
   stable-hash-x@0.1.1: {}
 
   stackback@0.0.2: {}
+
+  state-local@1.0.7: {}
 
   std-env@3.9.0: {}
 
