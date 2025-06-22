@@ -2,7 +2,7 @@
  * @file Scene Controls Component
  * 
  * Interactive controls for Babylon.js scene manipulation
- * Provides wireframe toggle, camera controls, lighting, and background settings
+ * Provides wireframe toggle, lighting, and background settings
  * 
  * @author Luciano Júnior
  * @date June 2025
@@ -19,10 +19,12 @@ import './scene-controls.css';
  * Responsible for:
  * - Providing interactive controls for scene manipulation
  * - Wireframe mode toggle
- * - Camera position reset
  * - Lighting controls
  * - Background color picker
  * - Collapsible interface
+ *
+ * Note: Camera controls are now handled directly at Babylon.js canvas level
+ * via keyboard shortcuts (F/B/L/R/T/U/I/H/Z) and enhanced navigation cube
  * 
  * @param props - Scene controls configuration and event handlers
  * @returns JSX element containing the controls interface
@@ -35,7 +37,6 @@ import './scene-controls.css';
  *   lightingEnabled={true}
  *   backgroundColor="#2c3e50"
  *   onWireframeToggle={() => toggleWireframe()}
- *   onCameraReset={() => resetCamera()}
  *   onLightingToggle={() => toggleLighting()}
  *   onBackgroundColorChange={(color) => setBackgroundColor(color)}
  * />
@@ -50,8 +51,7 @@ export function SceneControls({
   backgroundColor = '#2c3e50',
   defaultCollapsed = false,
   onWireframeToggle,
-  onCameraReset,
-  onFitToView,
+
   onLightingToggle,
   onBackgroundColorChange,
   'aria-label': ariaLabel = 'Scene Controls',
@@ -66,18 +66,7 @@ export function SceneControls({
     return scene && !scene.isDisposed;
   }, [scene]);
 
-  const cameraPosition = useMemo(() => {
-    if (!isSceneValid || !scene || !scene.cameras.length) {
-      return 'No camera';
-    }
 
-    const camera = scene.cameras[0] as BABYLON.ArcRotateCamera;
-    if (camera instanceof BABYLON.ArcRotateCamera) {
-      return `α: ${camera.alpha.toFixed(2)}, β: ${camera.beta.toFixed(2)}, r: ${camera.radius.toFixed(2)}`;
-    }
-    
-    return 'Unknown camera type';
-  }, [isSceneValid, scene]);
 
   // Event handlers
   const handleWireframeToggle = useCallback(() => {
@@ -87,19 +76,7 @@ export function SceneControls({
     }
   }, [onWireframeToggle]);
 
-  const handleCameraReset = useCallback(() => {
-    console.log('[DEBUG] Camera reset clicked');
-    if (onCameraReset) {
-      onCameraReset();
-    }
-  }, [onCameraReset]);
 
-  const handleFitToView = useCallback(() => {
-    console.log('[DEBUG] Fit to view clicked');
-    if (onFitToView) {
-      onFitToView();
-    }
-  }, [onFitToView]);
 
   const handleLightingToggle = useCallback(() => {
     console.log('[DEBUG] Lighting toggle clicked');
@@ -168,36 +145,8 @@ export function SceneControls({
           </div>
         </div>
 
-        {/* Camera Controls */}
-        <div className="scene-controls__section">
-          <h4 className="scene-controls__section-title">Camera</h4>
-          <div className="scene-controls__control-group">
-            <button
-              type="button"
-              className="scene-controls__button"
-              onClick={handleCameraReset}
-              disabled={!isSceneValid}
-              aria-label="Reset Camera"
-              tabIndex={0}
-            >
-              Reset Camera
-            </button>
-            <button
-              type="button"
-              className="scene-controls__button"
-              onClick={handleFitToView}
-              disabled={!isSceneValid}
-              aria-label="Fit to View"
-              tabIndex={0}
-            >
-              Fit to View
-            </button>
-            <div className="scene-controls__info">
-              <span className="scene-controls__info-label">Camera Position:</span>
-              <span className="scene-controls__info-value">{cameraPosition}</span>
-            </div>
-          </div>
-        </div>
+        {/* Camera controls are now handled directly at Babylon.js canvas level */}
+        {/* Use keyboard shortcuts: F/B/L/R/T/U/I/H/Z for camera navigation */}
 
         {/* Lighting Controls */}
         <div className="scene-controls__section">

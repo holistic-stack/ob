@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
+    "@babylonjs/gui": "^8.13.0",
     "@babylonjs/loaders": "^8.11.0",
     "@babylonjs/materials": "^8.11.0",
     "@holistic-stack/openscad-parser": "^0.1.2",

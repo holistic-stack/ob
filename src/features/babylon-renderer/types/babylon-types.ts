@@ -27,6 +27,45 @@ export interface BabylonEngineConfig {
 }
 
 /**
+ * Configuration for CAD-style 3D grid
+ */
+export interface CADGridConfig {
+  readonly enabled?: boolean;
+  readonly size?: number;
+  readonly divisions?: number;
+  readonly majorLineInterval?: number;
+  readonly minorLineColor?: string;
+  readonly majorLineColor?: string;
+  readonly opacity?: number;
+  readonly position?: readonly [number, number, number];
+}
+
+/**
+ * Configuration for CAD-style navigation cube
+ */
+export interface CADNavigationCubeConfig {
+  readonly enabled?: boolean;
+  readonly size?: number;
+  readonly position?: readonly [number, number, number];
+  readonly faceLabels?: {
+    readonly front?: string;
+    readonly back?: string;
+    readonly left?: string;
+    readonly right?: string;
+    readonly top?: string;
+    readonly bottom?: string;
+  };
+  readonly faceColors?: {
+    readonly front?: string;
+    readonly back?: string;
+    readonly left?: string;
+    readonly right?: string;
+    readonly top?: string;
+    readonly bottom?: string;
+  };
+}
+
+/**
  * Configuration for Babylon.js scene setup
  */
 export interface BabylonSceneConfig {
@@ -34,6 +73,8 @@ export interface BabylonSceneConfig {
   readonly enableLighting?: boolean;
   readonly backgroundColor?: string;
   readonly cameraPosition?: readonly [number, number, number];
+  readonly cadGrid?: CADGridConfig;
+  readonly cadNavigationCube?: CADNavigationCubeConfig;
 }
 
 /**
@@ -226,6 +267,8 @@ export interface SceneService {
   readonly createScene: (engine: BABYLON.Engine, config?: BabylonSceneConfig) => SceneResult;
   readonly setupCamera: (scene: BABYLON.Scene, config: BabylonSceneConfig) => Result<BABYLON.ArcRotateCamera, string>;
   readonly setupLighting: (scene: BABYLON.Scene) => Result<void, string>;
+  readonly setupCADGrid: (scene: BABYLON.Scene | null, config: NonNullable<BabylonSceneConfig['cadGrid']>) => Result<void, string>;
+  readonly setupNavigationCube: (scene: BABYLON.Scene | null, config: NonNullable<BabylonSceneConfig['cadNavigationCube']>) => Result<void, string>;
   readonly disposeScene: (scene: BABYLON.Scene) => void;
 }
 
@@ -310,8 +353,6 @@ export interface SceneControlsProps extends React.HTMLAttributes<HTMLDivElement>
   readonly backgroundColor?: string;
   readonly defaultCollapsed?: boolean;
   readonly onWireframeToggle?: () => void;
-  readonly onCameraReset?: () => void;
-  readonly onFitToView?: () => void;
   readonly onLightingToggle?: () => void;
   readonly onBackgroundColorChange?: (color: string) => void;
 }

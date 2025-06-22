@@ -18,7 +18,7 @@ import type { BabylonRendererProps, DebugReport } from '../../types/babylon-type
 import { OpenScadAstVisitor } from '../../../babylon-csg2/openscad/ast-visitor/openscad-ast-visitor';
 import { initializeCSG2ForBrowser } from '../../../babylon-csg2/lib/initializers/csg2-browser-initializer/csg2-browser-initializer';
 import { compareASTCached } from '../../../ui-components/shared/utils/ast-comparison';
-import { positionCameraForScene, resetCamera } from '../../services/camera-service';
+
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import './babylon-renderer.css';
 
@@ -372,61 +372,7 @@ export function BabylonRenderer({
     }
   }, [scene, onSceneChange]);
 
-  const handleCameraReset = useCallback(() => {
-    if (scene) {
-      const camera = scene.cameras.find(cam => cam instanceof BABYLON.ArcRotateCamera) as BABYLON.ArcRotateCamera;
-      if (camera) {
-        console.log('[CAMERA] Camera position before reset:', {
-          target: camera.getTarget(),
-          alpha: camera.alpha,
-          beta: camera.beta,
-          radius: camera.radius
-        });
-
-        resetCamera(camera);
-        console.log('[CAMERA] Camera reset to default position');
-        console.log('[CAMERA] Camera position after reset:', {
-          target: camera.getTarget(),
-          alpha: camera.alpha,
-          beta: camera.beta,
-          radius: camera.radius
-        });
-      }
-      if (onSceneChange) {
-        onSceneChange(scene);
-      }
-    }
-  }, [scene, onSceneChange]);
-
-  const handleFitToView = useCallback(() => {
-    if (scene) {
-      const camera = scene.cameras.find(cam => cam instanceof BABYLON.ArcRotateCamera) as BABYLON.ArcRotateCamera;
-      if (camera) {
-        // Get all meshes in the scene
-        const meshes = scene.meshes.filter(mesh =>
-          mesh instanceof BABYLON.AbstractMesh &&
-          !mesh.isDisposed &&
-          mesh.name !== '__root__' // Exclude root mesh
-        ) as BABYLON.AbstractMesh[];
-
-        if (meshes.length === 0) {
-          console.warn('[CAMERA] No meshes found for fit to view');
-          return;
-        }
-
-        console.log('[CAMERA] Fitting camera to view for', meshes.length, 'meshes');
-        const result = positionCameraForScene(camera, meshes);
-        if (result.success) {
-          console.log('[CAMERA] Camera fitted to view successfully');
-        } else {
-          console.warn('[CAMERA] Failed to fit camera to view:', result.error);
-        }
-      }
-      if (onSceneChange) {
-        onSceneChange(scene);
-      }
-    }
-  }, [scene, onSceneChange]);
+  // Camera control handlers removed - camera controls now handled by Babylon.js GUI navigation cube
 
   const handleLightingToggle = useCallback(() => {
     if (scene && onSceneChange) {
@@ -543,8 +489,6 @@ export function BabylonRenderer({
           <SceneControls
             scene={scene}
             onWireframeToggle={handleWireframeToggle}
-            onCameraReset={handleCameraReset}
-            onFitToView={handleFitToView}
             onLightingToggle={handleLightingToggle}
             onBackgroundColorChange={handleBackgroundColorChange}
             {...sceneControlsConfig}

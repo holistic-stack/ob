@@ -15,6 +15,7 @@ import {
   type GlassConfig,
 } from '../../shared';
 import { BabylonRenderer } from '../../../babylon-renderer/components/babylon-renderer/babylon-renderer';
+import type { BabylonSceneConfig } from '../../../babylon-renderer/types/babylon-types';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { ParseError } from '../code-editor/openscad-ast-service';
 import { OpenSCADErrorBoundary } from '../../shared/error-boundary/openscad-error-boundary';
@@ -23,7 +24,7 @@ import {
   useOpenSCADErrors,
   useOpenSCADStatus
 } from '../stores';
-import { useCameraControls } from './use-camera-controls';
+
 
 // ============================================================================
 // Types and Interfaces
@@ -44,20 +45,7 @@ export interface ModelData {
   readonly uvs?: readonly number[];
 }
 
-/**
- * View control actions
- */
-export type ViewAction =
-  | 'reset'
-  | 'zoom-in'
-  | 'zoom-out'
-  | 'rotate-left'
-  | 'rotate-right'
-  | 'pan-up'
-  | 'pan-down'
-  | 'pan-left'
-  | 'pan-right'
-  | 'fit-to-view';
+// ViewAction type removed - camera controls now handled by Babylon.js GUI navigation cube
 
 /**
  * Props for the VisualizationPanel component
@@ -77,8 +65,7 @@ export interface VisualizationPanelProps extends BaseComponentProps, AriaProps {
   /** Error message to display (external error, not parse errors) */
   readonly error?: string;
 
-  /** Whether to show view controls */
-  readonly showControls?: boolean;
+  // showControls removed - camera controls now handled by Babylon.js GUI navigation cube
 
   /** Width of the visualization panel */
   readonly width?: number | string;
@@ -86,8 +73,7 @@ export interface VisualizationPanelProps extends BaseComponentProps, AriaProps {
   /** Height of the visualization panel */
   readonly height?: number | string;
 
-  /** Callback when view changes */
-  readonly onViewChange?: (action: ViewAction) => void;
+  // onViewChange removed - camera controls now handled by Babylon.js GUI navigation cube
 
   /** Callback when model is clicked */
   readonly onModelClick?: (point: { x: number; y: number; z: number }) => void;
@@ -151,138 +137,56 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message }) => (
   </div>
 );
 
+// ViewControls component removed - camera controls now handled by professional Babylon.js GUI navigation cube
+
 // ============================================================================
-// View Controls Component
+// CAD Viewport Configuration
 // ============================================================================
 
-interface ViewControlsProps {
-  readonly onViewChange: (action: ViewAction) => void;
-}
+/**
+ * Professional CAD viewport configuration with 3D grid and navigation cube
+ * Optimized for OpenSCAD visualization with enhanced spatial reference
+ */
+const CAD_VIEWPORT_CONFIG: BabylonSceneConfig = {
+  enableCamera: true,
+  enableLighting: true,
+  backgroundColor: '#2c3e50',
 
-const ViewControls: React.FC<ViewControlsProps> = ({ onViewChange }) => (
-  <div className="absolute top-2 right-2 z-20">
-    {/* Main control panel */}
-    <div className="bg-black/40 backdrop-blur-sm rounded-lg p-2 border border-white/20">
-      {/* Top row - Zoom and Reset */}
-      <div className="flex gap-1 mb-2">
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('zoom-in')}
-          aria-label="Zoom in"
-          title="Zoom in"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-          </svg>
-        </button>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('zoom-out')}
-          aria-label="Zoom out"
-          title="Zoom out"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
-          </svg>
-        </button>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('fit-to-view')}
-          aria-label="Fit to view"
-          title="Fit to view"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-          </svg>
-        </button>
-      </div>
+  // Professional 3D grid system for spatial reference
+  cadGrid: {
+    enabled: true,
+    size: 40,              // Larger grid for OpenSCAD models
+    divisions: 40,         // More divisions for finer reference
+    majorLineInterval: 5,  // Major lines every 5 units
+    minorLineColor: '#e0e0e0',
+    majorLineColor: '#808080',
+    opacity: 0.4,          // Subtle but visible
+    position: [0, 0, 0]    // Centered at origin
+  },
 
-      {/* Pan controls - Cross pattern */}
-      <div className="grid grid-cols-3 gap-1 mb-2">
-        <div></div>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('pan-up')}
-          aria-label="Pan up"
-          title="Pan up"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-        <div></div>
-
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('pan-left')}
-          aria-label="Pan left"
-          title="Pan left"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('reset')}
-          aria-label="Reset view"
-          title="Reset view"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('pan-right')}
-          aria-label="Pan right"
-          title="Pan right"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-
-        <div></div>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('pan-down')}
-          aria-label="Pan down"
-          title="Pan down"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div></div>
-      </div>
-
-      {/* Rotation controls */}
-      <div className="flex gap-1">
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('rotate-left')}
-          aria-label="Rotate left"
-          title="Rotate left"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-        </button>
-        <button
-          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-          onClick={() => onViewChange('rotate-right')}
-          aria-label="Rotate right"
-          title="Rotate right"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-);
+  // Interactive navigation cube for view orientation
+  cadNavigationCube: {
+    enabled: true,
+    size: 1.5,             // Slightly larger for better visibility
+    position: [0.85, 0.85, 0], // Top-right corner positioning
+    faceLabels: {
+      front: 'Front',
+      back: 'Back',
+      left: 'Left',
+      right: 'Right',
+      top: 'Top',
+      bottom: 'Bottom'
+    },
+    faceColors: {
+      front: '#4CAF50',   // Green - Front view
+      back: '#F44336',    // Red - Back view
+      left: '#2196F3',    // Blue - Left view
+      right: '#FF9800',   // Orange - Right view
+      top: '#9C27B0',     // Purple - Top view
+      bottom: '#607D8B'   // Blue Grey - Bottom view
+    }
+  }
+} as const;
 
 // ============================================================================
 // Babylon 3D Renderer Component
@@ -301,6 +205,8 @@ const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
   onModelClick,
   onSceneReady
 }) => {
+  console.log('[VisualizationPanel] Initializing CAD viewport with professional features');
+
   return (
     <div className="w-full h-full">
       <OpenSCADErrorBoundary
@@ -317,6 +223,7 @@ const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
           showSceneControls={false}
           showMeshDisplay={false}
           showDebugPanel={false}
+          sceneConfig={CAD_VIEWPORT_CONFIG}
           astData={astData ?? []}
           onMeshSelect={(mesh) => {
             // Convert Babylon.js mesh selection to 3D point
@@ -342,7 +249,7 @@ const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
           onASTProcessingError={(error) => {
             console.error('[VisualizationPanel] AST processing error:', error);
           }}
-          aria-label="3D OpenSCAD Visualization"
+          aria-label="3D OpenSCAD Visualization with CAD Viewport"
         />
       </OpenSCADErrorBoundary>
     </div>
@@ -358,11 +265,10 @@ const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
  * 
  * @example
  * ```tsx
- * <VisualizationPanel 
+ * <VisualizationPanel
  *   modelData={model3D}
  *   mode="solid"
- *   showControls
- *   onViewChange={(action) => console.log('View changed:', action)}
+ *   onModelClick={(point) => console.log('Model clicked:', point)}
  * />
  * ```
  */
@@ -373,10 +279,10 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
       mode = 'solid',
       loading = false,
       error,
-      showControls = true,
+      // showControls removed - camera controls now handled by Babylon.js GUI navigation cube
       width = 350,
       height = 400,
-      onViewChange,
+      // onViewChange removed - camera controls now handled by Babylon.js GUI navigation cube
       onModelClick,
       glassConfig: _glassConfig,
       overLight: _overLight = false,
@@ -395,17 +301,7 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
     const parseErrors = useOpenSCADErrors();
     const { isParsing } = useOpenSCADStatus();
 
-    // ========================================================================
-    // Camera Controls
-    // ========================================================================
-
-    const cameraControls = useCameraControls();
-
-    // Handle view changes - use camera controls if available, otherwise fallback to prop callback
-    const handleViewChange = (action: ViewAction) => {
-      cameraControls.handleViewAction(action);
-      onViewChange?.(action);
-    };
+    // View change handler removed - camera controls now handled by professional Babylon.js GUI navigation cube
     // ========================================================================
     // Style Generation
     // ========================================================================
@@ -476,7 +372,6 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
                 astData={astData}
                 mode={mode}
                 onModelClick={onModelClick}
-                onSceneReady={cameraControls.setScene}
               />
             )}
 
@@ -494,10 +389,6 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
               </div>
             )}
 
-            {/* View Controls */}
-            {showControls && (
-              <ViewControls onViewChange={handleViewChange} />
-            )}
           </div>
         </div>
       </div>

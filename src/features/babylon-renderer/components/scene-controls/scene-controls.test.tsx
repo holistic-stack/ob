@@ -143,48 +143,15 @@ describe('SceneControls', () => {
   });
 
   describe('camera controls', () => {
-    it('should render camera reset button', () => {
-      console.log('[DEBUG] Testing camera reset button rendering');
-      
+    it('should show camera controls are handled at canvas level', () => {
+      console.log('[DEBUG] Testing camera controls message');
+
       render(<SceneControls scene={mockScene} />);
-      
-      const resetButton = screen.getByRole('button', { name: /reset camera/i });
-      expect(resetButton).toBeInTheDocument();
-    });
 
-    it('should call onCameraReset when reset button is clicked', () => {
-      console.log('[DEBUG] Testing camera reset callback');
-      
-      const mockOnCameraReset = vi.fn();
-      
-      render(
-        <SceneControls 
-          scene={mockScene} 
-          onCameraReset={mockOnCameraReset}
-        />
-      );
-      
-      const resetButton = screen.getByRole('button', { name: /reset camera/i });
-      fireEvent.click(resetButton);
-      
-      expect(mockOnCameraReset).toHaveBeenCalledTimes(1);
-    });
-
-    it('should disable camera reset when scene is null', () => {
-      console.log('[DEBUG] Testing camera reset disabled state');
-      
-      render(<SceneControls scene={null} />);
-      
-      const resetButton = screen.getByRole('button', { name: /reset camera/i });
-      expect(resetButton).toBeDisabled();
-    });
-
-    it('should render camera position display', () => {
-      console.log('[DEBUG] Testing camera position display');
-      
-      render(<SceneControls scene={mockScene} />);
-      
-      expect(screen.getByText(/camera position/i)).toBeInTheDocument();
+      // Camera controls are now handled at Babylon.js canvas level
+      // The component should show a message about this
+      const cameraMessage = screen.getByText(/camera controls are now handled directly at babylon\.js canvas level/i);
+      expect(cameraMessage).toBeInTheDocument();
     });
   });
 

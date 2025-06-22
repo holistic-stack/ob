@@ -94,20 +94,7 @@ describe('VisualizationPanel', () => {
     expect(panel).toHaveStyle({ width: '400px' });
   });
 
-  it('should handle view controls', () => {
-    const onViewChange = vi.fn();
-    render(
-      <VisualizationPanel 
-        showControls 
-        onViewChange={onViewChange}
-      />
-    );
-    
-    const resetButton = screen.getByRole('button', { name: /reset view/i });
-    fireEvent.click(resetButton);
-    
-    expect(onViewChange).toHaveBeenCalledWith('reset');
-  });
+  // View controls test removed - camera controls now handled by Babylon.js GUI navigation cube
 
   it('should be accessible', () => {
     render(

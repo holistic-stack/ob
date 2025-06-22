@@ -77,7 +77,7 @@ export type {
   VisualizationPanelProps,
   VisualizationMode,
   ModelData,
-  ViewAction,
+  // ViewAction removed - camera controls now handled by Babylon.js GUI navigation cube
   ConsolePanelProps,
   ConsoleMessage,
   ConsoleMessageType,

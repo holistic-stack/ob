@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
 import { VisualizationPanel } from './visualization-panel';
-import type { ModelData, VisualizationMode, ViewAction } from './visualization-panel';
+import type { ModelData, VisualizationMode } from './visualization-panel';
 
 // Mock 3D model data
 const mockModelData: ModelData = {
@@ -80,7 +80,6 @@ export const Default: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    showControls: true,
     width: 350,
     height: 400,
   },
@@ -90,7 +89,6 @@ export const Wireframe: Story = {
   args: {
     modelData: mockModelData,
     mode: 'wireframe',
-    showControls: true,
     width: 350,
     height: 400,
   },
@@ -100,7 +98,6 @@ export const Points: Story = {
   args: {
     modelData: mockModelData,
     mode: 'points',
-    showControls: true,
     width: 350,
     height: 400,
   },
@@ -110,7 +107,6 @@ export const Transparent: Story = {
   args: {
     modelData: mockModelData,
     mode: 'transparent',
-    showControls: true,
     width: 350,
     height: 400,
   },
@@ -175,14 +171,10 @@ export const Large: Story = {
 export const Interactive: Story = {
   render: (args) => {
     const [mode, setMode] = useState<VisualizationMode>('solid');
-    const [viewActions, setViewActions] = useState<ViewAction[]>([]);
-
-    const handleViewChange = (action: ViewAction) => {
-      setViewActions(prev => [...prev, action]);
-      console.log('View action:', action);
-    };
+    const [clickEvents, setClickEvents] = useState<Array<{ x: number; y: number; z: number }>>([]);
 
     const handleModelClick = (point: { x: number; y: number; z: number }) => {
+      setClickEvents(prev => [...prev, point]);
       console.log('Model clicked at:', point);
     };
 
@@ -208,18 +200,16 @@ export const Interactive: Story = {
           {...args}
           modelData={mockModelData}
           mode={mode}
-          onViewChange={handleViewChange}
           onModelClick={handleModelClick}
-          showControls
         />
-        
-        {viewActions.length > 0 && (
+
+        {clickEvents.length > 0 && (
           <div className="bg-black/20 backdrop-blur-sm border border-white/50 rounded-lg p-4 text-white">
-            <h3 className="font-semibold mb-2">View Actions:</h3>
+            <h3 className="font-semibold mb-2">Click Events:</h3>
             <div className="space-y-1 text-sm">
-              {viewActions.slice(-5).map((action, index) => (
+              {clickEvents.slice(-5).map((event, index) => (
                 <div key={index} className="text-white/80">
-                  {action}
+                  x: {event.x.toFixed(2)}, y: {event.y.toFixed(2)}, z: {event.z.toFixed(2)}
                 </div>
               ))}
             </div>
@@ -238,7 +228,6 @@ export const LightBackground: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    showControls: true,
     width: 350,
     height: 400,
     overLight: true,

@@ -88,9 +88,7 @@ export function App(): React.JSX.Element {
     console.log('[App] Parse errors updated via Zustand store:', errors.length, 'errors');
   }, []);
 
-  const handleViewChange = useCallback((_action: string) => {
-    // Handle 3D view changes
-  }, []);
+  // handleViewChange removed - camera controls now handled by Babylon.js GUI navigation cube
 
   const handleModelClick = useCallback((_point: { x: number; y: number; z: number }) => {
     // Handle model click events
@@ -152,8 +150,6 @@ export function App(): React.JSX.Element {
             mode={visualizationMode}
             width="100%"
             height="100%"
-            showControls
-            onViewChange={handleViewChange}
             onModelClick={handleModelClick}
             aria-label="3D Model Visualization"
           />

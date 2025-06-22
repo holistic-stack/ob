@@ -11,6 +11,9 @@ importers:
       '@babylonjs/core':
         specifier: ^8.11.0
         version: 8.12.1
+      '@babylonjs/gui':
+        specifier: ^8.13.0
+        version: 8.13.0(@babylonjs/core@8.12.1)
       '@babylonjs/loaders':
         specifier: ^8.11.0
         version: 8.12.1(@babylonjs/core@8.12.1)(babylonjs-gltf2interface@8.12.1)
@@ -40,7 +43,7 @@ importers:
         version: 19.0.0
       react-babylonjs:
         specifier: latest
-        version: 3.2.5-beta.2(@babylonjs/core@8.12.1)(@babylonjs/gui@8.12.1(@babylonjs/core@8.12.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0)
+        version: 3.2.5-beta.2(@babylonjs/core@8.12.1)(@babylonjs/gui@8.13.0(@babylonjs/core@8.12.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0)
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
@@ -291,8 +294,8 @@ packages:
   '@babylonjs/core@8.12.1':
     resolution: {integrity: sha512-qw5B3DxNKXoOTY0WFkZmQnodbmgkUh41OXHa8DBMIUwfz+28DA4xTG8jsN+glrIZo/+gMM28m772bQ9BZ56Z7A==}
 
-  '@babylonjs/gui@8.12.1':
-    resolution: {integrity: sha512-3o8dI1VmafphUza/rK5X5ixgHcNaFzmRRSLoXGN9hNdKWG5xdcYwZkHfItHsKzupzHRVXlawy7a6/dVd3mjwRw==}
+  '@babylonjs/gui@8.13.0':
+    resolution: {integrity: sha512-sy5Q+nsG62JKqAu1Pa2Ob5UFw57d2NtpLpzb5I6tHOjFU7p03iiCJEAm616ZACny9dgM/VrTZRM4A/GKHQMIZQ==}
     peerDependencies:
       '@babylonjs/core': ^8.0.0
 
@@ -3784,7 +3787,7 @@ snapshots:
 
   '@babylonjs/core@8.12.1': {}
 
-  '@babylonjs/gui@8.12.1(@babylonjs/core@8.12.1)':
+  '@babylonjs/gui@8.13.0(@babylonjs/core@8.12.1)':
     dependencies:
       '@babylonjs/core': 8.12.1
 
@@ -6484,10 +6487,10 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  react-babylonjs@3.2.5-beta.2(@babylonjs/core@8.12.1)(@babylonjs/gui@8.12.1(@babylonjs/core@8.12.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0):
+  react-babylonjs@3.2.5-beta.2(@babylonjs/core@8.12.1)(@babylonjs/gui@8.13.0(@babylonjs/core@8.12.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@babylonjs/core': 8.12.1
-      '@babylonjs/gui': 8.12.1(@babylonjs/core@8.12.1)
+      '@babylonjs/gui': 8.13.0(@babylonjs/core@8.12.1)
       react: 19.0.0
       react-reconciler: 0.31.0(react@19.0.0)
     optionalDependencies:
