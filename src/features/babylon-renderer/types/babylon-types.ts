@@ -311,6 +311,7 @@ export interface SceneControlsProps extends React.HTMLAttributes<HTMLDivElement>
   readonly defaultCollapsed?: boolean;
   readonly onWireframeToggle?: () => void;
   readonly onCameraReset?: () => void;
+  readonly onFitToView?: () => void;
   readonly onLightingToggle?: () => void;
   readonly onBackgroundColorChange?: (color: string) => void;
 }

@@ -51,6 +51,7 @@ export function SceneControls({
   defaultCollapsed = false,
   onWireframeToggle,
   onCameraReset,
+  onFitToView,
   onLightingToggle,
   onBackgroundColorChange,
   'aria-label': ariaLabel = 'Scene Controls',
@@ -92,6 +93,13 @@ export function SceneControls({
       onCameraReset();
     }
   }, [onCameraReset]);
+
+  const handleFitToView = useCallback(() => {
+    console.log('[DEBUG] Fit to view clicked');
+    if (onFitToView) {
+      onFitToView();
+    }
+  }, [onFitToView]);
 
   const handleLightingToggle = useCallback(() => {
     console.log('[DEBUG] Lighting toggle clicked');
@@ -173,6 +181,16 @@ export function SceneControls({
               tabIndex={0}
             >
               Reset Camera
+            </button>
+            <button
+              type="button"
+              className="scene-controls__button"
+              onClick={handleFitToView}
+              disabled={!isSceneValid}
+              aria-label="Fit to View"
+              tabIndex={0}
+            >
+              Fit to View
             </button>
             <div className="scene-controls__info">
               <span className="scene-controls__info-label">Camera Position:</span>

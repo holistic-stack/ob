@@ -23,11 +23,11 @@ import type {
 /**
  * Default scene configuration following best practices
  */
-const DEFAULT_SCENE_CONFIG: Required<BabylonSceneConfig> = {
+const DEFAULT_SCENE_CONFIG: BabylonSceneConfig = {
   enableCamera: true,
   enableLighting: true,
-  backgroundColor: '#2c3e50',
-  cameraPosition: [10, 10, 10]
+  backgroundColor: '#2c3e50'
+  // cameraPosition is intentionally omitted to use ArcRotate camera's radius/alpha/beta positioning
 } as const;
 
 // ============================================================================
@@ -135,13 +135,13 @@ const setupCamera = (
       return { success: false, error };
     }
 
-    // Create ArcRotate camera
+    // Create ArcRotate camera with better default positioning for our showcase scene
     const camera = new BABYLON.ArcRotateCamera(
       'camera',
       -Math.PI / 4,    // Alpha: 45 degrees around Y axis
       Math.PI / 3,     // Beta: 60 degrees from horizontal
-      20,              // Radius: distance from target
-      BABYLON.Vector3.Zero(), // Target: center of scene
+      60,              // Radius: increased distance for better initial view
+      new BABYLON.Vector3(1, 6, 4), // Target: centered on our object layout
       scene
     );
 
@@ -154,7 +154,7 @@ const setupCamera = (
 
     // Set camera limits for better control
     camera.lowerRadiusLimit = 2;   // Minimum zoom distance
-    camera.upperRadiusLimit = 100; // Maximum zoom distance
+    camera.upperRadiusLimit = 500; // Maximum zoom distance (increased for large scenes)
     camera.lowerBetaLimit = 0.1;   // Prevent camera from going below ground
     camera.upperBetaLimit = Math.PI - 0.1; // Prevent camera from flipping
 
@@ -165,11 +165,21 @@ const setupCamera = (
       console.log('[DEBUG] Camera positioned at:', camera.position.toString());
     }
 
+    // Attach camera to canvas for user controls and proper updates
+    const canvas = scene.getEngine().getRenderingCanvas();
+    if (canvas) {
+      camera.attachToCanvas(canvas);
+      console.log('[DEBUG] Camera attached to canvas for user controls');
+    } else {
+      console.warn('[WARN] No canvas available for camera attachment');
+    }
+
     console.log('[DEBUG] Camera setup complete:', {
       alpha: camera.alpha,
       beta: camera.beta,
       radius: camera.radius,
-      target: camera.target.toString()
+      target: camera.target.toString(),
+      attachedToCanvas: !!canvas
     });
 
     return { success: true, data: camera };

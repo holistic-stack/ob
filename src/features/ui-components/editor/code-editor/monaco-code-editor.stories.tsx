@@ -85,21 +85,32 @@ export default meta;
 type Story = StoryObj<typeof MonacoCodeEditor>;
 
 // Sample OpenSCAD code for demonstrations
-const basicOpenSCADCode = `// Basic OpenSCAD Example
-module house(size = 10) {
-    // Create the base
-    cube([size, size, size/2]);
-    
-    // Add a roof
-    translate([0, 0, size/2]) {
-        rotate([0, 45, 0]) {
-            cube([size*1.4, size, 2], center=true);
-        }
-    }
-}
+const basicOpenSCADCode = `// OpenSCAD Primitives Showcase
+// Demonstrates various 3D shapes positioned for optimal camera framing
 
-// Create a simple house
-house(15);`;
+// Basic cube at origin
+cube([8, 8, 8]);
+
+// Sphere positioned to the right
+translate([15, 0, 0])
+  sphere(4);
+
+// Cylinder positioned above
+translate([0, 12, 0])
+  cylinder(h = 8, r = 3);
+
+// Cone (using cylinder with different radii)
+translate([15, 12, 0])
+  cylinder(h = 10, r1 = 4, r2 = 1);
+
+// Torus-like shape using difference
+translate([-12, 0, 4])
+  difference() {
+    sphere(5);
+    sphere(3);
+  }
+
+// Use "Fit to View" button to frame all objects perfectly!`;
 
 const advancedOpenSCADCode = `// Advanced OpenSCAD Features Demo
 $fa = 1;

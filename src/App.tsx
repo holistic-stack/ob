@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   MonacoCodeEditor,
   VisualizationPanel,
@@ -6,7 +6,9 @@ import {
 } from './features/ui-components/editor';
 import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
 import { PerformanceDebugPanel } from './features/ui-components/shared/performance/performance-debug-panel';
-import { compareASTCached } from './features/ui-components/shared/utils/ast-comparison';
+import {
+  useOpenSCADActions
+} from './features/ui-components/editor/stores';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 
 // Types for parse errors
@@ -17,48 +19,73 @@ interface ParseError {
   readonly severity: 'error' | 'warning';
 }
 
-// Default OpenSCAD code example - simplified for better performance
-const defaultCode = `// Simple 3D Shapes Demo
-// Basic OpenSCAD shapes to get started
+// Default OpenSCAD code example - showcasing multiple primitives in a well-framed scene
+const defaultCode = `// OpenSCAD Primitives Showcase
+// Demonstrates various 3D shapes positioned for optimal camera framing
 
-// Create a cube
-cube([10, 10, 10]);
+// Basic cube at origin
+cube([8, 8, 8]);
 
-// Create a sphere next to it
+// Sphere positioned to the right
 translate([15, 0, 0])
-  sphere(5);
+  sphere(4);
 
-// Create a cylinder
-translate([0, 15, 0])
-  cylinder(h = 10, r = 3);`;
+// Cylinder positioned above
+translate([0, 12, 0])
+  cylinder(h = 8, r = 3);
+
+// Cone (using cylinder with different radii)
+translate([15, 12, 0])
+  cylinder(h = 10, r1 = 4, r2 = 1);
+
+// Torus-like shape using difference
+translate([-12, 0, 4])
+  difference() {
+    sphere(5);
+    sphere(3);
+  }
+
+// Rounded cube using hull and spheres
+translate([-12, 12, 0])
+  hull() {
+    translate([0, 0, 0]) sphere(2);
+    translate([6, 0, 0]) sphere(2);
+    translate([6, 6, 0]) sphere(2);
+    translate([0, 6, 0]) sphere(2);
+    translate([0, 0, 6]) sphere(2);
+    translate([6, 0, 6]) sphere(2);
+    translate([6, 6, 6]) sphere(2);
+    translate([0, 6, 6]) sphere(2);
+  }
+
+// Use "Fit to View" button to frame all objects perfectly!`;
 
 /**
- * Modern App component with OpenSCAD Editor
+ * Modern App component with OpenSCAD Editor using Zustand store
  */
 export function App(): React.JSX.Element {
   const [code, setCode] = useState(defaultCode);
   const [visualizationMode] = useState<VisualizationMode>('solid');
-  const [ast, setAst] = useState<ASTNode[]>([]);
-  const [parseErrors, setParseErrors] = useState<ParseError[]>([]);
   const [isEditorExpanded, setIsEditorExpanded] = useState(true);
 
-  // Ref to track previous AST for comparison
-  const previousASTRef = useRef<ASTNode[]>([]);
+  // Zustand store hooks
+  const { updateCode } = useOpenSCADActions();
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
-  }, []);
+    // Update Zustand store with new code (this will trigger AST parsing)
+    updateCode(newCode);
+  }, [updateCode]);
 
+  // These callbacks are maintained for backward compatibility with MonacoCodeEditor
   const handleASTChange = useCallback((newAst: ASTNode[]) => {
-    // Only update if AST has actually changed
-    if (!compareASTCached(previousASTRef.current, newAst)) {
-      previousASTRef.current = newAst;
-      setAst(newAst);
-    }
+    // AST changes are now handled by Zustand store
+    console.log('[App] AST updated via Zustand store:', newAst.length, 'nodes');
   }, []);
 
   const handleParseErrors = useCallback((errors: ParseError[]) => {
-    setParseErrors(errors);
+    // Parse errors are now handled by Zustand store
+    console.log('[App] Parse errors updated via Zustand store:', errors.length, 'errors');
   }, []);
 
   const handleViewChange = useCallback((_action: string) => {
@@ -102,8 +129,10 @@ export function App(): React.JSX.Element {
     insertSpaces: true
   }), []);
 
-  // Memoize AST data to prevent unnecessary re-renders in VisualizationPanel
-  const memoizedASTData = useMemo(() => ast, [ast]);
+  // Initialize Zustand store with default code on mount
+  useEffect(() => {
+    updateCode(defaultCode);
+  }, [updateCode]);
 
   return (
     <div className="h-screen w-screen overflow-hidden relative">
@@ -120,8 +149,6 @@ export function App(): React.JSX.Element {
           isEditorExpanded ? 'brightness-75' : 'brightness-100'
         }`}>
           <VisualizationPanel
-            astData={memoizedASTData}
-            parseErrors={parseErrors}
             mode={visualizationMode}
             width="100%"
             height="100%"
@@ -186,11 +213,11 @@ export function App(): React.JSX.Element {
         </button>
 
         {/* Performance Debug Panel (development only) */}
-        <PerformanceDebugPanel
+        {/* <PerformanceDebugPanel
           enabled={process.env.NODE_ENV === 'development'}
           position="top-right"
           maxMetrics={15}
-        />
+        /> */}
       </OpenSCADErrorBoundary>
     </div>
   );

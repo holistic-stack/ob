@@ -55,7 +55,7 @@ vi.mock('../../../babylon-renderer/components/babylon-renderer/babylon-renderer'
 }));
 
 vi.mock('../code-editor/openscad-ast-service', () => ({
-  parseOpenSCADCodeDebounced: vi.fn(),
+  parseOpenSCADCodeCached: vi.fn(),
   cancelDebouncedParsing: vi.fn(),
   validateAST: vi.fn(() => true),
   getPerformanceMetrics: vi.fn(() => ({ assessment: 'good', recommendation: 'Performance is good' }))
@@ -66,6 +66,20 @@ vi.mock('../../shared/performance/performance-monitor', () => ({
     const result = await fn();
     return { result, metrics: { operation, duration: 100, withinTarget: true } };
   })
+}));
+
+// Mock Zustand store
+vi.mock('../stores', () => ({
+  useOpenSCADAst: vi.fn(() => []),
+  useOpenSCADErrors: vi.fn(() => []),
+  useOpenSCADStatus: vi.fn(() => ({ isParsing: false, isASTValid: false })),
+  useOpenSCADActions: vi.fn(() => ({
+    updateCode: vi.fn(),
+    parseAST: vi.fn(),
+    clearErrors: vi.fn(),
+    reset: vi.fn()
+  })),
+  cleanupOpenSCADStore: vi.fn()
 }));
 
 // Test data
@@ -93,10 +107,32 @@ const mockParseError: ParseError = {
 
 describe('OpenSCAD Pipeline Integration', () => {
   let mockParseFunction: any;
+  let mockUseOpenSCADAst: any;
+  let mockUseOpenSCADErrors: any;
+  let mockUseOpenSCADStatus: any;
+  let mockUseOpenSCADActions: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockParseFunction = vi.mocked(require('../code-editor/openscad-ast-service').parseOpenSCADCodeDebounced);
+    mockParseFunction = vi.mocked(require('../code-editor/openscad-ast-service').parseOpenSCADCodeCached);
+
+    // Setup Zustand store mocks
+    const storeModule = require('../stores');
+    mockUseOpenSCADAst = vi.mocked(storeModule.useOpenSCADAst);
+    mockUseOpenSCADErrors = vi.mocked(storeModule.useOpenSCADErrors);
+    mockUseOpenSCADStatus = vi.mocked(storeModule.useOpenSCADStatus);
+    mockUseOpenSCADActions = vi.mocked(storeModule.useOpenSCADActions);
+
+    // Default mock implementations
+    mockUseOpenSCADAst.mockReturnValue([]);
+    mockUseOpenSCADErrors.mockReturnValue([]);
+    mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: false });
+    mockUseOpenSCADActions.mockReturnValue({
+      updateCode: vi.fn(),
+      parseAST: vi.fn(),
+      clearErrors: vi.fn(),
+      reset: vi.fn()
+    });
   });
 
   afterEach(() => {
@@ -113,6 +149,19 @@ describe('OpenSCAD Pipeline Integration', () => {
         parseTime: 150
       });
 
+      // Mock Zustand store to return valid AST data
+      mockUseOpenSCADAst.mockReturnValue(mockValidAST);
+      mockUseOpenSCADErrors.mockReturnValue([]);
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: true });
+
+      const mockUpdateCode = vi.fn();
+      mockUseOpenSCADActions.mockReturnValue({
+        updateCode: mockUpdateCode,
+        parseAST: vi.fn(),
+        clearErrors: vi.fn(),
+        reset: vi.fn()
+      });
+
       const onASTChange = vi.fn();
       const onParseErrors = vi.fn();
 
@@ -127,8 +176,6 @@ describe('OpenSCAD Pipeline Integration', () => {
             data-testid="code-editor"
           />
           <VisualizationPanel
-            astData={mockValidAST}
-            parseErrors={[]}
             data-testid="visualization-panel"
           />
         </div>
@@ -139,7 +186,7 @@ describe('OpenSCAD Pipeline Integration', () => {
 
       // Assert
       await waitFor(() => {
-        expect(mockParseFunction).toHaveBeenCalled();
+        expect(mockUpdateCode).toHaveBeenCalled();
       });
 
       await waitFor(() => {
@@ -161,6 +208,9 @@ describe('OpenSCAD Pipeline Integration', () => {
         parseTime: 150
       });
 
+      // Mock parsing state
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: true, isASTValid: false });
+
       // Act
       render(
         <MonacoCodeEditor
@@ -176,6 +226,10 @@ describe('OpenSCAD Pipeline Integration', () => {
 
       // Assert - Check for parsing indicator
       expect(screen.getByText('Parsing AST...')).toBeInTheDocument();
+
+      // Simulate parsing completion
+      mockUseOpenSCADAst.mockReturnValue(mockValidAST);
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: true });
 
       // Wait for parsing to complete
       await waitFor(() => {
@@ -194,6 +248,11 @@ describe('OpenSCAD Pipeline Integration', () => {
         parseTime: 200
       });
 
+      // Mock error state in Zustand store
+      mockUseOpenSCADAst.mockReturnValue([]);
+      mockUseOpenSCADErrors.mockReturnValue([mockParseError]);
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: false });
+
       const onParseErrors = vi.fn();
 
       // Act
@@ -206,8 +265,6 @@ describe('OpenSCAD Pipeline Integration', () => {
             data-testid="code-editor"
           />
           <VisualizationPanel
-            astData={[]}
-            parseErrors={[mockParseError]}
             data-testid="visualization-panel"
           />
         </div>
@@ -270,6 +327,11 @@ describe('OpenSCAD Pipeline Integration', () => {
         parseTime: 50
       });
 
+      // Mock empty state in Zustand store
+      mockUseOpenSCADAst.mockReturnValue([]);
+      mockUseOpenSCADErrors.mockReturnValue([]);
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: false });
+
       // Act
       render(
         <div>
@@ -279,8 +341,6 @@ describe('OpenSCAD Pipeline Integration', () => {
             data-testid="code-editor"
           />
           <VisualizationPanel
-            astData={[]}
-            parseErrors={[]}
             data-testid="visualization-panel"
           />
         </div>
@@ -391,6 +451,11 @@ describe('OpenSCAD Pipeline Integration', () => {
 
   describe('accessibility', () => {
     it('should have proper ARIA labels and roles', () => {
+      // Mock valid AST data for visualization
+      mockUseOpenSCADAst.mockReturnValue(mockValidAST);
+      mockUseOpenSCADErrors.mockReturnValue([]);
+      mockUseOpenSCADStatus.mockReturnValue({ isParsing: false, isASTValid: true });
+
       // Act
       render(
         <div>
@@ -401,7 +466,6 @@ describe('OpenSCAD Pipeline Integration', () => {
             data-testid="code-editor"
           />
           <VisualizationPanel
-            astData={mockValidAST}
             aria-label="3D Model Visualization"
             data-testid="visualization-panel"
           />

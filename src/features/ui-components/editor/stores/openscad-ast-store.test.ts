@@ -1,0 +1,387 @@
+/**
+ * @file OpenSCAD AST Store Tests
+ * 
+ * Comprehensive test suite for the Zustand-based OpenSCAD AST store.
+ * Tests state management, debouncing, error handling, and performance requirements.
+ * 
+ * @author OpenSCAD-Babylon Pipeline
+ * @version 1.0.0
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import {
+  useOpenSCADStore,
+  useOpenSCADCode,
+  useOpenSCADAst,
+  useOpenSCADErrors,
+  useOpenSCADStatus,
+  useOpenSCADActions,
+  cleanupOpenSCADStore,
+  type OpenSCADCode,
+  type ASTData,
+  type Result
+} from './openscad-ast-store';
+import type { ParseError } from '../code-editor/openscad-ast-service';
+
+// Mock dependencies
+vi.mock('../code-editor/openscad-ast-service', () => ({
+  parseOpenSCADCodeCached: vi.fn(),
+  cancelDebouncedParsing: vi.fn(),
+  validateAST: vi.fn(() => true),
+  getPerformanceMetrics: vi.fn(() => ({ assessment: 'good', recommendation: 'Performance is good' }))
+}));
+
+vi.mock('../../shared/performance/performance-monitor', () => ({
+  measurePerformance: vi.fn(async (operation: string, fn: () => Promise<any>) => {
+    const result = await fn();
+    return { result, metrics: { operation, duration: 100, withinTarget: true } };
+  })
+}));
+
+// Test data
+const validOpenSCADCode = 'cube([10, 10, 10]);' as OpenSCADCode;
+const invalidOpenSCADCode = 'cube([10, 10, 10]' as OpenSCADCode; // Missing closing bracket
+
+const mockValidAST: ASTNode[] = [
+  { type: 'cube', size: [10, 10, 10] } as any
+];
+
+const mockParseError: ParseError = {
+  message: 'Syntax error: missing closing bracket',
+  line: 1,
+  column: 15,
+  severity: 'error'
+};
+
+describe('OpenSCAD AST Store', () => {
+  let mockParseFunction: any;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+
+    // Import the mocked module
+    const astService = await import('../code-editor/openscad-ast-service');
+    mockParseFunction = vi.mocked(astService.parseOpenSCADCodeCached);
+
+    // Reset store to initial state
+    const { result } = renderHook(() => useOpenSCADStore());
+    act(() => {
+      result.current.reset();
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanupOpenSCADStore();
+  });
+
+  describe('initial state', () => {
+    it('should have correct initial state', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      expect(result.current.code).toBe('');
+      expect(result.current.ast).toEqual([]);
+      expect(result.current.parseErrors).toEqual([]);
+      expect(result.current.parseStatus).toBe('idle');
+      expect(result.current.isParsing).toBe(false);
+      expect(result.current.isASTValid).toBe(false);
+      expect(result.current.performanceMetrics).toBeNull();
+      expect(result.current.lastParseTime).toBeNull();
+    });
+  });
+
+  describe('updateCode action', () => {
+    it('should update code immediately', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+      });
+      
+      expect(result.current.code).toBe('cube([5, 5, 5]);');
+    });
+
+    it('should clear AST for empty code', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      // First set some code and AST
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+      });
+      
+      // Then clear it
+      act(() => {
+        result.current.updateCode('');
+      });
+      
+      expect(result.current.code).toBe('');
+      expect(result.current.ast).toEqual([]);
+      expect(result.current.parseStatus).toBe('idle');
+      expect(result.current.isASTValid).toBe(false);
+    });
+
+    it('should debounce parsing calls', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+
+      // Rapid code updates
+      act(() => {
+        result.current.updateCode('c');
+      });
+      act(() => {
+        result.current.updateCode('cu');
+      });
+      act(() => {
+        result.current.updateCode('cub');
+      });
+      act(() => {
+        result.current.updateCode('cube([10, 10, 10]);');
+      });
+
+      // Should not parse immediately
+      expect(mockParseFunction).not.toHaveBeenCalled();
+
+      // Fast-forward through debounce period
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+
+      // Should have called parse function once after debounce
+      expect(mockParseFunction).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('parseAST action', () => {
+    it('should parse valid OpenSCAD code successfully', async () => {
+      mockParseFunction.mockResolvedValue({
+        success: true,
+        ast: mockValidAST,
+        errors: [],
+        parseTime: 150
+      });
+
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      let parseResult: Result<ASTData, ParseError[]>;
+      await act(async () => {
+        parseResult = await result.current.parseAST(validOpenSCADCode, { immediate: true });
+      });
+      
+      expect(parseResult!.success).toBe(true);
+      if (parseResult!.success) {
+        expect(parseResult.data).toEqual(mockValidAST);
+      }
+      
+      expect(result.current.ast).toEqual(mockValidAST);
+      expect(result.current.parseStatus).toBe('success');
+      expect(result.current.isParsing).toBe(false);
+      expect(result.current.isASTValid).toBe(true);
+      expect(result.current.parseErrors).toEqual([]);
+    });
+
+    it('should handle parse errors gracefully', async () => {
+      mockParseFunction.mockResolvedValue({
+        success: false,
+        ast: [],
+        errors: [mockParseError],
+        parseTime: 200
+      });
+
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      let parseResult: Result<ASTData, ParseError[]>;
+      await act(async () => {
+        parseResult = await result.current.parseAST(invalidOpenSCADCode, { immediate: true });
+      });
+      
+      expect(parseResult!.success).toBe(false);
+      if (!parseResult!.success) {
+        expect(parseResult.error).toEqual([mockParseError]);
+      }
+      
+      expect(result.current.ast).toEqual([]);
+      expect(result.current.parseStatus).toBe('error');
+      expect(result.current.isParsing).toBe(false);
+      expect(result.current.isASTValid).toBe(false);
+      expect(result.current.parseErrors).toEqual([mockParseError]);
+    });
+
+    it('should track performance metrics', async () => {
+      const slowParseTime = 400; // Exceeds 300ms target
+      mockParseFunction.mockResolvedValue({
+        success: true,
+        ast: mockValidAST,
+        errors: [],
+        parseTime: slowParseTime
+      });
+
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      await act(async () => {
+        await result.current.parseAST(validOpenSCADCode, { immediate: true });
+      });
+      
+      expect(result.current.performanceMetrics).toEqual({
+        parseTime: slowParseTime,
+        withinTarget: false, // Should be false since 400ms > 300ms
+        operation: 'AST_PARSING'
+      });
+    });
+
+    it('should handle parsing exceptions', async () => {
+      const error = new Error('Parser crashed');
+      mockParseFunction.mockRejectedValue(error);
+
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      let parseResult: Result<ASTData, ParseError[]>;
+      await act(async () => {
+        parseResult = await result.current.parseAST(validOpenSCADCode, { immediate: true });
+      });
+      
+      expect(parseResult!.success).toBe(false);
+      expect(result.current.parseStatus).toBe('error');
+      expect(result.current.parseErrors).toHaveLength(1);
+      expect(result.current.parseErrors[0].message).toBe('Parser crashed');
+    });
+  });
+
+  describe('error management actions', () => {
+    it('should set parse errors manually', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      act(() => {
+        result.current.setParseErrors([mockParseError]);
+      });
+      
+      expect(result.current.parseErrors).toEqual([mockParseError]);
+      expect(result.current.parseStatus).toBe('error');
+      expect(result.current.isASTValid).toBe(false);
+    });
+
+    it('should clear errors', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      // First set some errors
+      act(() => {
+        result.current.setParseErrors([mockParseError]);
+      });
+      
+      // Then clear them
+      act(() => {
+        result.current.clearErrors();
+      });
+      
+      expect(result.current.parseErrors).toEqual([]);
+      expect(result.current.parseStatus).toBe('idle');
+    });
+  });
+
+  describe('store management actions', () => {
+    it('should reset store to initial state', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      // Set some state
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+        result.current.setParseErrors([mockParseError]);
+      });
+      
+      // Reset
+      act(() => {
+        result.current.reset();
+      });
+      
+      expect(result.current.code).toBe('');
+      expect(result.current.ast).toEqual([]);
+      expect(result.current.parseErrors).toEqual([]);
+      expect(result.current.parseStatus).toBe('idle');
+      expect(result.current.isParsing).toBe(false);
+    });
+
+    it('should cancel parsing operations', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      // Set parsing state
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+      });
+      
+      // Cancel parsing
+      act(() => {
+        result.current.cancelParsing();
+      });
+      
+      expect(result.current.isParsing).toBe(false);
+    });
+
+    it('should provide state snapshot', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+      });
+      
+      const snapshot = result.current.getSnapshot();
+      
+      expect(snapshot).toEqual({
+        code: 'cube([5, 5, 5]);',
+        ast: [],
+        parseErrors: [],
+        parseStatus: 'idle',
+        isParsing: false
+      });
+    });
+  });
+
+  describe('selector hooks', () => {
+    it('should provide selective subscriptions', () => {
+      // Test that selector hooks exist and return expected types
+      expect(typeof useOpenSCADCode).toBe('function');
+      expect(typeof useOpenSCADAst).toBe('function');
+      expect(typeof useOpenSCADErrors).toBe('function');
+      expect(typeof useOpenSCADStatus).toBe('function');
+      expect(typeof useOpenSCADActions).toBe('function');
+    });
+  });
+
+  describe('performance requirements', () => {
+    it('should meet 300ms debouncing requirement', () => {
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      act(() => {
+        result.current.updateCode('cube([5, 5, 5]);');
+      });
+      
+      // Should not parse immediately
+      expect(mockParseFunction).not.toHaveBeenCalled();
+      
+      // Should parse after 300ms
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      
+      expect(mockParseFunction).toHaveBeenCalledTimes(1);
+    });
+
+    it('should track performance against 300ms target', async () => {
+      const fastParseTime = 250; // Within target
+      mockParseFunction.mockResolvedValue({
+        success: true,
+        ast: mockValidAST,
+        errors: [],
+        parseTime: fastParseTime
+      });
+
+      const { result } = renderHook(() => useOpenSCADStore());
+      
+      await act(async () => {
+        await result.current.parseAST(validOpenSCADCode, { immediate: true });
+      });
+      
+      expect(result.current.performanceMetrics?.withinTarget).toBe(true);
+    });
+  });
+});

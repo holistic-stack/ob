@@ -6,6 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
+import * as BABYLON from '@babylonjs/core';
 import {
   clsx,
   generateAccessibleStyles,
@@ -17,6 +18,12 @@ import { BabylonRenderer } from '../../../babylon-renderer/components/babylon-re
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { ParseError } from '../code-editor/openscad-ast-service';
 import { OpenSCADErrorBoundary } from '../../shared/error-boundary/openscad-error-boundary';
+import {
+  useOpenSCADAst,
+  useOpenSCADErrors,
+  useOpenSCADStatus
+} from '../stores';
+import { useCameraControls } from './use-camera-controls';
 
 // ============================================================================
 // Types and Interfaces
@@ -40,31 +47,34 @@ export interface ModelData {
 /**
  * View control actions
  */
-export type ViewAction = 'reset' | 'zoom-in' | 'zoom-out' | 'rotate-left' | 'rotate-right';
+export type ViewAction =
+  | 'reset'
+  | 'zoom-in'
+  | 'zoom-out'
+  | 'rotate-left'
+  | 'rotate-right'
+  | 'pan-up'
+  | 'pan-down'
+  | 'pan-left'
+  | 'pan-right'
+  | 'fit-to-view';
 
 /**
  * Props for the VisualizationPanel component
+ *
+ * Note: AST data, parse errors, and parsing status are now managed by Zustand store
  */
 export interface VisualizationPanelProps extends BaseComponentProps, AriaProps {
   /** 3D model data to visualize (legacy) */
   readonly modelData?: ModelData;
 
-  /** AST data from OpenSCAD parsing */
-  readonly astData?: readonly ASTNode[];
-
-  /** Parse errors from OpenSCAD parsing */
-  readonly parseErrors?: readonly ParseError[];
-
-  /** Whether AST parsing is in progress */
-  readonly isParsing?: boolean;
-
   /** Visualization mode */
   readonly mode?: VisualizationMode;
 
-  /** Whether the panel is in loading state */
+  /** Whether the panel is in loading state (external loading, not AST parsing) */
   readonly loading?: boolean;
 
-  /** Error message to display */
+  /** Error message to display (external error, not parse errors) */
   readonly error?: string;
 
   /** Whether to show view controls */
@@ -150,37 +160,127 @@ interface ViewControlsProps {
 }
 
 const ViewControls: React.FC<ViewControlsProps> = ({ onViewChange }) => (
-  <div className="absolute top-2 right-2 flex gap-1 z-20">
-    <button
-      className="p-1 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-      onClick={() => onViewChange('reset')}
-      aria-label="Reset view"
-      title="Reset view"
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    </button>
-    <button
-      className="p-1 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-      onClick={() => onViewChange('zoom-in')}
-      aria-label="Zoom in"
-      title="Zoom in"
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-      </svg>
-    </button>
-    <button
-      className="p-1 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
-      onClick={() => onViewChange('zoom-out')}
-      aria-label="Zoom out"
-      title="Zoom out"
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
-      </svg>
-    </button>
+  <div className="absolute top-2 right-2 z-20">
+    {/* Main control panel */}
+    <div className="bg-black/40 backdrop-blur-sm rounded-lg p-2 border border-white/20">
+      {/* Top row - Zoom and Reset */}
+      <div className="flex gap-1 mb-2">
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('zoom-in')}
+          aria-label="Zoom in"
+          title="Zoom in"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+          </svg>
+        </button>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('zoom-out')}
+          aria-label="Zoom out"
+          title="Zoom out"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+          </svg>
+        </button>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('fit-to-view')}
+          aria-label="Fit to view"
+          title="Fit to view"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Pan controls - Cross pattern */}
+      <div className="grid grid-cols-3 gap-1 mb-2">
+        <div></div>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('pan-up')}
+          aria-label="Pan up"
+          title="Pan up"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        <div></div>
+
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('pan-left')}
+          aria-label="Pan left"
+          title="Pan left"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('reset')}
+          aria-label="Reset view"
+          title="Reset view"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('pan-right')}
+          aria-label="Pan right"
+          title="Pan right"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        <div></div>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('pan-down')}
+          aria-label="Pan down"
+          title="Pan down"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div></div>
+      </div>
+
+      {/* Rotation controls */}
+      <div className="flex gap-1">
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('rotate-left')}
+          aria-label="Rotate left"
+          title="Rotate left"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+        </button>
+        <button
+          className="p-2 bg-black/40 hover:bg-black/60 rounded text-white/80 hover:text-white transition-colors"
+          onClick={() => onViewChange('rotate-right')}
+          aria-label="Rotate right"
+          title="Rotate right"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 );
 
@@ -192,12 +292,14 @@ interface BabylonRendererWrapperProps {
   readonly astData?: readonly ASTNode[];
   readonly mode: VisualizationMode;
   readonly onModelClick?: ((point: { x: number; y: number; z: number }) => void) | undefined;
+  readonly onSceneReady?: (scene: BABYLON.Scene | null) => void;
 }
 
 const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
   astData,
-  mode,
-  onModelClick
+  mode: _mode,
+  onModelClick,
+  onSceneReady
 }) => {
   return (
     <div className="w-full h-full">
@@ -226,6 +328,10 @@ const BabylonRendererWrapper: React.FC<BabylonRendererWrapperProps> = ({
                 z: position.z
               });
             }
+          }}
+          onSceneChange={(scene) => {
+            // Pass scene to camera controls
+            onSceneReady?.(scene);
           }}
           onASTProcessingStart={() => {
             console.log('[VisualizationPanel] AST processing started');
@@ -264,9 +370,6 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
   (
     {
       modelData,
-      astData,
-      parseErrors,
-      isParsing = false,
       mode = 'solid',
       loading = false,
       error,
@@ -275,8 +378,8 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
       height = 400,
       onViewChange,
       onModelClick,
-      glassConfig,
-      overLight = false,
+      glassConfig: _glassConfig,
+      overLight: _overLight = false,
       className,
       'data-testid': dataTestId,
       'aria-label': ariaLabel,
@@ -284,6 +387,25 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
     },
     ref
   ) => {
+    // ========================================================================
+    // Zustand Store Hooks
+    // ========================================================================
+
+    const astData = useOpenSCADAst();
+    const parseErrors = useOpenSCADErrors();
+    const { isParsing } = useOpenSCADStatus();
+
+    // ========================================================================
+    // Camera Controls
+    // ========================================================================
+
+    const cameraControls = useCameraControls();
+
+    // Handle view changes - use camera controls if available, otherwise fallback to prop callback
+    const handleViewChange = (action: ViewAction) => {
+      cameraControls.handleViewAction(action);
+      onViewChange?.(action);
+    };
     // ========================================================================
     // Style Generation
     // ========================================================================
@@ -345,7 +467,7 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
             {/* Error states */}
             {error && <ErrorDisplay message={error} />}
             {parseErrors && parseErrors.length > 0 && !error && (
-              <ErrorDisplay message={`Parse errors: ${parseErrors.map(e => e.message).join(', ')}`} />
+              <ErrorDisplay message={`Parse errors: ${parseErrors.map((e: ParseError) => e.message).join(', ')}`} />
             )}
 
             {/* 3D Rendering */}
@@ -354,6 +476,7 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
                 astData={astData}
                 mode={mode}
                 onModelClick={onModelClick}
+                onSceneReady={cameraControls.setScene}
               />
             )}
 
@@ -372,8 +495,8 @@ export const VisualizationPanel = forwardRef<HTMLDivElement, VisualizationPanelP
             )}
 
             {/* View Controls */}
-            {showControls && onViewChange && (
-              <ViewControls onViewChange={onViewChange} />
+            {showControls && (
+              <ViewControls onViewChange={handleViewChange} />
             )}
           </div>
         </div>
