@@ -1,10 +1,34 @@
 /**
  * @file OpenSCAD AST Zustand Store
- * 
+ *
  * Centralized state management for OpenSCAD AST parsing and 3D visualization pipeline.
  * Implements modern Zustand patterns with TypeScript, Result<T,E> error handling,
  * and performance optimization for the Monaco Editor → AST → Babylon.js flow.
- * 
+ *
+ * **Phase 3 Refactoring**: This component has been refactored to use shared utilities
+ * from `src/features/ui-components/shared/ast-utils.ts` for consistent error handling
+ * and performance logging across the application.
+ *
+ * **Shared Utilities Integration**:
+ * - `createParseError`: Standardized error creation for consistent error formatting
+ * - `formatPerformanceTime`: Unified performance time formatting across components
+ *
+ * **Usage Example**:
+ * ```typescript
+ * const { parseAST, parseErrors, performanceMetrics } = useOpenSCADStore();
+ *
+ * // Parse OpenSCAD code with automatic error handling via shared utilities
+ * const result = await parseAST('cube([10, 10, 10]);', { immediate: true });
+ *
+ * // Errors are automatically formatted using createParseError
+ * if (!result.success) {
+ *   console.log('Parse errors:', parseErrors); // Consistent error format
+ * }
+ *
+ * // Performance metrics use formatPerformanceTime for consistent logging
+ * console.log('Parse time:', performanceMetrics?.parseTime); // e.g., "150.00ms"
+ * ```
+ *
  * Features:
  * - Type-safe state management with branded types
  * - Debounced AST parsing (300ms requirement)
@@ -12,9 +36,11 @@
  * - Performance monitoring and optimization
  * - Selective reactivity to prevent unnecessary re-renders
  * - Memory management and cleanup
- * 
+ * - **NEW**: Shared utilities integration for consistent error handling and logging
+ *
  * @author OpenSCAD-Babylon Pipeline
- * @version 1.0.0
+ * @version 2.0.0 - Phase 3 Refactoring: Shared Utilities Integration
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';
@@ -27,6 +53,7 @@ import {
   type ASTParseResult
 } from '../code-editor/openscad-ast-service';
 import { measurePerformance } from '../../shared/performance/performance-monitor';
+import { createParseError, formatPerformanceTime } from '../../shared/ast-utils';
 
 // ============================================================================
 // Types and Interfaces
@@ -109,6 +136,32 @@ export interface OpenSCADState {
   
   /**
    * Parse OpenSCAD code to AST with performance monitoring
+   *
+   * **Phase 3 Refactoring**: This method now uses shared utilities for consistent
+   * error handling and performance logging across the application.
+   *
+   * **Shared Utilities Used**:
+   * - `createParseError`: Creates standardized ParseError objects for exceptions
+   * - `formatPerformanceTime`: Formats performance times consistently (e.g., "150.00ms")
+   *
+   * @param code - OpenSCAD code to parse
+   * @param options - Parse options
+   * @param options.immediate - If true, parse immediately without debouncing
+   * @returns Promise resolving to Result<ASTData, ParseError[]>
+   *
+   * @example
+   * ```typescript
+   * // Parse with debouncing (default)
+   * const result = await parseAST('cube([10, 10, 10]);');
+   *
+   * // Parse immediately without debouncing
+   * const result = await parseAST('sphere(5);', { immediate: true });
+   *
+   * // Handle errors (automatically formatted via createParseError)
+   * if (!result.success) {
+   *   console.log('Parse errors:', result.error);
+   * }
+   * ```
    */
   parseAST: (code: string, options?: { immediate?: boolean }) => Promise<Result<ASTData, ParseError[]>>;
   
@@ -269,7 +322,7 @@ export const useOpenSCADStore = create<OpenSCADState>()(
             isASTValid: astData.length > 0
           });
           
-          console.log(`[OpenSCADStore] AST parsing completed successfully in ${result.parseTime.toFixed(2)}ms`);
+          console.log(`[OpenSCADStore] AST parsing completed successfully in ${formatPerformanceTime(result.parseTime)}`);
           return { success: true, data: astData } as Result<ASTData, ParseError[]>;
         } else {
           set({
@@ -286,13 +339,8 @@ export const useOpenSCADStore = create<OpenSCADState>()(
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
-        const parseError: ParseError = {
-          message: errorMessage,
-          line: 1,
-          column: 1,
-          severity: 'error'
-        };
-        
+        const parseError = createParseError(errorMessage);
+
         set({
           ast: [] as unknown as ASTData,
           parseErrors: [parseError],
@@ -300,7 +348,7 @@ export const useOpenSCADStore = create<OpenSCADState>()(
           isParsing: false,
           isASTValid: false
         });
-        
+
         console.error('[OpenSCADStore] AST parsing exception:', error);
         return { success: false, error: [parseError] } as Result<ASTData, ParseError[]>;
       }

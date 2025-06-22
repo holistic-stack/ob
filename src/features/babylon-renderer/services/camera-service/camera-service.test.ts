@@ -163,18 +163,18 @@ describe('Camera Service', () => {
 
     it('should handle invalid camera', () => {
       const result = positionCameraForMesh(null as any, createMockMesh('test', [0, 0, 0], 10));
-      
+
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid or disposed camera');
+      expect(result.error).toContain('Camera is null or undefined');
     });
 
     it('should handle invalid mesh', () => {
       const camera = createMockCamera();
-      
+
       const result = positionCameraForMesh(camera, null as any);
-      
+
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid or disposed mesh');
+      expect(result.error).toContain('Mesh is null or undefined');
     });
   });
 

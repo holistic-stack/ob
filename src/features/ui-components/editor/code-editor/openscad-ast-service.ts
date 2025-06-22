@@ -10,14 +10,18 @@
 
 import { createParserResourceManager, type Result } from '../../../babylon-csg2/openscad/utils/parser-resource-manager';
 import { type ASTNode } from '@holistic-stack/openscad-parser';
-
-// Types for AST parsing results
-export interface ParseError {
-  readonly message: string;
-  readonly line: number;
-  readonly column: number;
-  readonly severity: 'error' | 'warning';
-}
+import {
+  validateAST as validateASTShared,
+  createParseError,
+  logASTOperation,
+  logASTResult,
+  formatPerformanceTime,
+  isWithinPerformanceTarget,
+  extractLineNumber,
+  extractColumnNumber,
+  type ParseError,
+  type ASTResult
+} from '../../shared/ast-utils';
 
 export interface ASTParseResult {
   readonly success: boolean;
@@ -26,8 +30,8 @@ export interface ASTParseResult {
   readonly parseTime: number;
 }
 
-// Result type for functional error handling
-export type ASTResult<T> = Result<T, ParseError[]>;
+// Re-export types for backward compatibility
+export type { ParseError, ASTResult };
 
 /**
  * Configuration for AST parsing service
@@ -85,16 +89,14 @@ export async function parseOpenSCADCode(
 
   // Validate input
   if (!code || typeof code !== 'string') {
+    const parseTime = performance.now() - startTime;
+    const error = createParseError('Invalid or empty OpenSCAD code provided');
+
     return {
       success: false,
       ast: [],
-      errors: [{
-        message: 'Invalid or empty OpenSCAD code provided',
-        line: 1,
-        column: 1,
-        severity: 'error'
-      }],
-      parseTime: performance.now() - startTime
+      errors: [error],
+      parseTime
     };
   }
 
@@ -116,14 +118,17 @@ export async function parseOpenSCADCode(
 
     if (result.success) {
       if (finalConfig.enableLogging) {
-        console.log(`[PERF] Successfully parsed AST with ${result.value.length} nodes in ${parseTime.toFixed(2)}ms`);
+        logASTOperation('Successfully parsed AST', result.value, {
+          parseTime: formatPerformanceTime(parseTime)
+        });
       }
 
       // Performance benchmark validation
-      if (parseTime > 300) {
-        console.warn(`[PERF] AST parsing exceeded target time: ${parseTime.toFixed(2)}ms > 300ms`);
+      const withinTarget = isWithinPerformanceTarget(parseTime);
+      if (!withinTarget) {
+        console.warn(`[PERF] AST parsing exceeded target time: ${formatPerformanceTime(parseTime)} > 300ms`);
       } else {
-        console.log(`[PERF] AST parsing within target: ${parseTime.toFixed(2)}ms < 300ms`);
+        console.log(`[PERF] AST parsing within target: ${formatPerformanceTime(parseTime)} < 300ms`);
       }
 
       return {
@@ -133,16 +138,11 @@ export async function parseOpenSCADCode(
         parseTime
       };
     } else {
-      // Convert parser error to ParseError format
-      const parseError: ParseError = {
-        message: result.error,
-        line: extractLineNumber(result.error) || 1,
-        column: extractColumnNumber(result.error) || 1,
-        severity: 'error'
-      };
+      // Convert parser error to ParseError format using shared utility
+      const parseError = createParseError(result.error);
 
       if (finalConfig.enableLogging) {
-        console.warn(`[AST Service] Parsing failed in ${parseTime.toFixed(2)}ms:`, result.error);
+        console.warn(`[AST Service] Parsing failed in ${formatPerformanceTime(parseTime)}:`, result.error);
       }
 
       return {
@@ -155,16 +155,11 @@ export async function parseOpenSCADCode(
   } catch (error) {
     const parseTime = performance.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
-    
-    const parseError: ParseError = {
-      message: `Parser exception: ${errorMessage}`,
-      line: 1,
-      column: 1,
-      severity: 'error'
-    };
+
+    const parseError = createParseError(`Parser exception: ${errorMessage}`);
 
     if (finalConfig.enableLogging) {
-      console.error(`[AST Service] Parser exception in ${parseTime.toFixed(2)}ms:`, error);
+      console.error(`[AST Service] Parser exception in ${formatPerformanceTime(parseTime)}:`, error);
     }
 
     return {
@@ -263,41 +258,17 @@ export function disposeASTService(): void {
   }
 }
 
-/**
- * Extract line number from error message
- * @param errorMessage - Error message that may contain line information
- * @returns Line number or null if not found
- */
-function extractLineNumber(errorMessage: string): number | null {
-  const lineMatch = errorMessage.match(/line\s+(\d+)/i);
-  return lineMatch ? parseInt(lineMatch[1], 10) : null;
-}
-
-/**
- * Extract column number from error message
- * @param errorMessage - Error message that may contain column information
- * @returns Column number or null if not found
- */
-function extractColumnNumber(errorMessage: string): number | null {
-  const columnMatch = errorMessage.match(/column\s+(\d+)/i);
-  return columnMatch ? parseInt(columnMatch[1], 10) : null;
-}
+// Helper functions moved to shared/ast-utils.ts to eliminate duplication
 
 /**
  * Validate AST structure
  * @param ast - AST nodes to validate
  * @returns True if AST is valid
+ * @deprecated Use validateAST from shared/ast-utils instead
  */
 export function validateAST(ast: readonly ASTNode[]): boolean {
-  if (!Array.isArray(ast)) {
-    return false;
-  }
-
-  return ast.every(node => 
-    node && 
-    typeof node === 'object' && 
-    typeof node.type === 'string'
-  );
+  const result = validateASTShared(ast);
+  return result.success;
 }
 
 /**

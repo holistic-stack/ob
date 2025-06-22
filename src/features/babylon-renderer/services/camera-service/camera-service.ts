@@ -9,12 +9,21 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import type { 
-  CameraPosition, 
-  MeshBounds, 
+import type {
+  CameraPosition,
+  MeshBounds,
   CameraService,
   Result
 } from '../../types/babylon-types';
+import {
+  validateCamera,
+  validateMesh,
+  validateMeshArray,
+  applyCameraPosition,
+  logCameraPosition,
+  logCameraResult,
+  withCameraErrorHandling
+} from '../../utils/camera-utils';
 
 // ============================================================================
 // Mesh Bounds Calculation
@@ -178,47 +187,41 @@ export const calculateOptimalPosition = (bounds: MeshBounds): CameraPosition => 
  * Mutates the camera but returns position info for logging
  */
 export const positionCameraForMesh = (
-  camera: BABYLON.ArcRotateCamera, 
+  camera: BABYLON.ArcRotateCamera,
   mesh: BABYLON.AbstractMesh
 ): Result<CameraPosition, string> => {
-  try {
-    if (!camera || camera.isDisposed) {
-      return { success: false, error: 'Invalid or disposed camera' };
-    }
-
-    if (!mesh || mesh.isDisposed) {
-      return { success: false, error: 'Invalid or disposed mesh' };
-    }
-
-    // Calculate mesh bounds
-    const boundsResult = calculateMeshBounds(mesh);
-    if (!boundsResult.success) {
-      return { success: false, error: `Failed to calculate bounds: ${boundsResult.error}` };
-    }
-
-    // Calculate optimal position
-    const position = calculateOptimalPosition(boundsResult.data);
-    
-    // Apply position to camera
-    const [targetX, targetY, targetZ] = position.target;
-    camera.setTarget(new BABYLON.Vector3(targetX, targetY, targetZ));
-    camera.alpha = position.alpha;
-    camera.beta = position.beta;
-    camera.radius = position.radius;
-
-    console.log('[CameraService] Camera positioned for mesh:', {
-      meshName: mesh.name,
-      target: position.target,
-      radius: position.radius,
-      alpha: position.alpha,
-      beta: position.beta
-    });
-
-    return { success: true, data: position };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown camera positioning error';
-    return { success: false, error: `Failed to position camera: ${errorMessage}` };
+  // Validate inputs using shared utilities
+  const cameraValidation = validateCamera(camera);
+  if (!cameraValidation.success) {
+    return cameraValidation;
   }
+
+  const meshValidation = validateMesh(mesh);
+  if (!meshValidation.success) {
+    return meshValidation;
+  }
+
+  // Calculate mesh bounds
+  const boundsResult = calculateMeshBounds(mesh);
+  if (!boundsResult.success) {
+    return { success: false, error: `Failed to calculate bounds: ${boundsResult.error}` };
+  }
+
+  // Calculate optimal position
+  const position = calculateOptimalPosition(boundsResult.data);
+
+  // Apply position to camera using shared utility
+  const applyResult = applyCameraPosition(camera, position);
+  if (!applyResult.success) {
+    return applyResult;
+  }
+
+  // Log result using shared utility
+  logCameraPosition('Camera positioned for mesh', camera, {
+    meshName: mesh.name
+  });
+
+  return { success: true, data: position };
 };
 
 /**
@@ -226,46 +229,42 @@ export const positionCameraForMesh = (
  * Calculates scene bounds and positions camera to show all meshes
  */
 export const positionCameraForScene = (
-  camera: BABYLON.ArcRotateCamera, 
+  camera: BABYLON.ArcRotateCamera,
   meshes: BABYLON.AbstractMesh[]
 ): Result<CameraPosition, string> => {
-  try {
-    if (!camera || camera.isDisposed) {
-      return { success: false, error: 'Invalid or disposed camera' };
-    }
-
-    if (!meshes || meshes.length === 0) {
-      return { success: false, error: 'No meshes provided' };
-    }
-
-    // Calculate scene bounds
-    const boundsResult = calculateSceneBounds(meshes);
-    if (!boundsResult.success) {
-      return { success: false, error: `Failed to calculate scene bounds: ${boundsResult.error}` };
-    }
-
-    // Calculate optimal position
-    const position = calculateOptimalPosition(boundsResult.data);
-    
-    // Apply position to camera
-    const [targetX, targetY, targetZ] = position.target;
-    camera.setTarget(new BABYLON.Vector3(targetX, targetY, targetZ));
-    camera.alpha = position.alpha;
-    camera.beta = position.beta;
-    camera.radius = position.radius;
-
-    console.log('[CameraService] Camera positioned for scene:', {
-      meshCount: meshes.length,
-      target: position.target,
-      radius: position.radius,
-      sceneBounds: boundsResult.data
-    });
-
-    return { success: true, data: position };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown scene positioning error';
-    return { success: false, error: `Failed to position camera for scene: ${errorMessage}` };
+  // Validate inputs using shared utilities
+  const cameraValidation = validateCamera(camera);
+  if (!cameraValidation.success) {
+    return cameraValidation;
   }
+
+  const meshValidation = validateMeshArray(meshes);
+  if (!meshValidation.success) {
+    return meshValidation;
+  }
+
+  // Calculate scene bounds
+  const boundsResult = calculateSceneBounds(meshValidation.data);
+  if (!boundsResult.success) {
+    return { success: false, error: `Failed to calculate scene bounds: ${boundsResult.error}` };
+  }
+
+  // Calculate optimal position
+  const position = calculateOptimalPosition(boundsResult.data);
+
+  // Apply position to camera using shared utility
+  const applyResult = applyCameraPosition(camera, position);
+  if (!applyResult.success) {
+    return applyResult;
+  }
+
+  // Log result using shared utility
+  logCameraPosition('Camera positioned for scene', camera, {
+    meshCount: meshValidation.data.length,
+    sceneBounds: boundsResult.data
+  });
+
+  return { success: true, data: position };
 };
 
 /**
@@ -273,21 +272,37 @@ export const positionCameraForScene = (
  * Useful for manual camera reset functionality
  */
 export const resetCamera = (camera: BABYLON.ArcRotateCamera): void => {
-  try {
-    if (!camera || camera.isDisposed) {
-      console.warn('[CameraService] Cannot reset invalid or disposed camera');
-      return;
+  const result = withCameraErrorHandling('reset camera', () => {
+    // Validate camera using shared utility
+    const validation = validateCamera(camera);
+    if (!validation.success) {
+      console.warn('[CameraService] Cannot reset camera:', validation.error);
+      return validation;
     }
 
-    // Reset to default position
-    camera.setTarget(BABYLON.Vector3.Zero());
-    camera.alpha = -Math.PI / 4;
-    camera.beta = Math.PI / 3;
-    camera.radius = 20;
+    // Define default position
+    const defaultPosition: CameraPosition = {
+      target: [0, 0, 0],
+      alpha: -Math.PI / 4,
+      beta: Math.PI / 3,
+      radius: 20
+    };
 
-    console.log('[CameraService] Camera reset to default position');
-  } catch (error) {
-    console.error('[CameraService] Failed to reset camera:', error);
+    // Apply default position using shared utility
+    const applyResult = applyCameraPosition(camera, defaultPosition);
+    if (!applyResult.success) {
+      return applyResult;
+    }
+
+    // Log result using shared utility
+    logCameraPosition('Camera reset to default position', camera);
+
+    return { success: true, data: undefined };
+  });
+
+  // Log any errors that occurred
+  if (!result.success) {
+    console.error('[CameraService] Failed to reset camera:', result.error);
   }
 };
 

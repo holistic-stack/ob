@@ -44,7 +44,11 @@
     "test:ast-service": "vitest run src/features/ui-components/editor/code-editor/openscad-ast-service.test.ts",
     "test:error-boundary": "vitest run src/features/ui-components/shared/error-boundary/openscad-error-boundary.test.tsx",
     "test:performance-monitor": "vitest run src/features/ui-components/shared/performance/performance-monitor.test.ts",
-    "test:babylon-visual": "playwright test src/features/babylon-renderer/components/babylon-renderer/babylon-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots"
+    "test:babylon-visual": "playwright test src/features/babylon-renderer/components/babylon-renderer/babylon-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots",
+    "validate:shared-utilities": "node scripts/validate-shared-utilities.js",
+    "validate:types": "tsc --noEmit --strict",
+    "validate:quality": "npm run lint && npm run validate:types && npm run validate:shared-utilities",
+    "validate:all": "npm run validate:quality && npm run test:unit && npm run test:coverage"
   },
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
