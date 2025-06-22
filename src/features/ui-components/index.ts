@@ -57,6 +57,16 @@ export type {
 // Showcase Component
 export { LiquidGlassShowcase } from './showcase';
 
+// Layout Components
+export {
+  AppLayout,
+} from './layout';
+export type {
+  AppLayoutProps,
+  FileName,
+  LayoutConfig,
+} from './layout';
+
 // Editor Components
 export {
   EditorLayout,
@@ -157,7 +167,7 @@ export const LIBRARY_INFO = {
   name: 'Liquid Glass UI',
   version: '1.0.0',
   description: 'Apple Liquid Glass design system components for React',
-  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase', 'EditorLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
+  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase', 'AppLayout', 'EditorLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
   features: [
     'Glass morphism effects',
     'Accessibility compliance (WCAG 2.1 AA)',
@@ -207,6 +217,12 @@ export const COMPONENT_REGISTRY = {
     demos: ['Single Button', 'Button Group', 'Horizontal Dock', 'Grid Dock', 'Control Panel', 'Notification'],
     features: ['Real-world use cases', 'Beautiful backgrounds', 'Interactive demos', 'Technical documentation'],
   },
+  AppLayout: {
+    displayName: 'App Layout',
+    description: 'CAD-style application layout with comprehensive interface structure and glass morphism effects',
+    sections: ['Header Bar', 'Toolbar', 'Main Body (Split Layout)', 'Footer Bar'],
+    features: ['Glass morphism', '8px grid system', 'Split layout', 'Accessibility (WCAG 2.1 AA)', 'Monaco Editor integration', 'Babylon.js visualization'],
+  },
   EditorLayout: {
     displayName: 'Editor Layout',
     description: 'Main layout component for code editor interface with glass morphism effects',
@@ -252,6 +268,7 @@ export default {
   Input,
   Slider,
   LiquidGlassShowcase,
+  AppLayout,
   EditorLayout,
   FileExplorer,
   CodeEditor,

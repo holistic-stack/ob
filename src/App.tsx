@@ -1,23 +1,11 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import {
-  MonacoCodeEditor,
-  VisualizationPanel,
-  type VisualizationMode
-} from './features/ui-components/editor';
+import React, { useState, useCallback, useEffect } from 'react';
+import { AppLayout, type FileName } from './features/ui-components/layout';
 import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
-import { PerformanceDebugPanel } from './features/ui-components/shared/performance/performance-debug-panel';
 import {
   useOpenSCADActions
 } from './features/ui-components/editor/stores';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 
-// Types for parse errors
-interface ParseError {
-  readonly message: string;
-  readonly line: number;
-  readonly column: number;
-  readonly severity: 'error' | 'warning';
-}
+
 
 // Default OpenSCAD code example - showcasing multiple primitives in a well-framed scene
 const defaultCode = `// OpenSCAD Primitives Showcase
@@ -61,71 +49,31 @@ translate([-12, 12, 0])
 // Use "Fit to View" button to frame all objects perfectly!`;
 
 /**
- * Modern App component with OpenSCAD Editor using Zustand store
+ * Modern App component with CAD-style Liquid Glass Layout
+ * Maintains backward compatibility with existing OpenSCAD editor and Babylon.js visualization
  */
 export function App(): React.JSX.Element {
-  const [code, setCode] = useState(defaultCode);
-  const [visualizationMode] = useState<VisualizationMode>('solid');
-  const [isEditorExpanded, setIsEditorExpanded] = useState(true);
+  const [fileName, setFileName] = useState('untitled.scad');
 
-  // Zustand store hooks
+  // Zustand store hooks for backward compatibility
   const { updateCode } = useOpenSCADActions();
 
-  const handleCodeChange = useCallback((newCode: string) => {
-    setCode(newCode);
-    // Update Zustand store with new code (this will trigger AST parsing)
-    updateCode(newCode);
-  }, [updateCode]);
-
-  // These callbacks are maintained for backward compatibility with MonacoCodeEditor
-  const handleASTChange = useCallback((newAst: ASTNode[]) => {
-    // AST changes are now handled by Zustand store
-    console.log('[App] AST updated via Zustand store:', newAst.length, 'nodes');
+  // Layout event handlers
+  const handleFileNameChange = useCallback((newName: string) => {
+    setFileName(newName);
+    console.log('[App] File name changed to:', newName);
   }, []);
 
-  const handleParseErrors = useCallback((errors: ParseError[]) => {
-    // Parse errors are now handled by Zustand store
-    console.log('[App] Parse errors updated via Zustand store:', errors.length, 'errors');
+  const handleRender = useCallback(() => {
+    console.log('[App] Render button clicked');
+    // Trigger re-render of current AST data
+    // This could trigger a fresh CSG2 conversion or other render operations
   }, []);
 
-  // handleViewChange removed - camera controls now handled by Babylon.js GUI navigation cube
-
-  const handleModelClick = useCallback((_point: { x: number; y: number; z: number }) => {
-    // Handle model click events
+  const handleMoreOptions = useCallback(() => {
+    console.log('[App] More options button clicked');
+    // Open options menu or settings panel
   }, []);
-
-  const toggleEditor = useCallback(() => {
-    setIsEditorExpanded(prev => !prev);
-  }, []);
-
-  // Keyboard shortcut for toggling editor (Ctrl/Cmd + E)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
-        event.preventDefault();
-        toggleEditor();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleEditor]);
-
-  // Memoize Monaco editor options to prevent unnecessary re-renders
-  const monacoOptions = useMemo(() => ({
-    fontSize: 14,
-    lineNumbers: 'on' as const,
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    wordWrap: 'on' as const,
-    automaticLayout: true,
-    folding: true,
-    glyphMargin: true,
-    lineDecorationsWidth: 20,
-    lineNumbersMinChars: 3,
-    tabSize: 2,
-    insertSpaces: true
-  }), []);
 
   // Initialize Zustand store with default code on mount
   useEffect(() => {
@@ -133,89 +81,21 @@ export function App(): React.JSX.Element {
   }, [updateCode]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative">
-      <OpenSCADErrorBoundary
-        enableRecovery={true}
-        showTechnicalDetails={true}
-        onError={(error, errorInfo) => {
-          console.error('[App] Error caught by boundary:', error, errorInfo);
-        }}
-        className="h-full w-full"
-      >
-        {/* Full-screen 3D Visualization Panel (Background) */}
-        <div className={`absolute inset-0 z-0 transition-all duration-300 ${
-          isEditorExpanded ? 'brightness-75' : 'brightness-100'
-        }`}>
-          <VisualizationPanel
-            mode={visualizationMode}
-            width="100%"
-            height="100%"
-            onModelClick={handleModelClick}
-            aria-label="3D Model Visualization"
-          />
-        </div>
-
-        {/* Monaco Code Editor Drawer (Overlay) */}
-        <div
-          className={`absolute top-0 left-0 z-10 h-full transition-all duration-300 ease-in-out ${
-            isEditorExpanded ? 'translate-x-0' : '-translate-x-full'
-          } ${
-            isEditorExpanded ? 'w-full md:w-3/4 lg:w-1/2' : 'w-0'
-          }`}
-        >
-          <div className="h-full w-full relative">
-            <MonacoCodeEditor
-              value={code}
-              onChange={handleCodeChange}
-              language="openscad"
-              theme="dark"
-              height="100%"
-              width="100%"
-              enableASTParsing
-              onASTChange={handleASTChange}
-              onParseErrors={handleParseErrors}
-              options={monacoOptions}
-            />
-          </div>
-        </div>
-
-        {/* Drawer Toggle Button */}
-        <button
-          onClick={toggleEditor}
-          className={`fixed top-4 z-20 transition-all duration-300 ease-in-out ${
-            isEditorExpanded
-              ? 'left-[calc(100%-3rem)] md:left-[calc(75%-3rem)] lg:left-[calc(50%-3rem)]'
-              : 'left-4'
-          }`}
-          aria-label={isEditorExpanded ? 'Collapse Code Editor (Ctrl+E)' : 'Expand Code Editor (Ctrl+E)'}
-          title={isEditorExpanded ? 'Collapse Code Editor (Ctrl+E)' : 'Expand Code Editor (Ctrl+E)'}
-        >
-          <div className="bg-black/80 backdrop-blur-sm border border-white/30 rounded-lg p-3 hover:bg-black/90 transition-colors">
-            <div className="w-6 h-6 text-white flex items-center justify-center">
-              {isEditorExpanded ? (
-                // Collapse icon (chevron left)
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                  <polyline points="15,18 9,12 15,6" />
-                </svg>
-              ) : (
-                // Expand icon (code)
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                  <polyline points="16,18 22,12 16,6" />
-                  <polyline points="8,6 2,12 8,18" />
-                </svg>
-              )}
-            </div>
-          </div>
-        </button>
-
-        {/* Performance Debug Panel (development only) */}
-        {/* <PerformanceDebugPanel
-          enabled={process.env.NODE_ENV === 'development'}
-          position="top-right"
-          maxMetrics={15}
-        /> */}
-      </OpenSCADErrorBoundary>
-    </div>
+    <OpenSCADErrorBoundary
+      enableRecovery={true}
+      showTechnicalDetails={true}
+      onError={(error, errorInfo) => {
+        console.error('[App] Error caught by boundary:', error, errorInfo);
+      }}
+      className="h-full w-full"
+    >
+      <AppLayout
+        fileName={fileName as FileName} // Type assertion for branded type
+        onFileNameChange={handleFileNameChange}
+        onRender={handleRender}
+        onMoreOptions={handleMoreOptions}
+      />
+    </OpenSCADErrorBoundary>
   );
 }
 
