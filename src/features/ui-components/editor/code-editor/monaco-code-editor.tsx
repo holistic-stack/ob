@@ -30,15 +30,20 @@ import {
   useOpenSCADAst,
   cleanupOpenSCADStore
 } from '../stores';
+import type { ComponentSize } from '../../shared/types';
+import {
+  generateMonacoGlassClasses,
+  generateMonacoContentLayer,
+  generateMonacoStatusGlass,
+  generateMonacoSizing,
+  createMonacoGlassConfig,
+  type MonacoGlassConfig,
+  type MonacoGlassOptions,
+} from './monaco-glass-styles';
 
 // Re-export types for backward compatibility
 export type { ParseError };
-
-interface GlassConfig {
-  readonly intensity?: 'light' | 'medium' | 'heavy';
-  readonly tint?: string;
-  readonly blur?: string;
-}
+export type { MonacoGlassConfig, MonacoGlassOptions };
 
 export interface MonacoCodeEditorProps {
   /** Current code value */
@@ -56,9 +61,13 @@ export interface MonacoCodeEditorProps {
   /** Monaco editor options */
   readonly options?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
   /** Glass morphism configuration */
-  readonly glassConfig?: GlassConfig;
+  readonly glassConfig?: Partial<MonacoGlassConfig>;
+  /** Component size for 8px grid compliance */
+  readonly size?: ComponentSize;
   /** Whether editor is read-only */
   readonly readOnly?: boolean;
+  /** Whether editor is disabled */
+  readonly disabled?: boolean;
   /** Enable AST parsing for OpenSCAD */
   readonly enableASTParsing?: boolean;
   /** Callback when AST is parsed (OpenSCAD only) */
@@ -268,7 +277,9 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
   width = '100%',
   options = {},
   glassConfig,
+  size = 'medium',
   readOnly = false,
+  disabled = false,
   enableASTParsing = false,
   onASTChange,
   onParseErrors,
@@ -412,28 +423,50 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
     ...options
   };
 
-  // Glass morphism classes
+  // Create glass configuration with validation
+  const monacoGlassConfig = createMonacoGlassConfig({
+    editorTheme: theme,
+    enableFocusRing: true,
+    enableTransitions: true,
+    ...glassConfig,
+  });
+
+  // Glass morphism options based on component state
+  const glassOptions: MonacoGlassOptions = {
+    size,
+    disabled,
+    readOnly,
+    hasErrors: parseErrors.length > 0,
+    isActive: isMonacoReady,
+  };
+
+  // Generate glass morphism classes using reusable utilities (DRY principle)
   const glassClasses = clsx(
-    'relative overflow-hidden rounded-lg',
-    'bg-black/20 backdrop-blur-sm border border-white/50',
-    'shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]',
-    'before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/60 before:via-transparent before:to-transparent before:opacity-70 before:pointer-events-none',
-    'after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-tl after:from-white/30 after:via-transparent after:to-transparent after:opacity-50 after:pointer-events-none',
-    'focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2',
-    'transition-all duration-200 ease-in-out'
+    generateMonacoGlassClasses(monacoGlassConfig, glassOptions),
+    generateMonacoSizing(size)
   );
 
+  // Calculate minimum height based on 8px grid system
+  const minHeight = size === 'small' ? '40px' : size === 'large' ? '56px' : '48px';
+  const computedHeight = typeof height === 'string' && height.includes('px')
+    ? `max(${height}, ${minHeight})`
+    : height;
+
   return (
-    <div 
+    <div
       className={glassClasses}
-      style={{ height, width, minHeight: '44px' }}
+      style={{
+        height: computedHeight,
+        width,
+        minHeight
+      }}
       data-testid="monaco-code-editor"
       data-language={language}
       data-theme={theme}
       role="textbox"
       tabIndex={0}
     >
-      <div className="relative z-10 h-full w-full">
+      <div className={generateMonacoContentLayer()}>
         <Editor
           height="100%"
           width="100%"
@@ -446,7 +479,7 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
         {/* Parsing indicator */}
         {isParsing && enableASTParsing && (
           <div className="absolute top-2 left-2 z-20">
-            <div className="bg-blue-900/80 backdrop-blur-sm border border-blue-500/50 rounded-lg p-2 flex items-center gap-2">
+            <div className={clsx(generateMonacoStatusGlass('parsing'), 'flex items-center gap-2')}>
               <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
               <span className="text-blue-300 text-xs">Parsing AST...</span>
             </div>
@@ -470,7 +503,7 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
         {/* Success indicator */}
         {isASTValid && ast.length > 0 && enableASTParsing && !isParsing && (
           <div className="absolute bottom-2 right-2 z-20">
-            <div className="bg-green-900/80 backdrop-blur-sm border border-green-500/50 rounded-lg p-2">
+            <div className={generateMonacoStatusGlass('success')}>
               <span className="text-green-300 text-xs">
                 ✓ {ast.length} AST {ast.length === 1 ? 'node' : 'nodes'}
               </span>

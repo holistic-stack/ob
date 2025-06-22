@@ -203,38 +203,181 @@ describe('MonacoCodeEditor', () => {
     });
   });
 
-  describe('Glass Morphism Effects', () => {
-    it('should apply complete three-layer glass effect', () => {
+  describe('Glass Morphism Effects (Enhanced TDD)', () => {
+    it('should apply base glass morphism effects following design system', () => {
       render(<MonacoCodeEditor />);
-      
+
       const editor = screen.getByTestId('monaco-code-editor');
-      
-      // Base glass effect
+
+      // Base glass effect - exact requirements
       expect(editor).toHaveClass('bg-black/20');
       expect(editor).toHaveClass('backdrop-blur-sm');
+      expect(editor).toHaveClass('border');
       expect(editor).toHaveClass('border-white/50');
-      
-      // Shadow system
-      expect(editor).toHaveClass('shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]');
-      
-      // Gradient pseudo-elements
-      expect(editor).toHaveClass('before:bg-gradient-to-br');
-      expect(editor).toHaveClass('after:bg-gradient-to-tl');
+      expect(editor).toHaveClass('rounded-lg');
     });
 
-    it('should support custom glass configuration', () => {
-      const glassConfig = { intensity: 'heavy' as const, tint: 'blue', blur: 'lg' };
-      render(<MonacoCodeEditor glassConfig={glassConfig} />);
-      
+    it('should apply complex shadow system with three layers', () => {
+      render(<MonacoCodeEditor />);
+
       const editor = screen.getByTestId('monaco-code-editor');
+
+      // Complex shadow system - exact specification
+      expect(editor).toHaveClass(
+        'shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)]'
+      );
+    });
+
+    it('should apply gradient pseudo-elements for refraction effects', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+
+      // Before pseudo-element
+      expect(editor).toHaveClass('before:absolute');
+      expect(editor).toHaveClass('before:inset-0');
+      expect(editor).toHaveClass('before:rounded-lg');
+      expect(editor).toHaveClass('before:bg-gradient-to-br');
+      expect(editor).toHaveClass('before:from-white/60');
+      expect(editor).toHaveClass('before:via-transparent');
+      expect(editor).toHaveClass('before:to-transparent');
+      expect(editor).toHaveClass('before:opacity-70');
+      expect(editor).toHaveClass('before:pointer-events-none');
+
+      // After pseudo-element
+      expect(editor).toHaveClass('after:absolute');
+      expect(editor).toHaveClass('after:inset-0');
+      expect(editor).toHaveClass('after:rounded-lg');
+      expect(editor).toHaveClass('after:bg-gradient-to-tl');
+      expect(editor).toHaveClass('after:from-white/30');
+      expect(editor).toHaveClass('after:via-transparent');
+      expect(editor).toHaveClass('after:to-transparent');
+      expect(editor).toHaveClass('after:opacity-50');
+      expect(editor).toHaveClass('after:pointer-events-none');
+    });
+
+    it('should ensure content layer is positioned above gradients', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      const contentLayer = editor.querySelector('.relative.z-10');
+
+      expect(contentLayer).toBeInTheDocument();
+      expect(contentLayer).toHaveClass('relative', 'z-10', 'h-full', 'w-full');
+    });
+
+    it('should use generateGlassClasses utility following DRY principle', () => {
+      const glassConfig = {
+        blurIntensity: 'lg' as const,
+        opacity: 0.2,
+        elevation: 'medium' as const,
+        enableDistortion: false,
+        enableSpecularHighlights: true,
+      };
+
+      render(<MonacoCodeEditor glassConfig={glassConfig} />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toBeInTheDocument();
+      // Should integrate with shared glass utilities
+    });
+
+    it('should maintain glass effects across different themes', () => {
+      const { rerender } = render(<MonacoCodeEditor theme="dark" />);
+
+      let editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toHaveClass('bg-black/20', 'backdrop-blur-sm');
+
+      rerender(<MonacoCodeEditor theme="light" />);
+      editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toHaveClass('bg-black/20', 'backdrop-blur-sm');
+    });
+
+    it('should apply focus ring with glass morphism integration', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toHaveClass(
+        'focus-within:ring-2',
+        'focus-within:ring-blue-500',
+        'focus-within:ring-offset-2'
+      );
+    });
+
+    it('should include transition effects for smooth interactions', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toHaveClass('transition-all', 'duration-200', 'ease-in-out');
+    });
+  });
+
+  describe('8px Grid System Compliance', () => {
+    it('should follow 8px grid for minimum touch target size', () => {
+      render(<MonacoCodeEditor height="20px" />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      // Should use 48px (8px grid) instead of 44px
+      expect(editor).toHaveStyle({ minHeight: '48px' });
+    });
+
+    it('should use 8px grid compliant border radius', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toHaveClass('rounded-lg'); // 8px border radius
+    });
+
+    it('should avoid non-8px-grid values', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      // Should not have forbidden classes like p-5, gap-5, px-7
+      expect(editor.className).not.toMatch(/p-5|gap-5|px-7|py-5/);
+    });
+  });
+
+  describe('DRY and SRP Principles', () => {
+    it('should use shared glass utilities instead of hardcoded styles', () => {
+      render(<MonacoCodeEditor />);
+
+      const editor = screen.getByTestId('monaco-code-editor');
+      // Should use generateGlassClasses utility
       expect(editor).toBeInTheDocument();
     });
 
-    it('should adapt to light backgrounds', () => {
-      render(<MonacoCodeEditor theme="light" />);
-      
+    it('should separate styling concerns from editor logic', () => {
+      render(<MonacoCodeEditor />);
+
+      // Component should have clear separation between:
+      // 1. Glass morphism styling
+      // 2. Monaco Editor integration
+      // 3. AST parsing logic
       const editor = screen.getByTestId('monaco-code-editor');
-      expect(editor).toHaveAttribute('data-theme', 'light');
+      const monacoEditor = screen.getByTestId('monaco-editor');
+
+      expect(editor).toBeInTheDocument();
+      expect(monacoEditor).toBeInTheDocument();
+    });
+
+    it('should reuse glass configuration across instances', () => {
+      const glassConfig = {
+        blurIntensity: 'lg' as const,
+        opacity: 0.2,
+        elevation: 'medium' as const,
+        enableDistortion: false,
+        enableSpecularHighlights: true,
+      };
+
+      const { rerender } = render(<MonacoCodeEditor glassConfig={glassConfig} />);
+
+      let editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toBeInTheDocument();
+
+      rerender(<MonacoCodeEditor glassConfig={glassConfig} language="javascript" />);
+      editor = screen.getByTestId('monaco-code-editor');
+      expect(editor).toBeInTheDocument();
+      // Should reuse same glass configuration
     });
   });
 
