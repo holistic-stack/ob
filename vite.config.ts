@@ -31,7 +31,9 @@ export default defineConfig({
       external: [
         'react',
         'react-dom',
-        '@babylonjs/core',
+        'three',
+        '@react-three/fiber',
+        '@react-three/drei',
         // Exclude Node.js modules that shouldn't be in browser build
         'node:fs',
         'node:path',
@@ -59,7 +61,9 @@ export default defineConfig({
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          '@babylonjs/core': 'BABYLON',
+          three: 'THREE',
+          '@react-three/fiber': 'ReactThreeFiber',
+          '@react-three/drei': 'ReactThreeDrei',
         },
       },
     },

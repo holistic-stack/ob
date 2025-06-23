@@ -1,9 +1,9 @@
 /**
  * @file Main React application entry point
  *
- * Entry point for the OpenSCAD to Babylon.js pipeline application.
+ * Entry point for the OpenSCAD to React Three Fiber pipeline application.
  * Provides a complete interface for the pipeline:
- * OpenSCAD code → @holistic-stack/openscad-parser:parseAST → CSG2 Babylon JS → Babylon JS scene
+ * OpenSCAD code → @holistic-stack/openscad-parser:parseAST → Three.js CSG → React Three Fiber scene
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';

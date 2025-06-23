@@ -176,3 +176,32 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
 }
+
+/* React Three Fiber canvas overlay styles */
+canvas[data-r3f-canvas="true"] {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto !important;
+  z-index: 1000 !important;
+}
+
+/* Ensure Babylon.js canvas container allows overlays */
+.babylon-canvas-container {
+  position: relative !important;
+}
+
+/* Debug styles for navigation cube (temporary) */
+.babylon-renderer__nav-cube-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 2000;
+}

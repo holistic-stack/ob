@@ -89,9 +89,10 @@ export default defineConfig({
     // Mock configuration
     deps: {
       inline: [
-        '@babylonjs/core',
         '@monaco-editor/react',
-        'monaco-editor'
+        'monaco-editor',
+        'three',
+        'three-csg-ts'
       ]
     },
     

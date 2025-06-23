@@ -4,7 +4,7 @@
  * Global setup and configuration for integration tests including mocks,
  * performance monitoring, and test utilities for the OpenSCAD 3D visualization pipeline.
  * 
- * @author OpenSCAD-Babylon Pipeline
+ * @author OpenSCAD-R3F Pipeline
  * @version 1.0.0
  */
 
@@ -38,33 +38,33 @@ Object.defineProperty(window, 'performance', {
 });
 
 // ============================================================================
-// Babylon.js Mocking
+// Three.js Mocking
 // ============================================================================
 
-// Mock Babylon.js core for integration tests
-vi.mock('@babylonjs/core', () => ({
-  Engine: vi.fn().mockImplementation(() => ({
-    dispose: vi.fn(),
-    runRenderLoop: vi.fn(),
-    stopRenderLoop: vi.fn(),
-    resize: vi.fn(),
-    setHardwareScalingLevel: vi.fn()
-  })),
+// Mock Three.js for integration tests
+vi.mock('three', () => ({
   Scene: vi.fn().mockImplementation(() => ({
+    add: vi.fn(),
+    remove: vi.fn(),
     dispose: vi.fn(),
+    children: []
+  })),
+  PerspectiveCamera: vi.fn().mockImplementation(() => ({
+    position: { set: vi.fn(), x: 0, y: 0, z: 0 },
+    lookAt: vi.fn(),
+    updateProjectionMatrix: vi.fn()
+  })),
+  WebGLRenderer: vi.fn().mockImplementation(() => ({
     render: vi.fn(),
-    registerBeforeRender: vi.fn(),
-    unregisterBeforeRender: vi.fn(),
-    executeWhenReady: vi.fn((callback) => callback()),
-    getEngine: vi.fn(() => ({
-      setHardwareScalingLevel: vi.fn()
-    })),
-    setRenderingAutoClearDepthStencil: vi.fn(),
-    skipPointerMovePicking: false,
-    skipPointerDownPicking: false,
-    skipPointerUpPicking: false,
-    autoClear: false,
-    autoClearDepthAndStencil: false
+    dispose: vi.fn(),
+    setSize: vi.fn(),
+    domElement: document.createElement('canvas')
+  })),
+  Mesh: vi.fn().mockImplementation(() => ({
+    position: { set: vi.fn(), x: 0, y: 0, z: 0 },
+    rotation: { set: vi.fn(), x: 0, y: 0, z: 0 },
+    scale: { set: vi.fn(), x: 1, y: 1, z: 1 },
+    dispose: vi.fn()
   })),
   FreeCamera: vi.fn().mockImplementation(() => ({
     setTarget: vi.fn(),
@@ -203,14 +203,18 @@ vi.mock('@holistic-stack/openscad-parser', () => ({
 }));
 
 // ============================================================================
-// CSG2 Mocking
+// Three.js CSG Mocking
 // ============================================================================
 
-vi.mock('../features/babylon-csg2/lib/initializers/csg2-browser-initializer/csg2-browser-initializer', () => ({
-  initializeCSG2ForBrowser: vi.fn().mockResolvedValue({
-    success: true,
-    error: null
-  })
+vi.mock('three-csg-ts', () => ({
+  CSG: {
+    fromMesh: vi.fn().mockReturnValue({
+      union: vi.fn().mockReturnThis(),
+      subtract: vi.fn().mockReturnThis(),
+      intersect: vi.fn().mockReturnThis(),
+      toMesh: vi.fn().mockReturnValue(null)
+    })
+  }
 }));
 
 // ============================================================================

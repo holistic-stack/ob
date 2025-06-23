@@ -72,7 +72,7 @@ export default defineConfig({
           lines: 90,
           statements: 90
         },
-        'src/features/babylon-renderer/': {
+        'src/features/r3f-renderer/': {
           branches: 85,
           functions: 85,
           lines: 85,
@@ -111,7 +111,8 @@ export default defineConfig({
     // Mock configuration
     deps: {
       inline: [
-        '@babylonjs/core',
+        'three',
+        'three-csg-ts',
         '@monaco-editor/react',
         'monaco-editor'
       ]

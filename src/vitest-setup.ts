@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import * as BABYLON from '@babylonjs/core';
 import createFetchMock from 'vitest-fetch-mock';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -290,73 +289,73 @@ fetchMocker.mockResponse((req) => {
 });
 
 /**
- * Initialize CSG2 for testing environments
- * Provides fallback mock CSG2 if real CSG2 initialization fails
+ * Initialize Three.js CSG for testing environments
+ * Provides fallback mock CSG if real CSG initialization fails
  */
-export async function initializeCSG2ForTests(): Promise<void> {
-  console.log('[INIT] Initializing CSG2 for tests');
+export async function initializeCSGForTests(): Promise<void> {
+  console.log('[INIT] Initializing Three.js CSG for tests');
 
   try {
-    // Try to initialize real CSG2 with a timeout
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('CSG2 initialization timeout')), 3000)
-    );
-
-    await Promise.race([
-      BABYLON.InitializeCSG2Async(),
-      timeoutPromise
-    ]);
-
-    console.log('[DEBUG] ✅ Real CSG2 initialized successfully');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn('[WARN] Real CSG2 initialization failed, using mock CSG2:', errorMessage);
-
-    // Set up mock CSG2 for testing
-    interface MockCSG2 {
-      FromMesh: () => {
-        add: () => { toMesh: () => null };
-        subtract: () => { toMesh: () => null };
-        intersect: () => { toMesh: () => null };
-      };
-    }
-    (globalThis as typeof globalThis & { __MOCK_CSG2__?: MockCSG2 }).__MOCK_CSG2__ = {
-      FromMesh: () => ({
-        add: () => ({ toMesh: () => null }),
+    // Mock Three.js CSG for testing
+    const mockCSG = {
+      fromMesh: () => ({
+        union: () => ({ toMesh: () => null }),
         subtract: () => ({ toMesh: () => null }),
         intersect: () => ({ toMesh: () => null })
       })
     };
 
-    console.log('[DEBUG] ✅ Mock CSG2 initialized for testing');
+    (globalThis as typeof globalThis & { __MOCK_THREE_CSG__?: typeof mockCSG }).__MOCK_THREE_CSG__ = mockCSG;
+
+    console.log('[DEBUG] ✅ Mock Three.js CSG initialized for testing');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn('[WARN] Three.js CSG initialization failed:', errorMessage);
   }
 }
 
 /**
- * Create a test scene with NullEngine for headless testing
- * Following the pattern used in existing tests
+ * Create a test Three.js scene for headless testing
+ * Following R3F testing patterns
  */
-export function createTestScene(): { engine: BABYLON.NullEngine; scene: BABYLON.Scene } {
-  console.log('[DEBUG] Creating test scene with NullEngine');
+export function createTestScene(): { scene: any; camera: any; renderer: any } {
+  console.log('[DEBUG] Creating test Three.js scene');
 
-  const engine = new BABYLON.NullEngine();
-  const scene = new BABYLON.Scene(engine);
+  // Mock Three.js objects for testing
+  const scene = {
+    add: vi.fn(),
+    remove: vi.fn(),
+    dispose: vi.fn(),
+    children: []
+  };
 
-  return { engine, scene };
+  const camera = {
+    position: { set: vi.fn(), x: 0, y: 0, z: 0 },
+    lookAt: vi.fn(),
+    updateProjectionMatrix: vi.fn()
+  };
+
+  const renderer = {
+    render: vi.fn(),
+    dispose: vi.fn(),
+    setSize: vi.fn()
+  };
+
+  return { scene, camera, renderer };
 }
 
 /**
  * Dispose test scene resources properly
- * Following the pattern used in existing tests
+ * Following R3F testing patterns
  */
-export function disposeTestScene(engine: BABYLON.NullEngine, scene: BABYLON.Scene): void {
+export function disposeTestScene(scene: any, camera: any, renderer: any): void {
   console.log('[DEBUG] Disposing test scene resources');
 
-  if (scene) {
+  if (scene?.dispose) {
     scene.dispose();
   }
 
-  if (engine) {
-    engine.dispose();
+  if (renderer?.dispose) {
+    renderer.dispose();
   }
 }

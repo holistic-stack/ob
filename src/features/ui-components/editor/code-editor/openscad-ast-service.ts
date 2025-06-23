@@ -4,11 +4,11 @@
  * Provides a service layer for parsing OpenSCAD code to AST using the existing
  * ParserResourceManager with proper error handling, debouncing, and performance optimization.
  * 
- * @author OpenSCAD-Babylon Pipeline
+ * @author OpenSCAD-R3F Pipeline
  * @version 1.0.0
  */
 
-import { createParserResourceManager, type Result } from '../../../babylon-csg2/openscad/utils/parser-resource-manager';
+import { createParserResourceManager, type Result } from '../../../csg-processor';
 import { type ASTNode } from '@holistic-stack/openscad-parser';
 import {
   validateAST as validateASTShared,

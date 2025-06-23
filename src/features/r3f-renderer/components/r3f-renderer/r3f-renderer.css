@@ -1,0 +1,515 @@
+/**
+ * @file R3FRenderer Component Styles
+ * 
+ * CSS styles for the R3FRenderer component following the same patterns
+ * as BabylonRenderer with responsive layouts and accessibility features.
+ * 
+ * @author OpenSCAD-R3F Pipeline
+ * @version 1.0.0
+ */
+
+/* ============================================================================
+   Base Renderer Styles
+   ============================================================================ */
+
+.r3f-renderer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  overflow: hidden;
+}
+
+.r3f-renderer * {
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   Layout Variants
+   ============================================================================ */
+
+/* Flex Layout (Default) */
+.r3f-renderer--flex {
+  flex-direction: row;
+}
+
+.r3f-renderer--flex .r3f-renderer__canvas-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.r3f-renderer--flex .r3f-renderer__controls-area,
+.r3f-renderer--flex .r3f-renderer__mesh-area,
+.r3f-renderer--flex .r3f-renderer__debug-area {
+  flex: 0 0 300px;
+  border-left: 1px solid #333;
+}
+
+/* Grid Layout */
+.r3f-renderer--grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: 1fr auto;
+  grid-template-areas: 
+    "canvas controls"
+    "canvas mesh"
+    "canvas debug";
+}
+
+.r3f-renderer--grid .r3f-renderer__canvas-area {
+  grid-area: canvas;
+}
+
+.r3f-renderer--grid .r3f-renderer__controls-area {
+  grid-area: controls;
+  border-left: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+.r3f-renderer--grid .r3f-renderer__mesh-area {
+  grid-area: mesh;
+  border-left: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+.r3f-renderer--grid .r3f-renderer__debug-area {
+  grid-area: debug;
+  border-left: 1px solid #333;
+}
+
+/* ============================================================================
+   Canvas Area
+   ============================================================================ */
+
+.r3f-renderer__canvas-area {
+  position: relative;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.r3f-renderer__canvas-area canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+/* ============================================================================
+   Control Panels
+   ============================================================================ */
+
+.r3f-renderer__controls-area,
+.r3f-renderer__mesh-area,
+.r3f-renderer__debug-area {
+  background-color: #2a2a2a;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.r3f-renderer__controls-area h3,
+.r3f-renderer__mesh-area h3,
+.r3f-renderer__debug-area h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  border-bottom: 1px solid #444;
+  padding-bottom: 8px;
+}
+
+/* ============================================================================
+   Placeholder Styles (for development)
+   ============================================================================ */
+
+.placeholder-controls,
+.placeholder-mesh-display,
+.placeholder-debug-panel {
+  padding: 16px;
+  background-color: #333;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+
+.placeholder-controls button,
+.placeholder-mesh-display button,
+.placeholder-debug-panel button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background-color: #4a4a4a;
+  color: #ffffff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.placeholder-controls button:hover,
+.placeholder-mesh-display button:hover,
+.placeholder-debug-panel button:hover {
+  background-color: #5a5a5a;
+}
+
+.placeholder-controls button:active,
+.placeholder-mesh-display button:active,
+.placeholder-debug-panel button:active {
+  background-color: #3a3a3a;
+}
+
+.placeholder-controls input[type="color"] {
+  width: 100%;
+  height: 32px;
+  margin: 8px 0;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background-color: #4a4a4a;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+.r3f-renderer--responsive {
+  /* Mobile and tablet adjustments */
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+
+  @media (max-width: 768px) .r3f-renderer__controls-area,
+  @media (max-width: 768px) .r3f-renderer__mesh-area,
+  @media (max-width: 768px) .r3f-renderer__debug-area {
+    flex: 0 0 200px;
+    border-left: none;
+    border-top: 1px solid #333;
+  }
+
+  @media (max-width: 768px) .r3f-renderer__canvas-area {
+    flex: 1;
+    min-height: 300px;
+  }
+}
+
+/* Grid layout responsive adjustments */
+.r3f-renderer--grid.r3f-renderer--responsive {
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 768px) .r3f-renderer__canvas-area {
+    grid-area: unset;
+    flex: 1;
+    min-height: 300px;
+  }
+
+  @media (max-width: 768px) .r3f-renderer__controls-area,
+  @media (max-width: 768px) .r3f-renderer__mesh-area,
+  @media (max-width: 768px) .r3f-renderer__debug-area {
+    grid-area: unset;
+    flex: 0 0 150px;
+    border-left: none;
+    border-top: 1px solid #333;
+    border-bottom: none;
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+.r3f-renderer:focus-within {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.r3f-renderer button:focus,
+.r3f-renderer input:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .r3f-renderer {
+    border: 2px solid #ffffff;
+  }
+
+  .r3f-renderer__controls-area,
+  .r3f-renderer__mesh-area,
+  .r3f-renderer__debug-area {
+    border-color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .r3f-renderer *,
+  .r3f-renderer *::before,
+  .r3f-renderer *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   Loading and Error States
+   ============================================================================ */
+
+.r3f-renderer__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-size: 16px;
+  z-index: 1000;
+}
+
+.r3f-renderer__error {
+  padding: 16px;
+  background-color: #cc0000;
+  color: #ffffff;
+  border-radius: 4px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  .r3f-renderer {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .r3f-renderer__controls-area,
+  .r3f-renderer__mesh-area,
+  .r3f-renderer__debug-area {
+    display: none !important;
+  }
+
+  .r3f-renderer__canvas-area {
+    width: 100% !important;
+    height: 400px !important;
+  }
+}
+
+/* ============================================================================
+   OpenSCAD Editor Styles
+   ============================================================================ */
+
+.openscad-editor-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.toggle-button {
+  padding: 8px 16px;
+  background: rgba(59, 130, 246, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  background: rgba(59, 130, 246, 1);
+  border-color: rgba(59, 130, 246, 0.8);
+}
+
+.toggle-button.active {
+  background: rgba(34, 197, 94, 0.8);
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.toggle-button.active:hover {
+  background: rgba(34, 197, 94, 1);
+  border-color: rgba(34, 197, 94, 0.8);
+}
+
+.code-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.openscad-code-editor {
+  width: 100%;
+  min-height: 300px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 8px;
+  color: rgba(248, 250, 252, 0.9);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.openscad-code-editor:focus {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.openscad-code-editor::placeholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.editor-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.convert-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8));
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.convert-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(147, 51, 234, 1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.convert-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.example-button {
+  padding: 8px 16px;
+  background: rgba(71, 85, 105, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 6px;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.example-button:hover {
+  background: rgba(71, 85, 105, 0.8);
+  border-color: rgba(71, 85, 105, 0.6);
+}
+
+.conversion-progress {
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 8px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(71, 85, 105, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.scene-controls-section {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.scene-controls-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.scene-controls-section button {
+  margin-right: 12px;
+  margin-bottom: 8px;
+  padding: 8px 16px;
+  background: rgba(71, 85, 105, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 6px;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scene-controls-section button:hover {
+  background: rgba(71, 85, 105, 0.8);
+  border-color: rgba(71, 85, 105, 0.6);
+}
+
+.scene-controls-section input[type="color"] {
+  margin-left: 12px;
+  width: 40px;
+  height: 32px;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}

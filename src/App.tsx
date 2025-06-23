@@ -50,7 +50,7 @@ translate([-12, 12, 0])
 
 /**
  * Modern App component with CAD-style Liquid Glass Layout
- * Maintains backward compatibility with existing OpenSCAD editor and Babylon.js visualization
+ * Features OpenSCAD editor with React Three Fiber 3D visualization
  */
 export function App(): React.JSX.Element {
   const [fileName, setFileName] = useState('untitled.scad');

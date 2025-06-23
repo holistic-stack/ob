@@ -1480,11 +1480,11 @@ function updateMesh(mesh: Mesh, data: BabylonMeshData): void {
 
 ```typescript
 // ❌ Unused imports
-import { Mesh, StandardMaterial, Color3 } from '@babylonjs/core';
+import { Mesh, MeshBasicMaterial, Color } from 'three';
 import { SphereNode, CubeNode, CylinderNode } from './types.js';
 
 // ✅ Remove unused imports or prefix with underscore
-import { Mesh } from '@babylonjs/core';
+import { Mesh } from 'three';
 import type { SphereNode } from './types.js'; // Use type-only import if only for typing
 
 // ✅ For intentionally unused parameters
@@ -1609,16 +1609,16 @@ function formatCSG2Result(result: CSG2Result): string {
 
 ```typescript
 // ❌ Duplicate imports
-import { Vector3 } from '@babylonjs/core';
-import { Mesh, Scene } from '@babylonjs/core';
-import type { Material } from '@babylonjs/core';
+import { Vector3 } from 'three';
+import { Mesh, Scene } from 'three';
+import type { Material } from 'three';
 
 // ✅ Consolidated imports
-import { Vector3, Mesh, Scene } from '@babylonjs/core';
-import type { Material } from '@babylonjs/core';
+import { Vector3, Mesh, Scene } from 'three';
+import type { Material } from 'three';
 
 // ✅ Or combine type and value imports
-import { Vector3, Mesh, Scene, type Material } from '@babylonjs/core';
+import { Vector3, Mesh, Scene, type Material } from 'three';
 ```
 
 #### 7. Handling `@typescript-eslint/prefer-nullish-coalescing`

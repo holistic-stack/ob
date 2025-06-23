@@ -1,7 +1,7 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 import storybook from "eslint-plugin-storybook";
 
-// ESLint 9 flat config for openscad-babylon package
+// ESLint 9 flat config for openscad-r3f package
 // Optimized for TypeScript 5.8, React 19, and modern development practices
 // Focused on essential rules for development productivity
 import js from '@eslint/js';

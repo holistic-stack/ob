@@ -151,10 +151,10 @@ playwright-report/
 # Monaco Editor cache
 .monaco/
 
-# Babylon.js specific
-*.babylon
+# Three.js specific
 *.gltf
 *.glb
+*.fbx
 
 # OpenSCAD specific
 *.scad.bak
