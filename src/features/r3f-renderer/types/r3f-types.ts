@@ -352,7 +352,6 @@ export interface R3FCanvasConfig {
   readonly alpha?: boolean;
   readonly preserveDrawingBuffer?: boolean;
   readonly powerPreference?: 'default' | 'high-performance' | 'low-power';
-  readonly shadows?: boolean;
   readonly toneMapping?: THREE.ToneMapping;
   readonly outputColorSpace?: THREE.ColorSpace;
   readonly pixelRatio?: number;
@@ -416,7 +415,7 @@ export interface R3FSceneService {
   readonly createScene: (config?: R3FSceneConfig) => R3FSceneResult;
   readonly disposeScene: (scene: THREE.Scene | null) => void;
   readonly setupLighting: (scene: THREE.Scene, config: R3FSceneConfig) => void;
-  readonly setupCamera: (scene: THREE.Scene, config: R3FCameraConfig) => THREE.Camera;
+  readonly setupCamera: (scene: THREE.Scene, config: R3FCameraConfig) => Result<THREE.Camera, string>;
 }
 
 /**

@@ -27,8 +27,21 @@ import type {
   Result,
   ProcessingMetrics,
   ProcessingProgress,
-  R3FPipelineConfig
+  R3FPipelineConfig,
+  R3FCSGConverterConfig,
+  CanvasConfig,
+  SceneConfig,
+  ControlsConfig,
+  ConversionResult,
+  ConverterState,
 } from '../types/r3f-csg-types';
+
+export type {
+  R3FCSGConverterConfig,
+  ConversionResult,
+  ConverterState,
+  ProcessingProgress,
+};
 
 // ============================================================================
 // Converter Configuration
@@ -37,91 +50,26 @@ import type {
 /**
  * Configuration for the R3F CSG converter
  */
-export interface R3FCSGConverterConfig {
-  readonly pipelineConfig?: R3FPipelineConfig;
-  readonly enableReactComponents?: boolean;
-  readonly enablePerformanceMonitoring?: boolean;
-  readonly enableProgressTracking?: boolean;
-  readonly enableCaching?: boolean;
-  readonly enableLogging?: boolean;
-  readonly canvasConfig?: CanvasConfig;
-  readonly sceneConfig?: SceneConfig;
-  readonly controlsConfig?: ControlsConfig;
-}
 
 /**
  * Canvas configuration for React Three Fiber
  */
-export interface CanvasConfig {
-  readonly camera?: {
-    readonly position?: [number, number, number];
-    readonly fov?: number;
-    readonly near?: number;
-    readonly far?: number;
-  };
-  readonly shadows?: boolean;
-  readonly antialias?: boolean;
-  readonly alpha?: boolean;
-  readonly preserveDrawingBuffer?: boolean;
-  readonly powerPreference?: 'default' | 'high-performance' | 'low-power';
-}
 
 /**
  * Scene configuration
  */
-export interface SceneConfig {
-  readonly background?: string;
-  readonly fog?: {
-    readonly color: string;
-    readonly near: number;
-    readonly far: number;
-  };
-  readonly enableGrid?: boolean;
-  readonly enableAxes?: boolean;
-  readonly enableStats?: boolean;
-}
 
 /**
  * Controls configuration
  */
-export interface ControlsConfig {
-  readonly enableOrbitControls?: boolean;
-  readonly enableZoom?: boolean;
-  readonly enablePan?: boolean;
-  readonly enableRotate?: boolean;
-  readonly autoRotate?: boolean;
-  readonly autoRotateSpeed?: number;
-}
 
 /**
  * Conversion result containing React components and metadata
  */
-export interface ConversionResult {
-  readonly success: boolean;
-  readonly data?: {
-    readonly CanvasComponent: React.ComponentType<any>;
-    readonly SceneComponent: React.ComponentType<any>;
-    readonly MeshComponents: React.ComponentType<any>[];
-    readonly scene: THREE.Scene;
-    readonly camera?: THREE.Camera;
-    readonly meshes: THREE.Mesh[];
-    readonly metrics: ProcessingMetrics;
-    readonly jsx: string;
-  };
-  readonly error?: string;
-}
 
 /**
  * Converter state for tracking conversions
  */
-export interface ConverterState {
-  readonly isProcessing: boolean;
-  readonly currentProgress?: ProcessingProgress;
-  readonly lastError?: string;
-  readonly conversionCount: number;
-  readonly cacheHits: number;
-  readonly cacheMisses: number;
-}
 
 // ============================================================================
 // Default Configuration
@@ -132,40 +80,46 @@ const DEFAULT_CONVERTER_CONFIG: Required<R3FCSGConverterConfig> = {
     enableCaching: true,
     enableOptimization: true,
     enableLogging: true,
-    enableProgressTracking: true
+    enableProgressTracking: true,
   },
-  enableReactComponents: true,
-  enablePerformanceMonitoring: true,
-  enableProgressTracking: true,
-  enableCaching: true,
-  enableLogging: true,
   canvasConfig: {
+    width: '100%',
+    height: '100%',
+    style: {},
     camera: {
       position: [10, 10, 10],
       fov: 75,
       near: 0.1,
-      far: 1000
+      far: 1000,
     },
     shadows: true,
     antialias: true,
     alpha: false,
     preserveDrawingBuffer: false,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
   },
   sceneConfig: {
-    background: '#2c3e50',
+    backgroundColor: '#2c3e50',
+    showAxes: true,
+    showGrid: true,
+    fog: undefined,
     enableGrid: true,
     enableAxes: true,
-    enableStats: false
+    enableStats: false,
   },
   controlsConfig: {
-    enableOrbitControls: true,
     enableZoom: true,
     enablePan: true,
     enableRotate: true,
+    enableOrbitControls: true,
     autoRotate: false,
-    autoRotateSpeed: 1
-  }
+    autoRotateSpeed: 1,
+  },
+  enableLogging: true,
+  enableCaching: true,
+  enableReactComponents: true,
+  enablePerformanceMonitoring: true,
+  enableProgressTracking: true,
 } as const;
 
 // ============================================================================
@@ -511,7 +465,7 @@ export class R3FCSGConverter {
             key: 'directional',
             position: [10, 10, 5],
             intensity: 1.0,
-            castShadow: this.config.canvasConfig.shadows
+            castShadow: this.config.canvasConfig?.shadows
           }),
           React.createElement('pointLight', {
             key: 'point',
@@ -520,7 +474,7 @@ export class R3FCSGConverter {
           }),
           
           // Grid and axes (if enabled)
-          ...(this.config.sceneConfig.enableGrid ? [
+          ...(this.config.sceneConfig?.enableGrid ? [
             React.createElement(Grid, {
               key: 'grid',
               args: [20, 20],
@@ -535,19 +489,21 @@ export class R3FCSGConverter {
           ),
           
           // Controls
-          ...(this.config.controlsConfig.enableOrbitControls ? [
-            React.createElement(OrbitControls, {
-              key: 'controls',
-              enableZoom: this.config.controlsConfig.enableZoom,
-              enablePan: this.config.controlsConfig.enablePan,
-              enableRotate: this.config.controlsConfig.enableRotate,
-              autoRotate: this.config.controlsConfig.autoRotate,
-              autoRotateSpeed: this.config.controlsConfig.autoRotateSpeed
-            })
-          ] : []),
+          ...(this.config.controlsConfig?.enableOrbitControls
+            ? [
+                React.createElement(OrbitControls, {
+                  key: 'controls',
+                  enableZoom: this.config.controlsConfig.enableZoom ?? true,
+                  enablePan: this.config.controlsConfig.enablePan ?? true,
+                  enableRotate: this.config.controlsConfig.enableRotate ?? true,
+                  autoRotate: this.config.controlsConfig.autoRotate ?? false,
+                  autoRotateSpeed: this.config.controlsConfig.autoRotateSpeed ?? 2.0,
+                }),
+              ]
+            : []),
           
           // Stats (if enabled)
-          ...(this.config.sceneConfig.enableStats ? [
+          ...(this.config.sceneConfig?.enableStats ? [
             React.createElement(Stats, { key: 'stats' })
           ] : [])
         ])
@@ -556,13 +512,13 @@ export class R3FCSGConverter {
       // Generate canvas component
       const CanvasComponent = React.memo((props: any) => (
         React.createElement(Canvas, {
-          shadows: this.config.canvasConfig.shadows,
-          camera: this.config.canvasConfig.camera,
+          shadows: this.config.canvasConfig?.shadows,
+          camera: this.config.canvasConfig?.camera,
           gl: {
-            antialias: this.config.canvasConfig.antialias,
-            alpha: this.config.canvasConfig.alpha,
-            preserveDrawingBuffer: this.config.canvasConfig.preserveDrawingBuffer,
-            powerPreference: this.config.canvasConfig.powerPreference
+            antialias: this.config.canvasConfig?.antialias,
+            alpha: this.config.canvasConfig?.alpha,
+            preserveDrawingBuffer: this.config.canvasConfig?.preserveDrawingBuffer,
+            powerPreference: this.config.canvasConfig?.powerPreference
           },
           style: { width: '100%', height: '100%' },
           ...props
@@ -614,14 +570,14 @@ import { OrbitControls, Grid, Stats } from '@react-three/drei';
 export const ${componentName} = () => {
   return (
     <Canvas
-      shadows={${this.config.canvasConfig.shadows}}
+      shadows={${this.config.canvasConfig?.shadows}}
       camera={{
-        position: [${this.config.canvasConfig.camera!.position!.join(', ')}],
-        fov: ${this.config.canvasConfig.camera!.fov}
+        position: [${this.config.canvasConfig?.camera?.position?.join(', ')}],
+        fov: ${this.config.canvasConfig?.camera?.fov}
       }}
       gl={{
-        antialias: ${this.config.canvasConfig.antialias},
-        powerPreference: "${this.config.canvasConfig.powerPreference}"
+        antialias: ${this.config.canvasConfig?.antialias},
+        powerPreference: "${this.config.canvasConfig?.powerPreference}"
       }}
       style={{ width: '100%', height: '100%' }}
     >
@@ -630,11 +586,11 @@ export const ${componentName} = () => {
       <directionalLight 
         position={[10, 10, 5]} 
         intensity={1.0} 
-        castShadow={${this.config.canvasConfig.shadows}}
+        castShadow={${this.config.canvasConfig?.shadows}}
       />
       <pointLight position={[-5, 5, 5]} intensity={0.5} />
       
-      ${this.config.sceneConfig.enableGrid ? `
+      ${this.config.sceneConfig?.enableGrid ? `
       {/* Grid */}
       <Grid args={[20, 20]} cellColor="#808080" sectionColor="#e0e0e0" />
       ` : ''}
@@ -642,7 +598,7 @@ export const ${componentName} = () => {
       {/* Generated Meshes */}
       {/* TODO: Add mesh components here */}
       
-      ${this.config.controlsConfig.enableOrbitControls ? `
+      ${this.config.controlsConfig?.enableOrbitControls ? `
       {/* Controls */}
       <OrbitControls 
         enableZoom={${this.config.controlsConfig.enableZoom}}
@@ -652,7 +608,7 @@ export const ${componentName} = () => {
       />
       ` : ''}
       
-      ${this.config.sceneConfig.enableStats ? `
+      ${this.config.sceneConfig?.enableStats ? `
       {/* Performance Stats */}
       <Stats />
       ` : ''}

@@ -9,12 +9,12 @@
  * @version 1.0.0
  */
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import { 
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import type { ASTNode } from '../types/ast-types';
+import {
   parseOpenSCADCodeCached,
+  type ASTParseResult,
   type ParseError,
-  type ASTParseResult 
 } from '../../ui-components/editor/code-editor/openscad-ast-service';
 
 // ============================================================================

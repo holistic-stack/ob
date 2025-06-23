@@ -43,6 +43,65 @@ export type MeshResult = Result<THREE.Mesh, string>;
 export type CSGOperationResult = Result<THREE.BufferGeometry, string>;
 
 // ============================================================================
+// R3F CSG Converter Configuration
+// ============================================================================
+
+/**
+ * Configuration for the R3F CSG Converter.
+ */
+export interface R3FCSGConverterConfig {
+  readonly pipelineConfig?: R3FPipelineConfig | undefined;
+  readonly canvasConfig?: CanvasConfig | undefined;
+  readonly sceneConfig?: SceneConfig | undefined;
+  readonly controlsConfig?: ControlsConfig | undefined;
+  readonly enableLogging?: boolean | undefined;
+  readonly enableCaching?: boolean | undefined;
+  readonly enableReactComponents?: boolean | undefined;
+  readonly enablePerformanceMonitoring?: boolean | undefined;
+  readonly enableProgressTracking?: boolean | undefined;
+}
+
+/**
+ * Configuration for the R3F Canvas.
+ */
+export interface CanvasConfig {
+  readonly width?: string | undefined;
+  readonly height?: string | undefined;
+  readonly style?: React.CSSProperties | undefined;
+  readonly camera?: { [key: string]: any } | undefined;
+  readonly shadows?: boolean | undefined;
+  readonly antialias?: boolean | undefined;
+  readonly alpha?: boolean | undefined;
+  readonly preserveDrawingBuffer?: boolean | undefined;
+  readonly powerPreference?: 'high-performance' | 'low-power' | 'default' | undefined;
+}
+
+/**
+ * Configuration for the R3F Scene.
+ */
+export interface SceneConfig {
+  readonly backgroundColor?: THREE.ColorRepresentation | undefined;
+  readonly showAxes?: boolean | undefined;
+  readonly showGrid?: boolean | undefined;
+  readonly fog?: any | undefined;
+  readonly enableGrid?: boolean | undefined;
+  readonly enableAxes?: boolean | undefined;
+  readonly enableStats?: boolean | undefined;
+}
+
+/**
+ * Configuration for the R3F Camera Controls.
+ */
+export interface ControlsConfig {
+  readonly enableZoom?: boolean | undefined;
+  readonly enablePan?: boolean | undefined;
+  readonly enableRotate?: boolean | undefined;
+  readonly enableOrbitControls?: boolean | undefined;
+  readonly autoRotate?: boolean | undefined;
+  readonly autoRotateSpeed?: number | undefined;
+}
+
+// ============================================================================
 // AST Visitor Configuration
 // ============================================================================
 
@@ -77,10 +136,107 @@ export interface R3FMaterialConfig {
  * Geometry creation parameters
  */
 export interface GeometryParams {
-  readonly segments?: number;
-  readonly detail?: number;
-  readonly precision?: number;
-  readonly optimize?: boolean;
+  readonly segments?: number | undefined;
+  readonly detail?: number | undefined;
+  readonly precision?: number | undefined;
+  readonly optimize?: boolean | undefined;
+}
+
+/**
+ * Configuration for scene factory
+ */
+export interface SceneFactoryConfig {
+  readonly enableLighting?: boolean | undefined;
+  readonly enableShadows?: boolean | undefined;
+  readonly enableFog?: boolean | undefined;
+  readonly enableGrid?: boolean | undefined;
+  readonly enableAxes?: boolean | undefined;
+  readonly backgroundColor?: string | undefined;
+  readonly ambientLightIntensity?: number | undefined;
+  readonly directionalLightIntensity?: number | undefined;
+  readonly pointLightIntensity?: number | undefined;
+  readonly fogNear?: number | undefined;
+  readonly fogFar?: number | undefined;
+  readonly gridSize?: number | undefined;
+  readonly axesSize?: number | undefined;
+  readonly enableOptimization?: boolean | undefined;
+  readonly enableLogging?: boolean | undefined;
+}
+
+
+/**
+ * Configuration for the R3F pipeline processor
+ */
+export interface R3FPipelineConfig {
+  readonly astVisitorConfig?: R3FASTVisitorConfig | undefined;
+  readonly sceneFactoryConfig?: SceneFactoryConfig | undefined;
+  readonly enableCaching?: boolean | undefined;
+  readonly enableOptimization?: boolean | undefined;
+  readonly enableLogging?: boolean | undefined;
+  readonly processingTimeout?: number | undefined;
+  readonly maxRetries?: number | undefined;
+  readonly enableProgressTracking?: boolean | undefined;
+}
+
+/**
+ * Conversion result containing React components and metadata
+ */
+export interface ConversionResult {
+  readonly success: boolean;
+  readonly data?: {
+    readonly CanvasComponent: React.ComponentType<any>;
+    readonly SceneComponent: React.ComponentType<any>;
+    readonly MeshComponents: React.ComponentType<any>[];
+    readonly scene: THREE.Scene;
+    readonly camera?: THREE.Camera | undefined;
+    readonly meshes: THREE.Mesh[];
+    readonly metrics: ProcessingMetrics;
+    readonly jsx: string;
+  } | undefined;
+  readonly error?: string | undefined;
+}
+
+/**
+ * State for the useR3FCSGConverter hook.
+ */
+export interface UseR3FCSGConverterState {
+  readonly isProcessing: boolean;
+  readonly progress: ProcessingProgress | undefined;
+  readonly result: ConversionResult | undefined;
+  readonly error: string | undefined;
+}
+
+/**
+ * Configuration for the useR3FCSGConverter hook.
+ */
+export interface UseR3FCSGConverterConfig {
+  readonly initialCode?: string | undefined;
+  readonly converterConfig?: R3FCSGConverterConfig | undefined;
+  readonly onConversionStart?: (() => void) | undefined;
+  readonly onConversionSuccess?: ((result: ConversionResult) => void) | undefined;
+  readonly onConversionError?: ((error: string) => void) | undefined;
+  readonly onProgress?: ((progress: ProcessingProgress) => void) | undefined;
+}
+
+/**
+ * Return value of the useR3FCSGConverter hook.
+ */
+export interface UseR3FCSGConverterReturn {
+  readonly processOpenJSCADCode: (code: string) => Promise<void>;
+  readonly state: UseR3FCSGConverterState;
+  readonly reset: () => void;
+}
+
+/**
+ * Converter state for tracking conversions
+ */
+export interface ConverterState {
+  readonly isProcessing: boolean;
+  readonly currentProgress?: ProcessingProgress | undefined;
+  readonly lastError?: string | undefined;
+  readonly conversionCount: number;
+  readonly cacheHits: number;
+  readonly cacheMisses: number;
 }
 
 // ============================================================================
@@ -259,6 +415,17 @@ export interface GeometryCacheEntry {
 }
 
 /**
+ * Processing progress report
+ */
+export interface ProcessingProgress {
+  readonly stage: 'parsing' | 'ast-processing' | 'scene-generation' | 'optimization' | 'complete';
+  readonly progress: number; // 0-100
+  readonly message: string;
+  readonly timeElapsed: number;
+  readonly estimatedTimeRemaining?: number;
+}
+
+/**
  * Performance metrics for AST processing
  */
 export interface ProcessingMetrics {
@@ -294,10 +461,10 @@ export interface ASTProcessingError {
   readonly nodeLocation?: {
     readonly line: number;
     readonly column: number;
-  };
+  } | undefined;
   readonly message: string;
-  readonly stack?: string;
-  readonly context?: VisitorContext;
+  readonly stack?: string | undefined;
+  readonly context?: VisitorContext | undefined;
 }
 
 /**

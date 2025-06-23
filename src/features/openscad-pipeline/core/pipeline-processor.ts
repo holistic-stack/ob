@@ -82,11 +82,11 @@ export interface PipelineConfig {
  */
 export interface PipelineResult {
   readonly success: boolean;
-  readonly ast?: readonly ASTNode[];
-  readonly csgTree?: CSGTree;
-  readonly r3fResult?: R3FGenerationResult;
+  readonly ast: readonly ASTNode[] | undefined;
+  readonly csgTree: CSGTree | undefined;
+  readonly r3fResult: R3FGenerationResult | undefined;
   readonly meshes: readonly THREE.Mesh[];
-  readonly scene?: THREE.Scene;
+  readonly scene: THREE.Scene | undefined;
   readonly errors: readonly PipelineError[];
   readonly warnings: readonly PipelineError[];
   readonly metrics: {
@@ -250,8 +250,7 @@ export async function processOpenSCADPipeline(
     const parseStartTime = performance.now();
     const parseResult = await parseOpenSCADCodeCached(code, {
       enableLogging: finalConfig.enableLogging,
-      timeout: finalConfig.parsingConfig.timeout,
-      maxRetries: finalConfig.parsingConfig.maxRetries
+      ...finalConfig.parsingConfig
     });
     parsingTime = performance.now() - parseStartTime;
 
@@ -265,6 +264,10 @@ export async function processOpenSCADPipeline(
 
       return {
         success: false,
+        ast: undefined,
+        csgTree: undefined,
+        r3fResult: undefined,
+        scene: undefined,
         meshes: [],
         errors,
         warnings,
@@ -439,6 +442,10 @@ export async function processOpenSCADPipeline(
 
     return {
       success: false,
+      ast: undefined,
+      csgTree: undefined,
+      r3fResult: undefined,
+      scene: undefined,
       meshes: [],
       errors,
       warnings,

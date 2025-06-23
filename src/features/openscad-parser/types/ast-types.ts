@@ -9,52 +9,39 @@
  * @version 1.0.0
  */
 
-// Re-export core AST types from the parser package
-export type {
-  ASTNode,
-  StatementNode,
-  ExpressionNode,
-  
-  // Primitive nodes
-  CubeNode,
-  SphereNode,
-  CylinderNode,
-  PolyhedronNode,
-  
-  // Transform nodes
-  TranslateNode,
-  RotateNode,
-  ScaleNode,
-  MirrorNode,
-  
-  // CSG nodes
-  UnionNode,
-  DifferenceNode,
-  IntersectionNode,
-  
-  // Module and function nodes
-  ModuleDefinitionNode,
-  ModuleCallNode,
-  FunctionDefinitionNode,
-  FunctionCallNode,
-  
-  // Control flow nodes
-  IfNode,
-  ForNode,
-  
-  // Expression nodes
-  VariableNode,
-  LiteralNode,
-  BinaryOperationNode,
-  UnaryOperationNode,
-  ArrayNode,
-  
-  // Utility types
-  Vector3,
-  Vector2,
-  NodeLocation,
-  ParameterNode
-} from '@holistic-stack/openscad-parser';
+import * as Parser from '@holistic-stack/openscad-parser';
+
+// ============================================================================
+// Re-exported and Aliased Parser Types
+// ============================================================================
+
+export type ASTNode = Parser.ASTNode;
+export type StatementNode = Parser.StatementNode;
+export type ExpressionNode = Parser.ExpressionNode;
+export type CubeNode = Parser.CubeNode;
+export type SphereNode = Parser.SphereNode;
+export type CylinderNode = Parser.CylinderNode;
+export type PolyhedronNode = Parser.PolyhedronNode;
+export type TranslateNode = Parser.TranslateNode;
+export type RotateNode = Parser.RotateNode;
+export type ScaleNode = Parser.ScaleNode;
+export type MirrorNode = Parser.MirrorNode;
+export type UnionNode = Parser.UnionNode;
+export type DifferenceNode = Parser.DifferenceNode;
+export type IntersectionNode = Parser.IntersectionNode;
+export type ModuleDefinitionNode = Parser.ModuleDefinitionNode;
+export type FunctionDefinitionNode = Parser.FunctionDefinitionNode;
+export type FunctionCallNode = Parser.FunctionCallNode;
+export type IfNode = Parser.IfNode;
+export type VariableNode = Parser.VariableNode;
+export type LiteralNode = Parser.LiteralNode;
+export type BinaryOperationNode = Parser.BinaryOperator;
+export type UnaryOperationNode = Parser.UnaryOperator;
+export type Vector3 = Parser.Vector3D;
+export type Vector2 = Parser.Vector2D;
+export type NodeLocation = Parser.NodeLocation;
+export type ParameterNode = Parser.Parameter;
+
 
 // ============================================================================
 // Pipeline-Specific Types
@@ -175,9 +162,8 @@ export function isCSGNode(node: ASTNode): node is UnionNode | DifferenceNode | I
 /**
  * Type guard to check if a node is a module-related node
  */
-export function isModuleNode(node: ASTNode): node is ModuleDefinitionNode | ModuleCallNode {
-  return node.type === 'module_definition' || 
-         node.type === 'module_call';
+export function isModuleNode(node: ASTNode): node is ModuleDefinitionNode {
+  return node.type === 'module_definition';
 }
 
 /**
@@ -276,6 +262,7 @@ export function validateAST(ast: readonly ASTNode[]): Result<true, readonly Pars
   function traverse(nodes: readonly ASTNode[], path: string = 'root') {
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
+      if (!node) continue; // Skip undefined nodes
       const nodePath = `${path}[${i}]`;
       
       // Check required properties
@@ -298,7 +285,7 @@ export function validateAST(ast: readonly ASTNode[]): Result<true, readonly Pars
   traverse(ast);
   
   if (errors.length > 0) {
-    return { success: false, error: Object.freeze(errors) };
+    return { success: false, error: errors };
   }
   
   return { success: true, data: true };

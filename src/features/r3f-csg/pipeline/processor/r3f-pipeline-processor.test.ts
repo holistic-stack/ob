@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { R3FPipelineProcessor, createR3FPipelineProcessor } from './r3f-pipeline-processor';
-import type { R3FPipelineConfig, ProcessingProgress } from './r3f-pipeline-processor';
+import type { R3FPipelineConfig, ProcessingProgress } from '../../types/r3f-csg-types';
 
 // Mock the AST visitor
 vi.mock('../../openscad/ast-visitor/r3f-ast-visitor', () => ({

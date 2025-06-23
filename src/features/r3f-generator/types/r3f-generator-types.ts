@@ -20,14 +20,14 @@ import type { CSGTree, CSGTreeNode, CSGMaterial, Vector3, Result } from '../../c
  * R3F generation configuration
  */
 export interface R3FGeneratorConfig {
-  readonly enableCaching?: boolean;
-  readonly enableOptimization?: boolean;
-  readonly enableLogging?: boolean;
-  readonly maxCacheSize?: number;
-  readonly geometryPrecision?: number;
-  readonly materialQuality?: 'low' | 'medium' | 'high';
-  readonly enableShadows?: boolean;
-  readonly enableWireframe?: boolean;
+  readonly enableCaching?: boolean | undefined;
+  readonly enableOptimization?: boolean | undefined;
+  readonly enableLogging?: boolean | undefined;
+  readonly maxCacheSize?: number | undefined;
+  readonly geometryPrecision?: number | undefined;
+  readonly materialQuality?: 'low' | 'medium' | 'high' | undefined;
+  readonly enableShadows?: boolean | undefined;
+  readonly enableWireframe?: boolean | undefined;
 }
 
 /**
@@ -54,10 +54,10 @@ export interface GeneratedMesh {
   readonly nodeId: string;
   readonly nodeType: string;
   readonly transform?: THREE.Matrix4;
-  readonly metadata: {
+  metadata: {
     readonly vertexCount: number;
     readonly triangleCount: number;
-    readonly generationTime: number;
+    generationTime: number;
     readonly memoryUsage: number;
   };
 }
@@ -88,8 +88,8 @@ export interface R3FGenerationError {
   readonly message: string;
   readonly code: string;
   readonly severity: 'error' | 'warning' | 'info';
-  readonly nodeId?: string;
-  readonly nodeType?: string;
+  readonly nodeId?: string | undefined;
+  readonly nodeType?: string | undefined;
 }
 
 /**
@@ -107,13 +107,13 @@ export interface GeometryCacheEntry {
  * Material configuration for R3F generation
  */
 export interface R3FMaterialConfig extends CSGMaterial {
-  readonly castShadow?: boolean;
-  readonly receiveShadow?: boolean;
-  readonly transparent?: boolean;
-  readonly side?: THREE.Side;
-  readonly alphaTest?: number;
-  readonly depthWrite?: boolean;
-  readonly depthTest?: boolean;
+  readonly castShadow?: boolean | undefined;
+  readonly receiveShadow?: boolean | undefined;
+  readonly transparent?: boolean | undefined;
+  readonly side?: THREE.Side | undefined;
+  readonly alphaTest?: number | undefined;
+  readonly depthWrite?: boolean | undefined;
+  readonly depthTest?: boolean | undefined;
 }
 
 /**
@@ -322,6 +322,7 @@ export const DEFAULT_GEOMETRY_PARAMS: Required<GeometryParams> = {
  */
 export const DEFAULT_MATERIAL_CONFIG: Required<R3FMaterialConfig> = {
   color: { r: 0.3, g: 0.5, b: 0.8, a: 1.0 },
+  emissive: { r: 0, g: 0, b: 0 },
   opacity: 1.0,
   metalness: 0.1,
   roughness: 0.4,

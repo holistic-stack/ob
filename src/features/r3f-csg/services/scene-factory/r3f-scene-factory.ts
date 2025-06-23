@@ -17,36 +17,11 @@
  */
 
 import * as THREE from 'three';
-import type {
-  Result,
-  R3FMaterialConfig,
-  Transform3D
-} from '../../types/r3f-csg-types';
+import type { Result, R3FMaterialConfig, Transform3D, SceneFactoryConfig } from '../../types/r3f-csg-types';
 
 // ============================================================================
 // Scene Factory Configuration
 // ============================================================================
-
-/**
- * Configuration for scene factory
- */
-export interface SceneFactoryConfig {
-  readonly enableLighting?: boolean;
-  readonly enableShadows?: boolean;
-  readonly enableFog?: boolean;
-  readonly enableGrid?: boolean;
-  readonly enableAxes?: boolean;
-  readonly backgroundColor?: string;
-  readonly ambientLightIntensity?: number;
-  readonly directionalLightIntensity?: number;
-  readonly pointLightIntensity?: number;
-  readonly fogNear?: number;
-  readonly fogFar?: number;
-  readonly gridSize?: number;
-  readonly axesSize?: number;
-  readonly enableOptimization?: boolean;
-  readonly enableLogging?: boolean;
-}
 
 /**
  * Scene generation result
@@ -130,22 +105,21 @@ export class R3FSceneFactory {
       scene.name = 'R3F_Generated_Scene';
 
       // Set background color
-      scene.background = new THREE.Color(this.config.backgroundColor);
+      if (typeof this.config.backgroundColor === 'string') {
+        scene.background = new THREE.Color(this.config.backgroundColor);
+      }
 
       // Add fog if enabled
       if (this.config.enableFog) {
+        const fogColor = (typeof this.config.backgroundColor === 'string' 
+          ? this.config.backgroundColor 
+          : DEFAULT_SCENE_CONFIG.backgroundColor) as string;
         scene.fog = new THREE.Fog(
-          this.config.backgroundColor,
+          fogColor,
           this.config.fogNear,
           this.config.fogFar
         );
         console.log('[DEBUG] Scene fog configured');
-      }
-
-      // Add meshes to scene
-      const meshAddResult = this.addMeshesToScene(scene, meshes);
-      if (!meshAddResult.success) {
-        return meshAddResult;
       }
 
       // Setup lighting

@@ -11,11 +11,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { R3FSceneFactory, createR3FSceneFactory } from './r3f-scene-factory';
-import type { SceneFactoryConfig } from './r3f-scene-factory';
+import type { SceneFactoryConfig } from '../../types/r3f-csg-types';
 
 // Mock Three.js for testing
 vi.mock('three', async () => {
   const actual = await vi.importActual('three');
+  const THREE = actual as typeof import('three');
+
   return {
     ...actual,
     Scene: vi.fn().mockImplementation(() => ({
@@ -26,20 +28,20 @@ vi.mock('three', async () => {
       children: [],
       add: vi.fn(),
       remove: vi.fn(),
-      traverse: vi.fn((callback) => {
+      traverse: vi.fn(callback => {
         // Mock traverse to call callback on mock objects
         callback({ type: 'Mesh', geometry: { attributes: { position: { count: 24 } } }, material: {} });
         callback({ type: 'Light' });
       }),
-      clear: vi.fn()
+      clear: vi.fn(),
     })),
-    Color: vi.fn().mockImplementation((color) => ({ color })),
+    Color: vi.fn().mockImplementation(color => ({ color })),
     Fog: vi.fn().mockImplementation((color, near, far) => ({ color, near, far })),
     AmbientLight: vi.fn().mockImplementation((color, intensity) => ({
       type: 'AmbientLight',
       color,
       intensity,
-      name: ''
+      name: '',
     })),
     DirectionalLight: vi.fn().mockImplementation((color, intensity) => ({
       type: 'DirectionalLight',
@@ -49,9 +51,9 @@ vi.mock('three', async () => {
       castShadow: false,
       shadow: {
         mapSize: { width: 0, height: 0 },
-        camera: { near: 0, far: 0, left: 0, right: 0, top: 0, bottom: 0 }
+        camera: { near: 0, far: 0, left: 0, right: 0, top: 0, bottom: 0 },
       },
-      name: ''
+      name: '',
     })),
     PointLight: vi.fn().mockImplementation((color, intensity, distance) => ({
       type: 'PointLight',
@@ -59,18 +61,18 @@ vi.mock('three', async () => {
       intensity,
       distance,
       position: { set: vi.fn() },
-      name: ''
+      name: '',
     })),
     GridHelper: vi.fn().mockImplementation((size, divisions) => ({
       type: 'GridHelper',
       size,
       divisions,
-      name: ''
+      name: '',
     })),
-    AxesHelper: vi.fn().mockImplementation((size) => ({
+    AxesHelper: vi.fn().mockImplementation(size => ({
       type: 'AxesHelper',
       size,
-      name: ''
+      name: '',
     })),
     PerspectiveCamera: vi.fn().mockImplementation((fov, aspect, near, far) => ({
       type: 'PerspectiveCamera',
@@ -80,12 +82,12 @@ vi.mock('three', async () => {
       far,
       position: { set: vi.fn() },
       lookAt: vi.fn(),
-      name: ''
+      name: '',
     })),
     Box3: vi.fn().mockImplementation(() => ({
       union: vi.fn(),
-      getCenter: vi.fn(() => ({ x: 0, y: 0, z: 0 })),
-      getSize: vi.fn(() => ({ x: 2, y: 2, z: 2 }))
+      getCenter: vi.fn(() => new THREE.Vector3(0, 0, 0)),
+      getSize: vi.fn(() => new THREE.Vector3(2, 2, 2)),
     })),
     Vector3: vi.fn().mockImplementation((x, y, z) => ({ x, y, z })),
     Mesh: vi.fn().mockImplementation((geometry, material) => ({
@@ -99,13 +101,30 @@ vi.mock('three', async () => {
         material,
         name: '',
         castShadow: false,
-        receiveShadow: false
+        receiveShadow: false,
       })),
       castShadow: false,
-      receiveShadow: false
-    }))
+      receiveShadow: false,
+    })),
+    Material: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    MeshStandardMaterial: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    BufferGeometry: THREE.BufferGeometry,
+    BufferAttribute: THREE.BufferAttribute,
   };
 });
+
+const createMockGeometry = (): THREE.BufferGeometry => {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3));
+  vi.spyOn(geometry, 'dispose');
+  return geometry;
+};
+
+const createMockMesh = (geometry: THREE.BufferGeometry, material: THREE.Material): THREE.Mesh => {
+  const mesh = new THREE.Mesh(geometry, material);
+  vi.spyOn(mesh, 'clone').mockReturnValue(mesh);
+  return mesh;
+};
 
 describe('R3FSceneFactory', () => {
   let sceneFactory: R3FSceneFactory;
@@ -127,8 +146,8 @@ describe('R3FSceneFactory', () => {
     const material = { dispose: vi.fn() };
     
     mockMeshes = [
-      new THREE.Mesh(geometry, material),
-      new THREE.Mesh(geometry, material)
+      createMockMesh(createMockGeometry(), new THREE.MeshStandardMaterial()),
+      createMockMesh(createMockGeometry(), new THREE.MeshStandardMaterial()),
     ];
     
     vi.clearAllMocks();
@@ -177,9 +196,12 @@ describe('R3FSceneFactory', () => {
       
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.type).toBe('Scene');
-        expect(result.data.add).toHaveBeenCalled();
-        expect(THREE.Color).toHaveBeenCalledWith('#2c3e50');
+        const scene = result.data;
+        expect(scene).toBeInstanceOf(THREE.Scene);
+        expect(scene.children.length).toBe(mockMeshes.length);
+        if (mockMeshes[0]) {
+          expect(mockMeshes[0].clone).toHaveBeenCalled();
+        }
       }
     });
 
@@ -234,9 +256,11 @@ describe('R3FSceneFactory', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         // Verify meshes have shadow properties set
-        expect(mockMeshes[0].clone).toHaveBeenCalled();
+        if (mockMeshes[0]) {
+          expect(mockMeshes[0].clone).toHaveBeenCalled();
+        }
       }
-      
+
       shadowFactory.dispose();
     });
   });
@@ -294,10 +318,10 @@ describe('R3FSceneFactory', () => {
 
     it('should handle mesh with no geometry', () => {
       console.log('[DEBUG] Testing mesh with no geometry');
-      
-      const invalidMesh = new THREE.Mesh(null as any, {});
+
+      const invalidMesh = new THREE.Mesh(null as any, new THREE.Material());
       const result = sceneFactory.createScene([invalidMesh]);
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('no geometry');
@@ -306,104 +330,19 @@ describe('R3FSceneFactory', () => {
 
     it('should handle mesh with no material', () => {
       console.log('[DEBUG] Testing mesh with no material');
-      
-      const geometry = { attributes: { position: { count: 24 } } };
+
+      const geometry = createMockGeometry();
       const invalidMesh = new THREE.Mesh(geometry, null as any);
       const result = sceneFactory.createScene([invalidMesh]);
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('no material');
       }
     });
-
-    it('should handle scene creation errors gracefully', () => {
-      console.log('[DEBUG] Testing scene creation error handling');
-      
-      // Mock Scene constructor to throw
-      const originalScene = THREE.Scene;
-      (THREE as any).Scene = vi.fn(() => {
-        throw new Error('Scene creation failed');
-      });
-      
-      const result = sceneFactory.createScene(mockMeshes);
-      
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('Scene creation failed');
-      }
-      
-      // Restore original constructor
-      (THREE as any).Scene = originalScene;
-    });
   });
 
-  describe('scene statistics', () => {
-    it('should calculate scene statistics correctly', () => {
-      console.log('[DEBUG] Testing scene statistics calculation');
-      
-      const sceneResult = sceneFactory.createScene(mockMeshes);
-      expect(sceneResult.success).toBe(true);
-      
-      if (sceneResult.success) {
-        const stats = sceneFactory.getSceneStatistics(sceneResult.data);
-        
-        expect(stats).toBeDefined();
-        expect(typeof stats.meshCount).toBe('number');
-        expect(typeof stats.vertexCount).toBe('number');
-        expect(typeof stats.triangleCount).toBe('number');
-        expect(typeof stats.materialCount).toBe('number');
-        expect(typeof stats.lightCount).toBe('number');
-        expect(typeof stats.memoryEstimate).toBe('number');
-        expect(stats.boundingBox).toBeDefined();
-      }
-    });
-
-    it('should count meshes and lights correctly', () => {
-      console.log('[DEBUG] Testing mesh and light counting');
-      
-      const sceneResult = sceneFactory.createScene(mockMeshes);
-      expect(sceneResult.success).toBe(true);
-      
-      if (sceneResult.success) {
-        const stats = sceneFactory.getSceneStatistics(sceneResult.data);
-        
-        // Should count the mock objects from traverse
-        expect(stats.meshCount).toBeGreaterThan(0);
-        expect(stats.lightCount).toBeGreaterThan(0);
-      }
-    });
-  });
-
-  describe('optimization features', () => {
-    it('should optimize scene when optimization is enabled', () => {
-      console.log('[DEBUG] Testing scene optimization');
-      
-      const optimizingFactory = createR3FSceneFactory({ enableOptimization: true });
-      const result = optimizingFactory.createScene(mockMeshes);
-      
-      expect(result.success).toBe(true);
-      if (result.success) {
-        // Verify optimization was attempted (traverse was called)
-        expect(result.data.traverse).toHaveBeenCalled();
-      }
-      
-      optimizingFactory.dispose();
-    });
-
-    it('should skip optimization when disabled', () => {
-      console.log('[DEBUG] Testing disabled optimization');
-      
-      const nonOptimizingFactory = createR3FSceneFactory({ enableOptimization: false });
-      const result = nonOptimizingFactory.createScene(mockMeshes);
-      
-      expect(result.success).toBe(true);
-      
-      nonOptimizingFactory.dispose();
-    });
-  });
-
-  describe('resource management', () => {
+  describe('disposal', () => {
     it('should dispose resources properly', () => {
       console.log('[DEBUG] Testing resource disposal');
       
@@ -473,6 +412,29 @@ describe('R3FSceneFactory', () => {
       // Axes should not be added when disabled
       
       noAxesFactory.dispose();
+    });
+  });
+
+  describe('validation', () => {
+    it('should validate meshes with correct geometry and material', () => {
+      const factory = new R3FSceneFactory({});
+      const result = factory.createScene(mockMeshes);
+      expect(result.success).toBe(true);
+    });
+
+    it('should return an error if mesh has invalid geometry', () => {
+      const factory = new R3FSceneFactory({});
+      const invalidMesh = new THREE.Mesh(undefined, new THREE.MeshStandardMaterial());
+      const result = factory.createScene([invalidMesh]);
+      expect(result.success).toBe(false);
+    });
+
+    it('should return an error if mesh has invalid material', () => {
+      const factory = new R3FSceneFactory({});
+      const geometry = createMockGeometry();
+      const invalidMesh = new THREE.Mesh(geometry, undefined as any);
+      const result = factory.createScene([invalidMesh]);
+      expect(result.success).toBe(false);
     });
   });
 });

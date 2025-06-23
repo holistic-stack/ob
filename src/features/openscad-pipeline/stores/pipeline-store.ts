@@ -12,7 +12,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { 
   processOpenSCADPipeline,
   type PipelineResult,

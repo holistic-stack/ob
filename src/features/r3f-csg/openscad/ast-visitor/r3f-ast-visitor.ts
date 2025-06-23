@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { createR3FCSGService } from '../../services/csg-service/r3f-csg-service';
 import type {
-  R3FASTVisitor,
+  R3FASTVisitor as IR3FASTVisitor,
   R3FASTVisitorConfig,
   MeshResult,
   GeometryResult,
@@ -102,11 +102,19 @@ const DEFAULT_VISITOR_CONFIG: Required<R3FASTVisitorConfig> = {
  * Converts OpenSCAD AST nodes to Three.js geometries and meshes using
  * functional programming patterns and comprehensive error handling.
  */
-export class R3FASTVisitor implements R3FASTVisitor {
+export class R3FASTVisitor implements IR3FASTVisitor {
   private readonly config: Required<R3FASTVisitorConfig>;
   private readonly geometryCache = new Map<string, THREE.BufferGeometry>();
   private readonly materialCache = new Map<string, THREE.Material>();
-  private readonly metrics: ProcessingMetrics;
+  private readonly metrics: {
+    totalNodes: number;
+    processedNodes: number;
+    failedNodes: number;
+    processingTime: number;
+    memoryUsage: number;
+    cacheHits: number;
+    cacheMisses: number;
+  };
   private readonly disposables: Set<THREE.Object3D> = new Set();
   private readonly csgService: CSGService;
 
@@ -188,7 +196,7 @@ export class R3FASTVisitor implements R3FASTVisitor {
       }
       // Unsupported node type
       else {
-        const error = `Unsupported node type: ${node.type}`;
+        const error = `Unsupported node type: ${(node as any).type}`;
         console.warn(`[WARN] ${error}`);
         this.metrics.failedNodes++;
         return { success: false, error };
@@ -360,8 +368,8 @@ export class R3FASTVisitor implements R3FASTVisitor {
       // Process all children
       const childResults = node.children.map((child: ASTNode) => this.visit(child));
       const childMeshes = childResults
-        .filter((result): result is { success: true; data: THREE.Mesh } => result.success)
-        .map(result => result.data);
+        .filter((result: MeshResult): result is { success: true; data: THREE.Mesh } => result.success)
+        .map((result: { success: true; data: THREE.Mesh }) => result.data);
 
       if (childMeshes.length === 0) {
         return { success: false, error: 'No valid child meshes for union operation' };
@@ -373,7 +381,7 @@ export class R3FASTVisitor implements R3FASTVisitor {
 
       // Perform actual CSG union operation if enabled and supported
       if (this.config.enableCSG && this.csgService.isSupported()) {
-        const geometries = childMeshes.map(mesh => mesh.geometry);
+        const geometries = childMeshes.map((mesh: THREE.Mesh) => mesh.geometry);
         const unionResult = this.csgService.union(geometries);
 
         if (unionResult.success) {
@@ -414,8 +422,8 @@ export class R3FASTVisitor implements R3FASTVisitor {
       // Process all children
       const childResults = node.children.map((child: ASTNode) => this.visit(child));
       const childMeshes = childResults
-        .filter((result): result is { success: true; data: THREE.Mesh } => result.success)
-        .map(result => result.data);
+        .filter((result: MeshResult): result is { success: true; data: THREE.Mesh } => result.success)
+        .map((result: { success: true; data: THREE.Mesh }) => result.data);
 
       if (childMeshes.length < 2) {
         return { success: false, error: 'Insufficient valid child meshes for difference operation' };
@@ -423,7 +431,7 @@ export class R3FASTVisitor implements R3FASTVisitor {
 
       // Perform actual CSG difference operation if enabled and supported
       if (this.config.enableCSG && this.csgService.isSupported()) {
-        const geometries = childMeshes.map(mesh => mesh.geometry);
+        const geometries = childMeshes.map((mesh: THREE.Mesh) => mesh.geometry);
         const differenceResult = this.csgService.difference(geometries);
 
         if (differenceResult.success) {
@@ -464,8 +472,8 @@ export class R3FASTVisitor implements R3FASTVisitor {
       // Process all children
       const childResults = node.children.map((child: ASTNode) => this.visit(child));
       const childMeshes = childResults
-        .filter((result): result is { success: true; data: THREE.Mesh } => result.success)
-        .map(result => result.data);
+        .filter((result: MeshResult): result is { success: true; data: THREE.Mesh } => result.success)
+        .map((result: { success: true; data: THREE.Mesh }) => result.data);
 
       if (childMeshes.length < 2) {
         return { success: false, error: 'Insufficient valid child meshes for intersection operation' };
@@ -473,7 +481,7 @@ export class R3FASTVisitor implements R3FASTVisitor {
 
       // Perform actual CSG intersection operation if enabled and supported
       if (this.config.enableCSG && this.csgService.isSupported()) {
-        const geometries = childMeshes.map(mesh => mesh.geometry);
+        const geometries = childMeshes.map((mesh: THREE.Mesh) => mesh.geometry);
         const intersectionResult = this.csgService.intersection(geometries);
 
         if (intersectionResult.success) {

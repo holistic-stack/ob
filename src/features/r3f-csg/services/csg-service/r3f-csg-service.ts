@@ -55,12 +55,12 @@ const DEFAULT_CSG_CONFIG: Required<CSGServiceConfig> = {
  * CSG operation metrics
  */
 interface CSGMetrics {
-  readonly totalOperations: number;
-  readonly successfulOperations: number;
-  readonly failedOperations: number;
-  readonly cacheHits: number;
-  readonly cacheMisses: number;
-  readonly averageOperationTime: number;
+  totalOperations: number;
+  successfulOperations: number;
+  failedOperations: number;
+  cacheHits: number;
+  cacheMisses: number;
+  averageOperationTime: number;
 }
 
 // ============================================================================
@@ -144,7 +144,7 @@ export class R3FCSGService implements CSGService {
     geometries: readonly THREE.BufferGeometry[]
   ): CSGOperationResult {
     const startTime = performance.now();
-    this.metrics.totalOperations++;
+    (this.metrics as any).totalOperations++;
 
     if (this.config.enableLogging) {
       console.log(`[DEBUG] Performing ${operationType} operation on ${geometries.length} geometries`);
@@ -154,7 +154,7 @@ export class R3FCSGService implements CSGService {
       // Validate inputs
       const validationResult = this.validateGeometries(geometries, operationType);
       if (!validationResult.success) {
-        this.metrics.failedOperations++;
+        (this.metrics as any).failedOperations++;
         return validationResult;
       }
 
@@ -163,20 +163,20 @@ export class R3FCSGService implements CSGService {
         const cacheKey = this.generateCacheKey(operationType, geometries);
         const cachedResult = this.operationCache.get(cacheKey);
         if (cachedResult) {
-          this.metrics.cacheHits++;
+          (this.metrics as any).cacheHits++;
           if (this.config.enableLogging) {
             console.log(`[DEBUG] Cache hit for ${operationType} operation`);
           }
           return { success: true, data: cachedResult.clone() };
         }
-        this.metrics.cacheMisses++;
+        (this.metrics as any).cacheMisses++;
       }
 
       // Perform the actual CSG operation
       const operationResult = this.executeCSGOperation(operationType, geometries);
       
       if (!operationResult.success) {
-        this.metrics.failedOperations++;
+        (this.metrics as any).failedOperations++;
         return operationResult;
       }
 
@@ -197,11 +197,11 @@ export class R3FCSGService implements CSGService {
         console.log(`[DEBUG] ${operationType} operation completed in ${operationTime.toFixed(2)}ms`);
       }
 
-      this.metrics.successfulOperations++;
+      (this.metrics as any).successfulOperations++;
       return operationResult;
 
     } catch (error) {
-      this.metrics.failedOperations++;
+      (this.metrics as any).failedOperations++;
       const errorMessage = error instanceof Error ? error.message : 'Unknown CSG operation error';
       
       if (this.config.enableLogging) {
@@ -220,8 +220,12 @@ export class R3FCSGService implements CSGService {
     geometries: readonly THREE.BufferGeometry[]
   ): CSGOperationResult {
     try {
+      const firstGeometry = geometries[0];
+      if (!firstGeometry) {
+        return { success: false, error: 'First geometry is missing.' };
+      }
       // Convert first geometry to CSG
-      let resultCSG = CSG.fromGeometry(geometries[0]);
+      let resultCSG = CSG.fromGeometry(firstGeometry);
       
       if (!resultCSG) {
         return { success: false, error: 'Failed to convert first geometry to CSG' };
@@ -229,7 +233,11 @@ export class R3FCSGService implements CSGService {
 
       // Apply operation to remaining geometries
       for (let i = 1; i < geometries.length; i++) {
-        const nextCSG = CSG.fromGeometry(geometries[i]);
+        const nextGeometry = geometries[i];
+        if (!nextGeometry) {
+          return { success: false, error: `Failed to convert geometry ${i} to CSG` };
+        }
+        const nextCSG = CSG.fromGeometry(nextGeometry);
         
         if (!nextCSG) {
           return { success: false, error: `Failed to convert geometry ${i} to CSG` };
@@ -255,7 +263,7 @@ export class R3FCSGService implements CSGService {
       }
 
       // Convert back to BufferGeometry
-      const resultGeometry = CSG.toGeometry(resultCSG);
+      const resultGeometry = CSG.toGeometry(resultCSG, new THREE.Matrix4());
       
       if (!resultGeometry) {
         return { success: false, error: 'Failed to convert CSG result back to geometry' };
@@ -325,6 +333,9 @@ export class R3FCSGService implements CSGService {
    */
   private hashGeometry(geometry: THREE.BufferGeometry): string {
     const positions = geometry.attributes.position;
+    if (!positions) {
+      return 'no_position';
+    }
     const vertexCount = positions.count;
     const firstVertex = `${positions.getX(0)}_${positions.getY(0)}_${positions.getZ(0)}`;
     const lastVertex = `${positions.getX(vertexCount - 1)}_${positions.getY(vertexCount - 1)}_${positions.getZ(vertexCount - 1)}`;
@@ -339,11 +350,13 @@ export class R3FCSGService implements CSGService {
     if (this.operationCache.size >= this.config.maxCacheSize) {
       // Remove oldest entry (simple LRU)
       const firstKey = this.operationCache.keys().next().value;
-      const oldGeometry = this.operationCache.get(firstKey);
-      if (oldGeometry) {
-        oldGeometry.dispose();
+      if (firstKey) {
+        const oldGeometry = this.operationCache.get(firstKey);
+        if (oldGeometry) {
+          oldGeometry.dispose();
+        }
+        this.operationCache.delete(firstKey);
       }
-      this.operationCache.delete(firstKey);
     }
 
     this.operationCache.set(key, geometry.clone());
@@ -379,7 +392,7 @@ export class R3FCSGService implements CSGService {
    */
   private updateMetrics(operationTime: number, success: boolean): void {
     const totalTime = this.metrics.averageOperationTime * this.metrics.totalOperations + operationTime;
-    this.metrics.averageOperationTime = totalTime / (this.metrics.totalOperations + 1);
+    (this.metrics as any).averageOperationTime = totalTime / (this.metrics.totalOperations + 1);
   }
 
   /**

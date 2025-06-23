@@ -26,48 +26,33 @@ import type {
   Result,
   R3FASTVisitorConfig,
   ProcessingMetrics,
-  ASTProcessingResult
+  ProcessingProgress,
+  ASTProcessingResult,
+  R3FPipelineConfig,
 } from '../../types/r3f-csg-types';
-import type { SceneFactoryConfig } from '../../services/scene-factory/r3f-scene-factory';
+import type { SceneFactoryConfig } from '../../types/r3f-csg-types';
 
 // ============================================================================
 // Pipeline Configuration
 // ============================================================================
 
 /**
- * Configuration for the R3F pipeline processor
- */
-export interface R3FPipelineConfig {
-  readonly astVisitorConfig?: R3FASTVisitorConfig;
-  readonly sceneFactoryConfig?: SceneFactoryConfig;
-  readonly enableCaching?: boolean;
-  readonly enableOptimization?: boolean;
-  readonly enableLogging?: boolean;
-  readonly processingTimeout?: number;
-  readonly maxRetries?: number;
-  readonly enableProgressTracking?: boolean;
-}
-
-/**
  * Pipeline processing result
  */
-export type PipelineResult = Result<{
-  scene: THREE.Scene;
-  camera?: THREE.Camera;
-  meshes: THREE.Mesh[];
-  metrics: ProcessingMetrics;
-}, string>;
+export type PipelineResult = Result<
+  {
+    scene: THREE.Scene;
+    camera?: THREE.Camera;
+    meshes: THREE.Mesh[];
+    metrics: ProcessingMetrics;
+  },
+  string
+>;
 
 /**
  * Pipeline processing progress
  */
-export interface ProcessingProgress {
-  readonly stage: 'parsing' | 'ast-processing' | 'scene-generation' | 'optimization' | 'complete';
-  readonly progress: number; // 0-100
-  readonly message: string;
-  readonly timeElapsed: number;
-  readonly estimatedTimeRemaining?: number;
-}
+
 
 /**
  * Pipeline processing context
@@ -89,13 +74,25 @@ const DEFAULT_PIPELINE_CONFIG: Required<R3FPipelineConfig> = {
     enableCSG: true,
     enableCaching: true,
     enableOptimization: true,
+    maxRecursionDepth: 20,
+    defaultMaterial: { type: 'standard', color: 0xffffff },
+    geometryPrecision: 0.001,
     enableLogging: true
   },
   sceneFactoryConfig: {
     enableLighting: true,
     enableShadows: true,
+    enableFog: false,
     enableGrid: true,
     enableAxes: true,
+    backgroundColor: '#2c3e50',
+    ambientLightIntensity: 0.4,
+    directionalLightIntensity: 1.0,
+    pointLightIntensity: 0.5,
+    fogNear: 50,
+    fogFar: 200,
+    gridSize: 20,
+    axesSize: 5,
     enableOptimization: true,
     enableLogging: true
   },
@@ -152,8 +149,8 @@ export class R3FPipelineProcessor {
       startTime,
       openscadCode,
       config: this.config,
-      onProgress,
-      onError
+      ...(onProgress && { onProgress }),
+      ...(onError && { onError })
     };
 
     try {
@@ -213,7 +210,7 @@ export class R3FPipelineProcessor {
         success: true,
         data: {
           scene: sceneResult.data.scene,
-          camera: sceneResult.data.camera,
+          ...(sceneResult.data.camera && { camera: sceneResult.data.camera }),
           meshes: meshResult.data,
           metrics
         }
@@ -264,39 +261,39 @@ export class R3FPipelineProcessor {
     onError?: (error: string, stage: string) => void
   ): Promise<PipelineResult> {
     let lastError = '';
-    
-    for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+    const maxRetries = this.config.maxRetries ?? 3;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       if (this.config.enableLogging) {
-        console.log(`[DEBUG] Processing attempt ${attempt}/${this.config.maxRetries}`);
+        console.log(`[DEBUG] Processing attempt ${attempt}/${maxRetries}`);
       }
 
       try {
         const result = await this.processOpenSCAD(openscadCode, onProgress, onError);
-        
+
         if (result.success) {
           return result;
         }
-        
+
         lastError = result.error;
-        
-        if (attempt < this.config.maxRetries) {
+
+        if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, delay));
         }
-
       } catch (error) {
         lastError = error instanceof Error ? error.message : 'Unknown retry error';
-        
-        if (attempt < this.config.maxRetries) {
+
+        if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt - 1) * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
 
-    return { 
-      success: false, 
-      error: `Processing failed after ${this.config.maxRetries} attempts. Last error: ${lastError}` 
+    return {
+      success: false,
+      error: `Processing failed after ${maxRetries} attempts. Last error: ${lastError}`,
     };
   }
 
@@ -552,7 +549,7 @@ export class R3FPipelineProcessor {
       progress,
       message,
       timeElapsed,
-      estimatedTimeRemaining
+      ...(estimatedTimeRemaining !== undefined && { estimatedTimeRemaining })
     });
   }
 

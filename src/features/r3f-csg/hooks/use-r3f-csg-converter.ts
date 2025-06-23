@@ -100,10 +100,10 @@ const DEFAULT_HOOK_CONFIG: Required<UseR3FCSGConverterConfig> = {
     powerPreference: 'high-performance'
   },
   sceneConfig: {
-    background: '#2c3e50',
-    enableGrid: true,
-    enableAxes: true,
-    enableStats: false
+    backgroundColor: '#2c3e50',
+    showAxes: true,
+    showGrid: true,
+    enableStats: false,
   },
   controlsConfig: {
     enableOrbitControls: true,
@@ -375,14 +375,16 @@ export function useR3FCSGConverter(
   }, []);
 
   // Debounced conversion for auto-convert mode
-  const debouncedConvert = useCallback((code: string) => {
+  const debouncedConvert = useCallback((code: string): Promise<ConversionResult> => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    debounceTimerRef.current = setTimeout(() => {
-      convertToR3F(code);
-    }, mergedConfig.debounceMs);
+    return new Promise((resolve) => {
+      debounceTimerRef.current = setTimeout(() => {
+        resolve(convertToR3F(code));
+      }, mergedConfig.debounceMs);
+    });
   }, [convertToR3F, mergedConfig.debounceMs]);
 
   return {

@@ -410,13 +410,21 @@ function performCSGOperation(
       };
     }
 
+    const firstGeom = geometries[0];
+    if (!firstGeom) {
+      return {
+        success: false,
+        error: createR3FError('First geometry is undefined', 'CSG_CONVERSION_ERROR')
+      };
+    }
+
     if (geometries.length === 1) {
       // Single geometry, just return a clone
-      return { success: true, data: geometries[0].clone() };
+      return { success: true, data: firstGeom.clone() };
     }
 
     // Convert first geometry to CSG
-    let resultCSG = CSG.fromGeometry(geometries[0]);
+    let resultCSG = CSG.fromGeometry(firstGeom);
 
     if (!resultCSG) {
       return {
@@ -430,7 +438,11 @@ function performCSGOperation(
 
     // Apply operation to remaining geometries
     for (let i = 1; i < geometries.length; i++) {
-      const nextCSG = CSG.fromGeometry(geometries[i]);
+      const nextGeom = geometries[i];
+      if (!nextGeom) {
+        continue;
+      }
+      const nextCSG = CSG.fromGeometry(nextGeom);
 
       if (!nextCSG) {
         return {

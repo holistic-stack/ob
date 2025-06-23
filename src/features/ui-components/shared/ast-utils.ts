@@ -8,20 +8,11 @@
  */
 
 import { type ASTNode } from '@holistic-stack/openscad-parser';
+import type { ParseError } from '../../openscad-parser/types/ast-types';
 
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
-
-/**
- * Parse error interface for consistent error reporting
- */
-export interface ParseError {
-  readonly message: string;
-  readonly line: number;
-  readonly column: number;
-  readonly severity: 'error' | 'warning';
-}
 
 /**
  * Result type for AST operations following functional programming patterns
@@ -208,7 +199,7 @@ export const transformASTNode = <T>(
  */
 export const extractLineNumber = (errorMessage: string): number | null => {
   const lineMatch = errorMessage.match(/line\s+(\d+)/i);
-  return lineMatch ? parseInt(lineMatch[1], 10) : null;
+  return lineMatch && lineMatch[1] ? parseInt(lineMatch[1], 10) : null;
 };
 
 /**
@@ -217,7 +208,7 @@ export const extractLineNumber = (errorMessage: string): number | null => {
  */
 export const extractColumnNumber = (errorMessage: string): number | null => {
   const columnMatch = errorMessage.match(/column\s+(\d+)/i);
-  return columnMatch ? parseInt(columnMatch[1], 10) : null;
+  return columnMatch && columnMatch[1] ? parseInt(columnMatch[1], 10) : null;
 };
 
 /**
@@ -226,13 +217,15 @@ export const extractColumnNumber = (errorMessage: string): number | null => {
  */
 export const createParseError = (
   message: string,
-  severity: 'error' | 'warning' = 'error'
+  severity: 'error' | 'warning' | 'info' = 'error'
 ): ParseError => {
   return {
     message,
-    line: extractLineNumber(message) || 1,
-    column: extractColumnNumber(message) || 1,
-    severity
+    location: {
+      line: extractLineNumber(message) || 1,
+      column: extractColumnNumber(message) || 1,
+    },
+    severity,
   };
 };
 

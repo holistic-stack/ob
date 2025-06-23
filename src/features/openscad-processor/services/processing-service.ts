@@ -8,10 +8,25 @@
  * @date June 2025
  */
 
-import { MeshGeometryData, PipelineResult, createPipelineFailure } from '../../../types/pipeline-types';
+import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
+import type { GeneratedMesh } from '../../r3f-generator/types/r3f-generator-types';
 import { ProcessingContext } from '../types/processing-types';
 import { PipelineService } from './pipeline-service';
 import { isValidGeometryData } from '../utils/geometry-converter';
+
+function createPipelineFailure<T>(error: string): PipelineResult {
+  return {
+    success: false,
+    errors: [{ stage: 'complete', message: error, code: 'PROCESSING_ERROR', severity: 'error' }],
+    warnings: [],
+    meshes: [],
+    metrics: { totalTime: 0, parsingTime: 0, csgProcessingTime: 0, r3fGenerationTime: 0, nodeCount: 0, meshCount: 0, vertexCount: 0, triangleCount: 0, memoryUsage: 0 },
+    ast: undefined,
+    csgTree: undefined,
+    r3fResult: undefined,
+    scene: undefined
+  };
+}
 
 /**
  * Processing service class for handling OpenSCAD code processing
@@ -32,7 +47,7 @@ export class ProcessingService {
   async processCode(
     code: string,
     abortController?: AbortController
-  ): Promise<PipelineResult<MeshGeometryData | MeshGeometryData[]>> {
+  ): Promise<PipelineResult> {
     const context: ProcessingContext = {
       code,
       abortController: abortController || new AbortController(),
@@ -47,7 +62,7 @@ export class ProcessingService {
    */
   private async performProcessing(
     context: ProcessingContext
-  ): Promise<PipelineResult<MeshGeometryData | MeshGeometryData[]>> {
+  ): Promise<PipelineResult> {
     console.log('[ProcessingService] 🔄 Starting OpenSCAD processing...');
 
     try {
@@ -72,13 +87,12 @@ export class ProcessingService {
 
       // Validate result
       if (!result.success) {
-        throw new Error(`Processing failed: ${result.error || 'No valid result'}`);
+        throw new Error(`Processing failed: ${result.errors[0]?.message || 'No valid result'}`);
       }
 
       // Validate geometry data
-      if (result.value) {
-        const geometryArray = Array.isArray(result.value) ? result.value : [result.value];
-        const invalidGeometry = geometryArray.find((geo: any) => !isValidGeometryData(geo));
+      if (result.meshes) {
+        const invalidGeometry = result.meshes.find((mesh: any) => !isValidGeometryData(mesh));
         
         if (invalidGeometry) {
           console.warn('[ProcessingService] ⚠️ Invalid geometry data detected:', invalidGeometry.name);
@@ -94,7 +108,7 @@ export class ProcessingService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
       console.error('[ProcessingService] ❌ Processing failed:', errorMessage);
 
-      return createPipelineFailure<MeshGeometryData | MeshGeometryData[]>(errorMessage);
+      return createPipelineFailure(errorMessage);
     }
   }
 

@@ -31,7 +31,7 @@
     "test-ct": "playwright test -c playwright-ct.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:all": "tsx scripts/test-runner.ts",
+    "test:all": "npx tsx scripts/test-runner.ts",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:visual": "playwright test --config playwright-ct.config.ts",

@@ -15,7 +15,7 @@
  * @version 1.0.0
  */
 
-import React, { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useState, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Grid, Environment, Stats } from '@react-three/drei';
 import * as THREE from 'three';
@@ -219,8 +219,8 @@ export function R3FCanvas({
         ref={canvasRef}
         camera={defaultCameraConfig}
         onCreated={handleCreated}
-        onPointerMissed={onPointerMissed}
-        shadows={defaultCanvasConfig.shadows}
+        {...(onPointerMissed && { onPointerMissed })}
+        shadows="soft"
         gl={{
           antialias: defaultCanvasConfig.antialias,
           alpha: defaultCanvasConfig.alpha,
@@ -247,7 +247,7 @@ export function R3FCanvas({
               dampingFactor={defaultCameraConfig.dampingFactor}
               enableDamping={defaultCameraConfig.enableDamping}
               target={defaultSceneConfig.cameraTarget || [0, 0, 0]}
-              position={defaultSceneConfig.cameraPosition}
+              position={defaultSceneConfig.cameraPosition || [10, 10, 10]}
               autoFrame={false}
               onPositionChange={(position) => {
                 console.log('[R3F Canvas] Camera position changed:', position);

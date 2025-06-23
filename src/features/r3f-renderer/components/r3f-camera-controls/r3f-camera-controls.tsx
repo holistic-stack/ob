@@ -195,8 +195,8 @@ export const R3FCameraControls = forwardRef<R3FCameraControlsRef, R3FCameraContr
     autoFrame,
     framePadding,
     enableLogging: false,
-    onPositionChange,
-    onError
+    ...(onPositionChange && { onPositionChange }),
+    ...(onError && { onError })
   };
 
   // Use R3F camera hook
@@ -302,7 +302,7 @@ export const R3FCameraControls = forwardRef<R3FCameraControlsRef, R3FCameraContr
     <>
       <OrbitControls
         ref={controlsRef}
-        target={target}
+        target={[...target] as [number, number, number]}
         enableZoom={enableZoom}
         enablePan={enablePan}
         enableRotate={enableRotate}
@@ -316,11 +316,9 @@ export const R3FCameraControls = forwardRef<R3FCameraControlsRef, R3FCameraContr
         maxPolarAngle={maxPolarAngle}
         minAzimuthAngle={minAzimuthAngle}
         maxAzimuthAngle={maxAzimuthAngle}
-        enableKeys={enableKeys}
         keyPanSpeed={keyPanSpeed}
-        enablePan={enableScreenSpacePanning}
-        screenSpacePanning={screenSpacePanning}
-        mouseButtons={mouseButtons}
+        screenSpacePanning={enableScreenSpacePanning}
+        mouseButtons={mouseButtons || undefined}
         touches={touches}
         onChange={handleControlsChange}
       />

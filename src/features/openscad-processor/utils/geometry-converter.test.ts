@@ -9,162 +9,102 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import * as THREE from 'three';
 import {
-  convertGeometryToMesh,
+  convertThreeMeshToProcessedMesh,
   convertResultToMeshes,
   isValidGeometryData,
-  getMeshStats
+  getMeshStats,
 } from './geometry-converter';
-import { createPipelineSuccess, createPipelineFailure } from '../../../types/pipeline-types';
-import type { MeshGeometryData } from '../../../types/pipeline-types';
+import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
 
 describe('Geometry Converter (Pure Functions)', () => {
-  const mockGeometryData: MeshGeometryData = {
-    name: 'test-cube',
-    positions: [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0], // 4 vertices
-    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1], // 4 normals
-    indices: [0, 1, 2, 0, 2, 3], // 2 triangles
-    uvs: [0, 0, 1, 0, 1, 1, 0, 1], // 4 UV coordinates
-    materialData: {
-      diffuseColor: [1, 0, 0] as const,
-      specularColor: [0, 1, 0] as const,
-      emissiveColor: [0, 0, 1] as const
-    }
+  const createMockMesh = (name: string): THREE.Mesh => {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 1, 1, 1]), 3));
+    const material = new THREE.MeshStandardMaterial({ color: 'red' });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    return mesh;
   };
 
-  describe('convertGeometryToMesh', () => {
-    it('should convert geometry data to processed mesh', () => {
-      const mesh = convertGeometryToMesh(mockGeometryData);
-      
-      expect(mesh.name).toBe('test-cube');
-      expect(mesh.positions).toBeInstanceOf(Float32Array);
-      expect(mesh.normals).toBeInstanceOf(Float32Array);
-      expect(mesh.indices).toBeInstanceOf(Uint16Array);
-      expect(mesh.uvs).toBeInstanceOf(Float32Array);
-      expect(mesh.materialData).toEqual(mockGeometryData.materialData);
-    });
+  const mockMesh = createMockMesh('test-cube');
 
-    it('should handle null geometry data gracefully', () => {
-      const geometryWithNulls: MeshGeometryData = {
-        name: 'empty-mesh',
-        positions: null,
-        normals: null,
-        indices: null,
-        uvs: null,
-        materialData: null
-      };
-      
-      const mesh = convertGeometryToMesh(geometryWithNulls);
-      
-      expect(mesh.name).toBe('empty-mesh');
-      expect(mesh.positions).toBeNull();
-      expect(mesh.normals).toBeNull();
-      expect(mesh.indices).toBeNull();
-      expect(mesh.uvs).toBeNull();
-      expect(mesh.materialData).toBeNull();
+  describe('convertThreeMeshToProcessedMesh', () => {
+    it('should convert THREE.Mesh to processed mesh', () => {
+      const processedMesh = convertThreeMeshToProcessedMesh(mockMesh);
+
+      expect(processedMesh.name).toBe('test-cube');
+      expect(processedMesh.positions).toBeInstanceOf(Float32Array);
+      expect(processedMesh.materialData).not.toBeNull();
     });
   });
-  describe('convertResultToMeshes', () => {
-    it('should convert successful result with single mesh', () => {
-      const result = createPipelineSuccess(mockGeometryData);
-      const meshes = convertResultToMeshes(result);
-      
-      expect(meshes).toHaveLength(1);
-      expect(meshes[0]?.name).toBe('test-cube');
-    });
 
-    it('should convert successful result with multiple meshes', () => {
-      const geometryArray = [
-        { ...mockGeometryData, name: 'mesh1' },
-        { ...mockGeometryData, name: 'mesh2' }
-      ];
-      const result = createPipelineSuccess(geometryArray);
+  describe('convertResultToMeshes', () => {
+    it('should convert successful result with meshes', () => {
+      const result: PipelineResult = {
+        success: true,
+        meshes: [mockMesh, createMockMesh('mesh2')],
+        ast: undefined,
+        csgTree: undefined,
+        r3fResult: undefined,
+        scene: undefined,
+        errors: [],
+        warnings: [],
+        metrics: {} as any,
+      };
       const meshes = convertResultToMeshes(result);
-      
+
       expect(meshes).toHaveLength(2);
-      expect(meshes[0]?.name).toBe('mesh1');
+      expect(meshes[0]?.name).toBe('test-cube');
       expect(meshes[1]?.name).toBe('mesh2');
     });
 
     it('should return empty array for failed result', () => {
-      const result = createPipelineFailure<MeshGeometryData>('Processing failed');
+      const result: PipelineResult = {
+        success: false,
+        meshes: [],
+        ast: undefined,
+        csgTree: undefined,
+        r3fResult: undefined,
+        scene: undefined,
+        errors: [{ stage: 'parsing', message: 'error', code: 'ERROR', severity: 'error' }],
+        warnings: [],
+        metrics: {} as any,
+      };
       const meshes = convertResultToMeshes(result);
-      
-      expect(meshes).toHaveLength(0);
-    });
-
-    it('should return empty array for successful result with null value', () => {
-      const result = { success: true as const, value: null as MeshGeometryData | null };
-      const meshes = convertResultToMeshes(result as any);
-      
       expect(meshes).toHaveLength(0);
     });
   });
 
   describe('isValidGeometryData', () => {
-    it('should validate correct geometry data', () => {
-      expect(isValidGeometryData(mockGeometryData)).toBe(true);
+    it('should return true for valid mesh', () => {
+      expect(isValidGeometryData(mockMesh)).toBe(true);
     });
 
-    it('should reject geometry without name', () => {
-      const invalidGeometry = { ...mockGeometryData, name: '' };
-      expect(isValidGeometryData(invalidGeometry)).toBe(false);
+    it('should return false for mesh with no name', () => {
+      const mesh = createMockMesh('');
+      mesh.name = '';
+      expect(isValidGeometryData(mesh)).toBe(false);
     });
 
-    it('should reject geometry without positions', () => {
-      const invalidGeometry = { ...mockGeometryData, positions: null };
-      expect(isValidGeometryData(invalidGeometry)).toBe(false);
-    });
-
-    it('should reject geometry with empty positions', () => {
-      const invalidGeometry = { ...mockGeometryData, positions: [] };
-      expect(isValidGeometryData(invalidGeometry)).toBe(false);
-    });
-
-    it('should reject geometry with invalid position count', () => {
-      const invalidGeometry = { ...mockGeometryData, positions: [0, 0] }; // Not divisible by 3
-      expect(isValidGeometryData(invalidGeometry)).toBe(false);
-    });
-
-    it('should reject geometry with invalid indices', () => {
-      const invalidGeometry = { 
-        ...mockGeometryData, 
-        indices: [0, 1, 100] // Index 100 doesn't exist in positions
-      };
-      expect(isValidGeometryData(invalidGeometry)).toBe(false);
+    it('should return false for mesh with no positions', () => {
+        const geometry = new THREE.BufferGeometry();
+        const material = new THREE.MeshStandardMaterial();
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.name = 'no-positions';
+        expect(isValidGeometryData(mesh)).toBe(false);
     });
   });
 
   describe('getMeshStats', () => {
-    it('should calculate mesh statistics correctly', () => {
-      const mesh = convertGeometryToMesh(mockGeometryData);
-      const stats = getMeshStats(mesh);
-      
-      expect(stats.vertexCount).toBe(4); // 12 positions / 3 = 4 vertices
-      expect(stats.triangleCount).toBe(2); // 6 indices / 3 = 2 triangles
-      expect(stats.hasNormals).toBe(true);
-      expect(stats.hasUVs).toBe(true);
-      expect(stats.hasMaterial).toBe(true);
-    });
+    it('should return correct stats for a processed mesh', () => {
+      const processedMesh = convertThreeMeshToProcessedMesh(mockMesh);
+      const stats = getMeshStats(processedMesh);
 
-    it('should handle mesh without optional data', () => {
-      const minimalGeometry: MeshGeometryData = {
-        name: 'minimal',
-        positions: [0, 0, 0, 1, 0, 0, 1, 1, 0],
-        normals: null,
-        indices: null,
-        uvs: null,
-        materialData: null
-      };
-      
-      const mesh = convertGeometryToMesh(minimalGeometry);
-      const stats = getMeshStats(mesh);
-      
-      expect(stats.vertexCount).toBe(3);
-      expect(stats.triangleCount).toBe(0);
+      expect(stats.vertexCount).toBe(2);
+      expect(stats.triangleCount).toBe(0); // No indices
       expect(stats.hasNormals).toBe(false);
-      expect(stats.hasUVs).toBe(false);
-      expect(stats.hasMaterial).toBe(false);
     });
   });
 });

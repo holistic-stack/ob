@@ -32,8 +32,8 @@ export default defineConfig({
       'node_modules/**',
       'dist/**',
       'build/**',
-      '**/*.integration.test.{ts,tsx}',
-      '**/*.e2e.test.{ts,tsx}',
+      'src/features/**/*.integration.test.{ts,tsx}',
+      'src/features/**/*.e2e.test.{ts,tsx}',
       '**/*.vspec.tsx' // Visual tests run separately with Playwright
     ],
     

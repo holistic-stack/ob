@@ -96,7 +96,12 @@ const DEFAULT_CONFIG: Required<OpenSCADR3FConfig> = {
     enableCaching: true,
     materialQuality: 'medium',
     enableShadows: true
-  }
+  },
+  onMeshesGenerated: () => {},
+  onSceneReady: () => {},
+  onProgress: () => {},
+  onError: () => {},
+  onComplete: () => {}
 };
 
 // ============================================================================
@@ -234,7 +239,9 @@ export function useOpenSCADR3FIntegration(
   useEffect(() => {
     if (pipeline.errors.length > 0 && callbacksRef.current.onError) {
       const latestError = pipeline.errors[pipeline.errors.length - 1];
-      callbacksRef.current.onError(latestError);
+      if (latestError) {
+        callbacksRef.current.onError(latestError);
+      }
     }
   }, [pipeline.errors]);
 

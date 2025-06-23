@@ -182,19 +182,21 @@ export function getWebGLCapabilities(): RendererInfo | null {
       return null;
     }
     
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    // Cast to WebGLRenderingContext since we know it's webgl context
+    const webgl = gl as WebGLRenderingContext;
+    const debugInfo = webgl.getExtension('WEBGL_debug_renderer_info');
     
     return {
-      vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown',
-      renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown',
-      version: gl.getParameter(gl.VERSION),
-      maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
-      maxCubeTextureSize: gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE),
-      maxVertexTextures: gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
-      maxFragmentTextures: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
-      maxVaryingVectors: gl.getParameter(gl.MAX_VARYING_VECTORS),
-      maxVertexAttribs: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
-      extensions: gl.getSupportedExtensions() || []
+      vendor: debugInfo ? webgl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown',
+      renderer: debugInfo ? webgl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown',
+      version: webgl.getParameter(webgl.VERSION),
+      maxTextureSize: webgl.getParameter(webgl.MAX_TEXTURE_SIZE),
+      maxCubeTextureSize: webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE),
+      maxVertexTextures: webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
+      maxFragmentTextures: webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS),
+      maxVaryingVectors: webgl.getParameter(webgl.MAX_VARYING_VECTORS),
+      maxVertexAttribs: webgl.getParameter(webgl.MAX_VERTEX_ATTRIBS),
+      extensions: webgl.getSupportedExtensions() || []
     };
   } catch {
     return null;
@@ -266,7 +268,6 @@ export type {
   OrthographicCamera,
   Mesh,
   Material,
-  Geometry,
   BufferGeometry,
   Vector3,
   Matrix4,

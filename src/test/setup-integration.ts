@@ -8,6 +8,7 @@
  * @version 1.0.0
  */
 
+import React from 'react';
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';

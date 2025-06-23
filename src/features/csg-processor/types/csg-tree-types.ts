@@ -18,7 +18,7 @@ import type { ASTNode } from '@holistic-stack/openscad-parser';
 /**
  * Result type for functional programming patterns
  */
-export type Result<T, E = string> = 
+export type Result<T, E = string> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: E };
 
@@ -39,29 +39,31 @@ export interface Color {
   readonly r: number;
   readonly g: number;
   readonly b: number;
-  readonly a?: number;
+  readonly a?: number | undefined;
 }
 
 /**
  * Material properties for CSG objects
  */
 export interface CSGMaterial {
-  readonly color?: Color;
-  readonly opacity?: number;
-  readonly metalness?: number;
-  readonly roughness?: number;
-  readonly emissive?: Color;
-  readonly wireframe?: boolean;
+  readonly color?: Color | undefined;
+  readonly opacity?: number | undefined;
+  readonly metalness?: number | undefined;
+  readonly roughness?: number | undefined;
+  readonly emissive?: Color | undefined;
+  readonly wireframe?: boolean | undefined;
+  readonly castShadow?: boolean | undefined;
+  readonly receiveShadow?: boolean | undefined;
 }
 
 /**
  * Transform matrix for 3D transformations
  */
 export interface Transform3D {
-  readonly translation?: Vector3;
-  readonly rotation?: Vector3;
-  readonly scale?: Vector3;
-  readonly matrix?: readonly number[]; // 4x4 matrix in column-major order
+  readonly translation?: Vector3 | undefined;
+  readonly rotation?: Vector3 | undefined;
+  readonly scale?: Vector3 | undefined;
+  readonly matrix?: readonly number[] | undefined; // 4x4 matrix in column-major order
 }
 
 // ============================================================================
@@ -74,79 +76,76 @@ export interface Transform3D {
 export interface CSGNode {
   readonly id: string;
   readonly type: string;
-  readonly transform?: Transform3D;
-  readonly material?: CSGMaterial;
-  readonly metadata?: Record<string, unknown>;
-  readonly sourceLocation?: {
-    readonly line: number;
-    readonly column: number;
-  };
-}
-
-/**
- * CSG primitive shapes
- */
-export interface CSGPrimitive extends CSGNode {
-  readonly type: 'cube' | 'sphere' | 'cylinder' | 'cone' | 'polyhedron';
+  readonly transform?: Transform3D | undefined;
+  readonly material?: CSGMaterial | undefined;
+  readonly metadata?: Record<string, unknown> | undefined;
+  readonly sourceLocation?: { readonly line: number; readonly column: number } | undefined;
 }
 
 /**
  * Cube primitive
  */
-export interface CSGCube extends CSGPrimitive {
+export interface CSGCube extends CSGNode {
   readonly type: 'cube';
   readonly size: Vector3;
-  readonly center?: boolean;
+  readonly center?: boolean | undefined;
 }
 
 /**
  * Sphere primitive
  */
-export interface CSGSphere extends CSGPrimitive {
+export interface CSGSphere extends CSGNode {
   readonly type: 'sphere';
   readonly radius: number;
-  readonly segments?: number;
+  readonly segments?: number | undefined;
 }
 
 /**
  * Cylinder primitive
  */
-export interface CSGCylinder extends CSGPrimitive {
+export interface CSGCylinder extends CSGNode {
   readonly type: 'cylinder';
   readonly height: number;
   readonly radius1: number;
-  readonly radius2?: number; // For cone-like cylinders
-  readonly segments?: number;
-  readonly center?: boolean;
+  readonly radius2?: number | undefined; // For cone-like cylinders
+  readonly segments?: number | undefined;
+  readonly center?: boolean | undefined;
 }
 
 /**
  * Cone primitive (special case of cylinder)
  */
-export interface CSGCone extends CSGPrimitive {
+export interface CSGCone extends CSGNode {
   readonly type: 'cone';
   readonly height: number;
   readonly radius1: number;
   readonly radius2: number;
-  readonly segments?: number;
-  readonly center?: boolean;
+  readonly segments?: number | undefined;
+  readonly center?: boolean | undefined;
 }
 
 /**
  * Polyhedron primitive
  */
-export interface CSGPolyhedron extends CSGPrimitive {
+export interface CSGPolyhedron extends CSGNode {
   readonly type: 'polyhedron';
   readonly points: readonly Vector3[];
   readonly faces: readonly (readonly number[])[];
 }
+
+export type CSGPrimitiveNode =
+  | CSGCube
+  | CSGSphere
+  | CSGCylinder
+  | CSGCone
+  | CSGPolyhedron;
 
 /**
  * CSG operations
  */
 export interface CSGOperation extends CSGNode {
   readonly type: 'union' | 'difference' | 'intersection';
-  readonly children: readonly CSGNode[];
+  readonly children: readonly CSGTreeNode[];
 }
 
 /**
@@ -175,7 +174,7 @@ export interface CSGIntersection extends CSGOperation {
  */
 export interface CSGTransform extends CSGNode {
   readonly type: 'transform';
-  readonly child: CSGNode;
+  readonly child: CSGTreeNode;
 }
 
 /**
@@ -183,18 +182,14 @@ export interface CSGTransform extends CSGNode {
  */
 export interface CSGGroup extends CSGNode {
   readonly type: 'group';
-  readonly children: readonly CSGNode[];
+  readonly children: readonly CSGTreeNode[];
 }
 
 /**
  * Union type for all CSG nodes
  */
-export type CSGTreeNode = 
-  | CSGCube
-  | CSGSphere
-  | CSGCylinder
-  | CSGCone
-  | CSGPolyhedron
+export type CSGTreeNode =
+  | CSGPrimitiveNode
   | CSGUnion
   | CSGDifference
   | CSGIntersection
@@ -215,13 +210,10 @@ export interface CSGTree {
     readonly primitiveCount: number;
     readonly operationCount: number;
     readonly maxDepth: number;
-    readonly boundingBox?: {
-      readonly min: Vector3;
-      readonly max: Vector3;
-    };
+    readonly boundingBox?: { readonly min: Vector3; readonly max: Vector3 } | undefined;
   };
   readonly processingTime: number;
-  readonly sourceAST?: readonly ASTNode[];
+  readonly sourceAST?: readonly ASTNode[] | undefined;
 }
 
 /**
@@ -231,11 +223,8 @@ export interface CSGError {
   readonly message: string;
   readonly code: string;
   readonly severity: 'error' | 'warning' | 'info';
-  readonly sourceLocation?: {
-    readonly line: number;
-    readonly column: number;
-  };
-  readonly nodeId?: string;
+  readonly sourceLocation?: { readonly line: number; readonly column: number } | undefined;
+  readonly nodeId?: string | undefined;
 }
 
 /**
@@ -243,7 +232,7 @@ export interface CSGError {
  */
 export interface CSGProcessingResult {
   readonly success: boolean;
-  readonly tree?: CSGTree;
+  readonly tree?: CSGTree | undefined;
   readonly errors: readonly CSGError[];
   readonly warnings: readonly CSGError[];
   readonly processingTime: number;
@@ -253,12 +242,12 @@ export interface CSGProcessingResult {
  * CSG processor configuration
  */
 export interface CSGProcessorConfig {
-  readonly enableLogging?: boolean;
-  readonly enableOptimization?: boolean;
-  readonly enableValidation?: boolean;
-  readonly maxDepth?: number;
-  readonly maxNodes?: number;
-  readonly defaultMaterial?: CSGMaterial;
+  readonly enableLogging?: boolean | undefined;
+  readonly enableOptimization?: boolean | undefined;
+  readonly enableValidation?: boolean | undefined;
+  readonly maxDepth?: number | undefined;
+  readonly maxNodes?: number | undefined;
+  readonly defaultMaterial?: CSGMaterial | undefined;
 }
 
 // ============================================================================
@@ -268,7 +257,7 @@ export interface CSGProcessorConfig {
 /**
  * Type guard for CSG primitives
  */
-export function isCSGPrimitive(node: CSGTreeNode): node is CSGPrimitive {
+export function isCSGPrimitive(node: CSGTreeNode): node is CSGPrimitiveNode {
   return ['cube', 'sphere', 'cylinder', 'cone', 'polyhedron'].includes(node.type);
 }
 
@@ -342,7 +331,11 @@ export function isCSGGroup(node: CSGTreeNode): node is CSGGroup {
 /**
  * CSG tree visitor function type
  */
-export type CSGTreeVisitor<T = void> = (node: CSGTreeNode, depth: number, path: readonly number[]) => T;
+export type CSGTreeVisitor<T = void> = (
+  node: CSGTreeNode,
+  depth: number,
+  path: readonly number[],
+) => T;
 
 /**
  * CSG tree transformer function type

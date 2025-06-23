@@ -9,16 +9,17 @@
  */
 
 import { useState, useCallback, useRef, useOptimistic, startTransition } from 'react';
-import { MeshGeometryData, PipelineResult } from '../../../types/pipeline-types';
+import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
+import type { GeneratedMesh } from '../../r3f-generator/types/r3f-generator-types';
 
 /**
  * Hook state for processing operations
  */
 export interface UseProcessingStateState {
   readonly isProcessing: boolean;
-  readonly result: PipelineResult<MeshGeometryData | MeshGeometryData[]> | null;
+  readonly result: PipelineResult | null;
   readonly error: string | null;
-  readonly setResult: (result: PipelineResult<MeshGeometryData | MeshGeometryData[]>) => void;
+  readonly setResult: (result: PipelineResult) => void;
   readonly setError: (error: string | null) => void;
   readonly setProcessing: (processing: boolean) => void;
   readonly resetState: () => void;
@@ -35,7 +36,7 @@ export interface UseProcessingStateState {
  * @returns Processing state and actions
  */
 export function useProcessingState(): UseProcessingStateState {
-  const [result, setResult] = useState<PipelineResult<MeshGeometryData | MeshGeometryData[]> | null>(null);
+  const [result, setResult] = useState<PipelineResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   

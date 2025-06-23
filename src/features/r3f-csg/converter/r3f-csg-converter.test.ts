@@ -12,18 +12,33 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
 import * as THREE from 'three';
 import { R3FCSGConverter, createR3FCSGConverter } from './r3f-csg-converter';
-import type { R3FCSGConverterConfig, ProcessingProgress } from './r3f-csg-converter';
+import type { R3FCSGConverterConfig, ConversionResult, ProcessingProgress } from '../types/r3f-csg-types';
+
+// Mock Component type for testing
+interface MockComponent {
+  type: string;
+  props: {
+    children?: MockComponent | MockComponent[];
+    [key: string]: any;
+  };
+  key: any;
+}
 
 // Mock React
-vi.mock('react', () => ({
-  createElement: vi.fn((type, props, ...children) => ({
-    type,
-    props: { ...props, children: children.length === 1 ? children[0] : children },
-    key: props?.key
-  })),
-  memo: vi.fn((component) => component),
-  Fragment: 'Fragment'
-}));
+vi.mock('react', async () => {
+  const actualReact = await vi.importActual<typeof React>('react');
+  return {
+    ...actualReact,
+    default: actualReact,
+    createElement: vi.fn((type, props, ...children) => ({
+      type,
+      props: { ...props, children: children.length === 1 ? children[0] : children },
+      key: props?.key,
+    })),
+    memo: vi.fn(component => component),
+    Fragment: 'Fragment',
+  };
+});
 
 // Mock @react-three/fiber
 vi.mock('@react-three/fiber', () => ({
@@ -138,16 +153,24 @@ describe('R3FCSGConverter', () => {
       console.log('[DEBUG] Testing converter creation with custom config');
       
       const config: R3FCSGConverterConfig = {
-        enableCaching: false,
-        enableLogging: false,
+        pipelineConfig: {
+          enableCaching: false,
+          enableLogging: false,
+        },
         canvasConfig: {
-          shadows: false,
-          antialias: false
+          width: '100%',
+          height: '100%',
         },
         sceneConfig: {
-          enableGrid: false,
-          enableAxes: false
-        }
+          backgroundColor: '#000',
+          showAxes: false,
+          showGrid: false,
+        },
+        controlsConfig: {
+          enableZoom: false,
+          enablePan: false,
+          enableRotate: false,
+        },
       };
       
       const customConverter = createR3FCSGConverter(config);
@@ -524,25 +547,16 @@ describe('R3FCSGConverter', () => {
       console.log('[DEBUG] Testing canvas configuration');
       
       const configuredConverter = createR3FCSGConverter({
-        canvasConfig: {
-          shadows: false,
-          antialias: false,
-          camera: {
-            position: [5, 5, 5],
-            fov: 60
-          }
-        }
+        canvasConfig: { shadows: false, camera: { fov: 60 } },
       });
-      
-      const result = await configuredConverter.convertToJSX('cube([1, 1, 1]);');
-      
+      const result = await configuredConverter.convertToR3F('cube(1);');
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toContain('shadows={false}');
-        expect(result.data).toContain('position: [5, 5, 5]');
-        expect(result.data).toContain('fov: 60');
+      if (result.success && result.data) {
+        const CanvasComponent = result.data.CanvasComponent as unknown as MockComponent;
+        expect(CanvasComponent.type).toBe('Canvas');
+        expect(CanvasComponent.props.shadows).toBe(false);
+        expect(CanvasComponent.props.camera).toEqual({ fov: 60 });
       }
-      
       configuredConverter.dispose();
     });
 
@@ -550,40 +564,31 @@ describe('R3FCSGConverter', () => {
       console.log('[DEBUG] Testing scene configuration');
       
       const configuredConverter = createR3FCSGConverter({
-        sceneConfig: {
-          enableGrid: false,
-          enableAxes: false,
-          enableStats: true
-        }
+        sceneConfig: { enableGrid: false, enableStats: true },
       });
-      
-      const result = await configuredConverter.convertToJSX('sphere(2);');
-      
+      const result = await configuredConverter.convertToR3F('sphere(1);');
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).not.toContain('Grid');
-        expect(result.data).toContain('Stats');
+      if (result.success && result.data) {
+        const CanvasComponent = result.data.CanvasComponent as unknown as MockComponent;
+        const canvasChildren = (CanvasComponent.props.children as MockComponent[]).flat();
+        expect(canvasChildren.some((c: MockComponent) => c.type === 'Grid')).toBe(false);
+        expect(canvasChildren.some((c: MockComponent) => c.type === 'Stats')).toBe(true);
       }
-      
       configuredConverter.dispose();
     });
 
     it('should respect controls configuration', async () => {
       console.log('[DEBUG] Testing controls configuration');
-      
       const configuredConverter = createR3FCSGConverter({
-        controlsConfig: {
-          enableOrbitControls: false
-        }
+        controlsConfig: { enableOrbitControls: false },
       });
-      
-      const result = await configuredConverter.convertToJSX('cylinder(h=3, r=1);');
-      
+      const result = await configuredConverter.convertToR3F('cylinder(h=3, r=1);');
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).not.toContain('OrbitControls');
+      if (result.success && result.data) {
+        const CanvasComponent = result.data.CanvasComponent as unknown as MockComponent;
+        const canvasChildren = (CanvasComponent.props.children as MockComponent[]).flat();
+        expect(canvasChildren.some((c: MockComponent) => c.type === 'OrbitControls')).toBe(false);
       }
-      
       configuredConverter.dispose();
     });
   });
@@ -610,19 +615,25 @@ describe('R3FCSGConverter', () => {
 
     it('should clean up processor resources on disposal', async () => {
       console.log('[DEBUG] Testing processor resource cleanup');
-      
       const { createR3FPipelineProcessor } = await import('../pipeline/processor/r3f-pipeline-processor');
       const mockDispose = vi.fn();
-      
-      (createR3FPipelineProcessor as any).mockImplementationOnce(() => ({
-        processOpenSCAD: vi.fn(async () => ({ success: true, data: {} })),
-        dispose: mockDispose
-      }));
-      
+      (createR3FPipelineProcessor as any).mockReturnValue({
+        processOpenSCAD: vi.fn().mockResolvedValue({
+          success: true,
+          data: {
+            scene: { type: 'Scene' },
+            meshes: [],
+            metrics: { totalNodes: 0, processedNodes: 0, failedNodes: 0, processingTime: 0, memoryUsage: 0, cacheHits: 0, cacheMisses: 0 },
+          },
+        }),
+        dispose: mockDispose,
+      });
       const testConverter = createR3FCSGConverter();
+      // Perform a conversion to ensure the processor is created
+      await testConverter.convertToR3F('cube(1);');
+      // Dispose the converter and check if the processor's dispose method was called
       testConverter.dispose();
-      
-      expect(mockDispose).toHaveBeenCalled();
+      expect(mockDispose).toHaveBeenCalledTimes(1);
     });
   });
 });

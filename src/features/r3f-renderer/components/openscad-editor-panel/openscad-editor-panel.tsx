@@ -18,8 +18,9 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import * as THREE from 'three';
 import { useR3FCSGConverter } from '../../../r3f-csg/hooks/use-r3f-csg-converter';
-import type { ProcessingProgress } from '../../../r3f-csg/pipeline/processor/r3f-pipeline-processor';
+import type { ProcessingProgress } from '../../../r3f-csg/types/r3f-csg-types';
 import type { UseR3FCSGConverterConfig } from '../../../r3f-csg/hooks/use-r3f-csg-converter';
 import './openscad-editor-panel.css';
 
@@ -150,7 +151,7 @@ export const OpenSCADEditorPanel: React.FC<OpenSCADEditorPanelProps> = ({
       }
     },
     sceneConfig: {
-      background: '#1e293b',
+      backgroundColor: '#1e293b',
       enableGrid: true,
       enableAxes: true,
       enableStats: false
@@ -224,6 +225,8 @@ export const OpenSCADEditorPanel: React.FC<OpenSCADEditorPanelProps> = ({
 
       return () => clearTimeout(timeoutId);
     }
+    
+    return undefined;
   }, [code, autoConvert, disabled, handleConvert]);
 
   // Memoized statistics

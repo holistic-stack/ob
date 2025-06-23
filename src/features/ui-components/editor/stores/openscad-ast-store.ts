@@ -72,9 +72,9 @@ export type ASTData = readonly ASTNode[] & { readonly __brand: 'ASTData' };
 /**
  * Result type for error handling throughout the pipeline
  */
-export type Result<T, E = Error> = 
-  | { readonly success: true; readonly data: T }
-  | { readonly success: false; readonly error: E };
+export type Result<T, E> =
+  | { readonly success: true; readonly data: T; readonly error?: never }
+  | { readonly success: false; readonly data?: never; readonly error: E };
 
 /**
  * Parse operation status

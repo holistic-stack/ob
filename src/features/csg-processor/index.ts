@@ -24,7 +24,7 @@ export type {
   CSGProcessorConfig,
   CSGError,
   CSGNode,
-  CSGPrimitive,
+  CSGPrimitiveNode,
   CSGCube,
   CSGSphere,
   CSGCylinder,

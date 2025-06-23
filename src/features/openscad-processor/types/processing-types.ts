@@ -8,7 +8,8 @@
  * @date June 2025
  */
 
-import { PipelineResult, MeshGeometryData } from '../../../types/pipeline-types';
+import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
+import type { GeneratedMesh } from '../../r3f-generator/types/r3f-generator-types';
 
 /**
  * Processing statistics - immutable data structure
@@ -62,7 +63,7 @@ export interface OpenSCADProcessorState {
   readonly isReady: boolean;
   readonly isProcessing: boolean;
   readonly error: string | null;
-  readonly result: PipelineResult<MeshGeometryData | MeshGeometryData[]> | null;
+  readonly result: PipelineResult | null;
   readonly meshes: readonly ProcessedMesh[];
   readonly stats: ProcessingStats;
   readonly processCode: (code: string) => Promise<void>;

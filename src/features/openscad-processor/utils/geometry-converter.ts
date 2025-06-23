@@ -8,23 +8,33 @@
  * @date June 2025
  */
 
-import { MeshGeometryData, PipelineResult } from '../../../types/pipeline-types';
-import { ProcessedMesh } from '../types/processing-types';
+import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
+import type * as THREE from 'three';
+import type { ProcessedMesh } from '../types/processing-types';
 
 /**
- * Pure function to convert geometry data to processed mesh
+ * Pure function to convert THREE.Mesh to processed mesh
  * 
- * @param geometryData - Raw geometry data from the pipeline
+ * @param mesh - THREE.Mesh from the pipeline
  * @returns Processed mesh ready for Babylon.js
  */
-export const convertGeometryToMesh = (geometryData: MeshGeometryData): ProcessedMesh => ({
-  name: geometryData.name,
-  positions: geometryData.positions ? new Float32Array(geometryData.positions) : null,
-  normals: geometryData.normals ? new Float32Array(geometryData.normals) : null,
-  indices: geometryData.indices ? new Uint16Array(geometryData.indices) : null,
-  uvs: geometryData.uvs ? new Float32Array(geometryData.uvs) : null,
-  materialData: geometryData.materialData
-});
+export const convertThreeMeshToProcessedMesh = (mesh: THREE.Mesh): ProcessedMesh => {
+    const geometry = mesh.geometry;
+    const material = mesh.material as THREE.MeshStandardMaterial; // Assuming standard material
+
+    return {
+        name: mesh.name,
+        positions: geometry.attributes.position ? (geometry.attributes.position.array as Float32Array) : null,
+        normals: geometry.attributes.normal ? (geometry.attributes.normal.array as Float32Array) : null,
+        indices: geometry.index ? (geometry.index.array as Uint16Array) : null,
+        uvs: geometry.attributes.uv ? (geometry.attributes.uv.array as Float32Array) : null,
+        materialData: material ? {
+            diffuseColor: [material.color.r, material.color.g, material.color.b],
+            specularColor: [0,0,0], // MeshStandardMaterial doesn't have specular color directly
+            emissiveColor: material.emissive ? [material.emissive.r, material.emissive.g, material.emissive.b] : [0,0,0],
+        } : null
+    };
+};
 
 /**
  * Pure function to convert result to meshes array
@@ -33,34 +43,32 @@ export const convertGeometryToMesh = (geometryData: MeshGeometryData): Processed
  * @returns Array of processed meshes
  */
 export const convertResultToMeshes = (
-  result: PipelineResult<MeshGeometryData | MeshGeometryData[]>
+  result: PipelineResult
 ): readonly ProcessedMesh[] => {
-  if (!result.success || !result.value) {
+  if (!result.success || !result.meshes) {
     return [];
   }
 
-  if (Array.isArray(result.value)) {
-    return result.value.map(convertGeometryToMesh);
-  }
-
-  return [convertGeometryToMesh(result.value)];
+  return result.meshes.map(convertThreeMeshToProcessedMesh);
 };
 
 /**
  * Pure function to validate geometry data
  * 
- * @param geometryData - Geometry data to validate
+ * @param mesh - THREE.Mesh to validate
  * @returns True if valid, false otherwise
  */
-export const isValidGeometryData = (geometryData: MeshGeometryData): boolean => {
-  if (!geometryData.name) return false;
-  if (!geometryData.positions || geometryData.positions.length === 0) return false;
+export const isValidGeometryData = (mesh: THREE.Mesh): boolean => {
+  if (!mesh.name) return false;
+  const geometry = mesh.geometry;
+  if (!geometry.attributes.position || (geometry.attributes.position.array as Float32Array).length === 0) return false;
   
   // Positions should be in groups of 3 (x, y, z)
-  if (geometryData.positions.length % 3 !== 0) return false;
+  if ((geometry.attributes.position.array as Float32Array).length % 3 !== 0) return false;
   
   // If indices exist, they should be valid
-  if (geometryData.indices && geometryData.indices.some(i => i < 0 || i >= geometryData.positions!.length / 3)) {
+  const positionCount = geometry.attributes.position.count;
+  if (geometry.index && Array.from(geometry.index.array).some((i: number) => i < 0 || i >= positionCount)) {
     return false;
   }
   

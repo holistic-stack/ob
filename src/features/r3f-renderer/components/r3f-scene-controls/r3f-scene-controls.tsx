@@ -19,7 +19,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
-import type { ProcessingProgress } from '../../types/r3f-types';
+import type { ProcessingProgress } from '../../../r3f-csg/types/r3f-csg-types';
 import './r3f-scene-controls.css';
 
 // ============================================================================

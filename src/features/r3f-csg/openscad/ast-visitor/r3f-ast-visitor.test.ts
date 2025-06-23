@@ -13,48 +13,54 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { R3FASTVisitor, createR3FASTVisitor } from './r3f-ast-visitor';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { R3FASTVisitorConfig } from '../../types/r3f-csg-types';
+import type { R3FASTVisitorConfig, MeshResult } from '../../types/r3f-csg-types';
 
 // Mock Three.js for testing
 vi.mock('three', async () => {
-  const actual = await vi.importActual('three');
+  const actual = await vi.importActual('three') as typeof THREE;
+  const mockGeometry = {
+    dispose: vi.fn(),
+    toNonIndexed: vi.fn().mockReturnThis(),
+    computeVertexNormals: vi.fn(),
+    setAttribute: vi.fn(),
+    setIndex: vi.fn(),
+    getAttribute: vi.fn(() => ({ array: [] })),
+  };
+
   return {
     ...actual,
     BoxGeometry: vi.fn().mockImplementation((width, height, depth) => ({
+      ...mockGeometry,
       type: 'BoxGeometry',
-      parameters: { width, height, depth },
-      dispose: vi.fn()
     })),
     SphereGeometry: vi.fn().mockImplementation((radius, widthSegments, heightSegments) => ({
+      ...mockGeometry,
       type: 'SphereGeometry',
-      parameters: { radius, widthSegments, heightSegments },
-      dispose: vi.fn()
     })),
     CylinderGeometry: vi.fn().mockImplementation((radiusTop, radiusBottom, height, segments) => ({
+      ...mockGeometry,
       type: 'CylinderGeometry',
-      parameters: { radiusTop, radiusBottom, height, segments },
-      dispose: vi.fn()
     })),
     MeshStandardMaterial: vi.fn().mockImplementation((params) => ({
       type: 'MeshStandardMaterial',
       ...params,
-      dispose: vi.fn()
+      dispose: vi.fn(),
     })),
     MeshBasicMaterial: vi.fn().mockImplementation((params) => ({
       type: 'MeshBasicMaterial',
       ...params,
-      dispose: vi.fn()
+      dispose: vi.fn(),
     })),
     Mesh: vi.fn().mockImplementation((geometry, material) => ({
       type: 'Mesh',
       geometry,
       material,
       name: '',
-      position: { set: vi.fn() },
-      rotation: { set: vi.fn() },
-      scale: { set: vi.fn() }
+      position: new actual.Vector3(),
+      rotation: new actual.Euler(),
+      scale: new actual.Vector3(1, 1, 1),
     })),
-    FrontSide: 'FrontSide'
+    FrontSide: 'FrontSide',
   };
 });
 
@@ -63,8 +69,16 @@ describe('R3FASTVisitor', () => {
 
   beforeEach(() => {
     console.log('[DEBUG] Setting up R3F AST visitor test');
-    visitor = createR3FASTVisitor();
-    vi.clearAllMocks();
+    const config: R3FASTVisitorConfig = {
+      enableCSG: true,
+      enableCaching: true,
+      enableOptimization: true,
+      maxRecursionDepth: 10,
+      defaultMaterial: { type: 'standard', color: 0xffffff },
+      geometryPrecision: 32,
+      enableLogging: false,
+    };
+    visitor = createR3FASTVisitor(config);
   });
 
   afterEach(() => {
@@ -116,11 +130,6 @@ describe('R3FASTVisitor', () => {
       if (result.success) {
         expect(result.data.type).toBe('Mesh');
         expect(result.data.geometry.type).toBe('BoxGeometry');
-        expect(result.data.geometry.parameters).toEqual({
-          width: 2,
-          height: 3,
-          depth: 4
-        });
         expect(THREE.BoxGeometry).toHaveBeenCalledWith(2, 3, 4);
         expect(THREE.Mesh).toHaveBeenCalled();
       }
@@ -139,11 +148,7 @@ describe('R3FASTVisitor', () => {
       
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.geometry.parameters).toEqual({
-          width: 5,
-          height: 5,
-          depth: 5
-        });
+        expect(THREE.BoxGeometry).toHaveBeenCalledWith(5, 5, 5);
       }
     });
 
@@ -162,7 +167,6 @@ describe('R3FASTVisitor', () => {
       if (result.success) {
         expect(result.data.type).toBe('Mesh');
         expect(result.data.geometry.type).toBe('SphereGeometry');
-        expect(result.data.geometry.parameters.radius).toBe(2.5);
         expect(THREE.SphereGeometry).toHaveBeenCalledWith(2.5, 32, 32);
       }
     });
@@ -183,12 +187,6 @@ describe('R3FASTVisitor', () => {
       if (result.success) {
         expect(result.data.type).toBe('Mesh');
         expect(result.data.geometry.type).toBe('CylinderGeometry');
-        expect(result.data.geometry.parameters).toEqual({
-          radiusTop: 3,
-          radiusBottom: 3,
-          height: 10,
-          segments: 32
-        });
         expect(THREE.CylinderGeometry).toHaveBeenCalledWith(3, 3, 10, 32);
       }
     });
@@ -208,12 +206,6 @@ describe('R3FASTVisitor', () => {
       
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.geometry.parameters).toEqual({
-          radiusTop: 4,
-          radiusBottom: 2,
-          height: 8,
-          segments: 32
-        });
         expect(THREE.CylinderGeometry).toHaveBeenCalledWith(4, 2, 8, 32);
       }
     });
