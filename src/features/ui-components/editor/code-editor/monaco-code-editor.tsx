@@ -20,9 +20,8 @@ import { clsx } from '../../shared';
 import { createOpenSCADCompletionProvider } from './openscad-completion-provider';
 import { createOpenSCADHoverProvider } from './openscad-hover-provider';
 import { createOpenSCADDiagnosticsProvider } from './openscad-diagnostics-provider';
-import { type ParseError } from './openscad-ast-service';
 import { type ASTNode } from '@holistic-stack/openscad-parser';
-import { ParseErrorDisplay } from '../../shared/error-display/parse-error-display';
+import { ParseErrorDisplay, type ParseError } from '../../shared/error-display/parse-error-display';
 import {
   useOpenSCADActions,
   useOpenSCADErrors,
@@ -102,7 +101,7 @@ const openscadLanguageConfig: monacoEditor.languages.LanguageConfiguration = {
     { open: '(', close: ')' },
     { open: '"', close: '"' }
   ],
-  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
+  wordPattern: /(-?\d*\.\d\w*)|([^`~!@#%^&*()\-=+[\]{}\\|;:'",./?<>\s]+)/g
 };
 
 /**
@@ -152,7 +151,7 @@ const openscadTokensDefinition: monacoEditor.languages.IMonarchLanguage = {
       }],
 
       // Numbers
-      [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+      [/\d*\.\d+([eE][-+]?\d+)?/, 'number.float'],
       [/0[xX][0-9a-fA-F]+/, 'number.hex'],
       [/\d+/, 'number'],
 
@@ -166,20 +165,20 @@ const openscadTokensDefinition: monacoEditor.languages.IMonarchLanguage = {
 
       // Operators and punctuation
       [/@symbols/, 'operator'],
-      [/[{}()\[\]]/, '@brackets'],
+      [/[{}()[\]]/, '@brackets'],
       [/[<>](?!@symbols)/, '@brackets'],
       [/[;,.]/, 'delimiter'],
     ],
 
     comment: [
-      [/[^\/*]+/, 'comment'],
+      [/[^/*]+/, 'comment'],
       [/\/\*/, 'comment', '@push'],
       ["\\*/", 'comment', '@pop'],
-      [/[\/*]/, 'comment']
+      [/[/*]/, 'comment']
     ],
 
     string: [
-      [/[^\\"]+/, 'string'],
+      [/[^"\\]+/, 'string'],
       [/@escapes/, 'string.escape'],
       [/\\./, 'string.escape.invalid'],
       [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
@@ -277,7 +276,7 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
   width = '100%',
   options = {},
   glassConfig,
-  size = 'medium',
+  size = 'md',
   readOnly = false,
   disabled = false,
   enableASTParsing = false,
@@ -305,10 +304,17 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
     if (enableASTParsing && language === 'openscad') {
       // Only call if callbacks exist and data has actually changed
       if (onASTChange && ast.length >= 0) {
-        onASTChange(Array.from(ast) as ASTNode[]);
+        onASTChange(Array.from(ast));
       }
       if (onParseErrors && parseErrors.length >= 0) {
-        onParseErrors(Array.from(parseErrors) as ParseError[]);
+        // Convert AST ParseError format to display ParseError format
+        const displayErrors = parseErrors.map(error => ({
+          message: error.message,
+          line: error.location?.line ?? 0,
+          column: error.location?.column ?? 0,
+          severity: error.severity === 'info' ? 'warning' as const : error.severity
+        }));
+        onParseErrors(displayErrors);
       }
     }
   }, [ast, parseErrors, enableASTParsing, language]); // Removed callback dependencies to prevent loops
@@ -447,7 +453,7 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
   );
 
   // Calculate minimum height based on 8px grid system
-  const minHeight = size === 'small' ? '40px' : size === 'large' ? '56px' : '48px';
+  const minHeight = size === 'sm' ? '40px' : size === 'lg' ? '56px' : '48px';
   const computedHeight = typeof height === 'string' && height.includes('px')
     ? `max(${height}, ${minHeight})`
     : height;
@@ -490,7 +496,12 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
         {parseErrors.length > 0 && (
           <div className="absolute top-2 right-2 z-20 max-w-sm">
             <ParseErrorDisplay
-              errors={Array.from(parseErrors) as ParseError[]}
+              errors={parseErrors.map(error => ({
+                message: error.message,
+                line: error.location?.line ?? 0,
+                column: error.location?.column ?? 0,
+                severity: error.severity === 'info' ? 'warning' as const : error.severity
+              }))}
               onErrorClick={onErrorClick}
               maxErrors={3}
               showLineNumbers={true}

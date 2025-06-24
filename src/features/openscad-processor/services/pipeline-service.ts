@@ -14,11 +14,11 @@ import { PipelineConfig, PipelineInitializationResult } from '../types/processin
 
 // Temporary mock for OpenScadPipeline until implementation is complete
 class MockOpenScadPipeline {
-  constructor(config: any) {}
+  constructor(_config: any) {}
   async initialize(): Promise<{ success: boolean; error?: string }> {
     return { success: true };
   }
-  async processOpenScadCodeToGeometry(code: string): Promise<any> {
+  async processOpenScadCodeToGeometry(_code: string): Promise<any> {
     return { success: true, value: [] };
   }
 }

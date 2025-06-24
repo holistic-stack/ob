@@ -257,14 +257,14 @@ union() {
       const markers = provider.convertDiagnosticsToMarkers(diagnostics);
 
       expect(markers).toHaveLength(1);
-      expect(markers[0].severity).toBe(monacoEditor.MarkerSeverity.Error);
-      expect(markers[0].startLineNumber).toBe(1);
-      expect(markers[0].startColumn).toBe(5);
-      expect(markers[0].endLineNumber).toBe(1);
-      expect(markers[0].endColumn).toBe(10);
-      expect(markers[0].message).toBe('Test error');
-      expect(markers[0].code).toBe('test-error');
-      expect(markers[0].source).toBe('openscad-parser');
+      expect(markers[0]?.severity).toBe(monacoEditor.MarkerSeverity.Error);
+      expect(markers[0]?.startLineNumber).toBe(1);
+      expect(markers[0]?.startColumn).toBe(5);
+      expect(markers[0]?.endLineNumber).toBe(1);
+      expect(markers[0]?.endColumn).toBe(10);
+      expect(markers[0]?.message).toBe('Test error');
+      expect(markers[0]?.code).toBe('test-error');
+      expect(markers[0]?.source).toBe('openscad-parser');
     });
 
     it('should handle multiple diagnostics conversion', () => {
@@ -288,8 +288,8 @@ union() {
       const markers = provider.convertDiagnosticsToMarkers(diagnostics);
 
       expect(markers).toHaveLength(2);
-      expect(markers[0].severity).toBe(monacoEditor.MarkerSeverity.Error);
-      expect(markers[1].severity).toBe(monacoEditor.MarkerSeverity.Warning);
+      expect(markers[0]?.severity).toBe(monacoEditor.MarkerSeverity.Error);
+      expect(markers[1]?.severity).toBe(monacoEditor.MarkerSeverity.Warning);
     });
   });
 

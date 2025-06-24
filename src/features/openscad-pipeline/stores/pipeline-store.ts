@@ -72,7 +72,7 @@ export interface PipelineState {
   readonly config: PipelineConfig;
   
   // Debouncing
-  readonly debounceTimeout: NodeJS.Timeout | null;
+  readonly debounceTimeout: ReturnType<typeof setTimeout> | null;
   readonly lastUpdateTime: number;
 }
 
@@ -190,7 +190,7 @@ export const usePipelineStore = create<PipelineStore>()(
       // Immediate processing
       try {
         // Validate input
-        if (!code || !code.trim()) {
+        if (!code?.trim()) {
           set(state => ({
             ...state,
             status: 'idle',
@@ -207,7 +207,28 @@ export const usePipelineStore = create<PipelineStore>()(
             debounceTimeout: null
           }));
 
-          return { success: true, data: DEFAULT_STATE as any };
+          const emptyResult: PipelineResult = {
+            success: false,
+            ast: undefined,
+            csgTree: undefined,
+            r3fResult: undefined,
+            meshes: [],
+            scene: undefined,
+            errors: [],
+            warnings: [],
+            metrics: {
+              totalTime: 0,
+              parsingTime: 0,
+              csgProcessingTime: 0,
+              r3fGenerationTime: 0,
+              nodeCount: 0,
+              meshCount: 0,
+              vertexCount: 0,
+              triangleCount: 0,
+              memoryUsage: 0
+            }
+          };
+          return { success: true, data: emptyResult };
         }
 
         // Check if code has changed
@@ -216,7 +237,7 @@ export const usePipelineStore = create<PipelineStore>()(
             success: true, 
             data: {
               success: true,
-              ast: state.ast || [],
+              ast: state.ast ?? [],
               csgTree: state.csgTree,
               r3fResult: state.r3fResult,
               meshes: state.meshes,
@@ -270,11 +291,11 @@ export const usePipelineStore = create<PipelineStore>()(
           status: result.success ? 'success' : 'error',
           isProcessing: false,
           lastProcessedCode: code,
-          ast: result.ast || null,
-          csgTree: result.csgTree || null,
-          r3fResult: result.r3fResult || null,
+          ast: result.ast ?? null,
+          csgTree: result.csgTree ?? null,
+          r3fResult: result.r3fResult ?? null,
           meshes: result.meshes,
-          scene: result.scene || null,
+          scene: result.scene ?? null,
           progress: {
             stage: 'complete',
             progress: 100,

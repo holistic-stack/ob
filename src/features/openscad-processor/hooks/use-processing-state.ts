@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useRef, useOptimistic, startTransition } from 'react';
 import type { PipelineResult } from '../../openscad-pipeline/core/pipeline-processor';
-import type { GeneratedMesh } from '../../r3f-generator/types/r3f-generator-types';
+import type { GeneratedMesh as _GeneratedMesh } from '../../r3f-generator/types/r3f-generator-types';
 
 /**
  * Hook state for processing operations

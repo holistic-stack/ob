@@ -5,7 +5,7 @@
  * with real-world use cases and comprehensive examples.
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { LiquidGlassShowcase } from './liquid-glass-showcase';
 

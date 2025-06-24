@@ -10,8 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { processOpenSCADPipeline } from './pipeline-processor';
-import type { PipelineConfig, PipelineProgress, PipelineError } from './pipeline-processor';
+import { processOpenSCADPipeline, type PipelineConfig, type PipelineProgress, type PipelineError } from './pipeline-processor';
 
 // No longer mocking dependencies to perform integration testing
 

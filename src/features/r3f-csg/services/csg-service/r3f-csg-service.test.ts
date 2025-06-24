@@ -14,62 +14,61 @@ import { R3FCSGService, createR3FCSGService } from './r3f-csg-service';
 import type { CSGServiceConfig } from './r3f-csg-service';
 
 // Mock three-csg-ts for testing
-vi.mock('three-csg-ts', () => ({
-  CSG: {
-    fromGeometry: vi.fn((geometry) => ({
-      union: vi.fn(() => ({ toGeometry: () => new THREE.BoxGeometry(1, 1, 1) })),
-      subtract: vi.fn(() => ({ toGeometry: () => new THREE.BoxGeometry(1, 1, 1) })),
-      intersect: vi.fn(() => ({ toGeometry: () => new THREE.BoxGeometry(1, 1, 1) }))
-    })),
-    toGeometry: vi.fn((csg) => new THREE.BoxGeometry(1, 1, 1))
+vi.mock('three-csg-ts', () => {
+  // Define a mock CSG instance type
+  interface MockCSGInstance {
+    union: () => MockCSGInstance;
+    subtract: () => MockCSGInstance;
+    intersect: () => MockCSGInstance;
+    toGeometry: () => THREE.BufferGeometry;
   }
-}));
+  
+  const mockCSGInstance: MockCSGInstance = {
+    union: vi.fn(() => mockCSGInstance),
+    subtract: vi.fn(() => mockCSGInstance),
+    intersect: vi.fn(() => mockCSGInstance),
+    toGeometry: vi.fn(() => new THREE.BoxGeometry(1, 1, 1))
+  };
+  
+  return {
+    CSG: {
+      fromGeometry: vi.fn(() => mockCSGInstance),
+      toGeometry: vi.fn(() => new THREE.BoxGeometry(1, 1, 1))
+    }
+  };
+});
 
 // Mock Three.js geometries for testing
 vi.mock('three', async () => {
   const actual = await vi.importActual('three');
+  
+  const createMockGeometry = (type: string, vertexCount: number) => ({
+    type,
+    attributes: {
+      position: {
+        count: vertexCount,
+        getX: vi.fn(() => 1),
+        getY: vi.fn(() => 1),
+        getZ: vi.fn(() => 1)
+      }
+    },
+    computeVertexNormals: vi.fn(),
+    computeBoundingBox: vi.fn(),
+    computeBoundingSphere: vi.fn(),
+    clone: vi.fn(function(this: any) {
+      return {
+        ...this,
+        dispose: vi.fn()
+      };
+    }),
+    dispose: vi.fn()
+  });
+  
   return {
     ...actual,
-    BoxGeometry: vi.fn().mockImplementation(() => ({
-      type: 'BoxGeometry',
-      attributes: {
-        position: {
-          count: 24,
-          getX: vi.fn(() => 1),
-          getY: vi.fn(() => 1),
-          getZ: vi.fn(() => 1)
-        }
-      },
-      computeVertexNormals: vi.fn(),
-      computeBoundingBox: vi.fn(),
-      computeBoundingSphere: vi.fn(),
-      clone: vi.fn(() => ({
-        type: 'BoxGeometry',
-        attributes: { position: { count: 24 } },
-        dispose: vi.fn()
-      })),
-      dispose: vi.fn()
-    })),
-    SphereGeometry: vi.fn().mockImplementation(() => ({
-      type: 'SphereGeometry',
-      attributes: {
-        position: {
-          count: 32,
-          getX: vi.fn(() => 0.5),
-          getY: vi.fn(() => 0.5),
-          getZ: vi.fn(() => 0.5)
-        }
-      },
-      computeVertexNormals: vi.fn(),
-      computeBoundingBox: vi.fn(),
-      computeBoundingSphere: vi.fn(),
-      clone: vi.fn(() => ({
-        type: 'SphereGeometry',
-        attributes: { position: { count: 32 } },
-        dispose: vi.fn()
-      })),
-      dispose: vi.fn()
-    }))
+    BoxGeometry: vi.fn().mockImplementation(() => createMockGeometry('BoxGeometry', 24)),
+    SphereGeometry: vi.fn().mockImplementation(() => createMockGeometry('SphereGeometry', 32)),
+    Matrix4: actual.Matrix4
   };
 });
 
@@ -353,12 +352,14 @@ describe('R3FCSGService', () => {
       }
     });
 
-    it('should handle CSG operation failures gracefully', () => {
+    it('should handle CSG operation failures gracefully', async () => {
       console.log('[DEBUG] Testing CSG operation failure handling');
       
-      // Mock CSG to throw an error
-      const { CSG } = require('three-csg-ts');
-      CSG.fromGeometry.mockImplementationOnce(() => {
+      // Mock CSG to throw an error using vi.mocked
+      const { CSG } = await import('three-csg-ts');
+      const mockedCSG = vi.mocked(CSG);
+      
+      mockedCSG.fromGeometry.mockImplementationOnce(() => {
         throw new Error('CSG operation failed');
       });
       

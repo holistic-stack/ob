@@ -309,7 +309,7 @@ describe('global performance monitor', () => {
 
     // Assert
     expect(report.metrics).toHaveLength(1);
-    expect(report.metrics[0].operation).toBe('global_test');
+    expect(report.metrics[0]?.operation).toBe('global_test');
   });
 });
 

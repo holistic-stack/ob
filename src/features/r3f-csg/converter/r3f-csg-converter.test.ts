@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
-import * as THREE from 'three';
+import * as _THREE from 'three';
 import { R3FCSGConverter, createR3FCSGConverter } from './r3f-csg-converter';
 import type { R3FCSGConverterConfig, ConversionResult, ProcessingProgress } from '../types/r3f-csg-types';
 
@@ -55,7 +55,7 @@ vi.mock('@react-three/drei', () => ({
 // Mock the pipeline processor
 vi.mock('../pipeline/processor/r3f-pipeline-processor', () => ({
   createR3FPipelineProcessor: vi.fn(() => ({
-    processOpenSCAD: vi.fn(async (code, onProgress, onError) => {
+    processOpenSCAD: vi.fn(async (_code, onProgress, _onError) => {
       // Simulate progress
       if (onProgress) {
         onProgress({ stage: 'parsing', progress: 25, message: 'Parsing...', timeElapsed: 100 });
@@ -417,7 +417,7 @@ describe('R3FCSGConverter', () => {
     it('should track progress in state', async () => {
       console.log('[DEBUG] Testing progress tracking in state');
       
-      let progressUpdates: any[] = [];
+      const progressUpdates: any[] = [];
       
       await converter.convertToR3F(
         'sphere(2);',
@@ -520,7 +520,7 @@ describe('R3FCSGConverter', () => {
       const mockProcessor = createR3FPipelineProcessor as any;
       
       mockProcessor.mockImplementationOnce(() => ({
-        processOpenSCAD: vi.fn(async (code, onProgress, onError) => {
+        processOpenSCAD: vi.fn(async (_code, _onProgress, onError) => {
           if (onError) {
             onError('Test error', 'test-stage');
           }

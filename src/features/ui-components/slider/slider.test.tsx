@@ -192,12 +192,18 @@ describe('Slider - Interactions', () => {
     const sliders = screen.getAllByRole('slider');
     
     // Change first slider
-    fireEvent.change(sliders[0], { target: { value: '30' } });
-    expect(handleChange).toHaveBeenCalledWith([30, 75]);
+    const firstSlider = sliders[0];
+    if (firstSlider) {
+      fireEvent.change(firstSlider, { target: { value: '30' } });
+      expect(handleChange).toHaveBeenCalledWith([30, 75]);
+    }
     
     // Change second slider
-    fireEvent.change(sliders[1], { target: { value: '80' } });
-    expect(handleChange).toHaveBeenCalledWith([25, 80]);
+    const secondSlider = sliders[1];
+    if (secondSlider) {
+      fireEvent.change(secondSlider, { target: { value: '80' } });
+      expect(handleChange).toHaveBeenCalledWith([25, 80]);
+    }
   });
 
   it('should handle disabled state', () => {
@@ -406,9 +412,11 @@ describe('Slider - Edge Cases', () => {
     
     const sliders = screen.getAllByRole('slider');
     // Values should be corrected so min <= max
-    expect(parseInt(sliders[0].getAttribute('value') || '0')).toBeLessThanOrEqual(
-      parseInt(sliders[1].getAttribute('value') || '0')
-    );
+    const firstValue = sliders[0]?.getAttribute('value');
+    const secondValue = sliders[1]?.getAttribute('value');
+    if (firstValue && secondValue) {
+      expect(parseInt(firstValue)).toBeLessThanOrEqual(parseInt(secondValue));
+    }
   });
 
   it('should handle zero step value', () => {

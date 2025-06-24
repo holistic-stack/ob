@@ -212,7 +212,7 @@ function generateSphereGeometry(
       };
     }
     
-    const segments = node.segments || params.segments || 32;
+    const segments = node.segments ?? params.segments ?? 32;
     const geometry = new THREE.SphereGeometry(
       node.radius,
       segments,
@@ -267,7 +267,7 @@ function generateCylinderGeometry(
     }
     
     const radius2 = node.radius2 !== undefined ? node.radius2 : node.radius1;
-    const segments = node.segments || params.segments || 32;
+    const segments = node.segments ?? params.segments ?? 32;
     
     const geometry = new THREE.CylinderGeometry(
       radius2, // top radius
@@ -350,15 +350,15 @@ function generateMaterial(
   try {
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(
-        materialConfig.color?.r || 0.3,
-        materialConfig.color?.g || 0.5,
-        materialConfig.color?.b || 0.8
+        materialConfig.color?.r ?? 0.3,
+        materialConfig.color?.g ?? 0.5,
+        materialConfig.color?.b ?? 0.8
       ),
-      opacity: materialConfig.opacity || 1.0,
-      transparent: materialConfig.transparent || materialConfig.opacity !== undefined && materialConfig.opacity < 1.0,
-      metalness: materialConfig.metalness || 0.1,
-      roughness: materialConfig.roughness || 0.4,
-      wireframe: materialConfig.wireframe || config.enableWireframe || false,
+      opacity: materialConfig.opacity ?? 1.0,
+      transparent: materialConfig.transparent ?? (materialConfig.opacity !== undefined && materialConfig.opacity < 1.0),
+      metalness: materialConfig.metalness ?? 0.1,
+      roughness: materialConfig.roughness ?? 0.4,
+      wireframe: materialConfig.wireframe ?? config.enableWireframe ?? false,
       side: materialConfig.side !== undefined ? materialConfig.side : THREE.DoubleSide
     });
     
@@ -560,7 +560,7 @@ function generateMesh(
     }
     
     // Calculate metadata
-    const vertexCount = geometry.attributes.position?.count || 0;
+    const vertexCount = geometry.attributes.position?.count ?? 0;
     const triangleCount = geometry.index ? geometry.index.count / 3 : vertexCount / 3;
     const memoryUsage = calculateGeometryMemory(geometry);
     
@@ -742,7 +742,7 @@ async function generateMeshFromNode(
       }
 
       // Calculate metadata
-      const vertexCount = csgResult.data.attributes.position?.count || 0;
+      const vertexCount = csgResult.data.attributes.position?.count ?? 0;
       const triangleCount = csgResult.data.index ? csgResult.data.index.count / 3 : vertexCount / 3;
       const memoryUsage = calculateGeometryMemory(csgResult.data);
 

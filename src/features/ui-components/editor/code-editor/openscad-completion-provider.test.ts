@@ -39,8 +39,7 @@ const createMockPosition = (lineNumber: number, column: number): monacoEditor.Po
 } as any);
 
 const createMockContext = (): monacoEditor.languages.CompletionContext => ({
-  triggerKind: monacoEditor.languages.CompletionTriggerKind.Invoke,
-  triggerCharacter: undefined
+  triggerKind: monacoEditor.languages.CompletionTriggerKind.Invoke
 });
 
 const createMockToken = (): monacoEditor.CancellationToken => ({
@@ -80,7 +79,7 @@ describe('OpenSCAD Completion Provider', () => {
 
   describe('Function Completion', () => {
     it('should provide completion for OpenSCAD primitive functions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -106,7 +105,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should provide completion for OpenSCAD transformation functions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -128,7 +127,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should provide completion for OpenSCAD boolean operations', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -150,7 +149,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should provide completion for OpenSCAD mathematical functions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -177,7 +176,7 @@ describe('OpenSCAD Completion Provider', () => {
 
   describe('Snippet Completion', () => {
     it('should provide completion for OpenSCAD code snippets', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -202,7 +201,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should provide snippet completion with proper insert text rules', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -220,7 +219,7 @@ describe('OpenSCAD Completion Provider', () => {
 
   describe('Documentation and Details', () => {
     it('should provide rich documentation for function completions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -242,7 +241,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should provide parameter information in function completions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -262,7 +261,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should categorize completions properly', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -284,7 +283,7 @@ describe('OpenSCAD Completion Provider', () => {
 
   describe('Completion Quality', () => {
     it('should provide a comprehensive set of completions', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -299,7 +298,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should have proper completion item properties', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -325,7 +324,7 @@ describe('OpenSCAD Completion Provider', () => {
     });
 
     it('should not return incomplete results for basic completion', async () => {
-      const result = await provider.provideCompletionItems!(
+      const result = await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -342,7 +341,7 @@ describe('OpenSCAD Completion Provider', () => {
     it('should provide completions within performance threshold', async () => {
       const startTime = performance.now();
       
-      await provider.provideCompletionItems!(
+      await provider.provideCompletionItems(
         mockModel,
         mockPosition,
         mockContext,
@@ -358,7 +357,7 @@ describe('OpenSCAD Completion Provider', () => {
 
     it('should handle multiple completion requests efficiently', async () => {
       const requests = Array(10).fill(null).map(() =>
-        provider.provideCompletionItems!(
+        provider.provideCompletionItems(
           mockModel,
           mockPosition,
           mockContext,

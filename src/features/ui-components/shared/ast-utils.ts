@@ -10,6 +10,9 @@
 import { type ASTNode } from '@holistic-stack/openscad-parser';
 import type { ParseError } from '../../openscad-parser/types/ast-types';
 
+// Re-export ParseError for external usage
+export type { ParseError };
+
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -199,7 +202,7 @@ export const transformASTNode = <T>(
  */
 export const extractLineNumber = (errorMessage: string): number | null => {
   const lineMatch = errorMessage.match(/line\s+(\d+)/i);
-  return lineMatch && lineMatch[1] ? parseInt(lineMatch[1], 10) : null;
+  return lineMatch?.[1] ? parseInt(lineMatch[1], 10) : null;
 };
 
 /**
@@ -208,7 +211,7 @@ export const extractLineNumber = (errorMessage: string): number | null => {
  */
 export const extractColumnNumber = (errorMessage: string): number | null => {
   const columnMatch = errorMessage.match(/column\s+(\d+)/i);
-  return columnMatch && columnMatch[1] ? parseInt(columnMatch[1], 10) : null;
+  return columnMatch?.[1] ? parseInt(columnMatch[1], 10) : null;
 };
 
 /**
@@ -222,8 +225,8 @@ export const createParseError = (
   return {
     message,
     location: {
-      line: extractLineNumber(message) || 1,
-      column: extractColumnNumber(message) || 1,
+      line: extractLineNumber(message) ?? 1,
+      column: extractColumnNumber(message) ?? 1,
     },
     severity,
   };

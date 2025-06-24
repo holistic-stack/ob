@@ -5,7 +5,7 @@
  * and interactive features of the Input component.
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { Input } from './input';
 

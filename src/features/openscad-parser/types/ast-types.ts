@@ -220,7 +220,7 @@ export function countNodesByType(ast: readonly ASTNode[]): Record<string, number
   
   function traverse(nodes: readonly ASTNode[]) {
     for (const node of nodes) {
-      counts[node.type] = (counts[node.type] || 0) + 1;
+      counts[node.type] = (counts[node.type] ?? 0) + 1;
       
       // Recursively traverse children
       if ('children' in node && Array.isArray(node.children)) {

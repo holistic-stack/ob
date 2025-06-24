@@ -34,7 +34,7 @@ export function formatErrorMessage(error: unknown): string {
  */
 export function extractLineNumber(message: string): number | null {
   const match = message.match(/line\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match?.[1] ? parseInt(match[1], 10) : null;
 }
 
 /**
@@ -42,7 +42,7 @@ export function extractLineNumber(message: string): number | null {
  */
 export function extractColumnNumber(message: string): number | null {
   const match = message.match(/column\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match?.[1] ? parseInt(match[1], 10) : null;
 }
 
 /**
@@ -52,7 +52,7 @@ export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
+  let timeout: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);

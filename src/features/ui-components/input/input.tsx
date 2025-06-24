@@ -212,10 +212,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const hasError = validationState === 'error' && Boolean(error);
     
     // Validate and merge glass configuration
-    const glassConfigResult = validateGlassConfig(glassConfig || {});
+    const glassConfigResult = validateGlassConfig(glassConfig ?? {});
+    const defaultConfigResult = validateGlassConfig({});
     const finalGlassConfig = glassConfigResult.success 
       ? glassConfigResult.data 
-      : validateGlassConfig({}).data;
+      : (defaultConfigResult.success ? defaultConfigResult.data : {} as any);
 
     // ========================================================================
     // Style Generation
@@ -330,7 +331,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             onBlur={onBlur}
             aria-label={ariaLabel}
             aria-labelledby={ariaLabelledBy}
-            aria-describedby={describedByIds || undefined}
+            aria-describedby={describedByIds ?? undefined}
             aria-invalid={hasError}
             {...rest}
           />

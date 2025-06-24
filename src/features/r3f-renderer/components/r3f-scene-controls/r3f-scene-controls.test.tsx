@@ -530,7 +530,7 @@ describe('R3FSceneControls', () => {
       console.log('[DEBUG] Testing progress display');
       
       const progress = {
-        stage: 'ast-processing',
+        stage: 'ast-processing' as const,
         progress: 75,
         message: 'Processing AST...',
         timeElapsed: 1500

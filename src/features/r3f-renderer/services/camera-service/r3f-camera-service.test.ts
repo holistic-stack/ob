@@ -119,7 +119,9 @@ describe('R3F Camera Service', () => {
       const result = calculateMeshBounds(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('null or undefined');
+      if (!result.success) {
+        expect(result.error).toContain('null or undefined');
+      }
     });
 
     it('should handle empty meshes array', () => {
@@ -128,7 +130,9 @@ describe('R3F Camera Service', () => {
       const result = calculateSceneBounds([]);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('No meshes provided');
+      if (!result.success) {
+        expect(result.error).toContain('No meshes provided');
+      }
     });
   });
 
@@ -221,7 +225,9 @@ describe('R3F Camera Service', () => {
       const result = resetCamera(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('null or undefined');
+      if (!result.success) {
+        expect(result.error).toContain('null or undefined');
+      }
     });
   });
 
@@ -321,7 +327,9 @@ describe('R3F Camera Service', () => {
       const result = calculateMeshBounds(invalidMesh);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('no geometry');
+      if (!result.success) {
+        expect(result.error).toContain('no geometry');
+      }
     });
 
     it('should handle camera positioning errors', () => {
@@ -333,7 +341,9 @@ describe('R3F Camera Service', () => {
       const result = resetCamera(invalidCamera);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid camera type');
+      if (!result.success) {
+        expect(result.error).toContain('Invalid camera type');
+      }
     });
   });
 });

@@ -1,11 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { EditorLayout } from './editor-layout';
-import { FileExplorer } from './file-explorer';
-import { CodeEditor } from './code-editor';
-import { VisualizationPanel } from './visualization-panel';
-import { ConsolePanel } from './console-panel';
-import type { FileNode, ConsoleMessage, VisualizationMode } from './index';
+import { 
+  EditorLayout, 
+  FileExplorer, 
+  CodeEditor, 
+  VisualizationPanel, 
+  ConsolePanel,
+  type FileNode, 
+  type ConsoleMessage, 
+  type VisualizationMode 
+} from '../../../../ui-components';
 
 // Mock file tree data
 const mockFileTree: FileNode[] = [
@@ -147,7 +151,7 @@ const mockConsoleMessages: ConsoleMessage[] = [
 // Interactive Editor Component
 const InteractiveEditor: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
-  const [code, setCode] = useState(codeExamples['case.scad']);
+  const [code, setCode] = useState(codeExamples['case.scad'] ?? '// Welcome to OpenSCAD Editor\n// Start typing your code here...');
   const [messages, setMessages] = useState(mockConsoleMessages);
   const [visualizationMode, setVisualizationMode] = useState<VisualizationMode>('solid');
   const [consoleFilter, setConsoleFilter] = useState<'all' | 'info' | 'warning' | 'error' | 'success' | 'debug'>('all');
@@ -206,7 +210,6 @@ const InteractiveEditor: React.FC = () => {
         files={mockFileTree}
         onFileSelect={handleFileSelect}
         showIcons
-        width={280}
       />
       
       <div className="flex-1 flex flex-col">
@@ -217,14 +220,11 @@ const InteractiveEditor: React.FC = () => {
             language="openscad"
             showLineNumbers
             onSave={handleSave}
-            placeholder="Select a file to start editing..."
           />
           
           <VisualizationPanel 
             mode={visualizationMode}
-            width={380}
-            showControls
-            onViewChange={handleViewChange}
+            onModeChange={setVisualizationMode}
           />
         </div>
         

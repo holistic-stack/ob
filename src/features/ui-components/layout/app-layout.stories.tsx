@@ -5,7 +5,7 @@
  * Showcases glass morphism effects, 8px grid system, and accessibility features
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from '@storybook/test';
 import { AppLayout } from './app-layout';
 

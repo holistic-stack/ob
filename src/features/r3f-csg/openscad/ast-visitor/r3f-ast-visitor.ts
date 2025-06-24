@@ -23,49 +23,54 @@ import type {
   R3FASTVisitorConfig,
   MeshResult,
   GeometryResult,
-  VisitorContext,
-  Transform3D,
-  R3FMaterialConfig,
-  ProcessingMetrics,
   ASTProcessingError,
-  CSGService
+  CSGService,
+  CubeNode,
+  SphereNode,
+  CylinderNode,
+  UnionNode,
+  DifferenceNode,
+  IntersectionNode,
+  TranslateNode,
+  RotateNode,
+  ScaleNode
 } from '../../types/r3f-csg-types';
 
 // Import node type guards (these would need to be implemented or imported)
 // For now, we'll create basic type checking functions
-function isCubeNode(node: ASTNode): node is any {
+function isCubeNode(node: ASTNode): node is ASTNode & { type: 'cube' } {
   return node.type === 'cube';
 }
 
-function isSphereNode(node: ASTNode): node is any {
+function isSphereNode(node: ASTNode): node is ASTNode & { type: 'sphere' } {
   return node.type === 'sphere';
 }
 
-function isCylinderNode(node: ASTNode): node is any {
+function isCylinderNode(node: ASTNode): node is ASTNode & { type: 'cylinder' } {
   return node.type === 'cylinder';
 }
 
-function isUnionNode(node: ASTNode): node is any {
+function isUnionNode(node: ASTNode): node is ASTNode & { type: 'union' } {
   return node.type === 'union';
 }
 
-function isDifferenceNode(node: ASTNode): node is any {
+function isDifferenceNode(node: ASTNode): node is ASTNode & { type: 'difference' } {
   return node.type === 'difference';
 }
 
-function isIntersectionNode(node: ASTNode): node is any {
+function isIntersectionNode(node: ASTNode): node is ASTNode & { type: 'intersection' } {
   return node.type === 'intersection';
 }
 
-function isTranslateNode(node: ASTNode): node is any {
+function isTranslateNode(node: ASTNode): node is ASTNode & { type: 'translate' } {
   return node.type === 'translate';
 }
 
-function isRotateNode(node: ASTNode): node is any {
+function isRotateNode(node: ASTNode): node is ASTNode & { type: 'rotate' } {
   return node.type === 'rotate';
 }
 
-function isScaleNode(node: ASTNode): node is any {
+function isScaleNode(node: ASTNode): node is ASTNode & { type: 'scale' } {
   return node.type === 'scale';
 }
 
@@ -146,6 +151,15 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   }
 
   /**
+   * Get current processing metrics
+   * 
+   * @returns Read-only copy of current metrics
+   */
+  public getMetrics() {
+    return { ...this.metrics };
+  }
+
+  /**
    * Main visit method that dispatches to appropriate node handlers
    * 
    * @param node - AST node to process
@@ -172,31 +186,31 @@ export class R3FASTVisitor implements IR3FASTVisitor {
 
       // 3D Primitives
       if (isCubeNode(node)) {
-        result = this.visitCube(node);
+        result = this.visitCube(node as any);
       } else if (isSphereNode(node)) {
-        result = this.visitSphere(node);
+        result = this.visitSphere(node as any);
       } else if (isCylinderNode(node)) {
-        result = this.visitCylinder(node);
+        result = this.visitCylinder(node as any);
       }
       // CSG Operations
       else if (isUnionNode(node)) {
-        result = this.visitUnion(node);
+        result = this.visitUnion(node as any);
       } else if (isDifferenceNode(node)) {
-        result = this.visitDifference(node);
+        result = this.visitDifference(node as any);
       } else if (isIntersectionNode(node)) {
-        result = this.visitIntersection(node);
+        result = this.visitIntersection(node as any);
       }
       // Transformations
       else if (isTranslateNode(node)) {
-        result = this.visitTranslate(node);
+        result = this.visitTranslate(node as any);
       } else if (isRotateNode(node)) {
-        result = this.visitRotate(node);
+        result = this.visitRotate(node as any);
       } else if (isScaleNode(node)) {
-        result = this.visitScale(node);
+        result = this.visitScale(node as any);
       }
       // Unsupported node type
       else {
-        const error = `Unsupported node type: ${(node as any).type}`;
+        const error = `Unsupported node type: ${node.type}`;
         console.warn(`[WARN] ${error}`);
         this.metrics.failedNodes++;
         return { success: false, error };
@@ -245,7 +259,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit cube node and create box geometry
    */
-  public visitCube(node: any): MeshResult {
+  public visitCube(node: CubeNode): MeshResult {
     console.log('[DEBUG] Processing cube node');
 
     try {
@@ -282,12 +296,12 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit sphere node and create sphere geometry
    */
-  public visitSphere(node: any): MeshResult {
+  public visitSphere(node: SphereNode): MeshResult {
     console.log('[DEBUG] Processing sphere node');
 
     try {
       // Extract radius with default
-      const radius = this.extractNumber(node.r || node.radius, 1);
+      const radius = this.extractNumber(node.r ?? node.radius, 1);
       
       // Extract detail parameters
       const segments = this.config.geometryPrecision;
@@ -316,14 +330,14 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit cylinder node and create cylinder geometry
    */
-  public visitCylinder(node: any): MeshResult {
+  public visitCylinder(node: CylinderNode): MeshResult {
     console.log('[DEBUG] Processing cylinder node');
 
     try {
       // Extract parameters with defaults
-      const height = this.extractNumber(node.h || node.height, 1);
-      const r1 = this.extractNumber(node.r1 || node.r, 1);
-      const r2 = this.extractNumber(node.r2 || node.r, r1);
+      const height = this.extractNumber(node.h ?? node.height, 1);
+      const r1 = this.extractNumber(node.r1 ?? node.r, 1);
+      const r2 = this.extractNumber(node.r2 ?? node.r, r1);
       
       // Extract detail parameters
       const segments = this.config.geometryPrecision;
@@ -357,7 +371,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit union node and combine child meshes
    */
-  public visitUnion(node: any): MeshResult {
+  public visitUnion(node: UnionNode): MeshResult {
     console.log('[DEBUG] Processing union node with', node.children?.length ?? 0, 'children');
 
     if (!node.children || node.children.length === 0) {
@@ -376,7 +390,11 @@ export class R3FASTVisitor implements IR3FASTVisitor {
       }
 
       if (childMeshes.length === 1) {
-        return { success: true, data: childMeshes[0] };
+        const firstMesh = childMeshes[0];
+        if (!firstMesh) {
+          return { success: false, error: 'First child mesh is undefined' };
+        }
+        return { success: true, data: firstMesh };
       }
 
       // Perform actual CSG union operation if enabled and supported
@@ -393,12 +411,20 @@ export class R3FASTVisitor implements IR3FASTVisitor {
           return { success: true, data: mesh };
         } else {
           console.warn('[WARN] CSG union failed, falling back to first mesh:', unionResult.error);
-          return { success: true, data: childMeshes[0] };
+          const firstMesh = childMeshes[0];
+          if (!firstMesh) {
+            return { success: false, error: 'First child mesh is undefined' };
+          }
+          return { success: true, data: firstMesh };
         }
       } else {
         // Fallback: return first mesh if CSG is disabled or not supported
         console.log('[DEBUG] CSG disabled or not supported, returning first mesh');
-        return { success: true, data: childMeshes[0] };
+        const firstMesh = childMeshes[0];
+        if (!firstMesh) {
+          return { success: false, error: 'First child mesh is undefined' };
+        }
+        return { success: true, data: firstMesh };
       }
 
     } catch (error) {
@@ -411,7 +437,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit difference node and subtract child meshes
    */
-  public visitDifference(node: any): MeshResult {
+  public visitDifference(node: DifferenceNode): MeshResult {
     console.log('[DEBUG] Processing difference node with', node.children?.length ?? 0, 'children');
 
     if (!node.children || node.children.length < 2) {
@@ -443,12 +469,20 @@ export class R3FASTVisitor implements IR3FASTVisitor {
           return { success: true, data: mesh };
         } else {
           console.warn('[WARN] CSG difference failed, falling back to first mesh:', differenceResult.error);
-          return { success: true, data: childMeshes[0] };
+          const fallbackMesh = childMeshes[0];
+          if (!fallbackMesh) {
+            return { success: false, error: 'No child meshes available for fallback' };
+          }
+          return { success: true, data: fallbackMesh };
         }
       } else {
         // Fallback: return first mesh if CSG is disabled or not supported
         console.log('[DEBUG] CSG disabled or not supported, returning first mesh');
-        return { success: true, data: childMeshes[0] };
+        const fallbackMesh = childMeshes[0];
+        if (!fallbackMesh) {
+          return { success: false, error: 'No child meshes available for fallback' };
+        }
+        return { success: true, data: fallbackMesh };
       }
 
     } catch (error) {
@@ -461,7 +495,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit intersection node and intersect child meshes
    */
-  public visitIntersection(node: any): MeshResult {
+  public visitIntersection(node: IntersectionNode): MeshResult {
     console.log('[DEBUG] Processing intersection node with', node.children?.length ?? 0, 'children');
 
     if (!node.children || node.children.length < 2) {
@@ -493,12 +527,20 @@ export class R3FASTVisitor implements IR3FASTVisitor {
           return { success: true, data: mesh };
         } else {
           console.warn('[WARN] CSG intersection failed, falling back to first mesh:', intersectionResult.error);
-          return { success: true, data: childMeshes[0] };
+          const fallbackMesh = childMeshes[0];
+          if (!fallbackMesh) {
+            return { success: false, error: 'No child meshes available for fallback' };
+          }
+          return { success: true, data: fallbackMesh };
         }
       } else {
         // Fallback: return first mesh if CSG is disabled or not supported
         console.log('[DEBUG] CSG disabled or not supported, returning first mesh');
-        return { success: true, data: childMeshes[0] };
+        const fallbackMesh = childMeshes[0];
+        if (!fallbackMesh) {
+          return { success: false, error: 'No child meshes available for fallback' };
+        }
+        return { success: true, data: fallbackMesh };
       }
 
     } catch (error) {
@@ -511,7 +553,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit translate node and apply translation
    */
-  public visitTranslate(node: any): MeshResult {
+  public visitTranslate(node: TranslateNode): MeshResult {
     console.log('[DEBUG] Processing translate node');
 
     if (!node.children || node.children.length === 0) {
@@ -523,7 +565,12 @@ export class R3FASTVisitor implements IR3FASTVisitor {
       const translation = this.extractVector3(node.v, [0, 0, 0]);
       
       // Process child (translate should have exactly one child)
-      const childResult = this.visit(node.children[0]);
+      const firstChild = node.children[0];
+      if (!firstChild) {
+        return { success: false, error: 'Translate node has no valid first child' };
+      }
+      
+      const childResult = this.visit(firstChild);
       if (!childResult.success) {
         return childResult;
       }
@@ -545,7 +592,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit rotate node and apply rotation
    */
-  public visitRotate(node: any): MeshResult {
+  public visitRotate(node: RotateNode): MeshResult {
     console.log('[DEBUG] Processing rotate node');
 
     if (!node.children || node.children.length === 0) {
@@ -554,11 +601,16 @@ export class R3FASTVisitor implements IR3FASTVisitor {
 
     try {
       // Extract rotation vector (in degrees, convert to radians)
-      const rotationDegrees = this.extractVector3(node.a || node.v, [0, 0, 0]);
+      const rotationDegrees = this.extractVector3(node.a ?? node.v, [0, 0, 0]);
       const rotation = rotationDegrees.map(deg => (deg * Math.PI) / 180) as [number, number, number];
       
       // Process child
-      const childResult = this.visit(node.children[0]);
+      const firstChild = node.children[0];
+      if (!firstChild) {
+        return { success: false, error: 'Rotate node has no valid first child' };
+      }
+      
+      const childResult = this.visit(firstChild);
       if (!childResult.success) {
         return childResult;
       }
@@ -580,7 +632,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   /**
    * Visit scale node and apply scaling
    */
-  public visitScale(node: any): MeshResult {
+  public visitScale(node: ScaleNode): MeshResult {
     console.log('[DEBUG] Processing scale node');
 
     if (!node.children || node.children.length === 0) {
@@ -592,7 +644,12 @@ export class R3FASTVisitor implements IR3FASTVisitor {
       const scale = this.extractVector3(node.v, [1, 1, 1]);
       
       // Process child
-      const childResult = this.visit(node.children[0]);
+      const firstChild = node.children[0];
+      if (!firstChild) {
+        return { success: false, error: 'Scale node has no valid first child' };
+      }
+      
+      const childResult = this.visit(firstChild);
       if (!childResult.success) {
         return childResult;
       }
@@ -634,8 +691,8 @@ export class R3FASTVisitor implements IR3FASTVisitor {
     });
 
     // Dispose CSG service
-    if (this.csgService && typeof (this.csgService as any).dispose === 'function') {
-      (this.csgService as any).dispose();
+    if (this.csgService && 'dispose' in this.csgService && typeof this.csgService.dispose === 'function') {
+      this.csgService.dispose();
     }
 
     // Clear caches
@@ -651,7 +708,7 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   // ============================================================================
 
   private validateNode(node: ASTNode): MeshResult | { success: true } {
-    if (!node || !node.type) {
+    if (!node?.type) {
       return { success: false, error: 'Invalid node: missing type' };
     }
     return { success: true };
@@ -715,37 +772,14 @@ export class R3FASTVisitor implements IR3FASTVisitor {
   }
 
   private extractVector3(value: unknown, defaultValue: [number, number, number]): [number, number, number] {
-    if (Array.isArray(value) && value.length >= 3) {
-      return [
-        this.extractNumber(value[0], defaultValue[0]),
-        this.extractNumber(value[1], defaultValue[1]),
-        this.extractNumber(value[2], defaultValue[2])
-      ];
-    }
-    if (typeof value === 'number') {
-      return [value, value, value];
+    if (Array.isArray(value) && value.length === 3 && value.every(v => typeof v === 'number')) {
+      return value as [number, number, number];
     }
     return defaultValue;
   }
 
   private extractNumber(value: unknown, defaultValue: number): number {
-    if (typeof value === 'number' && !isNaN(value)) {
-      return value;
-    }
-    if (typeof value === 'string') {
-      const parsed = parseFloat(value);
-      if (!isNaN(parsed)) {
-        return parsed;
-      }
-    }
-    return defaultValue;
-  }
-
-  /**
-   * Get processing metrics
-   */
-  public getMetrics(): ProcessingMetrics {
-    return { ...this.metrics };
+    return typeof value === 'number' ? value : defaultValue;
   }
 }
 

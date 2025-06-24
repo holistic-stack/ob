@@ -21,7 +21,32 @@ import { R3FCanvas } from '../r3f-canvas/r3f-canvas';
 import { R3FSceneControls, type MaterialConfig, type LightingConfig, type CameraConfig, type EnvironmentConfig, type CSGVisualizationMode } from '../r3f-scene-controls/r3f-scene-controls';
 import { useOpenSCADR3FIntegration } from '../../../openscad-pipeline';
 import type { R3FRendererProps } from '../../types/r3f-types';
+import type { PipelineProgress } from '../../../openscad-pipeline/core/pipeline-processor';
+import type { ProcessingProgress } from '../../../r3f-csg/types/r3f-csg-types';
 import './r3f-renderer.css';
+
+/**
+ * Maps PipelineProgress to ProcessingProgress for component compatibility
+ */
+function mapPipelineToProcessingProgress(progress: PipelineProgress | null): ProcessingProgress | null {
+  if (!progress) return null;
+  
+  // Map pipeline stages to processing stages
+  const stageMap: Record<PipelineProgress['stage'], ProcessingProgress['stage']> = {
+    'parsing': 'parsing',
+    'csg-processing': 'ast-processing', 
+    'r3f-generation': 'scene-generation',
+    'complete': 'complete'
+  };
+  
+  return {
+    stage: stageMap[progress.stage],
+    progress: progress.progress,
+    message: progress.message,
+    timeElapsed: progress.timeElapsed,
+    ...(progress.estimatedTimeRemaining !== undefined && { estimatedTimeRemaining: progress.estimatedTimeRemaining })
+  } as ProcessingProgress;
+}
 
 /**
  * R3FRenderer Component
@@ -580,7 +605,7 @@ export function R3FRenderer({
             scene={scene ?? undefined}
             camera={camera ?? undefined}
             meshes={meshes}
-            conversionProgress={pipeline.progress}
+            conversionProgress={mapPipelineToProcessingProgress(pipeline.progress)}
             isProcessing={pipeline.isProcessing}
             onMaterialChange={handleMaterialChange}
             onLightingChange={handleLightingChange}

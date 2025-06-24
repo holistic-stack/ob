@@ -9,11 +9,11 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { ASTNode } from '../types/ast-types';
 import {
+  createParseError,
   parseOpenSCADCodeCached,
-  type ASTParseResult,
   type ParseError,
 } from '../../ui-components/editor/code-editor/openscad-ast-service';
 
@@ -40,7 +40,7 @@ export interface UseOpenSCADParserResult {
   readonly isParsing: boolean;
   readonly isReady: boolean;
   readonly parseTime: number;
-  readonly parseCode: (code: string) => Promise<void>;
+  readonly parseCode: (code: string) => void;
   readonly clearErrors: () => void;
   readonly reset: () => void;
 }
@@ -109,88 +109,108 @@ export function useOpenSCADParser(
   const [parseErrors, setParseErrors] = useState<readonly ParseError[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [parseTime, setParseTime] = useState(0);
-  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
 
   // ========================================================================
   // Parse Function
   // ========================================================================
 
-  const parseCode = useCallback(async (code: string): Promise<void> => {
-    if (!code || !code.trim()) {
-      setAstData(null);
-      setParseErrors([]);
-      setParseTime(0);
-      return;
-    }
-
-    setIsParsing(true);
-    setParseErrors([]);
-
-    try {
-      if (finalConfig.enableLogging) {
-        console.log('[useOpenSCADParser] Starting parse operation for code length:', code.length);
-      }
-
-      const result: ASTParseResult = await parseOpenSCADCodeCached(code, {
-        enableLogging: finalConfig.enableLogging,
-        timeout: finalConfig.timeout
-      });
-
-      setParseTime(result.parseTime);
-
-      if (result.success) {
-        setAstData(result.ast);
-        setParseErrors([]);
-        
-        if (finalConfig.enableLogging) {
-          console.log('[useOpenSCADParser] Parse successful, AST nodes:', result.ast.length);
-        }
-      } else {
+  const parseCode = useCallback(
+    async (code: string): Promise<void> => {
+      if (!code?.trim()) {
         setAstData(null);
-        setParseErrors(result.errors);
-        
-        if (finalConfig.enableLogging) {
-          console.warn('[useOpenSCADParser] Parse failed with errors:', result.errors);
-        }
+        setParseErrors([]);
+        return;
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
-      
-      setAstData(null);
-      setParseErrors([{
-        message: `Parser exception: ${errorMessage}`,
-        location: { line: 0, column: 0 },
-        severity: 'error'
-      }]);
-      
+
       if (finalConfig.enableLogging) {
-        console.error('[useOpenSCADParser] Parse exception:', error);
+        console.log(`[Parser Hook] Parsing code...`);
       }
-    } finally {
-      setIsParsing(false);
-    }
-  }, [finalConfig.enableLogging, finalConfig.timeout]);
+
+      setIsParsing(true);
+      const startTime = performance.now();
+
+      try {
+        const result = await parseOpenSCADCodeCached(code, {
+          enableLogging: finalConfig.enableLogging,
+          timeout: finalConfig.timeout,
+        });
+
+        const parseTime = performance.now() - startTime;
+        setParseTime(parseTime);
+
+        if (result.success) {
+          setAstData(result.ast);
+          setParseErrors([]);
+          if (finalConfig.enableLogging) {
+            console.log(
+              `[Parser Hook] Code parsed successfully in ${parseTime.toFixed(
+                2,
+              )}ms`,
+            );
+          }
+        } else {
+          setAstData(null);
+          setParseErrors(result.errors);
+          if (finalConfig.enableLogging) {
+            console.warn(
+              `[Parser Hook] Parsing failed:`,
+              result.errors.map(e => e.message).join('\n'),
+            );
+          }
+        }
+      } catch (error) {
+        const parseTime = performance.now() - startTime;
+        setParseTime(parseTime);
+        setAstData(null);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown parsing error';
+        setParseErrors([createParseError(errorMessage)]);
+        if (finalConfig.enableLogging) {
+          console.error('[Parser Hook] Unexpected error during parsing:', error);
+        }
+      } finally {
+        setIsParsing(false);
+      }
+    },
+    [finalConfig],
+  );
 
   // ========================================================================
   // Debounced Parse Function
   // ========================================================================
 
-  const debouncedParseCode = useCallback((code: string): void => {
-    // Clear existing timeout
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
-    }
-
-    // Set new timeout
-    const timeoutId = setTimeout(() => {
-      parseCode(code).catch(console.error);
-    }, finalConfig.debounceMs);
-
-    setDebounceTimeout(timeoutId);
-  }, [parseCode, finalConfig.debounceMs, debounceTimeout]);
+  const debouncedParse = useCallback(
+    (code: string) => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+      const newTimeout = window.setTimeout(() => {
+        void parseCode(code);
+      }, finalConfig.debounceMs);
+      setDebounceTimeout(newTimeout);
+    },
+    [parseCode, finalConfig.debounceMs, debounceTimeout],
+  );
 
   // ========================================================================
-  // Utility Functions
+  // Effects
+  // ========================================================================
+
+  useEffect(() => {
+    if (initialCode && finalConfig.autoParseOnMount) {
+      debouncedParse(initialCode);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [initialCode, finalConfig.autoParseOnMount]);
+
+  // ========================================================================
+  // Public API
   // ========================================================================
 
   const clearErrors = useCallback(() => {
@@ -198,67 +218,25 @@ export function useOpenSCADParser(
   }, []);
 
   const reset = useCallback(() => {
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
-      setDebounceTimeout(null);
-    }
-    
     setAstData(null);
     setParseErrors([]);
     setIsParsing(false);
     setParseTime(0);
-  }, [debounceTimeout]);
-
-  // ========================================================================
-  // Effects
-  // ========================================================================
-
-  // Auto-parse initial code on mount
-  useEffect(() => {
-    if (initialCode && finalConfig.autoParseOnMount) {
-      if (finalConfig.debounceMs > 0) {
-        debouncedParseCode(initialCode);
-      } else {
-        parseCode(initialCode).catch(console.error);
-      }
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+      setDebounceTimeout(null);
     }
-  }, [initialCode, finalConfig.autoParseOnMount, finalConfig.debounceMs, debouncedParseCode, parseCode]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
-      }
-    };
   }, [debounceTimeout]);
-
-  // ========================================================================
-  // Derived State
-  // ========================================================================
-
-  const isReady = useMemo(() => {
-    return !isParsing && (astData !== null || parseErrors.length > 0);
-  }, [isParsing, astData, parseErrors]);
-
-  // ========================================================================
-  // Return Hook Interface
-  // ========================================================================
 
   return {
     astData,
     parseErrors,
     isParsing,
-    isReady,
+    isReady: !isParsing && astData !== null,
     parseTime,
-    parseCode: finalConfig.debounceMs > 0 ? 
-      (code: string) => {
-        debouncedParseCode(code);
-        return Promise.resolve();
-      } : 
-      parseCode,
+    parseCode: debouncedParse, // Expose the debounced version
     clearErrors,
-    reset
+    reset,
   };
 }
 

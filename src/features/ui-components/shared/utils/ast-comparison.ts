@@ -29,7 +29,9 @@ export function compareAST(ast1: readonly ASTNode[], ast2: readonly ASTNode[]): 
   
   // Deep comparison of each node
   for (let i = 0; i < ast1.length; i++) {
-    if (!compareASTNode(ast1[i], ast2[i])) {
+    const node1 = ast1[i];
+    const node2 = ast2[i];
+    if (!node1 || !node2 || !compareASTNode(node1, node2)) {
       return false;
     }
   }
@@ -225,7 +227,9 @@ class ASTComparisonCache {
       // Manage cache size
       if (this.cache.size >= this.maxSize) {
         const firstKey = this.cache.keys().next().value;
-        this.cache.delete(firstKey);
+        if (firstKey !== undefined) {
+          this.cache.delete(firstKey);
+        }
       }
       
       this.cache.set(key, hash);

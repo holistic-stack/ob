@@ -5,7 +5,7 @@
  * and interactive features of the Card component.
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { Card } from './card';
 
@@ -43,7 +43,7 @@ multiple variants, and accessibility features.
 \`\`\`tsx
 import { Card } from '@/features/ui-components/card';
 
-<Card variant="interactive" elevation="medium" onClick={() => console.log('clicked')}>
+<Card variant="primary" elevation="medium" onClick={() => console.log('clicked')}>
   <h2>Card Title</h2>
   <p>Card content goes here</p>
 </Card>
@@ -55,7 +55,7 @@ import { Card } from '@/features/ui-components/card';
   argTypes: {
     variant: {
       control: { type: 'select' },
-      options: ['default', 'bordered', 'elevated', 'interactive'],
+      options: ['primary', 'secondary', 'ghost', 'danger'],
       description: 'Visual style variant of the card',
     },
     elevation: {
@@ -102,7 +102,7 @@ export const Default: Story = {
         <p className="text-gray-600">This is a default card with glass morphism effects.</p>
       </div>
     ),
-    variant: 'default',
+    variant: 'primary',
     elevation: 'medium',
     padding: 'md',
   },
@@ -115,23 +115,23 @@ export const Default: Story = {
 export const Variants: Story = {
   render: () => (
     <div className="grid grid-cols-2 gap-6 w-full max-w-4xl">
-      <Card variant="default" padding="lg">
-        <h3 className="text-lg font-semibold mb-2">Default</h3>
+      <Card variant="primary" padding="lg">
+        <h3 className="text-lg font-semibold mb-2">Primary</h3>
         <p className="text-gray-600">Glass morphism with backdrop blur</p>
       </Card>
       
-      <Card variant="bordered" padding="lg">
-        <h3 className="text-lg font-semibold mb-2">Bordered</h3>
+      <Card variant="secondary" padding="lg">
+        <h3 className="text-lg font-semibold mb-2">Secondary</h3>
         <p className="text-gray-600">Solid border with subtle background</p>
       </Card>
       
-      <Card variant="elevated" padding="lg">
-        <h3 className="text-lg font-semibold mb-2">Elevated</h3>
+      <Card variant="ghost" padding="lg">
+        <h3 className="text-lg font-semibold mb-2">Ghost</h3>
         <p className="text-gray-600">Enhanced shadow with solid background</p>
       </Card>
       
-      <Card variant="interactive" padding="lg" onClick={fn()}>
-        <h3 className="text-lg font-semibold mb-2">Interactive</h3>
+      <Card variant="danger" padding="lg" onClick={fn()}>
+        <h3 className="text-lg font-semibold mb-2">Danger</h3>
         <p className="text-gray-600">Clickable with hover effects</p>
       </Card>
     </div>
@@ -228,7 +228,7 @@ export const Padding: Story = {
 
 export const Interactive: Story = {
   args: {
-    variant: 'interactive',
+    variant: 'primary',
     children: (
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Interactive Card</h3>
@@ -344,7 +344,7 @@ export const SemanticElements: Story = {
 
 export const ComplexContent: Story = {
   args: {
-    variant: 'elevated',
+    variant: 'ghost',
     padding: 'lg',
     children: (
       <div>
@@ -356,7 +356,7 @@ export const ComplexContent: Story = {
         </div>
         
         <div className="mb-4">
-          <div className="w-full h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg mb-3"></div>
+          <div className="w-full h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg mb-3" />
           <p className="text-gray-600 text-sm">
             High-quality product with premium features and excellent customer reviews.
           </p>
@@ -393,20 +393,20 @@ export const Showcase: Story = {
       <div>
         <h2 className="text-2xl font-bold mb-6">Card Variants</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card variant="default" padding="md">
-            <h4 className="font-semibold mb-2">Default</h4>
+          <Card variant="primary" padding="md">
+            <h4 className="font-semibold mb-2">Primary</h4>
             <p className="text-sm text-gray-600">Glass morphism</p>
           </Card>
-          <Card variant="bordered" padding="md">
-            <h4 className="font-semibold mb-2">Bordered</h4>
+          <Card variant="secondary" padding="md">
+            <h4 className="font-semibold mb-2">Secondary</h4>
             <p className="text-sm text-gray-600">Solid border</p>
           </Card>
-          <Card variant="elevated" padding="md">
-            <h4 className="font-semibold mb-2">Elevated</h4>
+          <Card variant="ghost" padding="md">
+            <h4 className="font-semibold mb-2">Ghost</h4>
             <p className="text-sm text-gray-600">Enhanced shadow</p>
           </Card>
-          <Card variant="interactive" padding="md" onClick={fn()}>
-            <h4 className="font-semibold mb-2">Interactive</h4>
+          <Card variant="danger" padding="md" onClick={fn()}>
+            <h4 className="font-semibold mb-2">Danger</h4>
             <p className="text-sm text-gray-600">Clickable</p>
           </Card>
         </div>

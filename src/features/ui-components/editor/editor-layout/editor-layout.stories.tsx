@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { EditorLayout } from './editor-layout';
 import { FileExplorer } from '../file-explorer';
 import { CodeEditor } from '../code-editor';
@@ -93,8 +93,7 @@ export const Default: Story = {
               showLineNumbers
             />
             <VisualizationPanel 
-              width={350}
-              showControls
+              mode="solid"
             />
           </div>
           <ConsolePanel 
@@ -152,9 +151,7 @@ export const Expanded: Story = {
               showLineNumbers
             />
             <VisualizationPanel 
-              width={400}
-              height={500}
-              showControls
+              mode="solid"
             />
           </div>
           <ConsolePanel 

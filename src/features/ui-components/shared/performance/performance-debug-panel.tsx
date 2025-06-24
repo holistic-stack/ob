@@ -80,9 +80,17 @@ export const PerformanceDebugPanel: React.FC<PerformanceDebugPanelProps> = ({
     >
       <div className="bg-black/80 backdrop-blur-sm border border-white/20 rounded-lg overflow-hidden">
         {/* Header */}
-        <div 
-          className="p-2 bg-gray-900/90 border-b border-white/10 cursor-pointer flex items-center justify-between"
+        <button 
+          className="w-full p-2 bg-gray-900/90 border-b border-white/10 cursor-pointer flex items-center justify-between hover:bg-gray-800/90 transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsExpanded(!isExpanded);
+            }
+          }}
+          aria-expanded={isExpanded}
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} performance debug panel`}
         >
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -96,7 +104,7 @@ export const PerformanceDebugPanel: React.FC<PerformanceDebugPanelProps> = ({
               {isExpanded ? '▼' : '▶'}
             </span>
           </div>
-        </div>
+        </button>
 
         {/* Expanded content */}
         {isExpanded && (

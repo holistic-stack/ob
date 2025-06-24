@@ -91,7 +91,7 @@ export function R3FCanvas({
 
   // Default camera configuration
   const defaultCameraConfig = {
-    position: sceneConfig.cameraPosition || [10, 10, 10],
+    position: sceneConfig.cameraPosition ?? [10, 10, 10],
     fov: 50,
     near: 0.1,
     far: 1000,
@@ -246,8 +246,8 @@ export function R3FCanvas({
               maxPolarAngle={defaultCameraConfig.maxPolarAngle}
               dampingFactor={defaultCameraConfig.dampingFactor}
               enableDamping={defaultCameraConfig.enableDamping}
-              target={defaultSceneConfig.cameraTarget || [0, 0, 0]}
-              position={defaultSceneConfig.cameraPosition || [10, 10, 10]}
+              target={defaultSceneConfig.cameraTarget ?? [0, 0, 0]}
+              position={defaultSceneConfig.cameraPosition ?? [10, 10, 10]}
               autoFrame={false}
               onPositionChange={(position) => {
                 console.log('[R3F Canvas] Camera position changed:', position);

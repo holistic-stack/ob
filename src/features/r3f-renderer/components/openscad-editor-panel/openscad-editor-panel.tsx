@@ -190,7 +190,7 @@ export const OpenSCADEditorPanel: React.FC<OpenSCADEditorPanelProps> = ({
           onMeshesGenerated(result.data.meshes);
         }
       } else {
-        const error = result.error || 'Unknown conversion error';
+        const error = result.error ?? 'Unknown conversion error';
         console.error('[ERROR] OpenSCAD conversion failed:', error);
         
         if (onConversionError) {

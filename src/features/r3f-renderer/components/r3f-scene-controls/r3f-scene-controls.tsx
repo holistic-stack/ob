@@ -347,7 +347,7 @@ export const R3FSceneControls: React.FC<R3FSceneControlsProps> = ({
             ].map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
                 disabled={disabled}
               >
@@ -390,8 +390,9 @@ export const R3FSceneControls: React.FC<R3FSceneControlsProps> = ({
                   </div>
                   
                   <div className="control-group">
-                    <label className="control-label">Color</label>
+                    <label htmlFor="material-color-input" className="control-label">Color</label>
                     <input
+                      id="material-color-input"
                       type="color"
                       value={materialConfig.color}
                       onChange={(e) => handleMaterialChange({ color: e.target.value })}
@@ -610,8 +611,9 @@ export const R3FSceneControls: React.FC<R3FSceneControlsProps> = ({
                 
                 <div className="control-grid">
                   <div className="control-group">
-                    <label className="control-label">Background Color</label>
+                    <label htmlFor="environment-background-input" className="control-label">Background Color</label>
                     <input
+                      id="environment-background-input"
                       type="color"
                       value={environmentConfig.background}
                       onChange={(e) => handleEnvironmentChange({ background: e.target.value })}
@@ -695,7 +697,7 @@ export const R3FSceneControls: React.FC<R3FSceneControlsProps> = ({
                     {['gltf', 'obj', 'stl'].map(format => (
                       <button
                         key={format}
-                        onClick={() => onExportScene?.(format as any)}
+                        onClick={() => onExportScene?.(format as 'gltf' | 'obj' | 'stl')}
                         disabled={disabled || !meshes.length}
                         className="export-button"
                       >

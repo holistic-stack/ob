@@ -11,7 +11,7 @@
 
 // Editor Layout Component
 export { EditorLayout } from './editor-layout';
-export type { EditorLayoutProps } from './editor-layout';
+export type { EditorLayoutProps, EditorLayoutVariant } from './editor-layout';
 
 // File Explorer Panel
 export { FileExplorer } from './file-explorer';
@@ -34,7 +34,9 @@ export type {
 export { VisualizationPanel } from './visualization-panel';
 export type { 
   VisualizationPanelProps,
-  VisualizationMode
+  VisualizationMode,
+  ModelData,
+  ViewAction
 } from './visualization-panel';
 
 // Console Panel
@@ -45,8 +47,7 @@ export type {
   ConsoleMessageType
 } from './console-panel';
 
-// Re-export types for convenience
-export type { ViewAction } from './visualization-panel';
+// Re-export types for convenience (duplicates removed as they're exported above)
 
 // ============================================================================
 // Editor Feature Information

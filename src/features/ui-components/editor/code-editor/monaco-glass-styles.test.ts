@@ -43,7 +43,7 @@ describe('Monaco Glass Styles', () => {
 
     it('should accept custom configuration', () => {
       const config: Partial<MonacoGlassConfig> = {
-        blurIntensity: 'medium',
+        blurIntensity: 'md',
         opacity: 0.3,
       };
       
@@ -133,7 +133,7 @@ describe('Monaco Glass Styles', () => {
       };
       
       const options: MonacoGlassOptions = {
-        size: 'medium',
+        size: 'md',
         disabled: false,
         readOnly: false,
         hasErrors: false,
@@ -210,17 +210,17 @@ describe('Monaco Glass Styles', () => {
 
   describe('8px Grid System Sizing', () => {
     it('should generate small size (40px)', () => {
-      const classes = generateMonacoSizing('small');
+      const classes = generateMonacoSizing('sm');
       expect(classes).toContain('min-h-[40px]');
     });
 
     it('should generate medium size (48px) - WCAG AA compliant', () => {
-      const classes = generateMonacoSizing('medium');
+      const classes = generateMonacoSizing('md');
       expect(classes).toContain('min-h-[48px]');
     });
 
     it('should generate large size (56px)', () => {
-      const classes = generateMonacoSizing('large');
+      const classes = generateMonacoSizing('lg');
       expect(classes).toContain('min-h-[56px]');
     });
 
@@ -231,13 +231,13 @@ describe('Monaco Glass Styles', () => {
 
     it('should follow 8px grid system', () => {
       // Small: 5 * 8px = 40px
-      expect(generateMonacoSizing('small')).toContain('min-h-[40px]');
+      expect(generateMonacoSizing('sm')).toContain('min-h-[40px]');
       
       // Medium: 6 * 8px = 48px
-      expect(generateMonacoSizing('medium')).toContain('min-h-[48px]');
+      expect(generateMonacoSizing('md')).toContain('min-h-[48px]');
       
       // Large: 7 * 8px = 56px
-      expect(generateMonacoSizing('large')).toContain('min-h-[56px]');
+      expect(generateMonacoSizing('lg')).toContain('min-h-[56px]');
     });
   });
 
@@ -309,7 +309,7 @@ describe('Monaco Glass Styles', () => {
     it('should have proper default values', () => {
       expect(DEFAULT_MONACO_GLASS_CONFIG.blurIntensity).toBe('sm');
       expect(DEFAULT_MONACO_GLASS_CONFIG.opacity).toBe(0.2);
-      expect(DEFAULT_MONACO_GLASS_CONFIG.elevation).toBe('medium');
+      expect(DEFAULT_MONACO_GLASS_CONFIG.elevation).toBe('md');
       expect(DEFAULT_MONACO_GLASS_CONFIG.enableDistortion).toBe(false);
       expect(DEFAULT_MONACO_GLASS_CONFIG.enableSpecularHighlights).toBe(true);
       expect(DEFAULT_MONACO_GLASS_CONFIG.editorTheme).toBe('dark');

@@ -198,7 +198,7 @@ describe('R3FSceneFactory', () => {
       if (result.success) {
         const scene = result.data;
         expect(scene).toBeInstanceOf(THREE.Scene);
-        expect(scene.children.length).toBe(mockMeshes.length);
+        expect(scene.children).toHaveLength(mockMeshes.length);
         if (mockMeshes[0]) {
           expect(mockMeshes[0].clone).toHaveBeenCalled();
         }

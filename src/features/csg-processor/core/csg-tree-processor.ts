@@ -19,7 +19,6 @@ import {
   type Result,
   type Vector3,
   type Transform3D,
-  type CSGMaterial,
   isCSGPrimitive,
   isCSGOperation,
   isCSGTransform,
@@ -78,14 +77,14 @@ function createCSGError(
 /**
  * Extract numeric value from AST parameter
  */
-function extractNumericValue(param: any, defaultValue: number = 0): number {
+function extractNumericValue(param: unknown, defaultValue: number = 0): number {
   if (typeof param === 'number') return param;
   if (typeof param === 'string') {
     const parsed = parseFloat(param);
     return isNaN(parsed) ? defaultValue : parsed;
   }
   if (param && typeof param === 'object' && 'value' in param) {
-    return extractNumericValue(param.value, defaultValue);
+    return extractNumericValue((param as { value: unknown }).value, defaultValue);
   }
   return defaultValue;
 }
@@ -94,11 +93,13 @@ function extractNumericValue(param: any, defaultValue: number = 0): number {
  * Extract vector3 from AST parameter
  */
 function extractVector3(
-  param: any,
+  param: unknown,
   defaultValue: Vector3 = [0, 0, 0],
 ): Vector3 {
   if (Array.isArray(param)) {
-    const [x = 0, y = 0, z = 0] = param.map((v: any) => extractNumericValue(v));
+    const [x = 0, y = 0, z = 0] = param.map((v: unknown) =>
+      extractNumericValue(v),
+    );
     return [x, y, z];
   }
   if (typeof param === 'number') {
@@ -139,9 +140,18 @@ function extractTransform(node: ASTNode): Transform3D | undefined {
   return Object.keys(transform).length > 0 ? transform : undefined;
 }
 
-function findParameter(parameters: any, name: string): any {
+function findParameter(parameters: unknown, name: string): unknown {
   if (Array.isArray(parameters)) {
-    return parameters.find(p => p.name === name)?.value;
+    const param = parameters.find(
+      (p: unknown) =>
+        p &&
+        typeof p === 'object' &&
+        'name' in p &&
+        (p as { name: unknown }).name === name,
+    );
+    if (param && typeof param === 'object' && 'value' in param) {
+      return (param as { value: unknown }).value;
+    }
   }
   return undefined;
 }
@@ -176,8 +186,8 @@ function convertCubeNode(
     const sourceLocation: { readonly line: number; readonly column: number } | undefined =
       node.location
         ? {
-            line: node.location.start?.line || 0,
-            column: node.location.start?.column || 0,
+            line: node.location.start?.line ?? 0,
+            column: node.location.start?.column ?? 0,
           }
         : undefined;
 
@@ -234,8 +244,8 @@ function convertSphereNode(
     const sourceLocation: { readonly line: number; readonly column: number } | undefined =
       node.location
         ? {
-            line: node.location.start?.line || 0,
-            column: node.location.start?.column || 0,
+            line: node.location.start?.line ?? 0,
+            column: node.location.start?.column ?? 0,
           }
         : undefined;
 
@@ -322,8 +332,8 @@ function convertCylinderNode(
     const sourceLocation: { readonly line: number; readonly column: number } | undefined =
       node.location
         ? {
-            line: node.location.start?.line || 0,
-            column: node.location.start?.column || 0,
+            line: node.location.start?.line ?? 0,
+            column: node.location.start?.column ?? 0,
           }
         : undefined;
 
@@ -377,8 +387,8 @@ function convertCSGOperationNode(
     const sourceLocation: { readonly line: number; readonly column: number } | undefined =
       node.location
         ? {
-            line: node.location.start?.line || 0,
-            column: node.location.start?.column || 0,
+            line: node.location.start?.line ?? 0,
+            column: node.location.start?.column ?? 0,
           }
         : undefined;
 
@@ -430,8 +440,8 @@ function convertTransformNode(
     const sourceLocation: { readonly line: number; readonly column: number } | undefined =
       node.location
         ? {
-            line: node.location.start?.line || 0,
-            column: node.location.start?.column || 0,
+            line: node.location.start?.line ?? 0,
+            column: node.location.start?.column ?? 0,
           }
         : undefined;
 
@@ -472,10 +482,11 @@ function convertASTNodeToCSG(
   errors: CSGError[] = [],
 ): Result<CSGTreeNode | null, CSGError[]> {
   // Check depth limit
-  if (depth > config.maxDepth!) {
+  const maxDepth = config.maxDepth ?? 10; // Default fallback
+  if (depth > maxDepth) {
     errors.push(
       createCSGError(
-        `Maximum depth ${config.maxDepth} exceeded`,
+        `Maximum depth ${maxDepth} exceeded`,
         'MAX_DEPTH_EXCEEDED',
       ),
     );
@@ -622,7 +633,6 @@ export function processASTToCSGTree(
   const startTime = performance.now();
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   const errors: CSGError[] = [];
-  const warnings: CSGError[] = [];
 
   if (finalConfig.enableLogging) {
     console.log('[CSG Processor] Starting AST to CSG tree conversion...');
@@ -825,7 +835,7 @@ export function validateCSGTree(tree: CSGTree): Result<true, readonly CSGError[]
 
     // Validate specific node types
     if (node.type === 'cube' && 'size' in node) {
-      const size = node.size as Vector3;
+      const size = node.size;
       if (size.some(s => s <= 0)) {
         errors.push(
           createCSGError(
@@ -840,7 +850,7 @@ export function validateCSGTree(tree: CSGTree): Result<true, readonly CSGError[]
     }
 
     if (node.type === 'sphere' && 'radius' in node) {
-      const radius = node.radius as number;
+      const radius = node.radius;
       if (radius <= 0) {
         errors.push(
           createCSGError(
@@ -855,8 +865,8 @@ export function validateCSGTree(tree: CSGTree): Result<true, readonly CSGError[]
     }
 
     if (node.type === 'cylinder' && 'height' in node && 'radius1' in node) {
-      const height = node.height as number;
-      const radius1 = node.radius1 as number;
+      const height = node.height;
+      const radius1 = node.radius1;
       if (height <= 0) {
         errors.push(
           createCSGError(

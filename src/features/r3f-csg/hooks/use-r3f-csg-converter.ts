@@ -17,14 +17,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createR3FCSGConverter } from '../converter/r3f-csg-converter';
-import type {
-  R3FCSGConverter,
-  R3FCSGConverterConfig,
-  ConversionResult,
-  ConverterState,
-  ProcessingProgress
-} from '../converter/r3f-csg-converter';
+import { createR3FCSGConverter, type R3FCSGConverter, type R3FCSGConverterConfig, type ConversionResult, type ConverterState, type ProcessingProgress } from '../converter/r3f-csg-converter';
 import type { Result } from '../types/r3f-csg-types';
 
 // ============================================================================
@@ -180,7 +173,7 @@ export function useR3FCSGConverter(
   
   // Refs for stable references
   const converterRef = useRef<R3FCSGConverter | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef<number>(0);
   
   // State management

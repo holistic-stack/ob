@@ -78,6 +78,21 @@ export interface PipelineConfig {
 }
 
 /**
+ * Pipeline metrics
+ */
+export interface PipelineMetrics {
+  readonly totalTime: number;
+  readonly parsingTime: number;
+  readonly csgProcessingTime: number;
+  readonly r3fGenerationTime: number;
+  readonly nodeCount: number;
+  readonly meshCount: number;
+  readonly vertexCount: number;
+  readonly triangleCount: number;
+  readonly memoryUsage: number;
+}
+
+/**
  * Pipeline result containing all generated data
  */
 export interface PipelineResult {
@@ -89,17 +104,7 @@ export interface PipelineResult {
   readonly scene: THREE.Scene | undefined;
   readonly errors: readonly PipelineError[];
   readonly warnings: readonly PipelineError[];
-  readonly metrics: {
-    readonly totalTime: number;
-    readonly parsingTime: number;
-    readonly csgProcessingTime: number;
-    readonly r3fGenerationTime: number;
-    readonly nodeCount: number;
-    readonly meshCount: number;
-    readonly vertexCount: number;
-    readonly triangleCount: number;
-    readonly memoryUsage: number;
-  };
+  readonly metrics: PipelineMetrics;
 }
 
 /**
@@ -156,8 +161,8 @@ function createPipelineError(
     message,
     code,
     severity,
-    sourceError
-  };
+    ...(sourceError && { sourceError })
+  } as PipelineError;
 }
 
 /**
@@ -334,7 +339,7 @@ export async function processOpenSCADPipeline(
     onProgress?.({
       stage: 'csg-processing',
       progress: 60,
-      message: `Generated CSG tree with ${csgTree?.metadata.nodeCount || 0} nodes`,
+      message: `Generated CSG tree with ${csgTree?.metadata.nodeCount ?? 0} nodes`,
       timeElapsed: performance.now() - startTime
     });
 
@@ -387,7 +392,7 @@ export async function processOpenSCADPipeline(
     // ========================================================================
 
     const totalTime = performance.now() - startTime;
-    const meshes = r3fResult?.meshes.map(gm => gm.mesh) || [];
+    const meshes = r3fResult?.meshes.map(gm => gm.mesh) ?? [];
     const scene = r3fResult?.scene;
 
     onProgress?.({
@@ -418,9 +423,9 @@ export async function processOpenSCADPipeline(
         r3fGenerationTime,
         nodeCount: ast.length,
         meshCount: meshes.length,
-        vertexCount: r3fResult?.metrics.totalVertices || 0,
-        triangleCount: r3fResult?.metrics.totalTriangles || 0,
-        memoryUsage: r3fResult?.metrics.memoryUsage || 0
+        vertexCount: r3fResult?.metrics.totalVertices ?? 0,
+        triangleCount: r3fResult?.metrics.totalTriangles ?? 0,
+        memoryUsage: r3fResult?.metrics.memoryUsage ?? 0
       }
     };
 

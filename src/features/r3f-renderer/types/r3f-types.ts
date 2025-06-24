@@ -10,8 +10,9 @@
  */
 
 import * as THREE from 'three';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import React from 'react';
 import type { ReactNode } from 'react';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
 // Core Configuration Types
@@ -57,6 +58,17 @@ export interface R3FSceneConfig {
  * Camera control configuration
  */
 export interface R3FCameraConfig {
+  // Camera properties
+  readonly type?: 'perspective' | 'orthographic';
+  readonly fov?: number;
+  readonly aspect?: number;
+  readonly near?: number;
+  readonly far?: number;
+  readonly position?: readonly [number, number, number];
+  readonly target?: readonly [number, number, number];
+  
+  // Controls configuration
+  readonly enableControls?: boolean;
   readonly enableZoom?: boolean;
   readonly enablePan?: boolean;
   readonly enableRotate?: boolean;
@@ -68,6 +80,17 @@ export interface R3FCameraConfig {
   readonly maxPolarAngle?: number;
   readonly dampingFactor?: number;
   readonly enableDamping?: boolean;
+  
+  // Nested controls config (for compatibility)
+  readonly controlsConfig?: {
+    readonly enableDamping?: boolean;
+    readonly dampingFactor?: number;
+    readonly enableZoom?: boolean;
+    readonly enableRotate?: boolean;
+    readonly enablePan?: boolean;
+    readonly autoRotate?: boolean;
+    readonly autoRotateSpeed?: number;
+  };
 }
 
 // ============================================================================
@@ -288,75 +311,6 @@ export interface R3FEngineConfig {
   readonly forceRealRenderer?: boolean; // Force real renderer creation even in test environments
 }
 
-/**
- * Configuration for 3D scene setup
- */
-export interface R3FSceneConfig {
-  readonly enableCamera?: boolean;
-  readonly enableLighting?: boolean;
-  readonly backgroundColor?: string;
-  readonly cameraPosition?: readonly [number, number, number];
-  readonly cameraTarget?: readonly [number, number, number];
-  readonly ambientLightIntensity?: number;
-  readonly directionalLightIntensity?: number;
-  readonly directionalLightPosition?: readonly [number, number, number];
-  readonly enableGrid?: boolean;
-  readonly gridSize?: number;
-  readonly enableAxes?: boolean;
-  readonly fog?: {
-    readonly color: string;
-    readonly near: number;
-    readonly far: number;
-  };
-}
-
-/**
- * Configuration for camera setup
- */
-export interface R3FCameraConfig {
-  readonly type?: 'perspective' | 'orthographic';
-  readonly fov?: number;
-  readonly aspect?: number;
-  readonly near?: number;
-  readonly far?: number;
-  readonly position?: readonly [number, number, number];
-  readonly target?: readonly [number, number, number];
-  readonly enableControls?: boolean;
-  readonly enableZoom?: boolean;
-  readonly enableRotate?: boolean;
-  readonly enablePan?: boolean;
-  readonly autoRotate?: boolean;
-  readonly autoRotateSpeed?: number;
-  readonly minDistance?: number;
-  readonly maxDistance?: number;
-  readonly minPolarAngle?: number;
-  readonly maxPolarAngle?: number;
-  readonly dampingFactor?: number;
-  readonly enableDamping?: boolean;
-  readonly controlsConfig?: {
-    readonly enableDamping?: boolean;
-    readonly dampingFactor?: number;
-    readonly enableZoom?: boolean;
-    readonly enableRotate?: boolean;
-    readonly enablePan?: boolean;
-    readonly autoRotate?: boolean;
-    readonly autoRotateSpeed?: number;
-  };
-}
-
-/**
- * Configuration for R3F Canvas component
- */
-export interface R3FCanvasConfig {
-  readonly antialias?: boolean;
-  readonly alpha?: boolean;
-  readonly preserveDrawingBuffer?: boolean;
-  readonly powerPreference?: 'default' | 'high-performance' | 'low-power';
-  readonly toneMapping?: THREE.ToneMapping;
-  readonly outputColorSpace?: THREE.ColorSpace;
-  readonly pixelRatio?: number;
-}
-
 // ============================================================================
 // Result Types (Functional Programming)
 // ============================================================================
@@ -414,8 +368,8 @@ export interface R3FEngineService {
 export interface R3FSceneService {
   readonly createScene: (config?: R3FSceneConfig) => R3FSceneResult;
   readonly disposeScene: (scene: THREE.Scene | null) => void;
-  readonly setupLighting: (scene: THREE.Scene, config: R3FSceneConfig) => void;
-  readonly setupCamera: (scene: THREE.Scene, config: R3FCameraConfig) => Result<THREE.Camera, string>;
+  readonly setupLighting: (scene: THREE.Scene | null, config: R3FSceneConfig) => Result<void, string>;
+  readonly setupCamera: (scene: THREE.Scene | null, config: R3FCameraConfig) => Result<THREE.Camera, string>;
 }
 
 /**

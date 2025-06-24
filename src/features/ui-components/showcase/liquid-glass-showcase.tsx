@@ -221,7 +221,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       <div className="relative z-10">
         <div className="flex flex-col text-center">
           <blockquote className="text-sm opacity-80 mb-4 leading-relaxed">
-            "{quote}"
+            &quot;{quote}&quot;
           </blockquote>
           <div className="flex flex-col items-center">
             <img

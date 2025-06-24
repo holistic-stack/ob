@@ -18,8 +18,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useR3FCSGConverter, useOpenSCADToR3F } from '../hooks/use-r3f-csg-converter';
-import type { UseR3FCSGConverterConfig } from '../hooks/use-r3f-csg-converter';
+import { useR3FCSGConverter, useOpenSCADToR3F, type UseR3FCSGConverterConfig } from '../hooks/use-r3f-csg-converter';
 
 // ============================================================================
 // Glass Morphism Styles (8px Grid System)
@@ -227,7 +226,7 @@ export const OpenSCADViewer: React.FC = () => {
     return {
       processingTime: `${metrics.processingTime.toFixed(1)}ms`,
       memoryUsage: `${(metrics.memoryUsage / 1024).toFixed(1)}KB`,
-      meshCount: meshes?.length || 0,
+      meshCount: meshes?.length ?? 0,
       nodeCount: metrics.processedNodes
     };
   }, [metrics, meshes]);
@@ -349,7 +348,7 @@ export const OpenSCADViewer: React.FC = () => {
               ) : isLoading ? (
                 <div className="flex items-center justify-center h-full text-slate-400">
                   <div className="text-center">
-                    <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4" />
                     <p>Processing OpenSCAD code...</p>
                   </div>
                 </div>

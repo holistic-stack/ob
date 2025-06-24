@@ -247,7 +247,7 @@ describe('R3FPipelineProcessor', () => {
       
       const finalStats = cachingProcessor.getCacheStats();
       expect(finalStats.size).toBe(1);
-      expect(finalStats.keys.length).toBe(1);
+      expect(finalStats.keys).toHaveLength(1);
       
       cachingProcessor.dispose();
     });

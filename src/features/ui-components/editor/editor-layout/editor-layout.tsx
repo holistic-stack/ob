@@ -93,7 +93,7 @@ export const EditorLayout = forwardRef<HTMLElement, EditorLayoutProps>(
     // Style Generation
     // ========================================================================
     
-    const glassClasses = generateGlassClasses(glassConfig || {}, overLight);
+    const glassClasses = generateGlassClasses(glassConfig ?? {}, overLight);
     
     const variantClasses = {
       default: 'p-4',
@@ -140,10 +140,10 @@ export const EditorLayout = forwardRef<HTMLElement, EditorLayoutProps>(
         className={layoutClasses}
         style={style}
         data-testid={dataTestId}
-        aria-label={ariaLabel || 'Code Editor Interface'}
+        aria-label={ariaLabel ?? 'Code Editor Interface'}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
-        role={role || 'main'}
+        role={role ?? 'main'}
         {...rest}
       >
         <div className="relative z-10 w-full h-full flex flex-col lg:flex-row">

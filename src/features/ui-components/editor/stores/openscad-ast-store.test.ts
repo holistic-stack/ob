@@ -61,8 +61,10 @@ const mockValidAST: ASTNode[] = [
 
 const mockParseError: ParseError = {
   message: 'Syntax error: missing closing bracket',
-  line: 1,
-  column: 15,
+  location: {
+    line: 1,
+    column: 15,
+  },
   severity: 'error'
 };
 

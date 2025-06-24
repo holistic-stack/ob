@@ -6,7 +6,7 @@
  * Demonstrates all component variants, configurations, and use cases.
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MonacoCodeEditor } from './monaco-code-editor';
 
 const meta: Meta<typeof MonacoCodeEditor> = {
@@ -392,9 +392,10 @@ export const CustomGlass: Story = {
     height: '400px',
     width: '100%',
     glassConfig: {
-      intensity: 'heavy',
-      tint: 'blue',
-      blur: 'lg'
+      blurIntensity: 'lg',
+      opacity: 0.3,
+      elevation: 'high',
+      editorTheme: 'dark'
     }
   }
 };

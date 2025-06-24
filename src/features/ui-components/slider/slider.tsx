@@ -201,7 +201,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
     const trackId = useId();
     
     // Ensure step is at least 1 if 0 is provided
-    const validStep = step || 1;
+    const validStep = step ?? 1;
     
     // Normalize and clamp values
     const normalizedValue = isRange
@@ -217,10 +217,11 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
       : clamp(typeof value === 'number' ? value : min, min, max);
     
     // Validate and merge glass configuration
-    const glassConfigResult = validateGlassConfig(glassConfig || {});
+    const glassConfigResult = validateGlassConfig(glassConfig ?? {});
+    const defaultConfigResult = validateGlassConfig({});
     const finalGlassConfig = glassConfigResult.success 
       ? glassConfigResult.data 
-      : validateGlassConfig({}).data;
+      : (defaultConfigResult.success ? defaultConfigResult.data : {} as any);
 
     // ========================================================================
     // Event Handlers
@@ -332,8 +333,8 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
       
       const thumbId = index !== undefined ? `${sliderId}-thumb-${index}` : sliderId;
       const ariaLabelValue = index !== undefined 
-        ? `${label || 'Slider'} ${index === 0 ? 'minimum' : 'maximum'}`
-        : ariaLabel || label || 'Slider';
+        ? `${label ?? 'Slider'} ${index === 0 ? 'minimum' : 'maximum'}`
+        : ariaLabel ?? label ?? 'Slider';
 
       return (
         <input
@@ -500,13 +501,13 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
               <>
                 {isRange && Array.isArray(normalizedValue) ? (
                   <>
-                    {renderValueLabel(normalizedValue[0], normalizeValue(normalizedValue[0], min, max) * 100)}
-                    {renderValueLabel(normalizedValue[1], normalizeValue(normalizedValue[1], min, max) * 100)}
+                    {normalizedValue[0] !== undefined && renderValueLabel(normalizedValue[0], normalizeValue(normalizedValue[0], min, max) * 100)}
+                    {normalizedValue[1] !== undefined && renderValueLabel(normalizedValue[1], normalizeValue(normalizedValue[1], min, max) * 100)}
                   </>
                 ) : (
                   renderValueLabel(
-                    typeof normalizedValue === 'number' ? normalizedValue : normalizedValue[0],
-                    normalizeValue(typeof normalizedValue === 'number' ? normalizedValue : normalizedValue[0], min, max) * 100
+                    typeof normalizedValue === 'number' ? normalizedValue : (normalizedValue[0] ?? min),
+                    normalizeValue(typeof normalizedValue === 'number' ? normalizedValue : (normalizedValue[0] ?? min), min, max) * 100
                   )
                 )}
               </>
@@ -519,7 +520,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
                   className={thumbClasses}
                   style={{
                     [orientation === 'horizontal' ? 'left' : 'bottom']: 
-                      `${normalizeValue(normalizedValue[0], min, max) * 100}%`,
+                      `${normalizeValue(normalizedValue[0] ?? min, min, max) * 100}%`,
                     [orientation === 'horizontal' ? 'top' : 'left']: '50%'
                   }}
                 />
@@ -527,12 +528,12 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
                   className={thumbClasses}
                   style={{
                     [orientation === 'horizontal' ? 'left' : 'bottom']: 
-                      `${normalizeValue(normalizedValue[1], min, max) * 100}%`,
+                      `${normalizeValue(normalizedValue[1] ?? max, min, max) * 100}%`,
                     [orientation === 'horizontal' ? 'top' : 'left']: '50%'
                   }}
                 />
-                {renderThumb(normalizedValue[0], 0)}
-                {renderThumb(normalizedValue[1], 1)}
+                {normalizedValue[0] !== undefined && renderThumb(normalizedValue[0], 0)}
+                {normalizedValue[1] !== undefined && renderThumb(normalizedValue[1], 1)}
               </>
             ) : (
               <>
@@ -540,11 +541,11 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
                   className={thumbClasses}
                   style={{
                     [orientation === 'horizontal' ? 'left' : 'bottom']: 
-                      `${normalizeValue(typeof normalizedValue === 'number' ? normalizedValue : normalizedValue[0], min, max) * 100}%`,
+                      `${normalizeValue(typeof normalizedValue === 'number' ? normalizedValue : (normalizedValue[0] ?? min), min, max) * 100}%`,
                     [orientation === 'horizontal' ? 'top' : 'left']: '50%'
                   }}
                 />
-                {renderThumb(typeof normalizedValue === 'number' ? normalizedValue : normalizedValue[0])}
+                {renderThumb(typeof normalizedValue === 'number' ? normalizedValue : (normalizedValue[0] ?? min))}
               </>
             )}
           </div>

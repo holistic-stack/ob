@@ -68,7 +68,7 @@ export function R3FScene({
     // Configure renderer settings
     gl.shadowMap.enabled = true;
     gl.shadowMap.type = THREE.PCFSoftShadowMap;
-    gl.setClearColor(defaultConfig.backgroundColor || '#1a1a1a');
+    gl.setClearColor(defaultConfig.backgroundColor ?? '#1a1a1a');
 
     // Set up tone mapping for better visual quality
     gl.toneMapping = THREE.ACESFilmicToneMapping;

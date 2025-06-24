@@ -245,7 +245,7 @@ export class R3FCSGConverter {
       const conversionResult: ConversionResult = {
         success: true,
         data: {
-          ...componentResult.data!,
+          ...componentResult.data,
           scene: pipelineResult.data.scene,
           camera: pipelineResult.data.camera,
           meshes: pipelineResult.data.meshes,
@@ -434,7 +434,7 @@ export class R3FCSGConverter {
 
       // Generate mesh components
       const MeshComponents = pipelineData.meshes.map((mesh, index) => {
-        return React.memo(() => (
+        const MeshComponent = React.memo(() => (
           React.createElement('mesh', {
             key: `mesh-${index}`,
             position: [mesh.position.x, mesh.position.y, mesh.position.z],
@@ -451,6 +451,8 @@ export class R3FCSGConverter {
             })
           ])
         ));
+        MeshComponent.displayName = `MeshComponent${index}`;
+        return MeshComponent;
       });
 
       // Generate scene component
@@ -508,6 +510,7 @@ export class R3FCSGConverter {
           ] : [])
         ])
       ));
+      SceneComponent.displayName = 'SceneComponent';
 
       // Generate canvas component
       const CanvasComponent = React.memo((props: any) => (
@@ -524,6 +527,7 @@ export class R3FCSGConverter {
           ...props
         }, React.createElement(SceneComponent))
       ));
+      CanvasComponent.displayName = 'CanvasComponent';
 
       // Generate JSX string
       const jsx = this.generateJSXString('OpenSCADScene', {

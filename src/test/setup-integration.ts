@@ -10,7 +10,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { vi, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // ============================================================================
@@ -298,12 +298,10 @@ expect.extend({
 });
 
 // Declare custom matchers for TypeScript
-declare global {
-  namespace Vi {
-    interface AsymmetricMatchersContaining {
-      toBeWithinPerformanceTarget(target: number): any;
-      toHaveValidAST(): any;
-    }
+declare module 'vitest' {
+  interface AsymmetricMatchersContaining {
+    toBeWithinPerformanceTarget(target: number): any;
+    toHaveValidAST(): any;
   }
 }
 

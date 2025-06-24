@@ -5,7 +5,7 @@
  * and interactive features of the Slider component.
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { Slider } from './slider';
 import type { SliderProps, SliderValue } from './slider';
@@ -135,6 +135,8 @@ const InteractiveSlider = (props: Partial<SliderProps>) => {
   
   return (
     <Slider
+      min={0}
+      max={100}
       {...props}
       value={value}
       onChange={(newValue) => {

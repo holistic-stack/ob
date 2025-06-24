@@ -9,6 +9,7 @@
  */
 
 import * as THREE from 'three';
+import React from 'react';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 
 // ============================================================================
@@ -268,6 +269,66 @@ export interface CSGOperationContext {
 }
 
 // ============================================================================
+// OpenSCAD AST Node Types (Specific)
+// ============================================================================
+
+interface OpenSCADNodeBase {
+  readonly type: string;
+  readonly children?: readonly ASTNode[];
+  readonly location?: any; // Using any for now to avoid deep type definitions
+}
+
+export interface CubeNode extends OpenSCADNodeBase {
+  readonly type: 'cube';
+  readonly size?: readonly [number, number, number];
+  readonly center?: boolean;
+}
+
+export interface SphereNode extends OpenSCADNodeBase {
+  readonly type: 'sphere';
+  readonly r?: number;
+  readonly radius?: number;
+}
+
+export interface CylinderNode extends OpenSCADNodeBase {
+  readonly type: 'cylinder';
+  readonly h?: number;
+  readonly height?: number;
+  readonly r?: number;
+  readonly r1?: number;
+  readonly r2?: number;
+  readonly center?: boolean;
+}
+
+export interface UnionNode extends OpenSCADNodeBase {
+  readonly type: 'union';
+}
+
+export interface DifferenceNode extends OpenSCADNodeBase {
+  readonly type: 'difference';
+}
+
+export interface IntersectionNode extends OpenSCADNodeBase {
+  readonly type: 'intersection';
+}
+
+export interface TranslateNode extends OpenSCADNodeBase {
+  readonly type: 'translate';
+  readonly v?: readonly [number, number, number];
+}
+
+export interface RotateNode extends OpenSCADNodeBase {
+  readonly type: 'rotate';
+  readonly a?: readonly [number, number, number] | number;
+  readonly v?: readonly [number, number, number];
+}
+
+export interface ScaleNode extends OpenSCADNodeBase {
+  readonly type: 'scale';
+  readonly v?: readonly [number, number, number];
+}
+
+// ============================================================================
 // Primitive Creation Types
 // ============================================================================
 
@@ -377,16 +438,17 @@ export interface ScaleParams {
  */
 export interface R3FASTVisitor {
   readonly visit: (node: ASTNode) => MeshResult;
-  readonly visitCube: (node: any) => MeshResult;
-  readonly visitSphere: (node: any) => MeshResult;
-  readonly visitCylinder: (node: any) => MeshResult;
-  readonly visitUnion: (node: any) => MeshResult;
-  readonly visitDifference: (node: any) => MeshResult;
-  readonly visitIntersection: (node: any) => MeshResult;
-  readonly visitTranslate: (node: any) => MeshResult;
-  readonly visitRotate: (node: any) => MeshResult;
-  readonly visitScale: (node: any) => MeshResult;
+  readonly visitCube: (node: CubeNode) => MeshResult;
+  readonly visitSphere: (node: SphereNode) => MeshResult;
+  readonly visitCylinder: (node: CylinderNode) => MeshResult;
+  readonly visitUnion: (node: UnionNode) => MeshResult;
+  readonly visitDifference: (node: DifferenceNode) => MeshResult;
+  readonly visitIntersection: (node: IntersectionNode) => MeshResult;
+  readonly visitTranslate: (node: TranslateNode) => MeshResult;
+  readonly visitRotate: (node: RotateNode) => MeshResult;
+  readonly visitScale: (node: ScaleNode) => MeshResult;
   readonly dispose: () => void;
+  readonly getMetrics?: () => any;
 }
 
 /**

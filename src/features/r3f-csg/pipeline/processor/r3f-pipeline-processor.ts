@@ -24,13 +24,13 @@ import { createR3FASTVisitor } from '../../openscad/ast-visitor/r3f-ast-visitor'
 import { createR3FSceneFactory } from '../../services/scene-factory/r3f-scene-factory';
 import type {
   Result,
-  R3FASTVisitorConfig,
+  R3FASTVisitorConfig as _R3FASTVisitorConfig,
   ProcessingMetrics,
   ProcessingProgress,
   ASTProcessingResult,
   R3FPipelineConfig,
+  SceneFactoryConfig as _SceneFactoryConfig
 } from '../../types/r3f-csg-types';
-import type { SceneFactoryConfig } from '../../types/r3f-csg-types';
 
 // ============================================================================
 // Pipeline Configuration
@@ -373,8 +373,8 @@ export class R3FPipelineProcessor {
       const ast: ASTNode = {
         type: 'cube',
         size: [1, 1, 1],
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } }
-      } as any;
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 10 } }
+      };
 
       if (!ast) {
         const error = 'Failed to parse OpenSCAD code';
@@ -498,7 +498,7 @@ export class R3FPipelineProcessor {
 
   private async optimizeResult(
     sceneData: {scene: THREE.Scene, camera?: THREE.Camera},
-    context: ProcessingContext
+    _context: ProcessingContext
   ): Promise<void> {
     try {
       if (this.config.enableLogging) {

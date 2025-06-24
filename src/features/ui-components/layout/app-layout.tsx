@@ -11,6 +11,9 @@ import { MonacoCodeEditor } from '../editor/code-editor/monaco-code-editor';
 import { VisualizationPanel } from '../editor/visualization-panel/visualization-panel';
 import type { AppLayoutProps, FileName } from './types';
 
+// Re-export the props type
+export type { AppLayoutProps };
+
 // ============================================================================
 // Placeholder Components (Minimal Implementation)
 // ============================================================================
@@ -231,8 +234,6 @@ translate([30, 0, 0])
             <VisualizationPanel
               data-testid="visualization-panel"
               mode="solid"
-              width="100%"
-              height="100%"
               aria-label="3D Model Visualization"
             />
           </div>

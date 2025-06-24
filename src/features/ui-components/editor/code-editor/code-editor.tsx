@@ -20,7 +20,6 @@ import {
 declare global {
   interface Window {
     monaco: any;
-    MonacoEnvironment: any;
   }
 }
 
@@ -165,7 +164,7 @@ const openscadLanguageConfig = {
     { open: '(', close: ')' },
     { open: '"', close: '"' }
   ],
-  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
+  wordPattern: /(-?\d*\.\d\w*)|([^`~!@#%^&*()\-=+[\]{}\\|;:'",./?<>\s]+)/g
 };
 
 /**
@@ -334,7 +333,7 @@ class OpenSCADCompletionProvider {
   ): Promise<any> {
     const lineContent = model.getLineContent(position.lineNumber);
     const wordInfo = model.getWordAtPosition(position);
-    const wordAtPosition = wordInfo?.word || '';
+    const wordAtPosition = wordInfo?.word ?? '';
 
     // Skip completion in strings and comments
     const beforeCursor = lineContent.substring(0, position.column - 1);
@@ -497,7 +496,7 @@ class OpenSCADCompletionProvider {
           symbols.push({
             name: node.name,
             type: 'module',
-            line: node.location?.start.line || 0
+            line: node.location?.start.line ?? 0
           });
         }
       } else if (node.type === 'function_definition' && node.name) {
@@ -505,7 +504,7 @@ class OpenSCADCompletionProvider {
           symbols.push({
             name: node.name,
             type: 'function',
-            line: node.location?.start.line || 0
+            line: node.location?.start.line ?? 0
           });
         }
       }
@@ -661,8 +660,8 @@ class OpenSCADHoverProvider {
         return {
           name: node.name,
           type: node.type === 'module_definition' ? 'module' : 'function',
-          line: node.location?.start.line || 0,
-          parameters: node.parameters?.map((p: any) => p.name) || []
+          line: node.location?.start.line ?? 0,
+          parameters: node.parameters?.map((p: any) => p.name) ?? []
         };
       }
 
@@ -725,8 +724,8 @@ class OpenSCADDefinitionProvider {
         return {
           name: node.name,
           type: node.type === 'module_definition' ? 'module' : 'function',
-          line: node.location?.start.line || 0,
-          parameters: node.parameters?.map((p: any) => p.name) || []
+          line: node.location?.start.line ?? 0,
+          parameters: node.parameters?.map((p: any) => p.name) ?? []
         };
       }
 
@@ -827,7 +826,7 @@ class OpenSCADReferenceProvider {
         return {
           name: node.name,
           type: node.type === 'module_definition' ? 'module' : 'function',
-          line: node.location?.start.line || 0
+          line: node.location?.start.line ?? 0
         };
       }
 
@@ -884,16 +883,16 @@ class OpenSCADDocumentSymbolProvider {
           detail: 'module',
           kind: 5, // SymbolKind.Class
           range: {
-            startLineNumber: (node.location?.start.line || 0) + 1,
-            endLineNumber: (node.location?.end.line || 0) + 1,
-            startColumn: (node.location?.start.column || 0) + 1,
-            endColumn: (node.location?.end.column || 0) + 1
+            startLineNumber: (node.location?.start.line ?? 0) + 1,
+            endLineNumber: (node.location?.end.line ?? 0) + 1,
+            startColumn: (node.location?.start.column ?? 0) + 1,
+            endColumn: (node.location?.end.column ?? 0) + 1
           },
           selectionRange: {
-            startLineNumber: (node.location?.start.line || 0) + 1,
-            endLineNumber: (node.location?.start.line || 0) + 1,
-            startColumn: (node.location?.start.column || 0) + 1,
-            endColumn: (node.location?.start.column || 0) + node.name.length + 1
+            startLineNumber: (node.location?.start.line ?? 0) + 1,
+            endLineNumber: (node.location?.start.line ?? 0) + 1,
+            startColumn: (node.location?.start.column ?? 0) + 1,
+            endColumn: (node.location?.start.column ?? 0) + node.name.length + 1
           }
         });
       } else if (node.type === 'function_definition' && node.name) {
@@ -902,16 +901,16 @@ class OpenSCADDocumentSymbolProvider {
           detail: 'function',
           kind: 12, // SymbolKind.Function
           range: {
-            startLineNumber: (node.location?.start.line || 0) + 1,
-            endLineNumber: (node.location?.end.line || 0) + 1,
-            startColumn: (node.location?.start.column || 0) + 1,
-            endColumn: (node.location?.end.column || 0) + 1
+            startLineNumber: (node.location?.start.line ?? 0) + 1,
+            endLineNumber: (node.location?.end.line ?? 0) + 1,
+            startColumn: (node.location?.start.column ?? 0) + 1,
+            endColumn: (node.location?.end.column ?? 0) + 1
           },
           selectionRange: {
-            startLineNumber: (node.location?.start.line || 0) + 1,
-            endLineNumber: (node.location?.start.line || 0) + 1,
-            startColumn: (node.location?.start.column || 0) + 1,
-            endColumn: (node.location?.start.column || 0) + node.name.length + 1
+            startLineNumber: (node.location?.start.line ?? 0) + 1,
+            endLineNumber: (node.location?.start.line ?? 0) + 1,
+            startColumn: (node.location?.start.column ?? 0) + 1,
+            endColumn: (node.location?.start.column ?? 0) + node.name.length + 1
           }
         });
       }
@@ -1414,8 +1413,8 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       let column = 1;
 
       if (lineColMatch) {
-        line = parseInt(lineColMatch[1] ?? '1', 10) || 1;
-        column = parseInt(lineColMatch[2] ?? '1', 10) || 1;
+        line = parseInt(lineColMatch[1] ?? '1', 10) ?? 1;
+        column = parseInt(lineColMatch[2] ?? '1', 10) ?? 1;
       }
 
       return {
@@ -1523,7 +1522,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
     const handleErrorClick = (error: ParseResult['errors'][0]) => {
       // Jump to error line in Monaco Editor
       if (monacoEditor && error.line > 0) {
-        monacoEditor.setPosition({ lineNumber: error.line, column: error.column || 1 });
+        monacoEditor.setPosition({ lineNumber: error.line, column: error.column ?? 1 });
         monacoEditor.focus();
         monacoEditor.revealLine(error.line);
       }

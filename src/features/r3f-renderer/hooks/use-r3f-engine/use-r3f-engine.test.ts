@@ -15,30 +15,20 @@ import { useR3FEngine } from './use-r3f-engine';
 import type { R3FEngineConfig } from '../../types/r3f-types';
 
 // Mock the R3F engine service
+const mockCreateRenderer = vi.fn();
+const mockDisposeRenderer = vi.fn();
+const mockHandleResize = vi.fn();
+const mockSetupErrorHandlers = vi.fn();
+
+const mockEngineService = {
+  createRenderer: mockCreateRenderer,
+  disposeRenderer: mockDisposeRenderer,
+  handleResize: mockHandleResize,
+  setupErrorHandlers: mockSetupErrorHandlers
+};
+
 vi.mock('../../services/engine-service/r3f-engine-service', () => ({
-  createR3FEngineService: vi.fn(() => ({
-    createRenderer: vi.fn((canvas, config) => ({
-      success: true,
-      data: {
-        domElement: canvas || document.createElement('canvas'),
-        setSize: vi.fn(),
-        render: vi.fn(),
-        dispose: vi.fn(),
-        getContext: vi.fn(() => ({
-          getExtension: vi.fn(),
-          getParameter: vi.fn(),
-          getSupportedExtensions: vi.fn(() => [])
-        })),
-        shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap },
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1,
-        outputColorSpace: THREE.SRGBColorSpace
-      }
-    })),
-    disposeRenderer: vi.fn(),
-    handleResize: vi.fn(),
-    setupErrorHandlers: vi.fn()
-  }))
+  createR3FEngineService: vi.fn(() => mockEngineService)
 }));
 
 // Mock window.addEventListener and removeEventListener
@@ -65,6 +55,26 @@ describe('useR3FEngine', () => {
     canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 600;
+    
+    // Reset mocks to success state
+    mockCreateRenderer.mockReturnValue({
+      success: true,
+      data: {
+        domElement: canvas || document.createElement('canvas'),
+        setSize: vi.fn(),
+        render: vi.fn(),
+        dispose: vi.fn(),
+        getContext: vi.fn(() => ({
+          getExtension: vi.fn(),
+          getParameter: vi.fn(),
+          getSupportedExtensions: vi.fn(() => [])
+        })),
+        shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap },
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1,
+        outputColorSpace: THREE.SRGBColorSpace
+      }
+    });
     
     // Clear all mocks
     vi.clearAllMocks();
@@ -127,15 +137,9 @@ describe('useR3FEngine', () => {
     console.log('[DEBUG] Testing renderer creation failure');
     
     // Mock the service to return failure
-    const { createR3FEngineService } = require('../../services/engine-service/r3f-engine-service');
-    createR3FEngineService.mockReturnValue({
-      createRenderer: vi.fn(() => ({
-        success: false,
-        error: 'Renderer creation failed'
-      })),
-      disposeRenderer: vi.fn(),
-      handleResize: vi.fn(),
-      setupErrorHandlers: vi.fn()
+    mockCreateRenderer.mockReturnValue({
+      success: false,
+      error: 'Renderer creation failed'
     });
     
     const { result } = renderHook(() => useR3FEngine(canvas));
@@ -209,23 +213,6 @@ describe('useR3FEngine', () => {
   it('should handle resize events', () => {
     console.log('[DEBUG] Testing resize event handling');
     
-    const { createR3FEngineService } = require('../../services/engine-service/r3f-engine-service');
-    const mockHandleResize = vi.fn();
-    
-    createR3FEngineService.mockReturnValue({
-      createRenderer: vi.fn(() => ({
-        success: true,
-        data: {
-          domElement: canvas,
-          setSize: vi.fn(),
-          dispose: vi.fn()
-        }
-      })),
-      disposeRenderer: vi.fn(),
-      handleResize: mockHandleResize,
-      setupErrorHandlers: vi.fn()
-    });
-    
     const { result } = renderHook(() => useR3FEngine(canvas));
     
     expect(result.current.isReady).toBe(true);
@@ -244,23 +231,6 @@ describe('useR3FEngine', () => {
   it('should setup error handlers', () => {
     console.log('[DEBUG] Testing error handlers setup');
     
-    const { createR3FEngineService } = require('../../services/engine-service/r3f-engine-service');
-    const mockSetupErrorHandlers = vi.fn();
-    
-    createR3FEngineService.mockReturnValue({
-      createRenderer: vi.fn(() => ({
-        success: true,
-        data: {
-          domElement: canvas,
-          setSize: vi.fn(),
-          dispose: vi.fn()
-        }
-      })),
-      disposeRenderer: vi.fn(),
-      handleResize: vi.fn(),
-      setupErrorHandlers: mockSetupErrorHandlers
-    });
-    
     const { result } = renderHook(() => useR3FEngine(canvas));
     
     expect(result.current.isReady).toBe(true);
@@ -274,25 +244,12 @@ describe('useR3FEngine', () => {
   it('should handle context lost and restored events', () => {
     console.log('[DEBUG] Testing context lost/restored handling');
     
-    const { createR3FEngineService } = require('../../services/engine-service/r3f-engine-service');
     let onContextLost: (() => void) | undefined;
     let onContextRestored: (() => void) | undefined;
     
-    createR3FEngineService.mockReturnValue({
-      createRenderer: vi.fn(() => ({
-        success: true,
-        data: {
-          domElement: canvas,
-          setSize: vi.fn(),
-          dispose: vi.fn()
-        }
-      })),
-      disposeRenderer: vi.fn(),
-      handleResize: vi.fn(),
-      setupErrorHandlers: vi.fn((renderer, lost, restored) => {
-        onContextLost = lost;
-        onContextRestored = restored;
-      })
+    mockSetupErrorHandlers.mockImplementation((renderer, lost, restored) => {
+      onContextLost = lost;
+      onContextRestored = restored;
     });
     
     const { result } = renderHook(() => useR3FEngine(canvas));

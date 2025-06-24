@@ -324,7 +324,7 @@ export class R3FSceneFactory {
       meshes.forEach((mesh, index) => {
         // Clone mesh to avoid modifying original
         const clonedMesh = mesh.clone();
-        clonedMesh.name = mesh.name || `mesh_${index}`;
+        clonedMesh.name = mesh.name ?? `mesh_${index}`;
         
         // Enable shadows if configured
         if (this.config.enableShadows) {

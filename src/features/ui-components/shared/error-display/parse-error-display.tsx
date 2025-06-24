@@ -76,7 +76,7 @@ export const ParseErrorDisplay: React.FC<ParseErrorDisplayProps> = ({
           <ParseErrorItem
             key={index}
             error={error}
-            onClick={onErrorClick}
+            {...(onErrorClick && { onClick: onErrorClick })}
             showLineNumbers={showLineNumbers}
             showSuggestions={showSuggestions}
           />

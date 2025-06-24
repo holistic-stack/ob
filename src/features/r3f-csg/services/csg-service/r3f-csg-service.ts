@@ -144,7 +144,7 @@ export class R3FCSGService implements CSGService {
     geometries: readonly THREE.BufferGeometry[]
   ): CSGOperationResult {
     const startTime = performance.now();
-    (this.metrics as any).totalOperations++;
+    this.metrics.totalOperations++;
 
     if (this.config.enableLogging) {
       console.log(`[DEBUG] Performing ${operationType} operation on ${geometries.length} geometries`);
@@ -154,7 +154,7 @@ export class R3FCSGService implements CSGService {
       // Validate inputs
       const validationResult = this.validateGeometries(geometries, operationType);
       if (!validationResult.success) {
-        (this.metrics as any).failedOperations++;
+        this.metrics.failedOperations++;
         return validationResult;
       }
 
@@ -163,20 +163,20 @@ export class R3FCSGService implements CSGService {
         const cacheKey = this.generateCacheKey(operationType, geometries);
         const cachedResult = this.operationCache.get(cacheKey);
         if (cachedResult) {
-          (this.metrics as any).cacheHits++;
+          this.metrics.cacheHits++;
           if (this.config.enableLogging) {
             console.log(`[DEBUG] Cache hit for ${operationType} operation`);
           }
           return { success: true, data: cachedResult.clone() };
         }
-        (this.metrics as any).cacheMisses++;
+        this.metrics.cacheMisses++;
       }
 
       // Perform the actual CSG operation
       const operationResult = this.executeCSGOperation(operationType, geometries);
       
       if (!operationResult.success) {
-        (this.metrics as any).failedOperations++;
+        this.metrics.failedOperations++;
         return operationResult;
       }
 
@@ -197,11 +197,11 @@ export class R3FCSGService implements CSGService {
         console.log(`[DEBUG] ${operationType} operation completed in ${operationTime.toFixed(2)}ms`);
       }
 
-      (this.metrics as any).successfulOperations++;
+      this.metrics.successfulOperations++;
       return operationResult;
 
     } catch (error) {
-      (this.metrics as any).failedOperations++;
+      this.metrics.failedOperations++;
       const errorMessage = error instanceof Error ? error.message : 'Unknown CSG operation error';
       
       if (this.config.enableLogging) {
@@ -392,7 +392,7 @@ export class R3FCSGService implements CSGService {
    */
   private updateMetrics(operationTime: number, success: boolean): void {
     const totalTime = this.metrics.averageOperationTime * this.metrics.totalOperations + operationTime;
-    (this.metrics as any).averageOperationTime = totalTime / (this.metrics.totalOperations + 1);
+    this.metrics.averageOperationTime = totalTime / (this.metrics.totalOperations + 1);
   }
 
   /**

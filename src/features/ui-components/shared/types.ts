@@ -5,7 +5,7 @@
  * all UI components to ensure type safety and consistency.
  */
 
-import { ReactNode, CSSProperties } from 'react';
+import React, { ReactNode, CSSProperties } from 'react';
 
 // ============================================================================
 // Branded Types for Type Safety

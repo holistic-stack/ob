@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { VisualizationPanel } from './visualization-panel';
 import type { ModelData, VisualizationMode } from './visualization-panel';
@@ -10,7 +10,7 @@ const mockModelData: ModelData = {
     -1, -1, -1,  1, -1, -1,  1,  1, -1, -1,  1, -1, // Bottom face
     -1, -1,  1,  1, -1,  1,  1,  1,  1, -1,  1,  1, // Top face
   ],
-  faces: [
+  indices: [
     // Cube faces (simplified)
     0, 1, 2, 0, 2, 3, // Bottom
     4, 7, 6, 4, 6, 5, // Top
@@ -43,26 +43,6 @@ const meta: Meta<typeof VisualizationPanel> = {
       options: ['solid', 'wireframe', 'points', 'transparent'],
       description: 'Visualization rendering mode',
     },
-    loading: {
-      control: { type: 'boolean' },
-      description: 'Whether the panel is in loading state',
-    },
-    showControls: {
-      control: { type: 'boolean' },
-      description: 'Whether to show view control buttons',
-    },
-    width: {
-      control: { type: 'number', min: 250, max: 500, step: 10 },
-      description: 'Width of the visualization panel',
-    },
-    height: {
-      control: { type: 'number', min: 200, max: 600, step: 10 },
-      description: 'Height of the visualization panel',
-    },
-    overLight: {
-      control: { type: 'boolean' },
-      description: 'Whether the panel is over a light background',
-    },
   },
   decorators: [
     (Story) => (
@@ -80,8 +60,6 @@ export const Default: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    width: 350,
-    height: 400,
   },
 };
 
@@ -89,17 +67,13 @@ export const Wireframe: Story = {
   args: {
     modelData: mockModelData,
     mode: 'wireframe',
-    width: 350,
-    height: 400,
   },
 };
 
 export const Points: Story = {
   args: {
     modelData: mockModelData,
-    mode: 'points',
-    width: 350,
-    height: 400,
+    mode: 'wireframe',
   },
 };
 
@@ -107,34 +81,24 @@ export const Transparent: Story = {
   args: {
     modelData: mockModelData,
     mode: 'transparent',
-    width: 350,
-    height: 400,
   },
 };
 
 export const Loading: Story = {
   args: {
-    loading: true,
-    showControls: true,
-    width: 350,
-    height: 400,
+    mode: 'preview',
   },
 };
 
 export const Error: Story = {
   args: {
-    error: 'Failed to load 3D model. Please check the file format.',
-    showControls: true,
-    width: 350,
-    height: 400,
+    mode: 'preview',
   },
 };
 
 export const NoModel: Story = {
   args: {
-    showControls: true,
-    width: 350,
-    height: 400,
+    mode: 'preview',
   },
 };
 
@@ -142,9 +106,6 @@ export const WithoutControls: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    showControls: false,
-    width: 350,
-    height: 400,
   },
 };
 
@@ -152,9 +113,6 @@ export const Compact: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    showControls: true,
-    width: 250,
-    height: 200,
   },
 };
 
@@ -162,9 +120,6 @@ export const Large: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    showControls: true,
-    width: 500,
-    height: 600,
   },
 };
 
@@ -200,7 +155,6 @@ export const Interactive: Story = {
           {...args}
           modelData={mockModelData}
           mode={mode}
-          onModelClick={handleModelClick}
         />
 
         {clickEvents.length > 0 && (
@@ -218,19 +172,13 @@ export const Interactive: Story = {
       </div>
     );
   },
-  args: {
-    width: 380,
-    height: 400,
-  },
+  args: {},
 };
 
 export const LightBackground: Story = {
   args: {
     modelData: mockModelData,
     mode: 'solid',
-    width: 350,
-    height: 400,
-    overLight: true,
   },
   decorators: [
     (Story) => (

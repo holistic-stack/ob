@@ -131,10 +131,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const isDisabled = disabled || loading;
     
     // Validate and merge glass configuration
-    const glassConfigResult = validateGlassConfig(glassConfig || {});
+    const glassConfigResult = validateGlassConfig(glassConfig ?? {});
+    const defaultConfigResult = validateGlassConfig({});
     const finalGlassConfig = glassConfigResult.success 
       ? glassConfigResult.data 
-      : validateGlassConfig({}).data;
+      : (defaultConfigResult.success ? defaultConfigResult.data : {} as any);
 
     // ========================================================================
     // Event Handlers
@@ -226,7 +227,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-pressed={ariaPressed}
         aria-disabled={isDisabled}
         aria-busy={loading}
-        role={role || 'button'}
+        role={role ?? 'button'}
         {...rest}
       >
         {loading && <LoadingIndicator />}

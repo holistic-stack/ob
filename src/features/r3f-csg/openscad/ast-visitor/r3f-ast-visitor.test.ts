@@ -17,7 +17,7 @@ import type { R3FASTVisitorConfig, MeshResult } from '../../types/r3f-csg-types'
 
 // Mock Three.js for testing
 vi.mock('three', async () => {
-  const actual = await vi.importActual('three') as typeof THREE;
+  const actual = await vi.importActual('three');
   const mockGeometry = {
     dispose: vi.fn(),
     toNonIndexed: vi.fn().mockReturnThis(),
@@ -29,15 +29,15 @@ vi.mock('three', async () => {
 
   return {
     ...actual,
-    BoxGeometry: vi.fn().mockImplementation((width, height, depth) => ({
+    BoxGeometry: vi.fn().mockImplementation((_width, _height, _depth) => ({
       ...mockGeometry,
       type: 'BoxGeometry',
     })),
-    SphereGeometry: vi.fn().mockImplementation((radius, widthSegments, heightSegments) => ({
+    SphereGeometry: vi.fn().mockImplementation((_radius, _widthSegments, _heightSegments) => ({
       ...mockGeometry,
       type: 'SphereGeometry',
     })),
-    CylinderGeometry: vi.fn().mockImplementation((radiusTop, radiusBottom, height, segments) => ({
+    CylinderGeometry: vi.fn().mockImplementation((_radiusTop, _radiusBottom, _height, _segments) => ({
       ...mockGeometry,
       type: 'CylinderGeometry',
     })),
@@ -56,9 +56,9 @@ vi.mock('three', async () => {
       geometry,
       material,
       name: '',
-      position: new actual.Vector3(),
-      rotation: new actual.Euler(),
-      scale: new actual.Vector3(1, 1, 1),
+      position: new (actual as any).Vector3(),
+      rotation: new (actual as any).Euler(),
+      scale: new (actual as any).Vector3(1, 1, 1),
     })),
     FrontSide: 'FrontSide',
   };

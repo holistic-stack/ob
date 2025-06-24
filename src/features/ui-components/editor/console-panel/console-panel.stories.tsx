@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState, useEffect } from 'react';
 import { ConsolePanel } from './console-panel';
 import type { ConsoleMessage, ConsoleMessageType } from './console-panel';
@@ -255,7 +255,7 @@ export const Interactive: Story = {
     const messageTypes: ConsoleMessageType[] = ['info', 'warning', 'error', 'success', 'debug'];
     
     const addRandomMessage = () => {
-      const type = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+      const type = messageTypes[Math.floor(Math.random() * messageTypes.length)] as ConsoleMessageType;
       const messages_examples = {
         info: ['Processing file...', 'Loading module...', 'Starting operation...'],
         warning: ['Deprecated function used', 'Performance warning', 'Memory usage high'],
@@ -267,7 +267,7 @@ export const Interactive: Story = {
       const newMessage: ConsoleMessage = {
         id: Date.now().toString(),
         type,
-        message: messages_examples[type][Math.floor(Math.random() * messages_examples[type].length)],
+        message: messages_examples[type][Math.floor(Math.random() * messages_examples[type].length)] || 'Unknown message',
         timestamp: new Date(),
         source: 'simulator',
       };
@@ -292,6 +292,7 @@ export const Interactive: Story = {
         const interval = setInterval(addRandomMessage, 1000);
         return () => clearInterval(interval);
       }
+      return undefined;
     }, [isStreaming]);
 
     return (

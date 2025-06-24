@@ -318,8 +318,8 @@ export const R3FCameraControls = forwardRef<R3FCameraControlsRef, R3FCameraContr
         maxAzimuthAngle={maxAzimuthAngle}
         keyPanSpeed={keyPanSpeed}
         screenSpacePanning={enableScreenSpacePanning}
-        mouseButtons={mouseButtons || undefined}
-        touches={touches}
+        {...(mouseButtons && { mouseButtons })}
+        {...(touches && { touches })}
         onChange={handleControlsChange}
       />
       {children}

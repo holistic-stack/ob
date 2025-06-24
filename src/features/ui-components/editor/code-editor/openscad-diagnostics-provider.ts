@@ -24,7 +24,7 @@ interface OpenSCADDiagnostic {
   readonly code?: string;
   readonly source: 'openscad-parser' | 'openscad-linter';
   readonly tags?: monacoEditor.MarkerTag[];
-  readonly relatedInformation?: readonly monacoEditor.IRelatedInformation[];
+  readonly relatedInformation?: readonly any[];
 }
 
 /**
@@ -88,7 +88,7 @@ const COMMON_ISSUES = [
   {
     pattern: /\$fn\s*=\s*[0-9]+\s*;/,
     test: (match: string) => {
-      const value = parseInt(match.match(/\d+/)?.[0] || '0');
+      const value = parseInt(match.match(/\d+/)?.[0] ?? '0');
       return value > 100;
     },
     severity: DiagnosticSeverity.Warning,
@@ -153,15 +153,15 @@ function detectSyntaxErrors(code: string): OpenSCADDiagnostic[] {
     const lineNumber = lineIndex + 1;
 
     // Check for unmatched brackets
-    const bracketErrors = checkUnmatchedBrackets(line, lineNumber);
+    const bracketErrors = checkUnmatchedBrackets(line ?? '', lineNumber);
     diagnostics.push(...bracketErrors);
 
     // Check for missing semicolons
-    const semicolonErrors = checkMissingSemicolons(line, lineNumber);
+    const semicolonErrors = checkMissingSemicolons(line ?? '', lineNumber);
     diagnostics.push(...semicolonErrors);
 
     // Check for invalid function calls
-    const functionErrors = checkInvalidFunctionCalls(line, lineNumber);
+    const functionErrors = checkInvalidFunctionCalls(line ?? '', lineNumber);
     diagnostics.push(...functionErrors);
   }
 
@@ -389,11 +389,11 @@ function detectCommonIssues(code: string): OpenSCADDiagnostic[] {
     const lineNumber = lineIndex + 1;
 
     for (const issue of COMMON_ISSUES) {
-      const matches = line.matchAll(new RegExp(issue.pattern, 'g'));
+      const matches = (line ?? '').matchAll(new RegExp(issue.pattern, 'g'));
       
       for (const match of matches) {
         // Apply additional test if provided
-        if (issue.test && !issue.test(match[0])) {
+        if (issue.test && !issue.test(match[0] || '')) {
           continue;
         }
 
@@ -432,17 +432,17 @@ function convertDiagnosticsToMarkers(diagnostics: OpenSCADDiagnostic[]): monacoE
     endLineNumber: diagnostic.range.endLineNumber,
     endColumn: diagnostic.range.endColumn,
     message: diagnostic.message,
-    code: diagnostic.code,
+    ...(diagnostic.code ? { code: diagnostic.code } : {}),
     source: diagnostic.source,
-    tags: diagnostic.tags,
-    relatedInformation: diagnostic.relatedInformation
+    ...(diagnostic.tags ? { tags: diagnostic.tags } : {}),
+    ...(diagnostic.relatedInformation ? { relatedInformation: [...diagnostic.relatedInformation] } : {})
   }));
 }
 
 /**
  * Debounced validation function
  */
-let validationTimeout: NodeJS.Timeout | null = null;
+let validationTimeout: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Validate OpenSCAD code with debouncing

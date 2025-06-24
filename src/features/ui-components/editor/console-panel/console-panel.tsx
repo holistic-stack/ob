@@ -284,7 +284,7 @@ export const ConsolePanel = forwardRef<HTMLDivElement, ConsolePanelProps>(
     // Style Generation
     // ========================================================================
     
-    const glassClasses = generateGlassClasses(glassConfig || {}, overLight);
+    const glassClasses = generateGlassClasses(glassConfig ?? {}, overLight);
     
     const panelClasses = generateAccessibleStyles(
       clsx(
@@ -318,7 +318,7 @@ export const ConsolePanel = forwardRef<HTMLDivElement, ConsolePanelProps>(
         style={{ height: `${height}px` }}
         data-testid={dataTestId}
         role="log"
-        aria-label={ariaLabel || 'Console Output'}
+        aria-label={ariaLabel ?? 'Console Output'}
         aria-live="polite"
         {...rest}
       >
@@ -335,8 +335,8 @@ export const ConsolePanel = forwardRef<HTMLDivElement, ConsolePanelProps>(
           {showControls && (
             <ConsoleControls
               filter={filter}
-              onClear={onClear}
-              onFilterChange={onFilterChange}
+              {...(onClear && { onClear })}
+              {...(onFilterChange && { onFilterChange })}
             />
           )}
           

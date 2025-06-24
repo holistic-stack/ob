@@ -258,6 +258,27 @@ export const COMPONENT_REGISTRY = {
 // Default Export
 // ============================================================================
 
+import { Button } from './button';
+import { Card } from './card';
+import { Input } from './input';
+import { Slider } from './slider';
+import { LiquidGlassShowcase } from './showcase';
+import { AppLayout } from './layout';
+import { 
+  EditorLayout, 
+  FileExplorer, 
+  CodeEditor, 
+  VisualizationPanel, 
+  ConsolePanel 
+} from './editor';
+import { 
+  generateGlassClasses,
+  validateGlassConfig,
+  supportsBackdropFilter,
+  DEFAULT_GLASS_CONFIG,
+  GLASS_THEMES
+} from './shared';
+
 /**
  * Default export containing all components and utilities
  */

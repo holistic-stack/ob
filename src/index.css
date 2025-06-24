@@ -5,6 +5,10 @@
  * for the Liquid Glass UI component library.
  */
 
+/* Tailwind CSS - includes preflight.css which handles all global reset */
+/* MUST be imported first before any other CSS rules */
+@import 'tailwindcss';
+
 /* Custom styles - Tailwind's preflight.css handles all global reset */
 /* Only add project-specific customizations here */
 
@@ -13,9 +17,6 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
-/* Tailwind CSS - includes preflight.css which handles all global reset */
-@import 'tailwindcss';
 
 /* Custom CSS for glass morphism effects and animations */
 

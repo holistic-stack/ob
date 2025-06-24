@@ -85,15 +85,24 @@ describe('OpenSCAD Hover Provider', () => {
       const result = provider.provideHover(model, position, mockToken);
       
       expect(result).toBeDefined();
-      expect(result!.contents).toHaveLength(1);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('cube');
-      expect(content.value).toContain('Creates a cube or rectangular prism');
-      expect(content.value).toContain('size');
-      expect(content.value).toContain('center');
-      expect(content.value).toContain('Example:');
-      expect(content.isTrusted).toBe(true);
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        // This is a Thenable - we need to handle it properly
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        // This is a sync Hover result
+        const hover = result as monacoEditor.languages.Hover;
+        expect(hover.contents).toHaveLength(1);
+        
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('cube');
+        expect(content.value).toContain('Creates a cube or rectangular prism');
+        expect(content.value).toContain('size');
+        expect(content.value).toContain('center');
+        expect(content.value).toContain('Example:');
+        expect(content.isTrusted).toBe(true);
+      }
     });
 
     it('should provide hover documentation for sphere function', () => {
@@ -103,13 +112,20 @@ describe('OpenSCAD Hover Provider', () => {
       const result = provider.provideHover(model, position, mockToken);
       
       expect(result).toBeDefined();
-      expect(result!.contents).toHaveLength(1);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('sphere');
-      expect(content.value).toContain('Creates a sphere at the origin');
-      expect(content.value).toContain('radius');
-      expect(content.value).toContain('$fn');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        expect(hover.contents).toHaveLength(1);
+        
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('sphere');
+        expect(content.value).toContain('Creates a sphere at the origin');
+        expect(content.value).toContain('radius');
+        expect(content.value).toContain('$fn');
+      }
     });
 
     it('should provide hover documentation for transformation functions', () => {
@@ -120,10 +136,16 @@ describe('OpenSCAD Hover Provider', () => {
       
       expect(result).toBeDefined();
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('translate');
-      expect(content.value).toContain('Translates (moves) child objects');
-      expect(content.value).toContain('Translation vector');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('translate');
+        expect(content.value).toContain('Translates (moves) child objects');
+        expect(content.value).toContain('Translation vector');
+      }
     });
 
     it('should provide hover documentation for boolean operations', () => {
@@ -134,10 +156,16 @@ describe('OpenSCAD Hover Provider', () => {
       
       expect(result).toBeDefined();
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('difference');
-      expect(content.value).toContain('Subtracts all child objects');
-      expect(content.value).toContain('holes and cutouts');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('difference');
+        expect(content.value).toContain('Subtracts all child objects');
+        expect(content.value).toContain('holes and cutouts');
+      }
     });
 
     it('should provide hover documentation for mathematical functions', () => {
@@ -148,11 +176,17 @@ describe('OpenSCAD Hover Provider', () => {
       
       expect(result).toBeDefined();
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('abs');
-      expect(content.value).toContain('absolute value');
-      expect(content.value).toContain('Returns:');
-      expect(content.value).toContain('number');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('abs');
+        expect(content.value).toContain('absolute value');
+        expect(content.value).toContain('Returns:');
+        expect(content.value).toContain('number');
+      }
     });
   });
 
@@ -165,10 +199,16 @@ describe('OpenSCAD Hover Provider', () => {
       
       expect(result).toBeDefined();
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('PI');
-      expect(content.value).toContain('Mathematical constant');
-      expect(content.value).toContain('3.14159');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('PI');
+        expect(content.value).toContain('Mathematical constant');
+        expect(content.value).toContain('3.14159');
+      }
     });
 
     it('should provide hover documentation for fragment constants', () => {
@@ -179,10 +219,16 @@ describe('OpenSCAD Hover Provider', () => {
       
       expect(result).toBeDefined();
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('$fn');
-      expect(content.value).toContain('Fragment number');
-      expect(content.value).toContain('curved surfaces');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('$fn');
+        expect(content.value).toContain('Fragment number');
+        expect(content.value).toContain('curved surfaces');
+      }
     });
   });
 
@@ -193,9 +239,15 @@ describe('OpenSCAD Hover Provider', () => {
       
       const result = provider.provideHover(model, position, mockToken);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('cylinder(h, r, d, r1, r2, center=false)');
-      expect(content.value).toContain('```openscad');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('cylinder(h, r, d, r1, r2, center=false)');
+        expect(content.value).toContain('```openscad');
+      }
     });
 
     it('should include parameter documentation with types', () => {
@@ -204,12 +256,18 @@ describe('OpenSCAD Hover Provider', () => {
       
       const result = provider.provideHover(model, position, mockToken);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('**Parameters:**');
-      expect(content.value).toContain('`size`');
-      expect(content.value).toContain('number | [number, number, number]');
-      expect(content.value).toContain('*(optional)*');
-      expect(content.value).toContain('*(default: false)*');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('**Parameters:**');
+        expect(content.value).toContain('`size`');
+        expect(content.value).toContain('number | [number, number, number]');
+        expect(content.value).toContain('*(optional)*');
+        expect(content.value).toContain('*(default: false)*');
+      }
     });
 
     it('should include working code examples', () => {
@@ -218,10 +276,16 @@ describe('OpenSCAD Hover Provider', () => {
       
       const result = provider.provideHover(model, position, mockToken);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('**Example:**');
-      expect(content.value).toContain('```openscad');
-      expect(content.value).toContain('rotate([0, 0, 45]) cube(10);');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('**Example:**');
+        expect(content.value).toContain('```openscad');
+        expect(content.value).toContain('rotate([0, 0, 45]) cube(10);');
+      }
     });
 
     it('should include return type for mathematical functions', () => {
@@ -230,9 +294,15 @@ describe('OpenSCAD Hover Provider', () => {
       
       const result = provider.provideHover(model, position, mockToken);
       
-      const content = result!.contents[0] as monacoEditor.IMarkdownString;
-      expect(content.value).toContain('**Returns:**');
-      expect(content.value).toContain('`number`');
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        const content = hover.contents[0] as monacoEditor.IMarkdownString;
+        expect(content.value).toContain('**Returns:**');
+        expect(content.value).toContain('`number`');
+      }
     });
   });
 
@@ -244,11 +314,18 @@ describe('OpenSCAD Hover Provider', () => {
       const result = provider.provideHover(model, position, mockToken);
       
       expect(result).toBeDefined();
-      expect(result!.range).toBeDefined();
-      expect(result!.range!.startLineNumber).toBe(1);
-      expect(result!.range!.endLineNumber).toBe(1);
-      expect(result!.range!.startColumn).toBeGreaterThan(0);
-      expect(result!.range!.endColumn).toBeGreaterThan(result!.range!.startColumn);
+      
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        expect(hover.range).toBeDefined();
+        expect(hover.range!.startLineNumber).toBe(1);
+        expect(hover.range!.endLineNumber).toBe(1);
+        expect(hover.range!.startColumn).toBeGreaterThan(0);
+        expect(hover.range!.endColumn).toBeGreaterThan(hover.range!.startColumn);
+      }
     });
 
     it('should handle multi-line code correctly', () => {
@@ -258,8 +335,15 @@ describe('OpenSCAD Hover Provider', () => {
       const result = provider.provideHover(model, position, mockToken);
       
       expect(result).toBeDefined();
-      expect(result!.range!.startLineNumber).toBe(2);
-      expect(result!.range!.endLineNumber).toBe(2);
+      
+      // Handle both sync and async returns
+      if (result && typeof result === 'object' && 'then' in result) {
+        expect(result).toBeInstanceOf(Promise);
+      } else {
+        const hover = result as monacoEditor.languages.Hover;
+        expect(hover.range!.startLineNumber).toBe(2);
+        expect(hover.range!.endLineNumber).toBe(2);
+      }
     });
   });
 

@@ -395,7 +395,7 @@ function createFunctionCompletionItem(
     detail: `${func.category} - ${func.description}`,
     sortText: `${func.category}_${func.name}`,
     filterText: func.name,
-    tags: func.category === 'mathematical' ? [monacoEditor.languages.CompletionItemTag.Deprecated] : undefined
+    ...(func.category === 'mathematical' ? { tags: [monacoEditor.languages.CompletionItemTag.Deprecated] } : {})
   };
 }
 

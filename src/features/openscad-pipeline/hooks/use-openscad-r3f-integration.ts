@@ -12,7 +12,9 @@
 import { useEffect, useCallback, useMemo, useRef } from 'react';
 import type * as THREE from 'three';
 import { usePipelineManager } from '../stores/pipeline-store';
-import type { PipelineConfig, PipelineProgress, PipelineError } from '../core/pipeline-processor';
+import type { PipelineConfig, PipelineProgress, PipelineError, PipelineMetrics } from '../core/pipeline-processor';
+import type { ASTNode } from '../../openscad-parser/types/ast-types';
+import type { CSGTree } from '../../csg-processor/types/csg-tree-types';
 
 // ============================================================================
 // Hook Types
@@ -29,7 +31,7 @@ export interface OpenSCADR3FConfig extends PipelineConfig {
   readonly onSceneReady?: (scene: THREE.Scene) => void;
   readonly onProgress?: (progress: PipelineProgress) => void;
   readonly onError?: (error: PipelineError) => void;
-  readonly onComplete?: (success: boolean, metrics: any) => void;
+  readonly onComplete?: (success: boolean, metrics: PipelineMetrics) => void;
 }
 
 /**
@@ -44,8 +46,8 @@ export interface OpenSCADR3FResult {
   // Generated data
   readonly meshes: readonly THREE.Mesh[];
   readonly scene: THREE.Scene | null;
-  readonly ast: readonly any[] | null;
-  readonly csgTree: any | null;
+  readonly ast: readonly ASTNode[] | null;
+  readonly csgTree: CSGTree | null;
   
   // Error handling
   readonly errors: readonly PipelineError[];

@@ -49,9 +49,8 @@ vi.mock('@monaco-editor/react', () => ({
       'data-testid': 'monaco-editor',
       'data-language': props.language,
       'data-theme': props.theme,
-      onClick: () => onChange?.(value + ' test'),
-      children: value
-    });
+      onClick: () => onChange?.(value + ' test')
+    }, value);
   })
 }));
 
@@ -71,9 +70,8 @@ vi.mock('@holistic-stack/openscad-editor', () => ({
     return React.createElement('div', {
       'data-testid': 'openscad-editor',
       'data-features': features,
-      onClick: () => onChange?.(value + ' openscad'),
-      children: value
-    });
+      onClick: () => onChange?.(value + ' openscad')
+    }, value);
   }),
   createFeatureConfig: vi.fn((preset) => ({
     core: { syntaxHighlighting: true, basicEditing: true, keyboardShortcuts: true },

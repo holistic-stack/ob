@@ -88,37 +88,37 @@ const CAMERA_VIEWS: Record<string, R3FCameraView> = {
     position: [0, 0, 15],
     target: [0, 0, 0],
     label: 'Front',
-    color: DEFAULT_CONFIG.faceColors.front || '#4CAF50'
+    color: DEFAULT_CONFIG.faceColors.front ?? '#4CAF50'
   },
   back: {
     position: [0, 0, -15],
     target: [0, 0, 0],
     label: 'Back',
-    color: DEFAULT_CONFIG.faceColors.back || '#2196F3'
+    color: DEFAULT_CONFIG.faceColors.back ?? '#2196F3'
   },
   left: {
     position: [-15, 0, 0],
     target: [0, 0, 0],
     label: 'Left',
-    color: DEFAULT_CONFIG.faceColors.left || '#FF9800'
+    color: DEFAULT_CONFIG.faceColors.left ?? '#FF9800'
   },
   right: {
     position: [15, 0, 0],
     target: [0, 0, 0],
     label: 'Right',
-    color: DEFAULT_CONFIG.faceColors.right || '#9C27B0'
+    color: DEFAULT_CONFIG.faceColors.right ?? '#9C27B0'
   },
   top: {
     position: [0, 15, 0],
     target: [0, 0, 0],
     label: 'Top',
-    color: DEFAULT_CONFIG.faceColors.top || '#F44336'
+    color: DEFAULT_CONFIG.faceColors.top ?? '#F44336'
   },
   bottom: {
     position: [0, -15, 0],
     target: [0, 0, 0],
     label: 'Bottom',
-    color: DEFAULT_CONFIG.faceColors.bottom || '#607D8B'
+    color: DEFAULT_CONFIG.faceColors.bottom ?? '#607D8B'
   }
 };
 

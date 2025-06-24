@@ -173,7 +173,7 @@ export function isWebGLSupported(): boolean {
  * 
  * @returns WebGL capabilities or null if not supported
  */
-export function getWebGLCapabilities(): RendererInfo | null {
+export function getWebGLCapabilities(): import('./types/r3f-types').RendererInfo | null {
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');

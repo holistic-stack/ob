@@ -81,22 +81,22 @@ describe('Card - Props and Variants', () => {
     expect(card).toHaveClass('glass-effect');
   });
 
-  it('should render bordered variant', () => {
-    renderCard({ variant: 'bordered' });
+  it('should render secondary variant', () => {
+    renderCard({ variant: 'secondary' });
     
     const card = screen.getByTestId('card');
     expect(card).toHaveClass('border-2');
   });
 
-  it('should render elevated variant', () => {
-    renderCard({ variant: 'elevated' });
+  it('should render ghost variant', () => {
+    renderCard({ variant: 'ghost' });
     
     const card = screen.getByTestId('card');
     expect(card.className).toContain('shadow');
   });
 
-  it('should render interactive variant', () => {
-    renderCard({ variant: 'interactive' });
+  it('should render danger variant', () => {
+    renderCard({ variant: 'danger' });
     
     const card = screen.getByTestId('card');
     expect(card).toHaveClass('cursor-pointer');
@@ -152,7 +152,7 @@ describe('Card - Props and Variants', () => {
 describe('Card - Interactive Features', () => {
   it('should handle click events when interactive', async () => {
     const handleClick = vi.fn();
-    renderCard({ variant: 'interactive', onClick: handleClick });
+    renderCard({ variant: 'primary', onClick: handleClick });
     
     const card = screen.getByTestId('card');
     await userEvent.click(card);
@@ -172,7 +172,7 @@ describe('Card - Interactive Features', () => {
 
   it('should handle keyboard events when interactive', async () => {
     const handleClick = vi.fn();
-    renderCard({ variant: 'interactive', onClick: handleClick });
+    renderCard({ variant: 'primary', onClick: handleClick });
     
     const card = screen.getByTestId('card');
     
@@ -193,7 +193,7 @@ describe('Card - Interactive Features', () => {
     const handleFocus = vi.fn();
     const handleBlur = vi.fn();
     renderCard({ 
-      variant: 'interactive', 
+      variant: 'primary', 
       onFocus: handleFocus, 
       onBlur: handleBlur 
     });
@@ -215,7 +215,7 @@ describe('Card - Interactive Features', () => {
 describe('Card - Accessibility', () => {
   it('should have proper ARIA attributes when interactive', () => {
     renderCard({
-      variant: 'interactive',
+      variant: 'primary',
       'aria-label': 'Custom card label',
       'aria-describedby': 'card-description',
     });
@@ -239,7 +239,7 @@ describe('Card - Accessibility', () => {
   });
 
   it('should have focus indicators when interactive', () => {
-    renderCard({ variant: 'interactive' });
+    renderCard({ variant: 'primary' });
     
     const card = screen.getByTestId('card');
     expect(card).toHaveClass('focus:outline-none');
@@ -346,7 +346,7 @@ describe('Card - Edge Cases', () => {
     const handleClick2 = vi.fn();
     
     renderCard({
-      variant: 'interactive',
+      variant: 'primary',
       onClick: () => {
         handleClick1();
         handleClick2();
@@ -362,7 +362,7 @@ describe('Card - Edge Cases', () => {
 
   it('should handle rapid clicks gracefully', async () => {
     const handleClick = vi.fn();
-    renderCard({ variant: 'interactive', onClick: handleClick });
+    renderCard({ variant: 'primary', onClick: handleClick });
     
     const card = screen.getByTestId('card');
     

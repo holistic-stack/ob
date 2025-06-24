@@ -6,7 +6,7 @@
  */
 
 import { clsx } from 'clsx';
-import { generateGlassClasses, type GlassConfig } from '../../shared/glass-utils';
+import { generateGlassClasses, type GlassConfig } from '../../shared';
 import type { ComponentSize, ComponentVariant } from '../../shared/types';
 
 // ============================================================================
@@ -232,14 +232,18 @@ export const generateMonacoStatusGlass = (
  * @param size - Component size
  * @returns CSS class string with 8px grid compliant sizing
  */
-export const generateMonacoSizing = (size: ComponentSize = 'medium'): string => {
+export const generateMonacoSizing = (size: ComponentSize = 'md'): string => {
   switch (size) {
-    case 'small':
+    case 'xs':
+      return clsx('min-h-[32px]'); // 4 * 8px = 32px
+    case 'sm':
       return clsx('min-h-[40px]'); // 5 * 8px = 40px
-    case 'medium':
+    case 'md':
       return clsx('min-h-[48px]'); // 6 * 8px = 48px (WCAG AA compliant)
-    case 'large':
+    case 'lg':
       return clsx('min-h-[56px]'); // 7 * 8px = 56px
+    case 'xl':
+      return clsx('min-h-[64px]'); // 8 * 8px = 64px
     default:
       return clsx('min-h-[48px]'); // Default to WCAG AA compliant size
   }

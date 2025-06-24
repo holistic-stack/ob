@@ -114,8 +114,8 @@ describe('R3F Generator CSG Operations', () => {
 
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('union');
         expect(result.meshes[0].mesh).toBeInstanceOf(THREE.Mesh);
         if (result.meshes[0].mesh) {
@@ -170,8 +170,8 @@ describe('R3F Generator CSG Operations', () => {
 
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('union');
       }
     });
@@ -236,8 +236,8 @@ describe('R3F Generator CSG Operations', () => {
 
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('difference');
       }
     });
@@ -302,8 +302,8 @@ describe('R3F Generator CSG Operations', () => {
 
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('intersection');
       }
     });
@@ -342,8 +342,8 @@ describe('R3F Generator CSG Operations', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toBeDefined();
-        expect(result.errors.length).toBe(1);
-        if (result.errors && result.errors[0]) {
+        expect(result.errors).toHaveLength(1);
+        if (result.errors?.[0]) {
           expect(result.errors[0].message).toContain('no valid children');
         }
       }
@@ -414,8 +414,8 @@ describe('R3F Generator CSG Operations', () => {
       // Should succeed with fallback to first child
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('union');
       }
     });
@@ -509,8 +509,8 @@ describe('R3F Generator CSG Operations', () => {
 
       expect(result.success).toBe(true);
       expect(result.meshes).toBeDefined();
-      expect(result.meshes.length).toBe(1);
-      if (result.meshes && result.meshes[0]) {
+      expect(result.meshes).toHaveLength(1);
+      if (result.meshes?.[0]) {
         expect(result.meshes[0].nodeType).toBe('union');
         expect(result.metrics.totalMeshes).toBe(1);
       }

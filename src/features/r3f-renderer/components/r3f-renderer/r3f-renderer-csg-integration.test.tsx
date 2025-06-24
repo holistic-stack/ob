@@ -90,8 +90,6 @@ vi.mock('three', () => ({
 
 describe('R3F Renderer CSG Integration', () => {
   const defaultProps: R3FRendererProps = {
-    width: 800,
-    height: 600,
     showSceneControls: true,
     showMeshDisplay: false,
     showDebugPanel: false

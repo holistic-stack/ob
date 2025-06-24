@@ -164,7 +164,7 @@ export const generateSizeClasses = (
     },
   };
 
-  return sizeMap[size][componentType] || sizeMap[size]['button'] || sizeMap.md['button'];
+  return sizeMap[size]?.[componentType] ?? sizeMap[size]?.['button'] ?? sizeMap.md['button'] ?? 'text-sm px-3 py-1.5';
 };
 
 /**
@@ -300,9 +300,9 @@ export const generateAccessibleStyles = (baseClasses: string): string => {
 export const validateGlassConfig = (config: Partial<GlassConfig>): Result<GlassConfig> => {
   try {
     const validatedConfig: GlassConfig = {
-      blurIntensity: config.blurIntensity || DEFAULT_GLASS_CONFIG.blurIntensity,
-      opacity: Math.max(0, Math.min(1, config.opacity || DEFAULT_GLASS_CONFIG.opacity)),
-      elevation: config.elevation || DEFAULT_GLASS_CONFIG.elevation,
+      blurIntensity: config.blurIntensity ?? DEFAULT_GLASS_CONFIG.blurIntensity,
+      opacity: Math.max(0, Math.min(1, config.opacity ?? DEFAULT_GLASS_CONFIG.opacity)),
+      elevation: config.elevation ?? DEFAULT_GLASS_CONFIG.elevation,
       enableDistortion: config.enableDistortion ?? DEFAULT_GLASS_CONFIG.enableDistortion,
       enableSpecularHighlights: config.enableSpecularHighlights ?? DEFAULT_GLASS_CONFIG.enableSpecularHighlights,
     };

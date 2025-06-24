@@ -211,7 +211,7 @@ const initialState = {
 // Debouncing Logic
 // ============================================================================
 
-let parseTimeout: NodeJS.Timeout | null = null;
+let parseTimeout: ReturnType<typeof setTimeout> | null = null;
 const PARSE_DEBOUNCE_MS = 300; // Performance requirement: 300ms debouncing
 
 /**

@@ -8,8 +8,12 @@
  * @version 1.0.0
  */
 
-import { createParserResourceManager, type Result } from '../../../csg-processor';
-import { type ASTNode } from '@holistic-stack/openscad-parser';
+import { type Result } from '../../../csg-processor';
+import {
+  type ASTNode,
+  EnhancedOpenscadParser,
+  SimpleErrorHandler
+} from '@holistic-stack/openscad-parser';
 import {
   validateAST as validateASTShared,
   createParseError,
@@ -52,19 +56,76 @@ const DEFAULT_CONFIG: Required<ASTParsingConfig> = {
 };
 
 /**
+ * Simple parser manager interface
+ */
+interface ParserManager {
+  readonly parseCode: (code: string) => Promise<ASTParseResult>;
+  readonly dispose: () => void;
+}
+
+/**
+ * Create a real parser manager using EnhancedOpenscadParser
+ */
+function createParserManager(_config: ASTParsingConfig): ParserManager {
+  const errorHandler = new SimpleErrorHandler();
+  const parser = new EnhancedOpenscadParser(errorHandler);
+  let isInitialized = false;
+
+  const initializeParser = async () => {
+    if (!isInitialized) {
+      await parser.init();
+      isInitialized = true;
+    }
+  };
+
+  return {
+    parseCode: async (code: string): Promise<ASTParseResult> => {
+      await initializeParser();
+      const startTime = performance.now();
+
+      errorHandler.clear();
+
+      const tree = await parser.parse(code);
+      const parseTime = performance.now() - startTime;
+
+      const collectedErrors = errorHandler.getErrors();
+      if (collectedErrors.length > 0) {
+        const parseErrors: ParseError[] = collectedErrors.map(err =>
+          createParseError(err)
+        );
+        return { success: false, ast: [], errors: parseErrors, parseTime };
+      }
+
+      if (!tree?.rootNode) {
+        return {
+          success: false,
+          ast: [],
+          errors: [createParseError('Failed to parse code: no root node')],
+          parseTime
+        };
+      }
+
+      const ast = tree.rootNode.children.filter(Boolean) as unknown as readonly ASTNode[];
+
+      return { success: true, ast, errors: [], parseTime };
+    },
+    dispose: () => {
+      // No-op for now
+    }
+  };
+}
+
+/**
  * Global parser manager instance for reuse across components
  */
-let globalParserManager: ReturnType<typeof createParserResourceManager> | null = null;
+let globalParserManager: ParserManager | null = null;
 
 /**
  * Initialize the global parser manager
  */
-function getParserManager(): ReturnType<typeof createParserResourceManager> {
+function getParserManager(): ParserManager {
   if (!globalParserManager) {
-    globalParserManager = createParserResourceManager({
-      enableLogging: false,
-      timeout: 5000
-    });
+    globalParserManager = createParserManager(DEFAULT_CONFIG);
   }
   return globalParserManager;
 }
@@ -112,54 +173,57 @@ export async function parseOpenSCADCode(
 
   try {
     const parserManager = getParserManager();
-    const result = await parserManager.parseOpenSCAD(trimmedCode);
-
-    const parseTime = performance.now() - startTime;
+    const result = await parserManager.parseCode(trimmedCode);
+    const totalTime = performance.now() - startTime;
 
     if (result.success) {
       if (finalConfig.enableLogging) {
-        logASTOperation('Successfully parsed AST', result.value, {
-          parseTime: formatPerformanceTime(parseTime)
+        logASTOperation('Successfully parsed AST', result.ast, {
+          parseTime: formatPerformanceTime(result.parseTime)
         });
       }
 
       // Performance benchmark validation
-      const withinTarget = isWithinPerformanceTarget(parseTime);
+      const withinTarget = isWithinPerformanceTarget(result.parseTime);
       if (!withinTarget) {
-        console.warn(`[PERF] AST parsing exceeded target time: ${formatPerformanceTime(parseTime)} > 300ms`);
-      } else {
-        console.log(`[PERF] AST parsing within target: ${formatPerformanceTime(parseTime)} < 300ms`);
+        console.warn(
+          `[PERF] AST parsing exceeded target time: ${formatPerformanceTime(
+            result.parseTime
+          )} > 300ms`
+        );
+      } else if (finalConfig.enableLogging) {
+        console.log(
+          `[PERF] AST parsing within target: ${formatPerformanceTime(
+            result.parseTime
+          )} < 300ms`
+        );
       }
 
-      return {
-        success: true,
-        ast: result.value,
-        errors: [],
-        parseTime
-      };
+      return { ...result, parseTime: totalTime };
     } else {
-      // Convert parser error to ParseError format using shared utility
-      const parseError = createParseError(result.error);
-
       if (finalConfig.enableLogging) {
-        console.warn(`[AST Service] Parsing failed in ${formatPerformanceTime(parseTime)}:`, result.error);
+        console.warn(
+          `[AST Service] Parsing failed in ${formatPerformanceTime(
+            result.parseTime
+          )}:`,
+          result.errors
+        );
       }
 
-      return {
-        success: false,
-        ast: [],
-        errors: [parseError],
-        parseTime
-      };
+      return { ...result, parseTime: totalTime };
     }
   } catch (error) {
     const parseTime = performance.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown parsing error';
 
     const parseError = createParseError(`Parser exception: ${errorMessage}`);
 
     if (finalConfig.enableLogging) {
-      console.error(`[AST Service] Parser exception in ${formatPerformanceTime(parseTime)}:`, error);
+      console.error(
+        `[AST Service] Parser exception in ${formatPerformanceTime(parseTime)}:`,
+        error
+      );
     }
 
     return {
@@ -302,3 +366,6 @@ export function getPerformanceMetrics(parseTime: number): {
     };
   }
 }
+
+// Re-export commonly used utilities
+export { createParseError } from '../../shared/ast-utils';

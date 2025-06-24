@@ -9,7 +9,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AppLayout } from './app-layout';
-import type { AppLayoutProps } from './app-layout';
+import type { AppLayoutProps, FileName } from './types';
 
 // Mock child components to isolate layout testing
 vi.mock('../editor/code-editor/monaco-code-editor', () => ({
@@ -26,7 +26,7 @@ vi.mock('../editor/visualization-panel/visualization-panel', () => ({
 
 // Test data
 const defaultProps: AppLayoutProps = {
-  fileName: 'untitled.scad',
+  fileName: 'untitled.scad' as FileName,
   onFileNameChange: vi.fn(),
   onRender: vi.fn(),
   onMoreOptions: vi.fn(),
@@ -49,7 +49,7 @@ describe('AppLayout Component', () => {
     });
 
     it('should render header bar with logo, file name, and user avatar', () => {
-      render(<AppLayout {...defaultProps} fileName="test.scad" />);
+      render(<AppLayout {...defaultProps} fileName={'test.scad' as FileName} />);
       
       // Header bar should exist
       const header = screen.getByTestId('header-bar');

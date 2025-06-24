@@ -50,7 +50,7 @@ export class ProcessingService {
   ): Promise<PipelineResult> {
     const context: ProcessingContext = {
       code,
-      abortController: abortController || new AbortController(),
+      abortController: abortController ?? new AbortController(),
       startTime: Date.now()
     };
 
@@ -87,7 +87,7 @@ export class ProcessingService {
 
       // Validate result
       if (!result.success) {
-        throw new Error(`Processing failed: ${result.errors[0]?.message || 'No valid result'}`);
+        throw new Error(`Processing failed: ${result.errors[0]?.message ?? 'No valid result'}`);
       }
 
       // Validate geometry data
@@ -143,15 +143,15 @@ export class ProcessingService {
     }
 
     // Basic syntax checks
-    const openBraces = (code.match(/{/g) || []).length;
-    const closeBraces = (code.match(/}/g) || []).length;
+    const openBraces = (code.match(/{/g) ?? []).length;
+    const closeBraces = (code.match(/}/g) ?? []).length;
     
     if (openBraces !== closeBraces) {
       errors.push('Mismatched braces');
     }
 
-    const openParens = (code.match(/\(/g) || []).length;
-    const closeParens = (code.match(/\)/g) || []).length;
+    const openParens = (code.match(/\(/g) ?? []).length;
+    const closeParens = (code.match(/\)/g) ?? []).length;
     
     if (openParens !== closeParens) {
       errors.push('Mismatched parentheses');

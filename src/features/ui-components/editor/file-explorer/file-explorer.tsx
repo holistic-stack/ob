@@ -135,11 +135,19 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
         className={clsx(
           'flex items-center gap-2 py-1 px-2 cursor-pointer',
           'hover:bg-white/10 transition-colors duration-150',
-          'text-white/90 text-sm'
+          'text-white/90 text-sm',
+          'focus:outline-none focus:ring-2 focus:ring-blue-400'
         )}
         style={{ paddingLeft }}
         onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
         aria-expanded={file.type === 'folder' ? isExpanded : undefined}
+        aria-selected={false}
       >
         {showIcons && (
           file.type === 'folder' ? (
@@ -164,8 +172,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
               file={child}
               level={level + 1}
               showIcons={showIcons}
-              onFileSelect={onFileSelect}
-              onFolderToggle={onFolderToggle}
+              {...(onFileSelect && { onFileSelect })}
+              {...(onFolderToggle && { onFolderToggle })}
             />
           ))}
         </div>
@@ -211,7 +219,7 @@ export const FileExplorer = forwardRef<HTMLDivElement, FileExplorerProps>(
     // Style Generation
     // ========================================================================
     
-    const glassClasses = generateGlassClasses(glassConfig || {}, overLight);
+    const glassClasses = generateGlassClasses(glassConfig ?? {}, overLight);
     
     const explorerClasses = generateAccessibleStyles(
       clsx(
@@ -250,7 +258,7 @@ export const FileExplorer = forwardRef<HTMLDivElement, FileExplorerProps>(
         <div className="relative z-10 p-2">
           <div
             role="tree"
-            aria-label={ariaLabel || 'File Explorer'}
+            aria-label={ariaLabel ?? 'File Explorer'}
             className="space-y-1"
           >
             {files.map((file) => (
@@ -259,8 +267,8 @@ export const FileExplorer = forwardRef<HTMLDivElement, FileExplorerProps>(
                 file={file}
                 level={0}
                 showIcons={showIcons}
-                onFileSelect={onFileSelect}
-                onFolderToggle={onFolderToggle}
+                {...(onFileSelect && { onFileSelect })}
+                {...(onFolderToggle && { onFolderToggle })}
               />
             ))}
           </div>

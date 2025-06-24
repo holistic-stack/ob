@@ -24,7 +24,7 @@ import {
 /**
  * Card variant types
  */
-export type CardVariant = 'default' | 'bordered' | 'elevated' | 'interactive';
+export type CardVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 /**
  * Card padding levels
@@ -109,25 +109,25 @@ const generateVariantClasses = (variant: CardVariant, overLight: boolean): strin
   const baseClasses = 'rounded-lg transition-all duration-200 ease-in-out';
   
   switch (variant) {
-    case 'bordered':
+    case 'primary':
       return clsx(
         baseClasses,
         'border-2',
         overLight 
-          ? 'border-gray-200 bg-white/50' 
-          : 'border-gray-700 bg-gray-800/50'
+          ? 'border-blue-200 bg-blue-50/50' 
+          : 'border-blue-700 bg-blue-800/50'
       );
       
-    case 'elevated':
+    case 'secondary':
       return clsx(
         baseClasses,
         'shadow-lg hover:shadow-xl',
         overLight 
-          ? 'bg-white/80 border border-gray-100' 
+          ? 'bg-gray-50/80 border border-gray-100' 
           : 'bg-gray-800/80 border border-gray-700'
       );
       
-    case 'interactive':
+    case 'ghost':
       return clsx(
         baseClasses,
         'cursor-pointer',
@@ -136,7 +136,15 @@ const generateVariantClasses = (variant: CardVariant, overLight: boolean): strin
         'transform-gpu' // Enable GPU acceleration
       );
       
-    case 'default':
+    case 'danger':
+      return clsx(
+        baseClasses,
+        'border-2',
+        overLight 
+          ? 'border-red-200 bg-red-50/50' 
+          : 'border-red-700 bg-red-800/50'
+      );
+      
     default:
       return baseClasses;
   }
@@ -165,7 +173,7 @@ const generateElevationClasses = (elevation: ElevationLevel): string => {
  * 
  * @example
  * ```tsx
- * <Card variant="interactive" elevation="medium" onClick={() => console.log('clicked')}>
+ * <Card variant="ghost" elevation="medium" onClick={() => console.log('clicked')}>
  *   <h2>Card Title</h2>
  *   <p>Card content goes here</p>
  * </Card>
@@ -175,7 +183,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
   (
     {
       children,
-      variant = 'default',
+      variant = 'primary',
       elevation = 'medium',
       padding = 'md',
       as: Element = 'div',
@@ -201,13 +209,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     // State and Configuration
     // ========================================================================
     
-    const isInteractive = variant === 'interactive';
+    const isInteractive = variant === 'ghost';
     
     // Validate and merge glass configuration
-    const glassConfigResult = validateGlassConfig(glassConfig || {});
+    const glassConfigResult = validateGlassConfig(glassConfig ?? {});
+    const defaultConfigResult = validateGlassConfig({});
     const finalGlassConfig = glassConfigResult.success 
       ? glassConfigResult.data 
-      : validateGlassConfig({}).data;
+      : (defaultConfigResult.success ? defaultConfigResult.data : {} as any);
 
     // ========================================================================
     // Event Handlers
@@ -252,8 +261,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         // Base card styles
         'relative overflow-hidden',
         
-        // Glass morphism effects (only for default variant)
-        variant === 'default' && glassClasses,
+        // Glass morphism effects (only for primary variant)
+        variant === 'primary' && glassClasses,
         
         // Variant-specific styles
         variantClasses,
@@ -281,7 +290,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     
     const accessibilityProps = {
       ...(isInteractive && {
-        role: role || 'button',
+        role: role ?? 'button',
         tabIndex: 0,
         onKeyDown: handleKeyDown,
         onFocus: handleFocus,

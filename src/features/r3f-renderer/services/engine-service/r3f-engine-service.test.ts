@@ -61,12 +61,26 @@ describe('R3FEngineService', () => {
     canvas.width = 800;
     canvas.height = 600;
     
-    // Mock getContext to return a mock WebGL context
-    canvas.getContext = vi.fn(() => ({
-      getExtension: vi.fn(),
-      getParameter: vi.fn(),
-      getSupportedExtensions: vi.fn(() => [])
-    }));
+    // Create a real canvas context instead of mocking
+    Object.defineProperty(canvas, 'getContext', {
+      value: vi.fn((contextId: string) => {
+        if (contextId === 'webgl' || contextId === 'webgl2') {
+          // Return a minimal WebGL context mock only for WebGL-specific tests
+          return {
+            getExtension: vi.fn(),
+            getParameter: vi.fn(),
+            getSupportedExtensions: vi.fn(() => []),
+            canvas,
+            // Add minimal required WebGL properties
+            drawingBufferWidth: 800,
+            drawingBufferHeight: 600
+          };
+        }
+        // For other contexts, return null (real behavior)
+        return null;
+      }),
+      writable: true
+    });
   });
 
   afterEach(() => {
@@ -178,9 +192,17 @@ describe('R3FEngineService', () => {
       if (result.success) {
         const renderer = result.data;
         
-        // Set canvas size
-        canvas.clientWidth = 1024;
-        canvas.clientHeight = 768;
+        // Set canvas size using defineProperty for readonly properties
+        Object.defineProperty(canvas, 'clientWidth', {
+          value: 1024,
+          writable: true,
+          configurable: true
+        });
+        Object.defineProperty(canvas, 'clientHeight', {
+          value: 768,
+          writable: true,
+          configurable: true
+        });
         
         expect(() => engineService.handleResize(renderer)).not.toThrow();
         expect(renderer.setSize).toHaveBeenCalledWith(1024, 768, false);

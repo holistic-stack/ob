@@ -133,7 +133,7 @@ const createRenderer = (
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     // Validate renderer creation
-    if (!renderer || !renderer.domElement) {
+    if (!renderer?.domElement) {
       const error = 'Renderer creation failed or renderer is invalid';
       console.error('[ERROR]', error);
       return { success: false, error: `Failed to create renderer: ${error}` };

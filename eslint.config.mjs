@@ -119,6 +119,31 @@ js.configs.recommended, // Ignore patterns - comprehensive and specific
     'react/jsx-no-useless-fragment': 'warn',
     'react/self-closing-comp': 'warn',
     'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
+    'react/no-unknown-property': [
+      'error',
+      {
+        ignore: [
+          // Three.js / React Three Fiber properties
+          'intensity', 'position', 'rotation', 'scale', 'args', 'attach',
+          'castShadow', 'receiveShadow', 'transparent', 'wireframe',
+          // Shadow properties
+          'shadow-mapSize-width', 'shadow-mapSize-height',
+          'shadow-camera-far', 'shadow-camera-left', 'shadow-camera-right',
+          'shadow-camera-top', 'shadow-camera-bottom', 'shadow-camera-near',
+          // Material properties
+          'color', 'emissive', 'specular', 'shininess', 'opacity',
+          'alphaTest', 'alphaMap', 'aoMap', 'bumpMap', 'displacementMap',
+          'envMap', 'lightMap', 'normalMap', 'roughnessMap', 'metalnessMap',
+          // Geometry properties
+          'vertices', 'faces', 'morphTargets', 'morphNormals',
+          // Animation properties
+          'mixer', 'action', 'clip', 'loop', 'clampWhenFinished',
+          // Other common R3F properties
+          'object', 'primitive', 'dispose', 'raycast', 'onClick',
+          'onPointerOver', 'onPointerOut', 'onPointerDown', 'onPointerUp'
+        ]
+      }
+    ],
 
     // React Hooks rules (temporarily disabled due to ESLint 9 compatibility)
     // Note: react-hooks plugin has compatibility issues with ESLint 9

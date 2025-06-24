@@ -51,8 +51,10 @@ const createMockASTNode = (type: string, overrides: Partial<ASTNode> = {}): ASTN
 
 const createMockParseError = (message: string, line = 1, column = 1): ParseError => ({
   message,
-  line,
-  column,
+  location: {
+    line,
+    column,
+  },
   severity: 'error' as const
 });
 
@@ -67,21 +69,27 @@ describe('AST Utilities', () => {
       const result = validateAST(ast);
       
       expect(result.success).toBe(true);
-      expect(result.data).toBe(ast);
+      if (result.success) {
+        expect(result.data).toBe(ast);
+      }
     });
 
     it('should reject null AST', () => {
       const result = validateAST(null);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('AST is null or undefined');
+      if (!result.success) {
+        expect(result.error).toBe('AST is null or undefined');
+      }
     });
 
     it('should reject non-array AST', () => {
       const result = validateAST('not an array' as any);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('AST is not an array');
+      if (!result.success) {
+        expect(result.error).toBe('AST is not an array');
+      }
     });
 
     it('should reject AST with invalid nodes', () => {
@@ -94,14 +102,18 @@ describe('AST Utilities', () => {
       const result = validateAST(ast);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid AST node found');
+      if (!result.success) {
+        expect(result.error).toContain('Invalid AST node found');
+      }
     });
 
     it('should handle empty AST array', () => {
       const result = validateAST([]);
       
       expect(result.success).toBe(true);
-      expect(result.data).toEqual([]);
+      if (result.success) {
+        expect(result.data).toEqual([]);
+      }
     });
   });
 
@@ -111,14 +123,18 @@ describe('AST Utilities', () => {
       const result = validateASTNode(node);
       
       expect(result.success).toBe(true);
-      expect(result.data).toBe(node);
+      if (result.success) {
+        expect(result.data).toBe(node);
+      }
     });
 
     it('should reject null node', () => {
       const result = validateASTNode(null);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('AST node is null or undefined');
+      if (!result.success) {
+        expect(result.error).toBe('AST node is null or undefined');
+      }
     });
 
     it('should reject node without type', () => {
@@ -126,7 +142,9 @@ describe('AST Utilities', () => {
       const result = validateASTNode(node);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('AST node missing required type property');
+      if (!result.success) {
+        expect(result.error).toBe('AST node missing required type property');
+      }
     });
 
     it('should reject node with invalid type', () => {
@@ -134,7 +152,9 @@ describe('AST Utilities', () => {
       const result = validateASTNode(node);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('AST node type must be a string');
+      if (!result.success) {
+        expect(result.error).toBe('AST node type must be a string');
+      }
     });
   });
 
@@ -148,7 +168,9 @@ describe('AST Utilities', () => {
       const result = validateNodeArray(nodes);
       
       expect(result.success).toBe(true);
-      expect(result.data).toEqual(nodes);
+      if (result.success) {
+        expect(result.data).toEqual(nodes);
+      }
     });
 
     it('should filter out invalid nodes', () => {
@@ -162,22 +184,28 @@ describe('AST Utilities', () => {
       const result = validateNodeArray(nodes);
       
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(2);
-      expect(result.data?.map(n => n.type)).toEqual(['cube', 'sphere']);
+      if (result.success) {
+        expect(result.data).toHaveLength(2);
+        expect(result.data.map((n: any) => n.type)).toEqual(['cube', 'sphere']);
+      }
     });
 
     it('should reject null array', () => {
       const result = validateNodeArray(null);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Node array is null or undefined');
+      if (!result.success) {
+        expect(result.error).toBe('Node array is null or undefined');
+      }
     });
 
     it('should reject non-array input', () => {
       const result = validateNodeArray('not an array' as any);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Input is not an array');
+      if (!result.success) {
+        expect(result.error).toBe('Input is not an array');
+      }
     });
   });
 
@@ -208,7 +236,9 @@ describe('AST Utilities', () => {
       const result = withASTErrorHandling('test operation', fn);
       
       expect(result.success).toBe(true);
-      expect(result.data).toBe('test result');
+      if (result.success) {
+        expect(result.data).toBe('test result');
+      }
       expect(fn).toHaveBeenCalledOnce();
     });
 
@@ -217,7 +247,9 @@ describe('AST Utilities', () => {
       const result = withASTErrorHandling('test operation', fn);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to test operation: Test error');
+      if (!result.success) {
+        expect(result.error).toBe('Failed to test operation: Test error');
+      }
     });
 
     it('should handle non-Error exceptions', () => {
@@ -225,7 +257,9 @@ describe('AST Utilities', () => {
       const result = withASTErrorHandling('test operation', fn);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to test operation: Unknown error');
+      if (!result.success) {
+        expect(result.error).toBe('Failed to test operation: Unknown error');
+      }
     });
   });
 
