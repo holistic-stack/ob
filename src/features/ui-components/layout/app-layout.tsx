@@ -27,11 +27,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ fileName, onFileNameChange }) => 
   <header
     data-testid="header-bar"
     role="banner"
-    className="h-16 px-6 bg-black/20 backdrop-blur-sm border-white/50 shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] flex items-center justify-between"
+    className="h-16 px-6 relative flex items-center justify-between"
+    style={{
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 20px rgba(0, 0, 0, 0.2)'
+    }}
   >
     {/* Logo placeholder */}
     <div data-testid="logo-placeholder" className="flex items-center">
-      <div className="w-8 h-8 bg-white/10 rounded-lg" />
+      <div
+        className="w-8 h-8 rounded-lg relative flex items-center justify-center"
+        style={{
+          background: 'rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+        }}
+      >
+        <span className="text-white text-xs font-bold">OS</span>
+      </div>
     </div>
     
     {/* File name display */}
@@ -60,19 +76,36 @@ const Toolbar: React.FC<ToolbarProps> = ({ onRender, onMoreOptions }) => (
   <div
     data-testid="toolbar"
     role="toolbar"
-    className="h-12 px-6 gap-4 bg-black/20 backdrop-blur-sm border-white/50 flex items-center justify-between"
+    className="h-12 px-6 gap-4 relative flex items-center justify-between"
+    style={{
+      background: 'rgba(255, 255, 255, 0.08)',
+      backdropFilter: 'blur(8px)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.15)'
+    }}
   >
     {/* Tab navigation */}
     <div className="flex gap-4">
       <button
         data-testid="tab-openscad-code"
-        className="px-4 py-2 bg-white/10 text-white rounded-lg"
+        className="px-4 py-2 text-white rounded-lg relative"
+        style={{
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+        }}
       >
         OpenSCAD Code
       </button>
       <button
         data-testid="tab-ast-tree"
-        className="px-4 py-2 text-white/70 rounded-lg"
+        className="px-4 py-2 text-white/70 rounded-lg relative hover:text-white transition-colors"
+        style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
       >
         AST Tree Representation
       </button>
@@ -104,7 +137,12 @@ const FooterBar: React.FC = () => (
   <footer
     data-testid="footer-bar"
     role="contentinfo"
-    className="h-10 bg-black/20 backdrop-blur-sm flex items-center justify-end px-6"
+    className="h-10 relative flex items-center justify-end px-6"
+    style={{
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(6px)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+    }}
   >
     <div data-testid="console-viewer-placeholder" className="text-white/70 text-sm">
       Console viewer placeholder
@@ -179,8 +217,19 @@ translate([30, 0, 0])
         role="main"
         className={clsx(
           "h-screen w-screen overflow-hidden relative flex flex-col",
+          "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900",
+          "min-h-screen",
           className
         )}
+        style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%),
+            linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #581c87 50%, #1e1b4b 75%, #0f172a 100%)
+          `,
+          minHeight: '100vh'
+        }}
         {...rest}
       >
         {/* Header Bar */}

@@ -7,10 +7,29 @@
 
 /* Tailwind CSS - includes preflight.css which handles all global reset */
 /* MUST be imported first before any other CSS rules */
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Custom styles - Tailwind's preflight.css handles all global reset */
 /* Only add project-specific customizations here */
+
+/* Ensure backdrop-filter support */
+* {
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
+}
+
+/* Enhanced glass morphism base styles */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(0, 0, 0, 0.2);
+}
 
 /* Custom font family for code elements (if different from Tailwind's default) */
 code {
