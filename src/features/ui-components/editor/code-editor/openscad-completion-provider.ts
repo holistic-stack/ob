@@ -9,7 +9,7 @@
  * - Intelligent suggestions based on cursor position and scope
  */
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'monaco-editor';
 
 // Types for completion items
 interface OpenSCADFunction {

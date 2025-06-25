@@ -15,7 +15,7 @@
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import Editor, { type Monaco } from '@monaco-editor/react';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'monaco-editor';
 import { clsx } from '../../shared';
 import { createOpenSCADCompletionProvider } from './openscad-completion-provider';
 import { createOpenSCADHoverProvider } from './openscad-hover-provider';

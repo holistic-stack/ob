@@ -111,49 +111,55 @@ export function R3FRenderer({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
 
-  // OpenSCAD Pipeline integration
-  const pipeline = useOpenSCADR3FIntegration(openscadCode, {
+  // Stable callbacks to prevent infinite loops
+  const onMeshesGenerated = useCallback((generatedMeshes: readonly THREE.Mesh[]) => {
+    console.log('[DEBUG] Pipeline generated meshes:', generatedMeshes.length);
+
+    if (scene) {
+      // Clear existing meshes
+      meshes.forEach(mesh => {
+        scene.remove(mesh);
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) {
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(material => material.dispose());
+          } else {
+            mesh.material.dispose();
+          }
+        }
+      });
+
+      // Add new meshes
+      generatedMeshes.forEach(mesh => {
+        scene.add(mesh);
+      });
+
+      setMeshes([...generatedMeshes]);
+    }
+  }, [scene, meshes]);
+
+  // Stable pipeline config to prevent re-renders
+  const pipelineConfig = useMemo(() => ({
     autoProcess: false, // Manual processing for better control
     enableLogging: false,
     enableCaching: true,
     enableOptimization: true,
-    onMeshesGenerated: (generatedMeshes) => {
-      console.log('[DEBUG] Pipeline generated meshes:', generatedMeshes.length);
-
-      if (scene) {
-        // Clear existing meshes
-        meshes.forEach(mesh => {
-          scene.remove(mesh);
-          if (mesh.geometry) mesh.geometry.dispose();
-          if (mesh.material) {
-            if (Array.isArray(mesh.material)) {
-              mesh.material.forEach(material => material.dispose());
-            } else {
-              mesh.material.dispose();
-            }
-          }
-        });
-
-        // Add new meshes
-        generatedMeshes.forEach(mesh => {
-          scene.add(mesh);
-        });
-
-        setMeshes([...generatedMeshes]);
-      }
-    },
-    onProgress: (progress) => {
+    onMeshesGenerated,
+    onProgress: (progress: any) => {
       console.log('[DEBUG] Pipeline progress:', progress);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('[ERROR] Pipeline error:', error);
       setProcessingError(error.message);
     },
-    onComplete: (success, metrics) => {
+    onComplete: (success: boolean, metrics: any) => {
       console.log('[DEBUG] Pipeline complete:', success, metrics);
       setIsProcessingAST(false);
     }
-  });
+  }), [onMeshesGenerated]);
+
+  // OpenSCAD Pipeline integration
+  const pipeline = useOpenSCADR3FIntegration(openscadCode, pipelineConfig);
 
   // Derived state
   const isInitialized = useMemo(() => {

@@ -54,7 +54,23 @@ const meta: Meta<typeof FileExplorer> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'File tree navigation component with glass morphism effects, folder expansion, and file selection.',
+        component: `
+# File Explorer Component
+
+A professional file tree navigation component with glass morphism effects, designed for integration within the GridLayout system.
+
+## Features
+
+- **Hierarchical file tree** with folder expansion and file selection
+- **Glass morphism design** with three-layer effects and accessibility
+- **Responsive width control** for optimal space utilization
+- **File type icons** with customizable display options
+- **WCAG 2.1 AA compliant** with proper keyboard navigation
+
+## GridLayout Integration
+
+This component is designed to work within the Monaco Editor section (5 columns) of the GridLayout system, providing file navigation alongside the code editor for a complete IDE experience.
+        `,
       },
     },
   },

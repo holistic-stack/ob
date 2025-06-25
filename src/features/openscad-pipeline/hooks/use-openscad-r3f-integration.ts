@@ -161,12 +161,24 @@ export function useOpenSCADR3FIntegration(
   initialCode?: string,
   config: OpenSCADR3FConfig = {}
 ): OpenSCADR3FResult {
-  const finalConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config]);
-  
+  // Stabilize config to prevent infinite loops
+  const finalConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [
+    config.autoProcess,
+    config.debounceMs,
+    config.enableAutoUpdate,
+    config.enableLogging,
+    config.enableCaching,
+    config.enableOptimization,
+    config.timeout,
+    JSON.stringify(config.parsingConfig),
+    JSON.stringify(config.csgConfig),
+    JSON.stringify(config.r3fConfig)
+  ]);
+
   // Pipeline store integration
   const pipeline = usePipelineManager();
   
-  // Refs for callback stability
+  // Refs for callback stability and config tracking
   const callbacksRef = useRef({
     onMeshesGenerated: finalConfig.onMeshesGenerated,
     onSceneReady: finalConfig.onSceneReady,
@@ -174,6 +186,9 @@ export function useOpenSCADR3FIntegration(
     onError: finalConfig.onError,
     onComplete: finalConfig.onComplete
   });
+
+  // Track previous config to prevent unnecessary updates
+  const previousConfigRef = useRef<string>('');
   
   // Update callbacks ref when config changes
   useEffect(() => {
@@ -191,7 +206,8 @@ export function useOpenSCADR3FIntegration(
   // ========================================================================
 
   useEffect(() => {
-    pipeline.setConfig({
+    // Create a stable config object for comparison
+    const configToSet = {
       enableLogging: finalConfig.enableLogging,
       enableCaching: finalConfig.enableCaching,
       enableOptimization: finalConfig.enableOptimization,
@@ -199,7 +215,15 @@ export function useOpenSCADR3FIntegration(
       parsingConfig: finalConfig.parsingConfig,
       csgConfig: finalConfig.csgConfig,
       r3fConfig: finalConfig.r3fConfig
-    });
+    };
+
+    // Only update if config has actually changed
+    const configString = JSON.stringify(configToSet);
+    if (previousConfigRef.current !== configString) {
+      console.log('[DEBUG] Updating pipeline config');
+      pipeline.setConfig(configToSet);
+      previousConfigRef.current = configString;
+    }
   }, [pipeline, finalConfig]);
 
   // ========================================================================

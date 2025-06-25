@@ -59,25 +59,22 @@ export { LiquidGlassShowcase } from './showcase';
 
 // Layout Components
 export {
-  AppLayout,
+  GridLayout,
 } from './layout';
 export type {
-  AppLayoutProps,
+  GridLayoutProps,
   FileName,
   LayoutConfig,
 } from './layout';
 
 // Editor Components
 export {
-  EditorLayout,
   FileExplorer,
   CodeEditor,
   VisualizationPanel,
   ConsolePanel,
 } from './editor';
 export type {
-  EditorLayoutProps,
-  EditorLayoutVariant,
   FileExplorerProps,
   FileNode,
   FileType,
@@ -167,7 +164,7 @@ export const LIBRARY_INFO = {
   name: 'Liquid Glass UI',
   version: '1.0.0',
   description: 'Apple Liquid Glass design system components for React',
-  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase', 'AppLayout', 'EditorLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
+  components: ['Button', 'Card', 'Input', 'Slider', 'LiquidGlassShowcase', 'GridLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
   features: [
     'Glass morphism effects',
     'Accessibility compliance (WCAG 2.1 AA)',
@@ -223,12 +220,7 @@ export const COMPONENT_REGISTRY = {
     sections: ['Header Bar', 'Toolbar', 'Main Body (Split Layout)', 'Footer Bar'],
     features: ['Glass morphism', '8px grid system', 'Split layout', 'Accessibility (WCAG 2.1 AA)', 'Monaco Editor integration', 'Babylon.js visualization'],
   },
-  EditorLayout: {
-    displayName: 'Editor Layout',
-    description: 'Main layout component for code editor interface with glass morphism effects',
-    variants: ['default', 'compact', 'expanded'],
-    features: ['Responsive design', 'Glass morphism', 'Accessibility support'],
-  },
+
   FileExplorer: {
     displayName: 'File Explorer',
     description: 'File tree navigation component with folder expansion and file selection',
@@ -263,13 +255,12 @@ import { Card } from './card';
 import { Input } from './input';
 import { Slider } from './slider';
 import { LiquidGlassShowcase } from './showcase';
-import { AppLayout } from './layout';
-import { 
-  EditorLayout, 
-  FileExplorer, 
-  CodeEditor, 
-  VisualizationPanel, 
-  ConsolePanel 
+import { GridLayout } from './layout';
+import {
+  FileExplorer,
+  CodeEditor,
+  VisualizationPanel,
+  ConsolePanel
 } from './editor';
 import { 
   generateGlassClasses,
@@ -289,8 +280,7 @@ export default {
   Input,
   Slider,
   LiquidGlassShowcase,
-  AppLayout,
-  EditorLayout,
+  GridLayout,
   FileExplorer,
   CodeEditor,
   VisualizationPanel,

@@ -1757,3 +1757,204 @@ it('should process async operations', async () => {
   await expect(converter.processAsync(node)).resolves.toBeDefined();
 });
 ```
+
+## React Component TypeScript Patterns ⭐ **NEW**
+
+**Date Added:** June 24, 2025
+**Context:** GridLayout component implementation with TDD methodology
+
+### Component Props Interface Patterns
+
+#### ✅ Readonly Props with Optional Properties
+```typescript
+// GridLayout component props pattern
+interface GridLayoutProps {
+  readonly className?: string;
+  readonly 'data-testid'?: string;
+  readonly 'aria-label'?: string;
+}
+
+// ✅ Benefits:
+// - Immutable props prevent accidental mutations
+// - Optional properties with sensible defaults
+// - Accessibility attributes included by design
+// - Test-friendly with data-testid support
+```
+
+#### ✅ Centralized Type Definitions
+```typescript
+// types.ts - Centralized layout types
+export interface GridLayoutProps {
+  readonly className?: string;
+  readonly 'data-testid'?: string;
+  readonly 'aria-label'?: string;
+}
+
+// grid-layout.tsx - Import from centralized location
+import type { GridLayoutProps } from '../types';
+
+// ✅ Benefits:
+// - Single source of truth for types
+// - Easier refactoring and maintenance
+// - Consistent type definitions across components
+// - Better IDE support and autocomplete
+```
+
+### Component Implementation Patterns
+
+#### ✅ Functional Component with Default Parameters
+```typescript
+export const GridLayout: React.FC<GridLayoutProps> = ({
+  className = '',
+  'data-testid': dataTestId = 'grid-layout-container',
+  'aria-label': ariaLabel = '12-Column Grid Layout'
+}) => {
+  // Component implementation
+};
+
+// ✅ Benefits:
+// - Default values prevent undefined props
+// - Destructuring with renaming for special attributes
+// - Clear parameter names for better readability
+// - Type safety with React.FC<T> pattern
+```
+
+#### ✅ SRP-Compliant Component Structure
+```typescript
+// Single responsibility: Grid layout only
+export const GridLayout: React.FC<GridLayoutProps> = (props) => {
+  console.log('[INIT] Rendering GridLayout component');
+
+  return (
+    <div
+      data-testid={props['data-testid']}
+      role="main"
+      aria-label={props['aria-label']}
+      className={`grid grid-cols-12 gap-0 w-full h-full ${props.className}`}
+    >
+      {/* Grid sections */}
+    </div>
+  );
+};
+
+// ✅ Benefits:
+// - Single responsibility principle
+// - Predictable logging patterns
+// - Semantic HTML with proper roles
+// - Tailwind CSS class composition
+```
+
+### Testing TypeScript Patterns
+
+#### ✅ Co-located Test Files with Proper Typing
+```typescript
+// grid-layout.test.tsx - Co-located with implementation
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { GridLayout } from './grid-layout';
+
+describe('[INIT] GridLayout Component - TDD Implementation', () => {
+  beforeEach(() => {
+    console.log('[DEBUG] Setting up GridLayout test');
+  });
+
+  it('should render with 12-column grid container', () => {
+    render(<GridLayout />);
+
+    const container = screen.getByTestId('grid-layout-container');
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass('grid', 'grid-cols-12');
+  });
+});
+
+// ✅ Benefits:
+// - Co-located tests improve maintainability
+// - Consistent logging patterns for debugging
+// - Type-safe test implementations
+// - Descriptive test names following TDD principles
+```
+
+#### ✅ Type-Safe Test Data
+```typescript
+// Test data with proper typing
+const mockProps: GridLayoutProps = {
+  className: 'test-class',
+  'data-testid': 'test-grid-layout',
+  'aria-label': 'Test Grid Layout'
+};
+
+it('should accept custom props', () => {
+  render(<GridLayout {...mockProps} />);
+
+  const container = screen.getByTestId('test-grid-layout');
+  expect(container).toHaveAttribute('aria-label', 'Test Grid Layout');
+  expect(container).toHaveClass('test-class');
+});
+
+// ✅ Benefits:
+// - Type safety prevents test data errors
+// - Reusable test data objects
+// - Clear prop validation in tests
+// - Consistent test patterns
+```
+
+### Import/Export Patterns
+
+#### ✅ Clean Export Structure
+```typescript
+// index.ts - Clean exports
+export { GridLayout } from './grid-layout';
+export type { GridLayoutProps } from '../types';
+export { default } from './grid-layout';
+
+// ✅ Benefits:
+// - Clean import paths for consumers
+// - Type and implementation exports separated
+// - Default export for convenience
+// - Consistent export patterns
+```
+
+#### ✅ Avoiding Import/Export Issues
+```typescript
+// ❌ Problematic pattern that caused issues
+export interface GridLayoutProps { /* ... */ }
+export const GridLayout: React.FC<GridLayoutProps> = () => { /* ... */ };
+
+// ✅ Correct pattern - types in separate file
+// types.ts
+export interface GridLayoutProps { /* ... */ }
+
+// grid-layout.tsx
+import type { GridLayoutProps } from '../types';
+export const GridLayout: React.FC<GridLayoutProps> = () => { /* ... */ };
+
+// ✅ Benefits:
+// - Avoids circular dependency issues
+// - Cleaner separation of concerns
+// - Better TypeScript compilation
+// - Easier to maintain and refactor
+```
+
+### Lessons Learned from GridLayout Implementation
+
+#### ✅ Successful Patterns
+1. **TDD Methodology**: Write failing tests first, implement minimal solution
+2. **SRP Implementation**: Single responsibility makes components easier to test
+3. **Co-located Tests**: Tests next to implementation improve maintainability
+4. **Centralized Types**: Types in separate files prevent import issues
+5. **Incremental Development**: Build components in phases for stability
+
+#### ⚠️ Patterns to Avoid
+1. **Complex Props Interfaces**: Keep props simple and focused
+2. **Mixed Responsibilities**: Avoid components that do too many things
+3. **Inline Type Definitions**: Use centralized type files instead
+4. **Missing Default Values**: Always provide sensible defaults
+5. **Poor Test Organization**: Avoid `__tests__` folders, use co-location
+
+#### 🔮 Future Improvements
+1. **Enhanced Type Safety**: Use branded types for domain-specific values
+2. **Better Error Handling**: Implement Result<T, E> patterns for error-prone operations
+3. **Performance Optimization**: Use React.memo and useMemo for expensive operations
+4. **Accessibility Enhancement**: Add more comprehensive ARIA support
+
+**These patterns represent battle-tested approaches from successful GridLayout implementation following TDD methodology and SRP principles.**

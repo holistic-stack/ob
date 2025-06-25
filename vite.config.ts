@@ -44,5 +44,11 @@ export default defineConfig({
     testTimeout: 1000, // Longer timeout for CSG2 operations
     hookTimeout: 1000, // Longer timeout for setup hooks
     reporters: 'verbose',
+    // Monaco Editor configuration for tests
+    server: {
+      deps: {
+        inline: ['monaco-editor'],
+      },
+    },
   },
 });

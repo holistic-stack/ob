@@ -9,7 +9,7 @@
  * - Performance optimized with debounced validation
  */
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'monaco-editor';
 
 // Diagnostic severity mapping
 const DiagnosticSeverity = monacoEditor.MarkerSeverity;

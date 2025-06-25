@@ -9,7 +9,7 @@
  * - Performance optimized with < 10ms response times
  */
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'monaco-editor';
 
 // Re-use the function database from completion provider
 interface OpenSCADFunction {

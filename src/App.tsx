@@ -1,5 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { AppLayout, type FileName } from './features/ui-components/layout';
+/**
+ * @file Main Application Component - Refactored with 12-Column Grid Layout
+ *
+ * Root component implementing TDD-driven 12-column grid layout with:
+ * - Monaco editor (5 columns) for OpenSCAD code editing
+ * - Three.js viewer (7 columns) for 3D visualization
+ * - Error boundaries and state management
+ * - Follows React 19 patterns with TypeScript strict mode and SRP principles
+ *
+ * @author OpenSCAD-R3F Pipeline
+ * @version 2.0.0 - Refactored for 12-column grid layout
+ */
+
+import React, { useEffect } from 'react';
+import { GridLayout } from './features/ui-components/layout/grid-layout';
 import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
 import {
   useOpenSCADActions
@@ -48,35 +61,39 @@ translate([-12, 12, 0])
 
 // Use "Fit to View" button to frame all objects perfectly!`;
 
+// ============================================================================
+// Types and Interfaces
+// ============================================================================
+
 /**
- * Modern App component with CAD-style Liquid Glass Layout
- * Features OpenSCAD editor with React Three Fiber 3D visualization
+ * Props for the App component
+ */
+export interface AppProps {
+  readonly className?: string;
+  readonly 'data-testid'?: string;
+}
+
+// ============================================================================
+// Component Implementation
+// ============================================================================
+
+/**
+ * Modern App component with 12-Column Grid Layout
+ *
+ * Implements TDD-driven layout with Monaco editor (5 cols) and Three.js viewer (7 cols).
+ * Features OpenSCAD editor with React Three Fiber 3D visualization following SRP principles.
+ *
+ * @returns JSX element containing the refactored 12-column grid application
  */
 export function App(): React.JSX.Element {
-  const [fileName, setFileName] = useState('untitled.scad');
+  console.log('[INIT] Rendering refactored App with 12-column grid layout');
 
-  // Zustand store hooks for backward compatibility
+  // Zustand store hooks for OpenSCAD state management
   const { updateCode } = useOpenSCADActions();
-
-  // Layout event handlers
-  const handleFileNameChange = useCallback((newName: string) => {
-    setFileName(newName);
-    console.log('[App] File name changed to:', newName);
-  }, []);
-
-  const handleRender = useCallback(() => {
-    console.log('[App] Render button clicked');
-    // Trigger re-render of current AST data
-    // This could trigger a fresh CSG2 conversion or other render operations
-  }, []);
-
-  const handleMoreOptions = useCallback(() => {
-    console.log('[App] More options button clicked');
-    // Open options menu or settings panel
-  }, []);
 
   // Initialize Zustand store with default code on mount
   useEffect(() => {
+    console.log('[DEBUG] Initializing OpenSCAD store with default code');
     updateCode(defaultCode);
   }, [updateCode]);
 
@@ -85,15 +102,14 @@ export function App(): React.JSX.Element {
       enableRecovery={true}
       showTechnicalDetails={true}
       onError={(error, errorInfo) => {
-        console.error('[App] Error caught by boundary:', error, errorInfo);
+        console.error('[ERROR] App error caught by boundary:', error, errorInfo);
       }}
       className="h-full w-full"
     >
-      <AppLayout
-        fileName={fileName as FileName} // Type assertion for branded type
-        onFileNameChange={handleFileNameChange}
-        onRender={handleRender}
-        onMoreOptions={handleMoreOptions}
+      <GridLayout
+        className="h-full w-full"
+        data-testid="grid-layout-container"
+        aria-label="12-Column Grid Layout"
       />
     </OpenSCADErrorBoundary>
   );

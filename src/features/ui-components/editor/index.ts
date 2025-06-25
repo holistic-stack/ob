@@ -9,10 +9,6 @@
 // Component Exports
 // ============================================================================
 
-// Editor Layout Component
-export { EditorLayout } from './editor-layout';
-export type { EditorLayoutProps, EditorLayoutVariant } from './editor-layout';
-
 // File Explorer Panel
 export { FileExplorer } from './file-explorer';
 export type { 
@@ -60,7 +56,7 @@ export const EDITOR_INFO = {
   name: 'Liquid Glass Editor',
   version: '1.0.0',
   description: 'Code editor interface with glass morphism effects',
-  components: ['EditorLayout', 'FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
+  components: ['FileExplorer', 'CodeEditor', 'VisualizationPanel', 'ConsolePanel'],
   features: [
     'File tree navigation',
     'Syntax highlighting',

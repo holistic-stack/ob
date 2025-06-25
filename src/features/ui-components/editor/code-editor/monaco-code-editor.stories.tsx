@@ -43,6 +43,16 @@ A professional code editor component with Monaco Editor integration, featuring:
 - **Complex shadow system** with inset highlights and depth shadows
 - **Gradient pseudo-elements** for authentic refraction effects
 - **Focus states** with blue accent rings and smooth transitions
+
+## GridLayout Integration
+
+This component is designed to work seamlessly within the GridLayout system:
+- **Occupies 5 columns** in the 12-column grid (left side)
+- **Responsive sizing** adapts to grid container dimensions
+- **Integrated with Three.js visualization** (7 columns, right side)
+- **Consistent glass morphism** with other layout components
+
+For complete layout integration, see the GridLayout component stories.
         `
       }
     }

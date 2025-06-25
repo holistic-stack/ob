@@ -1,26 +1,38 @@
 /**
  * Layout Components Export Index
- * 
+ *
  * Clean exports for CAD-style Liquid Glass Layout components
  * Following bulletproof-react architecture patterns
  */
 
-// Main layout component
-export { AppLayout } from './app-layout';
+// ============================================================================
+// Current Layout Components (v2.0.0+)
+// ============================================================================
 
-// Types and interfaces
+// Main layout component - 12-column grid layout
+export { GridLayout } from './grid-layout';
+
+// ============================================================================
+// Deprecated Components (Removed in v2.0.0)
+// ============================================================================
+
+// Legacy layout component (deprecated - use GridLayout instead)
+// AppLayout has been removed. Use GridLayout for new implementations.
+// export { AppLayout } from './app-layout'; // REMOVED in v2.0.0
+
+// ============================================================================
+// Type Exports
+// ============================================================================
+
 export type {
-  AppLayoutProps,
-  HeaderBarProps,
-  ToolbarProps,
-  FooterBarProps,
+  // Current GridLayout types
+  GridLayoutProps,
+
+  // Active layout types
   MainBodyProps,
   SplitterProps,
   TabNavigationProps,
   LayoutConfig,
-  LayoutState,
-  LayoutActions,
-  LayoutValidation,
   TabItem,
   ToolbarAction,
   ConsoleMessage,
@@ -31,11 +43,8 @@ export type {
   ValidationResult,
 } from './types';
 
-// Default configurations
+// Type guards and validation functions
 export {
-  DEFAULT_LAYOUT_CONFIG,
-  DEFAULT_TAB_ITEMS,
-  DEFAULT_TOOLBAR_ACTIONS,
   isValidFileName,
   isValidTabId,
   isValidComponentId,
