@@ -172,3 +172,5 @@ docs/.vitepress/dist/
 
 *storybook.log
 storybook-static
+docs/openscad-editor
+docs/openscad-parser

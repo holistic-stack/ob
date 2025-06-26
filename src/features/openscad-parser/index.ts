@@ -1,37 +1,21 @@
 /**
- * @file OpenSCAD Parser Feature Index
- * 
- * Clean exports for the OpenSCAD parser feature including hooks and utilities.
- * 
- * @author OpenSCAD-R3F Pipeline
- * @version 1.0.0
+ * OpenSCAD Parser Feature - Barrel Exports
+ *
+ * @holistic-stack/openscad-parser integration with lifecycle management,
+ * AST processing, and functional error handling patterns.
  */
 
-// Hook exports
-export { 
-  useOpenSCADParser,
-  useOpenSCADParserSimple,
-  useOpenSCADParserDebounced
-} from './hooks/use-openscad-parser';
+export * from './types';
+export * from './services';
 
-// Type exports
-export type {
-  UseOpenSCADParserConfig,
-  UseOpenSCADParserResult
-} from './hooks/use-openscad-parser';
+// Services
+export * from './services';
 
-// Re-export AST types from the parser package for convenience
-export type {
-  ASTNode,
-  StatementNode,
-  ExpressionNode,
-  CubeNode,
-  SphereNode,
-  CylinderNode,
-  TranslateNode,
-  RotateNode,
-  ScaleNode,
-  UnionNode,
-  DifferenceNode,
-  IntersectionNode
-} from '@holistic-stack/openscad-parser';
+// Hooks
+export * from './hooks';
+
+// Types
+export * from './types';
+
+// Utils
+export * from './utils';

@@ -2,14 +2,29 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 import react from '@vitejs/plugin-react';
-
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: react() as any,
+export default defineConfig(({ mode }) => {
+  const isDevelopment = mode === 'development';
+
+  return {
+    plugins: [
+      react(),
+      // Monaco Editor plugin temporarily disabled for initial integration
+      // monacoEditorPlugin(createViteMonacoPlugin(monacoConfig))
+    ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  optimizeDeps: {
+    include: [
+      'zustand',
+      'zustand/middleware',
+      'immer',
+      'monaco-editor',
+      '@monaco-editor/react',
+    ],
   },
   build: {
     outDir: 'dist',
@@ -35,20 +50,15 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
-    setupFiles: ['./src/vitest-setup.ts'],
-    testTimeout: 1000, // Longer timeout for CSG2 operations
-    hookTimeout: 1000, // Longer timeout for setup hooks
-    reporters: 'verbose',
-    // Monaco Editor configuration for tests
-    server: {
-      deps: {
-        inline: ['monaco-editor'],
-      },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+      exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
+      setupFiles: ['./src/vitest-setup.ts'],
+      testTimeout: 1000, // Longer timeout for CSG2 operations
+      hookTimeout: 1000, // Longer timeout for setup hooks
+      reporters: 'verbose',
     },
-  },
+  };
 });

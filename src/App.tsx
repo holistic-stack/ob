@@ -1,117 +1,160 @@
 /**
- * @file Main Application Component - Refactored with 12-Column Grid Layout
+ * Main Application Component
  *
- * Root component implementing TDD-driven 12-column grid layout with:
- * - Monaco editor (5 columns) for OpenSCAD code editing
- * - Three.js viewer (7 columns) for 3D visualization
- * - Error boundaries and state management
- * - Follows React 19 patterns with TypeScript strict mode and SRP principles
- *
- * @author OpenSCAD-R3F Pipeline
- * @version 2.0.0 - Refactored for 12-column grid layout
+ * OpenSCAD 3D Visualization Application with Zustand-centric architecture.
+ * Integrates Monaco Editor for code input with Three.js renderer for 3D output.
  */
 
-import React, { useEffect } from 'react';
-import { GridLayout } from './features/ui-components/layout/grid-layout';
-import { OpenSCADErrorBoundary } from './features/ui-components/shared/error-boundary/openscad-error-boundary';
+import React, { useEffect, useState } from 'react';
+import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
+import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
+import { useAppStore } from './features/store/app-store';
 import {
-  useOpenSCADActions
-} from './features/ui-components/editor/stores';
-
-
-
-// Default OpenSCAD code example - showcasing multiple primitives in a well-framed scene
-const defaultCode = `// OpenSCAD Primitives Showcase
-// Demonstrates various 3D shapes positioned for optimal camera framing
-
-// Basic cube at origin
-cube([8, 8, 8]);
-
-// Sphere positioned to the right
-translate([15, 0, 0])
-  sphere(4);
-
-// Cylinder positioned above
-translate([0, 12, 0])
-  cylinder(h = 8, r = 3);
-
-// Cone (using cylinder with different radii)
-translate([15, 12, 0])
-  cylinder(h = 10, r1 = 4, r2 = 1);
-
-// Torus-like shape using difference
-translate([-12, 0, 4])
-  difference() {
-    sphere(5);
-    sphere(3);
-  }
-
-// Rounded cube using hull and spheres
-translate([-12, 12, 0])
-  hull() {
-    translate([0, 0, 0]) sphere(2);
-    translate([6, 0, 0]) sphere(2);
-    translate([6, 6, 0]) sphere(2);
-    translate([0, 6, 0]) sphere(2);
-    translate([0, 0, 6]) sphere(2);
-    translate([6, 0, 6]) sphere(2);
-    translate([6, 6, 6]) sphere(2);
-    translate([0, 6, 6]) sphere(2);
-  }
-
-// Use "Fit to View" button to frame all objects perfectly!`;
-
-// ============================================================================
-// Types and Interfaces
-// ============================================================================
+  selectApplicationStatus,
+  selectEditorCode,
+  selectParsingAST,
+  selectRenderingState,
+  selectPerformanceMetrics
+} from './features/store/selectors/store.selectors';
 
 /**
- * Props for the App component
- */
-export interface AppProps {
-  readonly className?: string;
-  readonly 'data-testid'?: string;
-}
-
-// ============================================================================
-// Component Implementation
-// ============================================================================
-
-/**
- * Modern App component with 12-Column Grid Layout
- *
- * Implements TDD-driven layout with Monaco editor (5 cols) and Three.js viewer (7 cols).
- * Features OpenSCAD editor with React Three Fiber 3D visualization following SRP principles.
- *
- * @returns JSX element containing the refactored 12-column grid application
+ * Main Application Component
  */
 export function App(): React.JSX.Element {
-  console.log('[INIT] Rendering refactored App with 12-column grid layout');
+  console.log('[INIT][App] Rendering OpenSCAD 3D Visualization Application v2.0.0');
 
-  // Zustand store hooks for OpenSCAD state management
-  const { updateCode } = useOpenSCADActions();
+  // Store selectors for application state
+  const applicationStatus = useAppStore(selectApplicationStatus);
+  const editorCode = useAppStore(selectEditorCode);
+  const ast = useAppStore(selectParsingAST);
+  const renderingState = useAppStore(selectRenderingState);
+  const performanceMetrics = useAppStore(selectPerformanceMetrics);
 
-  // Initialize Zustand store with default code on mount
+  // Local state for layout
+  const [editorWidth, setEditorWidth] = useState(50); // Percentage
+  const [isResizing, setIsResizing] = useState(false);
+
+  /**
+   * Initialize application on mount
+   */
   useEffect(() => {
-    console.log('[DEBUG] Initializing OpenSCAD store with default code');
-    updateCode(defaultCode);
-  }, [updateCode]);
+    console.log('[INIT][App] Application mounted and ready');
+  }, []);
+
+  /**
+   * Log application state changes
+   */
+  useEffect(() => {
+    console.log('[DEBUG][App] Application state updated:', {
+      status: applicationStatus,
+      codeLength: editorCode.length,
+      astNodeCount: ast?.length || 0,
+      isRendering: renderingState.isRendering,
+      meshCount: renderingState.meshes.length,
+      renderTime: performanceMetrics.renderTime
+    });
+  }, [applicationStatus, editorCode, ast, renderingState, performanceMetrics]);
+
+  /**
+   * Handle panel resize
+   */
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const containerWidth = window.innerWidth;
+      const newWidth = Math.max(20, Math.min(80, (e.clientX / containerWidth) * 100));
+      setEditorWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   return (
-    <OpenSCADErrorBoundary
-      enableRecovery={true}
-      showTechnicalDetails={true}
-      onError={(error, errorInfo) => {
-        console.error('[ERROR] App error caught by boundary:', error, errorInfo);
-      }}
-      className="h-full w-full"
-    >
-      <GridLayout
-        className="h-full w-full"
-        data-testid="grid-layout-container"
-        aria-label="12-Column Grid Layout"
-      />
-    </OpenSCADErrorBoundary>
+    <div className="app-container h-screen w-screen bg-gray-900 text-white overflow-hidden">
+      {/* Application Header */}
+      <header className="app-header bg-gray-800 border-b border-gray-700 px-6 py-3 flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-semibold text-white">
+            OpenSCAD 3D Visualizer
+          </h1>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <span className={`w-2 h-2 rounded-full ${
+              applicationStatus === 'idle' ? 'bg-green-400' :
+              applicationStatus === 'working' ? 'bg-yellow-400' : 'bg-red-400'
+            }`} />
+            <span className="capitalize">{applicationStatus}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4 text-sm text-gray-400">
+          <span>AST: {ast?.length || 0} nodes</span>
+          <span>Meshes: {renderingState.meshes.length}</span>
+          <span>Render: {performanceMetrics.renderTime.toFixed(1)}ms</span>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="app-main flex h-[calc(100vh-64px)]">
+        {/* Editor Panel */}
+        <div
+          className="editor-panel bg-gray-900 border-r border-gray-700 flex flex-col"
+          style={{ width: `${editorWidth}%` }}
+        >
+          <div className="panel-header bg-gray-800 px-4 py-2 border-b border-gray-700">
+            <h2 className="text-sm font-medium text-gray-300">OpenSCAD Code Editor</h2>
+          </div>
+          <div className="panel-content flex-1">
+            <StoreConnectedEditor
+              className="h-full"
+              data-testid="main-editor"
+            />
+          </div>
+        </div>
+
+        {/* Resize Handle */}
+        <button
+          type="button"
+          aria-label="Resize panels"
+          className={`resize-handle w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isResizing ? 'bg-blue-500' : ''
+          }`}
+          onMouseDown={handleMouseDown}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              setEditorWidth(Math.max(20, editorWidth - 5));
+            } else if (e.key === 'ArrowRight') {
+              setEditorWidth(Math.min(80, editorWidth + 5));
+            }
+          }}
+          data-testid="resize-handle"
+        />
+
+        {/* 3D Renderer Panel */}
+        <div
+          className="renderer-panel bg-gray-900 flex flex-col"
+          style={{ width: `${100 - editorWidth}%` }}
+        >
+          <div className="panel-header bg-gray-800 px-4 py-2 border-b border-gray-700">
+            <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
+          </div>
+          <div className="panel-content flex-1 relative">
+            <StoreConnectedRenderer
+              className="h-full w-full"
+              data-testid="main-renderer"
+            />
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 

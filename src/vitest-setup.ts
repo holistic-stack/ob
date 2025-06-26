@@ -3,6 +3,8 @@ import createFetchMock from 'vitest-fetch-mock';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { findUpSync } from 'find-up';
+// Use resolve.sync for robust module resolution following Node.js algorithm
+import resolve from 'resolve';
 
 // ============================================================================
 // Browser API Mocks for UI Component Testing
@@ -63,9 +65,9 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
+const projectRoot = join(__dirname, '..');
 
 // Initialize vitest-fetch-mock properly
 const fetchMocker = createFetchMock(vi);
@@ -75,9 +77,23 @@ fetchMocker.enableMocks();
  * Advanced WASM file resolution using multiple strategies
  * Combines Node.js module resolution with directory traversal for maximum robustness
  */
-function resolveWasmPath(urlPath: string): string {
-  // Normalize the path - remove leading ./ or /
-  const normalizedPath = urlPath.replace(/^\.?\//, '');
+export function resolveWasmPath(urlPath: string): string {
+  // Extract filename from URL or path
+  let normalizedPath: string;
+
+  if (urlPath.startsWith('http://') || urlPath.startsWith('https://') || urlPath.startsWith('file://')) {
+    try {
+      const url = new URL(urlPath);
+      normalizedPath = url.pathname.split('/').pop() || urlPath;
+      console.log(`Extracted filename from URL: ${normalizedPath}`);
+    } catch (error) {
+      console.warn(`Failed to parse URL: ${urlPath}, using as-is`);
+      normalizedPath = urlPath;
+    }
+  } else {
+    // Remove leading ./ or /
+    normalizedPath = urlPath.replace(/^\.?\//, '');
+  }
 
   console.log(`Resolving WASM file: ${normalizedPath}`);
   console.log(`__dirname: ${__dirname}`);
@@ -85,18 +101,19 @@ function resolveWasmPath(urlPath: string): string {
 
   // Strategy 1: Use Node.js module resolution algorithm (most reliable)
   const moduleResolutionStrategies = [
-    // Try @openscad/tree-sitter-openscad package
+    // Try @holistic-stack/tree-sitter-openscad package
     () => {
       try {
-        console.log(`Attempting @openscad/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`);
-        const packagePath = resolve.sync('@openscad/tree-sitter-openscad/package.json', {
-          basedir: __dirname
+        console.log(`Attempting @holistic-stack/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`);
+        const packagePath = resolve.sync('@holistic-stack/tree-sitter-openscad/package.json', {
+          basedir: projectRoot
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
-
+        console.log(`✅ Strategy 1 found package at: ${packagePath}`);
+        console.log(`✅ Strategy 1 resolved path: ${resolvedWasmPath}`);
         return resolvedWasmPath;
-      } catch (_e) {
-
+      } catch (e) {
+        console.log(`❌ Strategy 1 failed: ${e instanceof Error ? e.message : String(e)}`);
         return null;
       }
     },
@@ -106,7 +123,7 @@ function resolveWasmPath(urlPath: string): string {
       console.log(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
-          basedir: __dirname
+          basedir: projectRoot
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
@@ -119,20 +136,24 @@ function resolveWasmPath(urlPath: string): string {
 
     // Try web-tree-sitter/lib subdirectory
     () => {
-      console.log(`Attempting web-tree-sitter strategy 3 (lib) for ${normalizedPath}`);
+      try {
+        const packagePath = resolve.sync('web-tree-sitter/package.json', {
+          basedir: projectRoot
+        });
+        return join(dirname(packagePath), 'lib', normalizedPath);
+      } catch {
+        return null;
+      }
+    },
+
+    // Try web-tree-sitter debug directory (for tree-sitter.wasm)
+    () => {
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
           basedir: __dirname
         });
-        const resolvedWasmPath = join(dirname(packagePath), 'lib', normalizedPath);
-        console.log(`  - packagePath: ${packagePath}`);
-        console.log(`  - dirname(packagePath): ${dirname(packagePath)}`);
-        console.log(`  - normalizedPath: ${normalizedPath}`);
-        console.log(`  - resolvedWasmPath: ${resolvedWasmPath}`);
-        console.log(`Attempting web-tree-sitter strategy 3 (lib): ${resolvedWasmPath}`);
-        return resolvedWasmPath;
-      } catch (_e) {
-
+        return join(dirname(packagePath), 'debug', normalizedPath);
+      } catch {
         return null;
       }
     }
@@ -140,20 +161,20 @@ function resolveWasmPath(urlPath: string): string {
 
   // Strategy 2: Use find-up to locate package.json files and resolve from there
   const findUpStrategies = [
-    // Find @openscad/tree-sitter-openscad package.json using matcher function
+    // Find @holistic-stack/tree-sitter-openscad package.json using matcher function
     () => {
       try {
-        console.log(`Attempting @openscad/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`);
+        console.log(`Attempting @holistic-stack/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`);
         const packageJson = findUpSync((directory: string) => {
           const packagePath = join(directory, 'package.json');
           try {
             const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
-            return pkg.name === '@openscad/tree-sitter-openscad' ? packagePath : undefined;
+            return pkg.name === '@holistic-stack/tree-sitter-openscad' ? packagePath : undefined;
           } catch {
             return undefined;
           }
         }, {
-          cwd: __dirname,
+          cwd: projectRoot,
           type: 'file'
         });
 
@@ -209,8 +230,7 @@ function resolveWasmPath(urlPath: string): string {
         // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
         console.log(`✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`);
-
-        return `${resolvedPath}`;
+        return `file://${resolvedPath}`;
       } catch {
         // File doesn't exist, continue to next strategy
         console.log(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
@@ -222,12 +242,12 @@ function resolveWasmPath(urlPath: string): string {
   throw new Error(`WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`);
 }
 
-/**
- * Custom fetch mock handler for WASM files using vitest-fetch-mock
- * Handles loading local WASM files during testing
- */
-function createWasmFetchHandler(url: string | URL | Request): Promise<Response> {
-  console.log('[DEBUG] Using vitest-fetch-mock for WASM loading:', url);
+
+
+// Configure vitest-fetch-mock to handle WASM files with better URL handling
+vi.mocked(fetch).mockImplementation(url => {
+  console.log('using local fetch mock', url);
+  console.log('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
   // Handle both string and URL objects
   let urlPath: string;
@@ -235,57 +255,46 @@ function createWasmFetchHandler(url: string | URL | Request): Promise<Response> 
     urlPath = url;
   } else if (url instanceof URL) {
     urlPath = url.href; // Use href to get the full file:// URL
-  } else if (url instanceof Request) {
-    urlPath = url.url;
   } else {
     // Handle other URL-like objects
     urlPath = String(url);
   }
 
-  console.log(`[DEBUG] URL path: ${urlPath}`);
+  // Remove 'file://' prefix if present for local file system access
+  if (urlPath.startsWith('file://')) {
+    urlPath = urlPath.substring('file://'.length);
+  }
 
   try {
+    // Resolve the actual file path
     const resolvedPath = resolveWasmPath(urlPath);
-    console.log(`[DEBUG] Resolved WASM file path: ${resolvedPath}`);
+
+    // Remove file:// prefix if present for file system access
+    let actualPath = resolvedPath;
+    if (actualPath.startsWith('file://')) {
+      actualPath = actualPath.substring('file://'.length);
+    }
 
     // Read file as Uint8Array
-    const localFile = readFileSync(resolvedPath);
+    const localFile = readFileSync(actualPath);
     const uint8Array = new Uint8Array(localFile);
 
-    console.log(`[DEBUG] Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
+    console.log(`Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
 
-    return Promise.resolve(new Response(uint8Array.buffer, {
-      status: 200,
-      statusText: 'OK',
-      headers: {
-        'Content-Type': 'application/wasm',
-        'Content-Length': uint8Array.length.toString()
-      }
-    }));
+    return Promise.resolve({
+      ok: true,
+      arrayBuffer: () => Promise.resolve(uint8Array.buffer),
+      bytes: () => Promise.resolve(uint8Array),
+    } as unknown as Response);
   } catch (error) {
-    console.error('[ERROR] Failed to read WASM file:', urlPath, error);
-    return Promise.resolve(new Response(`WASM file not found: ${urlPath}`, {
+    console.error('Failed to read WASM file:', urlPath, error);
+    return Promise.resolve({
+      ok: false,
       status: 404,
       statusText: 'Not Found',
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    }));
+      text: () => Promise.resolve(`WASM file not found: ${urlPath}`),
+    } as unknown as Response);
   }
-}
-
-// Configure vitest-fetch-mock to handle WASM files
-fetchMocker.mockResponse((req) => {
-  const url = req.url;
-
-  // Check if this is a WASM file request
-  if (url.includes('.wasm') || url.includes('tree-sitter')) {
-    return createWasmFetchHandler(url);
-  }
-
-  // For non-WASM requests, return a default mock response
-  console.log('[DEBUG] Non-WASM fetch request:', url);
-  return Promise.resolve(new Response('Mock response', { status: 200 }));
 });
 
 /**
