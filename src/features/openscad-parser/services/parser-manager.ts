@@ -21,7 +21,13 @@ import type {
 } from '../types/parser.types';
 import { success, error, tryCatch } from '../../../shared/utils/functional/result';
 import type { Result, AsyncResult } from '../../../shared/types/result.types';
-import { measureTimeAsync } from '../../../shared/utils/performance/metrics';
+// Inline performance measurement to avoid import issues
+const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> => {
+  const start = performance.now();
+  const result = await fn();
+  const end = performance.now();
+  return { result, duration: end - start };
+};
 
 /**
  * Default parser configuration

@@ -77,8 +77,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handleRenderComplete = useCallback((meshes: ReadonlyArray<Mesh3D>) => {
     console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
-    // The renderFromAST action already handles updating the store state
-    // This callback is for additional side effects if needed
+
+    // Update store with actual mesh count and data
+    useAppStore.setState((state) => {
+      state.rendering.meshes = meshes.map(m => m.mesh);
+      state.rendering.meshCount = meshes.length;
+    });
+
+    console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
   }, []);
 
   /**

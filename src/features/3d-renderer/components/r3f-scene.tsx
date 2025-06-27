@@ -10,8 +10,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { CameraConfig, RenderingMetrics } from '../types/renderer.types';
+import type { CameraConfig, RenderingMetrics, Mesh3D } from '../types/renderer.types';
 import { useAppStore } from '../../store/app-store';
+import { renderASTNode } from '../services/primitive-renderer';
 
 /**
  * Props for the R3F scene component
@@ -21,7 +22,7 @@ interface R3FSceneProps {
   readonly camera: CameraConfig;
   readonly onCameraChange?: (camera: CameraConfig) => void;
   readonly onPerformanceUpdate?: (metrics: RenderingMetrics) => void;
-  readonly onRenderComplete?: (meshes: ReadonlyArray<any>) => void;
+  readonly onRenderComplete?: (meshes: ReadonlyArray<Mesh3D>) => void;
   readonly onRenderError?: (error: { message: string }) => void;
 }
 
@@ -35,92 +36,9 @@ const measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
   return { result, duration: end - start };
 };
 
-/**
- * Convert AST node to Three.js mesh
- */
-const createMeshFromASTNode = (node: ASTNode): THREE.Mesh | null => {
-  try {
-    console.log(`[DEBUG][R3FScene] Creating mesh for ${node.type} with parameters:`, node.parameters);
 
-    let geometry: THREE.BufferGeometry;
 
-    switch (node.type) {
-      case 'cube': {
-        // Handle both direct size parameter and nested parameter structure
-        let size: [number, number, number] = [1, 1, 1];
 
-        if (node.parameters?.size) {
-          // Direct size parameter
-          size = Array.isArray(node.parameters.size)
-            ? node.parameters.size as [number, number, number]
-            : [node.parameters.size as number, node.parameters.size as number, node.parameters.size as number];
-        } else if (node.parameters?.value && Array.isArray(node.parameters.value)) {
-          // Handle parser output format: parameters: { value: [10, 10, 10] }
-          size = node.parameters.value as [number, number, number];
-        }
-
-        console.log(`[DEBUG][R3FScene] Creating cube with size:`, size);
-        geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
-        break;
-      }
-      case 'sphere': {
-        // Handle various radius parameter formats
-        let radius = 1;
-
-        if (node.parameters?.r !== undefined) {
-          radius = node.parameters.r as number;
-        } else if (node.parameters?.radius !== undefined) {
-          radius = node.parameters.radius as number;
-        } else if (node.parameters?.value !== undefined) {
-          radius = node.parameters.value as number;
-        }
-
-        console.log(`[DEBUG][R3FScene] Creating sphere with radius:`, radius);
-        geometry = new THREE.SphereGeometry(radius, 32, 16);
-        break;
-      }
-      case 'cylinder': {
-        // Handle various cylinder parameter formats
-        let radius = 1;
-        let height = 1;
-
-        if (node.parameters?.r !== undefined) {
-          radius = node.parameters.r as number;
-        } else if (node.parameters?.radius !== undefined) {
-          radius = node.parameters.radius as number;
-        }
-
-        if (node.parameters?.h !== undefined) {
-          height = node.parameters.h as number;
-        } else if (node.parameters?.height !== undefined) {
-          height = node.parameters.height as number;
-        }
-
-        console.log(`[DEBUG][R3FScene] Creating cylinder with radius:`, radius, 'height:', height);
-        geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
-        break;
-      }
-      default:
-        console.warn(`[R3FScene] Unsupported AST node type: ${node.type}`);
-        return null;
-    }
-
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x00ff88,
-      metalness: 0.1,
-      roughness: 0.8
-    });
-
-    const mesh = new THREE.Mesh(geometry, material);
-    console.log(`[DEBUG][R3FScene] Successfully created mesh for ${node.type}`);
-
-    return mesh;
-  } catch (error) {
-    console.error(`[R3FScene] Error creating mesh for ${node.type}:`, error);
-    console.error(`[R3FScene] Node parameters:`, node.parameters);
-    return null;
-  }
-};
 
 /**
  * R3F Scene component that renders AST nodes
@@ -134,46 +52,45 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
   onRenderError
 }) => {
   const { scene, gl } = useThree();
-  const meshesRef = useRef<THREE.Mesh[]>([]);
+  const meshesRef = useRef<Mesh3D[]>([]);
   const frameCount = useRef(0);
   const lastPerformanceUpdate = useRef(0);
-
-  // Store hook for updating mesh count
-  const updateMeshCount = useAppStore((state) => state.updateMeshCount);
 
   /**
    * Update scene when AST nodes change
    */
   useEffect(() => {
     console.log(`[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`);
-    
+
     const { result: meshes, duration: renderTime } = measureTime(() => {
-      // Clear existing meshes
-      meshesRef.current.forEach(mesh => {
-        scene.remove(mesh);
-        mesh.geometry.dispose();
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(mat => mat.dispose());
-        } else {
-          mesh.material.dispose();
-        }
+      // Clear existing meshes using proper disposal
+      meshesRef.current.forEach(mesh3D => {
+        scene.remove(mesh3D.mesh);
+        mesh3D.dispose(); // Use the Mesh3D disposal method
       });
       meshesRef.current = [];
 
-      // Create new meshes from AST nodes
-      const newMeshes: THREE.Mesh[] = [];
+      // Create new meshes from AST nodes using proper service
+      const newMeshes: Mesh3D[] = [];
       astNodes.forEach((node, index) => {
         try {
-          const mesh = createMeshFromASTNode(node);
-          if (mesh) {
+          const result = renderASTNode(node, index);
+          if (result.success) {
+            const mesh3D = result.data;
+
             // Position meshes in a grid for multiple objects
             const gridSize = Math.ceil(Math.sqrt(astNodes.length));
             const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
             const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-            mesh.position.set(x, 0, z);
-            
-            scene.add(mesh);
-            newMeshes.push(mesh);
+            mesh3D.mesh.position.set(x, 0, z);
+
+            scene.add(mesh3D.mesh);
+            newMeshes.push(mesh3D);
+
+            console.log(`[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`);
+          } else {
+            console.error(`[ERROR][R3FScene] Failed to render AST node ${index}:`, result.error);
+            onRenderError?.({ message: result.error });
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -187,40 +104,79 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 
     meshesRef.current = meshes;
 
-    // Update store with mesh count
-    updateMeshCount(meshes.length);
-
     // Report render completion
     onRenderComplete?.(meshes);
 
     // Update performance metrics
     const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+    const triangleCount = meshes.reduce((total, mesh3D) => {
+      const geometry = mesh3D.mesh.geometry;
+      if (geometry.index) {
+        return total + geometry.index.count / 3;
+      } else if (geometry.attributes.position) {
+        return total + geometry.attributes.position.count / 3;
+      }
+      return total;
+    }, 0);
+
+    const vertexCount = meshes.reduce((total, mesh3D) => {
+      const geometry = mesh3D.mesh.geometry;
+      return total + (geometry.attributes.position?.count || 0);
+    }, 0);
+
     onPerformanceUpdate?.({
       renderTime,
       parseTime: 0, // AST parsing happens elsewhere
-      memoryUsage: memoryUsage / (1024 * 1024) // Convert to MB
+      memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
+      frameRate: 60, // Approximate - will be updated in frame loop
+      meshCount: meshes.length,
+      triangleCount,
+      vertexCount,
+      drawCalls: meshes.length, // Approximate - one draw call per mesh
+      textureMemory: 0, // Not tracking texture memory yet
+      bufferMemory: 0 // Not tracking buffer memory yet
     });
 
-  }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate, updateMeshCount]);
+  }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate]);
 
   /**
    * Frame loop for performance monitoring
    */
   useFrame(() => {
     frameCount.current++;
-    
+
     // Update performance metrics every second
     const now = performance.now();
     if (now - lastPerformanceUpdate.current > 1000) {
       const frameRate = frameCount.current;
       frameCount.current = 0;
       lastPerformanceUpdate.current = now;
-      
+
       const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+      const currentMeshes = meshesRef.current;
+
       onPerformanceUpdate?.({
         renderTime: gl.info.render.frame > 0 ? 16.67 : 0, // Approximate frame time
         parseTime: 0,
-        memoryUsage: memoryUsage / (1024 * 1024)
+        memoryUsage: memoryUsage / (1024 * 1024),
+        frameRate,
+        meshCount: currentMeshes.length,
+        triangleCount: currentMeshes.reduce((total, mesh3D) => {
+          const geometry = mesh3D.mesh.geometry;
+          if (geometry.index) {
+            return total + geometry.index.count / 3;
+          } else if (geometry.attributes.position) {
+            return total + geometry.attributes.position.count / 3;
+          }
+          return total;
+        }, 0),
+        vertexCount: currentMeshes.reduce((total, mesh3D) => {
+          const geometry = mesh3D.mesh.geometry;
+          return total + (geometry.attributes.position?.count || 0);
+        }, 0),
+        drawCalls: currentMeshes.length,
+        textureMemory: 0,
+        bufferMemory: 0
       });
     }
   });
@@ -237,7 +193,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       
       {/* Camera controls */}
       <OrbitControls
-        target={camera.target}
+        target={[...camera.target] as [number, number, number]}
         onChange={(event) => {
           if (event?.target && onCameraChange) {
             const controls = event.target as any;
@@ -246,12 +202,19 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
                 controls.object.position.x,
                 controls.object.position.y,
                 controls.object.position.z
-              ],
+              ] as const,
               target: [
                 controls.target.x,
                 controls.target.y,
                 controls.target.z
-              ]
+              ] as const,
+              zoom: camera.zoom,
+              fov: camera.fov,
+              near: camera.near,
+              far: camera.far,
+              enableControls: camera.enableControls,
+              enableAutoRotate: camera.enableAutoRotate,
+              autoRotateSpeed: camera.autoRotateSpeed
             };
             onCameraChange(newCamera);
           }

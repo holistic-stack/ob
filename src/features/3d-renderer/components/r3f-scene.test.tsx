@@ -9,9 +9,20 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { Canvas } from '@react-three/fiber';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import * as THREE from 'three';
+import type { ASTNode, CubeNode, SphereNode, CylinderNode } from '@holistic-stack/openscad-parser';
+import type { Mesh3D } from '../types/renderer.types';
 
 import { R3FScene } from './r3f-scene';
+
+// Mock ResizeObserver for test environment
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+global.ResizeObserver = MockResizeObserver as any;
 
 // Mock React Three Fiber hooks
 const mockScene = {
@@ -68,9 +79,21 @@ vi.mock('@react-three/drei', () => ({
 
 // Mock Three.js
 vi.mock('three', () => ({
-  BoxGeometry: vi.fn(() => ({ dispose: vi.fn() })),
-  SphereGeometry: vi.fn(() => ({ dispose: vi.fn() })),
-  CylinderGeometry: vi.fn(() => ({ dispose: vi.fn() })),
+  BoxGeometry: vi.fn(() => ({
+    dispose: vi.fn(),
+    attributes: { position: { count: 24 } },
+    index: { count: 36 }
+  })),
+  SphereGeometry: vi.fn(() => ({
+    dispose: vi.fn(),
+    attributes: { position: { count: 32 } },
+    index: { count: 96 }
+  })),
+  CylinderGeometry: vi.fn(() => ({
+    dispose: vi.fn(),
+    attributes: { position: { count: 64 } },
+    index: { count: 192 }
+  })),
   MeshStandardMaterial: vi.fn(() => ({ dispose: vi.fn() })),
   Mesh: vi.fn((geometry, material) => ({
     geometry,
@@ -80,6 +103,8 @@ vi.mock('three', () => ({
   }))
 }));
 
+// Use real primitive renderer service - no mocks
+
 describe('R3FScene', () => {
   const mockOnCameraChange = vi.fn();
   const mockOnPerformanceUpdate = vi.fn();
@@ -88,7 +113,17 @@ describe('R3FScene', () => {
 
   const defaultProps = {
     astNodes: [] as ASTNode[],
-    camera: { position: [5, 5, 5], target: [0, 0, 0] } as const,
+    camera: {
+      position: [5, 5, 5] as const,
+      target: [0, 0, 0] as const,
+      zoom: 1,
+      fov: 75,
+      near: 0.1,
+      far: 1000,
+      enableControls: true,
+      enableAutoRotate: false,
+      autoRotateSpeed: 2
+    },
     onCameraChange: mockOnCameraChange,
     onPerformanceUpdate: mockOnPerformanceUpdate,
     onRenderComplete: mockOnRenderComplete,
@@ -148,13 +183,15 @@ describe('R3FScene', () => {
     });
 
     it('should process cube AST nodes', async () => {
-      const cubeAST: ASTNode[] = [
+      const cubeAST: CubeNode[] = [
         {
           type: 'cube',
-          parameters: { size: [2, 2, 2] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([2, 2, 2]);'
+          size: [2, 2, 2],
+          center: false,
+          location: {
+            start: { line: 1, column: 1 },
+            end: { line: 1, column: 20 }
+          }
         }
       ];
 
@@ -172,13 +209,14 @@ describe('R3FScene', () => {
     });
 
     it('should process sphere AST nodes', async () => {
-      const sphereAST: ASTNode[] = [
+      const sphereAST: SphereNode[] = [
         {
           type: 'sphere',
-          parameters: { r: 1.5 },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'sphere(r=1.5);'
+          radius: 1.5,
+          location: {
+            start: { line: 1, column: 1 },
+            end: { line: 1, column: 15 }
+          }
         }
       ];
 
@@ -196,13 +234,16 @@ describe('R3FScene', () => {
     });
 
     it('should process cylinder AST nodes', async () => {
-      const cylinderAST: ASTNode[] = [
+      const cylinderAST: CylinderNode[] = [
         {
           type: 'cylinder',
-          parameters: { r: 1, h: 3 },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cylinder(r=1, h=3);'
+          h: 3,
+          r: 1,
+          center: false,
+          location: {
+            start: { line: 1, column: 1 },
+            end: { line: 1, column: 20 }
+          }
         }
       ];
 
@@ -320,15 +361,15 @@ describe('R3FScene', () => {
 
   describe('Error Handling', () => {
     it('should handle unsupported AST node types', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       const unsupportedAST: ASTNode[] = [
         {
           type: 'unsupported' as any,
-          parameters: {},
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'unsupported();'
+          location: {
+            start: { line: 1, column: 1 },
+            end: { line: 1, column: 15 }
+          }
         }
       ];
 
@@ -342,7 +383,8 @@ describe('R3FScene', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unsupported AST node type: unsupported')
+        expect.stringContaining('Failed to render AST node'),
+        expect.anything()
       );
       
       consoleSpy.mockRestore();

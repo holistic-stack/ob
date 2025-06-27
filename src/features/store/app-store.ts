@@ -531,23 +531,38 @@ export const createAppStore = (options: StoreOptions = {
 const initializeStore = async (store: AppStore) => {
   const state = store.getState();
 
-  // Only parse if we have default code and no AST yet
-  if (state.editor.code === DEFAULT_OPENSCAD_CODE && state.parsing.ast.length === 0) {
-    console.log('[INIT][Store] Initializing with default OpenSCAD code');
+  console.log('[INIT][Store] Initializing store with current code:', {
+    codeLength: state.editor.code.length,
+    code: state.editor.code,
+    astLength: state.parsing.ast.length,
+    enableRealTimeParsing: state.config.enableRealTimeParsing
+  });
 
-    // Trigger initial parsing of default code
-    await state.parseCode(DEFAULT_OPENSCAD_CODE);
+  // Parse current code if we have any code and no AST yet
+  if (state.editor.code.length > 0 && state.parsing.ast.length === 0) {
+    console.log('[INIT][Store] Triggering initial parsing of current code');
 
-    console.log('[INIT][Store] Default code parsed successfully');
+    // Trigger initial parsing of current code
+    await state.parseCode(state.editor.code);
+
+    console.log('[INIT][Store] Initial code parsed successfully');
   }
 };
 
 /**
- * Default store instance
+ * Default store instance - singleton to prevent re-creation
  */
-export const useAppStore = createAppStore();
+let _storeInstance: AppStore | null = null;
 
-// Initialize the store with default content
-initializeStore(useAppStore).catch(error => {
-  console.error('[ERROR][Store] Failed to initialize store:', error);
-});
+export const useAppStore = (() => {
+  if (!_storeInstance) {
+    console.log('[INIT][Store] Creating singleton store instance');
+    _storeInstance = createAppStore();
+
+    // Initialize the store with default content
+    initializeStore(_storeInstance).catch(error => {
+      console.error('[ERROR][Store] Failed to initialize store:', error);
+    });
+  }
+  return _storeInstance;
+})();

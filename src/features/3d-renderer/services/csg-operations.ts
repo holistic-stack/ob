@@ -15,7 +15,13 @@ import type {
 } from '../types/renderer.types';
 import { success, error, tryCatch } from '../../../shared/utils/functional/result';
 import type { Result, AsyncResult } from '../../../shared/types/result.types';
-import { measureTime } from '../../../shared/utils/performance/metrics';
+// Inline performance measurement to avoid import issues
+const measureTime = <T>(fn: () => T): { result: T; duration: number } => {
+  const start = performance.now();
+  const result = fn();
+  const end = performance.now();
+  return { result, duration: end - start };
+};
 
 /**
  * Maximum complexity threshold for CSG operations

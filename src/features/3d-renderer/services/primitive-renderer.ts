@@ -7,16 +7,17 @@
 
 import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { 
-  PrimitiveRendererFactory, 
-  MaterialFactory, 
-  PrimitiveParams, 
+import type {
+  PrimitiveRendererFactory,
+  MaterialFactory,
+  PrimitiveParams,
   MaterialConfig,
   Mesh3D,
-  RenderingError 
+  RenderingError
 } from '../types/renderer.types';
 import { success, error, tryCatch } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
+import { convertASTNodeToCSG } from './ast-to-csg-converter';
 
 /**
  * Default material configuration
@@ -302,53 +303,32 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
 };
 
 /**
- * Render OpenSCAD AST node to Three.js mesh
+ * Render OpenSCAD AST node to Three.js mesh using CSG operations
  */
 export const renderASTNode = (node: ASTNode, index: number): Result<Mesh3D, string> => {
-  const parameters = parseParameters(node);
-  
-  // Extract transformations from node
-  const transformations: Array<{ type: string; parameters: Record<string, unknown> }> = [];
-  
-  // Add basic transformations if present in parameters
-  if (parameters.translate) {
-    transformations.push({ type: 'translate', parameters: { vector: parameters.translate } });
-  }
-  if (parameters.rotate) {
-    transformations.push({ type: 'rotate', parameters: { vector: parameters.rotate } });
-  }
-  if (parameters.scale) {
-    transformations.push({ type: 'scale', parameters: { vector: parameters.scale } });
-  }
-  if (parameters.color) {
-    transformations.push({ type: 'color', parameters: { color: parameters.color } });
-  }
-  
-  const primitiveParams: PrimitiveParams = {
-    type: node.type as any,
-    parameters,
-    transformations,
+  console.log(`[DEBUG][PrimitiveRenderer] Rendering AST node ${index}: ${node.type} using CSG`);
+
+  // Use the new CSG converter for all OpenSCAD primitives
+  const csgResult = convertASTNodeToCSG(node, index, {
     material: {
-      color: parameters.color as string || '#ffffff',
-      opacity: parameters.opacity as number || 1,
+      color: '#00ff88', // Green color as specified
+      opacity: 1,
       metalness: 0.1,
       roughness: 0.8,
       wireframe: false,
-      transparent: (parameters.opacity as number || 1) < 1,
+      transparent: false,
       side: 'front'
-    }
-  };
-  
-  const result = renderPrimitive(primitiveParams);
-  
-  if (result.success) {
-    // Update metadata with correct index
-    result.data.metadata = {
-      ...result.data.metadata,
-      id: `${node.type}-${index}`,
-      nodeIndex: index
-    };
+    },
+    enableOptimization: true,
+    maxComplexity: 50000,
+    timeoutMs: 10000
+  });
+
+  if (csgResult.success) {
+    console.log(`[DEBUG][PrimitiveRenderer] Successfully rendered ${node.type} using CSG`);
+  } else {
+    console.error(`[ERROR][PrimitiveRenderer] Failed to render ${node.type} using CSG:`, csgResult.error);
   }
-  
-  return result;
+
+  return csgResult;
 };
