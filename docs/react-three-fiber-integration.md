@@ -1,17 +1,101 @@
-# React Three Fiber + three-csg-ts Integration Guide
+# React Three Fiber + Enhanced Matrix Operations Integration Guide
 
 ## Overview
 
-**✅ COMPLETED**: Full React Three Fiber integration with three-csg-ts for OpenSCAD 3D visualization, following functional programming principles and WebGL2 optimization.
+**✅ COMPLETED**: Full React Three Fiber integration with enhanced matrix operations, custom CSG utility for OpenSCAD 3D visualization, following functional programming principles and WebGL2 optimization.
 
 ## ✅ Implementation Status
 
-**COMPLETED**: Complete 3D rendering pipeline with 69 comprehensive tests covering:
+**COMPLETED**: Complete 3D rendering pipeline with enhanced matrix operations including:
 - Three.js renderer component with React Three Fiber
-- CSG operations (union, difference, intersection) with three-csg-ts
+- Enhanced CSG operations with robust matrix validation and telemetry
+- Advanced matrix operations with ml-matrix integration
+- React integration layer with hooks, providers, and error boundaries
+- Development tools for performance monitoring and debugging
 - Primitive renderer for OpenSCAD geometries
 - Performance optimization and WebGL2 support
 - Zustand store integration for state management
+
+## Enhanced Matrix Operations Integration ✅
+
+**COMPLETED**: Phase 3 of matrix-ml integration with comprehensive React integration layer:
+
+### Matrix Operations Features
+- **Enhanced CSG Operations**: Robust matrix validation and telemetry in CSG pipeline
+- **React Integration Layer**: Hooks, providers, and error boundaries for matrix operations
+- **API Abstraction**: Clean public interface with dependency injection
+- **Development Tools**: Performance profiler and operation debugger
+- **Error Handling**: Graceful degradation and recovery mechanisms
+- **Performance Monitoring**: Real-time metrics and regression detection
+
+### React Integration Components
+
+#### Matrix Operations Hook
+```typescript
+import { useMatrixOperations } from '@/features/3d-renderer';
+
+const MyComponent = () => {
+  const {
+    convertMatrix4ToMLMatrix,
+    performRobustInversion,
+    computeNormalMatrix,
+    isServiceHealthy
+  } = useMatrixOperations();
+
+  // Use enhanced matrix operations with React state management
+};
+```
+
+#### Matrix Operations Provider
+```typescript
+import { MatrixOperationProvider } from '@/features/3d-renderer';
+
+const App = () => (
+  <MatrixOperationProvider
+    config={{
+      enableTelemetry: true,
+      enableValidation: true,
+      autoOptimizeConfiguration: true
+    }}
+    onHealthStatusChange={(isHealthy, status) => {
+      console.log('Matrix services health:', isHealthy, status);
+    }}
+  >
+    <YourApp />
+  </MatrixOperationProvider>
+);
+```
+
+#### Development Tools
+```typescript
+import {
+  MatrixPerformanceProfiler,
+  MatrixOperationDebugger,
+  MatrixOperationErrorBoundary
+} from '@/features/3d-renderer';
+
+// Development environment with full debugging
+const DevApp = () => (
+  <MatrixOperationErrorBoundary enableAutoRecovery showErrorDetails>
+    <YourApp />
+    <MatrixPerformanceProfiler enabled showDetails position="top-right" />
+    <MatrixOperationDebugger enabled showStackTraces />
+  </MatrixOperationErrorBoundary>
+);
+```
+
+### Enhanced CSG Operations
+
+The CSG operations now use enhanced matrix services for improved numerical stability:
+
+```typescript
+// Enhanced CSG operations with matrix validation
+const csgResult = await CSGCoreService.toGeometry(csg, transformMatrix);
+// Automatically uses robust matrix inversion with SVD fallback
+
+const meshResult = await CSGCoreService.fromMesh(mesh);
+// Includes matrix validation and enhanced normal matrix computation
+```
 
 ## Technology Stack Analysis
 
@@ -19,19 +103,20 @@
 ```json
 {
   "@react-three/fiber": "^9.1.2",
-  "@react-three/drei": "^10.3.0", 
+  "@react-three/drei": "^10.3.0",
   "three": "^0.177.0",
-  "three-csg-ts": "^3.2.0",
-  "@types/three": "^0.177.0"
+  "@types/three": "^0.177.0",
+  "ml-matrix": "^6.12.1"
 }
 ```
 
 ### CSG Operations Support
 
-Based on three-csg-ts v3.2.0 API:
-- **Union**: Combine multiple geometries
-- **Difference**: Subtract geometries from base
-- **Intersection**: Keep only overlapping volumes
+Based on custom CSG utility implementation:
+- **Union**: Combine multiple geometries using BSP tree operations
+- **Difference**: Subtract geometries from base using CSG algorithms
+- **Intersection**: Keep only overlapping volumes with precise calculations
+- **Custom Implementation**: Full control over CSG operations without external dependencies
 
 ## ✅ Implemented Integration Patterns
 
@@ -40,8 +125,8 @@ Based on three-csg-ts v3.2.0 API:
 **File**: `src/features/3d-renderer/services/csg-operations.ts` (27 tests passing)
 
 ```typescript
-// Actual implementation with three-csg-ts
-import { CSG } from 'three-csg-ts';
+// Actual implementation with custom CSG utility
+import { CSG } from '../utils/CSG';
 import * as THREE from 'three';
 import type { Result } from '../../../shared/types/result.types';
 

@@ -1,11 +1,11 @@
 /**
  * CSG Operations Service Test Suite
- * 
+ *
  * Tests for CSG operations service following TDD methodology
- * with real three-csg-ts operations and Three.js mesh processing.
+ * with real custom CSG utility operations and Three.js mesh processing.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as THREE from 'three';
 import {
   performCSGOperation,
@@ -17,26 +17,8 @@ import {
 } from './csg-operations';
 import type { CSGConfig, CSGOperation } from '../types/renderer.types';
 
-// Mock three-csg-ts for testing
-const mockCSGResult = {
-  toMesh: vi.fn(() => {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial();
-    return new THREE.Mesh(geometry, material);
-  })
-};
-
-const mockCSG = {
-  union: vi.fn(() => mockCSGResult),
-  subtract: vi.fn(() => mockCSGResult),
-  intersect: vi.fn(() => mockCSGResult)
-};
-
-vi.mock('three-csg-ts', () => ({
-  CSG: {
-    fromMesh: vi.fn(() => mockCSG)
-  }
-}));
+// Note: Using real CSG utility implementation instead of mocks
+// This follows the established pattern of using real implementations in tests
 
 describe('CSG Operations Service', () => {
   let testMeshes: THREE.Mesh[];
@@ -198,33 +180,39 @@ describe('CSG Operations Service', () => {
     it('should perform union operation', async () => {
       const config = createCSGConfig('union', testMeshes.slice(0, 2));
       const result = await performCSGOperation(config);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBeInstanceOf(THREE.Mesh);
-        expect(mockCSG.union).toHaveBeenCalled();
+        // Verify the result has valid geometry
+        expect(result.data.geometry).toBeDefined();
+        expect(result.data.geometry.attributes.position).toBeDefined();
       }
     });
 
     it('should perform difference operation', async () => {
       const config = createCSGConfig('difference', testMeshes.slice(0, 2));
       const result = await performCSGOperation(config);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBeInstanceOf(THREE.Mesh);
-        expect(mockCSG.subtract).toHaveBeenCalled();
+        // Verify the result has valid geometry
+        expect(result.data.geometry).toBeDefined();
+        expect(result.data.geometry.attributes.position).toBeDefined();
       }
     });
 
     it('should perform intersection operation', async () => {
       const config = createCSGConfig('intersection', testMeshes.slice(0, 2));
       const result = await performCSGOperation(config);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBeInstanceOf(THREE.Mesh);
-        expect(mockCSG.intersect).toHaveBeenCalled();
+        // Verify the result has valid geometry
+        expect(result.data.geometry).toBeDefined();
+        expect(result.data.geometry.attributes.position).toBeDefined();
       }
     });
 

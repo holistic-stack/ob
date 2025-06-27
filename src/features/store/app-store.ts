@@ -23,6 +23,7 @@ import type { AsyncResult } from '../../shared/types/result.types';
 import { success, error, tryCatchAsync } from '../../shared/utils/functional/result';
 import { debounce } from '../../shared/utils/functional/pipe';
 import { UnifiedParserService } from '../openscad-parser/services';
+import { restructureAST } from '../3d-renderer/services/ast-restructuring-service';
 
 /**
  * Default application configuration
@@ -254,7 +255,20 @@ export const createAppStore = (options: StoreOptions = {
                   const parseResult = await parserService.parseDocument(code);
 
                   if (parseResult.success && parseResult.data.ast) {
-                    const ast = parseResult.data.ast;
+                    const rawAST = parseResult.data.ast;
+
+                    // Apply AST restructuring to fix hierarchical relationships
+                    console.log(`[DEBUG][Store] Restructuring AST with ${rawAST.length} nodes`);
+                    const restructureResult = restructureAST(rawAST, {
+                      enableLogging: true,
+                      enableSourceLocationAnalysis: true
+                    });
+
+                    if (!restructureResult.success) {
+                      console.warn(`[WARN][Store] AST restructuring failed: ${restructureResult.error}, using original AST`);
+                    }
+
+                    const ast = restructureResult.success ? restructureResult.data : rawAST;
                     const endTime = performance.now();
                     const parseTime = endTime - startTime;
 
@@ -268,7 +282,7 @@ export const createAppStore = (options: StoreOptions = {
                     // Record performance metrics
                     get().recordParseTime(parseTime);
 
-                    console.log(`[DEBUG][Store] Parsed ${ast.length} AST nodes in ${parseTime.toFixed(2)}ms`);
+                    console.log(`[DEBUG][Store] Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`);
                     return ast;
                   } else {
                     const errorMessage = parseResult.success

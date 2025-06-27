@@ -1,12 +1,12 @@
 /**
  * CSG Operations Service
- * 
+ *
  * Service for performing Constructive Solid Geometry operations
- * using three-csg-ts for union, difference, and intersection operations.
+ * using custom CSG utility for union, difference, and intersection operations.
  */
 
 import * as THREE from 'three';
-import { CSG } from 'three-csg-ts';
+import { CSG } from './csg-core.service';
 import type { 
   CSGOperation, 
   CSGConfig, 
