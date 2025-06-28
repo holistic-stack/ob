@@ -228,7 +228,7 @@ describe('Matrix Adapters', () => {
     it('should create random matrix correctly', () => {
       console.log('[DEBUG][MatrixAdaptersTest] Testing random matrix creation');
       
-      const matrix = matrixFactory.random(3, 3, 0, 1);
+      const matrix = matrixFactory.random(3, 3);
       
       expect(matrix.rows).toBe(3);
       expect(matrix.columns).toBe(3);
@@ -314,7 +314,7 @@ describe('Matrix Adapters', () => {
       console.log('[DEBUG][MatrixAdaptersTest] Testing singular matrix identification');
 
       const singular = matrixFactory.fromArray([[0, 0], [0, 0]]); // Zero matrix, clearly singular
-      const nonSingular = matrixFactory.fromArray([[1, 0], [0, 1]]); // Identity matrix manually created
+      const nonSingular = matrixFactory.fromArray([[1, 0], [0, 1]] as const); // Identity matrix manually created
 
       expect(matrixUtils.isSingular(singular)).toBe(true);
       expect(matrixUtils.isSingular(nonSingular)).toBe(false);

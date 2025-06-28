@@ -12,7 +12,7 @@ import {
   getGlobalUnifiedParserService, 
   disposeGlobalUnifiedParserService,
   parseOpenSCADCodeUnified,
-  type ParseResult,
+  type UnifiedParseResult,
   type OutlineItem,
   type DocumentSymbol,
   type HoverInfo
@@ -309,7 +309,7 @@ describe('UnifiedParserService', () => {
       console.log('[DEBUG][Test] Testing hover information');
       
       // Test hover at different positions
-      const hoverInfo = service.getHoverInfo({ line: 1, column: 8 }); // Should be on 'testModule'
+      const hoverInfo = service.getHoverInfo({ line: 1, column: 8, offset: 7 }); // Should be on 'testModule'
       
       if (hoverInfo) {
         expect(hoverInfo.contents).toBeDefined();

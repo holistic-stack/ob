@@ -42,8 +42,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         size: [10, 10, 10],
         center: false,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 15 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 15, offset: 14 }
         }
       };
 
@@ -64,8 +64,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         type: 'union',
         children: [], // Empty children as from parser
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 4, column: 1 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 4, column: 1, offset: 50 }
         }
       };
 
@@ -74,8 +74,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         size: [15, 15, 15],
         center: true,
         location: {
-          start: { line: 2, column: 5 },
-          end: { line: 2, column: 25 }
+          start: { line: 2, column: 5, offset: 15 },
+          end: { line: 2, column: 25, offset: 35 }
         }
       };
 
@@ -83,8 +83,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         type: 'sphere',
         radius: 10,
         location: {
-          start: { line: 3, column: 5 },
-          end: { line: 3, column: 15 }
+          start: { line: 3, column: 5, offset: 40 },
+          end: { line: 3, column: 15, offset: 50 }
         }
       };
 
@@ -121,8 +121,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         v: [-24, 0, 0],
         children: [], // Will be populated by restructuring
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 6, column: 1 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 6, column: 1, offset: 100 }
         }
       };
 
@@ -130,8 +130,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         type: 'union',
         children: [], // Empty children as from parser
         location: {
-          start: { line: 2, column: 5 },
-          end: { line: 5, column: 5 }
+          start: { line: 2, column: 5, offset: 20 },
+          end: { line: 5, column: 5, offset: 80 }
         }
       };
 
@@ -140,8 +140,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         size: [15, 15, 15],
         center: true,
         location: {
-          start: { line: 3, column: 9 },
-          end: { line: 3, column: 29 }
+          start: { line: 3, column: 9, offset: 35 },
+          end: { line: 3, column: 29, offset: 55 }
         }
       };
 
@@ -149,8 +149,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         type: 'sphere',
         radius: 10,
         location: {
-          start: { line: 4, column: 9 },
-          end: { line: 4, column: 19 }
+          start: { line: 4, column: 9, offset: 65 },
+          end: { line: 4, column: 19, offset: 75 }
         }
       };
 
@@ -209,8 +209,8 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         
         // Without source locations, should keep original structure
         expect(restructuredAST).toHaveLength(2);
-        expect(restructuredAST[0].type).toBe('union');
-        expect(restructuredAST[1].type).toBe('cube');
+        expect(restructuredAST[0]?.type).toBe('union');
+        expect(restructuredAST[1]?.type).toBe('cube');
         
         console.log('[DEBUG][ASTRestructuringServiceTest] Nodes without locations handled gracefully');
       }

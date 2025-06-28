@@ -361,7 +361,7 @@ describe('MatrixCacheService', () => {
       const keys = cacheService.getKeys();
       expect(keys).toContain('key1');
       expect(keys).toContain('key2');
-      expect(keys.length).toBe(2);
+      expect(keys).toHaveLength(2);
     });
 
     it('should handle empty cache keys correctly', () => {

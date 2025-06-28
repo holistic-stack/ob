@@ -46,12 +46,18 @@ export class BSPTreeNode implements BSPNodeData {
     console.log('[DEBUG][BSPTreeNode] Cloning BSP tree node');
 
     const node = new BSPTreeNode();
-    node.plane = this.plane ? {
-      normal: this.plane.normal.clone(),
-      w: this.plane.w
-    } : undefined;
-    node.front = this.front?.clone();
-    node.back = this.back?.clone();
+    if (this.plane) {
+      node.plane = {
+        normal: this.plane.normal.clone(),
+        w: this.plane.w
+      };
+    }
+    if (this.front) {
+      node.front = this.front.clone();
+    }
+    if (this.back) {
+      node.back = this.back.clone();
+    }
     node.polygons = this.polygons.map(clonePolygon);
 
     return node;
@@ -66,17 +72,23 @@ export class BSPTreeNode implements BSPNodeData {
     try {
       // Flip all polygons
       for (let i = 0; i < this.polygons.length; i++) {
+        const polygon = this.polygons[i];
+        if (!polygon?.vertices || !polygon?.plane) {
+          continue;
+        }
+        
         this.polygons[i] = {
-          ...this.polygons[i],
-          vertices: this.polygons[i].vertices.slice().reverse().map(v => ({
+          ...polygon,
+          vertices: polygon.vertices.slice().reverse().map(v => ({
             ...v,
             normal: v.normal.clone().negate()
           })),
           plane: {
-            ...this.polygons[i].plane,
-            normal: this.polygons[i].plane.normal.clone().negate(),
-            w: -this.polygons[i].plane.w
-          }
+            ...polygon.plane,
+            normal: polygon.plane.normal.clone().negate(),
+            w: -polygon.plane.w
+          },
+          shared: polygon.shared || null
         };
       }
 
@@ -101,8 +113,16 @@ export class BSPTreeNode implements BSPNodeData {
 
       // Swap front and back
       const temp = this.front;
-      this.front = this.back;
-      this.back = temp;
+      if (this.back) {
+        this.front = this.back;
+      } else {
+        delete (this as any).front;
+      }
+      if (temp) {
+        this.back = temp;
+      } else {
+        delete (this as any).back;
+      }
 
       return success(undefined);
     } catch (err) {
@@ -228,7 +248,7 @@ export class BSPTreeNode implements BSPNodeData {
       }
 
       // Use first polygon's plane if we don't have one
-      if (!this.plane) {
+      if (!this.plane && validPolygons[0]) {
         this.plane = { ...validPolygons[0].plane };
       }
 
@@ -236,6 +256,11 @@ export class BSPTreeNode implements BSPNodeData {
       const back: PolygonData[] = [];
 
       for (const polygon of validPolygons) {
+        if (!this.plane) {
+          console.warn('[BSPTreeNode] No plane defined for split operation');
+          continue;
+        }
+        
         const splitResult = splitPolygonByPlane(polygon, this.plane);
         
         this.polygons = this.polygons.concat(

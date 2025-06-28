@@ -5,7 +5,7 @@
  * auto-completion, and language features in Monaco Editor.
  */
 
-import type * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor';
 import type { OpenSCADLanguageConfig } from '../types/editor.types';
 import { success, error, tryCatch } from '../../../shared/utils/functional/result';
 
@@ -119,7 +119,7 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
   operators: OPENSCAD_LANGUAGE_CONFIG.operators,
 
   // Common regular expressions
-  symbols: /[=><!~?:&|+\-*\/\^%]+/,
+  symbols: /[=><!~?:&|+\-*\\/^%]+/,
   escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 
   tokenizer: {
@@ -139,7 +139,7 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
       { include: '@whitespace' },
 
       // Delimiters and operators
-      [/[{}()\[\]]/, '@brackets'],
+      [/[{}()[\]]/, '@brackets'],
       [/[<>](?!@symbols)/, '@brackets'],
       [/@symbols/, {
         cases: {
@@ -149,7 +149,7 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
       }],
 
       // Numbers
-      [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+      [/\d*\.\d+([eE][+-]?\d+)?/, 'number.float'],
       [/0[xX][0-9a-fA-F]+/, 'number.hex'],
       [/\d+/, 'number'],
 
@@ -167,10 +167,10 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
     ],
 
     comment: [
-      [/[^\/*]+/, 'comment'],
+      [/[^/*]+/, 'comment'],
       [/\/\*/, 'comment', '@push'],    // nested comment
-      ["\\*/", 'comment', '@pop'],
-      [/[\/*]/, 'comment']
+      [/\*\//, 'comment', '@pop'],
+      [/[/*]/, 'comment']
     ],
 
     string: [

@@ -155,7 +155,7 @@ export const createDebouncedMonitor = (
   callback: (metrics: PerformanceMetrics) => void,
   intervalMs = 1000
 ) => {
-  let timeoutId: NodeJS.Timeout | null = null;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
   const frameRateMonitor = createFrameRateMonitor();
 
   const collectMetrics = (): PerformanceMetrics => ({

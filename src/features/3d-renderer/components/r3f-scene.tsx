@@ -5,14 +5,16 @@
  * as Three.js objects within the React Three Fiber context.
  */
 
-import React, { useEffect, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { CameraConfig, RenderingMetrics, Mesh3D } from '../types/renderer.types';
-import { useAppStore } from '../../store/app-store';
-import { renderASTNode } from '../services/primitive-renderer';
+import React, { useEffect, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import type { ASTNode } from "@holistic-stack/openscad-parser";
+import type {
+  CameraConfig,
+  RenderingMetrics,
+  Mesh3D,
+} from "../types/renderer.types";
+import { renderASTNode } from "../services/primitive-renderer";
 
 /**
  * Props for the R3F scene component
@@ -29,16 +31,24 @@ interface R3FSceneProps {
 /**
  * Simple performance measurement utility
  */
-const measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
+const _measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
   const start = performance.now();
   const result = fn();
   const end = performance.now();
   return { result, duration: end - start };
 };
 
-
-
-
+/**
+ * Async performance measurement utility
+ */
+const measureTimeAsync = async <T,>(
+  fn: () => Promise<T>,
+): Promise<{ result: T; duration: number }> => {
+  const start = performance.now();
+  const result = await fn();
+  const end = performance.now();
+  return { result, duration: end - start };
+};
 
 /**
  * R3F Scene component that renders AST nodes
@@ -49,7 +59,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
   onCameraChange,
   onPerformanceUpdate,
   onRenderComplete,
-  onRenderError
+  onRenderError,
 }) => {
   const { scene, gl } = useThree();
   const meshesRef = useRef<Mesh3D[]>([]);
@@ -60,83 +70,118 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
    * Update scene when AST nodes change
    */
   useEffect(() => {
-    console.log(`[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`);
+    const updateScene = async () => {
+      console.log(
+        `[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`,
+      );
 
-    const { result: meshes, duration: renderTime } = measureTime(() => {
-      // Clear existing meshes using proper disposal
-      meshesRef.current.forEach(mesh3D => {
-        scene.remove(mesh3D.mesh);
-        mesh3D.dispose(); // Use the Mesh3D disposal method
-      });
-      meshesRef.current = [];
+      const { result: meshes, duration: renderTime } = await measureTimeAsync(
+        async () => {
+          // Clear existing meshes using proper disposal
+          meshesRef.current.forEach((mesh3D) => {
+            scene.remove(mesh3D.mesh);
+            mesh3D.dispose(); // Use the Mesh3D disposal method
+          });
+          meshesRef.current = [];
 
-      // Create new meshes from AST nodes using proper service
-      const newMeshes: Mesh3D[] = [];
-      astNodes.forEach((node, index) => {
-        try {
-          const result = renderASTNode(node, index);
-          if (result.success) {
-            const mesh3D = result.data;
+          // Create new meshes from AST nodes using proper service
+          const newMeshes: Mesh3D[] = [];
 
-            // Position meshes in a grid for multiple objects
-            const gridSize = Math.ceil(Math.sqrt(astNodes.length));
-            const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
-            const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-            mesh3D.mesh.position.set(x, 0, z);
+          // Process nodes sequentially to maintain order
+          for (let index = 0; index < astNodes.length; index++) {
+            const node = astNodes[index];
+            if (!node) {
+              console.warn(
+                `[DEBUG][R3FScene] Skipping undefined node at index ${index}`,
+              );
+              continue;
+            }
 
-            scene.add(mesh3D.mesh);
-            newMeshes.push(mesh3D);
+            try {
+              const result = await renderASTNode(node, index);
+              if (result.success) {
+                const mesh3D = result.data;
 
-            console.log(`[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`);
-          } else {
-            console.error(`[ERROR][R3FScene] Failed to render AST node ${index}:`, result.error);
-            onRenderError?.({ message: result.error });
+                // Position meshes in a grid for multiple objects
+                const gridSize = Math.ceil(Math.sqrt(astNodes.length));
+                const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
+                const z =
+                  Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
+                mesh3D.mesh.position.set(x, 0, z);
+
+                scene.add(mesh3D.mesh);
+                newMeshes.push(mesh3D);
+
+                console.log(
+                  `[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`,
+                );
+              } else {
+                console.error(
+                  `[ERROR][R3FScene] Failed to render AST node ${index} (${node.type}):`,
+                  result.error,
+                );
+                onRenderError?.({ message: result.error });
+              }
+            } catch (error) {
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
+              console.error(
+                `[ERROR][R3FScene] Failed to create mesh for node ${index} (${node.type}):`,
+                errorMessage,
+              );
+              onRenderError?.({ message: errorMessage });
+            }
           }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error(`[ERROR][R3FScene] Failed to create mesh for node ${index}:`, errorMessage);
-          onRenderError?.({ message: errorMessage });
+
+          return newMeshes;
+        },
+      );
+
+      meshesRef.current = meshes;
+
+      // Report render completion
+      onRenderComplete?.(meshes);
+
+      // Update performance metrics
+      const memoryUsage =
+        (performance as unknown as { memory?: { usedJSHeapSize: number } })
+          .memory?.usedJSHeapSize ?? 0;
+      const triangleCount = meshes.reduce((total, mesh3D) => {
+        const geometry = mesh3D.mesh.geometry;
+        if (geometry.index) {
+          return total + geometry.index.count / 3;
+        } else if (geometry.attributes.position) {
+          return total + geometry.attributes.position.count / 3;
         }
+        return total;
+      }, 0);
+
+      const vertexCount = meshes.reduce((total, mesh3D) => {
+        const geometry = mesh3D.mesh.geometry;
+        return total + (geometry.attributes.position?.count ?? 0);
+      }, 0);
+
+      onPerformanceUpdate?.({
+        renderTime,
+        parseTime: 0, // AST parsing happens elsewhere
+        memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
+        frameRate: 60, // Approximate - will be updated in frame loop
+        meshCount: meshes.length,
+        triangleCount,
+        vertexCount,
+        drawCalls: meshes.length, // Approximate - one draw call per mesh
+        textureMemory: 0, // Not tracking texture memory yet
+        bufferMemory: 0, // Not tracking buffer memory yet
       });
+    };
 
-      return newMeshes;
+    // Call the async function
+    void updateScene().catch((error) => {
+      console.error("[ERROR][R3FScene] Failed to update scene:", error);
+      onRenderError?.({
+        message: error.message ?? "Unknown scene update error",
+      });
     });
-
-    meshesRef.current = meshes;
-
-    // Report render completion
-    onRenderComplete?.(meshes);
-
-    // Update performance metrics
-    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
-    const triangleCount = meshes.reduce((total, mesh3D) => {
-      const geometry = mesh3D.mesh.geometry;
-      if (geometry.index) {
-        return total + geometry.index.count / 3;
-      } else if (geometry.attributes.position) {
-        return total + geometry.attributes.position.count / 3;
-      }
-      return total;
-    }, 0);
-
-    const vertexCount = meshes.reduce((total, mesh3D) => {
-      const geometry = mesh3D.mesh.geometry;
-      return total + (geometry.attributes.position?.count || 0);
-    }, 0);
-
-    onPerformanceUpdate?.({
-      renderTime,
-      parseTime: 0, // AST parsing happens elsewhere
-      memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
-      frameRate: 60, // Approximate - will be updated in frame loop
-      meshCount: meshes.length,
-      triangleCount,
-      vertexCount,
-      drawCalls: meshes.length, // Approximate - one draw call per mesh
-      textureMemory: 0, // Not tracking texture memory yet
-      bufferMemory: 0 // Not tracking buffer memory yet
-    });
-
   }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate]);
 
   /**
@@ -152,7 +197,9 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       frameCount.current = 0;
       lastPerformanceUpdate.current = now;
 
-      const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+      const memoryUsage =
+        (performance as unknown as { memory?: { usedJSHeapSize: number } })
+          .memory?.usedJSHeapSize ?? 0;
       const currentMeshes = meshesRef.current;
 
       onPerformanceUpdate?.({
@@ -172,11 +219,11 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         }, 0),
         vertexCount: currentMeshes.reduce((total, mesh3D) => {
           const geometry = mesh3D.mesh.geometry;
-          return total + (geometry.attributes.position?.count || 0);
+          return total + (geometry.attributes.position?.count ?? 0);
         }, 0),
         drawCalls: currentMeshes.length,
         textureMemory: 0,
-        bufferMemory: 0
+        bufferMemory: 0,
       });
     }
   });
@@ -185,28 +232,27 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
     <>
       {/* Lighting */}
       <ambientLight intensity={0.4} />
-      <directionalLight 
-        position={[10, 10, 5]} 
-        intensity={0.8}
-        castShadow
-      />
-      
+      <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
+
       {/* Camera controls */}
       <OrbitControls
         target={[...camera.target] as [number, number, number]}
         onChange={(event) => {
           if (event?.target && onCameraChange) {
-            const controls = event.target as any;
+            const controls = event.target as unknown as {
+              object: { position: { x: number; y: number; z: number } };
+              target: { x: number; y: number; z: number };
+            };
             const newCamera: CameraConfig = {
               position: [
                 controls.object.position.x,
                 controls.object.position.y,
-                controls.object.position.z
+                controls.object.position.z,
               ] as const,
               target: [
                 controls.target.x,
                 controls.target.y,
-                controls.target.z
+                controls.target.z,
               ] as const,
               zoom: camera.zoom,
               fov: camera.fov,
@@ -214,7 +260,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
               far: camera.far,
               enableControls: camera.enableControls,
               enableAutoRotate: camera.enableAutoRotate,
-              autoRotateSpeed: camera.autoRotateSpeed
+              autoRotateSpeed: camera.autoRotateSpeed,
             };
             onCameraChange(newCamera);
           }

@@ -48,7 +48,7 @@ export interface MatrixConversionOptions {
 export class MatrixConversionService {
   private readonly operationCounter = new Map<string, number>();
   private readonly conversionCache = new WeakMap<Matrix, Matrix>();
-  private readonly performanceMetrics: MatrixPerformanceMetrics = {
+  private performanceMetrics: MatrixPerformanceMetrics = {
     operationCount: 0,
     totalExecutionTime: 0,
     averageExecutionTime: 0,
@@ -115,7 +115,7 @@ export class MatrixConversionService {
     };
 
     // Update performance metrics
-    this.updatePerformanceMetrics(operationResult);
+    this.updatePerformanceMetrics(operationResult as MatrixOperationResult<Matrix>);
 
     return operationResult;
   }
@@ -124,17 +124,22 @@ export class MatrixConversionService {
    * Update internal performance metrics
    */
   private updatePerformanceMetrics(result: MatrixOperationResult): void {
-    this.performanceMetrics.operationCount++;
-    this.performanceMetrics.totalExecutionTime += result.performance.executionTime;
-    this.performanceMetrics.averageExecutionTime = 
-      this.performanceMetrics.totalExecutionTime / this.performanceMetrics.operationCount;
+    const newOperationCount = this.performanceMetrics.operationCount + 1;
+    const newTotalExecutionTime = this.performanceMetrics.totalExecutionTime + result.performance.executionTime;
     
     const [rows, cols] = result.performance.matrixSize;
     const size = rows * cols;
+    const isLargeMatrix = size >= this.deps.config.performance.largeMatrixThreshold;
     
-    if (size >= this.deps.config.performance.largeMatrixThreshold) {
-      this.performanceMetrics.largeMatrixOperations++;
-    }
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      operationCount: newOperationCount,
+      totalExecutionTime: newTotalExecutionTime,
+      averageExecutionTime: newTotalExecutionTime / newOperationCount,
+      largeMatrixOperations: isLargeMatrix 
+        ? this.performanceMetrics.largeMatrixOperations + 1 
+        : this.performanceMetrics.largeMatrixOperations,
+    };
 
     // Update telemetry if available
     if (this.deps.telemetry) {
@@ -150,7 +155,10 @@ export class MatrixConversionService {
    * Record failed operation
    */
   private recordFailure(operation: string, error: Error): void {
-    this.performanceMetrics.failedOperations++;
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      failedOperations: this.performanceMetrics.failedOperations + 1,
+    };
     
     if (this.deps.telemetry) {
       this.deps.telemetry.trackOperation(operation, 0, false);
@@ -333,7 +341,7 @@ export class MatrixConversionService {
       const cachedResult = this.conversionCache.get(matrix);
       if (cachedResult && options.useCache !== false) {
         console.log(`[DEBUG][MatrixConversionService] WeakMap cache hit for ml-matrix conversion`);
-        return success(this.createOperationResult(cachedResult as Matrix4, operation, startTime, [4, 4], true));
+        return success(this.createOperationResult(cachedResult as unknown as Matrix4, operation, startTime, [4, 4], true));
       }
 
       // Check persistent cache
@@ -448,7 +456,7 @@ export class MatrixConversionService {
             );
 
             const invS = Matrix.diag(invSingularValues);
-            result = svd.V.mmul(invS).mmul(svd.U.transpose());
+            result = (svd as any).V.mmul(invS).mmul((svd as any).U.transpose());
 
             console.log(`[DEBUG][MatrixConversionService] SVD-based pseudo-inverse completed successfully`);
 

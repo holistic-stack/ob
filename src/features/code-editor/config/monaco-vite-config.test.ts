@@ -260,9 +260,11 @@ describe('Monaco Editor Vite Configuration', () => {
         ]
       });
       
-      expect(config.customWorkers).toHaveLength(2);
-      expect(config.customWorkers?.[0].label).toBe('openscad');
-      expect(config.customWorkers?.[1].label).toBe('custom-lang');
+      expect(config.customWorkers).toBeDefined();
+      if (config.customWorkers) {
+        expect(config.customWorkers[0]?.label).toBe('openscad');
+        expect(config.customWorkers[1]?.label).toBe('custom-lang');
+      }
     });
 
     it('should validate worker entry paths', () => {

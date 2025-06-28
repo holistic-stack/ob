@@ -10,11 +10,11 @@ import { createParserManager } from './parser-manager';
 // Mock the @holistic-stack/openscad-parser
 vi.mock('@holistic-stack/openscad-parser', () => ({
   parseCode: vi.fn().mockResolvedValue([
-    { type: 'cube', parameters: { size: [10, 10, 10] } }
+    { type: 'cube', size: [10, 10, 10] }
   ]),
   validateAST: vi.fn().mockResolvedValue({ valid: true, errors: [] }),
   transformAST: vi.fn().mockResolvedValue([
-    { type: 'cube', parameters: { size: [10, 10, 10] } }
+    { type: 'cube', size: [10, 10, 10] }
   ])
 }));
 

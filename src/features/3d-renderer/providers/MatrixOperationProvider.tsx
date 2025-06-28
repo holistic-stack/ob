@@ -11,9 +11,9 @@ import { matrixServiceContainer } from '../services/matrix-service-container';
 import { useMatrixOperations, type UseMatrixOperationsReturn } from '../hooks/useMatrixOperations';
 
 /**
- * Matrix operation context configuration
+ * Matrix operation provider configuration
  */
-export interface MatrixOperationConfig {
+export interface MatrixOperationProviderConfig {
   readonly enableTelemetry?: boolean;
   readonly enableValidation?: boolean;
   readonly enableConfigManager?: boolean;
@@ -26,8 +26,8 @@ export interface MatrixOperationConfig {
  * Matrix operation context value
  */
 export interface MatrixOperationContextValue extends UseMatrixOperationsReturn {
-  readonly config: MatrixOperationConfig;
-  readonly updateConfig: (newConfig: Partial<MatrixOperationConfig>) => void;
+  readonly config: MatrixOperationProviderConfig;
+  readonly updateConfig: (newConfig: Partial<MatrixOperationProviderConfig>) => void;
   readonly isInitialized: boolean;
   readonly lastHealthCheck: number | null;
   readonly lastPerformanceReport: any;
@@ -36,7 +36,7 @@ export interface MatrixOperationContextValue extends UseMatrixOperationsReturn {
 /**
  * Default configuration
  */
-const DEFAULT_CONFIG: MatrixOperationConfig = {
+const DEFAULT_CONFIG: MatrixOperationProviderConfig = {
   enableTelemetry: true,
   enableValidation: true,
   enableConfigManager: true,
@@ -55,7 +55,7 @@ const MatrixOperationContext = createContext<MatrixOperationContextValue | null>
  */
 export interface MatrixOperationProviderProps {
   readonly children: ReactNode;
-  readonly config?: Partial<MatrixOperationConfig>;
+  readonly config?: Partial<MatrixOperationProviderConfig>;
   readonly onHealthStatusChange?: (isHealthy: boolean, status: any) => void;
   readonly onPerformanceReport?: (report: any) => void;
   readonly onError?: (error: Error) => void;
@@ -71,7 +71,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   onPerformanceReport,
   onError
 }) => {
-  const [config, setConfig] = useState<MatrixOperationConfig>({
+  const [config, setConfig] = useState<MatrixOperationProviderConfig>({
     ...DEFAULT_CONFIG,
     ...initialConfig
   });
@@ -85,7 +85,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   /**
    * Update configuration
    */
-  const updateConfig = useCallback((newConfig: Partial<MatrixOperationConfig>) => {
+  const updateConfig = useCallback((newConfig: Partial<MatrixOperationProviderConfig>) => {
     console.log('[DEBUG][MatrixOperationProvider] Updating configuration:', newConfig);
     setConfig(prev => ({ ...prev, ...newConfig }));
   }, []);
@@ -261,12 +261,12 @@ export const useMatrixOperationContext = (): MatrixOperationContextValue => {
  */
 export const withMatrixOperations = <P extends object>(
   Component: React.ComponentType<P>
-): React.FC<P & { matrixConfig?: Partial<MatrixOperationConfig> }> => {
-  const WrappedComponent: React.FC<P & { matrixConfig?: Partial<MatrixOperationConfig> }> = ({ 
+): React.FC<P & { matrixConfig?: Partial<MatrixOperationProviderConfig> }> => {
+  const WrappedComponent: React.FC<P & { matrixConfig?: Partial<MatrixOperationProviderConfig> }> = ({ 
     matrixConfig, 
     ...props 
   }) => (
-    <MatrixOperationProvider config={matrixConfig}>
+    <MatrixOperationProvider {...(matrixConfig ? { config: matrixConfig } : {})}>
       <Component {...(props as P)} />
     </MatrixOperationProvider>
   );

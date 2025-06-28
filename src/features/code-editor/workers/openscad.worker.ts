@@ -5,23 +5,30 @@
  * providing syntax validation, auto-completion, and language services.
  */
 
-import type { worker } from 'monaco-editor';
+import * as monaco from 'monaco-editor';
 
 // Import OpenSCAD language configuration
 import { 
-  OPENSCAD_LANGUAGE_CONFIG,
-  MONACO_LANGUAGE_CONFIG,
-  MONACO_TOKENIZER 
+  OPENSCAD_LANGUAGE_CONFIG
 } from '../services/openscad-language';
+
+// Global worker context types
+interface WorkerContext {
+  postMessage: (message: unknown) => void;
+  addEventListener: (type: string, listener: (event: unknown) => void) => void;
+  importScripts: (...urls: string[]) => void;
+  MarkerSeverity: typeof monaco.MarkerSeverity;
+  languages: typeof monaco.languages;
+}
 
 /**
  * OpenSCAD language worker implementation
  */
-export class OpenSCADWorker implements worker.IWorker {
-  private _ctx: worker.IWorkerContext;
+export class OpenSCADWorker {
+  private _ctx: WorkerContext;
   private _languageService: OpenSCADLanguageService;
 
-  constructor(ctx: worker.IWorkerContext) {
+  constructor(ctx: WorkerContext) {
     this._ctx = ctx;
     this._languageService = new OpenSCADLanguageService();
     
@@ -38,7 +45,7 @@ export class OpenSCADWorker implements worker.IWorker {
   /**
    * Validate OpenSCAD code
    */
-  async validateCode(code: string): Promise<worker.IMarkerData[]> {
+  async validateCode(code: string): Promise<monaco.editor.IMarkerData[]> {
     try {
       return await this._languageService.validateCode(code);
     } catch (error) {
@@ -53,7 +60,7 @@ export class OpenSCADWorker implements worker.IWorker {
   async getCompletions(
     code: string, 
     position: { line: number; column: number }
-  ): Promise<worker.languages.CompletionItem[]> {
+  ): Promise<monaco.languages.CompletionItem[]> {
     try {
       return await this._languageService.getCompletions(code, position);
     } catch (error) {
@@ -68,7 +75,7 @@ export class OpenSCADWorker implements worker.IWorker {
   async getHoverInfo(
     code: string,
     position: { line: number; column: number }
-  ): Promise<worker.languages.Hover | null> {
+  ): Promise<monaco.languages.Hover | null> {
     try {
       return await this._languageService.getHoverInfo(code, position);
     } catch (error) {
@@ -95,12 +102,14 @@ class OpenSCADLanguageService {
   /**
    * Validate OpenSCAD code and return diagnostics
    */
-  async validateCode(code: string): Promise<worker.IMarkerData[]> {
-    const markers: worker.IMarkerData[] = [];
+  async validateCode(code: string): Promise<monaco.editor.IMarkerData[]> {
+    const markers: monaco.editor.IMarkerData[] = [];
     const lines = code.split('\n');
 
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
       const line = lines[lineIndex];
+      if (!line) continue;
+      
       const lineNumber = lineIndex + 1;
 
       // Check for syntax errors
@@ -121,14 +130,14 @@ class OpenSCADLanguageService {
   async getCompletions(
     code: string,
     position: { line: number; column: number }
-  ): Promise<worker.languages.CompletionItem[]> {
-    const completions: worker.languages.CompletionItem[] = [];
+  ): Promise<monaco.languages.CompletionItem[]> {
+    const completions: monaco.languages.CompletionItem[] = [];
 
     // Add keyword completions
     this._keywords.forEach(keyword => {
       completions.push({
         label: keyword,
-        kind: worker.languages.CompletionItemKind.Keyword,
+        kind: monaco.languages.CompletionItemKind.Keyword,
         insertText: keyword,
         range: {
           startLineNumber: position.line,
@@ -143,9 +152,9 @@ class OpenSCADLanguageService {
     this._builtinFunctions.forEach(func => {
       completions.push({
         label: func,
-        kind: worker.languages.CompletionItemKind.Function,
+        kind: monaco.languages.CompletionItemKind.Function,
         insertText: `${func}()`,
-        insertTextRules: worker.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         range: {
           startLineNumber: position.line,
           endLineNumber: position.line,
@@ -159,9 +168,9 @@ class OpenSCADLanguageService {
     this._builtinModules.forEach(module => {
       completions.push({
         label: module,
-        kind: worker.languages.CompletionItemKind.Module,
+        kind: monaco.languages.CompletionItemKind.Module,
         insertText: `${module}()`,
-        insertTextRules: worker.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         range: {
           startLineNumber: position.line,
           endLineNumber: position.line,
@@ -180,7 +189,7 @@ class OpenSCADLanguageService {
   async getHoverInfo(
     code: string,
     position: { line: number; column: number }
-  ): Promise<worker.languages.Hover | null> {
+  ): Promise<monaco.languages.Hover | null> {
     const lines = code.split('\n');
     const line = lines[position.line - 1];
     
@@ -219,8 +228,8 @@ class OpenSCADLanguageService {
   /**
    * Validate syntax of a line
    */
-  private _validateSyntax(line: string, lineNumber: number): worker.IMarkerData[] {
-    const markers: worker.IMarkerData[] = [];
+  private _validateSyntax(line: string, lineNumber: number): monaco.editor.IMarkerData[] {
+    const markers: monaco.editor.IMarkerData[] = [];
 
     // Check for unmatched brackets
     const brackets = { '(': 0, '[': 0, '{': 0 };
@@ -241,7 +250,7 @@ class OpenSCADLanguageService {
     Object.entries(brackets).forEach(([bracket, count]) => {
       if (count !== 0) {
         markers.push({
-          severity: worker.MarkerSeverity.Error,
+          severity: monaco.MarkerSeverity.Error,
           startLineNumber: lineNumber,
           startColumn: 1,
           endLineNumber: lineNumber,
@@ -257,12 +266,12 @@ class OpenSCADLanguageService {
   /**
    * Validate semantics of a line
    */
-  private _validateSemantics(line: string, lineNumber: number): worker.IMarkerData[] {
-    const markers: worker.IMarkerData[] = [];
+  private _validateSemantics(line: string, lineNumber: number): monaco.editor.IMarkerData[] {
+    const markers: monaco.editor.IMarkerData[] = [];
 
     // Check for undefined functions/modules
-    const words = line.match(/\b\w+\b/g) || [];
-    words.forEach(word => {
+        const wordMatch = line.match(/\b\w+\b/g) ?? [];
+        wordMatch.forEach(word => {
       if (word.match(/^[a-z_]/i) && 
           !this._keywords.has(word) && 
           !this._builtinFunctions.has(word) && 
@@ -271,7 +280,7 @@ class OpenSCADLanguageService {
         const wordIndex = line.indexOf(word);
         if (wordIndex !== -1) {
           markers.push({
-            severity: worker.MarkerSeverity.Info,
+            severity: monaco.MarkerSeverity.Info,
             startLineNumber: lineNumber,
             startColumn: wordIndex + 1,
             endLineNumber: lineNumber,
@@ -308,8 +317,8 @@ class OpenSCADLanguageService {
 /**
  * Create and export worker instance
  */
-const ctx: worker.IWorkerContext = self as any;
-const worker = new OpenSCADWorker(ctx);
+const ctx: WorkerContext = self as unknown as WorkerContext;
+const openscadWorker = new OpenSCADWorker(ctx);
 
 // Export worker for Monaco Editor
-export default worker;
+export default openscadWorker;

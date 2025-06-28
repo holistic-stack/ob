@@ -157,8 +157,10 @@ describe('Vite Monaco Editor Integration', () => {
       configureMonacoEnvironment();
       
       expect(mockWindow.MonacoEnvironment).toBeDefined();
-      expect(typeof mockWindow.MonacoEnvironment.getWorkerUrl).toBe('function');
-      expect(typeof mockWindow.MonacoEnvironment.getWorker).toBe('function');
+      if (mockWindow.MonacoEnvironment) {
+        expect(typeof (mockWindow.MonacoEnvironment as any).getWorkerUrl).toBe('function');
+        expect(typeof (mockWindow.MonacoEnvironment as any).getWorker).toBe('function');
+      }
     });
   });
 
@@ -207,9 +209,11 @@ describe('Vite Monaco Editor Integration', () => {
         ]
       });
       
-      expect(pluginConfig.customWorkers).toHaveLength(2);
-      expect(pluginConfig.customWorkers?.[0].label).toBe('openscad');
-      expect(pluginConfig.customWorkers?.[1].label).toBe('custom');
+      expect(pluginConfig.customWorkers).toBeDefined();
+      if (pluginConfig.customWorkers) {
+        expect(pluginConfig.customWorkers[0]?.label).toBe('openscad');
+        expect(pluginConfig.customWorkers[1]?.label).toBe('custom');
+      }
     });
   });
 

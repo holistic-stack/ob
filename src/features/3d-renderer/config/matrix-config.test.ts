@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   MATRIX_CONFIG,
-  getPerformanceThresholds,
+  getMatrixPerformanceThresholds,
   getCacheConfig,
   getOperationDefaults,
   getThreeJSConfig,
@@ -80,7 +80,7 @@ describe('Matrix Configuration', () => {
     it('should return performance thresholds correctly', () => {
       console.log('[DEBUG][MatrixConfigTest] Testing performance thresholds getter');
       
-      const thresholds = getPerformanceThresholds();
+      const thresholds = getMatrixPerformanceThresholds();
       expect(thresholds).toEqual(MATRIX_CONFIG.performance);
     });
 

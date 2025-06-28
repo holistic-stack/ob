@@ -105,7 +105,12 @@ export const createPrimitiveRendererFactory = (): PrimitiveRendererFactory => ({
         
         // Triangulate face if it has more than 3 vertices
         for (let i = 1; i < face.length - 1; i++) {
-          indicesFlat.push(face[0], face[i], face[i + 1]);
+          const v0 = face[0];
+          const v1 = face[i];
+          const v2 = face[i + 1];
+          if (v0 !== undefined && v1 !== undefined && v2 !== undefined) {
+            indicesFlat.push(v0, v1, v2);
+          }
         }
       });
       
@@ -172,7 +177,10 @@ export const createMaterialFactory = (): MaterialFactory => ({
  * Parse OpenSCAD parameters from AST node
  */
 const parseParameters = (node: ASTNode): Record<string, unknown> => {
-  return node.parameters || {};
+  // In the new parser structure, parameters are direct properties of the node
+  // Extract only the non-standard properties (not type, location)
+  const { type, location, ...parameters } = node as any;
+  return parameters;
 };
 
 /**
@@ -282,8 +290,8 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
       id: `${params.type}-${Date.now()}`,
       nodeType: params.type,
       nodeIndex: 0,
-      triangleCount: geometryResult.data.attributes.position.count / 3,
-      vertexCount: geometryResult.data.attributes.position.count,
+      triangleCount: geometryResult.data.attributes.position?.count ? geometryResult.data.attributes.position.count / 3 : 0,
+      vertexCount: geometryResult.data.attributes.position?.count ?? 0,
       boundingBox,
       material: 'standard',
       color: materialConfig.color,
@@ -305,11 +313,11 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
 /**
  * Render OpenSCAD AST node to Three.js mesh using CSG operations
  */
-export const renderASTNode = (node: ASTNode, index: number): Result<Mesh3D, string> => {
+export const renderASTNode = async (node: ASTNode, index: number): Promise<Result<Mesh3D, string>> => {
   console.log(`[DEBUG][PrimitiveRenderer] Rendering AST node ${index}: ${node.type} using CSG`);
 
   // Use the new CSG converter for all OpenSCAD primitives
-  const csgResult = convertASTNodeToCSG(node, index, {
+  const csgResult = await convertASTNodeToCSG(node, index, {
     material: {
       color: '#00ff88', // Green color as specified
       opacity: 1,

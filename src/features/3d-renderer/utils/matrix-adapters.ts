@@ -5,7 +5,7 @@
  * following functional programming patterns and bulletproof-react organization.
  */
 
-import { Matrix, CholeskyDecomposition } from 'ml-matrix';
+import { Matrix, CholeskyDecomposition, determinant } from 'ml-matrix';
 import { Matrix3, Matrix4, Vector3, Quaternion, Euler } from 'three';
 import type { 
   TransformationMatrix, 
@@ -15,10 +15,10 @@ import type {
   MatrixAdapter,
   MatrixFactory,
   MatrixUtils
-} from '../types/matrix.types';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { success, error } from '../../../shared/utils/functional/result';
-import type { Result } from '../../../shared/types/result.types';
+} from '../types/matrix.types.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { success, error } from '../../../shared/utils/functional/result.js';
+import type { Result } from '../../../shared/types/result.types.js';
 
 /**
  * Convert Three.js Matrix3 to ml-matrix
@@ -253,7 +253,7 @@ export const matrixFactory: MatrixFactory = {
   
   random: (rows: number, cols: number, min = 0, max = 1): Matrix => {
     console.log(`[DEBUG][MatrixAdapters] Creating ${rows}x${cols} random matrix [${min}, ${max}]`);
-    return Matrix.random(rows, cols, { min, max });
+    return Matrix.random(rows, cols);
   },
   
   diagonal: (values: readonly number[]): Matrix => {
@@ -269,7 +269,7 @@ export const matrixFactory: MatrixFactory = {
         throw new Error('Matrix data cannot be empty');
       }
       
-      const cols = data[0].length;
+      const cols = data[0]!.length;
       for (const row of data) {
         if (row.length !== cols) {
           throw new Error('All rows must have the same number of columns');
@@ -354,7 +354,7 @@ export const matrixUtils: MatrixUtils = {
     if (!matrixUtils.isSquare(matrix)) return true;
 
     try {
-      const det = matrix.determinant();
+      const det = determinant(matrix);
       return Math.abs(det) < MATRIX_CONFIG.operations.precision;
     } catch {
       return true;
@@ -438,4 +438,28 @@ export const matrixAdapter: MatrixAdapter = {
     }
     return result.data;
   }
+};
+
+export const matrix4ToMLMatrix = fromThreeMatrix4;
+export const mlMatrixToMatrix4 = toThreeMatrix4;
+export const matrix3ToMLMatrix = fromThreeMatrix3;
+export const mlMatrixToMatrix3 = toThreeMatrix3;
+export const createIdentityMatrix = matrixFactory.identity;
+export const createZeroMatrix = matrixFactory.zeros;
+export const createRandomMatrix = matrixFactory.random;
+
+export const validateMatrixDimensions = (
+  matrix: Matrix,
+  expectedRows: number,
+  expectedCols: number,
+): boolean => {
+  return matrix.rows === expectedRows && matrix.columns === expectedCols;
+};
+
+export const isValidMatrix4 = (matrix: Matrix): boolean => {
+  return validateMatrixDimensions(matrix, 4, 4);
+};
+
+export const isValidMatrix3 = (matrix: Matrix): boolean => {
+  return validateMatrixDimensions(matrix, 3, 3);
 };

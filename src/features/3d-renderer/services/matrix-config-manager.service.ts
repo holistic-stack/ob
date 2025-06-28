@@ -210,42 +210,42 @@ export class MatrixConfigManagerService {
         debug: {
           ...MATRIX_CONFIG.debug,
           enablePerformanceLogging: true,
-          enableTracing: true,
+          enableTracing: false,
           logLevel: 'DEBUG'
         },
         performance: {
           ...MATRIX_CONFIG.performance,
-          performanceThreshold: 32 // More relaxed for development
+          performanceThreshold: 16 // More relaxed for development
         }
       },
       test: {
         debug: {
           ...MATRIX_CONFIG.debug,
-          enablePerformanceLogging: false,
+          enablePerformanceLogging: true,
           enableTracing: false,
           logLevel: 'ERROR'
         },
         cache: {
           ...MATRIX_CONFIG.cache,
-          maxCacheSize: 10, // Smaller cache for tests
-          cacheTTL: 1000 // Shorter TTL for tests
+          maxCacheSize: 100, // Smaller cache for tests
+          cacheTTL: 300000 // Shorter TTL for tests
         }
       },
       production: {
         debug: {
           ...MATRIX_CONFIG.debug,
-          enablePerformanceLogging: false,
+          enablePerformanceLogging: true,
           enableTracing: false,
           logLevel: 'WARN'
         },
         performance: {
           ...MATRIX_CONFIG.performance,
-          performanceThreshold: 8 // Stricter for production
+          performanceThreshold: 16 // Stricter for production
         },
         errorHandling: {
           ...MATRIX_CONFIG.errorHandling,
           enableAutoRecovery: true,
-          maxRetries: 5
+          maxRetries: 3
         }
       }
     };
@@ -274,7 +274,7 @@ export class MatrixConfigManagerService {
         this.configOverrides.set(key, value);
 
         // Record the change
-        this.recordConfigurationChange('manual', key, undefined, value, 'Manual configuration override');
+        this.recordConfigurationChange('debug', key, undefined, value, 'Manual configuration override');
       }
 
       return success(undefined);
@@ -310,13 +310,19 @@ export class MatrixConfigManagerService {
     let current = obj;
 
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!(keys[i] in current)) {
-        current[keys[i]] = {};
+      const key = keys[i];
+      if (key && !(key in current)) {
+        current[key] = {};
       }
-      current = current[keys[i]];
+      if (key) {
+        current = current[key];
+      }
     }
 
-    current[keys[keys.length - 1]] = value;
+    const lastKey = keys[keys.length - 1];
+    if (lastKey) {
+      current[lastKey] = value;
+    }
   }
 
   /**
@@ -392,7 +398,7 @@ export class MatrixConfigManagerService {
     this.configOverrides.clear();
     this.applyEnvironmentSpecificConfig();
     
-    this.recordConfigurationChange('manual', 'all', 'overridden', 'defaults', 'Reset to default configuration');
+    this.recordConfigurationChange('debug', 'all', 'overridden', 'defaults', 'Reset to default configuration');
   }
 
   /**
@@ -548,7 +554,7 @@ export class MatrixConfigManagerService {
         }
       }
 
-      this.recordConfigurationChange('manual', 'all', 'previous', 'imported', 'Configuration imported from backup');
+      this.recordConfigurationChange('debug', 'all', 'previous', 'imported', 'Configuration imported from backup');
       
       console.log('[DEBUG][MatrixConfigManagerService] Configuration imported successfully');
       return success(undefined);

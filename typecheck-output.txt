@@ -1,0 +1,134 @@
+
+> openscad-r3f@1.0.0 typecheck C:\Users\luciano\git\openscad-babylon
+> npx tsc --noEmit
+
+src/features/3d-renderer/api/matrix-operations.api.ts(381,49): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Matrix'.
+src/features/3d-renderer/api/matrix-operations.api.ts(406,49): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Matrix'.
+src/features/3d-renderer/components/three-renderer.tsx(478,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/features/3d-renderer/components/three-renderer.tsx(519,9): error TS2322: Type '({ gl, scene: _scene, camera: threeCamera, }: { gl: { setClearColor: (color: string) => void; shadowMap: { enabled: boolean; type: number; }; outputColorSpace: number; toneMapping: number; toneMappingExposure: number; }; scene: unknown; camera: THREE.PerspectiveCamera; }) => void' is not assignable to type '(state: RootState) => void'.
+  Types of parameters '__0' and 'state' are incompatible.
+    Type 'RootState' is not assignable to type '{ gl: { setClearColor: (color: string) => void; shadowMap: { enabled: boolean; type: number; }; outputColorSpace: number; toneMapping: number; toneMappingExposure: number; }; scene: unknown; camera: PerspectiveCamera; }'.
+      The types of 'gl.outputColorSpace' are incompatible between these types.
+        Type 'string' is not assignable to type 'number'.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(109,20): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ matrix4ToMLMatrix: { baseline: number; tolerance: number; maxRegression: number; }; mlMatrixToMatrix4: { baseline: number; tolerance: number; maxRegression: number; }; normalMatrixComputation: { ...; }; } | { ...; } | { ...; } | { ...; } | { ...; }'.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(154,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(318,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(348,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(374,33): error TS2345: Argument of type '{ test: string; timestamp: number; }' is not assignable to parameter of type 'Matrix'.
+  Type '{ test: string; timestamp: number; }' is missing the following properties from type 'Matrix': set, get, removeColumn, removeRow, and 137 more.
+src/features/3d-renderer/services/matrix-performance-regression.test.ts(401,33): error TS2345: Argument of type '{ data: number; timestamp: number; }' is not assignable to parameter of type 'Matrix'.
+  Type '{ data: number; timestamp: number; }' is missing the following properties from type 'Matrix': set, get, removeColumn, removeRow, and 137 more.
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(262,29): error TS2532: Object is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(282,39): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(300,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(470,36): error TS2551: Property 'getConfigManagerService' does not exist on type 'MatrixServiceContainer'. Did you mean 'getConfigManager'?
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(474,27): error TS2532: Object is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-concurrent.test.ts(474,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-container.test.ts(136,7): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/features/3d-renderer/services/matrix-service-container.test.ts(335,49): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/features/3d-renderer/services/matrix-service-load.test.ts(199,39): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(234,39): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(260,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(276,39): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(340,39): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(399,28): error TS18048: 'finalMemory' is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(399,42): error TS18048: 'initialMemory' is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(408,36): error TS2532: Object is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-service-load.test.ts(454,48): error TS2339: Property 'status' does not exist on type 'ServiceHealthStatus'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(190,56): error TS2345: Argument of type '(key: string, value: any, ttl?: number) => Result<void, string>' is not assignable to parameter of type '(key: string, matrix: Matrix, metadata?: Record<string, unknown> | undefined) => Result<void, string>'.
+  Types of parameters 'ttl' and 'metadata' are incompatible.
+    Type 'Record<string, unknown> | undefined' is not assignable to type 'number | undefined'.
+      Type 'Record<string, unknown>' is not assignable to type 'number'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(195,40): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'Record<string, unknown> | undefined'.
+  Type 'number' is not assignable to type 'Record<string, unknown>'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(238,38): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(244,35): error TS2345: Argument of type '"validateMatrix"' is not assignable to parameter of type 'never'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(244,72): error TS2345: Argument of type '(matrix: Matrix, options?: any) => Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>>' is not assignable to parameter of type '() => never'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(296,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(351,32): error TS18047: 'validationService' is possibly 'null'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(357,13): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(364,32): error TS2339: Property 'validation' does not exist on type 'MatrixOperationResult<MatrixValidationResult>'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(368,13): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/features/3d-renderer/services/matrix-service-recovery.test.ts(541,36): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Matrix'.
+src/features/3d-renderer/services/matrix-telemetry.service.test.ts(188,14): error TS18048: 'report.operationBreakdown.add' is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-telemetry.service.test.ts(189,14): error TS18048: 'report.operationBreakdown.add' is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-telemetry.service.test.ts(190,14): error TS18048: 'report.operationBreakdown.inverse' is possibly 'undefined'.
+src/features/3d-renderer/services/matrix-telemetry.service.test.ts(331,57): error TS2322: Type '{ debug: { enablePerformanceLogging: boolean; enableTracing: false; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; enableMemoryMonitoring: true; performanceLogInterval: 10000; }; performance: { ...; }; ... 4 more ...; errorHandling: { ...; }; }' is not assignable to type '{ readonly performance: { readonly maxDirectOperationSize: 10000; readonly maxCacheableSize: 1000000; readonly operationTimeout: 5000; readonly maxMemoryUsage: number; readonly performanceThreshold: 16; readonly largeMatrixThreshold: 1000000; readonly batchSize: 10000; }; ... 5 more ...; readonly errorHandling: { .....'.
+  The types of 'debug.enablePerformanceLogging' are incompatible between these types.
+    Type 'boolean' is not assignable to type 'true'.
+src/features/3d-renderer/services/matrix-telemetry.service.test.ts(355,57): error TS2322: Type '{ debug: { enablePerformanceLogging: boolean; enableTracing: false; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; enableMemoryMonitoring: true; performanceLogInterval: 10000; }; performance: { ...; }; ... 4 more ...; errorHandling: { ...; }; }' is not assignable to type '{ readonly performance: { readonly maxDirectOperationSize: 10000; readonly maxCacheableSize: 1000000; readonly operationTimeout: 5000; readonly maxMemoryUsage: number; readonly performanceThreshold: 16; readonly largeMatrixThreshold: 1000000; readonly batchSize: 10000; }; ... 5 more ...; readonly errorHandling: { .....'.
+  The types of 'debug.enablePerformanceLogging' are incompatible between these types.
+    Type 'boolean' is not assignable to type 'true'.
+src/features/3d-renderer/services/matrix-telemetry.service.ts(152,11): error TS2375: Type '{ operation: string; duration: number; success: boolean; timestamp: number; memoryUsage: number | undefined; matrixSize: readonly [number, number] | undefined; metadata: Record<string, unknown> | undefined; }' is not assignable to type 'OperationEntry' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'memoryUsage' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+src/features/3d-renderer/utils/matrix-adapters.test.ts(393,53): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/features/code-editor/components/store-connected-editor.test.tsx(188,42): error TS2322: Type 'string' is not assignable to type 'never'.
+src/features/code-editor/config/monaco-vite-config.test.ts(264,14): error TS2532: Object is possibly 'undefined'.
+src/features/code-editor/config/monaco-vite-config.test.ts(265,14): error TS2532: Object is possibly 'undefined'.
+src/features/code-editor/config/vite-integration.test.ts(160,21): error TS18048: 'mockWindow.MonacoEnvironment' is possibly 'undefined'.
+src/features/code-editor/config/vite-integration.test.ts(161,21): error TS18048: 'mockWindow.MonacoEnvironment' is possibly 'undefined'.
+src/features/code-editor/config/vite-integration.test.ts(211,14): error TS2532: Object is possibly 'undefined'.
+src/features/code-editor/config/vite-integration.test.ts(212,14): error TS2532: Object is possibly 'undefined'.
+src/features/code-editor/hooks/use-monaco-editor.test.ts(142,47): error TS2353: Object literal may only specify known properties, and 'start' does not exist in type 'EditorSelection'.
+src/features/integration/end-to-end-workflow.test.ts(300,26): error TS2740: Type 'Mesh3D' is missing the following properties from type 'Mesh<BufferGeometry<NormalBufferAttributes>, Material | Material[], Object3DEventMap>': isMesh, type, geometry, material, and 78 more.
+src/features/integration/end-to-end-workflow.test.ts(360,19): error TS2451: Cannot redeclare block-scoped variable 'csgResult'.
+src/features/integration/end-to-end-workflow.test.ts(361,19): error TS2451: Cannot redeclare block-scoped variable 'csgResult'.
+src/features/integration/end-to-end-workflow.test.ts(362,30): error TS2339: Property 'success' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(363,28): error TS2339: Property 'success' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(365,38): error TS2339: Property 'data' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(468,32): error TS2339: Property 'success' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(469,30): error TS2339: Property 'success' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(472,43): error TS2339: Property 'data' does not exist on type 'Promise<Result<Mesh3D, string>>'.
+src/features/integration/end-to-end-workflow.test.ts(509,37): error TS2339: Property 'data' does not exist on type 'Result<readonly ASTNode[], string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(517,38): error TS2339: Property 'data' does not exist on type 'Result<Mesh3D, string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(527,20): error TS18048: 'validationMetrics' is possibly 'undefined'.
+src/features/integration/end-to-end-workflow.test.ts(562,35): error TS2339: Property 'data' does not exist on type 'Result<readonly ASTNode[], string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(566,28): error TS2339: Property 'data' does not exist on type 'Result<Mesh3D, string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(615,33): error TS2339: Property 'data' does not exist on type 'Result<readonly ASTNode[], string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(619,32): error TS2339: Property 'data' does not exist on type 'Result<Mesh3D, string>'.
+  Property 'data' does not exist on type '{ readonly success: false; readonly error: string; }'.
+src/features/integration/end-to-end-workflow.test.ts(647,40): error TS2339: Property 'getStatistics' does not exist on type 'MatrixCacheService'.
+src/features/integration/react-integration.test.tsx(176,7): error TS2353: Object literal may only specify known properties, and 'code' does not exist in type 'AppStore | Partial<AppStore> | ((state: WritableDraft<AppStore>) => void)'.
+src/features/integration/react-integration.test.tsx(422,14): error TS2532: Object is possibly 'undefined'.
+src/features/integration/react-integration.test.tsx(593,15): error TS2353: Object literal may only specify known properties, and 'parameters' does not exist in type 'CubeNode'.
+src/features/openscad-parser/services/parser-manager.test.ts(205,40): error TS2740: Type '{}' is missing the following properties from type 'ModuleParameter[]': length, pop, push, concat, and 29 more.
+src/features/openscad-parser/services/parser-manager.test.ts(222,47): error TS2353: Object literal may only specify known properties, and 'parameters' does not exist in type 'CubeNode'.
+src/shared/utils/functional/pipe.test.ts(63,32): error TS2345: Argument of type '(x: number) => number' is not assignable to parameter of type 'UnaryFunction<unknown, unknown>'.
+  Types of parameters 'x' and 'arg' are incompatible.
+    Type 'unknown' is not assignable to type 'number'.
+src/shared/utils/functional/pipe.test.ts(76,14): error TS2571: Object is of type 'unknown'.
+src/shared/utils/functional/pipe.test.ts(83,14): error TS2571: Object is of type 'unknown'.
+src/shared/utils/functional/pipe.test.ts(243,28): error TS2345: Argument of type '"name"' is not assignable to parameter of type 'never'.
+src/shared/utils/functional/result.test.ts(121,37): error TS2345: Argument of type '(x: number) => { readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; }' is not assignable to parameter of type '(value: number) => Result<unknown, Error>'.
+  Type '{ readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; }' is not assignable to type 'Result<unknown, Error>'.
+    Type '{ readonly success: false; readonly error: string; }' is not assignable to type 'Result<unknown, Error>'.
+      Type '{ readonly success: false; readonly error: string; }' is not assignable to type '{ readonly success: false; readonly error: Error; }'.
+        Types of property 'error' are incompatible.
+          Type 'string' is not assignable to type 'Error'.
+src/shared/utils/functional/result.test.ts(188,32): error TS2345: Argument of type '({ readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; })[]' is not assignable to parameter of type 'readonly Result<unknown, string>[]'.
+  Type '{ readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; }' is not assignable to type 'Result<unknown, string>'.
+    Type '{ readonly success: false; readonly error: Error; }' is not assignable to type 'Result<unknown, string>'.
+      Type '{ readonly success: false; readonly error: Error; }' is not assignable to type '{ readonly success: false; readonly error: string; }'.
+        Types of property 'error' are incompatible.
+          Type 'Error' is not assignable to type 'string'.
+src/shared/utils/functional/result.test.ts(210,35): error TS2345: Argument of type '({ readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; })[]' is not assignable to parameter of type 'readonly Result<unknown, string>[]'.
+  Type '{ readonly success: false; readonly error: string; } | { readonly success: true; readonly data: unknown; } | { readonly success: false; readonly error: Error; }' is not assignable to type 'Result<unknown, string>'.
+    Type '{ readonly success: false; readonly error: Error; }' is not assignable to type 'Result<unknown, string>'.
+      Type '{ readonly success: false; readonly error: Error; }' is not assignable to type '{ readonly success: false; readonly error: string; }'.
+        Types of property 'error' are incompatible.
+          Type 'Error' is not assignable to type 'string'.
+src/shared/utils/functional/result.test.ts(259,61): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Error'.
+src/shared/utils/functional/result.test.ts(269,61): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Error'.
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 2.

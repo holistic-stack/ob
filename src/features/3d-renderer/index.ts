@@ -13,16 +13,48 @@ export * from './components';
 export * from './hooks';
 
 // Providers
-export * from './providers/MatrixOperationProvider';
+export {
+  MatrixOperationProvider,
+  useMatrixOperationContext,
+  withMatrixOperations,
+  MatrixOperationStatus,
+} from './providers/MatrixOperationProvider';
+export type {
+  MatrixOperationProviderConfig,
+  MatrixOperationContextValue,
+  MatrixOperationProviderProps,
+} from './providers/MatrixOperationProvider';
 
 // API Layer
-export * from './api/matrix-operations.api';
+export {
+  createMatrixOperationsAPI,
+  matrixOperationsAPI,
+  MatrixOperationsAPIImpl,
+} from './api/matrix-operations.api';
+export type {
+  MatrixOperationsAPI,
+  MatrixOperationConfig as APIMatrixOperationConfig,
+  BatchOperationConfig,
+  APIPerformanceMetrics,
+  APIHealthStatus,
+} from './api/matrix-operations.api';
 
 // Development Tools
 export * from './dev-tools/MatrixPerformanceProfiler';
 
 // Complete Matrix Operations Bundle
-export * from './exports/matrix-operations.exports';
+export {
+  createMatrixOperationsBundle,
+  matrixOperationsBundle,
+  createMatrixOperationsDevProvider,
+  createMatrixOperationsProdProvider,
+  setupMatrixOperations,
+} from './exports/matrix-operations.exports';
+export type {
+  MatrixOperationsBundle,
+  MatrixOperationsDevProviderProps,
+  MatrixOperationsProdProviderProps,
+} from './exports/matrix-operations.exports';
 
 // Services
 export * from './services';

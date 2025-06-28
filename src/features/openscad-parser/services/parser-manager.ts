@@ -8,7 +8,6 @@
 import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { 
-  ParserManager, 
   ParserConfig, 
   ParseResult, 
   ASTValidationResult,
@@ -19,7 +18,8 @@ import type {
   ParserEventListener,
   ParserContext
 } from '../types/parser.types';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import type { ParserManager } from '../types/parser.types';
+import { success, error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
 import type { Result, AsyncResult } from '../../../shared/types/result.types';
 // Inline performance measurement to avoid import issues
 const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> => {
@@ -63,7 +63,7 @@ const createCacheKey = (code: string): string => {
 const countASTNodes = (nodes: ReadonlyArray<ASTNode>): number => {
   let count = nodes.length;
   for (const node of nodes) {
-    if (node.children) {
+    if ('children' in node && Array.isArray(node.children)) {
       count += countASTNodes(node.children);
     }
   }
@@ -92,22 +92,24 @@ const validateASTNodes = (nodes: ReadonlyArray<ASTNode>): { valid: boolean; erro
         }
         break;
       case 'sphere':
-        if (!node.radius && !node.r) {
+        // SphereNode has 'radius' property, not 'r'
+        if (!('radius' in node)) {
           warnings.push('Sphere node missing radius property');
         }
         break;
       case 'cylinder':
-        if (!node.radius && !node.r) {
+        // Check for cylinder properties (need to verify what properties actually exist)
+        if (!('radius' in node) && !('r' in node)) {
           warnings.push('Cylinder node missing radius property');
         }
-        if (!node.height && !node.h) {
+        if (!('height' in node) && !('h' in node)) {
           warnings.push('Cylinder node missing height property');
         }
         break;
     }
 
     // Recursively validate children if they exist
-    if (node.children && Array.isArray(node.children)) {
+    if ('children' in node && Array.isArray(node.children)) {
       node.children.forEach(validateNode);
     }
   };
@@ -208,9 +210,15 @@ class ParserManagerImpl implements ParserManager {
     if (this.context.config.enableCaching) {
       const cached = this.context.cache.get(cacheKey);
       if (cached) {
-        // Update cache access
-        cached.accessCount++;
-        cached.lastAccessed = Date.now();
+        // Update cache access with new object to maintain immutability
+        const updatedCacheEntry = {
+          ...cached,
+          accessCount: cached.accessCount + 1,
+          lastAccessed: Date.now()
+        };
+        
+        // Update the cache with the new entry
+        this.context.cache.set(cacheKey, updatedCacheEntry);
         
         this.emitEvent({ type: 'cache-hit', key: cacheKey });
         
@@ -246,7 +254,19 @@ class ParserManagerImpl implements ParserManager {
             throw new Error(`AST node limit exceeded: ${nodeCount} > ${this.context.config.maxASTNodes}`);
           }
 
-          resolve(success({ ast, nodeCount }));
+          const parseResult: ParseResult = {
+            ast,
+            parseTime: 0, // Will be set by caller
+            nodeCount,
+            metadata: {
+              sourceLength: code.length,
+              complexity: nodeCount,
+              memoryUsage: 0,
+              warnings: [],
+              optimizations: []
+            }
+          };
+          resolve(success(parseResult));
         }, (err) => {
           clearTimeout(timeoutId);
           const errorMessage = `Parse failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -307,7 +327,7 @@ class ParserManagerImpl implements ParserManager {
     }
 
     const { result, duration } = await measureTimeAsync(async () => {
-      return tryCatch(async () => {
+      return tryCatchAsync(async () => {
         // Simple AST validation since validateAST is not exported from the package
         const validationResult = validateASTNodes(ast);
         
@@ -322,7 +342,7 @@ class ParserManagerImpl implements ParserManager {
         this.emitEvent({ type: 'validation-complete', result: astValidationResult });
 
         return astValidationResult;
-      }, (err) => `Validation failed: ${err instanceof Error ? err.message : String(err)}`);
+      }, (err: unknown) => `Validation failed: ${err instanceof Error ? err.message : String(err)}`);
     });
 
     return result;
@@ -351,7 +371,7 @@ class ParserManagerImpl implements ParserManager {
     const originalNodeCount = countASTNodes(ast);
 
     const { result, duration } = await measureTimeAsync(async () => {
-      return tryCatch(async () => {
+      return tryCatchAsync(async () => {
         // Simple optimization: remove duplicate nodes
         const optimizedAST = this.removeDuplicateNodes(ast);
         const optimizedNodeCount = countASTNodes(optimizedAST);
@@ -372,7 +392,7 @@ class ParserManagerImpl implements ParserManager {
         this.emitEvent({ type: 'optimization-complete', result: optimizationResult });
 
         return optimizationResult;
-      }, (err) => `Optimization failed: ${err instanceof Error ? err.message : String(err)}`);
+      }, (err: unknown) => `Optimization failed: ${err instanceof Error ? err.message : String(err)}`);
     });
 
     return result;
@@ -396,7 +416,11 @@ class ParserManagerImpl implements ParserManager {
       return validationResult;
     }
 
-    this.context.config = newConfig;
+    // Update context immutably instead of direct assignment
+    this.context = {
+      ...this.context,
+      config: newConfig
+    };
     
     // Clear cache if caching was disabled
     if (!newConfig.enableCaching) {
@@ -419,16 +443,20 @@ class ParserManagerImpl implements ParserManager {
    * Reset performance statistics
    */
   resetPerformanceStats(): void {
-    this.context.stats = {
-      totalParses: 0,
-      totalValidations: 0,
-      totalOptimizations: 0,
-      averageParseTime: 0,
-      averageValidationTime: 0,
-      averageOptimizationTime: 0,
-      cacheHitRate: 0,
-      memoryUsage: 0,
-      peakMemoryUsage: 0
+    // Update context immutably instead of direct assignment
+    this.context = {
+      ...this.context,
+      stats: {
+        totalParses: 0,
+        totalValidations: 0,
+        totalOptimizations: 0,
+        averageParseTime: 0,
+        averageValidationTime: 0,
+        averageOptimizationTime: 0,
+        cacheHitRate: 0,
+        memoryUsage: 0,
+        peakMemoryUsage: 0
+      }
     };
     
     console.log('[DEBUG][ParserManager] Performance statistics reset');
@@ -476,7 +504,11 @@ class ParserManagerImpl implements ParserManager {
       this.initialized = false;
     }
 
-    this.context.disposed = true;
+    // Update context immutably instead of direct assignment
+    this.context = {
+      ...this.context,
+      disposed: true
+    };
 
     console.log('[CLEANUP][ParserManager] Parser manager disposed');
   }
@@ -495,8 +527,8 @@ class ParserManagerImpl implements ParserManager {
 
         // Recursively optimize children
         const optimizedNode = { ...node };
-        if (node.children) {
-          optimizedNode.children = this.removeDuplicateNodes(node.children);
+        if ('children' in node && Array.isArray(node.children)) {
+          (optimizedNode as any).children = this.removeDuplicateNodes(node.children);
         }
 
         result.push(optimizedNode);
@@ -512,9 +544,14 @@ class ParserManagerImpl implements ParserManager {
   private addToCache(key: string, result: ParseResult): void {
     // Remove oldest entries if cache is full
     if (this.context.cache.size >= this.context.config.cacheSize) {
-      const oldestKey = Array.from(this.context.cache.entries())
-        .sort(([, a], [, b]) => a.lastAccessed - b.lastAccessed)[0][0];
-      this.context.cache.delete(oldestKey);
+      const entries = Array.from(this.context.cache.entries());
+      if (entries.length > 0) {
+        const oldestEntry = entries
+          .sort(([, a], [, b]) => a.lastAccessed - b.lastAccessed)[0];
+        if (oldestEntry) {
+          this.context.cache.delete(oldestEntry[0]);
+        }
+      }
     }
 
     const entry: CacheEntry = {
@@ -532,36 +569,58 @@ class ParserManagerImpl implements ParserManager {
    * Update parse statistics
    */
   private updateParseStats(duration: number): void {
-    this.context.stats.totalParses++;
-    this.context.stats.averageParseTime = 
-      (this.context.stats.averageParseTime * (this.context.stats.totalParses - 1) + duration) / 
-      this.context.stats.totalParses;
+    const newTotalParses = this.context.stats.totalParses + 1;
+    const newAverageParseTime = (this.context.stats.averageParseTime * (newTotalParses - 1) + duration) / newTotalParses;
     
     // Update cache hit rate
-    const totalCacheAccesses = this.context.stats.totalParses;
+    const totalCacheAccesses = newTotalParses;
     const cacheHits = Array.from(this.context.cache.values())
       .reduce((sum, entry) => sum + entry.accessCount - 1, 0); // -1 because first access is not a hit
-    this.context.stats.cacheHitRate = totalCacheAccesses > 0 ? (cacheHits / totalCacheAccesses) * 100 : 0;
+    const newCacheHitRate = totalCacheAccesses > 0 ? (cacheHits / totalCacheAccesses) * 100 : 0;
+    
+    this.context = {
+      ...this.context,
+      stats: {
+        ...this.context.stats,
+        totalParses: newTotalParses,
+        averageParseTime: newAverageParseTime,
+        cacheHitRate: newCacheHitRate,
+      },
+    };
   }
 
   /**
    * Update validation statistics
    */
   private updateValidationStats(duration: number): void {
-    this.context.stats.totalValidations++;
-    this.context.stats.averageValidationTime = 
-      (this.context.stats.averageValidationTime * (this.context.stats.totalValidations - 1) + duration) / 
-      this.context.stats.totalValidations;
+    const newTotalValidations = this.context.stats.totalValidations + 1;
+    const newAverageValidationTime = (this.context.stats.averageValidationTime * (newTotalValidations - 1) + duration) / newTotalValidations;
+    
+    this.context = {
+      ...this.context,
+      stats: {
+        ...this.context.stats,
+        totalValidations: newTotalValidations,
+        averageValidationTime: newAverageValidationTime,
+      },
+    };
   }
 
   /**
    * Update optimization statistics
    */
   private updateOptimizationStats(duration: number): void {
-    this.context.stats.totalOptimizations++;
-    this.context.stats.averageOptimizationTime = 
-      (this.context.stats.averageOptimizationTime * (this.context.stats.totalOptimizations - 1) + duration) / 
-      this.context.stats.totalOptimizations;
+    const newTotalOptimizations = this.context.stats.totalOptimizations + 1;
+    const newAverageOptimizationTime = (this.context.stats.averageOptimizationTime * (newTotalOptimizations - 1) + duration) / newTotalOptimizations;
+    
+    this.context = {
+      ...this.context,
+      stats: {
+        ...this.context.stats,
+        totalOptimizations: newTotalOptimizations,
+        averageOptimizationTime: newAverageOptimizationTime,
+      },
+    };
   }
 
   /**
@@ -590,18 +649,20 @@ export const createParserManager = (config: Partial<ParserConfig> = {}): ParserM
  * Parse OpenSCAD code (standalone function)
  */
 export const parseOpenSCADCode = async (code: string): AsyncResult<ReadonlyArray<ASTNode>, string> => {
-  return tryCatch(async () => {
+  try {
     const errorHandler = new SimpleErrorHandler();
     const parser = new OpenscadParser(errorHandler);
 
     try {
       await parser.init();
       const ast = parser.parseAST(code);
-      return ast;
+      return success(ast);
     } finally {
       parser.dispose();
     }
-  }, (err) => `Parse failed: ${err instanceof Error ? err.message : String(err)}`);
+  } catch (err) {
+    return error(`Parse failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 };
 
 /**
@@ -640,3 +701,6 @@ export const transformAST = async (ast: ReadonlyArray<ASTNode>): AsyncResult<Rea
     return result;
   }
 };
+
+// Export the ParserManager interface for external use
+export type { ParserManager } from '../types/parser.types';

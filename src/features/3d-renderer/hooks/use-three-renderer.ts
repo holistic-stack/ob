@@ -128,7 +128,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       renderer.setClearColor(config.backgroundColor);
       renderer.shadowMap.enabled = config.enableShadows;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       
       // Store references
@@ -173,7 +173,9 @@ export const useThreeRenderer = (): UseRendererReturn => {
       
       for (let i = 0; i < astNodes.length; i++) {
         const node = astNodes[i];
-        const meshResult = renderASTNode(node, i);
+        if (!node) continue;
+        
+        const meshResult = await renderASTNode(node, i);
         
         if (meshResult.success) {
           sceneRef.current?.add(meshResult.data.mesh);
@@ -186,7 +188,8 @@ export const useThreeRenderer = (): UseRendererReturn => {
       return renderedMeshes;
     });
 
-    setMeshes(newMeshes);
+    const resolvedMeshes = await newMeshes;
+    setMeshes(resolvedMeshes);
     setIsRendering(false);
 
     // Update performance metrics
@@ -195,19 +198,19 @@ export const useThreeRenderer = (): UseRendererReturn => {
       parseTime: storeMetrics?.parseTime || 0,
       memoryUsage: 0, // Will be calculated separately
       frameRate: 60, // Will be updated by frame loop
-      meshCount: newMeshes.length,
-      triangleCount: newMeshes.reduce((sum, m) => sum + m.metadata.triangleCount, 0),
-      vertexCount: newMeshes.reduce((sum, m) => sum + m.metadata.vertexCount, 0),
-      drawCalls: newMeshes.length,
+      meshCount: resolvedMeshes.length,
+      triangleCount: resolvedMeshes.reduce((sum: any, m: any) => sum + m.metadata.triangleCount, 0),
+      vertexCount: resolvedMeshes.reduce((sum: any, m: any) => sum + m.metadata.vertexCount, 0),
+      drawCalls: resolvedMeshes.length,
       textureMemory: 0,
-      bufferMemory: newMeshes.length * 1024 // Rough estimate
+      bufferMemory: resolvedMeshes.length * 1024 // Rough estimate
     };
 
     setMetrics(newMetrics);
     updateStoreMetrics(newMetrics);
     markDirty();
 
-    console.log(`[DEBUG][useThreeRenderer] Rendered ${newMeshes.length} meshes in ${duration}ms`);
+    console.log(`[DEBUG][useThreeRenderer] Rendered ${resolvedMeshes.length} meshes in ${duration}ms`);
   }, [meshes, isInitialized, storeMetrics, updateStoreMetrics, markDirty]);
 
   /**

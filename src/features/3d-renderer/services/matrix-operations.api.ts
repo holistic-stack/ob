@@ -56,7 +56,7 @@ export class MatrixOperationsAPI {
   ): MatrixOperationResult<T> {
     const executionTime = Date.now() - startTime;
     const memoryUsed = typeof result === 'object' && result && 'rows' in result && 'columns' in result
-      ? matrixUtils.memoryUsage(result as Matrix)
+      ? matrixUtils.memoryUsage(result as unknown as Matrix)
       : 0;
 
     const operationResult: MatrixOperationResult<T> = {
@@ -109,21 +109,21 @@ export class MatrixOperationsAPI {
     // Operation-specific validations
     switch (operation) {
       case 'multiply':
-        if (matrices.length >= 2 && matrices[0].columns !== matrices[1].rows) {
+        if (matrices.length >= 2 && matrices[0] && matrices[1] && matrices[0].columns !== matrices[1].rows) {
           errors.push(`Matrix multiplication dimension mismatch: ${matrices[0].rows}x${matrices[0].columns} × ${matrices[1].rows}x${matrices[1].columns}`);
         }
         break;
       
       case 'inverse':
       case 'determinant':
-        if (matrices.length > 0 && !matrixUtils.isSquare(matrices[0])) {
+        if (matrices.length > 0 && matrices[0] && !matrixUtils.isSquare(matrices[0])) {
           errors.push(`Operation ${operation} requires square matrix`);
         }
         break;
       
       case 'eigenvalues':
       case 'eigenvectors':
-        if (matrices.length > 0 && (!matrixUtils.isSquare(matrices[0]) || !matrixUtils.isSymmetric(matrices[0]))) {
+        if (matrices.length > 0 && matrices[0] && (!matrixUtils.isSquare(matrices[0]) || !matrixUtils.isSymmetric(matrices[0]))) {
           warnings.push('Eigenvalue computation works best with symmetric matrices');
         }
         break;
@@ -148,7 +148,7 @@ export class MatrixOperationsAPI {
     timeout?: number
   ): Promise<Result<MatrixOperationResult<T>, string>> {
     const startTime = Date.now();
-    const matrixSize: readonly [number, number] = matrices.length > 0 
+    const matrixSize: readonly [number, number] = matrices.length > 0 && matrices[0] 
       ? [matrices[0].rows, matrices[0].columns] 
       : [0, 0];
 
@@ -234,7 +234,10 @@ export class MatrixOperationsAPI {
 
   async pseudoInverse(matrix: Matrix): Promise<Result<MatrixOperationResult<Matrix>, string>> {
     const cacheKey = getCacheKey('pseudoInverse', matrixUtils.hash(matrix));
-    return this.executeOperation('pseudoInverse', [matrix], () => matrix.pseudoInverse(), cacheKey);
+    return this.executeOperation('pseudoInverse', [matrix], () => {
+      // Use ML-Matrix pseudoInverse method with proper type handling
+      return (matrix as any).pseudoInverse();
+    }, cacheKey);
   }
 
   /**
@@ -242,7 +245,10 @@ export class MatrixOperationsAPI {
    */
   async determinant(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
     const cacheKey = getCacheKey('determinant', matrixUtils.hash(matrix));
-    return this.executeOperation('determinant', [matrix], () => matrix.determinant(), cacheKey);
+    return this.executeOperation('determinant', [matrix], () => {
+      // Use ML-Matrix determinant method with proper type handling
+      return (matrix as any).determinant();
+    }, cacheKey);
   }
 
   async trace(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
@@ -252,7 +258,10 @@ export class MatrixOperationsAPI {
 
   async rank(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
     const cacheKey = getCacheKey('rank', matrixUtils.hash(matrix));
-    return this.executeOperation('rank', [matrix], () => matrix.rank(), cacheKey);
+    return this.executeOperation('rank', [matrix], () => {
+      // Use ML-Matrix rank method with proper type handling
+      return (matrix as any).rank();
+    }, cacheKey);
   }
 
   /**
@@ -262,7 +271,7 @@ export class MatrixOperationsAPI {
     const cacheKey = getCacheKey('decompose', matrixUtils.hash(matrix));
     
     return this.executeOperation('lu', [matrix], () => {
-      const decomposition: MatrixDecomposition = {};
+      const decomposition: any = {}; // Use any to allow property assignment
       
       try {
         if (matrixUtils.isSquare(matrix)) {
@@ -281,7 +290,7 @@ export class MatrixOperationsAPI {
         };
 
         if (matrix.rows >= matrix.columns) {
-          const svd = matrix.svd();
+          const svd = (matrix as any).svd(); // Use any for svd method
           decomposition.svd = {
             U: svd.U,
             S: Matrix.diag(svd.s),
@@ -305,7 +314,7 @@ export class MatrixOperationsAPI {
         console.warn(`[WARN][MatrixOperationsAPI] Some decompositions failed: ${err}`);
       }
       
-      return decomposition;
+      return decomposition as MatrixDecomposition; // Cast back to proper type
     }, cacheKey);
   }
 
@@ -387,7 +396,7 @@ export class MatrixOperationsAPI {
           
           switch (op.operation) {
             case 'add':
-              if (op.inputs.length >= 2) {
+              if (op.inputs.length >= 2 && op.inputs[0] && op.inputs[1]) {
                 result = await this.add(op.inputs[0], op.inputs[1]);
               } else {
                 result = error('Add operation requires 2 matrices');
@@ -395,7 +404,7 @@ export class MatrixOperationsAPI {
               break;
             
             case 'multiply':
-              if (op.inputs.length >= 2) {
+              if (op.inputs.length >= 2 && op.inputs[0] && op.inputs[1]) {
                 result = await this.multiply(op.inputs[0], op.inputs[1]);
               } else {
                 result = error('Multiply operation requires 2 matrices');
@@ -403,7 +412,7 @@ export class MatrixOperationsAPI {
               break;
             
             case 'transpose':
-              if (op.inputs.length >= 1) {
+              if (op.inputs.length >= 1 && op.inputs[0]) {
                 result = await this.transpose(op.inputs[0]);
               } else {
                 result = error('Transpose operation requires 1 matrix');

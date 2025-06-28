@@ -23,8 +23,8 @@ import {
   uniqueItems,
   hasProperty,
   propertyType,
-  when,
-  unless,
+  whenInvalid,
+  unlessValid,
   oneOf,
   allOf,
   openscadIdentifier,
@@ -265,8 +265,8 @@ describe('Validation Utilities', () => {
   });
 
   describe('Conditional validators', () => {
-    describe('when', () => {
-      const validator = when(
+    describe('whenInvalid', () => {
+      const validator = whenInvalid(
         (x: number) => x > 10,
         (x: number) => x < 20 ? null : 'Must be less than 20'
       );
@@ -281,8 +281,8 @@ describe('Validation Utilities', () => {
       });
     });
 
-    describe('unless', () => {
-      const validator = unless(
+    describe('unlessValid', () => {
+      const validator = unlessValid(
         (x: number) => x < 10,
         (x: number) => x < 20 ? null : 'Must be less than 20'
       );

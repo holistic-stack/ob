@@ -133,9 +133,9 @@ export const MATRIX_CONFIG = {
 export type MatrixConfig = typeof MATRIX_CONFIG;
 
 /**
- * Get performance thresholds
+ * Get matrix performance thresholds
  */
-export const getPerformanceThresholds = () => MATRIX_CONFIG.performance;
+export const getMatrixPerformanceThresholds = () => MATRIX_CONFIG.performance;
 
 /**
  * Get cache configuration

@@ -235,8 +235,8 @@ describe('useThreeRenderer Hook', () => {
       const { result } = renderHook(() => useThreeRenderer());
       
       const mockAST: ASTNode[] = [
-        { type: 'cube', parameters: { size: [1, 1, 1] } },
-        { type: 'sphere', parameters: { radius: 1 } }
+        { type: 'cube', size: [1, 1, 1], center: false },
+        { type: 'sphere', radius: 1 }
       ];
       
       // Mock initialization
@@ -338,7 +338,7 @@ describe('useThreeRenderer Hook', () => {
       const { result } = renderHook(() => useThreeRenderer());
       
       const mockAST: ASTNode[] = [
-        { type: 'cube', parameters: { size: [1, 1, 1] } }
+        { type: 'cube', size: [1, 1, 1], center: false }
       ];
       
       // Mock initialization
@@ -362,8 +362,15 @@ describe('useThreeRenderer Hook', () => {
       const { result } = renderHook(() => useThreeRenderer());
       
       // Mock failed rendering
-      const mockFailedAST: ASTNode[] = [
-        { type: 'invalid', parameters: {} }
+      const mockFailedAST: ASTNode[] = [        {
+          type: 'error' as const,
+          message: 'Test error',
+          errorCode: 'PARSE_ERROR',
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 }
+          }
+        }
       ];
       
       await act(async () => {

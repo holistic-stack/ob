@@ -63,9 +63,6 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Use resolve.sync for robust module resolution following Node.js algorithm
-import resolve from 'resolve';
-
 const __dirname = import.meta.dirname;
 const projectRoot = join(__dirname, '..');
 
@@ -84,9 +81,9 @@ export function resolveWasmPath(urlPath: string): string {
   if (urlPath.startsWith('http://') || urlPath.startsWith('https://') || urlPath.startsWith('file://')) {
     try {
       const url = new URL(urlPath);
-      normalizedPath = url.pathname.split('/').pop() || urlPath;
+      normalizedPath = url.pathname.split('/').pop() ?? urlPath;
       console.log(`Extracted filename from URL: ${normalizedPath}`);
-    } catch (error) {
+    } catch (_error) {
       console.warn(`Failed to parse URL: ${urlPath}, using as-is`);
       normalizedPath = urlPath;
     }

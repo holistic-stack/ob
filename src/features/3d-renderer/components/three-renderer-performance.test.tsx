@@ -81,8 +81,31 @@ describe('ThreeRenderer Performance', () => {
   const mockOnCameraChange = vi.fn();
 
   const defaultProps = {
-    astNodes: [] as ASTNode[],
-    camera: { position: [5, 5, 5], target: [0, 0, 0] } as const,
+    ast: [] as ASTNode[],
+    camera: { 
+      position: [5, 5, 5] as const, 
+      target: [0, 0, 0] as const,
+      zoom: 1,
+      fov: 75,
+      near: 0.1,
+      far: 1000,
+      type: 'perspective' as const,
+      enableControls: true,
+      enableAutoRotate: false,
+      autoRotateSpeed: 1
+    },
+    config: {
+      enableShadows: false,
+      enableAntialiasing: true,
+      enableWebGL2: true,
+      enableHardwareAcceleration: true,
+      backgroundColor: '#f0f0f0',
+      ambientLightIntensity: 0.3,
+      directionalLightIntensity: 0.7,
+      maxMeshes: 1000,
+      maxTriangles: 50000,
+      shadows: true
+    },
     onPerformanceUpdate: mockOnPerformanceUpdate,
     onRenderComplete: mockOnRenderComplete,
     onRenderError: mockOnRenderError,
@@ -106,16 +129,18 @@ describe('ThreeRenderer Performance', () => {
       const testAST: ASTNode[] = [
         {
           type: 'cube',
-          parameters: { size: [1, 1, 1] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([1, 1, 1]);'
+          size: [1, 1, 1],
+          center: false,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
+          }
         }
       ];
 
       render(
         <Canvas>
-          <ThreeRenderer {...defaultProps} astNodes={testAST} />
+          <ThreeRenderer {...defaultProps} ast={testAST} />
         </Canvas>
       );
 
@@ -149,16 +174,17 @@ describe('ThreeRenderer Performance', () => {
       const testAST: ASTNode[] = [
         {
           type: 'sphere',
-          parameters: { r: 2 },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'sphere(r=2);'
+          radius: 2,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 15, offset: 14 }
+          }
         }
       ];
 
       render(
         <Canvas>
-          <ThreeRenderer {...defaultProps} astNodes={testAST} />
+          <ThreeRenderer {...defaultProps} ast={testAST} />
         </Canvas>
       );
 

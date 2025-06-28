@@ -86,7 +86,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
   const [history, setHistory] = useState<PerformanceHistoryEntry[]>([]);
   const [currentMetrics, setCurrentMetrics] = useState<APIPerformanceMetrics | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Update performance metrics
@@ -211,6 +211,16 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
           cursor: 'pointer'
         }}
         onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-label={`Matrix Performance Profiler - ${isExpanded ? 'Collapse' : 'Expand'}`}
       >
         <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
           🔍 Matrix Performance
@@ -366,10 +376,10 @@ interface DebugLogEntry {
   readonly id: string;
   readonly timestamp: number;
   readonly level: 'debug' | 'info' | 'warn' | 'error';
-  readonly operation: string;
+  operation?: string;
   readonly message: string;
   readonly data?: any;
-  readonly stackTrace?: string;
+  stackTrace?: string;
   readonly executionTime?: number;
 }
 
@@ -450,13 +460,21 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
           const operationMatch = message.match(/\[(\w+)\]/);
           const operation = operationMatch ? operationMatch[1] : 'Unknown';
 
-          addLog({
+          const logPayload: Omit<DebugLogEntry, 'id' | 'timestamp'> = {
             level,
-            operation,
+            operation: operation || 'Unknown',
             message,
             data: args.length > 1 ? args.slice(1) : undefined,
-            stackTrace: showStackTraces ? new Error().stack : undefined
-          });
+          };
+
+          if (showStackTraces) {
+            const stack = new Error().stack;
+            if (stack) {
+              logPayload.stackTrace = stack;
+            }
+          }
+
+          addLog(logPayload);
         }
       };
     };

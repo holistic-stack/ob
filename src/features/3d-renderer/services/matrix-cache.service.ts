@@ -102,7 +102,7 @@ export class MatrixCacheService {
    * Remove tail node (least recently used)
    */
   private removeTail(): CacheNode | null {
-    if (!this.tail || !this.tail.prev || this.tail.prev === this.head) {
+    if (!this.tail?.prev || this.tail.prev === this.head) {
       return null;
     }
     
@@ -336,24 +336,32 @@ export class MatrixCacheService {
    * Update performance metrics
    */
   updateMetrics(operationResult: MatrixOperationResult): void {
-    this.performanceMetrics.operationCount++;
-    this.performanceMetrics.totalExecutionTime += operationResult.performance.executionTime;
-    this.performanceMetrics.averageExecutionTime = 
-      this.performanceMetrics.totalExecutionTime / this.performanceMetrics.operationCount;
+    const newOperationCount = this.performanceMetrics.operationCount + 1;
+    const newTotalExecutionTime = this.performanceMetrics.totalExecutionTime + operationResult.performance.executionTime;
     
     const [rows, cols] = operationResult.performance.matrixSize;
     const size = rows * cols;
+    const isLargeMatrix = size >= MATRIX_CONFIG.performance.largeMatrixThreshold;
     
-    if (size >= MATRIX_CONFIG.performance.largeMatrixThreshold) {
-      this.performanceMetrics.largeMatrixOperations++;
-    }
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      operationCount: newOperationCount,
+      totalExecutionTime: newTotalExecutionTime,
+      averageExecutionTime: newTotalExecutionTime / newOperationCount,
+      largeMatrixOperations: isLargeMatrix 
+        ? this.performanceMetrics.largeMatrixOperations + 1 
+        : this.performanceMetrics.largeMatrixOperations,
+    };
   }
 
   /**
    * Record failed operation
    */
   recordFailure(): void {
-    this.performanceMetrics.failedOperations++;
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      failedOperations: this.performanceMetrics.failedOperations + 1,
+    };
   }
 
   /**

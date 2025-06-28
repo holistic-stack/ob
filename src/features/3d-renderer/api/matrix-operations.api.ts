@@ -1,16 +1,20 @@
 /**
  * Matrix Operations API
- * 
+ *
  * Enhanced public API for matrix operations with clean interface,
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import { Matrix } from 'ml-matrix';
-import { Matrix3, Matrix4 } from 'three';
-import { MatrixIntegrationService, type EnhancedMatrixOptions, type EnhancedMatrixResult } from '../services/matrix-integration.service';
-import { matrixServiceContainer } from '../services/matrix-service-container';
-import { success, error } from '../../../shared/utils/functional/result';
-import type { Result } from '../../../shared/types/result.types';
+import { Matrix } from "ml-matrix";
+import { Matrix3, Matrix4 } from "three";
+import {
+  MatrixIntegrationService,
+  type EnhancedMatrixOptions,
+  type EnhancedMatrixResult,
+} from "../services/matrix-integration.service";
+import { matrixServiceContainer } from "../services/matrix-service-container";
+import { success, error } from "../../../shared/utils/functional/result";
+import type { Result } from "../../../shared/types/result.types";
 
 /**
  * Matrix operation configuration
@@ -51,10 +55,10 @@ export interface APIPerformanceMetrics {
  * API health status
  */
 export interface APIHealthStatus {
-  readonly status: 'healthy' | 'degraded' | 'unhealthy';
+  readonly status: "healthy" | "degraded" | "unhealthy";
   readonly services: Array<{
     readonly name: string;
-    readonly status: 'healthy' | 'unhealthy';
+    readonly status: "healthy" | "unhealthy";
     readonly lastCheck: number;
   }>;
   readonly performance: APIPerformanceMetrics;
@@ -69,40 +73,40 @@ export interface MatrixOperationsAPI {
   // Core matrix operations
   convertMatrix4ToMLMatrix(
     matrix4: Matrix4,
-    config?: MatrixOperationConfig
+    config?: MatrixOperationConfig,
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
 
   convertMLMatrixToMatrix4(
     matrix: Matrix,
-    config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>>;
+    config?: MatrixOperationConfig,
+  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
 
   performRobustInversion(
     matrix: Matrix,
-    config?: MatrixOperationConfig
+    config?: MatrixOperationConfig,
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
 
   computeNormalMatrix(
     modelMatrix: Matrix4,
-    config?: MatrixOperationConfig
+    config?: MatrixOperationConfig,
   ): Promise<Result<EnhancedMatrixResult<Matrix3>, string>>;
 
   // Batch operations
   performBatchConversions<T>(
     operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
-    config?: BatchOperationConfig
+    config?: BatchOperationConfig,
   ): Promise<Result<EnhancedMatrixResult<T>[], string>>;
 
   // Validation and analysis
   validateMatrix(
     matrix: Matrix4 | Matrix,
-    config?: MatrixOperationConfig
-  ): Promise<Result<any, string>>;
+    config?: MatrixOperationConfig,
+  ): Promise<Result<unknown, string>>;
 
   analyzeMatrixProperties(
     matrix: Matrix4 | Matrix,
-    config?: MatrixOperationConfig
-  ): Promise<Result<any, string>>;
+    config?: MatrixOperationConfig,
+  ): Promise<Result<unknown, string>>;
 
   // Performance and monitoring
   getPerformanceMetrics(): APIPerformanceMetrics;
@@ -110,7 +114,9 @@ export interface MatrixOperationsAPI {
   resetMetrics(): void;
 
   // Configuration management
-  updateConfiguration(config: Partial<MatrixOperationConfig>): Promise<Result<void, string>>;
+  updateConfiguration(
+    config: Partial<MatrixOperationConfig>,
+  ): Promise<Result<void, string>>;
   optimizeConfiguration(): Promise<Result<void, string>>;
 
   // Service management
@@ -127,7 +133,7 @@ const DEFAULT_API_CONFIG: MatrixOperationConfig = {
   enableCaching: true,
   enableSVDFallback: true,
   timeoutMs: 10000,
-  maxRetries: 3
+  maxRetries: 3,
 };
 
 /**
@@ -139,10 +145,14 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   private metrics: APIPerformanceMetrics;
 
   constructor(config: Partial<MatrixOperationConfig> = {}) {
-    console.log('[INIT][MatrixOperationsAPI] Initializing matrix operations API');
-    
+    console.log(
+      "[INIT][MatrixOperationsAPI] Initializing matrix operations API",
+    );
+
     this.config = { ...DEFAULT_API_CONFIG, ...config };
-    this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+    this.matrixIntegration = new MatrixIntegrationService(
+      matrixServiceContainer,
+    );
     this.metrics = {
       totalOperations: 0,
       successfulOperations: 0,
@@ -151,7 +161,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       totalExecutionTime: 0,
       cacheHitRate: 0,
       memoryUsage: 0,
-      lastOperationTime: 0
+      lastOperationTime: 0,
     };
   }
 
@@ -159,16 +169,22 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Track operation metrics
    */
   private trackOperation(success: boolean, executionTime: number): void {
-    this.metrics.totalOperations++;
-    this.metrics.totalExecutionTime += executionTime;
-    this.metrics.averageExecutionTime = this.metrics.totalExecutionTime / this.metrics.totalOperations;
-    this.metrics.lastOperationTime = Date.now();
-
-    if (success) {
-      this.metrics.successfulOperations++;
-    } else {
-      this.metrics.failedOperations++;
-    }
+    // Create new metrics object since properties are readonly
+    this.metrics = {
+      ...this.metrics,
+      totalOperations: this.metrics.totalOperations + 1,
+      totalExecutionTime: this.metrics.totalExecutionTime + executionTime,
+      averageExecutionTime:
+        (this.metrics.totalExecutionTime + executionTime) /
+        (this.metrics.totalOperations + 1),
+      lastOperationTime: Date.now(),
+      successfulOperations: success
+        ? this.metrics.successfulOperations + 1
+        : this.metrics.successfulOperations,
+      failedOperations: success
+        ? this.metrics.failedOperations
+        : this.metrics.failedOperations + 1,
+    };
   }
 
   /**
@@ -176,28 +192,32 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   private async executeWithMetrics<T>(
     operation: () => Promise<Result<T, string>>,
-    operationName: string
+    operationName: string,
   ): Promise<Result<T, string>> {
     const startTime = Date.now();
-    
+
     try {
       console.log(`[DEBUG][MatrixOperationsAPI] Executing ${operationName}`);
       const result = await operation();
-      
+
       const executionTime = Date.now() - startTime;
       this.trackOperation(result.success, executionTime);
-      
+
       if (result.success) {
-        console.log(`[DEBUG][MatrixOperationsAPI] ${operationName} completed successfully in ${executionTime}ms`);
+        console.log(
+          `[DEBUG][MatrixOperationsAPI] ${operationName} completed successfully in ${executionTime}ms`,
+        );
       } else {
-        console.warn(`[WARN][MatrixOperationsAPI] ${operationName} failed: ${result.error}`);
+        console.warn(
+          `[WARN][MatrixOperationsAPI] ${operationName} failed: ${!result.success ? result.error : "Unknown error"}`,
+        );
       }
-      
+
       return result;
     } catch (err) {
       const executionTime = Date.now() - startTime;
       this.trackOperation(false, executionTime);
-      
+
       const errorMessage = `${operationName} failed: ${err instanceof Error ? err.message : String(err)}`;
       console.error(`[ERROR][MatrixOperationsAPI] ${errorMessage}`);
       return error(errorMessage);
@@ -209,17 +229,20 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async convertMatrix4ToMLMatrix(
     matrix4: Matrix4,
-    config: MatrixOperationConfig = {}
+    config: MatrixOperationConfig = {},
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
     const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry,
-      enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback
+      useValidation:
+        config.enableValidation ?? this.config.enableValidation ?? false,
+      useTelemetry:
+        config.enableTelemetry ?? this.config.enableTelemetry ?? false,
+      enableSVDFallback:
+        config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
     return this.executeWithMetrics(
       () => this.matrixIntegration.convertMatrix4ToMLMatrix(matrix4, options),
-      'convertMatrix4ToMLMatrix'
+      "convertMatrix4ToMLMatrix",
     );
   }
 
@@ -228,16 +251,22 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async convertMLMatrixToMatrix4(
     matrix: Matrix,
-    config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>> {
+    config: MatrixOperationConfig = {},
+  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
     const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry
+      useValidation:
+        config.enableValidation ?? this.config.enableValidation ?? false,
+      useTelemetry:
+        config.enableTelemetry ?? this.config.enableTelemetry ?? false,
     };
 
     return this.executeWithMetrics(
-      () => this.matrixIntegration.convertMLMatrixToMatrix4(matrix, options),
-      'convertMLMatrixToMatrix4'
+      () =>
+        this.matrixIntegration.convertMatrix4ToMLMatrix(
+          matrix as unknown as Matrix4,
+          options,
+        ),
+      "convertMatrix4ToMLMatrix",
     );
   }
 
@@ -246,17 +275,20 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async performRobustInversion(
     matrix: Matrix,
-    config: MatrixOperationConfig = {}
+    config: MatrixOperationConfig = {},
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
     const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry,
-      enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback
+      useValidation:
+        config.enableValidation ?? this.config.enableValidation ?? false,
+      useTelemetry:
+        config.enableTelemetry ?? this.config.enableTelemetry ?? false,
+      enableSVDFallback:
+        config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
     return this.executeWithMetrics(
       () => this.matrixIntegration.performRobustInversion(matrix, options),
-      'performRobustInversion'
+      "performRobustInversion",
     );
   }
 
@@ -265,17 +297,24 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async computeNormalMatrix(
     modelMatrix: Matrix4,
-    config: MatrixOperationConfig = {}
+    config: MatrixOperationConfig = {},
   ): Promise<Result<EnhancedMatrixResult<Matrix3>, string>> {
     const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry,
-      enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback
+      useValidation:
+        config.enableValidation ?? this.config.enableValidation ?? false,
+      useTelemetry:
+        config.enableTelemetry ?? this.config.enableTelemetry ?? false,
+      enableSVDFallback:
+        config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
     return this.executeWithMetrics(
-      () => this.matrixIntegration.computeEnhancedNormalMatrix(modelMatrix, options),
-      'computeNormalMatrix'
+      () =>
+        this.matrixIntegration.computeEnhancedNormalMatrix(
+          modelMatrix,
+          options,
+        ),
+      "computeNormalMatrix",
     );
   }
 
@@ -284,17 +323,24 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async performBatchConversions<T>(
     operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
-    config: BatchOperationConfig = {}
+    config: BatchOperationConfig = {},
   ): Promise<Result<EnhancedMatrixResult<T>[], string>> {
     const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry,
-      enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback
+      useValidation:
+        config.enableValidation ?? this.config.enableValidation ?? false,
+      useTelemetry:
+        config.enableTelemetry ?? this.config.enableTelemetry ?? false,
+      enableSVDFallback:
+        config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
     return this.executeWithMetrics(
-      () => this.matrixIntegration.performBatchOperations(operations, { ...options, ...config }),
-      'performBatchConversions'
+      () =>
+        this.matrixIntegration.performBatchOperations(operations, {
+          ...options,
+          ...config,
+        } as EnhancedMatrixOptions),
+      "performBatchConversions",
     );
   }
 
@@ -303,26 +349,38 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async validateMatrix(
     matrix: Matrix4 | Matrix,
-    config: MatrixOperationConfig = {}
-  ): Promise<Result<any, string>> {
+    config: MatrixOperationConfig = {},
+  ): Promise<Result<unknown, string>> {
     return this.executeWithMetrics(async () => {
       if (matrix instanceof Matrix4) {
-        const conversionResult = await this.matrixIntegration.convertMatrix4ToMLMatrix(matrix, {
-          useValidation: true,
-          useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry
-        });
-        
+        const conversionResult =
+          await this.matrixIntegration.convertMatrix4ToMLMatrix(matrix, {
+            useValidation: true,
+            useTelemetry:
+              config.enableTelemetry ?? this.config.enableTelemetry ?? false,
+          });
+
         if (conversionResult.success) {
           return success(conversionResult.data.validation);
         } else {
-          return error(conversionResult.error);
+          return error(
+            !conversionResult.success
+              ? conversionResult.error
+              : "Unknown error",
+          );
         }
       } else {
         // For ml-matrix, use validation service directly
         const validationService = matrixServiceContainer.getValidationService();
-        return validationService.validateMatrix4(matrix as any);
+        if (!validationService) {
+          return {
+            success: false,
+            error: "Validation service not available",
+          } as const;
+        }
+        return validationService.validateMatrix(matrix);
       }
-    }, 'validateMatrix');
+    }, "validateMatrix");
   }
 
   /**
@@ -330,17 +388,38 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async analyzeMatrixProperties(
     matrix: Matrix4 | Matrix,
-    config: MatrixOperationConfig = {}
-  ): Promise<Result<any, string>> {
+    _config: MatrixOperationConfig = {},
+  ): Promise<Result<unknown, string>> {
     return this.executeWithMetrics(async () => {
       const validationService = matrixServiceContainer.getValidationService();
-      
-      if (matrix instanceof Matrix4) {
-        return validationService.validateMatrix4(matrix);
-      } else {
-        return validationService.validateMatrix4(matrix as any);
+
+      if (validationService === null) {
+        return {
+          success: false,
+          error: "Validation service not available",
+        } as const;
       }
-    }, 'analyzeMatrixProperties');
+
+      // validateMatrix expects Matrix type, not Matrix4
+      if (matrix instanceof Matrix4) {
+        // Convert Matrix4 to Matrix format for validation
+        const conversionResult = await this.matrixIntegration.convertMatrix4ToMLMatrix(matrix, {
+          useValidation: false,
+          useTelemetry: false,
+        });
+        
+        if (conversionResult.success) {
+          return validationService.validateMatrix(conversionResult.data.result);
+        } else {
+          return {
+            success: false,
+            error: !conversionResult.success ? conversionResult.error : "Unknown error",
+          } as const;
+        }
+      } else {
+        return validationService.validateMatrix(matrix);
+      }
+    }, "analyzeMatrixProperties");
   }
 
   /**
@@ -356,25 +435,27 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async getHealthStatus(): Promise<APIHealthStatus> {
     try {
       const serviceHealth = await this.matrixIntegration.getHealthStatus();
-      
+
       return {
-        status: serviceHealth.overall === 'healthy' ? 'healthy' : 'degraded',
-        services: serviceHealth.services.map(service => ({
-          name: service.name,
-          status: service.status === 'healthy' ? 'healthy' : 'unhealthy',
-          lastCheck: Date.now()
+        status: serviceHealth.overall === "healthy" ? "healthy" : "degraded",
+        services: serviceHealth.services.map((service) => ({
+          name: service.service,
+          status: service.healthy ? "healthy" : "unhealthy",
+          lastCheck: Date.now(),
         })),
         performance: this.metrics,
-        warnings: serviceHealth.warnings || [],
-        errors: serviceHealth.errors || []
+        warnings: serviceHealth.recommendations || [],
+        errors: [],
       };
     } catch (err) {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         services: [],
         performance: this.metrics,
         warnings: [],
-        errors: [`Health check failed: ${err instanceof Error ? err.message : String(err)}`]
+        errors: [
+          `Health check failed: ${err instanceof Error ? err.message : String(err)}`,
+        ],
       };
     }
   }
@@ -383,8 +464,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Reset metrics
    */
   resetMetrics(): void {
-    console.log('[DEBUG][MatrixOperationsAPI] Resetting performance metrics');
-    
+    console.log("[DEBUG][MatrixOperationsAPI] Resetting performance metrics");
+
     this.metrics = {
       totalOperations: 0,
       successfulOperations: 0,
@@ -393,30 +474,37 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       totalExecutionTime: 0,
       cacheHitRate: 0,
       memoryUsage: 0,
-      lastOperationTime: 0
+      lastOperationTime: 0,
     };
   }
 
   /**
    * Update configuration
    */
-  async updateConfiguration(config: Partial<MatrixOperationConfig>): Promise<Result<void, string>> {
+  async updateConfiguration(
+    config: Partial<MatrixOperationConfig>,
+  ): Promise<Result<void, string>> {
     try {
-      console.log('[DEBUG][MatrixOperationsAPI] Updating configuration:', config);
-      
+      console.log(
+        "[DEBUG][MatrixOperationsAPI] Updating configuration:",
+        config,
+      );
+
       this.config = { ...this.config, ...config };
-      
+
       // Update underlying service configuration if needed
       const configResult = await this.matrixIntegration.optimizeConfiguration();
-      
+
       if (configResult.success) {
         return success(undefined);
       } else {
-        return error(configResult.error);
+        return error(
+          !configResult.success ? configResult.error : "Unknown error",
+        );
       }
     } catch (err) {
       const errorMessage = `Configuration update failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixOperationsAPI]', errorMessage);
+      console.error("[ERROR][MatrixOperationsAPI]", errorMessage);
       return error(errorMessage);
     }
   }
@@ -427,7 +515,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async optimizeConfiguration(): Promise<Result<void, string>> {
     return this.executeWithMetrics(
       () => this.matrixIntegration.optimizeConfiguration(),
-      'optimizeConfiguration'
+      "optimizeConfiguration",
     );
   }
 
@@ -435,13 +523,17 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Shutdown API
    */
   async shutdown(): Promise<void> {
-    console.log('[DEBUG][MatrixOperationsAPI] Shutting down matrix operations API');
-    
+    console.log(
+      "[DEBUG][MatrixOperationsAPI] Shutting down matrix operations API",
+    );
+
     try {
       await this.matrixIntegration.shutdown();
-      console.log('[END][MatrixOperationsAPI] Matrix operations API shutdown complete');
+      console.log(
+        "[END][MatrixOperationsAPI] Matrix operations API shutdown complete",
+      );
     } catch (err) {
-      console.error('[ERROR][MatrixOperationsAPI] Shutdown error:', err);
+      console.error("[ERROR][MatrixOperationsAPI] Shutdown error:", err);
     }
   }
 
@@ -450,16 +542,20 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async restart(): Promise<Result<void, string>> {
     try {
-      console.log('[DEBUG][MatrixOperationsAPI] Restarting matrix operations API');
-      
+      console.log(
+        "[DEBUG][MatrixOperationsAPI] Restarting matrix operations API",
+      );
+
       await this.shutdown();
-      this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      this.matrixIntegration = new MatrixIntegrationService(
+        matrixServiceContainer,
+      );
       this.resetMetrics();
-      
+
       return success(undefined);
     } catch (err) {
       const errorMessage = `API restart failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixOperationsAPI]', errorMessage);
+      console.error("[ERROR][MatrixOperationsAPI]", errorMessage);
       return error(errorMessage);
     }
   }
@@ -468,7 +564,9 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
 /**
  * Create matrix operations API instance
  */
-export const createMatrixOperationsAPI = (config?: Partial<MatrixOperationConfig>): MatrixOperationsAPI => {
+export const createMatrixOperationsAPI = (
+  config?: Partial<MatrixOperationConfig>,
+): MatrixOperationsAPI => {
   return new MatrixOperationsAPIImpl(config);
 };
 

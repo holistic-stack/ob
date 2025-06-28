@@ -120,7 +120,7 @@ describe('MatrixServiceContainer', () => {
       }).toThrow("Service 'nonExistentService' not found in container");
     });
 
-    it('should return null for disabled optional services', () => {
+    it('should return null for disabled optional services', async () => {
       console.log('[DEBUG][MatrixServiceContainerTest] Testing disabled optional services');
       
       const containerWithoutOptional = new MatrixServiceContainer({
@@ -229,7 +229,7 @@ describe('MatrixServiceContainer', () => {
       
       // For a healthy container, recommendations should be minimal or empty
       if (healthReport.overall === 'healthy') {
-        expect(healthReport.recommendations.length).toBe(0);
+        expect(healthReport.recommendations).toHaveLength(0);
       }
     });
   });
@@ -246,7 +246,7 @@ describe('MatrixServiceContainer', () => {
       
       expect(status.initialized).toBe(true);
       expect(status.runningServices.length).toBeGreaterThan(0);
-      expect(status.errorServices.length).toBe(0);
+      expect(status.errorServices).toHaveLength(0);
       
       // All services should be running
       expect(status.runningServices).toContain('cache');
@@ -299,7 +299,7 @@ describe('MatrixServiceContainer', () => {
       const finalStatus = container.getStatus();
       expect(finalStatus.initialized).toBe(false);
       expect(finalStatus.serviceCount).toBe(0);
-      expect(finalStatus.runningServices.length).toBe(0);
+      expect(finalStatus.runningServices).toHaveLength(0);
     });
 
     it('should handle shutdown errors gracefully', async () => {
@@ -332,7 +332,7 @@ describe('MatrixServiceContainer', () => {
       console.log('[DEBUG][MatrixServiceContainerTest] Testing initialization failure handling');
       
       // Mock a failing service initialization
-      const originalMatrixCacheService = global.MatrixCacheService;
+      const originalMatrixCacheService = (global as any).MatrixCacheService;
       
       // This test would require more complex mocking to properly test initialization failures
       // For now, we'll test that the container handles missing dependencies gracefully

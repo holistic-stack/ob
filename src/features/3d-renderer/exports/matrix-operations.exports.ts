@@ -1,83 +1,130 @@
+import * as React from "react";
+import {
+  createMatrixOperationsAPI,
+  type MatrixOperationsAPI,
+  type MatrixOperationConfig as APIMatrixOperationConfig,
+} from "../api/matrix-operations.api.js";
+import { MatrixOperationErrorBoundary } from "../components/MatrixOperationErrorBoundary.js";
+import {
+  MatrixOperationDebugger,
+  MatrixPerformanceProfiler,
+} from "../dev-tools/MatrixPerformanceProfiler.js";
+import { useMatrixOperations } from "../hooks/useMatrixOperations.js";
+import {
+  MatrixOperationProvider,
+  MatrixOperationStatus as MatrixOperationStatusComponent,
+  useMatrixOperationContext,
+  withMatrixOperations,
+} from "../providers/MatrixOperationProvider.js";
+import type {
+  IMatrixCache as _IMatrixCache,
+  IMatrixTelemetry as _IMatrixTelemetry,
+  IMatrixValidator as _IMatrixValidator,
+  MatrixConversionOptions as _MatrixConversionOptions,
+  MatrixOperation as _MatrixOperation,
+  MatrixOperationDependencies as _MatrixOperationDependencies,
+  MatrixError as _MatrixError,
+  MatrixOperationResult as _MatrixOperationResult,
+  MatrixPerformanceMetrics as _MatrixPerformanceMetrics,
+  MatrixValidationResult as _MatrixValidationResult,
+  PerformanceReport as _PerformanceReport,
+  MatrixOperationProviderConfig as _MatrixOperationProviderConfig,
+} from "../types/matrix.types.js";
+import {
+  createIdentityMatrix as _createIdentityMatrix,
+  createRandomMatrix as _createRandomMatrix,
+  createZeroMatrix as _createZeroMatrix,
+  isValidMatrix3 as _isValidMatrix3,
+  isValidMatrix4 as _isValidMatrix4,
+  matrix3ToMLMatrix as _matrix3ToMLMatrix,
+  matrix4ToMLMatrix as _matrix4ToMLMatrix,
+  mlMatrixToMatrix3 as _mlMatrixToMatrix3,
+  mlMatrixToMatrix4 as _mlMatrixToMatrix4,
+  validateMatrixDimensions as _validateMatrixDimensions,
+} from "../utils/matrix-adapters.js";
+
 /**
  * Matrix Operations Exports
- * 
+ *
  * Public exports for matrix operations with React integration,
  * API abstraction, and development tools for external consumption.
  */
 
 // React Integration Layer
-export { useMatrixOperations } from '../hooks/useMatrixOperations';
-export type { UseMatrixOperationsReturn, MatrixOperationState, MatrixOperationStatus } from '../hooks/useMatrixOperations';
+export { useMatrixOperations } from "../hooks/useMatrixOperations.js";
+export type {
+  UseMatrixOperationsReturn,
+  MatrixOperationState,
+  MatrixOperationStatus,
+} from "../hooks/useMatrixOperations.js";
 
-export { 
-  MatrixOperationProvider, 
-  useMatrixOperationContext, 
+export {
+  MatrixOperationProvider,
+  useMatrixOperationContext,
   withMatrixOperations,
-  MatrixOperationStatus as MatrixOperationStatusComponent
-} from '../providers/MatrixOperationProvider';
-export type { 
-  MatrixOperationConfig, 
-  MatrixOperationContextValue, 
-  MatrixOperationProviderProps 
-} from '../providers/MatrixOperationProvider';
+  MatrixOperationStatus as MatrixOperationStatusComponent,
+} from "../providers/MatrixOperationProvider.js";
+export type {
+  MatrixOperationProviderConfig,
+  MatrixOperationContextValue,
+  MatrixOperationProviderProps,
+} from "../providers/MatrixOperationProvider.js";
 
-export { MatrixOperationErrorBoundary } from '../components/MatrixOperationErrorBoundary';
-export type { MatrixOperationErrorBoundaryProps } from '../components/MatrixOperationErrorBoundary';
+export { MatrixOperationErrorBoundary } from "../components/MatrixOperationErrorBoundary.js";
+export type { MatrixOperationErrorBoundaryProps } from "../components/MatrixOperationErrorBoundary.js";
 
 // API Layer
-export { 
-  createMatrixOperationsAPI, 
+export {
+  createMatrixOperationsAPI,
   matrixOperationsAPI,
-  MatrixOperationsAPIImpl
-} from '../api/matrix-operations.api';
-export type { 
-  MatrixOperationsAPI, 
+  MatrixOperationsAPIImpl,
+} from "../api/matrix-operations.api.js";
+export type {
+  MatrixOperationsAPI,
   MatrixOperationConfig as APIMatrixOperationConfig,
   BatchOperationConfig,
   APIPerformanceMetrics,
-  APIHealthStatus
-} from '../api/matrix-operations.api';
+  APIHealthStatus,
+} from "../api/matrix-operations.api.js";
 
 // Development Tools
-export { 
+export {
   MatrixPerformanceProfiler,
-  MatrixOperationDebugger
-} from '../dev-tools/MatrixPerformanceProfiler';
-export type { 
+  MatrixOperationDebugger,
+} from "../dev-tools/MatrixPerformanceProfiler.js";
+export type {
   MatrixPerformanceProfilerProps,
-  MatrixOperationDebuggerProps
-} from '../dev-tools/MatrixPerformanceProfiler';
+  MatrixOperationDebuggerProps,
+} from "../dev-tools/MatrixPerformanceProfiler.js";
 
 // Service Layer (for advanced usage)
-export { MatrixIntegrationService } from '../services/matrix-integration.service';
-export type { 
-  EnhancedMatrixOptions, 
+export { MatrixIntegrationService } from "../services/matrix-integration.service.js";
+export type {
+  EnhancedMatrixOptions,
   EnhancedMatrixResult,
-  MatrixValidationResult,
-  MatrixPerformanceMetrics
-} from '../services/matrix-integration.service';
+} from "../services/matrix-integration.service.js";
 
-export { matrixServiceContainer } from '../services/matrix-service-container';
+export { matrixServiceContainer } from "../services/matrix-service-container.js";
 
 // Configuration and Types
-export { MATRIX_CONFIG } from '../config/matrix-config';
-export type { MatrixConfig } from '../config/matrix-config';
+export { MATRIX_CONFIG } from "../config/matrix-config.js";
+export type { MatrixConfig } from "../config/matrix-config.js";
 
 export type {
   MatrixOperationResult,
   MatrixConversionOptions,
   MatrixValidationResult as ValidationResult,
-  PerformanceMetrics,
-  MatrixOperationError,
+  MatrixPerformanceMetrics as PerformanceMetrics,
+  MatrixError as MatrixOperationError,
   MatrixOperationDependencies,
   IMatrixValidator,
   IMatrixCache,
   IMatrixTelemetry,
-  PerformanceReport
-} from '../types/matrix.types';
+  PerformanceReport,
+} from "../types/matrix.types.js";
 
 // Utility Functions
-export { 
+export {
   matrix4ToMLMatrix,
   mlMatrixToMatrix4,
   matrix3ToMLMatrix,
@@ -87,12 +134,12 @@ export {
   createRandomMatrix,
   validateMatrixDimensions,
   isValidMatrix4,
-  isValidMatrix3
-} from '../utils/matrix-adapters';
+  isValidMatrix3,
+} from "../utils/matrix-adapters.js";
 
 /**
  * Complete Matrix Operations Bundle
- * 
+ *
  * Pre-configured bundle with all matrix operations functionality
  * for easy integration into applications.
  */
@@ -118,26 +165,28 @@ export interface MatrixOperationsBundle {
 /**
  * Create complete matrix operations bundle
  */
-export const createMatrixOperationsBundle = (config?: Partial<MatrixOperationConfig>): MatrixOperationsBundle => {
+export const createMatrixOperationsBundle = (
+  config?: Partial<APIMatrixOperationConfig>,
+): MatrixOperationsBundle => {
   const api = createMatrixOperationsAPI(config);
 
   return {
     api,
     hooks: {
       useMatrixOperations,
-      useMatrixOperationContext
+      useMatrixOperationContext,
     },
     components: {
       Provider: MatrixOperationProvider,
       ErrorBoundary: MatrixOperationErrorBoundary,
       PerformanceProfiler: MatrixPerformanceProfiler,
       Debugger: MatrixOperationDebugger,
-      StatusComponent: MatrixOperationStatusComponent
+      StatusComponent: MatrixOperationStatusComponent,
     },
     utils: {
       withMatrixOperations,
-      createAPI: createMatrixOperationsAPI
-    }
+      createAPI: createMatrixOperationsAPI,
+    },
   };
 };
 
@@ -154,19 +203,21 @@ export const matrixOperationsBundle = createMatrixOperationsBundle();
  */
 export interface MatrixOperationsDevProviderProps {
   readonly children: React.ReactNode;
-  readonly config?: Partial<MatrixOperationConfig>;
+  readonly config?: Partial<APIMatrixOperationConfig>;
   readonly enableProfiler?: boolean;
   readonly enableDebugger?: boolean;
   readonly onError?: (error: Error) => void;
 }
 
-export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProviderProps) => {
+export const createMatrixOperationsDevProvider = (
+  props: MatrixOperationsDevProviderProps,
+) => {
   const {
-    children,
+    children: _children,
     config,
-    enableProfiler = process.env.NODE_ENV === 'development',
-    enableDebugger = process.env.NODE_ENV === 'development',
-    onError
+    enableProfiler = process.env.NODE_ENV === "development",
+    enableDebugger = process.env.NODE_ENV === "development",
+    onError,
   } = props;
 
   // Return configuration object for JSX usage
@@ -178,30 +229,44 @@ export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProv
     config: {
       provider: {
         config,
-        onError
+        onError,
       },
       errorBoundary: {
         enableAutoRecovery: true,
-        showErrorDetails: process.env.NODE_ENV === 'development',
-        onError: (error: Error, errorInfo: any, errorId: string) => {
-          console.error('[MatrixOperationsDevProvider] Error caught:', { error, errorInfo, errorId });
+        showErrorDetails: process.env.NODE_ENV === "development",
+        onError: (error: Error, errorInfo: unknown, errorId: string) => {
+          console.error("[MatrixOperationsDevProvider] Error caught:", {
+            error,
+            errorInfo,
+            errorId,
+          });
           onError?.(error);
-        }
+        },
       },
-      profiler: enableProfiler ? {
-        enabled: enableProfiler,
-        showDetails: true,
-        position: 'top-right' as const,
-        onPerformanceAlert: (metric: string, value: number, threshold: number) => {
-          console.warn(`[MatrixOperationsDevProvider] Performance alert: ${metric} = ${value} (threshold: ${threshold})`);
-        }
-      } : null,
-      debugger: enableDebugger ? {
-        enabled: enableDebugger,
-        showStackTraces: true,
-        autoScroll: true
-      } : null
-    }
+      profiler: enableProfiler
+        ? {
+            enabled: enableProfiler,
+            showDetails: true,
+            position: "top-right" as const,
+            onPerformanceAlert: (
+              metric: string,
+              value: number,
+              threshold: number,
+            ) => {
+              console.warn(
+                `[MatrixOperationsDevProvider] Performance alert: ${metric} = ${value} (threshold: ${threshold})`,
+              );
+            },
+          }
+        : null,
+      debugger: enableDebugger
+        ? {
+            enabled: enableDebugger,
+            showStackTraces: true,
+            autoScroll: true,
+          }
+        : null,
+    },
   };
 };
 
@@ -213,13 +278,15 @@ export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProv
  */
 export interface MatrixOperationsProdProviderProps {
   readonly children: React.ReactNode;
-  readonly config?: Partial<MatrixOperationConfig>;
+  readonly config?: Partial<APIMatrixOperationConfig>;
   readonly onError?: (error: Error) => void;
-  readonly onHealthStatusChange?: (isHealthy: boolean, status: any) => void;
+  readonly onHealthStatusChange?: (isHealthy: boolean, status: unknown) => void;
 }
 
-export const createMatrixOperationsProdProvider = (props: MatrixOperationsProdProviderProps) => {
-  const { children, config, onError, onHealthStatusChange } = props;
+export const createMatrixOperationsProdProvider = (
+  props: MatrixOperationsProdProviderProps,
+) => {
+  const { children: _children, config, onError, onHealthStatusChange } = props;
 
   // Return configuration object for JSX usage
   return {
@@ -234,27 +301,27 @@ export const createMatrixOperationsProdProvider = (props: MatrixOperationsProdPr
           autoOptimizeConfiguration: true,
           healthCheckInterval: 60000, // 1 minute
           performanceReportInterval: 300000, // 5 minutes
-          ...config
+          ...config,
         },
         onError,
-        onHealthStatusChange
+        onHealthStatusChange,
       },
       errorBoundary: {
         enableAutoRecovery: true,
         maxRetries: 3,
         retryDelay: 1000,
         showErrorDetails: false,
-        onError: (error: Error, errorInfo: any, errorId: string) => {
+        onError: (error: Error, _errorInfo: unknown, errorId: string) => {
           // Log to external monitoring service in production
-          console.error('[MatrixOperationsProdProvider] Production error:', {
+          console.error("[MatrixOperationsProdProvider] Production error:", {
             errorId,
             message: error.message,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
           onError?.(error);
-        }
-      }
-    }
+        },
+      },
+    },
   };
 };
 
@@ -264,22 +331,29 @@ export const createMatrixOperationsProdProvider = (props: MatrixOperationsProdPr
  * Provides a simple way to set up matrix operations in any React application
  * with sensible defaults for development and production environments.
  */
-export const setupMatrixOperations = (options: {
-  readonly environment?: 'development' | 'production';
-  readonly config?: Partial<MatrixOperationConfig>;
-  readonly enableDevTools?: boolean;
-  readonly onError?: (error: Error) => void;
-  readonly onHealthStatusChange?: (isHealthy: boolean, status: any) => void;
-} = {}) => {
+export const setupMatrixOperations = (
+  options: {
+    readonly environment?: "development" | "production";
+    readonly config?: Partial<APIMatrixOperationConfig>;
+    readonly enableDevTools?: boolean;
+    readonly onError?: (error: Error) => void;
+    readonly onHealthStatusChange?: (
+      isHealthy: boolean,
+      status: unknown,
+    ) => void;
+  } = {},
+) => {
   const {
-    environment = process.env.NODE_ENV === 'development' ? 'development' : 'production',
+    environment = process.env.NODE_ENV === "development"
+      ? "development"
+      : "production",
     config,
-    enableDevTools = environment === 'development',
+    enableDevTools = environment === "development",
     onError,
-    onHealthStatusChange
+    onHealthStatusChange,
   } = options;
 
-  if (environment === 'development' && enableDevTools) {
+  if (environment === "development" && enableDevTools) {
     return {
       createProvider: createMatrixOperationsDevProvider,
       api: createMatrixOperationsAPI(config),
@@ -288,8 +362,8 @@ export const setupMatrixOperations = (options: {
         Provider: MatrixOperationProvider,
         ErrorBoundary: MatrixOperationErrorBoundary,
         PerformanceProfiler: MatrixPerformanceProfiler,
-        Debugger: MatrixOperationDebugger
-      }
+        Debugger: MatrixOperationDebugger,
+      },
     };
   } else {
     return {
@@ -298,8 +372,8 @@ export const setupMatrixOperations = (options: {
       bundle: createMatrixOperationsBundle(config),
       components: {
         Provider: MatrixOperationProvider,
-        ErrorBoundary: MatrixOperationErrorBoundary
-      }
+        ErrorBoundary: MatrixOperationErrorBoundary,
+      },
     };
   }
 };

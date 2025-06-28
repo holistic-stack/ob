@@ -290,8 +290,8 @@ describe('CSG Operations Service', () => {
       const results = await performBatchCSGOperations(configs);
       
       expect(results).toHaveLength(2);
-      expect(results[0].success).toBe(true);
-      expect(results[1].success).toBe(true);
+      expect(results[0]?.success).toBe(true);
+      expect(results[1]?.success).toBe(true);
     });
 
     it('should handle mixed success and failure results', async () => {
@@ -303,8 +303,8 @@ describe('CSG Operations Service', () => {
       const results = await performBatchCSGOperations(configs);
       
       expect(results).toHaveLength(2);
-      expect(results[0].success).toBe(true);
-      expect(results[1].success).toBe(false);
+      expect(results[0]?.success).toBe(true);
+      expect(results[1]?.success).toBe(false);
     });
 
     it('should handle empty config array', async () => {

@@ -103,14 +103,18 @@ interface PerformanceRegressionReport {
 const measurePerformance = async (
   operation: () => Promise<any> | any,
   operationName: string,
-  category: string
+  category: keyof typeof PERFORMANCE_BASELINES
 ): Promise<PerformanceMeasurement> => {
   const config = PERFORMANCE_TEST_CONFIG;
-  const baseline = PERFORMANCE_BASELINES[category as keyof typeof PERFORMANCE_BASELINES]?.[operationName as any];
+  const categoryBaselines = PERFORMANCE_BASELINES[category];
+  const baseline = (categoryBaselines as Record<string, { baseline: number; tolerance: number; maxRegression: number } | undefined>)[operationName];
   
   if (!baseline) {
     throw new Error(`No baseline found for ${category}.${operationName}`);
   }
+  
+  // Type assertion after null check to ensure baseline is defined
+  const baselineConfig = baseline as { baseline: number; tolerance: number; maxRegression: number };
   
   const executionTimes: number[] = [];
   
@@ -135,16 +139,16 @@ const measurePerformance = async (
   // Calculate statistics
   const averageTime = executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length;
   const sortedTimes = [...executionTimes].sort((a, b) => a - b);
-  const medianTime = sortedTimes[Math.floor(sortedTimes.length / 2)];
+  const medianTime = sortedTimes.length > 0 ? (sortedTimes[Math.floor(sortedTimes.length / 2)] ?? 0) : 0;
   const minTime = Math.min(...executionTimes);
   const maxTime = Math.max(...executionTimes);
   
   const variance = executionTimes.reduce((sum, time) => sum + Math.pow(time - averageTime, 2), 0) / executionTimes.length;
   const standardDeviation = Math.sqrt(variance);
   
-  const regressionPercent = ((averageTime - baseline.baseline) / baseline.baseline) * 100;
+  const regressionPercent = ((averageTime - baselineConfig.baseline) / baselineConfig.baseline) * 100;
   const isRegression = regressionPercent > config.regressionThreshold * 100;
-  const isSignificant = Math.abs(averageTime - baseline.baseline) > baseline.tolerance;
+  const isSignificant = Math.abs(averageTime - baselineConfig.baseline) > baselineConfig.tolerance;
   
   return {
     operation: operationName,
@@ -155,8 +159,8 @@ const measurePerformance = async (
     minTime,
     maxTime,
     standardDeviation,
-    baseline: baseline.baseline,
-    tolerance: baseline.tolerance,
+    baseline: baselineConfig.baseline,
+    tolerance: baselineConfig.tolerance,
     regressionPercent,
     isRegression,
     isSignificant
@@ -235,7 +239,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
       console.log('[PERFORMANCE][Report]', JSON.stringify(report, null, 2));
       
       // Assert no critical regressions
-      expect(report.summary.criticalRegressions.length).toBe(0);
+      expect(report.summary.criticalRegressions).toHaveLength(0);
       expect(report.summary.averageRegression).toBeLessThan(50); // <50% average regression
     }
     
@@ -315,6 +319,9 @@ describe('Matrix Performance Regression Testing Framework', () => {
       const measurement = await measurePerformance(
         async () => {
           const validationService = serviceContainer.getValidationService();
+          if (!validationService) {
+            throw new Error('Validation service not available');
+          }
           const result = await validationService.validateMatrix(testMatrix, {
             useCache: false,
             tolerance: 1e-10
@@ -345,6 +352,9 @@ describe('Matrix Performance Regression Testing Framework', () => {
       const measurement = await measurePerformance(
         async () => {
           const validationService = serviceContainer.getValidationService();
+          if (!validationService) {
+            throw new Error('Validation service not available');
+          }
           const result = await validationService.validateMatrix(testMatrix, {
             useCache: false,
             tolerance: 1e-6
@@ -368,15 +378,15 @@ describe('Matrix Performance Regression Testing Framework', () => {
       
       const cacheService = serviceContainer.getCacheService();
       const testKey = 'performance_test_key';
-      const testValue = { test: 'data', timestamp: Date.now() };
+      const testMatrix = matrixFactory.identity(4);
       
       // Pre-populate cache
-      cacheService.set(testKey, testValue);
+      cacheService.set(testKey, testMatrix);
       
       const measurement = await measurePerformance(
         () => {
           const result = cacheService.get(testKey);
-          expect(result).toEqual(testValue);
+          expect(result).toEqual(testMatrix);
           return result;
         },
         'get',
@@ -397,9 +407,9 @@ describe('Matrix Performance Regression Testing Framework', () => {
       const measurement = await measurePerformance(
         () => {
           const key = `perf_test_${Math.random()}`;
-          const value = { data: Math.random(), timestamp: Date.now() };
-          cacheService.set(key, value);
-          return value;
+          const matrix = matrixFactory.identity(2);
+          cacheService.set(key, matrix);
+          return matrix;
         },
         'set',
         'cacheOperations'

@@ -34,7 +34,7 @@ test.describe('Browser Debug', () => {
     await page.goto('http://localhost:5174');
 
     // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Check for specific metrics.ts related errors
     const metricsErrors = [
@@ -75,7 +75,7 @@ test.describe('Browser Debug', () => {
     });
 
     await page.goto('http://localhost:5174');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Look for parser service initialization messages
     const parserMessages = consoleMessages.filter(msg => 
@@ -100,7 +100,7 @@ test.describe('Browser Debug', () => {
     });
 
     await page.goto('http://localhost:5174');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Log any direct TypeScript file requests (these should not happen in production)
     if (tsRequests.length > 0) {

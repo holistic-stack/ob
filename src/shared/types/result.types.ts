@@ -85,7 +85,6 @@ export const isNone = <T>(option: Option<T>): option is { readonly some: false }
  */
 export type ComponentId = string & { readonly __brand: 'ComponentId' };
 export type UserId = string & { readonly __brand: 'UserId' };
-export type FileId = string & { readonly __brand: 'FileId' };
 export type SessionId = string & { readonly __brand: 'SessionId' };
 
 /**
@@ -110,11 +109,8 @@ export type DeepReadonly<T> = {
 };
 
 /**
- * Utility type for function types
+ * Async utility type for function types  
  */
-export type PureFunction<TArgs extends readonly unknown[], TReturn> = 
-  (...args: TArgs) => TReturn;
-
 export type AsyncPureFunction<TArgs extends readonly unknown[], TReturn> = 
   (...args: TArgs) => Promise<TReturn>;
 

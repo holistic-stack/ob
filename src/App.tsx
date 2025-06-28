@@ -5,23 +5,25 @@
  * Integrates Monaco Editor for code input with Three.js renderer for 3D output.
  */
 
-import React, { useEffect, useState } from 'react';
-import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
-import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
-import { useAppStore } from './features/store/app-store';
+import React, { useEffect, useState } from "react";
+import { StoreConnectedEditor } from "./features/code-editor/components/store-connected-editor";
+import { StoreConnectedRenderer } from "./features/3d-renderer/components/store-connected-renderer";
+import { useAppStore } from "./features/store/app-store";
 import {
   selectApplicationStatus,
   selectEditorCode,
   selectParsingAST,
   selectRenderingState,
-  selectPerformanceMetrics
-} from './features/store/selectors/store.selectors';
+  selectPerformanceMetrics,
+} from "./features/store/selectors/store.selectors";
 
 /**
  * Main Application Component
  */
 export function App(): React.JSX.Element {
-  console.log('[INIT][App] Rendering OpenSCAD 3D Visualization Application v2.0.0');
+  console.log(
+    "[INIT][App] Rendering OpenSCAD 3D Visualization Application v2.0.0",
+  );
 
   // Store selectors for application state
   const applicationStatus = useAppStore(selectApplicationStatus);
@@ -38,20 +40,20 @@ export function App(): React.JSX.Element {
    * Initialize application on mount
    */
   useEffect(() => {
-    console.log('[INIT][App] Application mounted and ready');
+    console.log("[INIT][App] Application mounted and ready");
   }, []);
 
   /**
    * Log application state changes
    */
   useEffect(() => {
-    console.log('[DEBUG][App] Application state updated:', {
+    console.log("[DEBUG][App] Application state updated:", {
       status: applicationStatus,
       codeLength: editorCode.length,
-      astNodeCount: ast?.length || 0,
+      astNodeCount: ast?.length ?? 0,
       isRendering: renderingState.isRendering,
       meshCount: renderingState.meshes.length,
-      renderTime: performanceMetrics.renderTime
+      renderTime: performanceMetrics.renderTime,
     });
   }, [applicationStatus, editorCode, ast, renderingState, performanceMetrics]);
 
@@ -64,18 +66,21 @@ export function App(): React.JSX.Element {
 
     const handleMouseMove = (e: MouseEvent) => {
       const containerWidth = window.innerWidth;
-      const newWidth = Math.max(20, Math.min(80, (e.clientX / containerWidth) * 100));
+      const newWidth = Math.max(
+        20,
+        Math.min(80, (e.clientX / containerWidth) * 100),
+      );
       setEditorWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
@@ -87,16 +92,21 @@ export function App(): React.JSX.Element {
             OpenSCAD 3D Visualizer
           </h1>
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span className={`w-2 h-2 rounded-full ${
-              applicationStatus === 'idle' ? 'bg-green-400' :
-              applicationStatus === 'working' ? 'bg-yellow-400' : 'bg-red-400'
-            }`} />
+            <span
+              className={`w-2 h-2 rounded-full ${
+                applicationStatus === "idle"
+                  ? "bg-green-400"
+                  : applicationStatus === "working"
+                    ? "bg-yellow-400"
+                    : "bg-red-400"
+              }`}
+            />
             <span className="capitalize">{applicationStatus}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-gray-400">
-          <span>AST: {ast?.length || 0} nodes</span>
+          <span>AST: {ast?.length ?? 0} nodes</span>
           <span>Meshes: {renderingState.meshes.length}</span>
           <span>Render: {performanceMetrics.renderTime.toFixed(1)}ms</span>
         </div>
@@ -110,7 +120,9 @@ export function App(): React.JSX.Element {
           style={{ width: `${editorWidth}%` }}
         >
           <div className="panel-header bg-gray-800 px-4 py-2 border-b border-gray-700">
-            <h2 className="text-sm font-medium text-gray-300">OpenSCAD Code Editor</h2>
+            <h2 className="text-sm font-medium text-gray-300">
+              OpenSCAD Code Editor
+            </h2>
           </div>
           <div className="panel-content flex-1">
             <StoreConnectedEditor
@@ -125,13 +137,13 @@ export function App(): React.JSX.Element {
           type="button"
           aria-label="Resize panels"
           className={`resize-handle w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            isResizing ? 'bg-blue-500' : ''
+            isResizing ? "bg-blue-500" : ""
           }`}
           onMouseDown={handleMouseDown}
           onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') {
+            if (e.key === "ArrowLeft") {
               setEditorWidth(Math.max(20, editorWidth - 5));
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === "ArrowRight") {
               setEditorWidth(Math.min(80, editorWidth + 5));
             }
           }}
@@ -144,7 +156,9 @@ export function App(): React.JSX.Element {
           style={{ width: `${100 - editorWidth}%` }}
         >
           <div className="panel-header bg-gray-800 px-4 py-2 border-b border-gray-700">
-            <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
+            <h2 className="text-sm font-medium text-gray-300">
+              3D Visualization
+            </h2>
           </div>
           <div className="panel-content flex-1 relative">
             <StoreConnectedRenderer

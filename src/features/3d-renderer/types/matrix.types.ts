@@ -218,6 +218,48 @@ export interface MatrixValidationResult extends MatrixValidation {
 }
 
 /**
+ * Interfaces for dependency injection
+ */
+export type IMatrixCache = MatrixCacheEntry;
+export type IMatrixValidator = MatrixValidation;
+
+export interface IMatrixTelemetry {
+  trackOperation: (
+    operation: string,
+    duration: number,
+    success: boolean,
+    metadata?: Record<string, unknown>,
+  ) => void;
+  generateReport: () => unknown;
+}
+
+export interface MatrixConversionOptions {
+  useCache?: boolean;
+  validateInput?: boolean;
+  precision?: number;
+  timeout?: number;
+}
+
+export interface MatrixOperationDependencies {
+  readonly validator?: IMatrixValidator;
+  readonly cache?: IMatrixCache;
+  readonly telemetry?: IMatrixTelemetry;
+}
+
+export interface PerformanceReport {
+  readonly metrics: MatrixPerformanceMetrics;
+  readonly operationBreakdown: Record<
+    string,
+    {
+      count: number;
+      totalTime: number;
+      averageTime: number;
+      successRate: number;
+    }
+  >;
+}
+
+/**
  * Matrix configuration override types
  */
 export interface MatrixConfigOverride {
@@ -273,4 +315,10 @@ export interface MatrixOperationContext {
   readonly timeout: number;
   readonly priority: 'low' | 'normal' | 'high';
   readonly metadata: Record<string, unknown>;
+}
+
+export interface MatrixOperationProviderConfig {
+  readonly performance?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.performance>;
+  readonly cache?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.cache>;
+  readonly operations?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.operations>;
 }

@@ -97,10 +97,10 @@ export const memoize = <T extends readonly unknown[], R>(
  */
 export const debounce = <T extends readonly unknown[]>(
   fn: (...args: T) => void,
-  delayMs: number
+  delayMs: number,
 ): ((...args: T) => void) => {
-  let timeoutId: NodeJS.Timeout | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   return (...args: T): void => {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
@@ -118,11 +118,11 @@ export const debounce = <T extends readonly unknown[]>(
  */
 export const throttle = <T extends readonly unknown[]>(
   fn: (...args: T) => void,
-  delayMs: number
+  delayMs: number,
 ): ((...args: T) => void) => {
   let lastCallTime = 0;
-  let timeoutId: NodeJS.Timeout | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   return (...args: T): void => {
     const now = Date.now();
     

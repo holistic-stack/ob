@@ -172,23 +172,28 @@ describe('React Integration Layer Testing', () => {
     console.log('[INIT][ReactIntegrationTest] Setting up React integration test environment');
     
     // Reset app store
-    useAppStore.setState({
-      code: '',
-      parsing: {
+    useAppStore.setState(state => {
+      state.editor.code = '';
+      state.parsing = {
         ast: [],
         isLoading: false,
         errors: [],
         warnings: [],
         lastParsed: null,
         parseTime: 0
-      },
-      scene3D: {
+      };
+      state.rendering = {
         meshes: [],
-        isLoading: false,
-        errors: [],
+        isRendering: false,
+        renderErrors: [],
         lastRendered: null,
-        renderTime: 0
-      }
+        renderTime: 0,
+        camera: {
+          position: [5, 5, 5],
+          target: [0, 0, 0],
+          zoom: 1,
+        },
+      };
     });
   });
 
@@ -209,7 +214,7 @@ describe('React Integration Layer Testing', () => {
           <MockMatrixServiceProvider>
             <TestIntegrationComponent 
               onRender={() => {
-                const count = parseInt(screen.getByTestId('render-count').textContent || '0');
+                const count = parseInt(screen.getByTestId('render-count').textContent ?? '0');
                 renderCounts.push(count);
               }}
             />
@@ -585,23 +590,16 @@ describe('React Integration Layer Testing', () => {
       console.log('[DEBUG][ReactIntegrationTest] Testing StoreConnectedRenderer integration');
       
       // Set up store with AST data
-      useAppStore.setState({
-        parsing: {
-          ast: [
+      useAppStore.setState(state => {
+        state.parsing.ast = [
             {
               type: 'cube',
-              parameters: { size: [10, 10, 10] },
+              size: [10, 10, 10],
               children: [],
               position: { line: 1, column: 1 },
               source: 'cube([10,10,10]);'
             }
-          ],
-          isLoading: false,
-          errors: [],
-          warnings: [],
-          lastParsed: new Date(),
-          parseTime: 25.5
-        }
+          ]
       });
       
       render(

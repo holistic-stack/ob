@@ -171,10 +171,8 @@ describe('StoreConnectedRenderer', () => {
       const mockAST: ASTNode[] = [
         {
           type: 'cube',
-          parameters: { size: [1, 1, 1] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([1, 1, 1]);'
+          size: [1, 1, 1],
+          center: false
         }
       ];
       
@@ -206,7 +204,7 @@ describe('StoreConnectedRenderer', () => {
     });
 
     it('should display render errors from store', () => {
-      mockStoreState.rendering.renderErrors = ['Test error 1', 'Test error 2'];
+      mockStoreState.rendering.renderErrors = ['Test error 1' as never, 'Test error 2' as never];
       
       render(<StoreConnectedRenderer />);
       
@@ -233,10 +231,7 @@ describe('StoreConnectedRenderer', () => {
       const mockAST: ASTNode[] = [
         {
           type: 'sphere',
-          parameters: { r: 1 },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'sphere(r=1);'
+          radius: 1
         }
       ];
       
@@ -260,10 +255,8 @@ describe('StoreConnectedRenderer', () => {
       mockStoreState.parsing.ast = [
         {
           type: 'cube',
-          parameters: { size: [1, 1, 1] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([1, 1, 1]);'
+          size: [1, 1, 1],
+          center: false
         }
       ];
       
@@ -286,7 +279,23 @@ describe('StoreConnectedRenderer', () => {
         parseTime: 8.3,
         memoryUsage: 1024 * 1024 * 3.2
       };
-      mockStoreState.rendering.meshes = [{}, {}, {}] as any[];
+      mockStoreState.rendering.meshes = [
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'cube', nodeIndex: 0, id: 'cube-0', triangleCount: 12, vertexCount: 8 },
+          dispose: () => {}
+        }, 
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'sphere', nodeIndex: 1, id: 'sphere-1', triangleCount: 100, vertexCount: 50 },
+          dispose: () => {}
+        }, 
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'cylinder', nodeIndex: 2, id: 'cylinder-2', triangleCount: 64, vertexCount: 32 },
+          dispose: () => {}
+        }
+      ] as any;
       
       render(<StoreConnectedRenderer />);
       
@@ -310,11 +319,13 @@ describe('StoreConnectedRenderer', () => {
       
       mockStoreState.parsing.ast = [
         {
-          type: 'invalid',
-          parameters: {},
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'invalid();'
+          type: 'error' as const,
+          message: 'Test error',
+          errorCode: 'PARSE_ERROR',
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 }
+          }
         }
       ];
       

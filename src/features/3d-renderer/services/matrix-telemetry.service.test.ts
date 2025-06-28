@@ -185,9 +185,9 @@ describe('MatrixTelemetryService', () => {
       expect(report.operationBreakdown).toHaveProperty('transpose');
       expect(report.operationBreakdown).toHaveProperty('inverse');
       
-      expect(report.operationBreakdown.add.count).toBe(2);
-      expect(report.operationBreakdown.add.successRate).toBe(1);
-      expect(report.operationBreakdown.inverse.successRate).toBe(0);
+      expect(report.operationBreakdown.add?.count).toBe(2);
+      expect(report.operationBreakdown.add?.successRate).toBe(1);
+      expect(report.operationBreakdown.inverse?.successRate).toBe(0);
     });
 
     it('should detect regressions in report period', () => {
@@ -326,7 +326,7 @@ describe('MatrixTelemetryService', () => {
           ...MATRIX_CONFIG.debug,
           enablePerformanceLogging: true
         }
-      };
+      } as any;
       
       const debugService = new MatrixTelemetryService({ config: debugConfig });
       debugService.trackOperation('add', 5, true);
@@ -350,7 +350,7 @@ describe('MatrixTelemetryService', () => {
           ...MATRIX_CONFIG.debug,
           enablePerformanceLogging: false
         }
-      };
+      } as any;
       
       const debugService = new MatrixTelemetryService({ config: debugConfig });
       debugService.trackOperation('add', 5, true);

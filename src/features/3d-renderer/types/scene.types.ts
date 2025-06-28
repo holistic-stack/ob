@@ -1,33 +1,28 @@
 /**
  * Three.js Scene Type Definitions
- * 
+ *
  * Specific type definitions for Three.js scene management,
  * React Three Fiber integration, and WebGL optimization.
  */
 
-import type * as THREE from 'three';
-import type { Object3DNode, extend } from '@react-three/fiber';
+import type * as THREE from "three";
 
 /**
- * Extended Three.js types for React Three Fiber
+ * Basic Three.js object types for React Three Fiber compatibility
  */
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      mesh: Object3DNode<THREE.Mesh, typeof THREE.Mesh>;
-      boxGeometry: Object3DNode<THREE.BoxGeometry, typeof THREE.BoxGeometry>;
-      sphereGeometry: Object3DNode<THREE.SphereGeometry, typeof THREE.SphereGeometry>;
-      cylinderGeometry: Object3DNode<THREE.CylinderGeometry, typeof THREE.CylinderGeometry>;
-      meshStandardMaterial: Object3DNode<THREE.MeshStandardMaterial, typeof THREE.MeshStandardMaterial>;
-      meshBasicMaterial: Object3DNode<THREE.MeshBasicMaterial, typeof THREE.MeshBasicMaterial>;
-      group: Object3DNode<THREE.Group, typeof THREE.Group>;
-      ambientLight: Object3DNode<THREE.AmbientLight, typeof THREE.AmbientLight>;
-      directionalLight: Object3DNode<THREE.DirectionalLight, typeof THREE.DirectionalLight>;
-      pointLight: Object3DNode<THREE.PointLight, typeof THREE.PointLight>;
-      perspectiveCamera: Object3DNode<THREE.PerspectiveCamera, typeof THREE.PerspectiveCamera>;
-      orthographicCamera: Object3DNode<THREE.OrthographicCamera, typeof THREE.OrthographicCamera>;
-    }
-  }
+export interface ThreeJSXElements {
+  mesh: any;
+  boxGeometry: any;
+  sphereGeometry: any;
+  cylinderGeometry: any;
+  meshStandardMaterial: any;
+  meshBasicMaterial: any;
+  group: any;
+  ambientLight: any;
+  directionalLight: any;
+  pointLight: any;
+  perspectiveCamera: any;
+  orthographicCamera: any;
 }
 
 /**
@@ -88,12 +83,12 @@ export interface WebGLConfig {
   readonly alpha: boolean;
   readonly premultipliedAlpha: boolean;
   readonly preserveDrawingBuffer: boolean;
-  readonly powerPreference: 'default' | 'high-performance' | 'low-power';
+  readonly powerPreference: "default" | "high-performance" | "low-power";
   readonly failIfMajorPerformanceCaveat: boolean;
   readonly depth: boolean;
   readonly stencil: boolean;
   readonly logarithmicDepthBuffer: boolean;
-  readonly precision: 'highp' | 'mediump' | 'lowp';
+  readonly precision: "highp" | "mediump" | "lowp";
 }
 
 /**
@@ -258,14 +253,14 @@ export interface SceneOptimization {
   readonly physicallyCorrectLights: boolean;
   readonly toneMapping: THREE.ToneMapping;
   readonly toneMappingExposure: number;
-  readonly outputEncoding: THREE.TextureEncoding;
+  readonly outputColorSpace: THREE.ColorSpace;
 }
 
 /**
  * Scene export configuration
  */
 export interface ExportConfig {
-  readonly format: 'gltf' | 'obj' | 'stl' | 'ply' | 'dae';
+  readonly format: "gltf" | "obj" | "stl" | "ply" | "dae";
   readonly binary: boolean;
   readonly embedImages: boolean;
   readonly includeCustomExtensions: boolean;
@@ -282,7 +277,7 @@ export interface ExportConfig {
  * Scene import configuration
  */
 export interface ImportConfig {
-  readonly format: 'gltf' | 'obj' | 'fbx' | 'dae' | '3ds' | 'ply' | 'stl';
+  readonly format: "gltf" | "obj" | "fbx" | "dae" | "3ds" | "ply" | "stl";
   readonly scale: number;
   readonly center: boolean;
   readonly flipY: boolean;

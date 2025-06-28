@@ -1,54 +1,63 @@
 /**
  * Result Utility Functions
- * 
+ *
  * Pure functional utilities for working with Result<T,E> types
  * following functional programming patterns and immutable data structures.
  */
 
-import type { 
-  Result, 
-  AsyncResult, 
-  Option, 
+import type {
+  Result,
+  AsyncResult,
+  Option,
   ValidationResult,
   NetworkResult,
-  NetworkError 
-} from '../../types/result.types';
+  NetworkError,
+} from "../../types/result.types";
+
+// Re-export types
+export type {
+  Result,
+  AsyncResult,
+  Option,
+  ValidationResult,
+  NetworkResult,
+  NetworkError,
+};
 
 /**
  * Creates a successful Result
  */
-export const success = <T, E = Error>(data: T): Result<T, E> => 
+export const success = <T, E = Error>(data: T): Result<T, E> =>
   Object.freeze({ success: true, data });
 
 /**
  * Creates an error Result
  */
-export const error = <T, E = Error>(err: E): Result<T, E> => 
+export const error = <T, E = Error>(err: E): Result<T, E> =>
   Object.freeze({ success: false, error: err });
 
 /**
  * Creates a Some Option
  */
-export const some = <T>(value: T): Option<T> => 
+export const some = <T>(value: T): Option<T> =>
   Object.freeze({ some: true, value });
 
 /**
  * Creates a None Option
  */
-export const none = <T>(): Option<T> => 
-  Object.freeze({ some: false });
+export const none = <T>(): Option<T> => Object.freeze({ some: false });
 
 /**
  * Maps over a successful Result, leaving errors unchanged
  */
 export const map = <T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => U
+  fn: (value: T) => U,
 ): Result<U, E> => {
   if (result.success) {
     return success(fn(result.data));
   }
-  return result;
+  return error(result.error);
 };
 
 /**
@@ -56,12 +65,12 @@ export const map = <T, U, E>(
  */
 export const mapError = <T, E, F>(
   result: Result<T, E>,
-  fn: (error: E) => F
+  fn: (error: E) => F,
 ): Result<T, F> => {
   if (!result.success) {
     return error(fn(result.error));
   }
-  return result;
+  return success(result.data);
 };
 
 /**
@@ -69,12 +78,12 @@ export const mapError = <T, E, F>(
  */
 export const chain = <T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Result<U, E>
+  fn: (value: T) => Result<U, E>,
 ): Result<U, E> => {
   if (result.success) {
     return fn(result.data);
   }
-  return result;
+  return error(result.error);
 };
 
 /**
@@ -82,7 +91,7 @@ export const chain = <T, U, E>(
  */
 export const mapAsync = async <T, U, E>(
   result: AsyncResult<T, E>,
-  fn: (value: T) => U | Promise<U>
+  fn: (value: T) => U | Promise<U>,
 ): AsyncResult<U, E> => {
   const resolvedResult = await result;
   if (resolvedResult.success) {
@@ -97,7 +106,7 @@ export const mapAsync = async <T, U, E>(
  */
 export const chainAsync = async <T, U, E>(
   result: AsyncResult<T, E>,
-  fn: (value: T) => AsyncResult<U, E>
+  fn: (value: T) => AsyncResult<U, E>,
 ): AsyncResult<U, E> => {
   const resolvedResult = await result;
   if (resolvedResult.success) {
@@ -126,16 +135,18 @@ export const unwrap = <T, E>(result: Result<T, E>): T => {
 /**
  * Combines multiple Results into a single Result containing an array
  */
-export const combine = <T, E>(results: ReadonlyArray<Result<T, E>>): Result<ReadonlyArray<T>, E> => {
+export const combine = <T, E>(
+  results: ReadonlyArray<Result<T, E>>,
+): Result<ReadonlyArray<T>, E> => {
   const values: T[] = [];
-  
+
   for (const result of results) {
     if (!result.success) {
       return result;
     }
     values.push(result.data);
   }
-  
+
   return success(Object.freeze(values));
 };
 
@@ -143,11 +154,11 @@ export const combine = <T, E>(results: ReadonlyArray<Result<T, E>>): Result<Read
  * Combines multiple Results, collecting all errors
  */
 export const combineAll = <T, E>(
-  results: ReadonlyArray<Result<T, E>>
+  results: ReadonlyArray<Result<T, E>>,
 ): Result<ReadonlyArray<T>, ReadonlyArray<E>> => {
   const values: T[] = [];
   const errors: E[] = [];
-  
+
   for (const result of results) {
     if (result.success) {
       values.push(result.data);
@@ -155,11 +166,11 @@ export const combineAll = <T, E>(
       errors.push(result.error);
     }
   }
-  
+
   if (errors.length > 0) {
     return error(Object.freeze(errors));
   }
-  
+
   return success(Object.freeze(values));
 };
 
@@ -168,7 +179,7 @@ export const combineAll = <T, E>(
  */
 export const tryCatch = <T, E = Error>(
   fn: () => T,
-  errorMapper?: (error: unknown) => E
+  errorMapper?: (error: unknown) => E,
 ): Result<T, E> => {
   try {
     const result = fn();
@@ -184,7 +195,7 @@ export const tryCatch = <T, E = Error>(
  */
 export const tryCatchAsync = async <T, E = Error>(
   fn: () => Promise<T>,
-  errorMapper?: (error: unknown) => E
+  errorMapper?: (error: unknown) => E,
 ): AsyncResult<T, E> => {
   try {
     const result = await fn();
@@ -201,7 +212,7 @@ export const tryCatchAsync = async <T, E = Error>(
 export const filter = <T, E>(
   result: Result<T, E>,
   predicate: (value: T) => boolean,
-  errorOnFalse: E
+  errorOnFalse: E,
 ): Result<T, E> => {
   if (result.success && predicate(result.data)) {
     return result;
@@ -215,7 +226,10 @@ export const filter = <T, E>(
 /**
  * Converts an Option to a Result
  */
-export const optionToResult = <T, E>(option: Option<T>, errorValue: E): Result<T, E> => {
+export const optionToResult = <T, E>(
+  option: Option<T>,
+  errorValue: E,
+): Result<T, E> => {
   return option.some ? success(option.value) : error(errorValue);
 };
 
@@ -231,13 +245,13 @@ export const resultToOption = <T, E>(result: Result<T, E>): Option<T> => {
  */
 export const fromFetchResponse = async <T>(
   response: Response,
-  parser: (response: Response) => Promise<T>
+  parser: (response: Response) => Promise<T>,
 ): AsyncResult<T, NetworkError> => {
   if (!response.ok) {
     const networkError: NetworkError = {
       status: response.status,
       message: response.statusText || `HTTP ${response.status}`,
-      details: { url: response.url }
+      details: { url: response.url },
     };
     return error(networkError);
   }
@@ -247,8 +261,8 @@ export const fromFetchResponse = async <T>(
     (err): NetworkError => ({
       status: response.status,
       message: err instanceof Error ? err.message : String(err),
-      details: { parseError: err }
-    })
+      details: { parseError: err },
+    }),
   );
 };
 
@@ -257,20 +271,20 @@ export const fromFetchResponse = async <T>(
  */
 export const validate = <T>(
   value: T,
-  validators: ReadonlyArray<(value: T) => string | null>
+  validators: ReadonlyArray<(value: T) => string | null>,
 ): ValidationResult<T> => {
   const errors: string[] = [];
-  
+
   for (const validator of validators) {
     const error = validator(value);
     if (error !== null) {
       errors.push(error);
     }
   }
-  
+
   if (errors.length > 0) {
     return error(Object.freeze(errors));
   }
-  
+
   return success(value);
 };

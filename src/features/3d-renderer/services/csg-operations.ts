@@ -101,72 +101,161 @@ const optimizeMeshForCSG = (mesh: THREE.Mesh): Result<THREE.Mesh, string> => {
 /**
  * Perform CSG union operation
  */
-const performUnion = (meshes: ReadonlyArray<THREE.Mesh>): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const performUnion = async (meshes: ReadonlyArray<THREE.Mesh>): Promise<Result<THREE.Mesh, string>> => {
+  try {
     if (meshes.length === 0) {
-      throw new Error('No meshes provided for union operation');
+      return error('No meshes provided for union operation');
     }
     
-    if (meshes.length === 1) {
-      return meshes[0].clone();
+    if (meshes.length === 1 && meshes[0]) {
+      return success(meshes[0].clone());
     }
     
-    let result = CSG.fromMesh(meshes[0]);
+    if (!meshes[0]) {
+      return error('First mesh is undefined');
+    }
+    
+    const firstCSGResult = await CSG.fromMesh(meshes[0]);
+    if (!firstCSGResult.success) {
+      return error(`Failed to convert first mesh to CSG: ${firstCSGResult.error}`);
+    }
+    
+    let result = firstCSGResult.data;
     
     for (let i = 1; i < meshes.length; i++) {
-      const nextCSG = CSG.fromMesh(meshes[i]);
-      result = result.union(nextCSG);
+      const mesh = meshes[i];
+      if (!mesh) {
+        return error(`Mesh at index ${i} is undefined`);
+      }
+      
+      const nextCSGResult = await CSG.fromMesh(mesh);
+      if (!nextCSGResult.success) {
+        return error(`Failed to convert mesh ${i} to CSG: ${nextCSGResult.error}`);
+      }
+      
+      const unionResult = await result.union(nextCSGResult.data);
+      if (!unionResult.success) {
+        return error(`Union operation failed at mesh ${i}: ${unionResult.error}`);
+      }
+      result = unionResult.data;
     }
     
-    return result.toMesh();
-  }, (err) => `Union operation failed: ${err instanceof Error ? err.message : String(err)}`);
+    const meshResult = await result.toMesh();
+    if (!meshResult.success) {
+      return error(`Failed to convert result to mesh: ${meshResult.error}`);
+    }
+    
+    return success(meshResult.data);
+  } catch (err) {
+    return error(`Union operation failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 };
 
 /**
  * Perform CSG difference operation
  */
-const performDifference = (meshes: ReadonlyArray<THREE.Mesh>): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const performDifference = async (meshes: ReadonlyArray<THREE.Mesh>): Promise<Result<THREE.Mesh, string>> => {
+  try {
     if (meshes.length < 2) {
       throw new Error('At least 2 meshes required for difference operation');
     }
     
-    let result = CSG.fromMesh(meshes[0]);
+    const firstMesh = meshes[0];
+    if (!firstMesh) {
+      throw new Error('First mesh is undefined');
+    }
+
+    const resultCSGResult = await CSG.fromMesh(firstMesh);
+    if (!resultCSGResult.success) {
+      throw new Error(`Failed to convert first mesh to CSG: ${resultCSGResult.error}`);
+    }
+
+    let resultCSG = resultCSGResult.data;
     
     for (let i = 1; i < meshes.length; i++) {
-      const nextCSG = CSG.fromMesh(meshes[i]);
-      result = result.subtract(nextCSG);
+      const mesh = meshes[i];
+      if (!mesh) {
+        throw new Error(`Mesh at index ${i} is undefined`);
+      }
+      
+      const nextCSGResult = await CSG.fromMesh(mesh);
+      if (!nextCSGResult.success) {
+        throw new Error(`Failed to convert mesh ${i} to CSG: ${nextCSGResult.error}`);
+      }
+      
+      const subtractResult = await resultCSG.subtract(nextCSGResult.data);
+      if (!subtractResult.success) {
+        throw new Error(`Failed to subtract mesh ${i}: ${subtractResult.error}`);
+      }
+      resultCSG = subtractResult.data;
     }
     
-    return result.toMesh();
-  }, (err) => `Difference operation failed: ${err instanceof Error ? err.message : String(err)}`);
+    const meshResult = await resultCSG.toMesh();
+    if (!meshResult.success) {
+      throw new Error(`Failed to convert result to mesh: ${meshResult.error}`);
+    }
+
+    return success(meshResult.data);
+  } catch (err) {
+    return error(`Difference operation failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 };
 
 /**
  * Perform CSG intersection operation
  */
-const performIntersection = (meshes: ReadonlyArray<THREE.Mesh>): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const performIntersection = async (meshes: ReadonlyArray<THREE.Mesh>): Promise<Result<THREE.Mesh, string>> => {
+  try {
     if (meshes.length < 2) {
       throw new Error('At least 2 meshes required for intersection operation');
     }
     
-    let result = CSG.fromMesh(meshes[0]);
+    const firstMesh = meshes[0];
+    if (!firstMesh) {
+      throw new Error('First mesh is undefined');
+    }
+
+    const resultCSGResult = await CSG.fromMesh(firstMesh);
+    if (!resultCSGResult.success) {
+      throw new Error(`Failed to convert first mesh to CSG: ${resultCSGResult.error}`);
+    }
+
+    let resultCSG = resultCSGResult.data;
     
     for (let i = 1; i < meshes.length; i++) {
-      const nextCSG = CSG.fromMesh(meshes[i]);
-      result = result.intersect(nextCSG);
+      const mesh = meshes[i];
+      if (!mesh) {
+        throw new Error(`Mesh at index ${i} is undefined`);
+      }
+      
+      const nextCSGResult = await CSG.fromMesh(mesh);
+      if (!nextCSGResult.success) {
+        throw new Error(`Failed to convert mesh ${i} to CSG: ${nextCSGResult.error}`);
+      }
+      
+      const intersectResult = await resultCSG.intersect(nextCSGResult.data);
+      if (!intersectResult.success) {
+        throw new Error(`Failed to intersect mesh ${i}: ${intersectResult.error}`);
+      }
+      resultCSG = intersectResult.data;
     }
     
-    return result.toMesh();
-  }, (err) => `Intersection operation failed: ${err instanceof Error ? err.message : String(err)}`);
+    const meshResult = await resultCSG.toMesh();
+    if (!meshResult.success) {
+      throw new Error(`Failed to convert result to mesh: ${meshResult.error}`);
+    }
+
+    return success(meshResult.data);
+  } catch (err) {
+    return error(`Intersection operation failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 };
 
 /**
  * Perform CSG operation with timeout
  */
 const performCSGWithTimeout = async (
-  operation: () => Result<THREE.Mesh, string>,
+  operation: () => Promise<Result<THREE.Mesh, string>>,
   timeoutMs: number = CSG_TIMEOUT_MS
 ): Promise<Result<THREE.Mesh, string>> => {
   return new Promise((resolve) => {
@@ -174,14 +263,15 @@ const performCSGWithTimeout = async (
       resolve(error('CSG operation timed out'));
     }, timeoutMs);
     
-    try {
-      const result = operation();
-      clearTimeout(timeoutId);
-      resolve(result);
-    } catch (err) {
-      clearTimeout(timeoutId);
-      resolve(error(`CSG operation failed: ${err instanceof Error ? err.message : String(err)}`));
-    }
+    operation()
+      .then((result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch((err) => {
+        clearTimeout(timeoutId);
+        resolve(error(`CSG operation failed: ${err instanceof Error ? err.message : String(err)}`));
+      });
   });
 };
 
@@ -189,14 +279,18 @@ const performCSGWithTimeout = async (
  * Main CSG operation function
  */
 export const performCSGOperation = async (config: CSGConfig): AsyncResult<THREE.Mesh, string> => {
-  const { result, duration } = await measureTime(async () => {
+  const { result, duration } = await measureTime(async (): Promise<Result<THREE.Mesh, string>> => {
     // Validate configuration
     if (config.meshes.length === 0) {
       return error('No meshes provided for CSG operation');
     }
     
     if (config.operation === 'union' && config.meshes.length === 1) {
-      return success(config.meshes[0].clone());
+      const firstMesh = config.meshes[0];
+      if (!firstMesh) {
+        return error('First mesh is undefined');
+      }
+      return success(firstMesh.clone());
     }
     
     if ((config.operation === 'difference' || config.operation === 'intersection') && config.meshes.length < 2) {
@@ -225,7 +319,7 @@ export const performCSGOperation = async (config: CSGConfig): AsyncResult<THREE.
     
     // Check total complexity
     const totalTriangles = optimizedMeshes.reduce((sum, mesh) => {
-      return sum + (mesh.geometry.attributes.position.count / 3);
+      return sum + (mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 : 0);
     }, 0);
     
     if (totalTriangles > config.maxComplexity) {
@@ -314,7 +408,12 @@ export const validateMeshesForCSG = (meshes: ReadonlyArray<THREE.Mesh>): Result<
     }
     
     for (let i = 0; i < meshes.length; i++) {
-      const validationResult = validateMeshForCSG(meshes[i]);
+      const mesh = meshes[i];
+      if (!mesh) {
+        throw new Error(`Mesh at index ${i} is undefined`);
+      }
+      
+      const validationResult = validateMeshForCSG(mesh);
       if (!validationResult.success) {
         throw new Error(`Mesh ${i} validation failed: ${validationResult.error}`);
       }

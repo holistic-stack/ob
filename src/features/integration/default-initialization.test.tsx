@@ -121,26 +121,38 @@ describe('Default Initialization End-to-End', () => {
       rendering: {
         meshes: [],
         isRendering: false,
+        renderErrors: [],
         camera: {
           position: [5, 5, 5],
-          target: [0, 0, 0]
+          target: [0, 0, 0],
+          zoom: 1
         },
-        lastRenderTime: 0,
-        errorCount: 0
+        lastRendered: new Date(),
+        renderTime: 0
       },
       performance: {
-        renderTime: 0,
-        parseTime: 0,
-        memoryUsage: 0,
-        frameRate: 60
+        metrics: {
+          renderTime: 0,
+          parseTime: 0,
+          memoryUsage: 0,
+          frameRate: 60
+        },
+        isMonitoring: false,
+        violations: [],
+        lastUpdated: null
       },
       config: {
         debounceMs: 300,
+        enableAutoSave: false,
         enableRealTimeParsing: true,
         enableRealTimeRendering: true,
-        maxASTNodes: 1000,
-        maxMeshes: 500,
-        enablePerformanceMonitoring: true
+        theme: 'dark',
+        performance: {
+          enableMetrics: true,
+          maxRenderTime: 16,
+          enableWebGL2: true,
+          enableHardwareAcceleration: true
+        }
       }
     });
   });
@@ -202,9 +214,9 @@ describe('Default Initialization End-to-End', () => {
       expect(result.success).toBe(true);
       
       if (result.success) {
-        expect(result.value).toHaveLength(1);
-        expect(result.value[0].type).toBe('cube');
-        expect(result.value[0].parameters.size).toEqual([10, 10, 10]);
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0]?.type).toBe('cube');
+        expect((result.data[0] as any)?.size).toEqual([10, 10, 10]);
       }
     });
 
@@ -228,10 +240,12 @@ describe('Default Initialization End-to-End', () => {
           ast: [
             {
               type: 'cube',
-              parameters: { size: [10, 10, 10] },
-              children: [],
-              position: { line: 1, column: 1 },
-              source: 'cube([10,10,10]);'
+              size: [10, 10, 10],
+              center: false,
+              location: {
+                start: { line: 1, column: 1, offset: 0 },
+                end: { line: 1, column: 20, offset: 19 }
+              }
             }
           ],
           isLoading: false,
@@ -246,7 +260,17 @@ describe('Default Initialization End-to-End', () => {
         <Canvas>
           <R3FScene
             astNodes={useAppStore.getState().parsing.ast}
-            camera={{ position: [5, 5, 5], target: [0, 0, 0] }}
+            camera={{ 
+              position: [5, 5, 5], 
+              target: [0, 0, 0],
+              zoom: 1,
+              fov: 75,
+              near: 0.1,
+              far: 1000,
+              enableControls: true,
+              enableAutoRotate: false,
+              autoRotateSpeed: 2
+            }}
             onCameraChange={vi.fn()}
             onPerformanceUpdate={vi.fn()}
             onRenderComplete={vi.fn()}
@@ -317,8 +341,8 @@ describe('Default Initialization End-to-End', () => {
       store.recordRenderTime(16.7);
       
       const state = useAppStore.getState();
-      expect(state.performance.parseTime).toBe(25.5);
-      expect(state.performance.renderTime).toBe(16.7);
+      expect(state.performance.metrics.parseTime).toBe(25.5);
+      expect(state.performance.metrics.renderTime).toBe(16.7);
     });
   });
 
@@ -332,13 +356,25 @@ describe('Default Initialization End-to-End', () => {
             astNodes={[
               {
                 type: 'cube',
-                parameters: { size: [10, 10, 10] },
-                children: [],
-                position: { line: 1, column: 1 },
-                source: 'cube([10,10,10]);'
+                size: [10, 10, 10],
+                center: false,
+                location: {
+                  start: { line: 1, column: 1, offset: 0 },
+                  end: { line: 1, column: 20, offset: 19 }
+                }
               }
             ]}
-            camera={{ position: [5, 5, 5], target: [0, 0, 0] }}
+            camera={{ 
+              position: [5, 5, 5], 
+              target: [0, 0, 0],
+              zoom: 1,
+              fov: 75,
+              near: 0.1,
+              far: 1000,
+              enableControls: true,
+              enableAutoRotate: false,
+              autoRotateSpeed: 2
+            }}
             onCameraChange={vi.fn()}
             onPerformanceUpdate={vi.fn()}
             onRenderComplete={vi.fn()}

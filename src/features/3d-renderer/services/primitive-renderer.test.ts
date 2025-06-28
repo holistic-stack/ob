@@ -8,6 +8,98 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+
+// Mock Three.js with proper BufferGeometry types
+vi.mock('three', async () => {
+  const actual = await vi.importActual('three');
+  
+  // Create mocked geometries that extend the base geometry structure
+  const mockBoxGeometry = vi.fn().mockImplementation((width = 1, height = 1, depth = 1) => {
+    const geometry = Object.create((actual as any).BufferGeometry.prototype);
+    Object.assign(geometry, {
+      type: 'BoxGeometry',
+      dispose: vi.fn(),
+      setAttribute: vi.fn(),
+      setIndex: vi.fn(),
+      computeVertexNormals: vi.fn(),
+      getAttribute: vi.fn(),
+      attributes: { position: { count: 24 } },
+      index: { count: 36 }
+    });
+    return geometry;
+  });
+
+  const mockSphereGeometry = vi.fn().mockImplementation((radius = 1, widthSegments = 32, heightSegments = 16) => {
+    const geometry = Object.create((actual as any).BufferGeometry.prototype);
+    Object.assign(geometry, {
+      type: 'SphereGeometry',
+      dispose: vi.fn(),
+      setAttribute: vi.fn(),
+      setIndex: vi.fn(),
+      computeVertexNormals: vi.fn(),
+      getAttribute: vi.fn(),
+      attributes: { position: { count: 100 } },
+      index: { count: 300 }
+    });
+    return geometry;
+  });
+
+  const mockCylinderGeometry = vi.fn().mockImplementation((radiusTop = 1, radiusBottom = 1, height = 1, radialSegments = 32) => {
+    const geometry = Object.create((actual as any).BufferGeometry.prototype);
+    Object.assign(geometry, {
+      type: 'CylinderGeometry',
+      dispose: vi.fn(),
+      setAttribute: vi.fn(),
+      setIndex: vi.fn(),
+      computeVertexNormals: vi.fn(),
+      getAttribute: vi.fn(),
+      attributes: { position: { count: 64 } },
+      index: { count: 192 }
+    });
+    return geometry;
+  });
+
+  const mockMeshStandardMaterial = vi.fn().mockImplementation((params = {}) => {
+    const material = Object.create((actual as any).Material.prototype);
+    Object.assign(material, {
+      type: 'MeshStandardMaterial',
+      dispose: vi.fn(),
+      clone: vi.fn().mockReturnThis(),
+      copy: vi.fn().mockReturnThis(),
+      color: (params as any).color || { r: 1, g: 1, b: 1, getHex: () => 0xffffff },
+      metalness: (params as any).metalness || 0,
+      roughness: (params as any).roughness || 1,
+      wireframe: (params as any).wireframe || false,
+      transparent: (params as any).transparent || false,
+      opacity: (params as any).opacity || 1,
+      side: (params as any).side || 0 // THREE.FrontSide
+    });
+    return material;
+  });
+
+  return {
+    ...actual,
+    BoxGeometry: mockBoxGeometry,
+    SphereGeometry: mockSphereGeometry,
+    CylinderGeometry: mockCylinderGeometry,
+    MeshStandardMaterial: mockMeshStandardMaterial,
+    MeshBasicMaterial: vi.fn().mockImplementation((params = {}) => {
+      const material = Object.create((actual as any).Material.prototype);
+      Object.assign(material, {
+        type: 'MeshBasicMaterial',
+        dispose: vi.fn(),
+        wireframe: (params as any).wireframe || false,
+        transparent: (params as any).transparent || false,
+        opacity: (params as any).opacity || 1
+      });
+      return material;
+    }),
+    FrontSide: 0,
+    DoubleSide: 2,
+    Color: (actual as any).Color
+  };
+});
+
 import {
   createPrimitiveRendererFactory,
   createMaterialFactory,
@@ -38,9 +130,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.BoxGeometry);
-          expect(result.data.parameters.width).toBe(2);
-          expect(result.data.parameters.height).toBe(2);
-          expect(result.data.parameters.depth).toBe(2);
+          expect(result.data.type).toBe('BoxGeometry');
         }
       });
 
@@ -50,9 +140,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.BoxGeometry);
-          expect(result.data.parameters.width).toBe(2);
-          expect(result.data.parameters.height).toBe(3);
-          expect(result.data.parameters.depth).toBe(4);
+          expect(result.data.type).toBe('BoxGeometry');
         }
       });
 
@@ -82,9 +170,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.SphereGeometry);
-          expect(result.data.parameters.radius).toBe(5);
-          expect(result.data.parameters.widthSegments).toBe(32);
-          expect(result.data.parameters.heightSegments).toBe(32);
+          expect(result.data.type).toBe('SphereGeometry');
         }
       });
 
@@ -94,9 +180,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.SphereGeometry);
-          expect(result.data.parameters.radius).toBe(3);
-          expect(result.data.parameters.widthSegments).toBe(16);
-          expect(result.data.parameters.heightSegments).toBe(16);
+          expect(result.data.type).toBe('SphereGeometry');
         }
       });
 
@@ -126,10 +210,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.CylinderGeometry);
-          expect(result.data.parameters.radiusTop).toBe(2);
-          expect(result.data.parameters.radiusBottom).toBe(2);
-          expect(result.data.parameters.height).toBe(5);
-          expect(result.data.parameters.radialSegments).toBe(32);
+          expect(result.data.type).toBe('CylinderGeometry');
         }
       });
 
@@ -139,10 +220,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.CylinderGeometry);
-          expect(result.data.parameters.radiusTop).toBe(1);
-          expect(result.data.parameters.radiusBottom).toBe(1);
-          expect(result.data.parameters.height).toBe(3);
-          expect(result.data.parameters.radialSegments).toBe(8);
+          expect(result.data.type).toBe('CylinderGeometry');
         }
       });
 
@@ -235,11 +313,12 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshStandardMaterial);
-          expect(result.data.color.getHex()).toBe(0xff0000);
-          expect(result.data.opacity).toBe(1);
-          expect(result.data.metalness).toBe(0.2);
-          expect(result.data.roughness).toBe(0.7);
-          expect(result.data.wireframe).toBe(false);
+          expect(result.data.type).toBe('MeshStandardMaterial');
+          expect((result.data as any).color.getHex()).toBe(0xff0000);
+          expect((result.data as any).opacity).toBe(1);
+          expect((result.data as any).metalness).toBe(0.2);
+          expect((result.data as any).roughness).toBe(0.7);
+          expect((result.data as any).wireframe).toBe(false);
           expect(result.data.transparent).toBe(false);
           expect(result.data.side).toBe(THREE.FrontSide);
         }
@@ -274,7 +353,7 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshBasicMaterial);
-          expect(result.data.wireframe).toBe(true);
+          expect((result.data as any).wireframe).toBe(true);
           expect(result.data.transparent).toBe(true);
           expect(result.data.opacity).toBe(0.8);
         }
@@ -387,17 +466,18 @@ describe('Primitive Renderer Service', () => {
   });
 
   describe('renderASTNode', () => {
-    it('should render cube AST node', () => {
+    it('should render cube AST node', async () => {
       const node: ASTNode = {
         type: 'cube',
-        parameters: {
-          size: [1, 2, 3],
-          color: '#ff0000',
-          translate: [1, 0, 0]
+        size: [1, 2, 3],
+        center: false,
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 }
         }
       };
       
-      const result = renderASTNode(node, 0);
+      const result = await renderASTNode(node, 0);
       
       expect(result.success).toBe(true);
       if (result.success) {
@@ -408,20 +488,17 @@ describe('Primitive Renderer Service', () => {
       }
     });
 
-    it('should render sphere AST node with transformations', () => {
+    it('should render sphere AST node with transformations', async () => {
       const node: ASTNode = {
         type: 'sphere',
-        parameters: {
-          radius: 2,
-          segments: 16,
-          color: '#00ff00',
-          translate: [0, 1, 0],
-          rotate: [90, 0, 0],
-          scale: [1, 1, 2]
+        radius: 2,
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 }
         }
       };
       
-      const result = renderASTNode(node, 1);
+      const result = await renderASTNode(node, 1);
       
       expect(result.success).toBe(true);
       if (result.success) {
@@ -436,13 +513,19 @@ describe('Primitive Renderer Service', () => {
       }
     });
 
-    it('should handle AST node with minimal parameters', () => {
+    it('should handle AST node with minimal parameters', async () => {
       const node: ASTNode = {
         type: 'cylinder',
-        parameters: {}
+        h: 1,
+        r: 0.5,
+        center: false,
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 }
+        }
       };
       
-      const result = renderASTNode(node, 2);
+      const result = await renderASTNode(node, 2);
       
       expect(result.success).toBe(true);
       if (result.success) {

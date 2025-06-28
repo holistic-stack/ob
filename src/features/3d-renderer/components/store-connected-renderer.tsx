@@ -1,7 +1,17 @@
 /**
  * Store-Connected Three.js Renderer Component
  *
- * Zustand-centric React component that renders 3D scenes exclusively through
+ * Zustand-centric React component that renders 3D sc    // Trigger rendering through store action
+    renderFromAST(ast).then(
+      (result: any) => {
+        if (result.success) {
+          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length || 0} meshes`);
+        } else {
+          console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
+          addRenderError(result.error);
+        }
+      },
+      (error: any) => {ively through
  * the application store, implementing the proper data flow:
  * OpenSCAD code → Store → AST → Three.js rendering
  */
@@ -78,10 +88,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleRenderComplete = useCallback((meshes: ReadonlyArray<Mesh3D>) => {
     console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
 
-    // Update store with actual mesh count and data
+    // Update store with actual mesh data
     useAppStore.setState((state) => {
       state.rendering.meshes = meshes.map(m => m.mesh);
-      state.rendering.meshCount = meshes.length;
     });
 
     console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
@@ -108,7 +117,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     
     // Trigger rendering through store action
     renderFromAST(ast).then(
-      (result) => {
+      (result: any) => {
         if (result.success) {
           console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length || 0} meshes`);
         } else {
@@ -116,7 +125,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           addRenderError(result.error);
         }
       }
-    ).catch((error) => {
+    ).catch((error: any) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
       addRenderError(errorMessage);
@@ -189,7 +198,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {renderingState.renderErrors.map((error, index) => (
+          {renderingState.renderErrors.map((error: any, index: any) => (
             <div key={index} className="text-sm">{error}</div>
           ))}
         </div>

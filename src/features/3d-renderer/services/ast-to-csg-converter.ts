@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import { CSG } from './csg-core.service';
+import { CSG, CSGCoreService } from './csg-core.service';
 import type {
   ASTNode,
   CubeNode,
@@ -17,14 +17,15 @@ import type {
   ScaleNode,
   UnionNode,
   DifferenceNode,
-  IntersectionNode
+  IntersectionNode,
+  SourceLocation
 } from '@holistic-stack/openscad-parser';
 import type { 
   Mesh3D,
   MaterialConfig,
   RenderingError 
 } from '../types/renderer.types';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { success, error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 
 /**
@@ -88,9 +89,11 @@ const convertCubeToMesh = (node: CubeNode, material: THREE.Material): Result<THR
       center: node.center
     });
 
-    // Extract size parameters
+    // Extract size parameters with proper defaults
     const size = Array.isArray(node.size) ? node.size : [node.size, node.size, node.size];
-    const [width, height, depth] = size.map(s => Number(s) || 1);
+    const width = Number(size[0]) || 1;
+    const height = Number(size[1]) || 1;
+    const depth = Number(size[2]) || 1;
 
     // Create cube geometry
     const geometry = new THREE.BoxGeometry(width, height, depth);
@@ -165,8 +168,8 @@ const convertCylinderToMesh = (node: CylinderNode, material: THREE.Material): Re
 /**
  * Convert translate node to mesh by processing children and applying transformation
  */
-const convertTranslateNode = (node: TranslateNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertTranslateNode = async (node: TranslateNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting translate node:`, node);
 
     // TranslateNode should have children and a vector parameter
@@ -179,7 +182,7 @@ const convertTranslateNode = (node: TranslateNode, material: THREE.Material): Re
     if (!firstChild) {
       throw new Error('Translate node first child is undefined');
     }
-    const childResult = convertASTNodeToMesh(firstChild, material);
+    const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
       throw new Error(`Failed to convert translate child: ${childResult.error}`);
     }
@@ -225,8 +228,8 @@ const convertTranslateNode = (node: TranslateNode, material: THREE.Material): Re
 /**
  * Convert rotate node to mesh by processing children and applying rotation
  */
-const convertRotateNode = (node: RotateNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertRotateNode = async (node: RotateNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting rotate node:`, node);
 
     if (!node.children || node.children.length === 0) {
@@ -237,7 +240,7 @@ const convertRotateNode = (node: RotateNode, material: THREE.Material): Result<T
     if (!firstChild) {
       throw new Error('Rotate node first child is undefined');
     }
-    const childResult = convertASTNodeToMesh(firstChild, material);
+    const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
       throw new Error(`Failed to convert rotate child: ${childResult.error}`);
     }
@@ -264,8 +267,8 @@ const convertRotateNode = (node: RotateNode, material: THREE.Material): Result<T
 /**
  * Convert scale node to mesh by processing children and applying scaling
  */
-const convertScaleNode = (node: ScaleNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertScaleNode = async (node: ScaleNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting scale node:`, node);
 
     if (!node.children || node.children.length === 0) {
@@ -276,7 +279,7 @@ const convertScaleNode = (node: ScaleNode, material: THREE.Material): Result<THR
     if (!firstChild) {
       throw new Error('Scale node first child is undefined');
     }
-    const childResult = convertASTNodeToMesh(firstChild, material);
+    const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
       throw new Error(`Failed to convert scale child: ${childResult.error}`);
     }
@@ -299,18 +302,19 @@ const convertScaleNode = (node: ScaleNode, material: THREE.Material): Result<THR
 /**
  * Mirror node interface for type safety
  */
-interface MirrorNode extends ASTNode {
+interface MirrorNode {
   type: 'mirror';
   v: readonly [number, number, number];
   children: readonly ASTNode[];
+  location?: SourceLocation;
 }
 
 /**
  * Convert mirror node to mesh by processing children and applying mirroring
  * Mirror reflects geometry across plane defined by normal vector
  */
-const convertMirrorNode = (node: MirrorNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertMirrorNode = async (node: MirrorNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting mirror node:`, node);
 
     if (!node.children || node.children.length === 0) {
@@ -321,7 +325,7 @@ const convertMirrorNode = (node: MirrorNode, material: THREE.Material): Result<T
     if (!firstChild) {
       throw new Error('Mirror node first child is undefined');
     }
-    const childResult = convertASTNodeToMesh(firstChild, material);
+    const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
       throw new Error(`Failed to convert mirror child: ${childResult.error}`);
     }
@@ -354,17 +358,18 @@ const convertMirrorNode = (node: MirrorNode, material: THREE.Material): Result<T
 /**
  * Rotate extrude node interface for type safety
  */
-interface RotateExtrudeNode extends ASTNode {
+interface RotateExtrudeNode {
   type: 'rotate_extrude';
   angle?: number;
   children: readonly ASTNode[];
+  location?: SourceLocation;
 }
 
 /**
  * Convert rotate_extrude node to mesh by revolving 2D profiles around Z-axis
  */
-const convertRotateExtrudeNode = (node: RotateExtrudeNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertRotateExtrudeNode = async (node: RotateExtrudeNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting rotate_extrude node:`, node);
 
     if (!node.children || node.children.length === 0) {
@@ -390,8 +395,8 @@ const convertRotateExtrudeNode = (node: RotateExtrudeNode, material: THREE.Mater
 /**
  * Convert union node to mesh by processing children and performing CSG union
  */
-const convertUnionNode = (node: UnionNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertUnionNode = async (node: UnionNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting union node:`, node);
     console.log(`[DEBUG][ASTToCSGConverter] Union node children count:`, node.children?.length || 0);
 
@@ -414,9 +419,12 @@ const convertUnionNode = (node: UnionNode, material: THREE.Material): Result<THR
     const childMeshes: THREE.Mesh[] = [];
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
+      if (!child) {
+        throw new Error(`Union child ${i} is undefined`);
+      }
       console.log(`[DEBUG][ASTToCSGConverter] Converting union child ${i + 1}/${node.children.length}: ${child.type}`);
 
-      const childResult = convertASTNodeToMesh(child, material);
+      const childResult = await convertASTNodeToMesh(child, material);
       if (!childResult.success) {
         throw new Error(`Failed to convert union child ${i}: ${childResult.error}`);
       }
@@ -454,7 +462,7 @@ const convertUnionNode = (node: UnionNode, material: THREE.Material): Result<THR
 
         console.log(`[DEBUG][ASTToCSGConverter] Performing union operation ${i}/${childMeshes.length - 1}`);
         // Use the correct three-csg-ts API
-        const unionResult = CSG.union(resultMesh, nextMesh);
+        const unionResult = await CSGCoreService.union(resultMesh, nextMesh);
         if (!unionResult.success) {
           throw new Error(`Union operation failed: ${unionResult.error}`);
         }
@@ -475,8 +483,8 @@ const convertUnionNode = (node: UnionNode, material: THREE.Material): Result<THR
 /**
  * Convert intersection node to mesh by processing children and performing CSG intersection
  */
-const convertIntersectionNode = (node: IntersectionNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertIntersectionNode = async (node: IntersectionNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting intersection node:`, node);
     console.log(`[DEBUG][ASTToCSGConverter] Intersection node children count:`, node.children?.length || 0);
 
@@ -498,7 +506,7 @@ const convertIntersectionNode = (node: IntersectionNode, material: THREE.Materia
     // Convert all children to meshes
     const childMeshes: THREE.Mesh[] = [];
     for (const child of node.children) {
-      const childResult = convertASTNodeToMesh(child, material);
+      const childResult = await convertASTNodeToMesh(child, material);
       if (!childResult.success) {
         throw new Error(`Failed to convert intersection child: ${childResult.error}`);
       }
@@ -534,7 +542,7 @@ const convertIntersectionNode = (node: IntersectionNode, material: THREE.Materia
         nextMesh.updateMatrix();
 
         // Use the correct three-csg-ts API
-        const intersectResult = CSG.intersect(resultMesh, nextMesh);
+        const intersectResult = await CSGCoreService.intersect(resultMesh, nextMesh);
         if (!intersectResult.success) {
           throw new Error(`Intersect operation failed: ${intersectResult.error}`);
         }
@@ -555,8 +563,8 @@ const convertIntersectionNode = (node: IntersectionNode, material: THREE.Materia
 /**
  * Convert difference node to mesh by processing children and performing CSG difference
  */
-const convertDifferenceNode = (node: DifferenceNode, material: THREE.Material): Result<THREE.Mesh, string> => {
-  return tryCatch(() => {
+const convertDifferenceNode = async (node: DifferenceNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
+  return tryCatchAsync(async () => {
     console.log(`[DEBUG][ASTToCSGConverter] Converting difference node:`, node);
 
     if (!node.children || node.children.length === 0) {
@@ -570,7 +578,7 @@ const convertDifferenceNode = (node: DifferenceNode, material: THREE.Material): 
     // Convert all children to meshes
     const childMeshes: THREE.Mesh[] = [];
     for (const child of node.children) {
-      const childResult = convertASTNodeToMesh(child, material);
+      const childResult = await convertASTNodeToMesh(child, material);
       if (!childResult.success) {
         throw new Error(`Failed to convert difference child: ${childResult.error}`);
       }
@@ -606,7 +614,7 @@ const convertDifferenceNode = (node: DifferenceNode, material: THREE.Material): 
         nextMesh.updateMatrix();
 
         // Use the correct three-csg-ts API
-        const subtractResult = CSG.subtract(resultMesh, nextMesh);
+        const subtractResult = await CSGCoreService.subtract(resultMesh, nextMesh);
         if (!subtractResult.success) {
           throw new Error(`Subtract operation failed: ${subtractResult.error}`);
         }
@@ -627,7 +635,7 @@ const convertDifferenceNode = (node: DifferenceNode, material: THREE.Material): 
 /**
  * Convert AST node to Three.js mesh for CSG operations
  */
-const convertASTNodeToMesh = (node: ASTNode, material: THREE.Material): Result<THREE.Mesh, string> => {
+const convertASTNodeToMesh = async (node: ASTNode, material: THREE.Material): Promise<Result<THREE.Mesh, string>> => {
   console.log(`[DEBUG][ASTToCSGConverter] Converting AST node type: ${node.type}`);
 
   switch (node.type) {
@@ -641,28 +649,28 @@ const convertASTNodeToMesh = (node: ASTNode, material: THREE.Material): Result<T
       return convertCylinderToMesh(node as CylinderNode, material);
 
     case 'translate':
-      return convertTranslateNode(node as TranslateNode, material);
+      return await convertTranslateNode(node as TranslateNode, material);
 
     case 'rotate':
-      return convertRotateNode(node as RotateNode, material);
+      return await convertRotateNode(node as RotateNode, material);
 
     case 'scale':
-      return convertScaleNode(node as ScaleNode, material);
+      return await convertScaleNode(node as ScaleNode, material);
 
     case 'mirror':
-      return convertMirrorNode(node as MirrorNode, material);
+      return await convertMirrorNode(node as MirrorNode, material);
 
     case 'rotate_extrude':
-      return convertRotateExtrudeNode(node as RotateExtrudeNode, material);
+      return await convertRotateExtrudeNode(node as RotateExtrudeNode, material);
 
     case 'union':
-      return convertUnionNode(node as UnionNode, material);
+      return await convertUnionNode(node as UnionNode, material);
 
     case 'intersection':
-      return convertIntersectionNode(node as IntersectionNode, material);
+      return await convertIntersectionNode(node as IntersectionNode, material);
 
     case 'difference':
-      return convertDifferenceNode(node as DifferenceNode, material);
+      return await convertDifferenceNode(node as DifferenceNode, material);
 
     default:
       return error(`Unsupported AST node type for CSG conversion: ${node.type}`);
@@ -672,11 +680,11 @@ const convertASTNodeToMesh = (node: ASTNode, material: THREE.Material): Result<T
 /**
  * Convert AST node to Mesh3D using CSG operations
  */
-export const convertASTNodeToCSG = (
+export const convertASTNodeToCSG = async (
   node: ASTNode, 
   index: number, 
   config: Partial<CSGConversionConfig> = {}
-): Result<Mesh3D, string> => {
+): Promise<Result<Mesh3D, string>> => {
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
   
   console.log(`[INIT][ASTToCSGConverter] Converting AST node ${index} (${node.type}) to CSG`);
@@ -685,7 +693,7 @@ export const convertASTNodeToCSG = (
   const material = createMaterial(finalConfig.material);
 
   // Convert AST node to Three.js mesh
-  const meshResult = convertASTNodeToMesh(node, material);
+  const meshResult = await convertASTNodeToMesh(node, material);
   if (!meshResult.success) {
     return meshResult;
   }
@@ -702,8 +710,8 @@ export const convertASTNodeToCSG = (
       id: `csg-${node.type}-${index}`,
       nodeType: node.type,
       nodeIndex: index,
-      triangleCount: mesh.geometry.attributes.position.count / 3,
-      vertexCount: mesh.geometry.attributes.position.count,
+      triangleCount: mesh.geometry.attributes.position?.count ? mesh.geometry.attributes.position.count / 3 : 0,
+      vertexCount: mesh.geometry.attributes.position?.count ?? 0,
       boundingBox,
       material: 'standard',
       color: finalConfig.material.color,
@@ -733,15 +741,15 @@ export const convertASTNodeToCSG = (
 /**
  * Convert multiple AST nodes to CSG operations with union
  */
-export const convertASTNodesToCSGUnion = (
+export const convertASTNodesToCSGUnion = async (
   nodes: ReadonlyArray<ASTNode>,
   config: Partial<CSGConversionConfig> = {}
-): Result<Mesh3D, string> => {
+): Promise<Result<Mesh3D, string>> => {
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
   
   console.log(`[INIT][ASTToCSGConverter] Converting ${nodes.length} AST nodes to CSG union`);
 
-  return tryCatch(() => {
+  return tryCatchAsync(async () => {
     if (nodes.length === 0) {
       throw new Error('No AST nodes provided for CSG union');
     }
@@ -751,7 +759,11 @@ export const convertASTNodesToCSGUnion = (
     const material = createMaterial(finalConfig.material);
 
     for (let i = 0; i < nodes.length; i++) {
-      const meshResult = convertASTNodeToMesh(nodes[i], material);
+      const node = nodes[i];
+      if (!node) {
+        throw new Error(`Node ${i} is undefined`);
+      }
+      const meshResult = await convertASTNodeToMesh(node, material);
       if (!meshResult.success) {
         throw new Error(`Failed to convert node ${i}: ${meshResult.error}`);
       }
@@ -774,39 +786,41 @@ export const convertASTNodesToCSGUnion = (
     let resultMesh: THREE.Mesh;
     
     if (meshes.length === 1) {
-      resultMesh = meshes[0];
+      const firstMesh = meshes[0];
+      if (!firstMesh) {
+        throw new Error('First mesh is undefined');
+      }
+      resultMesh = firstMesh;
     } else {
       console.log(`[DEBUG][ASTToCSGConverter] Performing CSG union on ${meshes.length} meshes`);
 
+      const firstMesh = meshes[0];
+      if (!firstMesh) {
+        throw new Error('First mesh is undefined');
+      }
+
       try {
-        const firstCSGResult = CSG.fromMesh(meshes[0]);
+        const firstCSGResult = await CSGCoreService.union(firstMesh, firstMesh); // Identity operation for first mesh
         if (!firstCSGResult.success) {
-          throw new Error(`Failed to create CSG from first mesh: ${firstCSGResult.error}`);
+          throw new Error(`Failed to prepare first mesh for CSG: ${firstCSGResult.error}`);
         }
-        let csgResult = firstCSGResult.data;
-        console.log(`[DEBUG][ASTToCSGConverter] Created first CSG from mesh`);
+        resultMesh = firstCSGResult.data;
+        console.log(`[DEBUG][ASTToCSGConverter] Prepared first mesh for CSG operations`);
 
         for (let i = 1; i < meshes.length; i++) {
           console.log(`[DEBUG][ASTToCSGConverter] Processing mesh ${i + 1} of ${meshes.length}`);
-          const nextCSGResult = CSG.fromMesh(meshes[i]);
-          if (!nextCSGResult.success) {
-            throw new Error(`Failed to create CSG from mesh ${i}: ${nextCSGResult.error}`);
+          const currentMesh = meshes[i];
+          if (!currentMesh) {
+            throw new Error(`Mesh ${i} is undefined`);
           }
-          const unionResult = csgResult.union(nextCSGResult.data);
+          const unionResult = await CSGCoreService.union(resultMesh, currentMesh);
           if (!unionResult.success) {
             throw new Error(`Union operation ${i} failed: ${unionResult.error}`);
           }
-          csgResult = unionResult.data;
+          resultMesh = unionResult.data;
           console.log(`[DEBUG][ASTToCSGConverter] Union operation ${i} completed`);
         }
 
-        console.log(`[DEBUG][ASTToCSGConverter] Converting CSG result back to mesh`);
-        const meshResult = csgResult.toMesh();
-        if (!meshResult.success) {
-          throw new Error(`Failed to convert CSG to mesh: ${meshResult.error}`);
-        }
-        resultMesh = meshResult.data;
-        resultMesh.material = material;
         console.log(`[DEBUG][ASTToCSGConverter] CSG union completed successfully`);
       } catch (csgError) {
         console.error(`[ERROR][ASTToCSGConverter] CSG union failed:`, csgError);
@@ -822,8 +836,8 @@ export const convertASTNodesToCSGUnion = (
       id: `csg-union-${Date.now()}`,
       nodeType: 'union',
       nodeIndex: 0,
-      triangleCount: resultMesh.geometry.attributes.position.count / 3,
-      vertexCount: resultMesh.geometry.attributes.position.count,
+      triangleCount: resultMesh.geometry.attributes.position?.count ? resultMesh.geometry.attributes.position.count / 3 : 0,
+      vertexCount: resultMesh.geometry.attributes.position?.count ?? 0,
       boundingBox,
       material: 'standard',
       color: finalConfig.material.color,

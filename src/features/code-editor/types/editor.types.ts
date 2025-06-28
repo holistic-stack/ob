@@ -1,30 +1,36 @@
 /**
  * Monaco Editor Type Definitions
- * 
+ *
  * Comprehensive type definitions for Monaco Editor integration
  * with OpenSCAD syntax highlighting and Zustand store integration.
  */
 
-import type * as monaco from 'monaco-editor';
-import type { Result, AsyncResult } from '../../../shared/types/result.types';
-import type { EditorPosition, EditorSelection } from '../../../shared/types/common.types';
+import type * as monaco from "monaco-editor";
+import type { Result, AsyncResult } from "../../../shared/types/result.types";
+import type { EditorPosition } from "../../../shared/types/common.types";
+import type * as React from "react";
 
 /**
  * Monaco Editor configuration types
  */
 export interface MonacoEditorConfig {
-  readonly theme: 'vs-dark' | 'vs-light' | 'hc-black';
+  readonly theme: "vs-dark" | "vs-light" | "hc-black";
   readonly fontSize: number;
   readonly fontFamily: string;
-  readonly lineNumbers: 'on' | 'off' | 'relative' | 'interval';
+  readonly lineNumbers: "on" | "off" | "relative" | "interval";
   readonly minimap: {
     readonly enabled: boolean;
-    readonly side: 'left' | 'right';
+    readonly side: "left" | "right";
   };
-  readonly wordWrap: 'on' | 'off' | 'wordWrapColumn' | 'bounded';
+  readonly wordWrap: "on" | "off" | "wordWrapColumn" | "bounded";
   readonly automaticLayout: boolean;
   readonly scrollBeyondLastLine: boolean;
-  readonly renderWhitespace: 'none' | 'boundary' | 'selection' | 'trailing' | 'all';
+  readonly renderWhitespace:
+    | "none"
+    | "boundary"
+    | "selection"
+    | "trailing"
+    | "all";
   readonly tabSize: number;
   readonly insertSpaces: boolean;
 }
@@ -54,6 +60,16 @@ export interface EditorCursorEvent {
   readonly secondaryPositions: ReadonlyArray<EditorPosition>;
 }
 
+/**
+ * Monaco Editor-specific selection type
+ */
+export interface EditorSelection {
+  readonly startLineNumber: number;
+  readonly startColumn: number;
+  readonly endLineNumber: number;
+  readonly endColumn: number;
+}
+
 export interface EditorSelectionEvent {
   readonly selection: EditorSelection;
   readonly secondarySelections: ReadonlyArray<EditorSelection>;
@@ -72,7 +88,9 @@ export interface EditorAction {
   readonly keybinding?: number;
   readonly contextMenuGroupId?: string;
   readonly contextMenuOrder?: number;
-  readonly run: (editor: monaco.editor.IStandaloneCodeEditor) => void | Promise<void>;
+  readonly run: (
+    editor: monaco.editor.IStandaloneCodeEditor,
+  ) => void | Promise<void>;
 }
 
 /**
@@ -94,7 +112,7 @@ export interface CompletionProvider {
   readonly provideCompletionItems: (
     model: monaco.editor.ITextModel,
     position: monaco.Position,
-    context: monaco.languages.CompletionContext
+    context: monaco.languages.CompletionContext,
   ) => Promise<monaco.languages.CompletionList | null>;
 }
 
@@ -152,8 +170,8 @@ export interface MonacoEditorProps {
   readonly config?: Partial<MonacoEditorConfig>;
   readonly readOnly?: boolean;
   readonly className?: string;
-  readonly 'data-testid'?: string;
-  
+  readonly "data-testid"?: string;
+
   // Event handlers
   readonly onChange?: (event: EditorChangeEvent) => void;
   readonly onCursorPositionChange?: (event: EditorCursorEvent) => void;
@@ -171,11 +189,17 @@ export interface EditorService {
   readonly initialize: () => AsyncResult<void, string>;
   readonly createEditor: (
     container: HTMLElement,
-    config: MonacoEditorConfig
+    config: MonacoEditorConfig,
   ) => Result<monaco.editor.IStandaloneCodeEditor, string>;
-  readonly registerLanguage: (config: OpenSCADLanguageConfig) => Result<void, string>;
-  readonly registerCompletionProvider: (provider: CompletionProvider) => Result<void, string>;
-  readonly registerSyntaxValidator: (validator: SyntaxValidator) => Result<void, string>;
+  readonly registerLanguage: (
+    config: OpenSCADLanguageConfig,
+  ) => Result<void, string>;
+  readonly registerCompletionProvider: (
+    provider: CompletionProvider,
+  ) => Result<void, string>;
+  readonly registerSyntaxValidator: (
+    validator: SyntaxValidator,
+  ) => Result<void, string>;
   readonly dispose: () => void;
 }
 
@@ -217,7 +241,7 @@ export interface EditorContextValue {
  */
 export interface EditorTheme {
   readonly name: string;
-  readonly base: 'vs' | 'vs-dark' | 'hc-black';
+  readonly base: "vs" | "vs-dark" | "hc-black";
   readonly inherit: boolean;
   readonly rules: ReadonlyArray<monaco.editor.ITokenThemeRule>;
   readonly colors: Record<string, string>;
@@ -227,26 +251,32 @@ export interface EditorTheme {
  * Editor configuration validation
  */
 export interface ConfigValidator {
-  readonly validateConfig: (config: Partial<MonacoEditorConfig>) => Result<MonacoEditorConfig, string>;
-  readonly validateLanguageConfig: (config: OpenSCADLanguageConfig) => Result<void, string>;
+  readonly validateConfig: (
+    config: Partial<MonacoEditorConfig>,
+  ) => Result<MonacoEditorConfig, string>;
+  readonly validateLanguageConfig: (
+    config: OpenSCADLanguageConfig,
+  ) => Result<void, string>;
 }
 
 /**
  * Editor error types
  */
-export type EditorError = 
-  | { readonly type: 'initialization'; readonly message: string }
-  | { readonly type: 'configuration'; readonly message: string }
-  | { readonly type: 'language'; readonly message: string }
-  | { readonly type: 'validation'; readonly message: string }
-  | { readonly type: 'performance'; readonly message: string };
+export type EditorError =
+  | { readonly type: "initialization"; readonly message: string }
+  | { readonly type: "configuration"; readonly message: string }
+  | { readonly type: "language"; readonly message: string }
+  | { readonly type: "validation"; readonly message: string }
+  | { readonly type: "performance"; readonly message: string };
 
 /**
  * Editor lifecycle types
  */
 export interface EditorLifecycle {
   readonly onBeforeMount: () => Promise<void>;
-  readonly onMount: (editor: monaco.editor.IStandaloneCodeEditor) => Promise<void>;
+  readonly onMount: (
+    editor: monaco.editor.IStandaloneCodeEditor,
+  ) => Promise<void>;
   readonly onBeforeUnmount: () => Promise<void>;
   readonly onUnmount: () => Promise<void>;
 }

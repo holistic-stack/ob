@@ -1,3 +1,4 @@
+import type React from 'react';
 /**
  * Common Types for OpenSCAD 3D Visualization Application
  * 

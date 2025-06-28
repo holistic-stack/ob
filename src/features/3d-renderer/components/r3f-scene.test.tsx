@@ -189,8 +189,8 @@ describe('R3FScene', () => {
           size: [2, 2, 2],
           center: false,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 20 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
           }
         }
       ];
@@ -214,8 +214,8 @@ describe('R3FScene', () => {
           type: 'sphere',
           radius: 1.5,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 15 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 15, offset: 14 }
           }
         }
       ];
@@ -241,8 +241,8 @@ describe('R3FScene', () => {
           r: 1,
           center: false,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 20 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
           }
         }
       ];
@@ -264,17 +264,20 @@ describe('R3FScene', () => {
       const multipleAST: ASTNode[] = [
         {
           type: 'cube',
-          parameters: { size: [1, 1, 1] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([1, 1, 1]);'
+          size: [1, 1, 1],
+          center: false,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
+          }
         },
         {
           type: 'sphere',
-          parameters: { r: 0.5 },
-          children: [],
-          position: { line: 2, column: 1 },
-          source: 'sphere(r=0.5);'
+          radius: 0.5,
+          location: {
+            start: { line: 2, column: 1, offset: 21 },
+            end: { line: 2, column: 15, offset: 35 }
+          }
         }
       ];
 
@@ -318,10 +321,8 @@ describe('R3FScene', () => {
       const testAST: ASTNode[] = [
         {
           type: 'cube',
-          parameters: { size: [1, 1, 1] },
-          children: [],
-          position: { line: 1, column: 1 },
-          source: 'cube([1, 1, 1]);'
+          size: [1, 1, 1],
+          center: false
         }
       ];
 
@@ -367,8 +368,8 @@ describe('R3FScene', () => {
         {
           type: 'unsupported' as any,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 15 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 15, offset: 14 }
           }
         }
       ];

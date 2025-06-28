@@ -8,6 +8,8 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { Mesh3D } from './features/3d-renderer/types/renderer.types';
 
 import App from './App';
 
@@ -126,8 +128,42 @@ describe('App', () => {
     });
 
     it('should display metrics in header', () => {
-      mockStoreState.parsing.ast = [{}, {}] as any[];
-      mockStoreState.rendering.meshes = [{}, {}, {}] as any[];
+      (mockStoreState.parsing.ast as any) = [
+        {
+          type: 'cube', 
+          size: [1,1,1], 
+          center: false,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
+          }
+        }, 
+        {
+          type: 'sphere', 
+          radius: 1,
+          location: {
+            start: { line: 2, column: 1, offset: 21 },
+            end: { line: 2, column: 15, offset: 35 }
+          }
+        }
+      ];
+      (mockStoreState.rendering.meshes as any) = [
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'cube', nodeIndex: 0, id: 'cube-0', triangleCount: 12, vertexCount: 8 },
+          dispose: () => {}
+        }, 
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'sphere', nodeIndex: 1, id: 'sphere-1', triangleCount: 100, vertexCount: 50 },
+          dispose: () => {}
+        }, 
+        {
+          mesh: {} as any,
+          metadata: { nodeType: 'cylinder', nodeIndex: 2, id: 'cylinder-2', triangleCount: 64, vertexCount: 32 },
+          dispose: () => {}
+        }
+      ];
       mockStoreState.performance.metrics.renderTime = 15.5;
       
       render(<App />);

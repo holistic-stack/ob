@@ -107,7 +107,9 @@ export class CSGCoreService implements CSGData {
       if (geom.index) {
         index = geom.index.array;
       } else {
-        index = new Uint16Array((posattr.array.length / posattr.itemSize) | 0);
+        const posArrayLength = posattr?.array?.length ?? 0;
+        const itemSize = posattr?.itemSize ?? 3;
+        index = new Uint16Array((posArrayLength / itemSize) | 0);
         for (let i = 0; i < index.length; i++) index[i] = i;
       }
 
@@ -118,18 +120,26 @@ export class CSGCoreService implements CSGData {
         
         for (let j = 0; j < 3; j++) {
           const vi = index[i + j];
+          if (vi === undefined) continue;
+          
           const vp = vi * 3;
           const vt = vi * 2;
+          
+          if (!posattr?.array || !normalattr?.array) {
+            console.warn('[WARN][CSGCoreService] Missing position or normal attributes');
+            continue;
+          }
+          
           const x = posattr.array[vp];
           const y = posattr.array[vp + 1];
           const z = posattr.array[vp + 2];
           const nx = normalattr.array[vp];
           const ny = normalattr.array[vp + 1];
           const nz = normalattr.array[vp + 2];
-          const u = uvattr?.array[vt] || 0;
-          const v = uvattr?.array[vt + 1] || 0;
+          const u = uvattr?.array?.[vt] || 0;
+          const v = uvattr?.array?.[vt + 1] || 0;
 
-          const color = colorattr ? new Vector(
+          const color = colorattr?.array ? new Vector(
             colorattr.array[vp],
             colorattr.array[vp + 1],
             colorattr.array[vp + 2]
@@ -206,30 +216,38 @@ export class CSGCoreService implements CSGData {
           if (!grps[p.shared]) grps[p.shared] = [];
         }
         
-        if (pvlen && pvs[0].color !== undefined) {
+        if (pvlen && pvs[0]?.color !== undefined) {
           if (!colors) colors = new NBuf3(triCount * 3 * 3);
         }
         
         for (let j = 3; j <= pvlen; j++) {
           const grp = p.shared === undefined ? dgrp : grps[p.shared];
+          if (!grp) continue;
+          
           grp.push(vertices.top / 3, vertices.top / 3 + 1, vertices.top / 3 + 2);
           
-          vertices.write(pvs[0].pos);
-          vertices.write(pvs[j - 2].pos);
-          vertices.write(pvs[j - 1].pos);
+          const v0 = pvs[0];
+          const v1 = pvs[j - 2];
+          const v2 = pvs[j - 1];
           
-          normals.write(pvs[0].normal);
-          normals.write(pvs[j - 2].normal);
-          normals.write(pvs[j - 1].normal);
+          if (!v0 || !v1 || !v2) continue;
           
-          uvs.write(pvs[0].uv);
-          uvs.write(pvs[j - 2].uv);
-          uvs.write(pvs[j - 1].uv);
+          vertices.write(v0.pos);
+          vertices.write(v1.pos);
+          vertices.write(v2.pos);
           
-          if (colors && pvs[0].color) {
-            colors.write(pvs[0].color);
-            colors.write(pvs[j - 2].color || pvs[0].color);
-            colors.write(pvs[j - 1].color || pvs[0].color);
+          normals.write(v0.normal);
+          normals.write(v1.normal);
+          normals.write(v2.normal);
+          
+          uvs.write(v0.uv);
+          uvs.write(v1.uv);
+          uvs.write(v2.uv);
+          
+          if (colors && v0.color) {
+            colors.write(v0.color);
+            colors.write(v1?.color || v0.color);
+            colors.write(v2?.color || v0.color);
           }
         }
       }
@@ -246,9 +264,12 @@ export class CSGCoreService implements CSGData {
       if (grps.length) {
         let gbase = 0;
         for (let gi = 0; gi < grps.length; gi++) {
-          geom.addGroup(gbase, grps[gi].length, gi);
-          index = index.concat(grps[gi]);
-          gbase += grps[gi].length;
+          const grp = grps[gi];
+          if (!grp) continue;
+          
+          geom.addGroup(gbase, grp.length, gi);
+          index = index.concat(grp);
+          gbase += grp.length;
         }
         geom.addGroup(gbase, dgrp.length, grps.length);
         index = index.concat(dgrp);
@@ -350,6 +371,8 @@ export class CSGCoreService implements CSGData {
       
       for (let i = 0; i < csg.polygons.length; i++) {
         const p = csg.polygons[i];
+        if (!p) continue;
+        
         const transformedVertices: VertexData[] = [];
         
         for (const v of p.vertices) {
@@ -365,7 +388,8 @@ export class CSGCoreService implements CSGData {
         
         csg.polygons[i] = {
           ...p,
-          vertices: transformedVertices
+          vertices: transformedVertices,
+          shared: p.shared ?? 0  // Provide default value for required property
         };
       }
       
@@ -415,14 +439,14 @@ export class CSGCoreService implements CSGData {
   /**
    * Static union operation
    */
-  static union(meshA: Mesh, meshB: Mesh): Result<Mesh, string> {
+  static async union(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
     console.log('[DEBUG][CSGCoreService] Performing static union operation');
     
     try {
-      const csgAResult = CSGCoreService.fromMesh(meshA);
+      const csgAResult = await CSGCoreService.fromMesh(meshA);
       if (!csgAResult.success) return csgAResult;
 
-      const csgBResult = CSGCoreService.fromMesh(meshB);
+      const csgBResult = await CSGCoreService.fromMesh(meshB);
       if (!csgBResult.success) return csgBResult;
 
       const unionResult = csgAResult.data.union(csgBResult.data);
@@ -439,14 +463,14 @@ export class CSGCoreService implements CSGData {
   /**
    * Static subtract operation
    */
-  static subtract(meshA: Mesh, meshB: Mesh): Result<Mesh, string> {
+  static async subtract(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
     console.log('[DEBUG][CSGCoreService] Performing static subtract operation');
     
     try {
-      const csgAResult = CSGCoreService.fromMesh(meshA);
+      const csgAResult = await CSGCoreService.fromMesh(meshA);
       if (!csgAResult.success) return csgAResult;
 
-      const csgBResult = CSGCoreService.fromMesh(meshB);
+      const csgBResult = await CSGCoreService.fromMesh(meshB);
       if (!csgBResult.success) return csgBResult;
 
       const subtractResult = csgAResult.data.subtract(csgBResult.data);
@@ -463,14 +487,14 @@ export class CSGCoreService implements CSGData {
   /**
    * Static intersect operation
    */
-  static intersect(meshA: Mesh, meshB: Mesh): Result<Mesh, string> {
+  static async intersect(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
     console.log('[DEBUG][CSGCoreService] Performing static intersect operation');
     
     try {
-      const csgAResult = CSGCoreService.fromMesh(meshA);
+      const csgAResult = await CSGCoreService.fromMesh(meshA);
       if (!csgAResult.success) return csgAResult;
 
-      const csgBResult = CSGCoreService.fromMesh(meshB);
+      const csgBResult = await CSGCoreService.fromMesh(meshB);
       if (!csgBResult.success) return csgBResult;
 
       const intersectResult = csgAResult.data.intersect(csgBResult.data);
@@ -621,17 +645,21 @@ export class CSGCoreService implements CSGData {
 
       // Flip all polygons
       for (let i = 0; i < csg.polygons.length; i++) {
+        const polygon = csg.polygons[i];
+        if (!polygon) continue;
+        
         csg.polygons[i] = {
-          ...csg.polygons[i],
-          vertices: csg.polygons[i].vertices.slice().reverse().map(v => ({
+          ...polygon,
+          vertices: polygon.vertices.slice().reverse().map(v => ({
             ...v,
             normal: v.normal.clone().negate()
           })),
           plane: {
-            ...csg.polygons[i].plane,
-            normal: csg.polygons[i].plane.normal.clone().negate(),
-            w: -csg.polygons[i].plane.w
-          }
+            ...polygon.plane,
+            normal: polygon.plane.normal.clone().negate(),
+            w: -polygon.plane.w
+          },
+          shared: polygon.shared ?? 0  // Provide default value for required property
         };
       }
 
@@ -665,7 +693,10 @@ export class Vertex {
     this.normal = new Vector().copy(normal);
     this.uv = new Vector().copy(uv);
     this.uv.z = 0;
-    this.color = color ? new Vector().copy(color) : undefined;
+    if (color) {
+      this.color = new Vector().copy(color);
+    }
+    // Note: If color is undefined, this.color remains unassigned which is valid for optional properties
   }
 
   clone(): Vertex {
@@ -762,11 +793,16 @@ export class Polygon {
 
     this.vertices = vertices.map(v => v.clone());
     this.shared = shared;
-    this.plane = Plane.fromPoints(
-      vertices[0].pos,
-      vertices[1].pos,
-      vertices[2].pos
-    );
+    
+    if (vertices.length >= 3 && vertices[0] && vertices[1] && vertices[2]) {
+      this.plane = Plane.fromPoints(
+        vertices[0].pos,
+        vertices[1].pos,
+        vertices[2].pos
+      );
+    } else {
+      throw new Error('Polygon requires at least 3 valid vertices');
+    }
   }
 
   clone(): Polygon {
@@ -794,7 +830,17 @@ export class Node {
   constructor(polygons?: Polygon[]) {
     if (polygons) {
       const polygonData = polygons.map(p => ({
-        vertices: p.vertices.map(v => ({ pos: v.pos, normal: v.normal, uv: v.uv, color: v.color })),
+        vertices: p.vertices.map(v => {
+          const vertexData: VertexData = {
+            pos: v.pos,
+            normal: v.normal,
+            uv: v.uv
+          };
+          if (v.color) {
+            (vertexData as any).color = v.color;
+          }
+          return vertexData;
+        }),
         shared: p.shared,
         plane: { normal: p.plane.normal, w: p.plane.w }
       }));
@@ -848,7 +894,17 @@ export class Node {
 
   clipPolygons(polygons: Polygon[]): Polygon[] {
     const polygonData = polygons.map(p => ({
-      vertices: p.vertices.map(v => ({ pos: v.pos, normal: v.normal, uv: v.uv, color: v.color })),
+      vertices: p.vertices.map(v => {
+        const vertexData: VertexData = {
+          pos: v.pos,
+          normal: v.normal,
+          uv: v.uv
+        };
+        if (v.color) {
+          (vertexData as any).color = v.color;
+        }
+        return vertexData;
+      }),
       shared: p.shared,
       plane: { normal: p.plane.normal, w: p.plane.w }
     }));
@@ -884,7 +940,17 @@ export class Node {
 
   build(polygons: Polygon[]): void {
     const polygonData = polygons.map(p => ({
-      vertices: p.vertices.map(v => ({ pos: v.pos, normal: v.normal, uv: v.uv, color: v.color })),
+      vertices: p.vertices.map(v => {
+        const vertexData: VertexData = {
+          pos: v.pos,
+          normal: v.normal,
+          uv: v.uv
+        };
+        if (v.color) {
+          (vertexData as any).color = v.color;
+        }
+        return vertexData;
+      }),
       shared: p.shared,
       plane: { normal: p.plane.normal, w: p.plane.w }
     }));

@@ -49,7 +49,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('convertASTNodeToCSG', () => {
-    it('should convert cube AST node to CSG mesh', () => {
+    it('should convert cube AST node to CSG mesh', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing cube conversion');
       
       const cubeNode: CubeNode = {
@@ -57,12 +57,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         size: [10, 10, 10],
         center: false,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 20 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 20, offset: 19 }
         }
       };
 
-      const result = convertASTNodeToCSG(cubeNode, 0);
+      const result = await convertASTNodeToCSG(cubeNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -99,19 +99,19 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert sphere AST node to CSG mesh', () => {
+    it('should convert sphere AST node to CSG mesh', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing sphere conversion');
       
       const sphereNode: SphereNode = {
         type: 'sphere',
         radius: 5,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 15 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 15, offset: 14 }
         }
       };
 
-      const result = convertASTNodeToCSG(sphereNode, 1);
+      const result = await convertASTNodeToCSG(sphereNode, 1);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -140,7 +140,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert cylinder AST node to CSG mesh', () => {
+    it('should convert cylinder AST node to CSG mesh', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing cylinder conversion');
       
       const cylinderNode: CylinderNode = {
@@ -149,12 +149,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         r: 3,
         center: false,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 25 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 25, offset: 24 }
         }
       };
 
-      const result = convertASTNodeToCSG(cylinderNode, 2);
+      const result = await convertASTNodeToCSG(cylinderNode, 2);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -186,18 +186,18 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should handle unsupported AST node types', () => {
+    it('should handle unsupported AST node types', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing unsupported node type');
       
       const unsupportedNode = {
         type: 'unsupported',
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 15 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 15, offset: 14 }
         }
       } as any;
 
-      const result = convertASTNodeToCSG(unsupportedNode, 0);
+      const result = await convertASTNodeToCSG(unsupportedNode, 0);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -206,7 +206,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should apply custom material configuration', () => {
+    it('should apply custom material configuration', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing custom material configuration');
       
       const cubeNode: CubeNode = {
@@ -214,8 +214,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         size: [5, 5, 5],
         center: true,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 20 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 20, offset: 19 }
         }
       };
 
@@ -231,7 +231,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         }
       };
 
-      const result = convertASTNodeToCSG(cubeNode, 0, customConfig);
+      const result = await convertASTNodeToCSG(cubeNode, 0, customConfig);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -255,7 +255,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('Transformation Operations', () => {
-    it('should convert translate node with child', () => {
+    it('should convert translate node with child', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing translate node conversion');
 
       const cubeChild: CubeNode = {
@@ -263,8 +263,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         size: [5, 5, 5],
         center: true,
         location: {
-          start: { line: 2, column: 5 },
-          end: { line: 2, column: 25 }
+          start: { line: 2, column: 5, offset: 54 },
+          end: { line: 2, column: 25, offset: 74 }
         }
       };
 
@@ -273,12 +273,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         v: [10, 20, 30],
         children: [cubeChild],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 3, column: 1 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 3, column: 1, offset: 100 }
         }
       };
 
-      const result = convertASTNodeToCSG(translateNode, 0);
+      const result = await convertASTNodeToCSG(translateNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -301,15 +301,15 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert rotate node with child', () => {
+    it('should convert rotate node with child', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing rotate node conversion');
 
       const sphereChild: SphereNode = {
         type: 'sphere',
         radius: 3,
         location: {
-          start: { line: 2, column: 5 },
-          end: { line: 2, column: 15 }
+          start: { line: 2, column: 5, offset: 54 },
+          end: { line: 2, column: 15, offset: 64 }
         }
       };
 
@@ -318,12 +318,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         a: [45, 90, 180],
         children: [sphereChild],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 3, column: 1 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 3, column: 1, offset: 100 }
         }
       };
 
-      const result = convertASTNodeToCSG(rotateNode, 1);
+      const result = await convertASTNodeToCSG(rotateNode, 1);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -346,7 +346,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert scale node with child', () => {
+    it('should convert scale node with child', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing scale node conversion');
 
       const cylinderChild: CylinderNode = {
@@ -355,8 +355,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         r: 2,
         center: false,
         location: {
-          start: { line: 2, column: 5 },
-          end: { line: 2, column: 25 }
+          start: { line: 2, column: 5, offset: 54 },
+          end: { line: 2, column: 25, offset: 74 }
         }
       };
 
@@ -365,12 +365,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         v: [2, 0.5, 3],
         children: [cylinderChild],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 3, column: 1 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 3, column: 1, offset: 100 }
         }
       };
 
-      const result = convertASTNodeToCSG(scaleNode, 2);
+      const result = await convertASTNodeToCSG(scaleNode, 2);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -393,7 +393,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should handle transformation nodes without children', () => {
+    it('should handle transformation nodes without children', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing transformation node without children');
 
       const translateNode: TranslateNode = {
@@ -401,12 +401,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         v: [5, 5, 5],
         children: [],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 20 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 20, offset: 19 }
         }
       };
 
-      const result = convertASTNodeToCSG(translateNode, 0);
+      const result = await convertASTNodeToCSG(translateNode, 0);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -417,7 +417,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('Advanced Operations', () => {
-    it('should convert mirror node with child', () => {
+    it('should convert mirror node with child', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing mirror node conversion');
 
       const cubeChild: CubeNode = {
@@ -440,7 +440,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         }
       };
 
-      const result = convertASTNodeToCSG(mirrorNode as any, 0);
+      const result = await convertASTNodeToCSG(mirrorNode as any, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -463,7 +463,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert rotate_extrude node', () => {
+    it('should convert rotate_extrude node', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing rotate_extrude node conversion');
 
       const rotateExtrudeNode = {
@@ -476,7 +476,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         }
       };
 
-      const result = convertASTNodeToCSG(rotateExtrudeNode as any, 0);
+      const result = await convertASTNodeToCSG(rotateExtrudeNode as any, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -496,19 +496,19 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('CSG Boolean Operations', () => {
-    it('should convert union node with placeholder when no children', () => {
+    it('should convert union node with placeholder when no children', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing union node without children');
 
       const unionNode: UnionNode = {
         type: 'union',
         children: [],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 10 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 }
         }
       };
 
-      const result = convertASTNodeToCSG(unionNode, 0);
+      const result = await convertASTNodeToCSG(unionNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -526,19 +526,19 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert intersection node with placeholder when no children', () => {
+    it('should convert intersection node with placeholder when no children', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing intersection node without children');
 
       const intersectionNode: IntersectionNode = {
         type: 'intersection',
         children: [],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 15 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 15, offset: 14 }
         }
       };
 
-      const result = convertASTNodeToCSG(intersectionNode, 1);
+      const result = await convertASTNodeToCSG(intersectionNode, 1);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -556,19 +556,19 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should convert difference node with placeholder when no children', () => {
+    it('should convert difference node with placeholder when no children', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing difference node without children');
 
       const differenceNode: DifferenceNode = {
         type: 'difference',
         children: [],
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 12 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 12, offset: 11 }
         }
       };
 
-      const result = convertASTNodeToCSG(differenceNode, 2);
+      const result = await convertASTNodeToCSG(differenceNode, 2);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -588,7 +588,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('convertASTNodesToCSGUnion', () => {
-    it('should create CSG union from multiple AST nodes', () => {
+    it('should create CSG union from multiple AST nodes', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing CSG union operation');
       
       const nodes = [
@@ -597,21 +597,21 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
           size: [5, 5, 5],
           center: true,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 20 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
           }
         } as CubeNode,
         {
           type: 'sphere',
           radius: 3,
           location: {
-            start: { line: 2, column: 1 },
-            end: { line: 2, column: 15 }
+            start: { line: 2, column: 1, offset: 50 },
+            end: { line: 2, column: 15, offset: 64 }
           }
         } as SphereNode
       ];
 
-      const result = convertASTNodesToCSGUnion(nodes);
+      const result = await convertASTNodesToCSGUnion(nodes);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -635,7 +635,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should handle single node as pass-through', () => {
+    it('should handle single node as pass-through', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing single node pass-through');
       
       const nodes = [
@@ -644,13 +644,13 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
           size: [8, 8, 8],
           center: false,
           location: {
-            start: { line: 1, column: 1 },
-            end: { line: 1, column: 20 }
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
           }
         } as CubeNode
       ];
 
-      const result = convertASTNodesToCSGUnion(nodes);
+      const result = await convertASTNodesToCSGUnion(nodes);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -665,10 +665,10 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should handle empty node array', () => {
+    it('should handle empty node array', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing empty node array');
       
-      const result = convertASTNodesToCSGUnion([]);
+      const result = await convertASTNodesToCSGUnion([]);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -679,7 +679,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('Performance and Memory Management', () => {
-    it('should complete conversion within performance requirements', () => {
+    it('should complete conversion within performance requirements', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing performance requirements');
       
       const cubeNode: CubeNode = {
@@ -687,13 +687,13 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         size: [10, 10, 10],
         center: false,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 20 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 20, offset: 19 }
         }
       };
 
       const startTime = performance.now();
-      const result = convertASTNodeToCSG(cubeNode, 0);
+      const result = await convertASTNodeToCSG(cubeNode, 0);
       const endTime = performance.now();
       const duration = endTime - startTime;
 
@@ -703,19 +703,19 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       console.log(`[DEBUG][ASTToCSGConverterTest] Conversion completed in ${duration.toFixed(2)}ms`);
     });
 
-    it('should properly dispose of resources', () => {
+    it('should properly dispose of resources', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing resource disposal');
       
       const sphereNode: SphereNode = {
         type: 'sphere',
         radius: 4,
         location: {
-          start: { line: 1, column: 1 },
-          end: { line: 1, column: 15 }
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 15, offset: 14 }
         }
       };
 
-      const result = convertASTNodeToCSG(sphereNode, 0);
+      const result = await convertASTNodeToCSG(sphereNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -737,7 +737,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   });
 
   describe('Validation Test Case', () => {
-    it('should handle the specific OpenSCAD validation case with correct positioning', () => {
+    it('should handle the specific OpenSCAD validation case with correct positioning', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing validation case with translate and boolean operations');
 
       // Test translate with negative X coordinate (left side)
@@ -764,7 +764,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 6, column: 1, offset: 110 } }
       };
 
-      const result = convertASTNodeToCSG(leftTranslateNode, 0);
+      const result = await convertASTNodeToCSG(leftTranslateNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -785,7 +785,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       }
     });
 
-    it('should handle translate with positive X coordinate (right side)', () => {
+    it('should handle translate with positive X coordinate (right side)', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing right side translate positioning');
 
       // Test translate with positive X coordinate (right side)
@@ -812,7 +812,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 6, column: 1, offset: 110 } }
       };
 
-      const result = convertASTNodeToCSG(rightTranslateNode, 0);
+      const result = await convertASTNodeToCSG(rightTranslateNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {

@@ -26,20 +26,32 @@ export const createVertex = (
   const uvCopy = new Vector().copy(uv);
   uvCopy.z = 0;
 
-  return {
+  const vertexData: VertexData = {
     pos: new Vector().copy(pos),
     normal: new Vector().copy(normal),
     uv: uvCopy,
-    color: color ? new Vector().copy(color) : undefined
   };
+
+  if (color) {
+    (vertexData as any).color = new Vector().copy(color);
+  }
+
+  return vertexData;
 };
 
-export const cloneVertex = (vertex: VertexData): VertexData => ({
-  pos: vertex.pos.clone(),
-  normal: vertex.normal.clone(),
-  uv: vertex.uv.clone(),
-  color: vertex.color?.clone()
-});
+export const cloneVertex = (vertex: VertexData): VertexData => {
+  const result: VertexData = {
+    pos: vertex.pos.clone(),
+    normal: vertex.normal.clone(),
+    uv: vertex.uv.clone(),
+  };
+  
+  if (vertex.color) {
+    (result as any).color = vertex.color.clone();
+  }
+  
+  return result;
+};
 
 export const flipVertex = (vertex: VertexData): VertexData => ({
   ...vertex,
@@ -50,14 +62,19 @@ export const interpolateVertex = (
   vertex1: VertexData, 
   vertex2: VertexData, 
   t: number
-): VertexData => ({
-  pos: vertex1.pos.clone().lerp(vertex2.pos, t),
-  normal: vertex1.normal.clone().lerp(vertex2.normal, t),
-  uv: vertex1.uv.clone().lerp(vertex2.uv, t),
-  color: vertex1.color && vertex2.color 
-    ? vertex1.color.clone().lerp(vertex2.color, t) 
-    : undefined
-});
+): VertexData => {
+  const result: VertexData = {
+    pos: vertex1.pos.clone().lerp(vertex2.pos, t),
+    normal: vertex1.normal.clone().lerp(vertex2.normal, t),
+    uv: vertex1.uv.clone().lerp(vertex2.uv, t),
+  };
+  
+  if (vertex1.color && vertex2.color) {
+    (result as any).color = vertex1.color.clone().lerp(vertex2.color, t);
+  }
+  
+  return result;
+};
 
 /**
  * Plane utility functions
@@ -94,6 +111,10 @@ export const createPolygon = (vertices: VertexData[], shared: any): PolygonData 
     throw new Error('Polygon must have at least 3 vertices');
   }
   
+  if (!vertices[0] || !vertices[1] || !vertices[2]) {
+    throw new Error('Polygon requires at least 3 vertices');
+  }
+
   const plane = createPlaneFromPoints(
     vertices[0].pos,
     vertices[1].pos,
@@ -196,12 +217,13 @@ export const splitPolygonByPlane = (
   
   // Handle different cases
   switch (polygonType) {
-    case coplanar:
+    case coplanar: {
       const targetArray = plane.normal.dot(polygon.plane.normal) > 0 
         ? coplanarFront 
         : coplanarBack;
       targetArray.push(polygon);
       break;
+    }
       
     case front:
       frontPolygons.push(polygon);
@@ -221,6 +243,8 @@ export const splitPolygonByPlane = (
         const tj = types[j];
         const vi = polygon.vertices[i];
         const vj = polygon.vertices[j];
+        
+        if (!vi || !vj) continue;
         
         if (ti !== back) f.push(vi);
         if (ti !== front) b.push(ti !== back ? cloneVertex(vi) : vi);

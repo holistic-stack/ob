@@ -202,7 +202,7 @@ describe('OpenSCAD Parser Manager', () => {
     it('should detect AST validation errors', async () => {
       // Create an invalid AST structure
       const invalidAST: ASTNode[] = [
-        { type: 'invalid_node' as any, parameters: {} }
+        { type: 'invalid_node' as any, parameters: [] }
       ];
 
       const result = await parserManager.validate(invalidAST);
@@ -219,7 +219,7 @@ describe('OpenSCAD Parser Manager', () => {
       const noValidationConfig = { ...defaultConfig, enableValidation: false };
       const noValidationManager = createParserManager(noValidationConfig);
 
-      const ast: ASTNode[] = [{ type: 'cube', parameters: {} }];
+      const ast: ASTNode[] = [{ type: 'cube', size: [1, 1, 1] }];
 
       const result = await noValidationManager.validate(ast);
 
@@ -236,8 +236,8 @@ describe('OpenSCAD Parser Manager', () => {
   describe('AST Optimization', () => {
     it('should optimize AST when enabled', async () => {
       const originalAST: ASTNode[] = [
-        { type: 'cube', parameters: { size: [10, 10, 10] } },
-        { type: 'cube', parameters: { size: [10, 10, 10] } } // Duplicate
+        { type: 'cube', size: [10, 10, 10] },
+        { type: 'cube', size: [10, 10, 10] } // Duplicate
       ];
 
       const result = await parserManager.optimize(originalAST);
@@ -256,7 +256,7 @@ describe('OpenSCAD Parser Manager', () => {
       const noOptimizationConfig = { ...defaultConfig, enableOptimization: false };
       const noOptimizationManager = createParserManager(noOptimizationConfig);
 
-      const ast: ASTNode[] = [{ type: 'cube', parameters: {} }];
+      const ast: ASTNode[] = [{ type: 'cube', size: [1, 1, 1] }];
 
       const result = await noOptimizationManager.optimize(ast);
 
@@ -271,7 +271,7 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should handle optimization errors', async () => {
       // Create an AST that might cause optimization issues
-      const ast: ASTNode[] = [{ type: 'cube', parameters: {} }];
+      const ast: ASTNode[] = [{ type: 'cube', size: [1, 1, 1] }];
 
       const result = await parserManager.optimize(ast);
 

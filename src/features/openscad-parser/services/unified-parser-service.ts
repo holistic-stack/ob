@@ -28,7 +28,7 @@ export interface ParseError {
 /**
  * Comprehensive parse result with both CST and AST
  */
-export interface ParseResult {
+export interface UnifiedParseResult {
   readonly cst: TreeSitter.Tree | null;
   readonly ast: ReadonlyArray<ASTNode> | null;
   readonly errors: ReadonlyArray<ParseError>;
@@ -70,6 +70,7 @@ export interface HoverInfo {
 export interface Position {
   readonly line: number;
   readonly column: number;
+  readonly offset: number;
 }
 
 /**
@@ -116,7 +117,7 @@ type ParserState = 'uninitialized' | 'initializing' | 'ready' | 'error' | 'dispo
  * Cache entry for parsed documents
  */
 interface CacheEntry {
-  readonly result: ParseResult;
+  readonly result: UnifiedParseResult;
   readonly timestamp: number;
   readonly codeHash: string;
 }
@@ -138,7 +139,7 @@ export class UnifiedParserService {
   private documentTree: TreeSitter.Tree | null = null;
   private documentAST: ReadonlyArray<ASTNode> | null = null;
   private lastParseErrors: ReadonlyArray<ParseError> = [];
-  private lastParseResult: ParseResult | null = null;
+  private lastParseResult: UnifiedParseResult | null = null;
   
   // Caching
   private cache = new Map<string, CacheEntry>();
@@ -185,7 +186,7 @@ export class UnifiedParserService {
   /**
    * Parse OpenSCAD document with comprehensive result
    */
-  public async parseDocument(content: string): AsyncResult<ParseResult, string> {
+  public async parseDocument(content: string): AsyncResult<UnifiedParseResult, string> {
     if (this.config.enableLogging) {
       console.log(`[DEBUG][UnifiedParserService] Parse request for ${content.length} characters`);
     }
@@ -209,7 +210,7 @@ export class UnifiedParserService {
         const result = await this.performParsing(content);
         const parseTime = performance.now() - startTime;
 
-        const finalResult: ParseResult = {
+        const finalResult: UnifiedParseResult = {
           ...result,
           parseTime
         };
@@ -285,7 +286,7 @@ export class UnifiedParserService {
   /**
    * Get last parse result
    */
-  public getLastParseResult(): ParseResult | null {
+  public getLastParseResult(): UnifiedParseResult | null {
     return this.lastParseResult;
   }
 
@@ -426,7 +427,7 @@ export class UnifiedParserService {
   /**
    * Perform actual parsing with AST (simplified for basic OpenscadParser)
    */
-  private async performParsing(content: string): Promise<ParseResult> {
+  private async performParsing(content: string): Promise<UnifiedParseResult> {
     if (!this.parser) {
       throw new Error('Parser not available');
     }
@@ -477,7 +478,7 @@ export class UnifiedParserService {
   /**
    * Update internal document state
    */
-  private updateDocumentState(result: ParseResult): void {
+  private updateDocumentState(result: UnifiedParseResult): void {
     this.documentTree = result.cst;
     this.documentAST = result.ast;
     this.lastParseErrors = result.errors;
@@ -500,7 +501,7 @@ export class UnifiedParserService {
   /**
    * Get cached result if available
    */
-  private getCachedResult(content: string): ParseResult | null {
+  private getCachedResult(content: string): UnifiedParseResult | null {
     const key = this.generateCacheKey(content);
     const entry = this.cache.get(key);
 
@@ -520,7 +521,7 @@ export class UnifiedParserService {
   /**
    * Cache parse result
    */
-  private cacheResult(content: string, result: ParseResult): void {
+  private cacheResult(content: string, result: UnifiedParseResult): void {
     const key = this.generateCacheKey(content);
 
     // Implement LRU eviction if cache is full
@@ -563,7 +564,7 @@ export class UnifiedParserService {
     if (!node) return;
 
     switch (node.type) {
-      case 'module_definition':
+      case 'module_definition': {
         const moduleName = this.findChildByType(node, 'identifier')?.text;
         if (moduleName) {
           outline.push({
@@ -574,8 +575,9 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
 
-      case 'function_definition':
+      case 'function_definition': {
         const funcName = this.findChildByType(node, 'identifier')?.text;
         if (funcName) {
           outline.push({
@@ -586,8 +588,9 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
 
-      case 'assignment':
+      case 'assignment': {
         const varName = this.findChildByType(node, 'identifier')?.text;
         if (varName) {
           outline.push({
@@ -598,6 +601,7 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
     }
 
     // Recursively process child nodes
@@ -687,24 +691,28 @@ export class UnifiedParserService {
     const contents: string[] = [];
 
     switch (node.type) {
-      case 'module_call':
+      case 'module_call': {
         const moduleName = this.findChildByType(node, 'identifier')?.text;
-        contents.push(`**Module Call**: ${moduleName || 'unknown'}`);
+        contents.push(`**Module Call**: ${moduleName ?? 'unknown'}`);
         break;
+      }
 
-      case 'function_definition':
+      case 'function_definition': {
         const funcName = this.findChildByType(node, 'identifier')?.text;
-        contents.push(`**Function Definition**: ${funcName || 'anonymous'}`);
+        contents.push(`**Function Definition**: ${funcName ?? 'anonymous'}`);
         break;
+      }
 
-      case 'assignment':
+      case 'assignment': {
         const varName = this.findChildByType(node, 'identifier')?.text;
-        contents.push(`**Variable**: ${varName || 'unknown'}`);
+        contents.push(`**Variable**: ${varName ?? 'unknown'}`);
         break;
+      }
 
-      case 'identifier':
+      case 'identifier': {
         contents.push(`**Identifier**: ${node.text}`);
         break;
+      }
 
       default:
         contents.push(`**${node.type}**`);
@@ -727,7 +735,7 @@ export class UnifiedParserService {
     if (!node) return;
 
     switch (node.type) {
-      case 'module_definition':
+      case 'module_definition': {
         const moduleName = this.findChildByType(node, 'identifier')?.text;
         if (moduleName) {
           symbols.push({
@@ -738,8 +746,9 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
 
-      case 'function_definition':
+      case 'function_definition': {
         const funcName = this.findChildByType(node, 'identifier')?.text;
         if (funcName) {
           symbols.push({
@@ -750,8 +759,9 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
 
-      case 'assignment':
+      case 'assignment': {
         const varName = this.findChildByType(node, 'identifier')?.text;
         if (varName) {
           symbols.push({
@@ -762,6 +772,7 @@ export class UnifiedParserService {
           });
         }
         break;
+      }
     }
 
     // Recursively process child nodes
@@ -809,7 +820,7 @@ export const disposeGlobalUnifiedParserService = (): void => {
 /**
  * Parse OpenSCAD code using global unified service (convenience function)
  */
-export const parseOpenSCADCodeUnified = async (code: string): AsyncResult<ParseResult, string> => {
+export const parseOpenSCADCodeUnified = async (code: string): AsyncResult<UnifiedParseResult, string> => {
   const service = getGlobalUnifiedParserService();
   return service.parseDocument(code);
 };

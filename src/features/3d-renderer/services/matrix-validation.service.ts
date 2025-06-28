@@ -43,7 +43,7 @@ export interface MatrixValidationOptions {
  */
 export class MatrixValidationService {
   private readonly operationCounter = new Map<string, number>();
-  private readonly performanceMetrics: MatrixPerformanceMetrics = {
+  private performanceMetrics: MatrixPerformanceMetrics = {
     operationCount: 0,
     totalExecutionTime: 0,
     averageExecutionTime: 0,
@@ -84,15 +84,22 @@ export class MatrixValidationService {
    * Update performance metrics
    */
   private updatePerformanceMetrics(executionTime: number, matrixSize: readonly [number, number]): void {
-    this.performanceMetrics.operationCount++;
-    this.performanceMetrics.totalExecutionTime += executionTime;
-    this.performanceMetrics.averageExecutionTime = 
-      this.performanceMetrics.totalExecutionTime / this.performanceMetrics.operationCount;
+    // Create new metrics object since properties are readonly
+    const newOperationCount = this.performanceMetrics.operationCount + 1;
+    const newTotalExecutionTime = this.performanceMetrics.totalExecutionTime + executionTime;
     
     const size = matrixSize[0] * matrixSize[1];
-    if (size >= this.deps.config.performance.largeMatrixThreshold) {
-      this.performanceMetrics.largeMatrixOperations++;
-    }
+    const isLargeMatrix = size >= this.deps.config.performance.largeMatrixThreshold;
+    
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      operationCount: newOperationCount,
+      totalExecutionTime: newTotalExecutionTime,
+      averageExecutionTime: newTotalExecutionTime / newOperationCount,
+      largeMatrixOperations: isLargeMatrix 
+        ? this.performanceMetrics.largeMatrixOperations + 1 
+        : this.performanceMetrics.largeMatrixOperations,
+    };
 
     // Update telemetry if available
     if (this.deps.telemetry) {
@@ -104,7 +111,10 @@ export class MatrixValidationService {
    * Record failed operation
    */
   private recordFailure(operation: string, error: Error): void {
-    this.performanceMetrics.failedOperations++;
+    this.performanceMetrics = {
+      ...this.performanceMetrics,
+      failedOperations: this.performanceMetrics.failedOperations + 1,
+    };
     
     if (this.deps.telemetry) {
       this.deps.telemetry.trackOperation(operation, 0, false);
@@ -289,7 +299,7 @@ export class MatrixValidationService {
 
       // Compute rank
       try {
-        rank = matrix.rank();
+        rank = (matrix as any).rank?.() ?? 0;
       } catch (err) {
         console.warn(`[WARN][MatrixValidationService] Failed to compute rank: ${err}`);
       }
@@ -297,7 +307,7 @@ export class MatrixValidationService {
       // Compute determinant for square matrices
       if (isSquare) {
         try {
-          determinant = matrix.determinant();
+          determinant = (matrix as any).determinant?.() ?? 0;
         } catch (err) {
           console.warn(`[WARN][MatrixValidationService] Failed to compute determinant: ${err}`);
         }
@@ -350,10 +360,10 @@ export class MatrixValidationService {
         warnings,
         suggestions,
         conditionNumber,
-        rank,
-        determinant,
-        eigenvalues,
-        singularValues,
+        rank: rank ?? 0,
+        determinant: determinant ?? 0,
+        eigenvalues: eigenvalues ?? [],
+        singularValues: singularValues ?? [],
         isPositiveDefinite,
         isOrthogonal,
         isSymmetric,

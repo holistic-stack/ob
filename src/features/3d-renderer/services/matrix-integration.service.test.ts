@@ -244,7 +244,7 @@ describe('MatrixIntegrationService', () => {
       
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.length).toBe(3);
+        expect(result.data).toHaveLength(3);
         
         for (const enhanced of result.data) {
           expect(enhanced.result).toBeDefined();
@@ -276,7 +276,7 @@ describe('MatrixIntegrationService', () => {
       
       expect(result2.success).toBe(true);
       if (result2.success) {
-        expect(result2.data.length).toBe(2); // Should have 2 successful operations
+        expect(result2.data).toHaveLength(2); // Should have 2 successful operations
       }
     });
   });

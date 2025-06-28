@@ -99,7 +99,7 @@ const createProblematicMatrix = (type: 'singular' | 'illConditioned' | 'large' |
         [1, 1, 1.0001]
       ]);
     
-    case 'large':
+    case 'large': {
       // Create a large matrix that might cause memory issues
       const size = 500;
       const data: number[][] = [];
@@ -111,6 +111,7 @@ const createProblematicMatrix = (type: 'singular' | 'illConditioned' | 'large' |
         data.push(row);
       }
       return new Matrix(data);
+    }
     
     case 'invalid':
       // Create a matrix with invalid values
@@ -186,12 +187,12 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         return originalGet(key);
       });
       
-      vi.spyOn(cacheService, 'set').mockImplementation((key: string, value: any, ttl?: number) => {
+      vi.spyOn(cacheService, 'set').mockImplementation((key: string, value: any, metadata?: Record<string, unknown>) => {
         if (failureCount < maxFailures && Math.random() < 0.3) {
           failureCount++;
           throw new Error(`Simulated cache failure ${failureCount}`);
         }
-        return originalSet(key, value, ttl);
+        return originalSet(key, value, metadata);
       });
       
       const results: Array<{ success: boolean; recoveryTime?: number }> = [];
@@ -234,13 +235,16 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
       console.log('[DEBUG][MatrixServiceRecoveryTest] Testing validation service failure handling');
       
       const validationService = serviceContainer.getValidationService();
+      if (!validationService) {
+        throw new Error('Validation service not available');
+      }
       const originalValidateMatrix = validationService.validateMatrix.bind(validationService);
       
       let failureCount = 0;
       const maxFailures = 3;
       
       // Inject failures into validation operations
-      vi.spyOn(validationService, 'validateMatrix').mockImplementation(async (matrix: Matrix, options?: any) => {
+      vi.spyOn(validationService, 'validateMatrix').mockImplementation(async (matrix: Matrix, options?: any): Promise<any> => {
         if (failureCount < maxFailures) {
           failureCount++;
           throw new Error(`Simulated validation failure ${failureCount}`);
@@ -291,6 +295,9 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         try {
           const largeMatrix = createProblematicMatrix('large');
           const validationService = serviceContainer.getValidationService();
+          if (!validationService) {
+            throw new Error('Validation service not available');
+          }
           
           const result = await validationService.validateMatrix(largeMatrix, {
             useCache: false, // Disable cache to increase memory pressure
@@ -343,10 +350,13 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
       const results: Array<{ type: string; success: boolean; hasError: boolean }> = [];
       
       for (const [index, matrix] of problematicMatrices.entries()) {
-        const matrixType = ['singular', 'illConditioned', 'invalid'][index];
+        const matrixType = ['singular', 'illConditioned', 'invalid'][index] as string;
         
         try {
           const validationService = serviceContainer.getValidationService();
+          if (!validationService) {
+            throw new Error('Validation service not available');
+          }
           const result = await validationService.validateMatrix(matrix, {
             useCache: true,
             tolerance: 1e-10
@@ -360,7 +370,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           
           // For invalid matrices, should detect the issues
           if (matrixType === 'invalid' && result.success) {
-            expect(result.data.validation?.errors.length).toBeGreaterThan(0);
+            expect(result.data.result?.errors.length).toBeGreaterThan(0);
           }
         } catch (err) {
           results.push({
@@ -372,7 +382,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
       }
       
       // Should handle all problematic inputs without crashing
-      expect(results.length).toBe(3);
+      expect(results).toHaveLength(3);
       
       // Invalid matrices should be properly detected
       const invalidResult = results.find(r => r.type === 'invalid');
@@ -512,7 +522,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
       // Get initial service status
       const initialStatus = serviceContainer.getStatus();
       expect(initialStatus.initialized).toBe(true);
-      expect(initialStatus.errorServices.length).toBe(0);
+      expect(initialStatus.errorServices).toHaveLength(0);
       
       // Simulate service failure
       const containerAny = serviceContainer as any;
@@ -537,9 +547,9 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
       expect(cacheService).toBeDefined();
       
       // Test cache functionality
-      cacheService.set('test_key', 'test_value');
+      cacheService.set('test_key', new Matrix([[1, 2], [3, 4]]));
       const retrievedValue = cacheService.get('test_key');
-      expect(retrievedValue).toBe('test_value');
+      expect(retrievedValue).toEqual(new Matrix([[1, 2], [3, 4]]));
     }, RECOVERY_SCENARIOS.serviceFailure.timeoutMs);
   });
 });
