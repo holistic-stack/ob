@@ -243,7 +243,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
       const sharedMatrix = createConcurrentTestMatrix4(12345); // Same matrix for all operations
       
       const results = await executeConcurrentOperations(
-        async (workerId: number, operationId: number) => {
+        async (_workerId: number, _operationId: number) => {
           // All workers use the same matrix to test cache consistency
           const result = await integrationService.convertMatrix4ToMLMatrix(sharedMatrix, {
             useValidation: true,

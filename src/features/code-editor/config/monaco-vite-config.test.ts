@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Plugin } from 'vite';
+
 import { createMonacoEditorConfig, validateMonacoConfig } from './monaco-vite-config';
 
 describe('Monaco Editor Vite Configuration', () => {

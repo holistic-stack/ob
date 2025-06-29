@@ -160,7 +160,7 @@ export const classifyPointToPlane = (
   plane: PlaneData,
 ): BSPClassification => {
   const { epsilon } = GEOMETRY_CONFIG.precision;
-  const { coplanar, front, back } = GEOMETRY_CONFIG.bsp;
+  const { coplanar: _coplanar, front: _front, back: _back } = GEOMETRY_CONFIG.bsp;
 
   const t = plane.normal.dot(point) - plane.w;
 
@@ -173,7 +173,7 @@ export const classifyPolygonToPlane = (
   polygon: PolygonData,
   plane: PlaneData,
 ): BSPClassification => {
-  const { coplanar, front, back, spanning } = GEOMETRY_CONFIG.bsp;
+  const { coplanar, front, back, spanning: _spanning } = GEOMETRY_CONFIG.bsp;
 
   let polygonType = 0;
   const types: number[] = [];

@@ -91,22 +91,22 @@ js.configs.recommended, // Ignore patterns - comprehensive and specific
         destructuredArrayIgnorePattern: '^_',
       },
     ],
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/prefer-nullish-coalescing': 'warn', // Relaxed to warn
-    '@typescript-eslint/prefer-optional-chain': 'warn', // Relaxed to warn
-    '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+    '@typescript-eslint/prefer-nullish-coalescing': 'error', 
+    '@typescript-eslint/prefer-optional-chain': 'error', 
+    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    '@typescript-eslint/no-unsafe-assignment': 'off', // Too strict for development
-    '@typescript-eslint/no-unsafe-member-access': 'off', // Too strict for development
-    '@typescript-eslint/no-unsafe-call': 'off', // Too strict for development
-    '@typescript-eslint/no-unsafe-return': 'off', // Too strict for development
-    '@typescript-eslint/no-unsafe-argument': 'off', // Too strict for development
-    '@typescript-eslint/require-await': 'off', // Too strict for development
-    '@typescript-eslint/no-floating-promises': 'warn', // Important but not blocking
-    '@typescript-eslint/no-misused-promises': 'warn', // Important but not blocking
-    '@typescript-eslint/no-base-to-string': 'warn', // Important but not blocking
+    '@typescript-eslint/no-unsafe-assignment': 'error', // Too strict for development
+    '@typescript-eslint/no-unsafe-member-access': 'error', // Too strict for development
+    '@typescript-eslint/no-unsafe-call': 'error', // Too strict for development
+    '@typescript-eslint/no-unsafe-return': 'error', // Too strict for development
+    '@typescript-eslint/no-unsafe-argument': 'error', // Too strict for development
+    '@typescript-eslint/require-await': 'error', // Too strict for development
+    '@typescript-eslint/no-floating-promises': 'error', // Important but not blocking
+    '@typescript-eslint/no-misused-promises': 'error', // Important but not blocking
+    '@typescript-eslint/no-base-to-string': 'error', // Important but not blocking
 
     // React 19 specific rules
     ...reactPlugin.configs.recommended.rules,

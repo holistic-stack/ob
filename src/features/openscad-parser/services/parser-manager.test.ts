@@ -10,17 +10,10 @@ import { OpenscadParser } from '@holistic-stack/openscad-parser';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import {
   ParserManager,
-  createParserManager,
-  parseOpenSCADCode,
-  validateAST,
-  optimizeAST,
-  transformAST
+  createParserManager
 } from './parser-manager';
 import type {
-  ParserConfig,
-  ParseResult,
-  ASTValidationResult,
-  ASTOptimizationResult
+  ParserConfig
 } from '../types/parser.types';
 
 describe('OpenSCAD Parser Manager', () => {

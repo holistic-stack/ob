@@ -11,7 +11,7 @@
 import type * as TreeSitter from 'web-tree-sitter';
 import { OpenscadParser, SimpleErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
 import type { AsyncResult } from '../../../shared/types/result.types';
-import { success, error, tryCatchAsync } from '../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../shared/utils/functional/result';
 
 /**
  * Enhanced parse error interface with location information
@@ -253,7 +253,7 @@ export class UnifiedParserService {
    * Get hover information for position
    * Note: Basic parser doesn't provide CST, so hover info is limited
    */
-  public getHoverInfo(position: Position): HoverInfo | null {
+  public getHoverInfo(_position: Position): HoverInfo | null {
     // TODO: Implement AST-based hover information
     // For now, return null since we don't have CST
     return null;

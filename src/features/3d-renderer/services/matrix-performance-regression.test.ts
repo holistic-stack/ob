@@ -469,7 +469,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
         expect(conversionResult.success).toBe(true);
         
         if (conversionResult.success) {
-          const inversionResult = await integrationService.performRobustInversion(conversionResult.data.result);
+          const _inversionResult = await integrationService.performRobustInversion(conversionResult.data.result);
           // Inversion might fail for some matrices, that's okay
         }
         

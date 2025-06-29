@@ -129,7 +129,7 @@ vi.mock('../../store', () => {
 });
 
 // Mock store
-let _mockStore: ReturnType<typeof createAppStore>;
+let mockStore: ReturnType<typeof createAppStore>;
 
 // Mock performance.now for consistent timing
 const mockPerformanceNow = vi.fn();
@@ -157,7 +157,7 @@ describe('useThreeRenderer Hook', () => {
     mockPerformanceNow.mockReturnValue(0);
     
     // Create fresh store for each test
-    _mockStore = createAppStore({
+    mockStore = createAppStore({
       enableDevtools: false,
       enablePersistence: false,
       debounceConfig: {

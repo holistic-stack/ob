@@ -6,7 +6,7 @@
  */
 
 import type { Result } from '../../../shared/types/result.types';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { tryCatch } from '../../../shared/utils/functional/result';
 
 /**
  * Custom worker configuration

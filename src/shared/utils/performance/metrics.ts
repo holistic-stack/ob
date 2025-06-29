@@ -31,7 +31,7 @@ export const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ resul
  */
 export const getMemoryUsage = (): number => {
   if ('memory' in performance) {
-    return (performance as any).memory.usedJSHeapSize / (1024 * 1024); // MB
+    return (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / (1024 * 1024); // MB
   }
   return 0; // Not available in all browsers
 };
@@ -190,11 +190,11 @@ export const createDebouncedMonitor = (
       frameRateMonitor.stop();
     },
 
-    updateRenderTime: (renderTime: number) => {
+    updateRenderTime: (_renderTime: number) => {
       // This would be called by render operations to update the metric
     },
 
-    updateParseTime: (parseTime: number) => {
+    updateParseTime: (_parseTime: number) => {
       // This would be called by parse operations to update the metric
     }
   };

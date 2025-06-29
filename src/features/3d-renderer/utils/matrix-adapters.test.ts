@@ -5,8 +5,8 @@
  * following TDD methodology and bulletproof-react testing patterns.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { Matrix } from "ml-matrix";
+import { describe, it, expect } from "vitest";
+
 import { Matrix3, Matrix4, Vector3, Quaternion, Euler } from "three";
 import {
   fromThreeMatrix3,

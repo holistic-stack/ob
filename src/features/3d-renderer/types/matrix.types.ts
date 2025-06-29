@@ -53,7 +53,7 @@ export interface MatrixCacheEntry {
 /**
  * Three.js integration types
  */
-export interface ThreeJSMatrixConversion {
+export interface _ThreeJSMatrixConversion {
   readonly matrix3: Matrix3;
   readonly matrix4: Matrix4;
   readonly source: MLMatrix;

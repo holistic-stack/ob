@@ -8,11 +8,11 @@
 import React, { act, useEffect, useState } from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { Canvas } from "@react-three/fiber";
+
 import { useAppStore } from "../store/app-store";
 import { StoreConnectedEditor } from "../code-editor/components/store-connected-editor";
 import { StoreConnectedRenderer } from "../3d-renderer/components/store-connected-renderer";
-import { R3FScene } from "../3d-renderer/components/r3f-scene";
+
 import { MatrixServiceContainer } from "../3d-renderer/services/matrix-service-container";
 import { MatrixIntegrationService } from "../3d-renderer/services/matrix-integration.service";
 
@@ -150,7 +150,7 @@ class TestErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
     console.log("[DEBUG][TestErrorBoundary] Caught error:", error);
     this.props.onError?.(error);
   }
@@ -455,7 +455,7 @@ describe("React Integration Layer Testing", () => {
           "[DEBUG][ReactIntegrationTest] Testing error boundary integration",
         );
 
-        const scenario = REACT_INTEGRATION_SCENARIOS.errorBoundary;
+        const _scenario = REACT_INTEGRATION_SCENARIOS.errorBoundary;
         const caughtErrors: Error[] = [];
 
         render(

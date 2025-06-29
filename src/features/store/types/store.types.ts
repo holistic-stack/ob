@@ -7,11 +7,10 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
-import type { Result, AsyncResult } from '../../../shared/types/result.types';
+import type { AsyncResult } from '../../../shared/types/result.types';
 import type { 
-  EditorState, 
-  SceneState, 
-  AppConfig, 
+  EditorState,
+  AppConfig,
   PerformanceMetrics,
   EditorPosition,
   EditorSelection,

@@ -5,9 +5,11 @@
  * with functional programming patterns and Result<T,E> error handling.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { AppState, AppStore } from './types/store.types';
+import { describe, it, expect, beforeEach } from 'vitest';
+
 import type { EditorPosition, EditorSelection } from '../../shared/types/common.types';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type * as THREE from 'three';
 import { createAppStore } from './app-store';
 
 let store: ReturnType<typeof createAppStore>;
@@ -233,7 +235,7 @@ describe('App Store', () => {
 
   describe('Rendering Actions', () => {
     it('should update meshes', () => {
-      const meshes: any[] = []; // Mock THREE.Mesh array
+      const meshes = [] as unknown as readonly THREE.Mesh[]; // Mock THREE.Mesh array
       store.getState().updateMeshes(meshes);
 
       const state = store.getState();
@@ -242,7 +244,7 @@ describe('App Store', () => {
     });
 
     it('should render from AST successfully', async () => {
-      const ast: any[] = []; // Mock AST nodes
+      const ast = [] as unknown as readonly ASTNode[]; // Mock AST nodes
       const result = await store.getState().renderFromAST(ast);
 
       expect(result.success).toBe(true);

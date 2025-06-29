@@ -22,8 +22,6 @@ import {
   selectConfigDebounceMs,
 } from "../../store/selectors";
 import {
-  success,
-  error,
   tryCatch,
 } from "../../../shared/utils/functional/result";
 import { debounce } from "../../../shared/utils/functional/pipe";
@@ -65,7 +63,7 @@ export const useMonacoEditor = (
   // Store selectors and actions
   const code = useAppStore(selectEditorCode);
   const cursorPosition = useAppStore(selectEditorCursorPosition);
-  const selection = useAppStore(selectEditorSelection);
+  const _selection = useAppStore(selectEditorSelection);
   const debounceMs = useAppStore(selectConfigDebounceMs);
 
   const {
@@ -81,7 +79,7 @@ export const useMonacoEditor = (
    */
   const debouncedUpdateCode = useCallback(
     debounce((newCode: string) => {
-      const { result: parseResult, duration } = measureTime(() => {
+      const { result: _parseResult, duration } = measureTime(() => {
         updateCode(newCode);
         recordParseTime(duration);
       });
@@ -235,7 +233,7 @@ export const useMonacoEditor = (
   /**
    * Initialize editor event listeners
    */
-  const initializeEditor = useCallback(
+  const _initializeEditor = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor) => {
       const result = tryCatch(
         () => {
@@ -274,7 +272,7 @@ export const useMonacoEditor = (
           );
 
           // Store disposables for cleanup
-          (editor as any)._hookDisposables = disposables;
+          (editor as unknown as { _hookDisposables: monaco.IDisposable[] })._hookDisposables = disposables;
 
           console.log(
             "[INIT][useMonacoEditor] Editor initialized successfully",
@@ -299,7 +297,7 @@ export const useMonacoEditor = (
    */
   const cleanupEditor = useCallback(() => {
     if (editorRef.current) {
-      const disposables = (editorRef.current as any)._hookDisposables;
+      const disposables = (editorRef.current as unknown as { _hookDisposables?: monaco.IDisposable[] })._hookDisposables;
       if (disposables) {
         disposables.forEach((disposable: monaco.IDisposable) => {
           disposable.dispose();

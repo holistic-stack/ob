@@ -7,11 +7,11 @@
 
 import type {
   MatrixPerformanceMetrics,
-  MatrixOperation,
+
 } from "../types/matrix.types";
 import { MATRIX_CONFIG } from "../config/matrix-config";
 
-import type { Result } from "../../../shared/types/result.types";
+
 
 /**
  * Performance regression detection result
@@ -640,7 +640,7 @@ export class MatrixTelemetryService {
   /**
    * Calculate cache efficiency from operations
    */
-  private calculateCacheEfficiency(operations: OperationEntry[]): number {
+  private calculateCacheEfficiency(_operations: OperationEntry[]): number {
     // This would need to be enhanced with actual cache hit/miss data
     // For now, return a placeholder value
     return 0.85; // 85% cache efficiency

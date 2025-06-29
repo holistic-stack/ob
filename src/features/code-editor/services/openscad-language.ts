@@ -7,7 +7,7 @@
 
 import * as monaco from 'monaco-editor';
 import type { OpenSCADLanguageConfig } from '../types/editor.types';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { tryCatch } from '../../../shared/utils/functional/result';
 
 /**
  * OpenSCAD language configuration

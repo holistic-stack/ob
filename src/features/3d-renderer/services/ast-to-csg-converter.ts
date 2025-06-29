@@ -197,7 +197,7 @@ const convertTranslateNode = async (node: TranslateNode, material: THREE.Materia
       console.log(`[DEBUG][ASTToCSGConverter] Found translation vector from node.v:`, translationVector);
     } else if ((node as unknown as Record<string, unknown>).v) {
       translationVector = (node as unknown as Record<string, unknown>).v as [number, number, number];
-      console.log(`[DEBUG][ASTToCSGConverter] Found translation vector from (node as any).v:`, translationVector);
+      console.log(`[DEBUG][ASTToCSGConverter] Found translation vector from node.v:`, translationVector);
     } else {
       console.warn(`[WARN][ASTToCSGConverter] No translation vector found in translate node, using [0,0,0]`);
     }

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
-  Matrix4,
+
   Mesh,
   BoxGeometry,
   SphereGeometry,
@@ -100,19 +100,33 @@ interface WorkflowMetrics {
 }
 
 /**
+ * Type assertion helpers for workflow results
+ */
+const asWorkflowResult = (result: unknown): Record<string, unknown> => result as Record<string, unknown>;
+const asMeshResult = (result: unknown): { mesh: unknown; metadata: Record<string, unknown> } =>
+  result as { mesh: unknown; metadata: Record<string, unknown> };
+const asMetadata = (obj: unknown): Record<string, unknown> =>
+  (obj as Record<string, unknown>).metadata as Record<string, unknown>;
+
+/**
  * Validate AST node structure
  */
-const validateASTNode = (node: any, expectedType?: string): boolean => {
+const validateASTNode = (node: unknown, expectedType?: string): boolean => {
   if (!node || typeof node !== "object") return false;
-  if (expectedType && node.type !== expectedType) return false;
+
+  const nodeObj = node as Record<string, unknown>;
+  if (expectedType && nodeObj.type !== expectedType) return false;
 
   // Check required properties
-  if (!node.type || !node.location) return false;
+  if (!nodeObj.type || !nodeObj.location) return false;
 
   // Validate location structure
-  if (!node.location.start || !node.location.end) return false;
-  if (typeof node.location.start.line !== "number") return false;
-  if (typeof node.location.start.column !== "number") return false;
+  const location = nodeObj.location as Record<string, unknown>;
+  if (!location.start || !location.end) return false;
+
+  const start = location.start as Record<string, unknown>;
+  if (typeof start.line !== "number") return false;
+  if (typeof start.column !== "number") return false;
 
   return true;
 };
@@ -144,8 +158,8 @@ const validateMesh = (mesh: Mesh, expectedGeometryType?: string): boolean => {
  * Measure workflow performance
  */
 const measureWorkflowPerformance = async (
-  workflowFn: () => Promise<any>,
-): Promise<{ result: any; metrics: Partial<WorkflowMetrics> }> => {
+  workflowFn: () => Promise<unknown>,
+): Promise<{ result: unknown; metrics: Partial<WorkflowMetrics> }> => {
   const startTime = Date.now();
   const memoryBefore = process.memoryUsage?.()?.heapUsed || 0;
 
@@ -161,7 +175,7 @@ const measureWorkflowPerformance = async (
     };
 
     return { result, metrics };
-  } catch (error) {
+  } catch (_error) {
     const endTime = Date.now();
     const memoryAfter = process.memoryUsage?.()?.heapUsed || 0;
 
@@ -327,7 +341,7 @@ describe("End-to-End Workflow Validation", () => {
         // Validate workflow performance
         expect(metrics.success).toBe(true);
         expect(metrics.totalWorkflowTime).toBeLessThan(scenario.timeoutMs);
-        expect(workflowResult.astNodeCount).toBe(scenario.expectedNodes);
+        expect(asWorkflowResult(workflowResult).astNodeCount).toBe(scenario.expectedNodes);
 
         // Validate final store state
         const finalState = useAppStore.getState();
@@ -381,7 +395,7 @@ describe("End-to-End Workflow Validation", () => {
           });
 
         expect(metrics.success).toBe(true);
-        expect(workflowResult.mesh3D.metadata.nodeType).toBe("translate");
+        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe("translate");
       },
       E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs,
     );
@@ -429,7 +443,7 @@ describe("End-to-End Workflow Validation", () => {
 
         expect(metrics.success).toBe(true);
         expect(metrics.totalWorkflowTime).toBeLessThan(scenario.timeoutMs);
-        expect(workflowResult.mesh3D.metadata.transformations).toBeGreaterThan(
+        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).transformations).toBeGreaterThan(
           0,
         );
       },
@@ -467,9 +481,9 @@ describe("End-to-End Workflow Validation", () => {
             expect(unionResult.success).toBe(true);
             if (!unionResult.success)
               throw new Error("Union conversion failed");
-            const unionMesh: any = unionResult.data;
-            expect(validateMesh(unionMesh.mesh)).toBe(true);
-            expect(unionMesh.metadata.nodeType).toBe("union");
+            const unionMesh: unknown = unionResult.data;
+            expect(validateMesh(asMeshResult(unionMesh).mesh as Mesh)).toBe(true);
+            expect(asMeshResult(unionMesh).metadata.nodeType).toBe("union");
 
             // Validate matrix operations for all primitives
             // Note: getStatistics method may not be available in current implementation
@@ -482,8 +496,8 @@ describe("End-to-End Workflow Validation", () => {
           });
 
         expect(metrics.success).toBe(true);
-        expect(workflowResult.astNodeCount).toBe(scenario.expectedNodes);
-        expect(workflowResult.unionMesh.metadata.triangleCount).toBeGreaterThan(
+        expect(asWorkflowResult(workflowResult).astNodeCount).toBe(scenario.expectedNodes);
+        expect(asMetadata(asWorkflowResult(workflowResult).unionMesh).triangleCount).toBeGreaterThan(
           0,
         );
       },
@@ -518,8 +532,8 @@ describe("End-to-End Workflow Validation", () => {
             expect(csgResult.success).toBe(true);
 
             if (!csgResult.success) throw new Error("CSG conversion failed");
-            const mesh3D: any = csgResult.data;
-            expect(mesh3D.metadata.nodeType).toBe(scenario.expectedType);
+            const mesh3D: unknown = csgResult.data;
+            expect(asMetadata(mesh3D).nodeType).toBe(scenario.expectedType);
 
             // Validate matrix operations for boolean operations
             const validationService =
@@ -534,8 +548,8 @@ describe("End-to-End Workflow Validation", () => {
           });
 
         expect(metrics.success).toBe(true);
-        expect(workflowResult.mesh3D.metadata.nodeType).toBe("difference");
-        expect(workflowResult.validationMetrics.operationCount).toBeGreaterThan(
+        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe("difference");
+        expect((asWorkflowResult(workflowResult).validationMetrics as Record<string, unknown>).operationCount).toBeGreaterThan(
           0,
         );
       },
@@ -615,7 +629,7 @@ describe("End-to-End Workflow Validation", () => {
       const code = "rotate([45,0,0]) cube([10,10,10]);";
 
       // Perform workflow multiple times to test consistency
-      const results: any[] = [];
+      const results: unknown[] = [];
 
       for (let i = 0; i < 5; i++) {
         const parseResult = await parseOpenSCADCode(code);
@@ -635,22 +649,30 @@ describe("End-to-End Workflow Validation", () => {
       // All results should be consistent
       const firstResult = results[0];
       results.forEach((result) => {
-        expect(result.metadata.nodeType).toBe(firstResult.metadata.nodeType);
-        expect(result.metadata.triangleCount).toBe(
-          firstResult.metadata.triangleCount,
+        const resultObj = result as Record<string, unknown>;
+        const firstResultObj = firstResult as Record<string, unknown>;
+
+        expect(asMetadata(resultObj).nodeType).toBe(asMetadata(firstResultObj).nodeType);
+        expect(asMetadata(resultObj).triangleCount).toBe(
+          asMetadata(firstResultObj).triangleCount,
         );
 
         // Matrix transformations should be identical
-        expect(result.mesh.rotation.x).toBeCloseTo(
-          firstResult.mesh.rotation.x,
+        const resultMesh = resultObj.mesh as Record<string, unknown>;
+        const firstResultMesh = firstResultObj.mesh as Record<string, unknown>;
+        const resultRotation = resultMesh.rotation as Record<string, unknown>;
+        const firstResultRotation = firstResultMesh.rotation as Record<string, unknown>;
+
+        expect(resultRotation.x).toBeCloseTo(
+          firstResultRotation.x as number,
           5,
         );
-        expect(result.mesh.rotation.y).toBeCloseTo(
-          firstResult.mesh.rotation.y,
+        expect(resultRotation.y).toBeCloseTo(
+          firstResultRotation.y as number,
           5,
         );
-        expect(result.mesh.rotation.z).toBeCloseTo(
-          firstResult.mesh.rotation.z,
+        expect(resultRotation.z).toBeCloseTo(
+          firstResultRotation.z as number,
           5,
         );
       });

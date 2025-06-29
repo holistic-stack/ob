@@ -335,21 +335,21 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
     const report = matrixIntegrationRef.current.getPerformanceReport();
 
-    // Extract data from the service report structure
-    const telemetryData = report?.telemetry ?? {};
-    const cacheData = report?.cache ?? {};
+    // Extract data from the service report structure with proper type assertions
+    const telemetryData = report?.telemetry as Record<string, unknown> ?? {};
+    const cacheData = report?.cache as Record<string, unknown> ?? {};
 
     return {
-      operationCount: telemetryData.operationCount ?? 0,
-      averageExecutionTime: telemetryData.averageExecutionTime ?? 0,
-      errorRate: telemetryData.errorRate ?? 0,
-      memoryUsage: telemetryData.memoryUsage ?? 0,
-      totalOperations: telemetryData.totalOperations ?? 0,
-      successfulOperations: telemetryData.successfulOperations ?? 0,
-      failedOperations: telemetryData.failedOperations ?? 0,
-      totalExecutionTime: telemetryData.totalExecutionTime ?? 0,
-      cacheHitRate: cacheData.hitRate ?? 0,
-      lastOperationTime: telemetryData.lastOperationTime ?? 0
+      operationCount: (telemetryData.operationCount as number) ?? 0,
+      averageExecutionTime: (telemetryData.averageExecutionTime as number) ?? 0,
+      errorRate: (telemetryData.errorRate as number) ?? 0,
+      memoryUsage: (telemetryData.memoryUsage as number) ?? 0,
+      totalOperations: (telemetryData.totalOperations as number) ?? 0,
+      successfulOperations: (telemetryData.successfulOperations as number) ?? 0,
+      failedOperations: (telemetryData.failedOperations as number) ?? 0,
+      totalExecutionTime: (telemetryData.totalExecutionTime as number) ?? 0,
+      cacheHitRate: (cacheData.hitRate as number) ?? 0,
+      lastOperationTime: (telemetryData.lastOperationTime as number) ?? 0
     };
   }, []);
 

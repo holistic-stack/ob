@@ -9,7 +9,7 @@ import * as React from 'react';
 import type * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { Result, AsyncResult } from '../../../shared/types/result.types';
-import type { Camera3D, PerformanceMetrics } from '../../../shared/types/common.types';
+import type { PerformanceMetrics } from '../../../shared/types/common.types';
 
 /**
  * 3D Scene configuration

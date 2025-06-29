@@ -5,9 +5,9 @@
  * assessment, remediation strategies, and performance monitoring following bulletproof-react patterns.
  */
 
-import { Matrix, EigenvalueDecomposition, SingularValueDecomposition, CholeskyDecomposition } from 'ml-matrix';
+import { Matrix, EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
 import type {
-  MatrixValidation,
+
   MatrixValidationResult,
   MatrixOperationResult,
   MatrixPerformanceMetrics
@@ -154,10 +154,10 @@ export class MatrixValidationService {
    */
   private assessNumericalStability(
     conditionNumber: number,
-    determinant?: number,
-    singularValues?: number[]
+    _determinant?: number,
+    _singularValues?: number[]
   ): 'excellent' | 'good' | 'poor' | 'unstable' {
-    const tolerance = this.deps.config.operations.precision;
+    const _tolerance = this.deps.config.operations.precision;
 
     // Check condition number
     if (conditionNumber < 1e3) {
@@ -229,34 +229,7 @@ export class MatrixValidationService {
     console.log(`[DEBUG][MatrixValidationService] Validating matrix ${matrix.rows}x${matrix.columns}`);
 
     try {
-      // Check cache first
-      if (options.useCache !== false) {
-        const cacheKey = getCacheKey(operation, matrixUtils.hash(matrix));
-        const cacheResult = this.deps.cache.get(cacheKey);
-        
-        if (cacheResult.success && cacheResult.data) {
-          console.log(`[DEBUG][MatrixValidationService] Cache hit for matrix validation`);
-          const cachedValidation = cacheResult.data as any as MatrixValidationResult;
-          
-          const operationResult: MatrixOperationResult<MatrixValidationResult> = {
-            result: cachedValidation,
-            performance: {
-              executionTime: Date.now() - startTime,
-              memoryUsed: 0,
-              operationType: operation,
-              matrixSize: [matrix.rows, matrix.columns],
-              cacheHit: true
-            },
-            metadata: {
-              timestamp: Date.now(),
-              operationId: this.generateOperationId(operation),
-              inputHash: matrixUtils.hash(matrix)
-            }
-          };
-          
-          return success(operationResult);
-        }
-      }
+      // Note: Validation results are not cached as the cache interface expects Matrix objects
 
       const tolerance = options.tolerance || this.deps.config.operations.precision;
       const errors: string[] = [];
@@ -299,7 +272,7 @@ export class MatrixValidationService {
 
       // Compute rank
       try {
-        rank = (matrix as any).rank?.() ?? 0;
+        rank = (matrix as unknown as { rank?(): number }).rank?.() ?? 0;
       } catch (err) {
         console.warn(`[WARN][MatrixValidationService] Failed to compute rank: ${err}`);
       }
@@ -307,7 +280,7 @@ export class MatrixValidationService {
       // Compute determinant for square matrices
       if (isSquare) {
         try {
-          determinant = (matrix as any).determinant?.() ?? 0;
+          determinant = (matrix as unknown as { determinant?(): number }).determinant?.() ?? 0;
         } catch (err) {
           console.warn(`[WARN][MatrixValidationService] Failed to compute determinant: ${err}`);
         }
@@ -371,11 +344,7 @@ export class MatrixValidationService {
         remediationStrategies
       };
 
-      // Cache result
-      if (options.useCache !== false) {
-        const cacheKey = getCacheKey(operation, matrixUtils.hash(matrix));
-        this.deps.cache.set(cacheKey, validationResult as any);
-      }
+      // Note: Validation results are not cached as the cache interface expects Matrix objects
 
       const executionTime = Date.now() - startTime;
       this.updatePerformanceMetrics(executionTime, [matrix.rows, matrix.columns]);

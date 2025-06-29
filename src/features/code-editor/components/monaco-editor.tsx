@@ -18,8 +18,6 @@ import type {
 } from "../types/editor.types";
 import type { MonacoEditorConfig } from "../types/editor.types";
 import {
-  success,
-  error,
   tryCatch,
 } from "../../../shared/utils/functional/result";
 import { debounce } from "../../../shared/utils/functional/pipe";
@@ -64,7 +62,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   onUnmount,
 }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [_isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Merge default config with provided config
@@ -90,7 +88,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   const handleEditorMount = useCallback(
     (
       editor: monaco.editor.IStandaloneCodeEditor,
-      monaco: typeof import("monaco-editor"),
+      _monaco: typeof import("monaco-editor"),
     ) => {
       const result = tryCatch(
         () => {

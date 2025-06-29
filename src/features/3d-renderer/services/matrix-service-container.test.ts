@@ -5,7 +5,7 @@
  * lifecycle management, and health monitoring following TDD methodology.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { MatrixServiceContainer } from './matrix-service-container';
 import { MatrixCacheService } from './matrix-cache.service';
 import { MatrixConversionService } from './matrix-conversion.service';
@@ -332,7 +332,7 @@ describe('MatrixServiceContainer', () => {
       console.log('[DEBUG][MatrixServiceContainerTest] Testing initialization failure handling');
       
       // Mock a failing service initialization
-      const originalMatrixCacheService = (global as any).MatrixCacheService;
+      const _originalMatrixCacheService = (global as unknown as { MatrixCacheService: unknown }).MatrixCacheService;
       
       // This test would require more complex mocking to properly test initialization failures
       // For now, we'll test that the container handles missing dependencies gracefully

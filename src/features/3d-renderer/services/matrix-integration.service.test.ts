@@ -297,10 +297,11 @@ describe('MatrixIntegrationService', () => {
       expect(report.validation).toBeDefined();
       expect(report.conversion).toBeDefined();
       
-      // Check telemetry report structure
-      expect(report.telemetry.summary).toBeDefined();
-      expect(report.telemetry.operationBreakdown).toBeDefined();
-      expect(typeof report.telemetry.summary.totalOperations).toBe('number');
+      // Check telemetry report structure with proper type assertions
+      const telemetryReport = report.telemetry as Record<string, unknown>;
+      expect((telemetryReport.summary as Record<string, unknown>)).toBeDefined();
+      expect((telemetryReport.operationBreakdown as Record<string, unknown>)).toBeDefined();
+      expect(typeof ((telemetryReport.summary as Record<string, unknown>).totalOperations as number)).toBe('number');
     });
 
     it('should handle missing services in performance report', () => {

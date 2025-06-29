@@ -14,7 +14,7 @@ vi.mock('three', async () => {
   const actual = await vi.importActual('three');
   
   // Create mocked geometries that extend the base geometry structure
-  const mockBoxGeometry = vi.fn().mockImplementation((width = 1, height = 1, depth = 1) => {
+  const mockBoxGeometry = vi.fn().mockImplementation((_width = 1, _height = 1, _depth = 1) => {
     const geometry = Object.create((actual as any).BufferGeometry.prototype);
     Object.assign(geometry, {
       type: 'BoxGeometry',
@@ -29,7 +29,7 @@ vi.mock('three', async () => {
     return geometry;
   });
 
-  const mockSphereGeometry = vi.fn().mockImplementation((radius = 1, widthSegments = 32, heightSegments = 16) => {
+  const mockSphereGeometry = vi.fn().mockImplementation((_radius = 1, _widthSegments = 32, _heightSegments = 16) => {
     const geometry = Object.create((actual as any).BufferGeometry.prototype);
     Object.assign(geometry, {
       type: 'SphereGeometry',
@@ -44,7 +44,7 @@ vi.mock('three', async () => {
     return geometry;
   });
 
-  const mockCylinderGeometry = vi.fn().mockImplementation((radiusTop = 1, radiusBottom = 1, height = 1, radialSegments = 32) => {
+  const mockCylinderGeometry = vi.fn().mockImplementation((_radiusTop = 1, _radiusBottom = 1, _height = 1, _radialSegments = 32) => {
     const geometry = Object.create((actual as any).BufferGeometry.prototype);
     Object.assign(geometry, {
       type: 'CylinderGeometry',

@@ -324,7 +324,7 @@ export async function initializeCSGForTests(): Promise<void> {
  * Create a test Three.js scene for headless testing
  * Following R3F testing patterns
  */
-export function createTestScene(): { scene: any; camera: any; renderer: any } {
+export function createTestScene(): { scene: unknown; camera: unknown; renderer: unknown } {
   console.log('[DEBUG] Creating test Three.js scene');
 
   // Mock Three.js objects for testing
@@ -354,14 +354,16 @@ export function createTestScene(): { scene: any; camera: any; renderer: any } {
  * Dispose test scene resources properly
  * Following R3F testing patterns
  */
-export function disposeTestScene(scene: any, camera: any, renderer: any): void {
+export function disposeTestScene(scene: unknown, camera: unknown, renderer: unknown): void {
   console.log('[DEBUG] Disposing test scene resources');
 
-  if (scene?.dispose) {
-    scene.dispose();
+  const sceneObj = scene as { dispose?: () => void };
+  if (sceneObj?.dispose) {
+    sceneObj.dispose();
   }
 
-  if (renderer?.dispose) {
-    renderer.dispose();
+  const rendererObj = renderer as { dispose?: () => void };
+  if (rendererObj?.dispose) {
+    rendererObj.dispose();
   }
 }

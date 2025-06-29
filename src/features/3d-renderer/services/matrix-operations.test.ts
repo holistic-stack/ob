@@ -326,7 +326,7 @@ describe('MatrixOperationsAPI', () => {
       console.log('[DEBUG][MatrixOperationsTest] Testing error handling');
       
       const a = matrixFactory.fromArray([[1, 2]]);     // 1x2 matrix
-      const b = matrixFactory.fromArray([[3], [4]]);   // 2x1 matrix
+      const _b = matrixFactory.fromArray([[3], [4]]);   // 2x1 matrix
       const c = matrixFactory.fromArray([[5, 6]]);     // 1x2 matrix
       
       // This should fail due to dimension mismatch

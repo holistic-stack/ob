@@ -5,12 +5,12 @@
  * validating performance, memory usage, and service stability under high load.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';
 import { MatrixIntegrationService } from './matrix-integration.service';
-import { matrixFactory } from '../utils/matrix-adapters';
+
 
 /**
  * Load testing configuration
@@ -187,7 +187,7 @@ describe('Matrix Service Load Testing', () => {
             // Perform additional operation to test chaining
             await integrationService.performRobustInversion(result.data.result);
           }
-        } catch (err) {
+        } catch (_err) {
           const executionTime = Date.now() - operationStart;
           results.push({ success: false, executionTime });
         }
@@ -195,7 +195,7 @@ describe('Matrix Service Load Testing', () => {
       
       const endTime = Date.now();
       const memoryAfter = measureMemoryUsage();
-      const cacheService = serviceContainer.getCacheService();
+      const _cacheService = serviceContainer.getCacheService();
       // const cacheStats = cacheService.getStatistics();
       
       const metrics = calculateMetrics(
@@ -267,7 +267,7 @@ describe('Matrix Service Load Testing', () => {
           
           const executionTime = Date.now() - operationStart;
           results.push({ success: result.success, executionTime });
-        } catch (err) {
+        } catch (_err) {
           const executionTime = Date.now() - operationStart;
           results.push({ success: false, executionTime });
         }
@@ -275,7 +275,7 @@ describe('Matrix Service Load Testing', () => {
       
       const endTime = Date.now();
       const memoryAfter = measureMemoryUsage();
-      const cacheService = serviceContainer.getCacheService();
+      const _cacheService = serviceContainer.getCacheService();
       // const cacheStats = cacheService.getStatistics();
       
       const metrics = calculateMetrics(
@@ -331,7 +331,7 @@ describe('Matrix Service Load Testing', () => {
             const executionTime = Date.now() - operationStart;
             results.push({ success: false, executionTime });
           }
-        } catch (err) {
+        } catch (_err) {
           const executionTime = Date.now() - operationStart;
           results.push({ success: false, executionTime });
         }
@@ -339,7 +339,7 @@ describe('Matrix Service Load Testing', () => {
       
       const endTime = Date.now();
       const memoryAfter = measureMemoryUsage();
-      const cacheService = serviceContainer.getCacheService();
+      const _cacheService = serviceContainer.getCacheService();
       // const cacheStats = cacheService.getStatistics();
       
       const metrics = calculateMetrics(

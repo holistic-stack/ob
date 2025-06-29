@@ -264,7 +264,7 @@ export class MatrixConversionService {
       }
 
       // Check WeakMap cache first
-      const cachedResult = this.conversionCache.get(matrix4 as any);
+      const cachedResult = this.conversionCache.get(matrix4 as unknown as Matrix);
       if (cachedResult && options.useCache !== false) {
         console.log(`[DEBUG][MatrixConversionService] WeakMap cache hit for Matrix4 conversion`);
         return success(this.createOperationResult(cachedResult, operation, startTime, [4, 4], true));
@@ -277,7 +277,7 @@ export class MatrixConversionService {
 
         if (cacheResult.success && cacheResult.data) {
           console.log(`[DEBUG][MatrixConversionService] Persistent cache hit for Matrix4 conversion`);
-          this.conversionCache.set(matrix4 as any, cacheResult.data);
+          this.conversionCache.set(matrix4 as unknown as Matrix, cacheResult.data);
           return success(this.createOperationResult(cacheResult.data, operation, startTime, [4, 4], true));
         }
       }
@@ -287,7 +287,7 @@ export class MatrixConversionService {
 
       // Cache results
       if (options.useCache !== false) {
-        this.conversionCache.set(matrix4 as any, result);
+        this.conversionCache.set(matrix4 as unknown as Matrix, result);
         const cacheKey = getCacheKey(operation, matrix4.elements.join(','));
         this.deps.cache.set(cacheKey, result);
       }
@@ -334,12 +334,7 @@ export class MatrixConversionService {
         return error(`Matrix must be 4x4 for Matrix4 conversion, got ${matrix.rows}x${matrix.columns}`);
       }
 
-      // Check WeakMap cache first
-      const cachedResult = this.conversionCache.get(matrix);
-      if (cachedResult && options.useCache !== false) {
-        console.log(`[DEBUG][MatrixConversionService] WeakMap cache hit for ml-matrix conversion`);
-        return success(this.createOperationResult(cachedResult as unknown as Matrix4, operation, startTime, [4, 4], true));
-      }
+      // Note: Matrix4 results are not cached in conversionCache as it expects Matrix-to-Matrix conversions
 
       // Check persistent cache
       if (options.useCache !== false) {
@@ -349,7 +344,6 @@ export class MatrixConversionService {
         if (cacheResult.success && cacheResult.data) {
           console.log(`[DEBUG][MatrixConversionService] Persistent cache hit for ml-matrix conversion`);
           const result = matrixAdapter.toThreeMatrix4(cacheResult.data);
-          this.conversionCache.set(matrix, result as any);
           return success(this.createOperationResult(result, operation, startTime, [4, 4], true));
         }
       }
@@ -357,9 +351,8 @@ export class MatrixConversionService {
       // Perform conversion
       const result = matrixAdapter.toThreeMatrix4(matrix);
 
-      // Cache results
+      // Cache results in persistent cache only (Matrix4 results not cached in conversionCache)
       if (options.useCache !== false) {
-        this.conversionCache.set(matrix, result as any);
         const cacheKey = getCacheKey(operation, matrixUtils.hash(matrix));
         this.deps.cache.set(cacheKey, matrix);
       }
@@ -453,7 +446,8 @@ export class MatrixConversionService {
             );
 
             const invS = Matrix.diag(invSingularValues);
-            result = (svd as any).V.mmul(invS).mmul((svd as any).U.transpose());
+            const svdTyped = svd as unknown as { V: Matrix; U: Matrix };
+            result = svdTyped.V.mmul(invS).mmul(svdTyped.U.transpose());
 
             console.log(`[DEBUG][MatrixConversionService] SVD-based pseudo-inverse completed successfully`);
 

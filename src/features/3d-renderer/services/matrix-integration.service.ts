@@ -1,32 +1,16 @@
 /**
  * Matrix Integration Service
- * 
+ *
  * Integration layer that connects the new matrix services with existing CSG operations,
- * providing e      const enhancedResult: EnhancedMatrixResult<Matrix> = {
-        result: matrix,
-        performance: {
-          executionTime,
-          memoryUsed: conversionResult.data.performance.memoryUsed,
-          cacheHit: conversionResult.data.performance.cacheHit,
-          operationType: operation
-        },
-        metadata: {
-          timestamp: Date.now(),
-          operationId: this.generateOperationId(operation),
-          matrixSize: [matrix.rows, matrix.columns]
-        }
-      };
-
-      // Apply conditional assignment for exactOptionalPropertyTypes
-      if (validation) {
-        (enhancedResult as any).validation = validation;
-      }operations with validation, telemetry, and robust error handling.
+ * providing enhanced operations with validation, telemetry, and robust error handling.
  */
 
 import { Matrix } from 'ml-matrix';
 import { Matrix3, Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';
 import type { MatrixValidationResult } from '../types/matrix.types';
+import type { MatrixValidationOptions } from './matrix-validation.service';
+import type { MatrixConversionOptions } from './matrix-conversion.service';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 
@@ -101,19 +85,12 @@ export class MatrixIntegrationService {
       const telemetryService = this.serviceContainer.getTelemetryService();
 
       // Prepare conversion options with conditional assignment
-      const conversionOptions: any = {};
-      if (options.useCache !== undefined) {
-        conversionOptions.useCache = options.useCache;
-      }
-      if (options.useValidation !== undefined) {
-        conversionOptions.validateInput = options.useValidation;
-      }
-      if (options.precision !== undefined) {
-        conversionOptions.precision = options.precision;
-      }
-      if (options.timeout !== undefined) {
-        conversionOptions.timeout = options.timeout;
-      }
+      const conversionOptions: MatrixConversionOptions = {
+        ...(options.useCache !== undefined && { useCache: options.useCache }),
+        ...(options.useValidation !== undefined && { validateInput: options.useValidation }),
+        ...(options.precision !== undefined && { precision: options.precision }),
+        ...(options.timeout !== undefined && { timeout: options.timeout })
+      };
 
       // Perform conversion
       const conversionResult = await conversionService.convertMatrix4ToMLMatrix(matrix4, conversionOptions);
@@ -132,14 +109,12 @@ export class MatrixIntegrationService {
       // Perform validation if requested
       let validation: MatrixValidationResult | undefined;
       if (validationService && options.useValidation) {
-        const validationOptions: any = {
+        const validationOptions: MatrixValidationOptions = {
           computeEigenvalues: false,
           computeSVD: false,
-          enableDetailedAnalysis: true
+          enableDetailedAnalysis: true,
+          ...(options.useCache !== undefined && { useCache: options.useCache })
         };
-        if (options.useCache !== undefined) {
-          validationOptions.useCache = options.useCache;
-        }
 
         const validationResult = await validationService.validateMatrix(matrix, validationOptions);
 
@@ -260,6 +235,7 @@ export class MatrixIntegrationService {
 
       const enhancedResult: EnhancedMatrixResult<Matrix> = {
         result: inversionResult.data.result,
+        ...(validation && { validation }),
         performance: {
           executionTime,
           memoryUsed: inversionResult.data.performance.memoryUsed,
@@ -272,11 +248,6 @@ export class MatrixIntegrationService {
           warnings
         }
       };
-
-      // Apply conditional assignment for exactOptionalPropertyTypes
-      if (validation) {
-        (enhancedResult as any).validation = validation;
-      }
 
       console.log(`[DEBUG][MatrixIntegrationService] Enhanced inversion completed in ${executionTime}ms`);
       return success(enhancedResult);
@@ -310,20 +281,12 @@ export class MatrixIntegrationService {
       const telemetryService = this.serviceContainer.getTelemetryService();
 
       // Compute normal matrix using robust methods
-      const conversionOptions: any = {
-        enableSVDFallback: options.enableSVDFallback !== false
+      const conversionOptions: MatrixConversionOptions = {
+        enableSVDFallback: options.enableSVDFallback !== false,
+        ...(options.useCache !== undefined && { useCache: options.useCache }),
+        ...(options.precision !== undefined && { precision: options.precision }),
+        ...(options.useValidation !== undefined && { validateInput: options.useValidation })
       };
-
-      // Apply conditional assignments for exactOptionalPropertyTypes
-      if (options.useCache !== undefined) {
-        conversionOptions.useCache = options.useCache;
-      }
-      if (options.precision !== undefined) {
-        conversionOptions.precision = options.precision;
-      }
-      if (options.useValidation !== undefined) {
-        conversionOptions.validateInput = options.useValidation;
-      }
 
       const normalResult = await conversionService.computeRobustNormalMatrix(modelMatrix, conversionOptions);
 
@@ -454,14 +417,14 @@ export class MatrixIntegrationService {
    * Get comprehensive performance report
    */
   getPerformanceReport(): {
-    telemetry?: any;
-    cache?: any;
-    validation?: any;
-    conversion?: any;
+    telemetry?: unknown;
+    cache?: unknown;
+    validation?: unknown;
+    conversion?: unknown;
   } {
     console.log('[DEBUG][MatrixIntegrationService] Generating performance report');
 
-    const report: any = {};
+    const report: Record<string, unknown> = {};
 
     try {
       const telemetryService = this.serviceContainer.getTelemetryService();

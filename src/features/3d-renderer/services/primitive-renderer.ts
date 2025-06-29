@@ -12,10 +12,9 @@ import type {
   MaterialFactory,
   PrimitiveParams,
   MaterialConfig,
-  Mesh3D,
-  RenderingError
+  Mesh3D
 } from '../types/renderer.types';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { error, tryCatch } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 import { convertASTNodeToCSG } from './ast-to-csg-converter';
 
@@ -176,10 +175,10 @@ export const createMaterialFactory = (): MaterialFactory => ({
 /**
  * Parse OpenSCAD parameters from AST node
  */
-const parseParameters = (node: ASTNode): Record<string, unknown> => {
+const _parseParameters = (node: ASTNode): Record<string, unknown> => {
   // In the new parser structure, parameters are direct properties of the node
   // Extract only the non-standard properties (not type, location)
-  const { type, location, ...parameters } = node as any;
+  const { type: _type, location: _location, ...parameters } = node as unknown as Record<string, unknown>;
   return parameters;
 };
 
@@ -218,7 +217,7 @@ const applyTransformations = (
         case 'color': {
           const color = transform.parameters.color as string;
           if (color && mesh.material instanceof THREE.Material) {
-            (mesh.material as any).color = new THREE.Color(color);
+            (mesh.material as THREE.Material & { color?: THREE.Color }).color = new THREE.Color(color);
           }
           break;
         }

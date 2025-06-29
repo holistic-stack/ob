@@ -8,7 +8,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import type { EditorSelection } from "../types/editor.types";
+
 
 import { StoreConnectedEditor } from "./store-connected-editor";
 

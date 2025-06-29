@@ -5,17 +5,13 @@
  * Uses real OpenSCAD parser instances (no mocks) as per project guidelines.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { 
   UnifiedParserService, 
   createUnifiedParserService, 
   getGlobalUnifiedParserService, 
   disposeGlobalUnifiedParserService,
-  parseOpenSCADCodeUnified,
-  type UnifiedParseResult,
-  type OutlineItem,
-  type DocumentSymbol,
-  type HoverInfo
+  parseOpenSCADCodeUnified
 } from './unified-parser-service';
 
 describe('UnifiedParserService', () => {

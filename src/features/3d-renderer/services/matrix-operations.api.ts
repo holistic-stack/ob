@@ -6,7 +6,7 @@
  */
 
 import { Matrix, inverse, LuDecomposition, QrDecomposition, EigenvalueDecomposition, CholeskyDecomposition } from 'ml-matrix';
-import { Matrix3, Matrix4, Vector3, Quaternion, Euler } from 'three';
+import { Matrix4, Vector3, Quaternion, Euler } from 'three';
 import type { 
   MatrixOperation,
   MatrixOperationResult,
@@ -15,12 +15,10 @@ import type {
   MatrixDecomposition,
   MatrixValidation,
   TransformationMatrix,
-  RotationMatrix,
-  ThreeJSTransformData,
-  MatrixConfigOverride
+
 } from '../types/matrix.types';
 import { MatrixCacheService } from './matrix-cache.service';
-import { matrixAdapter, matrixFactory, matrixUtils } from '../utils/matrix-adapters';
+import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters';
 import { MATRIX_CONFIG, getCacheKey, isMatrixSizeValid, getOperationTimeout } from '../config/matrix-config';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
@@ -87,7 +85,7 @@ export class MatrixOperationsAPI {
   private validateOperation(
     operation: MatrixOperation,
     matrices: Matrix[],
-    parameters?: Record<string, unknown>
+    _parameters?: Record<string, unknown>
   ): MatrixValidation {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -236,7 +234,7 @@ export class MatrixOperationsAPI {
     const cacheKey = getCacheKey('pseudoInverse', matrixUtils.hash(matrix));
     return this.executeOperation('pseudoInverse', [matrix], () => {
       // Use ML-Matrix pseudoInverse method with proper type handling
-      return (matrix as any).pseudoInverse();
+      return (matrix as unknown as { pseudoInverse(): Matrix }).pseudoInverse();
     }, cacheKey);
   }
 
@@ -247,7 +245,7 @@ export class MatrixOperationsAPI {
     const cacheKey = getCacheKey('determinant', matrixUtils.hash(matrix));
     return this.executeOperation('determinant', [matrix], () => {
       // Use ML-Matrix determinant method with proper type handling
-      return (matrix as any).determinant();
+      return (matrix as unknown as { determinant(): number }).determinant();
     }, cacheKey);
   }
 
@@ -260,7 +258,7 @@ export class MatrixOperationsAPI {
     const cacheKey = getCacheKey('rank', matrixUtils.hash(matrix));
     return this.executeOperation('rank', [matrix], () => {
       // Use ML-Matrix rank method with proper type handling
-      return (matrix as any).rank();
+      return (matrix as unknown as { rank(): number }).rank();
     }, cacheKey);
   }
 
@@ -271,7 +269,7 @@ export class MatrixOperationsAPI {
     const cacheKey = getCacheKey('decompose', matrixUtils.hash(matrix));
     
     return this.executeOperation('lu', [matrix], () => {
-      const decomposition: any = {}; // Use any to allow property assignment
+      const decomposition: Record<string, unknown> = {}; // Use Record to allow property assignment
       
       try {
         if (matrixUtils.isSquare(matrix)) {
@@ -290,7 +288,7 @@ export class MatrixOperationsAPI {
         };
 
         if (matrix.rows >= matrix.columns) {
-          const svd = (matrix as any).svd(); // Use any for svd method
+          const svd = (matrix as unknown as { svd(): { U: Matrix; s: number[]; V: Matrix } }).svd(); // Use proper typing for svd method
           decomposition.svd = {
             U: svd.U,
             S: Matrix.diag(svd.s),

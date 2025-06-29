@@ -20,7 +20,7 @@ import { Vector } from "../utils/Vector";
 import { BSPTreeNode, BSPTreeService } from "./bsp-tree.service";
 import { MatrixIntegrationService } from "./matrix-integration.service";
 import { matrixServiceContainer } from "./matrix-service-container";
-import type { PolygonData, VertexData, CSGData } from "../types/geometry.types";
+import type { PolygonData, VertexData, CSGData, SharedData } from "../types/geometry.types";
 import {
   createVertex,
   createPolygon,
@@ -144,8 +144,8 @@ export class CSGCoreService implements CSGData {
           const nx = normalattr.array[vp];
           const ny = normalattr.array[vp + 1];
           const nz = normalattr.array[vp + 2];
-          const u = uvattr?.array?.[vt] || 0;
-          const v = uvattr?.array?.[vt + 1] || 0;
+          const u = uvattr?.array?.[vt] ?? 0;
+          const v = uvattr?.array?.[vt + 1] ?? 0;
 
           const color = colorattr?.array
             ? new Vector(
@@ -167,7 +167,7 @@ export class CSGCoreService implements CSGData {
         if (objectIndex === undefined && grps && grps.length > 0) {
           for (const grp of grps) {
             if (i >= grp.start && i < grp.start + grp.count) {
-              materialIndex = grp.materialIndex;
+              materialIndex = grp.materialIndex ?? { id: "0" };
               break;
             }
           }
@@ -245,11 +245,11 @@ export class CSGCoreService implements CSGData {
             "id" in p.shared
               ? String(p.shared.id)
               : String(p.shared);
-          if (!grps[sharedKey]) grps[sharedKey] = [];
+          grps[sharedKey] ??= [];
         }
 
         if (pvlen && pvs[0]?.color !== undefined) {
-          if (!colors) colors = new NBuf3(triCount * 3 * 3);
+          colors ??= new NBuf3(triCount * 3 * 3);
         }
 
         for (let j = 3; j <= pvlen; j++) {
@@ -382,7 +382,7 @@ export class CSGCoreService implements CSGData {
    */
   static async fromMesh(
     mesh: Mesh,
-    objectIndex?: any,
+    objectIndex?: number,
   ): Promise<Result<CSGCoreService, string>> {
     console.log(
       "[DEBUG][CSGCoreService] Creating CSG from Mesh with enhanced matrix validation",
@@ -914,10 +914,10 @@ export class Plane {
  */
 export class Polygon {
   public vertices: Vertex[];
-  public shared: any;
+  public shared: SharedData;
   public plane: Plane;
 
-  constructor(vertices: Vertex[], shared: any) {
+  constructor(vertices: Vertex[], shared: SharedData) {
     if (vertices.length < 3) {
       throw new Error("Polygon must have at least 3 vertices");
     }
@@ -971,7 +971,7 @@ export class Node {
             uv: v.uv,
           };
           if (v.color) {
-            (vertexData as any).color = v.color;
+            (vertexData as VertexData & { color?: unknown }).color = v.color;
           }
           return vertexData;
         }),
@@ -1038,7 +1038,7 @@ export class Node {
           uv: v.uv,
         };
         if (v.color) {
-          (vertexData as any).color = v.color;
+          (vertexData as VertexData & { color?: unknown }).color = v.color;
         }
         return vertexData;
       }),
@@ -1093,7 +1093,7 @@ export class Node {
           uv: v.uv,
         };
         if (v.color) {
-          (vertexData as any).color = v.color;
+          (vertexData as VertexData & { color?: unknown }).color = v.color;
         }
         return vertexData;
       }),

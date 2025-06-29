@@ -10,8 +10,7 @@ import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';
 import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixCacheService } from './matrix-cache.service';
-import { MatrixTelemetryService } from './matrix-telemetry.service';
+
 
 /**
  * Recovery test scenarios
@@ -129,7 +128,7 @@ const createProblematicMatrix = (type: 'singular' | 'illConditioned' | 'large' |
 /**
  * Recovery test metrics
  */
-interface RecoveryTestMetrics {
+interface _RecoveryTestMetrics {
   readonly totalOperations: number;
   readonly successfulOperations: number;
   readonly failedOperations: number;
@@ -168,7 +167,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it('should recover from cache service failures', async () => {
       console.log('[DEBUG][MatrixServiceRecoveryTest] Testing cache service failure recovery');
       
-      const config = RECOVERY_SCENARIOS.serviceFailure;
+      const _config = RECOVERY_SCENARIOS.serviceFailure;
       const cacheService = serviceContainer.getCacheService();
       
       // Simulate cache failures by mocking cache operations
@@ -210,7 +209,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           
           const recoveryTime = Date.now() - startTime;
           results.push({ success: result.success, recoveryTime });
-        } catch (err) {
+        } catch (_err) {
           const recoveryTime = Date.now() - startTime;
           results.push({ success: false, recoveryTime });
         }
@@ -265,7 +264,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           });
           
           results.push(result.success);
-        } catch (err) {
+        } catch (_err) {
           results.push(false);
         }
       }
@@ -313,10 +312,10 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           if (global.gc) {
             global.gc();
           }
-        } catch (err) {
+        } catch (_err) {
           const memoryAfter = process.memoryUsage?.()?.heapUsed || 0;
           const memoryUsage = memoryAfter - memoryBefore;
-          
+
           results.push({ success: false, memoryUsage });
         }
       }
@@ -372,7 +371,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           if (matrixType === 'invalid' && result.success) {
             expect(result.data.result?.errors.length).toBeGreaterThan(0);
           }
-        } catch (err) {
+        } catch (_err) {
           results.push({
             type: matrixType,
             success: false,
@@ -441,7 +440,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
             }
             results.push({ success: false, circuitOpen: false });
           }
-        } catch (err) {
+        } catch (_err) {
           consecutiveFailures++;
           if (consecutiveFailures >= maxConsecutiveFailures) {
             circuitOpen = true;

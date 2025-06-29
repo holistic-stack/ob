@@ -5,7 +5,7 @@
  * higher-order functions, and composition utilities.
  */
 
-import type { Result, AsyncResult } from './result.types';
+
 
 /**
  * Function composition types

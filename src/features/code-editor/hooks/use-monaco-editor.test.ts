@@ -11,7 +11,7 @@ import { useMonacoEditor } from "./use-monaco-editor";
 import { createAppStore } from "../../store/app-store";
 
 // Mock Monaco Editor
-const mockEditor = {
+const _mockEditor = {
   getValue: vi.fn(() => ""),
   setValue: vi.fn(),
   getPosition: vi.fn(() => ({ lineNumber: 1, column: 1 })),

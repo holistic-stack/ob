@@ -315,7 +315,7 @@ export class MatrixConfigManagerService {
         current[key] = {};
       }
       if (key) {
-        current = current[key];
+        current = current[key] as Record<string, unknown>;
       }
     }
 
