@@ -111,7 +111,7 @@ describe('MatrixConfigManagerService', () => {
     it('should apply and track configuration overrides', () => {
       console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration overrides');
       
-      const originalMaxSize = service.getCurrentConfig().cache.maxCacheSize;
+      const _originalMaxSize = service.getCurrentConfig().cache.maxCacheSize;
       
       const result = service.applyOverride({
         cache: {
@@ -194,11 +194,15 @@ describe('MatrixConfigManagerService', () => {
       
       const addAdjustment = adjustments.find(a => a.operation === 'add');
       expect(addAdjustment).toBeDefined();
-      expect(addAdjustment?.suggestedThreshold).toBeGreaterThan(addAdjustment?.currentThreshold!);
-      
+      if (addAdjustment) {
+        expect(addAdjustment.suggestedThreshold).toBeGreaterThan(addAdjustment.currentThreshold);
+      }
+
       const multiplyAdjustment = adjustments.find(a => a.operation === 'multiply');
       expect(multiplyAdjustment).toBeDefined();
-      expect(multiplyAdjustment?.suggestedThreshold).toBeLessThan(multiplyAdjustment?.currentThreshold!);
+      if (multiplyAdjustment) {
+        expect(multiplyAdjustment.suggestedThreshold).toBeLessThan(multiplyAdjustment.currentThreshold);
+      }
       
       // Should not suggest adjustment for transpose due to insufficient data
       const transposeAdjustment = adjustments.find(a => a.operation === 'transpose');

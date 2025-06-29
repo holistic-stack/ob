@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Matrix } from 'ml-matrix';
+
 import { Matrix4, Vector3, Quaternion } from 'three';
 import { MatrixOperationsAPI } from './matrix-operations.api';
 import { matrixFactory, matrixUtils } from '../utils/matrix-adapters';

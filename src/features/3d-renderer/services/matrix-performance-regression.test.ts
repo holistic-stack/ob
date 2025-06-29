@@ -5,7 +5,7 @@
  * matrix services, providing continuous performance validation and alerting.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';

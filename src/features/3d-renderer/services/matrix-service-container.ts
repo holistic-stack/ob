@@ -56,7 +56,7 @@ export interface ContainerHealthReport {
  * Matrix Service Container with dependency injection and lifecycle management
  */
 export class MatrixServiceContainer {
-  private readonly services = new Map<string, any>();
+  private readonly services = new Map<string, unknown>();
   private readonly serviceStates = new Map<string, ServiceLifecycleState>();
   private readonly serviceStartTimes = new Map<string, number>();
   private readonly serviceErrorCounts = new Map<string, number>();
@@ -151,7 +151,7 @@ export class MatrixServiceContainer {
       this.setServiceState('telemetry', 'initializing');
       try {
         const telemetryDeps: MatrixTelemetryDependencies = {
-          config: this.getConfigManager()?.getCurrentConfig() || MATRIX_CONFIG
+          config: this.getConfigManager()?.getCurrentConfig() ?? MATRIX_CONFIG
         };
         const telemetryService = new MatrixTelemetryService(telemetryDeps);
         this.registerService('telemetry', telemetryService);
@@ -174,7 +174,7 @@ export class MatrixServiceContainer {
     const cacheService = this.getService<MatrixCacheService>('cache');
     const telemetryService = this.getService<MatrixTelemetryService>('telemetry');
     const configManager = this.getService<MatrixConfigManagerService>('configManager');
-    const currentConfig = configManager?.getCurrentConfig() || MATRIX_CONFIG;
+    const currentConfig = configManager?.getCurrentConfig() ?? MATRIX_CONFIG;
 
     // Initialize conversion service
     this.setServiceState('conversion', 'initializing');
@@ -231,7 +231,7 @@ export class MatrixServiceContainer {
   /**
    * Register a service in the container
    */
-  private registerService(name: string, service: any): void {
+  private registerService(name: string, service: unknown): void {
     this.services.set(name, service);
     this.serviceStartTimes.set(name, Date.now());
     this.serviceErrorCounts.set(name, 0);
@@ -250,7 +250,7 @@ export class MatrixServiceContainer {
    * Increment error count for a service
    */
   private incrementErrorCount(name: string): void {
-    const current = this.serviceErrorCounts.get(name) || 0;
+    const current = this.serviceErrorCounts.get(name) ?? 0;
     this.serviceErrorCounts.set(name, current + 1);
   }
 
@@ -325,25 +325,25 @@ export class MatrixServiceContainer {
     let healthyCount = 0;
 
     for (const [name, service] of this.services.entries()) {
-      const state = this.serviceStates.get(name) || 'uninitialized';
-      const startTime = this.serviceStartTimes.get(name) || Date.now();
-      const errorCount = this.serviceErrorCounts.get(name) || 0;
+      const state = this.serviceStates.get(name) ?? 'uninitialized';
+      const startTime = this.serviceStartTimes.get(name) ?? Date.now();
+      const errorCount = this.serviceErrorCounts.get(name) ?? 0;
       const uptime = Date.now() - startTime;
       
       let healthy = state === 'running' && errorCount < 5;
 
       // Perform service-specific health checks
       try {
-        if (name === 'cache' && service.getStats) {
-          const stats = service.getStats();
+        if (name === 'cache' && (service as any).getStats) {
+          const stats = (service as any).getStats();
           if (stats.hitRate < 0.1) {
             healthy = false;
             recommendations.push('Cache hit rate is very low - consider reviewing cache strategy');
           }
         }
 
-        if (name === 'telemetry' && service.getPerformanceMetrics) {
-          const metrics = service.getPerformanceMetrics();
+        if (name === 'telemetry' && (service as any).getPerformanceMetrics) {
+          const metrics = (service as any).getPerformanceMetrics();
           if (metrics.failedOperations > metrics.operationCount * 0.1) {
             healthy = false;
             recommendations.push('High failure rate detected in telemetry - investigate operation failures');
@@ -401,8 +401,8 @@ export class MatrixServiceContainer {
       
       // Stop the service if it has a cleanup method
       const service = this.services.get(serviceName);
-      if (service && typeof service.dispose === 'function') {
-        await service.dispose();
+      if (service && typeof (service as any).dispose === 'function') {
+        await (service as any).dispose();
       }
 
       this.setServiceState(serviceName, 'stopped');
@@ -431,8 +431,8 @@ export class MatrixServiceContainer {
       try {
         this.setServiceState(name, 'stopping');
         
-        if (service && typeof service.dispose === 'function') {
-          await service.dispose();
+        if (service && typeof (service as any).dispose === 'function') {
+          await (service as any).dispose();
         }
         
         this.setServiceState(name, 'stopped');

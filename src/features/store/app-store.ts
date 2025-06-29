@@ -20,11 +20,7 @@ import type {
   PerformanceMetrics,
 } from "../../shared/types/common.types";
 import type { AsyncResult } from "../../shared/types/result.types";
-import {
-  success,
-  error as createError,
-  tryCatchAsync,
-} from "../../shared/utils/functional/result";
+import { tryCatchAsync } from "../../shared/utils/functional/result";
 import { debounce } from "../../shared/utils/functional/pipe";
 import { UnifiedParserService } from "../openscad-parser/services";
 import { restructureAST } from "../3d-renderer/services/ast-restructuring-service";
@@ -154,12 +150,12 @@ export const createAppStore = (
 
                 // Trigger debounced parsing if enabled
                 if (state.config.enableRealTimeParsing) {
-                  debouncedParseInternal(code);
+                  void debouncedParseInternal(code);
                 }
 
                 // Trigger debounced auto-save if enabled
                 if (state.config.enableAutoSave) {
-                  debouncedSaveInternal();
+                  void debouncedSaveInternal();
                 }
               });
             },
@@ -335,6 +331,13 @@ export const createAppStore = (
 
             debouncedParse: (code: string) => {
               debouncedParseInternal(code);
+            },
+
+            // Alias for backwards compatibility
+            parseAST: async (
+              code: string,
+            ): AsyncResult<ReadonlyArray<ASTNode>, string> => {
+              return get().parseCode(code);
             },
 
             addParsingError: (errorMessage: string) => {
@@ -671,7 +674,7 @@ export const appStoreInstance = appStore;
  * Supports both selector and non-selector usage patterns
  */
 export const useAppStore = (() => {
-  const hook = (selector?: (state: any) => any) => {
+  const hook = (selector?: (state: AppStore) => any) => {
     const state = appStore(selector ? selector : (state) => state);
 
     // If a selector was provided, return its result directly
@@ -718,7 +721,7 @@ export const useAppStore = (() => {
         meshes: state.rendering.meshes,
         errors: state.rendering.renderErrors,
         camera: state.rendering.camera,
-        isRendering: state.rendering.isRendering,
+        isLoading: state.rendering.isRendering,
         lastRendered: state.rendering.lastRendered,
         renderTime: state.rendering.renderTime,
       },

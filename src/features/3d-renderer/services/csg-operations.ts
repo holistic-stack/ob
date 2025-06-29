@@ -7,11 +7,9 @@
 
 import * as THREE from 'three';
 import { CSG } from './csg-core.service';
-import type { 
-  CSGOperation, 
-  CSGConfig, 
-  Mesh3D,
-  RenderingError 
+import type {
+  CSGOperation,
+  CSGConfig
 } from '../types/renderer.types';
 import { success, error, tryCatch } from '../../../shared/utils/functional/result';
 import type { Result, AsyncResult } from '../../../shared/types/result.types';
@@ -80,8 +78,8 @@ const optimizeMeshForCSG = (mesh: THREE.Mesh): Result<THREE.Mesh, string> => {
       optimizedMesh.geometry = optimizedMesh.geometry.clone();
 
       // Try to merge vertices if method exists (newer Three.js versions)
-      if (typeof (optimizedMesh.geometry as any).mergeVertices === 'function') {
-        (optimizedMesh.geometry as any).mergeVertices();
+      if (typeof (optimizedMesh.geometry as unknown as { mergeVertices?: () => void }).mergeVertices === 'function') {
+        (optimizedMesh.geometry as unknown as { mergeVertices: () => void }).mergeVertices();
       }
 
       // Compute normals if missing
@@ -428,7 +426,7 @@ export const validateMeshesForCSG = (meshes: ReadonlyArray<THREE.Mesh>): Result<
  */
 export const estimateCSGComplexity = (meshes: ReadonlyArray<THREE.Mesh>): number => {
   return meshes.reduce((sum, mesh) => {
-    if (mesh.geometry && mesh.geometry.attributes.position) {
+    if (mesh.geometry?.attributes.position) {
       return sum + (mesh.geometry.attributes.position.count / 3);
     }
     return sum;

@@ -18,15 +18,42 @@ import type {
   RenderingMetrics,
   RenderingError
 } from '../types/renderer.types';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import type {
+  ASTNode,
+  CubeNode as _OpenSCADCubeNode,
+  SphereNode as _OpenSCADSphereNode,
+  CylinderNode as _OpenSCADCylinderNode
+} from '@holistic-stack/openscad-parser';
+import { success as _success, error as _error, tryCatch } from '../../../shared/utils/functional/result';
+
+// Type-safe interfaces for AST node parameters using proper OpenSCAD parser types
+interface _CubeNodeParams {
+  type: 'cube';
+  parameters?: { size?: number | number[] };
+  size?: number | number[];
+}
+
+interface _SphereNodeParams {
+  type: 'sphere';
+  parameters?: { radius?: number; segments?: number };
+  r?: number;
+  fn?: number;
+}
+
+interface _CylinderNodeParams {
+  type: 'cylinder';
+  parameters?: { radius?: number; height?: number; segments?: number };
+  radius?: number;
+  height?: number;
+  fn?: number;
+}
 import { renderASTNode } from '../services/primitive-renderer';
 
 /**
  * Simple performance measurement utility
  * Inline implementation to avoid import issues with ad blockers
  */
-const measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
+const _measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
   const start = performance.now();
   const result = fn();
   const end = performance.now();
@@ -59,9 +86,9 @@ const SceneContent: React.FC<{
   onRenderError?: (error: RenderingError) => void;
   onPerformanceUpdate?: (metrics: RenderingMetrics) => void;
 }> = ({ ast, camera, config, onRenderComplete, onRenderError, onPerformanceUpdate }) => {
-  const { scene, gl, size } = useThree();
+  const { scene, gl: _gl, size: _size } = useThree();
   const [meshes, setMeshes] = useState<ReadonlyArray<Mesh3D>>([]);
-  const [isRendering, setIsRendering] = useState(false);
+  const [_isRendering, setIsRendering] = useState(false);
   const frameCount = useRef(0);
   const lastFrameTime = useRef(performance.now());
 
@@ -74,21 +101,29 @@ const SceneContent: React.FC<{
 
       switch (node.type) {
         case 'cube': {
-          const size = (node as any).parameters?.size || (node as any).size || [1, 1, 1];
-          const [x, y, z] = Array.isArray(size) ? size : [size, size, size];
+          const cubeNode = node;
+          const size = cubeNode.size;
+          // Handle ParameterValue type - extract numeric values
+          const sizeValue = typeof size === 'number' ? size : 1;
+          const [x, y, z] = Array.isArray(size) ?
+            (size as number[]).map(v => typeof v === 'number' ? v : 1) :
+            [sizeValue, sizeValue, sizeValue];
           geometry = new THREE.BoxGeometry(x, y, z);
           break;
         }
         case 'sphere': {
-          const radius = (node as any).parameters?.radius || (node as any).r || 1;
-          const segments = (node as any).parameters?.segments || (node as any).fn || 32;
+          const sphereNode = node;
+          const radius = typeof sphereNode.radius === 'number' ? sphereNode.radius :
+                        (typeof sphereNode.diameter === 'number' ? sphereNode.diameter / 2 : 1);
+          const segments = typeof sphereNode.fn === 'number' ? sphereNode.fn : 32;
           geometry = new THREE.SphereGeometry(radius, segments, segments);
           break;
         }
         case 'cylinder': {
-          const radius = (node as any).parameters?.radius || (node as any).radius || 1;
-          const height = (node as any).parameters?.height || (node as any).height || 1;
-          const segments = (node as any).parameters?.segments || (node as any).fn || 32;
+          const cylinderNode = node;
+          const radius = typeof cylinderNode.r === 'number' ? cylinderNode.r : 1;
+          const height = typeof cylinderNode.h === 'number' ? cylinderNode.h : 1;
+          const segments = typeof cylinderNode.$fn === 'number' ? cylinderNode.$fn : 32;
           geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
           break;
         }
@@ -128,7 +163,7 @@ const SceneContent: React.FC<{
 
       // Calculate bounding box
       geometry.computeBoundingBox();
-      const boundingBox = geometry.boundingBox || new THREE.Box3();
+      const boundingBox = geometry.boundingBox ?? new THREE.Box3();
 
       const metadata = {
         id: `mesh-${index}`,
@@ -364,7 +399,7 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
   'data-testid': testId,
   onRenderComplete,
   onRenderError,
-  onCameraChange,
+  onCameraChange: _onCameraChange,
   onPerformanceUpdate
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -372,7 +407,7 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
   /**
    * Handle canvas creation
    */
-  const handleCreated = useCallback(({ gl, scene, camera: threeCamera }: { gl: any; scene: any; camera: any }) => {
+  const handleCreated = useCallback(({ gl, scene: _scene, camera: threeCamera }: { gl: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.Camera }) => {
     // Configure renderer
     gl.setClearColor(config.backgroundColor);
     gl.shadowMap.enabled = config.enableShadows;
@@ -396,7 +431,7 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
 
   return (
     <div
-      data-testid={testId || 'three-renderer'}
+      data-testid={testId ?? 'three-renderer'}
       className={className}
       style={{ width: '100%', height: '400px', position: 'relative' }}
     >

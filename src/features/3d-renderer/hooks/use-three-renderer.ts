@@ -9,13 +9,13 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 
-import type { 
-  UseRendererReturn, 
-  Scene3DConfig, 
-  CameraConfig, 
-  Mesh3D, 
+import type {
+  UseRendererReturn,
+  Scene3DConfig,
+  CameraConfig,
+  Mesh3D,
   RenderingMetrics,
-  RenderingError 
+  RenderingError as _RenderingError
 } from '../types/renderer.types';
 import {
   useAppStore,
@@ -24,10 +24,10 @@ import {
   selectRenderingState,
   selectPerformanceMetrics
 } from '../../store';
-import { success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { success as _success, error as _error, tryCatch } from '../../../shared/utils/functional/result';
 import { measureTime } from '../../../shared/utils/performance/metrics';
 import { renderASTNode } from '../services/primitive-renderer';
-import { performCSGOperation, createCSGConfig } from '../services/csg-operations';
+import { performCSGOperation as _performCSGOperation, createCSGConfig as _createCSGConfig } from '../services/csg-operations';
 
 /**
  * Default camera configuration
@@ -88,14 +88,14 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
   // Store selectors and actions
   const ast = useAppStore(selectParsingAST);
-  const camera = useAppStore(selectRenderingCamera) || DEFAULT_CAMERA;
-  const renderingState = useAppStore(selectRenderingState);
+  const camera = useAppStore(selectRenderingCamera) ?? DEFAULT_CAMERA;
+  const _renderingState = useAppStore(selectRenderingState);
   const storeMetrics = useAppStore(selectPerformanceMetrics);
   const config = DEFAULT_CONFIG; // Use default config for now
-  
+
   const updateStoreCamera = useAppStore((state) => state.updateCamera);
   const updateStoreMetrics = useAppStore((state) => state.updateMetrics);
-  const renderFromAST = useAppStore((state) => state.renderFromAST);
+  const _renderFromAST = useAppStore((state) => state.renderFromAST);
   const markDirty = useAppStore((state) => state.markDirty);
 
   /**
@@ -195,12 +195,12 @@ export const useThreeRenderer = (): UseRendererReturn => {
     // Update performance metrics
     const newMetrics: RenderingMetrics = {
       renderTime: duration,
-      parseTime: storeMetrics?.parseTime || 0,
+      parseTime: storeMetrics?.parseTime ?? 0,
       memoryUsage: 0, // Will be calculated separately
       frameRate: 60, // Will be updated by frame loop
       meshCount: resolvedMeshes.length,
-      triangleCount: resolvedMeshes.reduce((sum: any, m: any) => sum + m.metadata.triangleCount, 0),
-      vertexCount: resolvedMeshes.reduce((sum: any, m: any) => sum + m.metadata.vertexCount, 0),
+      triangleCount: resolvedMeshes.reduce((sum: number, m: Mesh3D) => sum + (m.metadata.triangleCount ?? 0), 0),
+      vertexCount: resolvedMeshes.reduce((sum: number, m: Mesh3D) => sum + (m.metadata.vertexCount ?? 0), 0),
       drawCalls: resolvedMeshes.length,
       textureMemory: 0,
       bufferMemory: resolvedMeshes.length * 1024 // Rough estimate

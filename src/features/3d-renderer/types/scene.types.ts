@@ -11,18 +11,18 @@ import type * as THREE from "three";
  * Basic Three.js object types for React Three Fiber compatibility
  */
 export interface ThreeJSXElements {
-  mesh: any;
-  boxGeometry: any;
-  sphereGeometry: any;
-  cylinderGeometry: any;
-  meshStandardMaterial: any;
-  meshBasicMaterial: any;
-  group: any;
-  ambientLight: any;
-  directionalLight: any;
-  pointLight: any;
-  perspectiveCamera: any;
-  orthographicCamera: any;
+  mesh: THREE.Mesh;
+  boxGeometry: THREE.BoxGeometry;
+  sphereGeometry: THREE.SphereGeometry;
+  cylinderGeometry: THREE.CylinderGeometry;
+  meshStandardMaterial: THREE.MeshStandardMaterial;
+  meshBasicMaterial: THREE.MeshBasicMaterial;
+  group: THREE.Group;
+  ambientLight: THREE.AmbientLight;
+  directionalLight: THREE.DirectionalLight;
+  pointLight: THREE.PointLight;
+  perspectiveCamera: THREE.PerspectiveCamera;
+  orthographicCamera: THREE.OrthographicCamera;
 }
 
 /**
@@ -324,13 +324,13 @@ export interface SceneData {
   readonly scene: {
     readonly background: string | null;
     readonly environment: string | null;
-    readonly fog: any | null;
+    readonly fog: THREE.Fog | THREE.FogExp2 | null;
   };
-  readonly cameras: ReadonlyArray<any>;
-  readonly lights: ReadonlyArray<any>;
-  readonly objects: ReadonlyArray<any>;
-  readonly materials: ReadonlyArray<any>;
-  readonly geometries: ReadonlyArray<any>;
-  readonly textures: ReadonlyArray<any>;
-  readonly animations: ReadonlyArray<any>;
+  readonly cameras: ReadonlyArray<THREE.Camera>;
+  readonly lights: ReadonlyArray<THREE.Light>;
+  readonly objects: ReadonlyArray<THREE.Object3D>;
+  readonly materials: ReadonlyArray<THREE.Material>;
+  readonly geometries: ReadonlyArray<THREE.BufferGeometry>;
+  readonly textures: ReadonlyArray<THREE.Texture>;
+  readonly animations: ReadonlyArray<THREE.AnimationClip>;
 }

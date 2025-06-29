@@ -66,13 +66,13 @@ vi.mock('three', async () => {
       dispose: vi.fn(),
       clone: vi.fn().mockReturnThis(),
       copy: vi.fn().mockReturnThis(),
-      color: (params as any).color || { r: 1, g: 1, b: 1, getHex: () => 0xffffff },
-      metalness: (params as any).metalness || 0,
-      roughness: (params as any).roughness || 1,
-      wireframe: (params as any).wireframe || false,
-      transparent: (params as any).transparent || false,
-      opacity: (params as any).opacity || 1,
-      side: (params as any).side || 0 // THREE.FrontSide
+      color: (params).color || { r: 1, g: 1, b: 1, getHex: () => 0xffffff },
+      metalness: (params).metalness || 0,
+      roughness: (params).roughness || 1,
+      wireframe: (params).wireframe || false,
+      transparent: (params).transparent || false,
+      opacity: (params).opacity || 1,
+      side: (params).side || 0 // THREE.FrontSide
     });
     return material;
   });
@@ -88,9 +88,9 @@ vi.mock('three', async () => {
       Object.assign(material, {
         type: 'MeshBasicMaterial',
         dispose: vi.fn(),
-        wireframe: (params as any).wireframe || false,
-        transparent: (params as any).transparent || false,
-        opacity: (params as any).opacity || 1
+        wireframe: (params).wireframe || false,
+        transparent: (params).transparent || false,
+        opacity: (params).opacity || 1
       });
       return material;
     }),

@@ -7,10 +7,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Matrix } from 'ml-matrix';
-import { Matrix3, Matrix4, Vector3, Quaternion } from 'three';
+import { Matrix4 } from 'three';
 import { MatrixConversionService, type MatrixConversionDependencies } from './matrix-conversion.service';
 import { MatrixCacheService } from './matrix-cache.service';
-import { matrixFactory, matrixUtils } from '../utils/matrix-adapters';
+import { matrixFactory } from '../utils/matrix-adapters';
 import { MATRIX_CONFIG } from '../config/matrix-config';
 
 describe('MatrixConversionService', () => {

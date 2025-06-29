@@ -5,7 +5,7 @@
  * validation, telemetry, and CSG integration following TDD methodology.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Matrix } from 'ml-matrix';
 import { Matrix3, Matrix4 } from 'three';
 import { MatrixIntegrationService } from './matrix-integration.service';

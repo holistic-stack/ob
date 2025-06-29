@@ -6,9 +6,28 @@
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useState, ReactNode } from 'react';
-import { MatrixIntegrationService } from '../services/matrix-integration.service';
-import { matrixServiceContainer } from '../services/matrix-service-container';
+
 import { useMatrixOperations, type UseMatrixOperationsReturn } from '../hooks/useMatrixOperations';
+
+// Type definitions for provider
+interface PerformanceReport {
+  readonly operationCount: number;
+  readonly averageExecutionTime: number;
+  readonly errorRate: number;
+  readonly memoryUsage: number;
+}
+
+interface _ServiceStatus {
+  readonly initialized: boolean;
+  readonly errors: string[];
+  readonly lastOperation: number;
+}
+
+interface HealthStatus {
+  readonly isHealthy: boolean;
+  readonly services: Record<string, boolean>;
+  readonly lastCheck: number;
+}
 
 /**
  * Matrix operation provider configuration
@@ -30,7 +49,7 @@ export interface MatrixOperationContextValue extends UseMatrixOperationsReturn {
   readonly updateConfig: (newConfig: Partial<MatrixOperationProviderConfig>) => void;
   readonly isInitialized: boolean;
   readonly lastHealthCheck: number | null;
-  readonly lastPerformanceReport: any;
+  readonly lastPerformanceReport: PerformanceReport | null;
 }
 
 /**
@@ -56,8 +75,8 @@ const MatrixOperationContext = createContext<MatrixOperationContextValue | null>
 export interface MatrixOperationProviderProps {
   readonly children: ReactNode;
   readonly config?: Partial<MatrixOperationProviderConfig>;
-  readonly onHealthStatusChange?: (isHealthy: boolean, status: any) => void;
-  readonly onPerformanceReport?: (report: any) => void;
+  readonly onHealthStatusChange?: (isHealthy: boolean, status: HealthStatus | null) => void;
+  readonly onPerformanceReport?: (report: PerformanceReport) => void;
   readonly onError?: (error: Error) => void;
 }
 
@@ -77,7 +96,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   });
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastHealthCheck, setLastHealthCheck] = useState<number | null>(null);
-  const [lastPerformanceReport, setLastPerformanceReport] = useState<any>(null);
+  const [lastPerformanceReport, setLastPerformanceReport] = useState<PerformanceReport | null>(null);
 
   // Use the matrix operations hook
   const matrixOperations = useMatrixOperations();
@@ -121,7 +140,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
       
       console.log('[DEBUG][MatrixOperationProvider] Performance report generated:', {
         timestamp: Date.now(),
-        reportSize: Object.keys(report || {}).length
+        reportSize: Object.keys(report ?? {}).length
       });
     } catch (err) {
       console.error('[ERROR][MatrixOperationProvider] Performance report generation failed:', err);
@@ -271,7 +290,7 @@ export const withMatrixOperations = <P extends object>(
     </MatrixOperationProvider>
   );
 
-  WrappedComponent.displayName = `withMatrixOperations(${Component.displayName || Component.name})`;
+  WrappedComponent.displayName = `withMatrixOperations(${Component.displayName ?? Component.name})`;
   
   return WrappedComponent;
 };
@@ -300,7 +319,7 @@ export const MatrixOperationStatus: React.FC<{
       {showDetails && (
         <div className="matrix-operation-details">
           <div>Last Health Check: {lastHealthCheck ? new Date(lastHealthCheck).toLocaleTimeString() : 'Never'}</div>
-          <div>Services: {serviceStatus?.services?.length || 0}</div>
+          <div>Services: {serviceStatus?.services ? Object.keys(serviceStatus.services).length : 0}</div>
           <div>Performance Report: {lastPerformanceReport ? 'Available' : 'Not available'}</div>
         </div>
       )}

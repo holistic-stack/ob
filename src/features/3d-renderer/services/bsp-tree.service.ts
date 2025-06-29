@@ -88,7 +88,7 @@ export class BSPTreeNode implements BSPNodeData {
             normal: polygon.plane.normal.clone().negate(),
             w: -polygon.plane.w
           },
-          shared: polygon.shared || null
+          shared: polygon.shared ?? null
         };
       }
 
@@ -116,12 +116,12 @@ export class BSPTreeNode implements BSPNodeData {
       if (this.back) {
         this.front = this.back;
       } else {
-        delete (this as any).front;
+        delete (this as Record<string, unknown>).front;
       }
       if (temp) {
         this.back = temp;
       } else {
-        delete (this as any).back;
+        delete (this as Record<string, unknown>).back;
       }
 
       return success(undefined);

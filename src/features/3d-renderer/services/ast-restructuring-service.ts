@@ -16,9 +16,8 @@ import type {
   CubeNode,
   SphereNode,
   CylinderNode,
-  SourceLocation
 } from '@holistic-stack/openscad-parser';
-import { Result, success, error, tryCatch } from '../../../shared/utils/functional/result';
+import { Result, tryCatch } from '../../../shared/utils/functional/result';
 
 /**
  * Configuration for AST restructuring
@@ -57,7 +56,7 @@ const isPrimitiveNode = (node: ASTNode): node is CubeNode | SphereNode | Cylinde
  * Check if a node has children property
  */
 const hasChildren = (node: ASTNode): node is ASTNode & { children: ASTNode[] } => {
-  return 'children' in node && Array.isArray((node as any).children);
+  return 'children' in node && Array.isArray((node as unknown as Record<string, unknown>).children);
 };
 
 /**

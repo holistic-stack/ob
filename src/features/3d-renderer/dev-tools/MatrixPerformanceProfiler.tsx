@@ -378,7 +378,7 @@ interface DebugLogEntry {
   readonly level: 'debug' | 'info' | 'warn' | 'error';
   operation?: string;
   readonly message: string;
-  readonly data?: any;
+  readonly data?: unknown;
   stackTrace?: string;
   readonly executionTime?: number;
 }
@@ -445,8 +445,8 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     };
 
     // Intercept console methods for matrix-related logs
-    const interceptConsole = (level: 'debug' | 'info' | 'warn' | 'error', originalMethod: any) => {
-      return (...args: any[]) => {
+    const interceptConsole = (level: 'debug' | 'info' | 'warn' | 'error', originalMethod: (...args: unknown[]) => void) => {
+      return (...args: unknown[]) => {
         originalMethod.apply(console, args);
 
         const message = args.join(' ');
@@ -462,7 +462,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
 
           const logPayload: Omit<DebugLogEntry, 'id' | 'timestamp'> = {
             level,
-            operation: operation || 'Unknown',
+            operation: operation ?? 'Unknown',
             message,
             data: args.length > 1 ? args.slice(1) : undefined,
           };
@@ -567,7 +567,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
+                onChange={(e) => setFilter(e.target.value as 'all' | 'debug' | 'info' | 'warn' | 'error')}
                 style={{
                   background: '#333',
                   color: 'white',
@@ -650,7 +650,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                   <div style={{ color: '#ccc' }}>
                     {log.message}
                   </div>
-                  {log.data && (
+                  {log.data ? (
                     <details style={{ marginTop: '4px' }}>
                       <summary style={{ color: '#888', cursor: 'pointer', fontSize: '10px' }}>
                         Data
@@ -663,10 +663,10 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                         overflow: 'auto',
                         maxHeight: '100px'
                       }}>
-                        {JSON.stringify(log.data, null, 2)}
+                        {typeof log.data === 'string' ? log.data : JSON.stringify(log.data, null, 2)}
                       </pre>
                     </details>
-                  )}
+                  ) : null}
                   {log.stackTrace && showStackTraces && (
                     <details style={{ marginTop: '4px' }}>
                       <summary style={{ color: '#888', cursor: 'pointer', fontSize: '10px' }}>

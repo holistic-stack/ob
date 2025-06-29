@@ -122,7 +122,7 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
   className,
   "data-testid": testId,
   onRenderComplete,
-  onRenderError,
+  onRenderError: _onRenderError,
   onCameraChange: _onCameraChange,
   onPerformanceUpdate,
 }) => {
@@ -178,7 +178,7 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
 
   return (
     <div
-      data-testid={testId || "three-renderer"}
+      data-testid={testId ?? "three-renderer"}
       className={className}
       style={{ width: "100%", height: "400px", position: "relative" }}
     >

@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import { CSG, CSGCoreService } from './csg-core.service';
+import { CSGCoreService } from './csg-core.service';
 import type {
   ASTNode,
   CubeNode,
@@ -20,12 +20,11 @@ import type {
   IntersectionNode,
   SourceLocation
 } from '@holistic-stack/openscad-parser';
-import type { 
+import type {
   Mesh3D,
-  MaterialConfig,
-  RenderingError 
+  MaterialConfig
 } from '../types/renderer.types';
-import { success, error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
+import { error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 
 /**
@@ -196,8 +195,8 @@ const convertTranslateNode = async (node: TranslateNode, material: THREE.Materia
     if (node.v) {
       translationVector = node.v as [number, number, number];
       console.log(`[DEBUG][ASTToCSGConverter] Found translation vector from node.v:`, translationVector);
-    } else if ((node as any).v) {
-      translationVector = (node as any).v as [number, number, number];
+    } else if ((node as unknown as Record<string, unknown>).v) {
+      translationVector = (node as unknown as Record<string, unknown>).v as [number, number, number];
       console.log(`[DEBUG][ASTToCSGConverter] Found translation vector from (node as any).v:`, translationVector);
     } else {
       console.warn(`[WARN][ASTToCSGConverter] No translation vector found in translate node, using [0,0,0]`);
@@ -248,8 +247,8 @@ const convertRotateNode = async (node: RotateNode, material: THREE.Material): Pr
     const mesh = childResult.data;
 
     // Apply rotation - need to check the actual structure of RotateNode
-    if ((node as any).a) {
-      const [x, y, z] = (node as any).a;
+    if ((node as unknown as Record<string, unknown>).a) {
+      const [x, y, z] = (node as unknown as Record<string, unknown>).a as [number, number, number];
       mesh.rotation.set(
         THREE.MathUtils.degToRad(x),
         THREE.MathUtils.degToRad(y),
@@ -287,8 +286,8 @@ const convertScaleNode = async (node: ScaleNode, material: THREE.Material): Prom
     const mesh = childResult.data;
 
     // Apply scaling - need to check the actual structure of ScaleNode
-    if ((node as any).v) {
-      const [x, y, z] = (node as any).v;
+    if ((node as unknown as Record<string, unknown>).v) {
+      const [x, y, z] = (node as unknown as Record<string, unknown>).v as [number, number, number];
       mesh.scale.set(x, y, z);
     }
 
@@ -640,22 +639,22 @@ const convertASTNodeToMesh = async (node: ASTNode, material: THREE.Material): Pr
 
   switch (node.type) {
     case 'cube':
-      return convertCubeToMesh(node as CubeNode, material);
+      return convertCubeToMesh(node, material);
 
     case 'sphere':
-      return convertSphereToMesh(node as SphereNode, material);
+      return convertSphereToMesh(node, material);
 
     case 'cylinder':
-      return convertCylinderToMesh(node as CylinderNode, material);
+      return convertCylinderToMesh(node, material);
 
     case 'translate':
-      return await convertTranslateNode(node as TranslateNode, material);
+      return await convertTranslateNode(node, material);
 
     case 'rotate':
-      return await convertRotateNode(node as RotateNode, material);
+      return await convertRotateNode(node, material);
 
     case 'scale':
-      return await convertScaleNode(node as ScaleNode, material);
+      return await convertScaleNode(node, material);
 
     case 'mirror':
       return await convertMirrorNode(node as MirrorNode, material);
@@ -664,13 +663,13 @@ const convertASTNodeToMesh = async (node: ASTNode, material: THREE.Material): Pr
       return await convertRotateExtrudeNode(node as RotateExtrudeNode, material);
 
     case 'union':
-      return await convertUnionNode(node as UnionNode, material);
+      return await convertUnionNode(node, material);
 
     case 'intersection':
-      return await convertIntersectionNode(node as IntersectionNode, material);
+      return await convertIntersectionNode(node, material);
 
     case 'difference':
-      return await convertDifferenceNode(node as DifferenceNode, material);
+      return await convertDifferenceNode(node, material);
 
     default:
       return error(`Unsupported AST node type for CSG conversion: ${node.type}`);
@@ -704,7 +703,7 @@ export const convertASTNodeToCSG = async (
     
     // Calculate metadata
     mesh.geometry.computeBoundingBox();
-    const boundingBox = mesh.geometry.boundingBox || new THREE.Box3();
+    const boundingBox = mesh.geometry.boundingBox ?? new THREE.Box3();
     
     const metadata = {
       id: `csg-${node.type}-${index}`,
@@ -830,7 +829,7 @@ export const convertASTNodesToCSGUnion = async (
 
     // Calculate metadata for the union result
     resultMesh.geometry.computeBoundingBox();
-    const boundingBox = resultMesh.geometry.boundingBox || new THREE.Box3();
+    const boundingBox = resultMesh.geometry.boundingBox ?? new THREE.Box3();
     
     const metadata = {
       id: `csg-union-${Date.now()}`,

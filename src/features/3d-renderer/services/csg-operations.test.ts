@@ -15,7 +15,7 @@ import {
   estimateCSGComplexity,
   isCSGOperationFeasible
 } from './csg-operations';
-import type { CSGConfig, CSGOperation } from '../types/renderer.types';
+import type { CSGOperation } from '../types/renderer.types';
 
 // Note: Using real CSG utility implementation instead of mocks
 // This follows the established pattern of using real implementations in tests

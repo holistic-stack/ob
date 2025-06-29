@@ -297,7 +297,7 @@ describe("End-to-End Workflow Validation", () => {
             const renderStartTime = Date.now();
             useAppStore.setState({
               rendering: {
-                meshes: [mesh3D],
+                meshes: [mesh3D.mesh],
                 isRendering: false,
                 renderErrors: [],
                 lastRendered: new Date(),
@@ -569,7 +569,10 @@ describe("End-to-End Workflow Validation", () => {
           const csgResult = await convertASTNodeToCSG(ast[0], 0);
           expect(csgResult.success).toBe(true);
 
-          return csgResult.data;
+          if (csgResult.success) {
+            return csgResult.data;
+          }
+          throw new Error(csgResult.error);
         });
 
         performanceResults.push({
@@ -620,7 +623,9 @@ describe("End-to-End Workflow Validation", () => {
 
         if (!parseResult.success) throw new Error("Parse failed");
         const ast = parseResult.data;
-        const csgResult = await convertASTNodeToCSG(ast[0], 0);
+        const firstNode = ast[0];
+        if (!firstNode) throw new Error("AST is empty");
+        const csgResult = await convertASTNodeToCSG(firstNode, 0);
         expect(csgResult.success).toBe(true);
         if (!csgResult.success) throw new Error("CSG conversion failed");
 

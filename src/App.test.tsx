@@ -8,8 +8,8 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { Mesh3D } from './features/3d-renderer/types/renderer.types';
+import type { ASTNode as _ASTNode } from '@holistic-stack/openscad-parser';
+import type { Mesh3D as _Mesh3D } from './features/3d-renderer/types/renderer.types';
 
 import App from './App';
 
@@ -18,7 +18,7 @@ vi.mock('./features/code-editor/components/store-connected-editor', () => ({
   StoreConnectedEditor: ({ className, 'data-testid': testId }: any) => (
     <div 
       className={className}
-      data-testid={testId || 'store-connected-editor-mock'}
+      data-testid={testId ?? 'store-connected-editor-mock'}
     >
       <div data-testid="editor-mock-content">Monaco Editor Mock</div>
     </div>
@@ -29,7 +29,7 @@ vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
   StoreConnectedRenderer: ({ className, 'data-testid': testId }: any) => (
     <div 
       className={className}
-      data-testid={testId || 'store-connected-renderer-mock'}
+      data-testid={testId ?? 'store-connected-renderer-mock'}
     >
       <div data-testid="renderer-mock-content">Three.js Renderer Mock</div>
     </div>

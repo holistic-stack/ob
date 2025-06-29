@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Canvas } from '@react-three/fiber';
 
 import { ThreeRenderer } from './three-renderer';
@@ -152,7 +152,7 @@ describe('ThreeRenderer Performance', () => {
       
       // Check that the performance update includes timing data
       const performanceCall = mockOnPerformanceUpdate.mock.calls[0];
-      if (performanceCall && performanceCall[0]) {
+      if (performanceCall?.[0]) {
         const metrics = performanceCall[0];
         expect(typeof metrics.renderTime).toBe('number');
         expect(metrics.renderTime).toBeGreaterThanOrEqual(0);

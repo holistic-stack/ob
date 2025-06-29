@@ -293,7 +293,7 @@ export class MatrixConfigManagerService {
       const fullKey = prefix ? `${prefix}.${key}` : key;
       
       if (value && typeof value === 'object' && !Array.isArray(value)) {
-        Object.assign(flattened, this.flattenConfig(value as any, fullKey));
+        Object.assign(flattened, this.flattenConfig(value as Record<string, unknown>, fullKey));
       } else {
         flattened[fullKey] = value;
       }
@@ -305,7 +305,7 @@ export class MatrixConfigManagerService {
   /**
    * Set nested property in configuration object
    */
-  private setNestedProperty(obj: any, path: string, value: unknown): void {
+  private setNestedProperty(obj: Record<string, unknown>, path: string, value: unknown): void {
     const keys = path.split('.');
     let current = obj;
 

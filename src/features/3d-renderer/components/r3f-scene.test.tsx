@@ -9,9 +9,9 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { Canvas } from '@react-three/fiber';
-import * as THREE from 'three';
+import * as _THREE from 'three';
 import type { ASTNode, CubeNode, SphereNode, CylinderNode } from '@holistic-stack/openscad-parser';
-import type { Mesh3D } from '../types/renderer.types';
+import type { Mesh3D as _Mesh3D } from '../types/renderer.types';
 
 import { R3FScene } from './r3f-scene';
 
@@ -309,7 +309,7 @@ describe('R3FScene', () => {
       expect(mockOnPerformanceUpdate).toHaveBeenCalled();
       
       const performanceCall = mockOnPerformanceUpdate.mock.calls[0];
-      if (performanceCall && performanceCall[0]) {
+      if (performanceCall?.[0]) {
         const metrics = performanceCall[0];
         expect(typeof metrics.renderTime).toBe('number');
         expect(typeof metrics.parseTime).toBe('number');

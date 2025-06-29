@@ -184,7 +184,11 @@ describe("Result Utilities", () => {
     });
 
     it("should return first error when any result fails", () => {
-      const results = [success(1), error("error 2"), success(3)];
+      const results = [
+        success<number, string>(1),
+        error<number, string>("error 2"),
+        success<number, string>(3),
+      ];
       const combined = combine(results);
 
       expect(combined.success).toBe(false);
@@ -206,7 +210,11 @@ describe("Result Utilities", () => {
     });
 
     it("should collect all errors", () => {
-      const results = [success(1), error("error 2"), error("error 3")];
+      const results = [
+        success<number, string>(1),
+        error<number, string>("error 2"),
+        error<number, string>("error 3"),
+      ];
       const combined = combineAll(results);
 
       expect(combined.success).toBe(false);
@@ -234,7 +242,7 @@ describe("Result Utilities", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBeInstanceOf(Error);
-        expect((result.error).message).toBe("test error");
+        expect(result.error.message).toBe("test error");
       }
     });
 
@@ -255,7 +263,7 @@ describe("Result Utilities", () => {
 
   describe("filter", () => {
     it("should pass values that match predicate", () => {
-      const result = success(10);
+      const result = success<number, string>(10);
       const filtered = filter(result, (x: number) => x > 5, "too small");
 
       expect(filtered.success).toBe(true);
@@ -265,7 +273,7 @@ describe("Result Utilities", () => {
     });
 
     it("should fail values that do not match predicate", () => {
-      const result = success(3);
+      const result = success<number, string>(3);
       const filtered = filter(result, (x: number) => x > 5, "too small");
 
       expect(filtered.success).toBe(false);

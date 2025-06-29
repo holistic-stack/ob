@@ -11,7 +11,7 @@ import type {
   MatrixPerformanceMetrics,
   MatrixOperationResult 
 } from '../types/matrix.types';
-import { MATRIX_CONFIG, getCacheKey } from '../config/matrix-config';
+import { MATRIX_CONFIG } from '../config/matrix-config';
 import { matrixUtils } from '../utils/matrix-adapters';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';

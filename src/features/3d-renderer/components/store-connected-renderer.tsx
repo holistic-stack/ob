@@ -5,7 +5,7 @@
     renderFromAST(ast).then(
       (result: any) => {
         if (result.success) {
-          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length || 0} meshes`);
+          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`);
         } else {
           console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
           addRenderError(result.error);
@@ -30,6 +30,8 @@ import {
 } from '../../store/selectors';
 import { R3FScene } from './r3f-scene';
 import type { CameraConfig, RenderingMetrics, Mesh3D } from '../types/renderer.types';
+import type { Result } from '../../../shared/types/result.types';
+import type * as THREE from 'three';
 
 /**
  * Props for the store-connected renderer
@@ -117,15 +119,15 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     
     // Trigger rendering through store action
     renderFromAST(ast).then(
-      (result: any) => {
+      (result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
         if (result.success) {
-          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length || 0} meshes`);
+          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`);
         } else {
           console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
           addRenderError(result.error);
         }
       }
-    ).catch((error: any) => {
+    ).catch((error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
       addRenderError(errorMessage);
@@ -137,7 +139,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   useEffect(() => {
     console.log('[DEBUG][StoreConnectedRenderer] Store state updated:', {
-      astNodeCount: ast?.length || 0,
+      astNodeCount: ast?.length ?? 0,
       isRendering: renderingState.isRendering,
       meshCount: renderingState.meshes.length,
       errorCount: renderingState.renderErrors.length,
@@ -147,7 +149,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   }, [ast, renderingState, camera, performanceMetrics]);
 
   // Default camera configuration
-  const defaultCamera: CameraConfig = camera || {
+  const defaultCamera: CameraConfig = camera ?? {
     position: [5, 5, 5],
     target: [0, 0, 0]
   };
@@ -169,7 +171,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       >
         {/* R3F Scene component - handles all Three.js rendering */}
         <R3FScene
-          astNodes={ast || []}
+          astNodes={ast ?? []}
           camera={defaultCamera}
           onCameraChange={handleCameraChange}
           onPerformanceUpdate={handlePerformanceUpdate}
@@ -198,7 +200,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {renderingState.renderErrors.map((error: any, index: any) => (
+          {renderingState.renderErrors.map((error: string, index: number) => (
             <div key={index} className="text-sm">{error}</div>
           ))}
         </div>

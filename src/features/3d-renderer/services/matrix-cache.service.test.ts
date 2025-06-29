@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Matrix } from 'ml-matrix';
+
 import { MatrixCacheService } from './matrix-cache.service';
 import { matrixFactory } from '../utils/matrix-adapters';
 import { MATRIX_CONFIG } from '../config/matrix-config';
@@ -111,7 +111,7 @@ describe('MatrixCacheService', () => {
       console.log('[DEBUG][MatrixCacheServiceTest] Testing LRU eviction');
       
       // Create small matrices to test eviction logic
-      const matrices = Array.from({ length: 5 }, (_, i) => 
+      const _matrices = Array.from({ length: 5 }, (_, i) =>
         matrixFactory.fromArray([[i, i + 1], [i + 2, i + 3]])
       );
       

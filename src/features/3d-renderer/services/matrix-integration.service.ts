@@ -24,9 +24,9 @@
  */
 
 import { Matrix } from 'ml-matrix';
-import { Matrix3, Matrix4, Vector3, Quaternion } from 'three';
+import { Matrix3, Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';
-import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types';
+import type { MatrixValidationResult } from '../types/matrix.types';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 
@@ -71,14 +71,14 @@ export class MatrixIntegrationService {
   constructor(serviceContainer?: MatrixServiceContainer) {
     console.log('[INIT][MatrixIntegrationService] Initializing matrix integration service');
     
-    this.serviceContainer = serviceContainer || new MatrixServiceContainer();
+    this.serviceContainer = serviceContainer ?? new MatrixServiceContainer();
   }
 
   /**
    * Generate unique operation ID
    */
   private generateOperationId(operation: string): string {
-    const count = this.operationCounter.get(operation) || 0;
+    const count = this.operationCounter.get(operation) ?? 0;
     this.operationCounter.set(operation, count + 1);
     return `${operation}_${Date.now()}_${count}`;
   }

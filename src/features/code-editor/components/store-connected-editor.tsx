@@ -209,7 +209,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       {/* Error/Warning Panel */}
       {(parsingErrors.length > 0 || parsingWarnings.length > 0) && (
         <div className="error-panel bg-gray-900 border-t border-gray-700 max-h-32 overflow-y-auto">
-          {parsingErrors.map((error: any, index: number) => (
+          {parsingErrors.map((error: string, index: number) => (
             <div
               key={`error-${index}`}
               className="error-item px-4 py-2 text-red-400 text-sm border-b border-gray-800"
@@ -217,7 +217,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
               <span className="font-semibold">Error:</span> {error}
             </div>
           ))}
-          {parsingWarnings.map((warning: any, index: number) => (
+          {parsingWarnings.map((warning: string, index: number) => (
             <div
               key={`warning-${index}`}
               className="warning-item px-4 py-2 text-yellow-400 text-sm border-b border-gray-800"

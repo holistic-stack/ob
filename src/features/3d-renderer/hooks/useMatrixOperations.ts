@@ -10,8 +10,37 @@ import { Matrix } from 'ml-matrix';
 import { Matrix3, Matrix4 } from 'three';
 import { MatrixIntegrationService, type EnhancedMatrixOptions, type EnhancedMatrixResult } from '../services/matrix-integration.service';
 import { matrixServiceContainer } from '../services/matrix-service-container';
-import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
+
+// Additional type definitions for hook interface
+interface PerformanceReport {
+  readonly operationCount: number;
+  readonly averageExecutionTime: number;
+  readonly errorRate: number;
+  readonly memoryUsage: number;
+  readonly totalOperations: number;
+  readonly successfulOperations: number;
+  readonly failedOperations: number;
+  readonly totalExecutionTime: number;
+  readonly cacheHitRate: number;
+  readonly lastOperationTime: number;
+}
+
+interface HealthStatus {
+  readonly isHealthy: boolean;
+  readonly services: Record<string, boolean>;
+  readonly lastCheck: number;
+}
+
+interface ServiceStatus {
+  readonly initialized: boolean;
+  readonly errors: readonly string[];
+  readonly lastOperation: number;
+  readonly overall?: 'healthy' | 'degraded' | 'unhealthy';
+  readonly services?: readonly unknown[];
+  readonly timestamp?: number;
+  readonly recommendations?: readonly string[];
+}
 
 /**
  * Matrix operation status
@@ -32,7 +61,7 @@ export interface MatrixOperationState<T> {
     readonly executionTime: number;
     readonly memoryUsed: number;
     readonly cacheHit: boolean;
-  };
+  } | undefined;
 }
 
 /**
@@ -62,20 +91,20 @@ export interface UseMatrixOperationsReturn {
   ) => Promise<MatrixOperationState<EnhancedMatrixResult<T>[]>>;
 
   // Performance and health monitoring
-  readonly getPerformanceReport: () => any;
-  readonly getHealthStatus: () => Promise<any>;
+  readonly getPerformanceReport: () => PerformanceReport;
+  readonly getHealthStatus: () => Promise<HealthStatus | null>;
   readonly optimizeConfiguration: () => Promise<MatrixOperationState<void>>;
 
   // Service management
   readonly resetServices: () => Promise<void>;
   readonly isServiceHealthy: boolean;
-  readonly serviceStatus: any;
+  readonly serviceStatus: ServiceStatus | null;
 }
 
 /**
  * Create initial operation state
  */
-const createInitialState = <T>(): MatrixOperationState<T> => ({
+const _createInitialState = <T>(): MatrixOperationState<T> => ({
   data: null,
   status: 'idle',
   error: null,
@@ -87,7 +116,7 @@ const createInitialState = <T>(): MatrixOperationState<T> => ({
 /**
  * Create loading state
  */
-const createLoadingState = <T>(): MatrixOperationState<T> => ({
+const _createLoadingState = <T>(): MatrixOperationState<T> => ({
   data: null,
   status: 'loading',
   error: null,
@@ -99,14 +128,18 @@ const createLoadingState = <T>(): MatrixOperationState<T> => ({
 /**
  * Create success state
  */
-const createSuccessState = <T>(data: T, performance?: any): MatrixOperationState<T> => ({
+const createSuccessState = <T>(data: T, performance?: { readonly executionTime: number; readonly memoryUsed: number; readonly cacheHit: boolean; readonly operationType?: string }): MatrixOperationState<T> => ({
   data,
   status: 'success',
   error: null,
   isLoading: false,
   isSuccess: true,
   isError: false,
-  performance
+  performance: performance ? {
+    executionTime: performance.executionTime,
+    memoryUsed: performance.memoryUsed,
+    cacheHit: performance.cacheHit
+  } : undefined
 });
 
 /**
@@ -127,7 +160,7 @@ const createErrorState = <T>(error: string): MatrixOperationState<T> => ({
 export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   const matrixIntegrationRef = useRef<MatrixIntegrationService | null>(null);
   const [isServiceHealthy, setIsServiceHealthy] = useState(true);
-  const [serviceStatus, setServiceStatus] = useState<any>(null);
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus | null>(null);
 
   // Initialize matrix integration service
   useEffect(() => {
@@ -139,7 +172,15 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       // Check initial health status
       matrixIntegrationRef.current.getHealthStatus().then(status => {
         setIsServiceHealthy(status.overall === 'healthy');
-        setServiceStatus(status);
+        setServiceStatus({
+          initialized: true,
+          errors: status.recommendations || [],
+          lastOperation: Date.now(),
+          overall: status.overall,
+          services: status.services,
+          timestamp: status.timestamp,
+          recommendations: status.recommendations
+        });
       }).catch(err => {
         console.error('[ERROR][useMatrixOperations] Failed to get initial health status:', err);
         setIsServiceHealthy(false);
@@ -274,14 +315,42 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   /**
    * Get performance report
    */
-  const getPerformanceReport = useCallback(() => {
+  const getPerformanceReport = useCallback((): PerformanceReport => {
     console.log('[DEBUG][useMatrixOperations] Getting performance report');
-    
+
     if (!matrixIntegrationRef.current) {
-      return null;
+      return {
+        operationCount: 0,
+        averageExecutionTime: 0,
+        errorRate: 0,
+        memoryUsage: 0,
+        totalOperations: 0,
+        successfulOperations: 0,
+        failedOperations: 0,
+        totalExecutionTime: 0,
+        cacheHitRate: 0,
+        lastOperationTime: 0
+      };
     }
 
-    return matrixIntegrationRef.current.getPerformanceReport();
+    const report = matrixIntegrationRef.current.getPerformanceReport();
+
+    // Extract data from the service report structure
+    const telemetryData = report?.telemetry ?? {};
+    const cacheData = report?.cache ?? {};
+
+    return {
+      operationCount: telemetryData.operationCount ?? 0,
+      averageExecutionTime: telemetryData.averageExecutionTime ?? 0,
+      errorRate: telemetryData.errorRate ?? 0,
+      memoryUsage: telemetryData.memoryUsage ?? 0,
+      totalOperations: telemetryData.totalOperations ?? 0,
+      successfulOperations: telemetryData.successfulOperations ?? 0,
+      failedOperations: telemetryData.failedOperations ?? 0,
+      totalExecutionTime: telemetryData.totalExecutionTime ?? 0,
+      cacheHitRate: cacheData.hitRate ?? 0,
+      lastOperationTime: telemetryData.lastOperationTime ?? 0
+    };
   }, []);
 
   /**
@@ -297,8 +366,27 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
     try {
       const status = await matrixIntegrationRef.current.getHealthStatus();
       setIsServiceHealthy(status.overall === 'healthy');
-      setServiceStatus(status);
-      return status;
+      setServiceStatus({
+        initialized: true,
+        errors: status.recommendations || [],
+        lastOperation: Date.now(),
+        overall: status.overall,
+        services: status.services,
+        timestamp: status.timestamp,
+        recommendations: status.recommendations
+      });
+
+      // Convert ContainerHealthReport to HealthStatus
+      const healthStatus: HealthStatus = {
+        isHealthy: status.overall === 'healthy',
+        services: status.services.reduce((acc, service) => {
+          acc[service.service] = service.healthy;
+          return acc;
+        }, {} as Record<string, boolean>),
+        lastCheck: status.timestamp
+      };
+
+      return healthStatus;
     } catch (err) {
       console.error('[ERROR][useMatrixOperations] Failed to get health status:', err);
       setIsServiceHealthy(false);
@@ -347,7 +435,15 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       // Check health after reset
       const status = await matrixIntegrationRef.current.getHealthStatus();
       setIsServiceHealthy(status.overall === 'healthy');
-      setServiceStatus(status);
+      setServiceStatus({
+        initialized: true,
+        errors: status.recommendations || [],
+        lastOperation: Date.now(),
+        overall: status.overall,
+        services: status.services,
+        timestamp: status.timestamp,
+        recommendations: status.recommendations
+      });
     } catch (err) {
       console.error('[ERROR][useMatrixOperations] Failed to reset services:', err);
       setIsServiceHealthy(false);

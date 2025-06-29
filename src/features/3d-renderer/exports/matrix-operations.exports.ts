@@ -349,8 +349,8 @@ export const setupMatrixOperations = (
       : "production",
     config,
     enableDevTools = environment === "development",
-    onError,
-    onHealthStatusChange,
+    onError: _onError,
+    onHealthStatusChange: _onHealthStatusChange,
   } = options;
 
   if (environment === "development" && enableDevTools) {

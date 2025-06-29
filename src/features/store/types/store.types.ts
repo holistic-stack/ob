@@ -86,9 +86,10 @@ export interface EditorActions {
 export interface ParsingActions {
   // AST parsing operations
   readonly parseCode: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
+  readonly parseAST: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>; // Alias for backwards compatibility
   readonly clearParsingState: () => void;
   readonly debouncedParse: (code: string) => void;
-  
+
   // Error handling
   readonly addParsingError: (error: string) => void;
   readonly clearParsingErrors: () => void;

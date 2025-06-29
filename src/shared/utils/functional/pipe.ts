@@ -1,50 +1,48 @@
 /**
  * Function Composition Utilities
- * 
+ *
  * Pure functional utilities for composing functions using pipe and compose
  * patterns following functional programming principles.
  */
 
-import type { UnaryFunction, Pipe } from '../../types/functional.types';
+import type { UnaryFunction, Pipe } from "../../types/functional.types";
 
 /**
  * Pipe function for left-to-right function composition
  * Allows chaining functions in a readable, sequential manner
  */
-export const pipe: Pipe = (...fns: UnaryFunction<any, any>[]) => {
-  return (value: any) => fns.reduce((acc, fn) => fn(acc), value);
-};
+export const pipe: Pipe = ((...fns: readonly UnaryFunction<any, any>[]) => {
+  return (value: any) => fns.reduce((acc: any, fn: UnaryFunction<any, any>) => fn(acc), value);
+}) as Pipe;
 
 /**
  * Compose function for right-to-left function composition
  * Traditional mathematical function composition
  */
-export const compose = <T>(...fns: UnaryFunction<any, any>[]) => {
-  return (value: T) => fns.reduceRight((acc, fn) => fn(acc), value);
+export const compose = <T>(...fns: readonly UnaryFunction<any, any>[]) => {
+  return (value: T) => fns.reduceRight((acc: any, fn: UnaryFunction<any, any>) => fn(acc), value as any);
 };
 
 /**
  * Curry function to convert multi-argument functions to curried form
  */
-export const curry = <T extends readonly unknown[], R>(
-  fn: (...args: T) => R
-): T extends readonly [infer A, ...infer Rest]
-  ? (arg: A) => Rest extends readonly []
-    ? R
-    : (...args: Rest) => R
-  : never => {
-  return ((...args: any[]) => {
+export const curry = <F extends (...args: any[]) => any>(fn: F): any => {
+  return (...args: any[]): any => {
     if (args.length >= fn.length) {
-      return fn(...(args as T));
+      return fn(...args);
     }
     return (...nextArgs: any[]) => curry(fn)(...args, ...nextArgs);
-  }) as any;
+  };
 };
 
 /**
  * Partial application utility
  */
-export const partial = <T extends readonly unknown[], U extends readonly unknown[], R>(
+export const partial = <
+  T extends readonly unknown[],
+  U extends readonly unknown[],
+  R,
+>(
   fn: (...args: [...T, ...U]) => R,
   ...partialArgs: T
 ) => {
@@ -61,7 +59,10 @@ export const identity = <T>(value: T): T => value;
 /**
  * Constant function - returns a function that always returns the same value
  */
-export const constant = <T>(value: T) => (): T => value;
+export const constant =
+  <T>(value: T) =>
+  (): T =>
+    value;
 
 /**
  * Flip function - reverses the order of arguments for a binary function
@@ -75,17 +76,17 @@ export const flip = <T, U, V>(fn: (a: T, b: U) => V) => {
  */
 export const memoize = <T extends readonly unknown[], R>(
   fn: (...args: T) => R,
-  keyFn?: (...args: T) => string
+  keyFn?: (...args: T) => string,
 ): ((...args: T) => R) => {
   const cache = new Map<string, R>();
-  
+
   return (...args: T): R => {
     const key = keyFn ? keyFn(...args) : JSON.stringify(args);
-    
+
     if (cache.has(key)) {
       return cache.get(key)!;
     }
-    
+
     const result = fn(...args);
     cache.set(key, result);
     return result;
@@ -105,7 +106,7 @@ export const debounce = <T extends readonly unknown[]>(
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
-    
+
     timeoutId = setTimeout(() => {
       fn(...args);
       timeoutId = null;
@@ -125,16 +126,19 @@ export const throttle = <T extends readonly unknown[]>(
 
   return (...args: T): void => {
     const now = Date.now();
-    
+
     if (now - lastCallTime >= delayMs) {
       lastCallTime = now;
       fn(...args);
     } else if (timeoutId === null) {
-      timeoutId = setTimeout(() => {
-        lastCallTime = Date.now();
-        fn(...args);
-        timeoutId = null;
-      }, delayMs - (now - lastCallTime));
+      timeoutId = setTimeout(
+        () => {
+          lastCallTime = Date.now();
+          fn(...args);
+          timeoutId = null;
+        },
+        delayMs - (now - lastCallTime),
+      );
     }
   };
 };
@@ -143,11 +147,11 @@ export const throttle = <T extends readonly unknown[]>(
  * Once utility - ensures a function is called only once
  */
 export const once = <T extends readonly unknown[], R>(
-  fn: (...args: T) => R
+  fn: (...args: T) => R,
 ): ((...args: T) => R | undefined) => {
   let called = false;
   let result: R;
-  
+
   return (...args: T): R | undefined => {
     if (!called) {
       called = true;
@@ -173,7 +177,7 @@ export const tap = <T>(sideEffect: (value: T) => void) => {
  */
 export const trace = <T>(label?: string) => {
   return (value: T): T => {
-    console.log(label ? `${label}:` : 'Trace:', value);
+    console.log(label ? `${label}:` : "Trace:", value);
     return value;
   };
 };
@@ -183,7 +187,7 @@ export const trace = <T>(label?: string) => {
  */
 export const when = <T>(
   predicate: (value: T) => boolean,
-  fn: (value: T) => T
+  fn: (value: T) => T,
 ) => {
   return (value: T): T => {
     return predicate(value) ? fn(value) : value;
@@ -195,7 +199,7 @@ export const when = <T>(
  */
 export const unless = <T>(
   predicate: (value: T) => boolean,
-  fn: (value: T) => T
+  fn: (value: T) => T,
 ) => {
   return (value: T): T => {
     return predicate(value) ? value : fn(value);
@@ -214,8 +218,8 @@ export const prop = <T, K extends keyof T>(key: K) => {
  */
 export const path = <T>(keys: ReadonlyArray<string | number>) => {
   return (obj: T): unknown => {
-    return keys.reduce((current: any, key) => {
-      return current?.[key];
+    return keys.reduce((current: unknown, key) => {
+      return (current as Record<string | number, unknown>)?.[key];
     }, obj);
   };
 };
@@ -224,9 +228,12 @@ export const path = <T>(keys: ReadonlyArray<string | number>) => {
  * Array utilities for functional programming
  */
 export const head = <T>(array: ReadonlyArray<T>): T | undefined => array[0];
-export const tail = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> => array.slice(1);
-export const last = <T>(array: ReadonlyArray<T>): T | undefined => array[array.length - 1];
-export const init = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> => array.slice(0, -1);
+export const tail = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> =>
+  array.slice(1);
+export const last = <T>(array: ReadonlyArray<T>): T | undefined =>
+  array[array.length - 1];
+export const init = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> =>
+  array.slice(0, -1);
 
 /**
  * Functional array operations

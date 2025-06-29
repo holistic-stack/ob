@@ -10,7 +10,7 @@ import type {
   MatrixOperation,
 } from "../types/matrix.types";
 import { MATRIX_CONFIG } from "../config/matrix-config";
-import { success, error } from "../../../shared/utils/functional/result";
+
 import type { Result } from "../../../shared/types/result.types";
 
 /**

@@ -1,11 +1,23 @@
 /**
  * Geometry Type Definitions
- * 
+ *
  * Type definitions for geometric primitives extracted from utility classes
  * following bulletproof-react type organization patterns.
  */
 
-import type { Vector } from '../utils/Vector';
+import type { Vector } from "../utils/Vector";
+
+/**
+ * Shared data interface for polygons
+ * Used for CSG operations and material/surface properties
+ */
+export interface SharedData {
+  readonly color?: Vector;
+  readonly material?: string;
+  readonly tag?: string;
+  readonly id?: string;
+  readonly [key: string]: unknown;
+}
 
 /**
  * Vertex data interface
@@ -47,7 +59,7 @@ export interface PlaneOperations {
     coplanarFront: PolygonData[],
     coplanarBack: PolygonData[],
     front: PolygonData[],
-    back: PolygonData[]
+    back: PolygonData[],
   ): void;
 }
 
@@ -57,7 +69,7 @@ export interface PlaneOperations {
  */
 export interface PolygonData {
   readonly vertices: VertexData[];
-  readonly shared: any;
+  readonly shared: SharedData;
   readonly plane: PlaneData;
 }
 
@@ -138,10 +150,10 @@ export interface CSGOperations {
 /**
  * Geometric primitive types
  */
-export type GeometricPrimitive = 
-  | VertexData 
-  | PlaneData 
-  | PolygonData 
+export type GeometricPrimitive =
+  | VertexData
+  | PlaneData
+  | PolygonData
   | BSPNodeData;
 
 /**
@@ -152,25 +164,35 @@ export type BufferType = BufferData3D | BufferData2D;
 /**
  * Classification types for BSP operations
  */
-export type BSPClassification = 'coplanar' | 'front' | 'back' | 'spanning';
+export type BSPClassification = "coplanar" | "front" | "back" | "spanning";
 
 /**
  * Type guards for geometric primitives
  */
-export const isVertexData = (obj: any): obj is VertexData => {
-  return obj && typeof obj === 'object' && 'pos' in obj && 'normal' in obj && 'uv' in obj;
+export const isVertexData = (obj: unknown): obj is VertexData => {
+  return Boolean(
+    obj &&
+      typeof obj === "object" &&
+      "pos" in obj &&
+      "normal" in obj &&
+      "uv" in obj,
+  );
 };
 
-export const isPlaneData = (obj: any): obj is PlaneData => {
-  return obj && typeof obj === 'object' && 'normal' in obj && 'w' in obj;
+export const isPlaneData = (obj: unknown): obj is PlaneData => {
+  return Boolean(
+    obj && typeof obj === "object" && "normal" in obj && "w" in obj,
+  );
 };
 
-export const isPolygonData = (obj: any): obj is PolygonData => {
-  return obj && typeof obj === 'object' && 'vertices' in obj && 'plane' in obj;
+export const isPolygonData = (obj: unknown): obj is PolygonData => {
+  return Boolean(
+    obj && typeof obj === "object" && "vertices" in obj && "plane" in obj,
+  );
 };
 
-export const isBSPNodeData = (obj: any): obj is BSPNodeData => {
-  return obj && typeof obj === 'object' && 'polygons' in obj;
+export const isBSPNodeData = (obj: unknown): obj is BSPNodeData => {
+  return Boolean(obj && typeof obj === "object" && "polygons" in obj);
 };
 
 /**
