@@ -86,7 +86,9 @@ describe('MatrixConfigManagerService', () => {
     it('should provide warnings for potentially problematic values', () => {
       console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration warnings');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       const result = service.applyOverride({
         performance: {
@@ -247,7 +249,9 @@ describe('MatrixConfigManagerService', () => {
         },
       ];
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       const result = service.applyPerformanceThresholdAdjustments(adjustments);
 
@@ -394,9 +398,10 @@ describe('MatrixConfigManagerService', () => {
     it('should handle configuration validation errors gracefully', () => {
       console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration error handling');
 
+      // Test with invalid type - string instead of number
       const result = service.applyOverride({
         cache: {
-          maxCacheSize: 'invalid' as any, // Wrong type
+          maxCacheSize: 'invalid' as unknown as number, // Wrong type for testing
         },
       });
 

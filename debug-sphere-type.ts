@@ -5,6 +5,6 @@ import type { SphereNode } from '@holistic-stack/openscad-parser';
 const sphereTest: SphereNode = {
   type: 'sphere',
   // Let's see what properties are actually available...
-} as any;
+};
 
 export { sphereTest };

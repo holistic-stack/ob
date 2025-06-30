@@ -8,8 +8,9 @@
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import type React from 'react';
+import type * as React from 'react';
 import { useEffect, useRef } from 'react';
+import type * as THREE from 'three';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
@@ -99,7 +100,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
               const gridSize = Math.ceil(Math.sqrt(astNodes.length));
               const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
               const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-              mesh3D.mesh.position.set(x, 0, z);
+              (mesh3D.mesh as THREE.Mesh).position.set(x, 0, z);
 
               scene.add(mesh3D.mesh);
               newMeshes.push(mesh3D);
@@ -108,6 +109,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
                 `[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`
               );
             } else {
+              // Type narrowing: result.success is false, so result.error exists
               console.error(
                 `[ERROR][R3FScene] Failed to render AST node ${index} (${node.type}):`,
                 result.error
@@ -137,18 +139,18 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
           ?.usedJSHeapSize ?? 0;
       const triangleCount = meshes.reduce((total, mesh3D) => {
-        const geometry = mesh3D.mesh.geometry;
+        const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
         if (geometry.index) {
-          return total + geometry.index.count / 3;
+          return total + (geometry.index as THREE.BufferAttribute).count / 3;
         } else if (geometry.attributes.position) {
-          return total + geometry.attributes.position.count / 3;
+          return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
         }
         return total;
       }, 0);
 
       const vertexCount = meshes.reduce((total, mesh3D) => {
-        const geometry = mesh3D.mesh.geometry;
-        return total + (geometry.attributes.position?.count ?? 0);
+        const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
+        return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
       }, 0);
 
       onPerformanceUpdate?.({
@@ -199,17 +201,17 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         frameRate,
         meshCount: currentMeshes.length,
         triangleCount: currentMeshes.reduce((total, mesh3D) => {
-          const geometry = mesh3D.mesh.geometry;
+          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
           if (geometry.index) {
-            return total + geometry.index.count / 3;
-          } else if (geometry.attributes.position) {
-            return total + geometry.attributes.position.count / 3;
+            return total + (geometry.index as THREE.BufferAttribute).count / 3;
+          } else if (geometry.attributes.position as THREE.BufferAttribute) {
+            return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
           }
           return total;
         }, 0),
         vertexCount: currentMeshes.reduce((total, mesh3D) => {
-          const geometry = mesh3D.mesh.geometry;
-          return total + (geometry.attributes.position?.count ?? 0);
+          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
+          return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
         }, 0),
         drawCalls: currentMeshes.length,
         textureMemory: 0,

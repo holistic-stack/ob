@@ -224,9 +224,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {renderingState.renderErrors.map((error: string, index: number) => (
-            <div key={index} className="text-sm">
-              {error}
+          {renderingState.renderErrors.map((error) => (
+            <div key={error.id} className="text-sm">
+              {error.message}
             </div>
           ))}
         </div>

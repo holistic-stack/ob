@@ -6,13 +6,18 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import * as THREE from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
 import App from './App';
 
 // Mock the store-connected components
+interface MockComponentProps {
+  className?: string;
+  'data-testid'?: string;
+}
+
 vi.mock('./features/code-editor/components/store-connected-editor', () => ({
-  StoreConnectedEditor: ({ className, 'data-testid': testId }: any) => (
+  StoreConnectedEditor: ({ className, 'data-testid': testId }: MockComponentProps) => (
     <div className={className} data-testid={testId || 'store-connected-editor-mock'}>
       <div data-testid="editor-mock-content">Monaco Editor Mock</div>
     </div>
@@ -20,7 +25,7 @@ vi.mock('./features/code-editor/components/store-connected-editor', () => ({
 }));
 
 vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
-  StoreConnectedRenderer: ({ className, 'data-testid': testId }: any) => (
+  StoreConnectedRenderer: ({ className, 'data-testid': testId }: MockComponentProps) => (
     <div className={className} data-testid={testId || 'store-connected-renderer-mock'}>
       <div data-testid="renderer-mock-content">Three.js Renderer Mock</div>
     </div>
@@ -119,7 +124,7 @@ describe('App', () => {
     });
 
     it('should display metrics in header', () => {
-      (mockStoreState.parsing.ast as any) = [
+      mockStoreState.parsing.ast = [
         {
           type: 'cube',
           size: [1, 1, 1],
@@ -138,39 +143,54 @@ describe('App', () => {
           },
         },
       ];
-      (mockStoreState.rendering.meshes as any) = [
+      mockStoreState.rendering.meshes = [
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh, // Use a proper mock for THREE.Mesh
           metadata: {
             nodeType: 'cube',
             nodeIndex: 0,
             id: 'cube-0',
             triangleCount: 12,
             vertexCount: 8,
+            boundingBox: new THREE.Box3(), // Add a mock bounding box
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(), // Use vi.fn() for empty functions
         },
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh,
           metadata: {
             nodeType: 'sphere',
             nodeIndex: 1,
             id: 'sphere-1',
             triangleCount: 100,
             vertexCount: 50,
+            boundingBox: new THREE.Box3(),
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(),
         },
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh,
           metadata: {
             nodeType: 'cylinder',
             nodeIndex: 2,
             id: 'cylinder-2',
             triangleCount: 64,
             vertexCount: 32,
+            boundingBox: new THREE.Box3(),
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(),
         },
       ];
       mockStoreState.performance.metrics.renderTime = 15.5;

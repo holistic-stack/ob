@@ -356,16 +356,19 @@ export class MatrixServiceContainer {
 
       // Perform service-specific health checks
       try {
-        if (name === 'cache' && (service as any).getStats) {
-          const stats = (service as any).getStats();
-          if (stats.hitRate < 0.1) {
+        if (name === 'cache' && 'getStats' in (service as MatrixCacheService)) {
+          const stats = (service as MatrixCacheService).getStats();
+          if (stats.cacheHitRate < 0.1) {
             healthy = false;
             recommendations.push('Cache hit rate is very low - consider reviewing cache strategy');
           }
         }
 
-        if (name === 'telemetry' && (service as any).getPerformanceMetrics) {
-          const metrics = (service as any).getPerformanceMetrics();
+        if (
+          name === 'telemetry' &&
+          'getPerformanceMetrics' in (service as MatrixTelemetryService)
+        ) {
+          const metrics = (service as MatrixTelemetryService).getPerformanceMetrics();
           if (metrics.failedOperations > metrics.operationCount * 0.1) {
             healthy = false;
             recommendations.push(
@@ -427,8 +430,13 @@ export class MatrixServiceContainer {
 
       // Stop the service if it has a cleanup method
       const service = this.services.get(serviceName);
-      if (service && typeof (service as any).dispose === 'function') {
-        await (service as any).dispose();
+      if (
+        typeof service === 'object' &&
+        service !== null &&
+        'dispose' in service &&
+        typeof (service as { dispose: () => Promise<void> }).dispose === 'function'
+      ) {
+        await (service as { dispose: () => Promise<void> }).dispose();
       }
 
       this.setServiceState(serviceName, 'stopped');
@@ -460,8 +468,13 @@ export class MatrixServiceContainer {
       try {
         this.setServiceState(name, 'stopping');
 
-        if (service && typeof (service as any).dispose === 'function') {
-          await (service as any).dispose();
+        if (
+          typeof service === 'object' &&
+          service !== null &&
+          'dispose' in service &&
+          typeof (service as { dispose: () => Promise<void> }).dispose === 'function'
+        ) {
+          await (service as { dispose: () => Promise<void> }).dispose();
         }
 
         this.setServiceState(name, 'stopped');

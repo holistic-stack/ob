@@ -5,7 +5,7 @@
  * lifecycle management, and health monitoring following TDD methodology.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatrixCacheService } from './matrix-cache.service';
 import { MatrixConfigManagerService } from './matrix-config-manager.service';
 import { MatrixConversionService } from './matrix-conversion.service';
@@ -206,7 +206,7 @@ describe('MatrixServiceContainer', () => {
       console.log('[DEBUG][MatrixServiceContainerTest] Testing unhealthy service detection');
 
       // Simulate service errors by accessing private methods (for testing)
-      const containerAny = container as any;
+      const containerAny = container as unknown as { incrementErrorCount: (name: string) => void };
       containerAny.incrementErrorCount('cache');
       containerAny.incrementErrorCount('cache');
       containerAny.incrementErrorCount('cache');
@@ -310,11 +310,16 @@ describe('MatrixServiceContainer', () => {
         dispose: vi.fn().mockRejectedValue(new Error('Dispose failed')),
       };
 
-      const containerAny = container as any;
+      const containerAny = container as unknown as {
+        services: Map<string, unknown>;
+        serviceStates: Map<string, string>;
+      };
       containerAny.services.set('mockService', mockService);
       containerAny.serviceStates.set('mockService', 'running');
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // do nothing
+      });
 
       await container.shutdown();
 
@@ -348,7 +353,10 @@ describe('MatrixServiceContainer', () => {
       container = new MatrixServiceContainer();
 
       // Simulate a service failure
-      const containerAny = container as any;
+      const containerAny = container as unknown as {
+        setServiceState: (name: string, state: string) => void;
+        incrementErrorCount: (name: string) => void;
+      };
       containerAny.setServiceState('cache', 'error');
       containerAny.incrementErrorCount('cache');
 

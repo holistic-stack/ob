@@ -11,9 +11,13 @@ import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThreeRenderer } from './three-renderer';
 
+interface MockCanvasProps {
+  children: React.ReactNode;
+}
+
 // Mock React Three Fiber
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: any) => <div data-testid="r3f-canvas">{children}</div>,
+  Canvas: ({ children }: MockCanvasProps) => <div data-testid="r3f-canvas">{children}</div>,
   useFrame: vi.fn(),
   useThree: vi.fn(() => ({
     scene: {
@@ -215,7 +219,9 @@ describe('ThreeRenderer Performance', () => {
       // This test verifies that the component can be imported and used
       // without the ERR_BLOCKED_BY_CLIENT error
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
 
       render(
         <Canvas>
@@ -271,7 +277,9 @@ describe('ThreeRenderer Performance', () => {
         throw new Error('Performance API not available');
       });
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
 
       // Component should still render without crashing
       expect(() => {
@@ -290,7 +298,7 @@ describe('ThreeRenderer Performance', () => {
       const originalPerformance = global.performance;
 
       // Temporarily remove performance API
-      (global as any).performance = undefined;
+      delete (globalThis as unknown as { performance?: unknown }).performance;
 
       expect(() => {
         render(

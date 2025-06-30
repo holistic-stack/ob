@@ -15,11 +15,12 @@ import {
   type MatrixConversionDependencies,
   MatrixConversionService,
 } from './matrix-conversion.service';
+import type { MatrixTelemetryService } from './matrix-telemetry.service';
 
 describe('MatrixConversionService', () => {
   let service: MatrixConversionService;
   let mockCache: MatrixCacheService;
-  let mockTelemetry: any;
+  let mockTelemetry: Partial<MatrixTelemetryService>;
   let dependencies: MatrixConversionDependencies;
 
   beforeEach(() => {
@@ -37,7 +38,7 @@ describe('MatrixConversionService', () => {
     dependencies = {
       cache: mockCache,
       config: MATRIX_CONFIG,
-      telemetry: mockTelemetry,
+      telemetry: mockTelemetry as MatrixTelemetryService,
     };
 
     // Create service with dependencies
@@ -56,7 +57,7 @@ describe('MatrixConversionService', () => {
 
       expect(() => {
         new MatrixConversionService({
-          cache: null as any,
+          cache: null as unknown as MatrixCacheService,
           config: MATRIX_CONFIG,
         });
       }).toThrow('MatrixCacheService dependency is required');
@@ -64,7 +65,7 @@ describe('MatrixConversionService', () => {
       expect(() => {
         new MatrixConversionService({
           cache: mockCache,
-          config: null as any,
+          config: null as unknown as typeof MATRIX_CONFIG,
         });
       }).toThrow('Matrix configuration dependency is required');
     });

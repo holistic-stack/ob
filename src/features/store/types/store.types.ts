@@ -31,12 +31,20 @@ export interface ParsingState {
 }
 
 /**
+ * Represents a rendering error with a unique ID.
+ */
+export interface RenderError {
+  readonly id: string;
+  readonly message: string;
+}
+
+/**
  * 3D rendering state
  */
 export interface RenderingState {
   readonly meshes: ReadonlyArray<THREE.Mesh>;
   readonly isRendering: boolean;
-  readonly renderErrors: ReadonlyArray<string>;
+  readonly renderErrors: ReadonlyArray<RenderError>;
   readonly lastRendered: Date | null;
   readonly renderTime: number;
   readonly camera: CameraConfig;

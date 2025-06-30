@@ -90,7 +90,9 @@ describe('Import Fix Verification', () => {
 
     it('should not have external performance metrics dependency', () => {
       // Verify that the component doesn't try to import from blocked paths
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
 
       // This should not cause any import errors
       expect(() => {
@@ -141,7 +143,9 @@ describe('Import Fix Verification', () => {
   describe('Error Prevention', () => {
     it('should not have any blocked client import attempts', () => {
       // Mock console.error to catch any import-related errors
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
 
       // Mock fetch to simulate blocked requests
       const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(() => {
@@ -161,15 +165,15 @@ describe('Import Fix Verification', () => {
       const originalResizeObserver = global.ResizeObserver;
 
       // Temporarily remove ResizeObserver
-      (global as any).ResizeObserver = undefined;
+      delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 
       // The application should not crash
       expect(() => {
         // This simulates what happens when ResizeObserver is not available
         const mockObserver = {
-          observe: () => {},
-          disconnect: () => {},
-          unobserve: () => {},
+          observe: vi.fn(),
+          disconnect: vi.fn(),
+          unobserve: vi.fn(),
         };
         expect(mockObserver).toBeDefined();
       }).not.toThrow();
@@ -184,7 +188,7 @@ describe('Import Fix Verification', () => {
       const originalPerformance = global.performance;
 
       // Temporarily remove performance API
-      (global as any).performance = undefined;
+      delete (globalThis as unknown as { performance?: unknown }).performance;
 
       // Should not crash when performance API is unavailable
       expect(() => {

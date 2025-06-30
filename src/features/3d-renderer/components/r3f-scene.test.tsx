@@ -378,7 +378,9 @@ describe('R3FScene', () => {
 
   describe('Error Handling', () => {
     it('should handle unsupported AST node types', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
 
       const unsupportedAST: ASTNode[] = [
         {
@@ -410,7 +412,9 @@ describe('R3FScene', () => {
     });
 
     it('should call onRenderError when an error occurs', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation to suppress console errors during testing
+      });
       const unsupportedAST: ASTNode[] = [
         {
           type: 'error',

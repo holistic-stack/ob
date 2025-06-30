@@ -21,7 +21,7 @@
 
     // Additional strict checks for bulletproof-react architecture
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
+    "noPropertyAccessFromIndexSignature": false, // Disabled for THREE.js compatibility
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "noImplicitThis": true,
@@ -42,6 +42,7 @@
     "sourceMap": true,
     "removeComments": false,
     "importHelpers": true,
+    "downlevelIteration": true, // Enable for Map.entries() compatibility
     "preserveValueImports": false, // Deprecated in 5.8, use verbatimModuleSyntax
     "importsNotUsedAsValues": "remove", // Deprecated in 5.8, use verbatimModuleSyntax
 

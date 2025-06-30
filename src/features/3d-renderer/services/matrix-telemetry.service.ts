@@ -187,11 +187,15 @@ export class MatrixTelemetryService {
     const deviation = duration / baseline;
     let severity: 'minor' | 'moderate' | 'severe' | null = null;
 
-    if (deviation >= this.regressionThresholds.get('severe')!) {
+    const severeThreshold = this.regressionThresholds.get('severe');
+    const moderateThreshold = this.regressionThresholds.get('moderate');
+    const minorThreshold = this.regressionThresholds.get('minor');
+
+    if (severeThreshold && deviation >= severeThreshold) {
       severity = 'severe';
-    } else if (deviation >= this.regressionThresholds.get('moderate')!) {
+    } else if (moderateThreshold && deviation >= moderateThreshold) {
       severity = 'moderate';
-    } else if (deviation >= this.regressionThresholds.get('minor')!) {
+    } else if (minorThreshold && deviation >= minorThreshold) {
       severity = 'minor';
     }
 
@@ -430,12 +434,16 @@ export class MatrixTelemetryService {
       const averageTime = successful.reduce((sum, op) => sum + op.duration, 0) / successful.length;
       const deviation = averageTime / baseline;
 
-      if (deviation >= this.regressionThresholds.get('minor')!) {
+      const minorThreshold = this.regressionThresholds.get('minor');
+      const moderateThreshold = this.regressionThresholds.get('moderate');
+      const severeThreshold = this.regressionThresholds.get('severe');
+
+      if (minorThreshold && deviation >= minorThreshold) {
         let severity: 'minor' | 'moderate' | 'severe' = 'minor';
 
-        if (deviation >= this.regressionThresholds.get('severe')!) {
+        if (severeThreshold && deviation >= severeThreshold) {
           severity = 'severe';
-        } else if (deviation >= this.regressionThresholds.get('moderate')!) {
+        } else if (moderateThreshold && deviation >= moderateThreshold) {
           severity = 'moderate';
         }
 

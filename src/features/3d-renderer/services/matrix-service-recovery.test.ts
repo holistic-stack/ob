@@ -8,8 +8,11 @@
 import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Result } from '../../../shared/types/result.types';
+import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types';
 import { MatrixIntegrationService } from './matrix-integration.service';
 import { MatrixServiceContainer } from './matrix-service-container';
+import type { MatrixValidationOptions } from './matrix-validation.service';
 
 /**
  * Recovery test scenarios
@@ -193,7 +196,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         });
 
         vi.spyOn(cacheService, 'set').mockImplementation(
-          (key: string, value: any, metadata?: Record<string, unknown>) => {
+          (key: string, value: Matrix, metadata?: Record<string, unknown>) => {
             if (failureCount < maxFailures && Math.random() < 0.3) {
               failureCount++;
               throw new Error(`Simulated cache failure ${failureCount}`);
@@ -261,7 +264,10 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
 
         // Inject failures into validation operations
         vi.spyOn(validationService, 'validateMatrix').mockImplementation(
-          async (matrix: Matrix, options?: any): Promise<any> => {
+          async (
+            matrix: Matrix,
+            options?: MatrixValidationOptions
+          ): Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>> => {
             if (failureCount < maxFailures) {
               failureCount++;
               throw new Error(`Simulated validation failure ${failureCount}`);
@@ -526,12 +532,16 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         expect(initialHealth.overall).toBe('healthy');
 
         // Simulate service degradation by causing errors
-        const containerAny = serviceContainer as any;
+        // Access private methods for testing purposes
+        const containerWithTestMethods = serviceContainer as unknown as {
+          incrementErrorCount: (name: string) => void;
+          setServiceState: (name: string, state: string) => void;
+        };
 
         // Simulate multiple errors in different services
         for (let i = 0; i < 3; i++) {
-          containerAny.incrementErrorCount('cache');
-          containerAny.incrementErrorCount('validation');
+          containerWithTestMethods.incrementErrorCount('cache');
+          containerWithTestMethods.incrementErrorCount('validation');
         }
 
         // Check health after errors
@@ -575,9 +585,13 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         expect(initialStatus.errorServices).toHaveLength(0);
 
         // Simulate service failure
-        const containerAny = serviceContainer as any;
-        containerAny.setServiceState('cache', 'error');
-        containerAny.incrementErrorCount('cache');
+        // Access private methods for testing purposes
+        const containerWithTestMethods = serviceContainer as unknown as {
+          incrementErrorCount: (name: string) => void;
+          setServiceState: (name: string, state: string) => void;
+        };
+        containerWithTestMethods.setServiceState('cache', 'error');
+        containerWithTestMethods.incrementErrorCount('cache');
 
         // Check status after failure
         const failedStatus = serviceContainer.getStatus();

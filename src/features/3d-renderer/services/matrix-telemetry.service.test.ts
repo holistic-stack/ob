@@ -93,7 +93,9 @@ describe('MatrixTelemetryService', () => {
     it('should detect minor performance regressions', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing minor regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Track an operation that's 60% slower than baseline (minor regression)
       service.trackOperation('add', 1.6, true); // Baseline is 1ms, so 1.6ms is 60% slower
@@ -112,7 +114,9 @@ describe('MatrixTelemetryService', () => {
     it('should detect moderate performance regressions', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing moderate regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Track an operation that's 150% slower than baseline (moderate regression)
       service.trackOperation('add', 2.5, true); // Baseline is 1ms, so 2.5ms is 150% slower
@@ -131,7 +135,9 @@ describe('MatrixTelemetryService', () => {
     it('should detect severe performance regressions', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing severe regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Track an operation that's 300% slower than baseline (severe regression)
       service.trackOperation('add', 4, true); // Baseline is 1ms, so 4ms is 300% slower
@@ -152,7 +158,9 @@ describe('MatrixTelemetryService', () => {
         '[DEBUG][MatrixTelemetryServiceTest] Testing no regression for normal operations'
       );
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Track an operation within normal performance range
       service.trackOperation('add', 0.8, true); // Baseline is 1ms, so 0.8ms is faster
@@ -322,16 +330,18 @@ describe('MatrixTelemetryService', () => {
     it('should log operations when debugging is enabled', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing debug logging');
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+        // Mock implementation to suppress console logs during testing
+      });
 
       // Create service with debug logging enabled
-      const debugConfig = {
+      const debugConfig: typeof MATRIX_CONFIG = {
         ...MATRIX_CONFIG,
         debug: {
           ...MATRIX_CONFIG.debug,
           enablePerformanceLogging: true,
         },
-      } as any;
+      };
 
       const debugService = new MatrixTelemetryService({ config: debugConfig });
       debugService.trackOperation('add', 5, true);
@@ -346,16 +356,18 @@ describe('MatrixTelemetryService', () => {
     it('should not log operations when debugging is disabled', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing disabled debug logging');
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+        // Mock implementation to suppress console logs during testing
+      });
 
       // Create service with debug logging disabled
       const debugConfig = {
         ...MATRIX_CONFIG,
         debug: {
           ...MATRIX_CONFIG.debug,
-          enablePerformanceLogging: false,
+          enablePerformanceLogging: false as const,
         },
-      } as any;
+      } as typeof MATRIX_CONFIG;
 
       const debugService = new MatrixTelemetryService({ config: debugConfig });
       debugService.trackOperation('add', 5, true);
@@ -370,7 +382,9 @@ describe('MatrixTelemetryService', () => {
     it('should provide specific recommendations for different operations', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing operation-specific recommendations');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Test multiply operation regression
       service.trackOperation('multiply', 25, true); // Baseline is 5ms, so 25ms is severe
@@ -390,7 +404,9 @@ describe('MatrixTelemetryService', () => {
     it('should provide severity-appropriate recommendations', () => {
       console.log('[DEBUG][MatrixTelemetryServiceTest] Testing severity-based recommendations');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation to suppress console warnings during testing
+      });
 
       // Test severe regression
       service.trackOperation('inverse', 50, true); // Baseline is 10ms, so 50ms is severe

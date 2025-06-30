@@ -6,7 +6,7 @@
  */
 
 import { Matrix } from 'ml-matrix';
-import { Matrix4 } from 'three';
+import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { matrixFactory } from '../utils/matrix-adapters';
 import { MatrixIntegrationService } from './matrix-integration.service';
@@ -101,7 +101,7 @@ interface PerformanceRegressionReport {
  * Measure operation performance
  */
 const measurePerformance = async (
-  operation: () => Promise<any> | any,
+  operation: () => Promise<unknown> | unknown,
   operationName: string,
   category: keyof typeof PERFORMANCE_BASELINES
 ): Promise<PerformanceMeasurement> => {
@@ -268,12 +268,9 @@ describe('Matrix Performance Regression Testing Framework', () => {
           '[DEBUG][PerformanceRegressionTest] Testing Matrix4 to ml-matrix conversion performance'
         );
 
-        const testMatrix = new Matrix4().makeRotationFromEuler({
-          x: Math.PI / 4,
-          y: Math.PI / 6,
-          z: Math.PI / 3,
-          order: 'XYZ',
-        } as any);
+        const testMatrix = new Matrix4().makeRotationFromEuler(
+          new Euler(Math.PI / 4, Math.PI / 6, Math.PI / 3, 'XYZ')
+        );
 
         const measurement = await measurePerformance(
           async () => {
@@ -504,12 +501,9 @@ describe('Matrix Performance Regression Testing Framework', () => {
           const startTime = performance.now();
 
           // Simulate complete workflow
-          const matrix4 = new Matrix4().makeRotationFromEuler({
-            x: i * 0.1,
-            y: i * 0.2,
-            z: i * 0.3,
-            order: 'XYZ',
-          } as any);
+          const matrix4 = new Matrix4().makeRotationFromEuler(
+            new Euler(i * 0.1, i * 0.2, i * 0.3, 'XYZ')
+          );
 
           const conversionResult = await integrationService.convertMatrix4ToMLMatrix(matrix4, {
             useValidation: true,

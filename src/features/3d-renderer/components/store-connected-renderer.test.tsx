@@ -8,13 +8,22 @@
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
+import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CameraConfig } from '../../../shared/types/common.types';
+import type { RenderError } from '../../store/types/store.types';
+import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
 
+interface MockCanvasProps {
+  children: React.ReactNode;
+  // Add other props as needed, e.g., camera, style
+}
+
 // Mock React Three Fiber
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children, ...props }: any) => (
+  Canvas: ({ children, ...props }: MockCanvasProps) => (
     <div data-testid="r3f-canvas" {...props}>
       {children}
     </div>
@@ -27,15 +36,36 @@ vi.mock('@react-three/fiber', () => ({
   })),
 }));
 
+interface MockOrbitControlsProps {
+  onChange?: (event: { target: { object: THREE.Object3D; target: THREE.Vector3 } }) => void;
+  // Add other props as needed
+}
+
 // Mock React Three Drei
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: ({ onChange, ...props }: any) => <div data-testid="orbit-controls" {...props} />,
+  OrbitControls: ({ onChange, ...props }: MockOrbitControlsProps) => (
+    <div data-testid="orbit-controls" {...props} />
+  ),
   Stats: () => <div data-testid="stats" />,
 }));
 
+interface MockThreeRendererProps {
+  astNodes: ReadonlyArray<ASTNode>;
+  camera: CameraConfig;
+  onRenderComplete?: (meshes: ReadonlyArray<Mesh3D>) => void;
+  onPerformanceUpdate?: (metrics: RenderingMetrics) => void;
+  // Add other props as needed
+}
+
 // Mock Three.js renderer component
 vi.mock('./three-renderer', () => ({
-  ThreeRenderer: ({ astNodes, camera, onRenderComplete, onPerformanceUpdate, ...props }: any) => {
+  ThreeRenderer: ({
+    astNodes,
+    camera,
+    onRenderComplete,
+    onPerformanceUpdate,
+    ...props
+  }: MockThreeRendererProps) => {
     // Simulate rendering completion
     React.useEffect(() => {
       if (onRenderComplete) {
@@ -48,6 +78,12 @@ vi.mock('./three-renderer', () => ({
               renderTime: 15.5,
               parseTime: 5.2,
               memoryUsage: 1024 * 1024 * 2.5,
+              meshCount: 0,
+              triangleCount: 0,
+              vertexCount: 0,
+              drawCalls: 0,
+              textureMemory: 0,
+              bufferMemory: 0,
             }),
           20
         );
@@ -73,8 +109,8 @@ const mockStoreState = {
   rendering: {
     camera: { position: [5, 5, 5], target: [0, 0, 0] },
     isRendering: false,
-    meshes: [],
-    renderErrors: [],
+    meshes: [] as Mesh3D[],
+    renderErrors: [] as RenderError[],
   },
   performance: {
     metrics: {
@@ -210,7 +246,10 @@ describe('StoreConnectedRenderer', () => {
     });
 
     it('should display render errors from store', () => {
-      mockStoreState.rendering.renderErrors = ['Test error 1' as never, 'Test error 2' as never];
+      mockStoreState.rendering.renderErrors = [
+        { id: '1', message: 'Test error 1' },
+        { id: '2', message: 'Test error 2' },
+      ];
 
       render(<StoreConnectedRenderer />);
 
@@ -284,42 +323,63 @@ describe('StoreConnectedRenderer', () => {
         renderTime: 25.7,
         parseTime: 8.3,
         memoryUsage: 1024 * 1024 * 3.2,
+        meshCount: 0,
+        triangleCount: 0,
+        vertexCount: 0,
+        drawCalls: 0,
+        textureMemory: 0,
+        bufferMemory: 0,
       };
       mockStoreState.rendering.meshes = [
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh,
           metadata: {
             nodeType: 'cube',
             nodeIndex: 0,
             id: 'cube-0',
             triangleCount: 12,
             vertexCount: 8,
+            boundingBox: new THREE.Box3(),
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(),
         },
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh,
           metadata: {
             nodeType: 'sphere',
             nodeIndex: 1,
             id: 'sphere-1',
             triangleCount: 100,
             vertexCount: 50,
+            boundingBox: new THREE.Box3(),
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(),
         },
         {
-          mesh: {} as any,
+          mesh: {} as THREE.Mesh,
           metadata: {
             nodeType: 'cylinder',
             nodeIndex: 2,
             id: 'cylinder-2',
             triangleCount: 64,
             vertexCount: 32,
+            boundingBox: new THREE.Box3(),
+            material: 'default',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
           },
-          dispose: () => {},
+          dispose: vi.fn(),
         },
-      ] as any;
+      ];
 
       render(<StoreConnectedRenderer />);
 

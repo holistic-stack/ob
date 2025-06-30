@@ -153,10 +153,31 @@ async function runTestSuite(config: TestConfig): Promise<TestResult> {
       output,
       coverage: extractCoverage(output),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    const errorMessage = error.message || 'Unknown error';
-    const output = error.stdout || error.output || '';
+    let errorMessage: string;
+    let output: string;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Check if the error is an instance of ChildProcessError (from execSync)
+      // and safely access stdout/stderr
+      if ('stdout' in error && typeof error.stdout === 'string') {
+        output = error.stdout;
+      } else if (
+        'output' in error &&
+        Array.isArray(error.output) &&
+        typeof error.output[1] === 'string'
+      ) {
+        // For older Node.js versions or specific error structures
+        output = error.output[1];
+      } else {
+        output = '';
+      }
+    } else {
+      errorMessage = String(error);
+      output = '';
+    }
 
     log(`✗ ${config.name} tests failed after ${formatDuration(duration)}`, 'error');
     log(`Error: ${errorMessage}`, 'error');

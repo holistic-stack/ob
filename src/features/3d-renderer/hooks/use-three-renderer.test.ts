@@ -7,6 +7,7 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { act, renderHook } from '@testing-library/react';
+import type * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAppStore } from '../../store/app-store';
 import { useThreeRenderer } from './use-three-renderer';
@@ -252,10 +253,9 @@ describe('useThreeRenderer Hook', () => {
 
       // Mock initialization
       act(() => {
-        result.current.sceneRef.current = mockScene as any;
-        result.current.cameraRef.current = mockCamera as any;
-        result.current.rendererRef.current = mockRenderer as any;
-        (result.current as any).setIsInitialized(true);
+        result.current.sceneRef.current = mockScene as unknown as THREE.Scene;
+        result.current.cameraRef.current = mockCamera as unknown as THREE.PerspectiveCamera;
+        result.current.rendererRef.current = mockRenderer as unknown as THREE.WebGLRenderer;
       });
 
       await act(async () => {
@@ -264,6 +264,7 @@ describe('useThreeRenderer Hook', () => {
 
       // Should attempt to render (even if mocked)
       expect(result.current.isRendering).toBe(false);
+      expect(result.current.isInitialized).toBe(true);
     });
   });
 
@@ -309,9 +310,9 @@ describe('useThreeRenderer Hook', () => {
 
       // Mock initialization
       act(() => {
-        result.current.sceneRef.current = mockScene as any;
-        result.current.cameraRef.current = mockCamera as any;
-        result.current.rendererRef.current = mockRenderer as any;
+        result.current.sceneRef.current = mockScene as unknown as THREE.Scene;
+        result.current.cameraRef.current = mockCamera as unknown as THREE.PerspectiveCamera;
+        result.current.rendererRef.current = mockRenderer as unknown as THREE.WebGLRenderer;
       });
 
       let screenshot: string = '';
@@ -352,10 +353,9 @@ describe('useThreeRenderer Hook', () => {
 
       // Mock initialization
       act(() => {
-        result.current.sceneRef.current = mockScene as any;
-        result.current.cameraRef.current = mockCamera as any;
-        result.current.rendererRef.current = mockRenderer as any;
-        (result.current as any).setIsInitialized(true);
+        result.current.sceneRef.current = mockScene as unknown as THREE.Scene;
+        result.current.cameraRef.current = mockCamera as unknown as THREE.PerspectiveCamera;
+        result.current.rendererRef.current = mockRenderer as unknown as THREE.WebGLRenderer;
       });
 
       await act(async () => {
@@ -363,6 +363,7 @@ describe('useThreeRenderer Hook', () => {
       });
 
       expect(result.current.metrics.renderTime).toBeGreaterThanOrEqual(0);
+      expect(result.current.isInitialized).toBe(true);
     });
   });
 
@@ -411,19 +412,15 @@ describe('useThreeRenderer Hook', () => {
       expect(() => unmount()).not.toThrow();
     });
 
-    it('should dispose of meshes on cleanup', () => {
+    it('should dispose of meshes on cleanup', async () => {
       const { result, unmount } = renderHook(() => useThreeRenderer());
 
-      // Add some mock meshes
-      act(() => {
-        (result.current as any).setMeshes([
-          {
-            mesh: mockMesh,
-            metadata: { id: 'test' },
-            dispose: vi.fn(),
-          },
-        ]);
+      // Add some mock meshes by rendering AST
+      const mockAST: ASTNode[] = [{ type: 'cube', size: [1, 1, 1], center: false }];
+      await act(async () => {
+        await result.current.actions.renderAST(mockAST);
       });
+      expect(result.current.meshes).toHaveLength(1);
 
       // Unmount should not throw
       expect(() => unmount()).not.toThrow();

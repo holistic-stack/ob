@@ -96,6 +96,7 @@
     }
   },
   "javascript": {
+    "globals": ["vi"],
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",

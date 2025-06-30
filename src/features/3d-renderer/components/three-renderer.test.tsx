@@ -13,6 +13,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { RendererProps, Scene3DConfig } from '../types/renderer.types';
 
+interface MockCanvasProps {
+  children: React.ReactNode;
+  // Add other props as needed, e.g., camera, style
+}
+
 // Mock Three.js for testing
 const mockScene = {
   add: vi.fn(),
@@ -77,7 +82,7 @@ vi.mock('three', () => ({
 
 // Mock React Three Fiber
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children, ...props }: any) =>
+  Canvas: ({ children, ...props }: MockCanvasProps) =>
     React.createElement(
       'div',
       {
@@ -133,7 +138,7 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
 
         if (onRenderComplete) {
           const mockMeshes = ast.map((node, index) => ({
-            mesh: mockMesh as any,
+            mesh: mockMesh as THREE.Mesh,
             metadata: {
               id: `mesh-${index}`,
               nodeType: node.type || 'unknown',

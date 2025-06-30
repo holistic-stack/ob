@@ -6,10 +6,11 @@
  */
 
 import { Matrix } from 'ml-matrix';
-import { Matrix4 } from 'three';
+import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MatrixIntegrationService } from './matrix-integration.service';
 import { MatrixServiceContainer } from './matrix-service-container';
+import type { MatrixTelemetryService } from './matrix-telemetry.service';
 
 /**
  * Concurrent testing configuration
@@ -47,7 +48,7 @@ interface ConcurrentOperationResult {
   readonly success: boolean;
   readonly executionTime: number;
   readonly error?: string;
-  readonly result?: any;
+  readonly result?: unknown;
 }
 
 /**
@@ -87,12 +88,9 @@ const createConcurrentTestMatrix = (size: number, seed: number): Matrix => {
  * Create test Matrix4 with seed
  */
 const createConcurrentTestMatrix4 = (seed: number): Matrix4 => {
-  return new Matrix4().makeRotationFromEuler({
-    x: Math.sin(seed) * Math.PI,
-    y: Math.cos(seed) * Math.PI,
-    z: Math.tan(seed) * Math.PI,
-    order: 'XYZ',
-  } as any);
+  return new Matrix4().makeRotationFromEuler(
+    new Euler(Math.sin(seed) * Math.PI, Math.cos(seed) * Math.PI, Math.tan(seed) * Math.PI, 'XYZ')
+  );
 };
 
 /**
@@ -266,22 +264,29 @@ describe('Matrix Service Concurrent Operations Testing', () => {
 
         // All successful operations should return the same result
         if (successfulResults.length > 1) {
-          const firstResult = successfulResults[0]?.result;
+          const firstResult = successfulResults[0]?.result as
+            | { success: boolean; data: { result: Matrix } }
+            | undefined;
           const allResultsMatch = successfulResults.every((r) => {
-            if (!r.result?.success || !firstResult?.success) return false;
+            const currentResult = r.result as
+              | { success: boolean; data: { result: Matrix } }
+              | undefined;
+            if (!currentResult?.success || !firstResult?.success) return false;
 
-            const matrix1 = r.result.data.result;
+            const matrix1 = currentResult.data.result;
             const matrix2 = firstResult.data.result;
 
             // Compare matrix dimensions and values
             return (
               matrix1.rows === matrix2.rows &&
               matrix1.columns === matrix2.columns &&
-              matrix1
-                .to1DArray()
-                .every(
-                  (val: number, idx: number) => Math.abs(val - matrix2.to1DArray()[idx]) < 1e-10
-                )
+              matrix1.to1DArray().every((val: number, idx: number) => {
+                const arr = matrix2.to1DArray();
+                if (arr && arr[idx] !== undefined) {
+                  return Math.abs(val - arr[idx]) < 1e-10;
+                }
+                return false;
+              })
             );
           });
 
@@ -382,9 +387,10 @@ describe('Matrix Service Concurrent Operations Testing', () => {
 
         // Each successful batch should contain multiple results
         successfulResults.forEach((result) => {
-          if (result.result?.success) {
-            expect(Array.isArray(result.result.data)).toBe(true);
-            expect(result.result.data).toHaveLength(5);
+          const currentResult = result.result as { success: boolean; data: unknown[] } | undefined;
+          if (currentResult?.success) {
+            expect(Array.isArray(currentResult.data)).toBe(true);
+            expect(currentResult.data).toHaveLength(5);
           }
         });
       },
@@ -536,9 +542,9 @@ describe('Matrix Service Concurrent Operations Testing', () => {
             if (
               service &&
               'getPerformanceMetrics' in service &&
-              typeof (service as any).getPerformanceMetrics === 'function'
+              typeof (service as MatrixTelemetryService).getPerformanceMetrics === 'function'
             ) {
-              const metrics = (service as any).getPerformanceMetrics();
+              const metrics = (service as MatrixTelemetryService).getPerformanceMetrics();
               expect(metrics).toBeDefined();
             }
 

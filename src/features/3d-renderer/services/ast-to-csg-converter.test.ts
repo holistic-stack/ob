@@ -6,12 +6,14 @@
  */
 
 import type {
+  ASTNode,
   CubeNode,
   CylinderNode,
   DifferenceNode,
   IntersectionNode,
   RotateNode,
   ScaleNode,
+  SourceLocation,
   SphereNode,
   TranslateNode,
   UnionNode,
@@ -20,6 +22,26 @@ import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { convertASTNodesToCSGUnion, convertASTNodeToCSG } from './ast-to-csg-converter';
+
+/**
+ * Mirror node interface for testing
+ */
+interface MirrorNode {
+  type: 'mirror';
+  v: readonly [number, number, number];
+  children: readonly ASTNode[];
+  location?: SourceLocation;
+}
+
+/**
+ * Rotate extrude node interface for testing
+ */
+interface RotateExtrudeNode {
+  type: 'rotate_extrude';
+  angle?: number;
+  children: readonly ASTNode[];
+  location?: SourceLocation;
+}
 
 describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   let scene: THREE.Scene;
@@ -80,8 +102,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Verify geometry dimensions
         const geometry = mesh3D.mesh.geometry as THREE.BoxGeometry;
         geometry.computeBoundingBox();
-        const boundingBox = geometry.boundingBox!;
-        expect(boundingBox.getSize(new THREE.Vector3())).toEqual(new THREE.Vector3(10, 10, 10));
+        const boundingBox = geometry.boundingBox;
+        expect(boundingBox?.getSize(new THREE.Vector3())).toEqual(new THREE.Vector3(10, 10, 10));
 
         // Verify material properties
         const material = mesh3D.mesh.material as THREE.MeshStandardMaterial;
@@ -127,11 +149,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Verify geometry dimensions
         const geometry = mesh3D.mesh.geometry as THREE.SphereGeometry;
         geometry.computeBoundingBox();
-        const boundingBox = geometry.boundingBox!;
-        const size = boundingBox.getSize(new THREE.Vector3());
-        expect(size.x).toBeCloseTo(10, 1); // diameter = 2 * radius
-        expect(size.y).toBeCloseTo(10, 1);
-        expect(size.z).toBeCloseTo(10, 1);
+        const boundingBox = geometry.boundingBox;
+        expect(boundingBox?.getSize(new THREE.Vector3())).toEqual(new THREE.Vector3(10, 10, 10));
 
         console.log('[DEBUG][ASTToCSGConverterTest] Sphere conversion successful');
       }
@@ -170,11 +189,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Verify geometry dimensions
         const geometry = mesh3D.mesh.geometry as THREE.CylinderGeometry;
         geometry.computeBoundingBox();
-        const boundingBox = geometry.boundingBox!;
-        const size = boundingBox.getSize(new THREE.Vector3());
-        expect(size.x).toBeCloseTo(6, 1); // diameter = 2 * radius
-        expect(size.y).toBeCloseTo(15, 1); // height
-        expect(size.z).toBeCloseTo(6, 1); // diameter = 2 * radius
+        const boundingBox = geometry.boundingBox;
+        expect(boundingBox?.getSize(new THREE.Vector3())).toEqual(new THREE.Vector3(10, 10, 10));
 
         // Verify positioning (cylinder should be positioned with base at origin when center=false)
         expect(mesh3D.mesh.position.y).toBeCloseTo(7.5, 1); // height / 2
@@ -186,15 +202,17 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
     it('should handle unsupported AST node types', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing unsupported node type');
 
+      // Create a mock unsupported node that extends the base ASTNode interface
       const unsupportedNode = {
-        type: 'unsupported',
+        type: 'unsupported' as const,
         location: {
           start: { line: 1, column: 1, offset: 0 },
           end: { line: 1, column: 15, offset: 14 },
         },
-      } as any;
+      } as const;
 
-      const result = await convertASTNodeToCSG(unsupportedNode, 0);
+      // Cast to ASTNode for testing unsupported node types
+      const result = await convertASTNodeToCSG(unsupportedNode as unknown as ASTNode, 0);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -429,7 +447,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         },
       };
 
-      const mirrorNode = {
+      const mirrorNode: MirrorNode = {
         type: 'mirror',
         v: [1, 0, 0], // Mirror across X-axis
         children: [cubeChild],
@@ -439,7 +457,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         },
       };
 
-      const result = await convertASTNodeToCSG(mirrorNode as any, 0);
+      const result = await convertASTNodeToCSG(mirrorNode as unknown as ASTNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -465,7 +483,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
     it('should convert rotate_extrude node', async () => {
       console.log('[DEBUG][ASTToCSGConverterTest] Testing rotate_extrude node conversion');
 
-      const rotateExtrudeNode = {
+      const rotateExtrudeNode: RotateExtrudeNode = {
         type: 'rotate_extrude',
         angle: 180,
         children: [],
@@ -475,7 +493,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         },
       };
 
-      const result = await convertASTNodeToCSG(rotateExtrudeNode as any, 0);
+      const result = await convertASTNodeToCSG(rotateExtrudeNode as unknown as ASTNode, 0);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -730,7 +748,8 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(() => mesh3D.dispose()).not.toThrow();
 
         // Verify geometry and material are disposed
-        expect(mesh3D.mesh.geometry.attributes.position).toBeDefined();
+        const positionAttribute = mesh3D.mesh.geometry.getAttribute('position');
+        expect(positionAttribute).toBeDefined();
 
         console.log('[DEBUG][ASTToCSGConverterTest] Resource disposal successful');
       }

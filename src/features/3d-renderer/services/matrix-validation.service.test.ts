@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MATRIX_CONFIG } from '../config/matrix-config';
 import { matrixFactory } from '../utils/matrix-adapters';
 import { MatrixCacheService } from './matrix-cache.service';
+import type { MatrixTelemetryService } from './matrix-telemetry.service';
 import {
   type MatrixValidationDependencies,
   MatrixValidationService,
@@ -18,7 +19,7 @@ import {
 describe('MatrixValidationService', () => {
   let service: MatrixValidationService;
   let mockCache: MatrixCacheService;
-  let mockTelemetry: any;
+  let mockTelemetry: Partial<MatrixTelemetryService>;
   let dependencies: MatrixValidationDependencies;
 
   beforeEach(() => {
@@ -36,7 +37,7 @@ describe('MatrixValidationService', () => {
     dependencies = {
       cache: mockCache,
       config: MATRIX_CONFIG,
-      telemetry: mockTelemetry,
+      telemetry: mockTelemetry as MatrixTelemetryService,
     };
 
     // Create service with dependencies
@@ -54,7 +55,7 @@ describe('MatrixValidationService', () => {
 
       expect(() => {
         new MatrixValidationService({
-          cache: null as any,
+          cache: null as unknown as MatrixCacheService,
           config: MATRIX_CONFIG,
         });
       }).toThrow('MatrixCacheService dependency is required');
@@ -62,7 +63,7 @@ describe('MatrixValidationService', () => {
       expect(() => {
         new MatrixValidationService({
           cache: mockCache,
-          config: null as any,
+          config: null as unknown as typeof MATRIX_CONFIG,
         });
       }).toThrow('Matrix configuration dependency is required');
     });

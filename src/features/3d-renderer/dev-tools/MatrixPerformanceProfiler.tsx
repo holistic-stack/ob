@@ -222,23 +222,23 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
       }}
     >
       {/* Header */}
-      <div
+      <button
+        type="button"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '8px',
           cursor: 'pointer',
+          background: 'transparent',
+          border: 'none',
+          padding: '0',
+          width: '100%',
+          color: 'white',
+          font: 'inherit',
+          textAlign: 'left',
         }}
         onClick={() => setIsExpanded(!isExpanded)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setIsExpanded(!isExpanded);
-          }
-        }}
-        role="button"
-        tabIndex={0}
         aria-expanded={isExpanded}
         aria-label={`Matrix Performance Profiler - ${isExpanded ? 'Collapse' : 'Expand'}`}
       >
@@ -254,7 +254,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
           </span>
           <span style={{ fontSize: '10px' }}>{isExpanded ? '▼' : '▶'}</span>
         </div>
-      </div>
+      </button>
 
       {/* Compact view */}
       {!isExpanded && (
@@ -374,7 +374,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
                   borderRadius: '4px',
                 }}
               >
-                {history.slice(-10).map((entry, index) => {
+                {history.slice(-10).map((entry, _index) => {
                   const time = entry.metrics.averageExecutionTime;
                   const bar = '█'.repeat(Math.max(1, Math.min(20, Math.floor(time / 2))));
                   const color = getPerformanceColor(
@@ -383,7 +383,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
                   );
 
                   return (
-                    <div key={index} style={{ color }}>
+                    <div key={entry.timestamp} style={{ color }}>
                       {bar} {formatDuration(time)}
                     </div>
                   );
@@ -563,6 +563,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     <>
       {/* Toggle button */}
       <button
+        type="button"
         onClick={() => setIsVisible(!isVisible)}
         style={{
           position: 'fixed',
@@ -640,6 +641,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                 <option value="error">Error</option>
               </select>
               <button
+                type="button"
                 onClick={clearLogs}
                 style={{
                   background: '#f44336',
@@ -654,6 +656,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                 Clear
               </button>
               <button
+                type="button"
                 onClick={() => setIsVisible(false)}
                 style={{
                   background: 'transparent',

@@ -6,7 +6,7 @@
  */
 
 import { Matrix } from 'ml-matrix';
-import { Matrix4 } from 'three';
+import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MatrixIntegrationService } from './matrix-integration.service';
 import { MatrixServiceContainer } from './matrix-service-container';
@@ -80,20 +80,33 @@ const createTestMatrix = (size: number): Matrix => {
  * Create test Matrix4
  */
 const createTestMatrix4 = (): Matrix4 => {
-  return new Matrix4().makeRotationFromEuler({
-    x: Math.random() * Math.PI,
-    y: Math.random() * Math.PI,
-    z: Math.random() * Math.PI,
-    order: 'XYZ',
-  } as any);
+  const euler = new Euler(
+    Math.random() * Math.PI,
+    Math.random() * Math.PI,
+    Math.random() * Math.PI,
+    'XYZ'
+  );
+  return new Matrix4().makeRotationFromEuler(euler);
 };
+
+/**
+ * Performance interface with memory property for Chrome
+ */
+interface PerformanceWithMemory extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
 
 /**
  * Measure memory usage
  */
 const measureMemoryUsage = (): number => {
-  if (typeof performance !== 'undefined' && (performance as any).memory) {
-    return (performance as any).memory.usedJSHeapSize;
+  const perf = performance as PerformanceWithMemory;
+  if (typeof performance !== 'undefined' && perf.memory) {
+    return perf.memory.usedJSHeapSize;
   }
   return 0;
 };
