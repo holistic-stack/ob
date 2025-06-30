@@ -2,7 +2,7 @@
  * 3D Renderer Types - Barrel Exports
  */
 
-export type * from './renderer.types';
-export type * from './scene.types';
-export type * from './geometry.types';
-export type * from './matrix.types';
+export type * from './renderer.types.js';
+export type * from './scene.types.js';
+export type * from './geometry.types.js';
+export type * from './matrix.types.js';

@@ -9,7 +9,7 @@ import type {
   MatrixPerformanceMetrics,
 
 } from "../types/matrix.types";
-import { MATRIX_CONFIG } from "../config/matrix-config";
+import type { MATRIX_CONFIG } from "../config/matrix-config";
 
 
 

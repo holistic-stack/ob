@@ -18,6 +18,13 @@ export interface AppConfig {
   readonly enableRealTimeRendering: boolean;
   readonly theme: 'light' | 'dark' | 'auto';
   readonly performance: PerformanceConfig;
+  readonly debounceConfig?: DebounceConfig;
+}
+
+export interface DebounceConfig {
+  readonly parseDelayMs: number;
+  readonly renderDelayMs: number;
+  readonly saveDelayMs: number;
 }
 
 export interface PerformanceConfig {
@@ -36,8 +43,10 @@ export interface EditorPosition {
 }
 
 export interface EditorSelection {
-  readonly start: number;
-  readonly end: number;
+  readonly startLineNumber: number;
+  readonly startColumn: number;
+  readonly endLineNumber: number;
+  readonly endColumn: number;
 }
 
 export interface EditorState {
@@ -51,17 +60,23 @@ export interface EditorState {
 /**
  * 3D Scene types
  */
-export interface Camera3D {
+export interface CameraConfig {
   readonly position: readonly [number, number, number];
   readonly target: readonly [number, number, number];
   readonly zoom: number;
+  readonly fov: number;
+  readonly near: number;
+  readonly far: number;
+  readonly enableControls: boolean;
+  readonly enableAutoRotate: boolean;
+  readonly autoRotateSpeed: number;
 }
 
 export interface SceneState {
   readonly isRendering: boolean;
   readonly renderErrors: ReadonlyArray<string>;
   readonly lastRendered: Date | null;
-  readonly camera: Camera3D;
+  readonly camera: CameraConfig;
 }
 
 /**

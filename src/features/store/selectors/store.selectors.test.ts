@@ -7,6 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { AppState } from '../types/store.types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import {
   selectEditorCode,
   selectEditorIsDirty,
@@ -62,7 +63,13 @@ describe('Store Selectors', () => {
         camera: {
           position: [10, 10, 10],
           target: [0, 0, 0],
-          zoom: 1
+          zoom: 1,
+          fov: 75,
+          near: 0.1,
+          far: 1000,
+          enableControls: true,
+          enableAutoRotate: false,
+          autoRotateSpeed: 1,
         }
       },
       performance: {

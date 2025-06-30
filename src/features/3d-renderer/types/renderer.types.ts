@@ -5,11 +5,11 @@
  * with OpenSCAD AST rendering, CSG operations, and performance monitoring.
  */
 
-import * as React from 'react';
+import type * as React from 'react';
 import type * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { Result, AsyncResult } from '../../../shared/types/result.types';
-import type { PerformanceMetrics } from '../../../shared/types/common.types';
+import type { Result, AsyncResult } from '../../../shared/types/result.types.js';
+import type { PerformanceMetrics, CameraConfig } from '../../../shared/types/common.types.js';
 
 /**
  * 3D Scene configuration
@@ -26,20 +26,7 @@ export interface Scene3DConfig {
   readonly maxTriangles: number;
 }
 
-/**
- * Camera configuration and controls
- */
-export interface CameraConfig {
-  readonly position: readonly [number, number, number];
-  readonly target: readonly [number, number, number];
-  readonly zoom: number;
-  readonly fov: number;
-  readonly near: number;
-  readonly far: number;
-  readonly enableControls: boolean;
-  readonly enableAutoRotate: boolean;
-  readonly autoRotateSpeed: number;
-}
+
 
 /**
  * Mesh metadata for tracking and optimization

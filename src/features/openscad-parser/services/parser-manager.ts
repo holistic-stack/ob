@@ -17,10 +17,11 @@ import type {
   ParserEvent,
   ParserEventListener,
   ParserContext
-} from '../types/parser.types';
-import type { ParserManager } from '../types/parser.types';
-import { success, error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
-import type { Result, AsyncResult } from '../../../shared/types/result.types';
+} from '../types/parser.types.js';
+import type { ParserManager } from '../types/parser.types.js';
+import { success, error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { Result, AsyncResult } from '../../../shared/types/result.types.js';
+
 // Inline performance measurement to avoid import issues
 const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> => {
   const start = performance.now();
@@ -87,7 +88,7 @@ const validateASTNodes = (nodes: ReadonlyArray<ASTNode>): { valid: boolean; erro
     // Check for common node types and their required properties
     switch (node.type) {
       case 'cube':
-        if (!node.size) {
+        if (!('size' in node)) {
           warnings.push('Cube node missing size property');
         }
         break;
@@ -149,7 +150,7 @@ const validateConfig = (config: ParserConfig): Result<void, string> => {
  */
 class ParserManagerImpl implements ParserManager {
   private context: ParserContext;
-  private parser: OpenscadParser;
+  private readonly parser: OpenscadParser;
   private initialized: boolean = false;
 
   constructor(config: ParserConfig) {
@@ -474,17 +475,20 @@ class ParserManagerImpl implements ParserManager {
    * Add event listener
    */
   addEventListener(listener: ParserEventListener): void {
-    (this.context.listeners as ParserEventListener[]).push(listener);
+    this.context = {
+      ...this.context,
+      listeners: [...this.context.listeners, listener],
+    };
   }
 
   /**
    * Remove event listener
    */
   removeEventListener(listener: ParserEventListener): void {
-    const index = this.context.listeners.indexOf(listener);
-    if (index !== -1) {
-      (this.context.listeners as ParserEventListener[]).splice(index, 1);
-    }
+    this.context = {
+      ...this.context,
+      listeners: this.context.listeners.filter(l => l !== listener),
+    };
   }
 
   /**
@@ -496,7 +500,6 @@ class ParserManagerImpl implements ParserManager {
     }
 
     this.clearCache();
-    (this.context.listeners as ParserEventListener[]).length = 0;
 
     // Dispose OpenSCAD parser
     if (this.initialized) {
@@ -507,7 +510,8 @@ class ParserManagerImpl implements ParserManager {
     // Update context immutably instead of direct assignment
     this.context = {
       ...this.context,
-      disposed: true
+      listeners: [],
+      disposed: true,
     };
 
     console.log('[CLEANUP][ParserManager] Parser manager disposed');
@@ -516,7 +520,7 @@ class ParserManagerImpl implements ParserManager {
   /**
    * Simple optimization: remove duplicate nodes
    */
-  private removeDuplicateNodes(nodes: ReadonlyArray<ASTNode>): ReadonlyArray<ASTNode> {
+  private removeDuplicateNodes(nodes: ReadonlyArray<ASTNode>): ASTNode[] {
     const seen = new Set<string>();
     const result: ASTNode[] = [];
 
@@ -526,12 +530,12 @@ class ParserManagerImpl implements ParserManager {
         seen.add(nodeKey);
 
         // Recursively optimize children
-        const optimizedNode = { ...node };
         if ('children' in node && Array.isArray(node.children)) {
-          (optimizedNode as any).children = this.removeDuplicateNodes(node.children);
+          const optimizedChildren = this.removeDuplicateNodes(node.children);
+          result.push({ ...node, children: optimizedChildren });
+        } else {
+          result.push(node);
         }
-
-        result.push(optimizedNode);
       }
     }
 
@@ -630,8 +634,8 @@ class ParserManagerImpl implements ParserManager {
     this.context.listeners.forEach(listener => {
       try {
         listener(event);
-      } catch (error) {
-        console.error('[ERROR][ParserManager] Event listener error:', error);
+      } catch (e) {
+        console.error('[ERROR][ParserManager] Event listener error:', e);
       }
     });
   }
@@ -703,4 +707,4 @@ export const transformAST = async (ast: ReadonlyArray<ASTNode>): AsyncResult<Rea
 };
 
 // Export the ParserManager interface for external use
-export type { ParserManager } from '../types/parser.types';
+export type { ParserManager } from '../types/parser.types.js';

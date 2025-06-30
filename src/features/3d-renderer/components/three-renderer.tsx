@@ -13,11 +13,11 @@ import * as THREE from 'three';
 import type {
   RendererProps,
   Scene3DConfig,
-  CameraConfig,
   Mesh3D,
   RenderingMetrics,
   RenderingError
 } from '../types/renderer.types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import type {
   ASTNode,
   CubeNode as _OpenSCADCubeNode,
@@ -418,8 +418,8 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
 
     // Configure camera
     if (threeCamera instanceof THREE.PerspectiveCamera) {
-      threeCamera.position.set(...camera.position);
-      threeCamera.lookAt(...camera.target);
+      threeCamera.position.set(camera.position[0], camera.position[1], camera.position[2]);
+      threeCamera.lookAt(camera.target[0], camera.target[1], camera.target[2]);
       threeCamera.fov = camera.fov;
       threeCamera.near = camera.near;
       threeCamera.far = camera.far;

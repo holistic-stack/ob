@@ -9,9 +9,9 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { Canvas } from '@react-three/fiber';
-import * as _THREE from 'three';
+import * as THREE from 'three';
 import type { ASTNode, CubeNode, SphereNode, CylinderNode } from '@holistic-stack/openscad-parser';
-import type { Mesh3D as _Mesh3D } from '../types/renderer.types';
+import type { Mesh3D } from '../types/renderer.types';
 
 import { R3FScene } from './r3f-scene';
 
@@ -48,25 +48,32 @@ vi.mock('@react-three/fiber', async () => {
       scene: mockScene,
       gl: mockGl
     })),
-    useFrame: vi.fn((callback) => {
+    useFrame: vi.fn((callback: (state: any, delta: number) => void) => {
       // Simulate frame callback
-      setTimeout(callback, 16);
+      setTimeout(() => callback({} as any, 0.016), 16);
     })
   };
 });
 
 // Mock React Three Drei
+interface OrbitControlsChangeEvent {
+  target: {
+    object: { position: THREE.Vector3; };
+    target: THREE.Vector3;
+  };
+}
+
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: ({ onChange, ...props }: any) => {
+  OrbitControls: ({ onChange, ...props }: { onChange?: (event: OrbitControlsChangeEvent) => void; }) => {
     React.useEffect(() => {
       // Simulate orbit controls change
       if (onChange) {
         const mockEvent = {
           target: {
             object: {
-              position: { x: 5, y: 5, z: 5 }
+              position: new THREE.Vector3(5, 5, 5)
             },
-            target: { x: 0, y: 0, z: 0 }
+            target: new THREE.Vector3(0, 0, 0)
           }
         };
         setTimeout(() => onChange(mockEvent), 10);
@@ -322,7 +329,11 @@ describe('R3FScene', () => {
         {
           type: 'cube',
           size: [1, 1, 1],
-          center: false
+          center: false,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 }
+          }
         }
       ];
 
@@ -387,6 +398,34 @@ describe('R3FScene', () => {
         expect.stringContaining('Failed to render AST node'),
         expect.anything()
       );
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should call onRenderError when an error occurs', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const unsupportedAST: ASTNode[] = [
+        {
+          type: 'unsupported' as any,
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 15, offset: 14 }
+          }
+        }
+      ];
+
+      render(
+        <Canvas>
+          <R3FScene {...defaultProps} astNodes={unsupportedAST} />
+        </Canvas>
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(mockOnRenderError).toHaveBeenCalled();
+      const errorCall = mockOnRenderError.mock.calls[0];
+      expect(errorCall[0]).toBeInstanceOf(Error);
+      expect(errorCall[0].message).toContain('Unsupported AST node type: unsupported');
       
       consoleSpy.mockRestore();
     });

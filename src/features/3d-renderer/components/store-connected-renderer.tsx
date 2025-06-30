@@ -29,7 +29,8 @@ import {
   selectConfigEnableRealTimeRendering
 } from '../../store/selectors';
 import { R3FScene } from './r3f-scene';
-import type { CameraConfig, RenderingMetrics, Mesh3D } from '../types/renderer.types';
+import type { RenderingMetrics, Mesh3D } from '../types/renderer.types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import type { Result } from '../../../shared/types/result.types';
 import type * as THREE from 'three';
 
@@ -67,6 +68,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const renderFromAST = useAppStore((state) => state.renderFromAST);
   const addRenderError = useAppStore((state) => state.addRenderError);
   const clearRenderErrors = useAppStore((state) => state.clearRenderErrors);
+  const updateMeshes = useAppStore((state) => state.updateMeshes);
 
   /**
    * Handle camera changes - update store
@@ -91,9 +93,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
 
     // Update store with actual mesh data
-    useAppStore.setState((state) => {
-      state.rendering.meshes = meshes.map(m => m.mesh);
-    });
+    updateMeshes(meshes.map(m => m.mesh));
 
     console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
   }, []);
@@ -151,7 +151,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   // Default camera configuration
   const defaultCamera: CameraConfig = camera ?? {
     position: [5, 5, 5],
-    target: [0, 0, 0]
+    target: [0, 0, 0],
+    zoom: 1,
+    fov: 75,
+    near: 0.1,
+    far: 1000,
+    enableControls: true,
+    enableAutoRotate: false,
+    autoRotateSpeed: 1
   };
 
   return (

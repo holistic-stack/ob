@@ -66,13 +66,11 @@ export const useMonacoEditor = (
   const _selection = useAppStore(selectEditorSelection);
   const debounceMs = useAppStore(selectConfigDebounceMs);
 
-  const {
-    updateCode,
-    updateCursorPosition,
-    updateSelection,
-    markDirty,
-    recordParseTime,
-  } = useAppStore();
+  const updateCode = useAppStore((state) => state.updateCode);
+  const updateCursorPosition = useAppStore((state) => state.updateCursorPosition);
+  const updateSelection = useAppStore((state) => state.updateSelection);
+  const markDirty = useAppStore((state) => state.markDirty);
+  const recordParseTime = useAppStore((state) => state.recordParseTime);
 
   /**
    * Debounced code update handler

@@ -5,8 +5,8 @@
  * providing enhanced operations with validation, telemetry, and robust error handling.
  */
 
-import { Matrix } from 'ml-matrix';
-import { Matrix3, Matrix4 } from 'three';
+import type { Matrix } from 'ml-matrix';
+import type { Matrix3, Matrix4 } from 'three';
 import { MatrixServiceContainer } from './matrix-service-container';
 import type { MatrixValidationResult } from '../types/matrix.types';
 import type { MatrixValidationOptions } from './matrix-validation.service';

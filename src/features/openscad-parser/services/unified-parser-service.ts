@@ -9,7 +9,8 @@
  */
 
 import type * as TreeSitter from 'web-tree-sitter';
-import { OpenscadParser, SimpleErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
+import type { OpenscadParser} from '@holistic-stack/openscad-parser';
+import { SimpleErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
 import type { AsyncResult } from '../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../shared/utils/functional/result';
 
@@ -131,7 +132,7 @@ interface CacheEntry {
 export class UnifiedParserService {
   private state: ParserState = 'uninitialized';
   private parser: OpenscadParser | null = null;
-  private errorHandler: SimpleErrorHandler;
+  private readonly errorHandler: SimpleErrorHandler;
   private readonly config: UnifiedParserConfig;
   private initPromise: Promise<void> | null = null;
   
@@ -142,7 +143,7 @@ export class UnifiedParserService {
   private lastParseResult: UnifiedParseResult | null = null;
   
   // Caching
-  private cache = new Map<string, CacheEntry>();
+  private readonly cache = new Map<string, CacheEntry>();
 
   constructor(config: Partial<UnifiedParserConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };

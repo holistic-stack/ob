@@ -9,11 +9,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import * as THREE from "three";
-import type {
-  RendererProps,
-  Scene3DConfig,
-  CameraConfig,
-} from "../types/renderer.types";
+import type { Mesh3D, RenderingMetrics, Scene3DConfig, RendererProps } from '../types/renderer.types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import type {
   ASTNode,
   CubeNode,

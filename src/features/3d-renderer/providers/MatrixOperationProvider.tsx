@@ -5,7 +5,8 @@
  * error boundaries, and performance monitoring following bulletproof-react patterns.
  */
 
-import React, { createContext, useContext, useCallback, useEffect, useState, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 
 import { useMatrixOperations, type UseMatrixOperationsReturn } from '../hooks/useMatrixOperations';
 

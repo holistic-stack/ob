@@ -5,14 +5,15 @@
  * following bulletproof-react service patterns with dependency injection and Result<T,E> error handling.
  */
 
+import type {
+  Material,
+  TypedArray} from "three";
 import {
   BufferAttribute,
   BufferGeometry,
-  Material,
   Matrix3,
   Matrix4,
   Mesh,
-  TypedArray,
   Vector3,
 } from "three";
 import { NBuf2, NBuf3 } from "../utils/NBuf";
@@ -39,8 +40,8 @@ import type { Result } from "../../../shared/types/result.types";
  */
 export class CSGCoreService implements CSGData {
   private _polygons: PolygonData[] = [];
-  private bspService: BSPTreeService;
-  private matrixIntegration: MatrixIntegrationService;
+  private readonly bspService: BSPTreeService;
+  private readonly matrixIntegration: MatrixIntegrationService;
 
   constructor(matrixIntegration?: MatrixIntegrationService) {
     console.log(

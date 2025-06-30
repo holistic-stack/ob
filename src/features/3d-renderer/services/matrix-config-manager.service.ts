@@ -57,10 +57,10 @@ export interface ConfigurationChangeEvent {
  */
 export class MatrixConfigManagerService {
   private currentConfig: MatrixConfig;
-  private configOverrides = new Map<string, unknown>();
-  private changeHistory: ConfigurationChangeEvent[] = [];
-  private validationRules = new Map<string, (value: unknown) => ConfigValidationResult>();
-  private performanceBaselines = new Map<string, number>();
+  private readonly configOverrides = new Map<string, unknown>();
+  private readonly changeHistory: ConfigurationChangeEvent[] = [];
+  private readonly validationRules = new Map<string, (value: unknown) => ConfigValidationResult>();
+  private readonly performanceBaselines = new Map<string, number>();
 
   constructor() {
     console.log('[INIT][MatrixConfigManagerService] Initializing configuration manager');

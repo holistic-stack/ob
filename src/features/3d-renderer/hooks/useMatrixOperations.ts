@@ -6,8 +6,8 @@
  */
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { Matrix } from 'ml-matrix';
-import { Matrix3, Matrix4 } from 'three';
+import type { Matrix } from 'ml-matrix';
+import type { Matrix3, Matrix4 } from 'three';
 import { MatrixIntegrationService, type EnhancedMatrixOptions, type EnhancedMatrixResult } from '../services/matrix-integration.service';
 import { matrixServiceContainer } from '../services/matrix-service-container';
 import type { Result } from '../../../shared/types/result.types';

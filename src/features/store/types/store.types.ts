@@ -7,14 +7,15 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
-import type { AsyncResult } from '../../../shared/types/result.types';
+import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type { 
   EditorState,
   AppConfig,
   PerformanceMetrics,
   EditorPosition,
   EditorSelection,
-  Camera3D
+  CameraConfig,
+  DebounceConfig
 } from '../../../shared/types/common.types';
 
 /**
@@ -38,7 +39,7 @@ export interface RenderingState {
   readonly renderErrors: ReadonlyArray<string>;
   readonly lastRendered: Date | null;
   readonly renderTime: number;
-  readonly camera: Camera3D;
+  readonly camera: CameraConfig;
 }
 
 /**
@@ -62,99 +63,79 @@ export interface AppState {
   readonly config: AppConfig;
 }
 
-/**
- * Editor action types
- */
+// =================================================================
+//
+//                       STORE SLICE DEFINITIONS
+//
+// =================================================================
+
 export interface EditorActions {
-  // Code management
-  readonly updateCode: (code: string) => void;
-  readonly updateCursorPosition: (position: EditorPosition) => void;
-  readonly updateSelection: (selection: EditorSelection | null) => void;
-  readonly markDirty: () => void;
-  readonly markSaved: () => void;
-  
-  // File operations
-  readonly saveCode: () => AsyncResult<void, string>;
-  readonly loadCode: (source: string) => AsyncResult<void, string>;
-  readonly resetEditor: () => void;
+  updateCode: (code: string) => void;
+  updateCursorPosition: (position: EditorPosition) => void;
+  updateSelection: (selection: EditorSelection | null) => void;
+  markDirty: () => void;
+  markSaved: () => void;
+  saveCode: () => AsyncResult<void, string>;
+  loadCode: (source: string) => AsyncResult<void, string>;
+  resetEditor: () => void;
 }
 
-/**
- * Parsing action types
- */
+export type EditorSlice = EditorState & EditorActions;
+
 export interface ParsingActions {
-  // AST parsing operations
-  readonly parseCode: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
-  readonly parseAST: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>; // Alias for backwards compatibility
-  readonly clearParsingState: () => void;
-  readonly debouncedParse: (code: string) => void;
-
-  // Error handling
-  readonly addParsingError: (error: string) => void;
-  readonly clearParsingErrors: () => void;
+  parseCode: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
+  parseAST: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
+  clearParsingState: () => void;
+  debouncedParse: (code: string) => void;
+  addParsingError: (error: string) => void;
+  clearParsingErrors: () => void;
 }
 
-/**
- * Rendering action types
- */
+export type ParsingSlice = ParsingState & ParsingActions;
+
 export interface RenderingActions {
-  // 3D scene management
-  readonly updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => void;
-  readonly renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
-  readonly clearScene: () => void;
-  
-  // Camera controls
-  readonly updateCamera: (camera: Camera3D) => void;
-  readonly resetCamera: () => void;
-  
-  // Error handling
-  readonly addRenderError: (error: string) => void;
-  readonly clearRenderErrors: () => void;
+  updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => void;
+  renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
+  clearScene: () => void;
+  updateCamera: (camera: Partial<CameraConfig>) => void;
+  resetCamera: () => void;
+  addRenderError: (error: string) => void;
+  clearRenderErrors: () => void;
 }
 
-/**
- * Performance action types
- */
+export type RenderingSlice = RenderingState & RenderingActions;
+
 export interface PerformanceActions {
-  // Metrics management
-  readonly updateMetrics: (metrics: PerformanceMetrics) => void;
-  readonly startMonitoring: () => void;
-  readonly stopMonitoring: () => void;
-  
-  // Performance tracking
-  readonly recordParseTime: (duration: number) => void;
-  readonly recordRenderTime: (duration: number) => void;
-  readonly addPerformanceViolation: (violation: string) => void;
-  readonly clearPerformanceViolations: () => void;
+  updateMetrics: (metrics: PerformanceMetrics) => void;
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  recordParseTime: (duration: number) => void;
+  recordRenderTime: (duration: number) => void;
+  addPerformanceViolation: (violation: string) => void;
+  clearPerformanceViolations: () => void;
 }
 
-/**
- * Configuration action types
- */
+export type PerformanceSlice = PerformanceState & PerformanceActions;
+
 export interface ConfigActions {
-  // Configuration management
-  readonly updateConfig: (config: Partial<AppConfig>) => void;
-  readonly resetConfig: () => void;
-  
-  // Feature toggles
-  readonly toggleRealTimeParsing: () => void;
-  readonly toggleRealTimeRendering: () => void;
-  readonly toggleAutoSave: () => void;
+  updateConfig: (config: Partial<AppConfig>) => void;
+  resetConfig: () => void;
+  toggleRealTimeParsing: () => void;
+  toggleRealTimeRendering: () => void;
+  toggleAutoSave: () => void;
 }
 
-/**
- * Combined actions interface
- */
-export type AppActions = EditorActions & 
-                        ParsingActions & 
-                        RenderingActions & 
-                        PerformanceActions & 
-                        ConfigActions;
+export type ConfigSlice = { config: AppConfig } & ConfigActions;
 
 /**
- * Store interface combining state and actions
+ * Store interface combining state and actions from all slices
  */
-export type AppStore = AppState & AppActions;
+export type AppStore = AppState &
+                        EditorActions &
+                        ParsingActions &
+                        RenderingActions &
+                        PerformanceActions &
+                        ConfigActions;
 
 /**
  * Store selector types for performance optimization
@@ -177,15 +158,6 @@ export interface StoreSubscription {
 export interface StoreMiddleware<T> {
   readonly name: string;
   readonly middleware: (config: T) => T;
-}
-
-/**
- * Debounce configuration
- */
-export interface DebounceConfig {
-  readonly parseDelayMs: number;
-  readonly renderDelayMs: number;
-  readonly saveDelayMs: number;
 }
 
 /**
@@ -215,3 +187,7 @@ export type StoreEvent =
  * Store event listener type
  */
 export type StoreEventListener = (event: StoreEvent) => void;
+
+
+
+

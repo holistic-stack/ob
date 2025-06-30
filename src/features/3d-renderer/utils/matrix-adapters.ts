@@ -6,7 +6,8 @@
  */
 
 import { Matrix, CholeskyDecomposition, determinant } from 'ml-matrix';
-import { Matrix3, Matrix4, Vector3, Quaternion, Euler } from 'three';
+import type { Euler } from 'three';
+import { Matrix3, Matrix4, Vector3, Quaternion } from 'three';
 import type { 
   TransformationMatrix, 
   RotationMatrix, 

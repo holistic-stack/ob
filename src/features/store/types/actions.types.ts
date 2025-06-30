@@ -10,7 +10,7 @@ import type * as THREE from 'three';
 import type { 
   EditorPosition, 
   EditorSelection, 
-  Camera3D, 
+  CameraConfig, 
   AppConfig, 
   PerformanceMetrics 
 } from '../../../shared/types/common.types';
@@ -76,7 +76,7 @@ export interface RenderFromASTPayload {
 }
 
 export interface UpdateCameraPayload {
-  readonly camera: Camera3D;
+  readonly camera: CameraConfig;
   readonly animate?: boolean;
   readonly duration?: number;
 }

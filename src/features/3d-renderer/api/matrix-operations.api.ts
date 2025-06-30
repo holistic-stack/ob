@@ -5,8 +5,9 @@
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import { Matrix } from "ml-matrix";
-import { Matrix3, Matrix4 } from "three";
+import type { Matrix } from "ml-matrix";
+import type { Matrix3} from "three";
+import { Matrix4 } from "three";
 import {
   MatrixIntegrationService,
   type EnhancedMatrixOptions,

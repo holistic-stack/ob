@@ -8,29 +8,29 @@
 import React, { useEffect, useState } from "react";
 import { StoreConnectedEditor } from "./features/code-editor/components/store-connected-editor";
 import { StoreConnectedRenderer } from "./features/3d-renderer/components/store-connected-renderer";
-import { useAppStore } from "./features/store/app-store";
-import {
-  selectApplicationStatus,
-  selectEditorCode,
-  selectParsingAST,
-  selectRenderingState,
-  selectPerformanceMetrics,
-} from "./features/store/selectors/store.selectors";
+import { useAppStore, type AppStore } from "./features/store/app-store";
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type * as THREE from 'three';
+import type { PerformanceMetrics } from './shared/types/common.types';
+
 
 /**
  * Main Application Component
  */
+
+
 export function App(): React.JSX.Element {
   console.log(
     "[INIT][App] Rendering OpenSCAD 3D Visualization Application v2.0.0",
   );
 
   // Store selectors for application state
-  const applicationStatus = useAppStore(selectApplicationStatus);
-  const editorCode = useAppStore(selectEditorCode);
-  const ast = useAppStore(selectParsingAST);
-  const renderingState = useAppStore(selectRenderingState);
-  const performanceMetrics = useAppStore(selectPerformanceMetrics);
+  const editorCode: string = useAppStore((state: AppStore) => state.editor.code);
+  const ast: ReadonlyArray<ASTNode> = useAppStore((state: AppStore) => state.parsing.ast);
+  const applicationStatus: boolean = useAppStore((state: AppStore) => state.rendering.isRendering);
+  const renderingStateMeshes: ReadonlyArray<THREE.Mesh> = useAppStore((state: AppStore) => state.rendering.meshes);
+  const performanceMetrics: PerformanceMetrics = useAppStore((state: AppStore) => state.performance.metrics);
+  const renderErrors: ReadonlyArray<string> = useAppStore((state: AppStore) => state.rendering.renderErrors);
 
   // Local state for layout
   const [editorWidth, setEditorWidth] = useState(50); // Percentage
@@ -51,11 +51,11 @@ export function App(): React.JSX.Element {
       status: applicationStatus,
       codeLength: editorCode.length,
       astNodeCount: ast?.length ?? 0,
-      isRendering: renderingState.isRendering,
-      meshCount: renderingState.meshes.length,
+      isRendering: applicationStatus,
+      meshCount: renderingStateMeshes.length,
       renderTime: performanceMetrics.renderTime,
     });
-  }, [applicationStatus, editorCode, ast, renderingState, performanceMetrics]);
+  }, [applicationStatus, editorCode, ast, renderingStateMeshes, performanceMetrics]);
 
   /**
    * Handle panel resize
@@ -94,20 +94,20 @@ export function App(): React.JSX.Element {
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <span
               className={`w-2 h-2 rounded-full ${
-                applicationStatus === "idle"
-                  ? "bg-green-400"
-                  : applicationStatus === "working"
-                    ? "bg-yellow-400"
-                    : "bg-red-400"
+                applicationStatus
+                  ? "bg-yellow-400"
+                  : "bg-green-400"
               }`}
             />
-            <span className="capitalize">{applicationStatus}</span>
+            <span className="capitalize">
+              {applicationStatus ? "rendering" : "idle"}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-gray-400">
           <span>AST: {ast?.length ?? 0} nodes</span>
-          <span>Meshes: {renderingState.meshes.length}</span>
+          <span>Meshes: {renderingStateMeshes.length}</span>
           <span>Render: {performanceMetrics.renderTime.toFixed(1)}ms</span>
         </div>
       </header>

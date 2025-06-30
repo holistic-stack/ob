@@ -11,28 +11,26 @@ import type { UnaryFunction, Pipe } from "../../types/functional.types";
  * Pipe function for left-to-right function composition
  * Allows chaining functions in a readable, sequential manner
  */
-export const pipe: Pipe = ((...fns: readonly UnaryFunction<any, any>[]) => {
-  return (value: any) => fns.reduce((acc: any, fn: UnaryFunction<any, any>) => fn(acc), value);
-}) as Pipe;
+export const pipe: Pipe = (...fns: any[]) => (value: any) => fns.reduce((acc, fn) => fn(acc), value);
 
-/**
- * Compose function for right-to-left function composition
- * Traditional mathematical function composition
- */
-export const compose = <T>(...fns: readonly UnaryFunction<any, any>[]) => {
-  return (value: T) => fns.reduceRight((acc: any, fn: UnaryFunction<any, any>) => fn(acc), value as any);
-};
+export const compose: Pipe = (...fns: any[]) => (value: any) => fns.reduceRight((acc, fn) => fn(acc), value);
 
 /**
  * Curry function to convert multi-argument functions to curried form
  */
-export const curry = <F extends (...args: any[]) => any>(fn: F): any => {
-  return (...args: any[]): any => {
+type Curried<A extends any[], R> =
+  A extends [infer Arg, ...infer Rest]
+  ? (arg: Arg) => Curried<Rest, R>
+  : R;
+
+export const curry = <A extends any[], R>(fn: (...args: A) => R): Curried<A, R> => {
+  const curried = (...args: any[]): any => {
     if (args.length >= fn.length) {
-      return fn(...args);
+      return fn(...args as A);
     }
-    return (...nextArgs: any[]) => curry(fn)(...args, ...nextArgs);
+    return (...nextArgs: any[]) => curried(...args, ...nextArgs);
   };
+  return curried as Curried<A, R>;
 };
 
 /**
@@ -84,7 +82,10 @@ export const memoize = <T extends readonly unknown[], R>(
     const key = keyFn ? keyFn(...args) : JSON.stringify(args);
 
     if (cache.has(key)) {
-      return cache.get(key)!;
+      const cachedValue = cache.get(key);
+      if (cachedValue !== undefined) {
+        return cachedValue;
+      }
     }
 
     const result = fn(...args);
@@ -130,8 +131,8 @@ export const throttle = <T extends readonly unknown[]>(
     if (now - lastCallTime >= delayMs) {
       lastCallTime = now;
       fn(...args);
-    } else if (timeoutId === null) {
-      timeoutId = setTimeout(
+    } else {
+      timeoutId ??= setTimeout(
         () => {
           lastCallTime = Date.now();
           fn(...args);
@@ -219,7 +220,10 @@ export const prop = <T, K extends keyof T>(key: K) => {
 export const path = <T>(keys: ReadonlyArray<string | number>) => {
   return (obj: T): unknown => {
     return keys.reduce((current: unknown, key) => {
-      return (current as Record<string | number, unknown>)?.[key];
+      if (typeof current === 'object' && current !== null && key in current) {
+        return (current as Record<string | number, unknown>)[key];
+      }
+      return undefined;
     }, obj);
   };
 };

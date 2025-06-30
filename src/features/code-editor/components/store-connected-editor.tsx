@@ -56,9 +56,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   // Store actions - all mutations go through Zustand
   const updateCode = useAppStore((state) => state.updateCode);
   const updateSelection = useAppStore((state) => state.updateSelection);
-  const updateCursorPosition = useAppStore(
-    (state) => state.updateCursorPosition,
-  );
+  const updateCursorPosition = useAppStore((state) => state.updateCursorPosition);
   const markDirty = useAppStore((state) => state.markDirty);
   const parseAST = useAppStore((state) => state.parseAST);
 
@@ -103,9 +101,9 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     (event: EditorSelectionEvent) => {
       console.log("[DEBUG][StoreConnectedEditor] Selection changed");
       updateSelection({
-        startLine: event.selection.startLineNumber,
+        startLineNumber: event.selection.startLineNumber,
         startColumn: event.selection.startColumn,
-        endLine: event.selection.endLineNumber,
+        endLineNumber: event.selection.endLineNumber,
         endColumn: event.selection.endColumn,
       });
     },
@@ -159,7 +157,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
           </span>
           {selection && (
             <span className="text-gray-400">
-              Ln {selection.startLine}, Col {selection.startColumn}
+              Ln {selection.startLineNumber}, Col {selection.startColumn}
             </span>
           )}
         </div>

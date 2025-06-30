@@ -5,7 +5,7 @@
  * performance monitoring, and memory management following bulletproof-react service patterns.
  */
 
-import { Matrix } from 'ml-matrix';
+import type { Matrix } from 'ml-matrix';
 import type { 
   MatrixCacheEntry, 
   MatrixPerformanceMetrics,
@@ -32,7 +32,7 @@ class CacheNode {
  * Matrix Cache Service with LRU eviction and performance monitoring
  */
 export class MatrixCacheService {
-  private cache = new Map<string, CacheNode>();
+  private readonly cache = new Map<string, CacheNode>();
   private head: CacheNode | null = null;
   private tail: CacheNode | null = null;
   private currentMemoryUsage = 0;

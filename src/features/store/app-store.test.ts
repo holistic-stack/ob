@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import type { EditorPosition, EditorSelection } from '../../shared/types/common.types';
+import type { EditorPosition, EditorSelection, CameraConfig } from '../../shared/types/common.types';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import { createAppStore } from './app-store';
@@ -102,7 +102,12 @@ describe('App Store', () => {
     });
 
     it('should update selection', () => {
-      const selection: EditorSelection = { start: 0, end: 10 };
+      const selection: EditorSelection = {
+        startLineNumber: 1,
+        startColumn: 1,
+        endLineNumber: 1,
+        endColumn: 11,
+      };
       store.getState().updateSelection(selection);
 
       const state = store.getState();
@@ -287,10 +292,16 @@ describe('App Store', () => {
 
     it('should reset camera to default', () => {
       // First modify camera
-      const customCamera = {
-        position: [5, 5, 5] as const,
-        target: [1, 1, 1] as const,
-        zoom: 1.5
+      const customCamera: CameraConfig = {
+        position: [5, 5, 5],
+        target: [1, 1, 1],
+        zoom: 1.5,
+        fov: 75,
+        near: 0.1,
+        far: 1000,
+        enableControls: true,
+        enableAutoRotate: false,
+        autoRotateSpeed: 1,
       };
       store.getState().updateCamera(customCamera);
       expect(store.getState().rendering.camera).toEqual(customCamera);

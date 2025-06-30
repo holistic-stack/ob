@@ -18,26 +18,11 @@ export type TernaryFunction<T, U, V, W> = (arg1: T, arg2: U, arg3: V) => W;
  * Pipe function types for composition
  */
 export interface Pipe {
-  <T, U>(fn1: UnaryFunction<T, U>): UnaryFunction<T, U>;
-  <T, U, V>(fn1: UnaryFunction<T, U>, fn2: UnaryFunction<U, V>): UnaryFunction<T, V>;
-  <T, U, V, W>(
-    fn1: UnaryFunction<T, U>,
-    fn2: UnaryFunction<U, V>,
-    fn3: UnaryFunction<V, W>
-  ): UnaryFunction<T, W>;
-  <T, U, V, W, X>(
-    fn1: UnaryFunction<T, U>,
-    fn2: UnaryFunction<U, V>,
-    fn3: UnaryFunction<V, W>,
-    fn4: UnaryFunction<W, X>
-  ): UnaryFunction<T, X>;
-  <T, U, V, W, X, Y>(
-    fn1: UnaryFunction<T, U>,
-    fn2: UnaryFunction<U, V>,
-    fn3: UnaryFunction<V, W>,
-    fn4: UnaryFunction<W, X>,
-    fn5: UnaryFunction<X, Y>
-  ): UnaryFunction<T, Y>;
+  <A, B>(f1: (a: A) => B): (a: A) => B;
+  <A, B, C>(f1: (a: A) => B, f2: (b: B) => C): (a: A) => C;
+  <A, B, C, D>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D): (a: A) => D;
+  <A, B, C, D, E>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D, f4: (d: D) => E): (a: A) => E;
+  <A, B, C, D, E, F>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D, f4: (d: D) => E, f5: (e: E) => F): (a: A) => F;
 }
 
 /**

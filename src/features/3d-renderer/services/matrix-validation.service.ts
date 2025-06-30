@@ -5,16 +5,18 @@
  * assessment, remediation strategies, and performance monitoring following bulletproof-react patterns.
  */
 
-import { Matrix, EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
+import type { Matrix} from 'ml-matrix';
+import { EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
 import type {
 
   MatrixValidationResult,
   MatrixOperationResult,
   MatrixPerformanceMetrics
 } from '../types/matrix.types';
-import { MatrixCacheService } from './matrix-cache.service';
+import type { MatrixCacheService } from './matrix-cache.service';
 import { matrixUtils } from '../utils/matrix-adapters';
-import { MATRIX_CONFIG, getCacheKey } from '../config/matrix-config';
+import type { MATRIX_CONFIG} from '../config/matrix-config';
+import { getCacheKey } from '../config/matrix-config';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 

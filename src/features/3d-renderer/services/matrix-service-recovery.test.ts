@@ -46,7 +46,7 @@ const RECOVERY_SCENARIOS = {
  * Failure injection utilities
  */
 class FailureInjector {
-  private failureRate: number = 0;
+  private readonly failureRate: number = 0;
   private failureCount: number = 0;
   private totalCalls: number = 0;
 

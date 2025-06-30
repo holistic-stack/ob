@@ -29,7 +29,7 @@ vi.mock('@react-three/fiber', () => ({
 
 // Mock React Three Drei
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: ({ onChange: _onChange, ...props }: any) => (
+  OrbitControls: ({ onChange, ...props }: any) => (
     <div data-testid="orbit-controls" {...props} />
   ),
   Stats: () => <div data-testid="stats" />
@@ -55,7 +55,7 @@ vi.mock('./three-renderer', () => ({
     return (
       <div 
         data-testid="three-renderer" 
-        data-ast-count={astNodes?.length ?? 0}
+        data-ast-count={astNodes?.length || 0}
         data-camera-position={JSON.stringify(camera?.position)}
         {...props}
       />

@@ -125,7 +125,13 @@ describe('Default Initialization End-to-End', () => {
         camera: {
           position: [5, 5, 5],
           target: [0, 0, 0],
-          zoom: 1
+          zoom: 1,
+          fov: 75,
+          near: 0.1,
+          far: 1000,
+          enableControls: true,
+          enableAutoRotate: false,
+          autoRotateSpeed: 1,
         },
         lastRendered: new Date(),
         renderTime: 0

@@ -198,15 +198,15 @@ export const isBSPNodeData = (obj: unknown): obj is BSPNodeData => {
 /**
  * Utility types for geometric operations
  */
-export type GeometryTransform = {
+export interface GeometryTransform {
   readonly translation: Vector;
   readonly rotation: Vector;
   readonly scale: Vector;
-};
+}
 
-export type GeometryBounds = {
+export interface GeometryBounds {
   readonly min: Vector;
   readonly max: Vector;
   readonly center: Vector;
   readonly size: Vector;
-};
+}

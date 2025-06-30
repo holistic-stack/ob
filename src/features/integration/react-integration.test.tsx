@@ -9,7 +9,7 @@ import React, { act, useEffect, useState } from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
-import { useAppStore } from "../store/app-store";
+import { useAppStore, type AppState } from "../store/app-store";
 import { StoreConnectedEditor } from "../code-editor/components/store-connected-editor";
 import { StoreConnectedRenderer } from "../3d-renderer/components/store-connected-renderer";
 
@@ -82,13 +82,17 @@ const TestIntegrationComponent: React.FC<{
   onError?: (error: Error) => void;
   triggerError?: boolean;
 }> = ({ onRender, onError, triggerError = false }) => {
-  const { code, parsing, scene3D, updateCode, parseCode } = useAppStore();
+  const code = useAppStore((state) => state.editor.code);
+  const parsing = useAppStore((state) => state.parsing);
+  const scene3D = useAppStore((state) => state.rendering);
+  const updateCode = useAppStore((state) => state.updateCode);
+  const parseCode = useAppStore((state) => state.parseCode);
   const [renderCount, setRenderCount] = useState(0);
 
   useEffect(() => {
     setRenderCount((prev) => prev + 1);
     onRender?.();
-  });
+  }, [onRender]);
 
   useEffect(() => {
     if (triggerError) {
@@ -98,12 +102,19 @@ const TestIntegrationComponent: React.FC<{
     }
   }, [triggerError, onError]);
 
-  const handleCodeChange = async (newCode: string) => {
-    updateCode(newCode);
+  const handleCodeChange = (newCode: string) => {
+    act(() => {
+      updateCode(newCode);
+    });
 
     // Simulate debounced parsing
-    setTimeout(async () => {
-      await parseCode(newCode);
+    setTimeout(() => {
+      act(async () => {
+        const result = await parseCode(newCode);
+        if (!result.success) {
+          console.error("Parsing failed:", result.error);
+        }
+      });
     }, 300);
   };
 
@@ -117,7 +128,7 @@ const TestIntegrationComponent: React.FC<{
         {parsing.isLoading ? "loading" : "idle"}
       </div>
       <div data-testid="scene-loading">
-        {scene3D.isLoading ? "loading" : "idle"}
+        {scene3D.isRendering ? "rendering" : "idle"}
       </div>
 
       <button
@@ -141,7 +152,7 @@ class TestErrorBoundary extends React.Component<
   { children: React.ReactNode; onError?: (error: Error) => void },
   { hasError: boolean; error?: Error }
 > {
-  constructor(props: any) {
+  constructor(props: { children: React.ReactNode; onError?: (error: Error) => void }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -196,6 +207,12 @@ describe("React Integration Layer Testing", () => {
           position: [5, 5, 5],
           target: [0, 0, 0],
           zoom: 1,
+          fov: 75,
+          near: 0.1,
+          far: 1000,
+          enableControls: true,
+          enableAutoRotate: false,
+          autoRotateSpeed: 1,
         },
       };
     });
@@ -327,16 +344,17 @@ describe("React Integration Layer Testing", () => {
         const stateUpdates: string[] = [];
 
         const StateObserver: React.FC = () => {
-          const { code, parsing } = useAppStore();
+          const code = useAppStore((state) => state.editor.code);
+          const ast = useAppStore((state) => state.parsing.ast);
 
           useEffect(() => {
-            stateUpdates.push(`code:${code},ast:${parsing.ast.length}`);
-          }, [code, parsing.ast.length]);
+            stateUpdates.push(`code:${code},ast:${ast.length}`);
+          }, [code, ast]);
 
           return (
             <div data-testid="state-observer">
               <div data-testid="observed-code">{code}</div>
-              <div data-testid="observed-ast-count">{parsing.ast.length}</div>
+              <div data-testid="observed-ast-count">{ast.length}</div>
             </div>
           );
         };
@@ -367,6 +385,7 @@ describe("React Integration Layer Testing", () => {
           expect(screen.getByTestId("observed-code")).toHaveTextContent(
             "cube([5,5,5]);",
           );
+          expect(screen.getByTestId("observed-ast-count")).not.toHaveTextContent("0");
         });
 
         // Verify state updates were captured
@@ -391,9 +410,9 @@ describe("React Integration Layer Testing", () => {
 
           const performConcurrentUpdates = async () => {
             const updates = [
-              () => updateCode("cube([1,1,1]);"),
-              () => updateCode("sphere(2);"),
-              () => updateCode("cylinder(h=5, r=1);"),
+              () => Promise.resolve(updateCode("cube([1,1,1]);")),
+              () => Promise.resolve(updateCode("sphere(2);")),
+              () => Promise.resolve(updateCode("cylinder(h=5, r=1);")),
               () => parseCode("cube([1,1,1]);"),
               () => parseCode("sphere(2);"),
             ];
@@ -501,14 +520,10 @@ describe("React Integration Layer Testing", () => {
           const [lastError, setLastError] = useState<string>("");
 
           const triggerServiceError = async () => {
-            try {
-              // Try to parse invalid code that might cause service errors
-              await parseCode("invalid_openscad_syntax_that_should_fail!!!");
-            } catch (error) {
+            const result = await parseCode("invalid_openscad_syntax_that_should_fail!!!");
+            if (!result.success) {
               setErrorCount((prev) => prev + 1);
-              setLastError(
-                error instanceof Error ? error.message : String(error),
-              );
+              setLastError(result.error);
             }
           };
 
@@ -567,7 +582,8 @@ describe("React Integration Layer Testing", () => {
         const renderTimes: number[] = [];
 
         const PerformanceTestComponent: React.FC = () => {
-          const { code, updateCode } = useAppStore();
+          const code = useAppStore((state) => state.editor.code);
+          const updateCode = useAppStore((state) => state.updateCode);
           const [renderCount, setRenderCount] = useState(0);
 
           useEffect(() => {

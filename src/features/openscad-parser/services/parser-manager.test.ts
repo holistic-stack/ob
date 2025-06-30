@@ -8,8 +8,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { OpenscadParser } from '@holistic-stack/openscad-parser';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type {
+  ParserManager} from './parser-manager';
 import {
-  ParserManager,
   createParserManager
 } from './parser-manager';
 import type {

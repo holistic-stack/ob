@@ -17,7 +17,8 @@ import type {
   SphereNode,
   CylinderNode,
 } from '@holistic-stack/openscad-parser';
-import { Result, tryCatch } from '../../../shared/utils/functional/result';
+import type { Result} from '../../../shared/utils/functional/result';
+import { tryCatch } from '../../../shared/utils/functional/result';
 
 /**
  * Configuration for AST restructuring
@@ -337,7 +338,7 @@ const restructureCSGNode = (
   // Create new node with proper children
   const restructuredNode = {
     ...csgNode,
-    children: children
+    children
   };
 
   if (config.enableLogging) {

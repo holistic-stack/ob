@@ -6,8 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import type { 
+  UnifiedParserService} from './unified-parser-service';
 import { 
-  UnifiedParserService, 
   createUnifiedParserService, 
   getGlobalUnifiedParserService, 
   disposeGlobalUnifiedParserService,

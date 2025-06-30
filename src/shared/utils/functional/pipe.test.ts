@@ -60,7 +60,7 @@ describe("Function Composition Utilities", () => {
       const multiply2 = (x: number): number => x * 2;
       const subtract3 = (x: number): number => x - 3;
 
-      const composed = compose<number>(subtract3 as any, multiply2 as any, add1 as any);
+      const composed = compose(subtract3, multiply2, add1);
       const result = composed(5);
 
       // (5 + 1) * 2 - 3 = 9
@@ -71,14 +71,14 @@ describe("Function Composition Utilities", () => {
   describe("curry", () => {
     it("should curry a binary function", () => {
       const add = (a: number, b: number) => a + b;
-      const curriedAdd = curry(add as any) as (a: number) => (b: number) => number;
+      const curriedAdd = curry(add) as (a: number) => (b: number) => number;
 
       expect(curriedAdd(5)(3)).toBe(8);
     });
 
     it("should curry a ternary function", () => {
       const add3 = (a: number, b: number, c: number) => a + b + c;
-      const curriedAdd3 = curry(add3 as any);
+      const curriedAdd3 = curry(add3);
 
       expect(curriedAdd3(1)(2)(3)).toBe(6);
     });

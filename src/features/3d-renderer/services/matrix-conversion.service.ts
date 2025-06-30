@@ -6,15 +6,16 @@
  */
 
 import { Matrix, inverse, SingularValueDecomposition } from 'ml-matrix';
-import { Matrix3, Matrix4 } from 'three';
+import type { Matrix3, Matrix4 } from 'three';
 import type {
   MatrixOperationResult,
   MatrixValidation,
   MatrixPerformanceMetrics
 } from '../types/matrix.types';
-import { MatrixCacheService } from './matrix-cache.service';
+import type { MatrixCacheService } from './matrix-cache.service';
 import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters';
-import { MATRIX_CONFIG, getCacheKey } from '../config/matrix-config';
+import type { MATRIX_CONFIG} from '../config/matrix-config';
+import { getCacheKey } from '../config/matrix-config';
 import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
 

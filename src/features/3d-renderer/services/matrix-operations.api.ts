@@ -6,7 +6,8 @@
  */
 
 import { Matrix, inverse, LuDecomposition, QrDecomposition, EigenvalueDecomposition, CholeskyDecomposition } from 'ml-matrix';
-import { Matrix4, Vector3, Quaternion, Euler } from 'three';
+import type { Vector3, Euler } from 'three';
+import { Matrix4, Quaternion } from 'three';
 import type { 
   MatrixOperation,
   MatrixOperationResult,
@@ -27,7 +28,7 @@ import type { Result } from '../../../shared/types/result.types';
  * Matrix Operations API Service
  */
 export class MatrixOperationsAPI {
-  private cache: MatrixCacheService;
+  private readonly cache: MatrixCacheService;
   private operationCounter = 0;
 
   constructor() {

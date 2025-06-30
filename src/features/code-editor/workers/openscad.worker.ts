@@ -25,8 +25,8 @@ interface WorkerContext {
  * OpenSCAD language worker implementation
  */
 export class OpenSCADWorker {
-  private _ctx: WorkerContext;
-  private _languageService: OpenSCADLanguageService;
+  private readonly _ctx: WorkerContext;
+  private readonly _languageService: OpenSCADLanguageService;
 
   constructor(ctx: WorkerContext) {
     this._ctx = ctx;
@@ -89,9 +89,9 @@ export class OpenSCADWorker {
  * OpenSCAD language service implementation
  */
 class OpenSCADLanguageService {
-  private _keywords: Set<string>;
-  private _builtinFunctions: Set<string>;
-  private _builtinModules: Set<string>;
+  private readonly _keywords: Set<string>;
+  private readonly _builtinFunctions: Set<string>;
+  private readonly _builtinModules: Set<string>;
 
   constructor() {
     this._keywords = new Set(OPENSCAD_LANGUAGE_CONFIG.keywords);

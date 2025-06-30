@@ -10,10 +10,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { ASTNode } from "@holistic-stack/openscad-parser";
 import type {
-  CameraConfig,
   RenderingMetrics,
   Mesh3D,
 } from "../types/renderer.types";
+import type { CameraConfig } from "../../../shared/types/common.types";
 import { renderASTNode } from "../services/primitive-renderer";
 
 /**

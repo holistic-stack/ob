@@ -5,8 +5,9 @@
  * error reporting, and recovery mechanisms following bulletproof-react patterns.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { MatrixIntegrationService } from '../services/matrix-integration.service.js';
+import type { ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
+import type { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 
 /**
  * Error boundary state
@@ -44,7 +45,7 @@ export class MatrixOperationErrorBoundary extends Component<
   MatrixOperationErrorBoundaryState
 > {
   private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
-  private matrixIntegration: MatrixIntegrationService | null = null;
+  private readonly matrixIntegration: MatrixIntegrationService | null = null;
 
   constructor(props: MatrixOperationErrorBoundaryProps) {
     super(props);
@@ -108,7 +109,7 @@ export class MatrixOperationErrorBoundary extends Component<
   /**
    * Schedule automatic recovery
    */
-  private scheduleAutoRecovery = (): void => {
+  private readonly scheduleAutoRecovery = (): void => {
     const delay = this.props.retryDelay ?? 2000;
     
     console.log(`[DEBUG][MatrixOperationErrorBoundary] Scheduling auto-recovery in ${delay}ms`);
@@ -123,7 +124,7 @@ export class MatrixOperationErrorBoundary extends Component<
   /**
    * Handle manual retry
    */
-  private handleRetry = (): void => {
+  private readonly handleRetry = (): void => {
     const { retryCount, errorId } = this.state;
     const maxRetries = this.props.maxRetries ?? 3;
 
@@ -151,7 +152,7 @@ export class MatrixOperationErrorBoundary extends Component<
   /**
    * Handle service reset
    */
-  private handleReset = async (): Promise<void> => {
+  private readonly handleReset = async (): Promise<void> => {
     console.log('[DEBUG][MatrixOperationErrorBoundary] Resetting matrix services');
 
     try {

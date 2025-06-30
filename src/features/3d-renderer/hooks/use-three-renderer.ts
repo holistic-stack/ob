@@ -12,11 +12,11 @@ import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type {
   UseRendererReturn,
   Scene3DConfig,
-  CameraConfig,
   Mesh3D,
   RenderingMetrics,
   RenderingError as _RenderingError
 } from '../types/renderer.types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import {
   useAppStore,
   selectParsingAST,
@@ -95,7 +95,6 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
   const updateStoreCamera = useAppStore((state) => state.updateCamera);
   const updateStoreMetrics = useAppStore((state) => state.updateMetrics);
-  const _renderFromAST = useAppStore((state) => state.renderFromAST);
   const markDirty = useAppStore((state) => state.markDirty);
 
   /**
