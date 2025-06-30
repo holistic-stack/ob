@@ -5,8 +5,11 @@
  * regression detection, and comprehensive reporting following bulletproof-react patterns.
  */
 
+import { createLogger } from '../../../shared/services/logger.service';
 import type { MATRIX_CONFIG } from '../config/matrix-config';
 import type { MatrixPerformanceMetrics } from '../types/matrix.types';
+
+const logger = createLogger('MatrixTelemetryService');
 
 /**
  * Performance regression detection result
@@ -170,7 +173,7 @@ export class MatrixTelemetryService {
     // Log operation if debugging is enabled
     if (this.deps.config.debug.enablePerformanceLogging) {
       const status = success ? 'SUCCESS' : 'FAILED';
-      console.log(`[DEBUG][MatrixTelemetryService] ${operation} ${status} in ${duration}ms`);
+      logger.debug(`${operation} ${status} in ${duration}ms`);
     }
 
     // Generate periodic reports

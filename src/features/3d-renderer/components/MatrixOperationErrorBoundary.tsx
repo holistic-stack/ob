@@ -6,6 +6,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { createLogger } from '../../../shared/services/logger.service';
 import type { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 
 /**
@@ -39,6 +40,8 @@ export interface MatrixOperationErrorBoundaryProps {
 /**
  * Matrix Operation Error Boundary Component
  */
+const logger = createLogger('MatrixOperationErrorBoundary');
+
 export class MatrixOperationErrorBoundary extends Component<
   MatrixOperationErrorBoundaryProps,
   MatrixOperationErrorBoundaryState
@@ -84,7 +87,7 @@ export class MatrixOperationErrorBoundary extends Component<
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const errorId = this.generateErrorId();
 
-    console.error('[ERROR][MatrixOperationErrorBoundary] Matrix operation error caught:', {
+    logger.error('Matrix operation error caught:', {
       errorId,
       error: error.message,
       stack: error.stack,
@@ -111,7 +114,7 @@ export class MatrixOperationErrorBoundary extends Component<
   private readonly scheduleAutoRecovery = (): void => {
     const delay = this.props.retryDelay ?? 2000;
 
-    console.log(`[DEBUG][MatrixOperationErrorBoundary] Scheduling auto-recovery in ${delay}ms`);
+    logger.debug(`Scheduling auto-recovery in ${delay}ms`);
 
     this.setState({ isRecovering: true });
 
@@ -128,13 +131,11 @@ export class MatrixOperationErrorBoundary extends Component<
     const maxRetries = this.props.maxRetries ?? 3;
 
     if (retryCount >= maxRetries) {
-      console.warn('[WARN][MatrixOperationErrorBoundary] Maximum retry attempts reached');
+      logger.warn('Maximum retry attempts reached');
       return;
     }
 
-    console.log(
-      `[DEBUG][MatrixOperationErrorBoundary] Retrying operation (attempt ${retryCount + 1}/${maxRetries})`
-    );
+    logger.debug(`Retrying operation (attempt ${retryCount + 1}/${maxRetries})`);
 
     this.setState((prevState) => ({
       hasError: false,
@@ -154,7 +155,7 @@ export class MatrixOperationErrorBoundary extends Component<
    * Handle service reset
    */
   private readonly handleReset = async (): Promise<void> => {
-    console.log('[DEBUG][MatrixOperationErrorBoundary] Resetting matrix services');
+    logger.debug('Resetting matrix services');
 
     try {
       // Reset matrix services if available
@@ -173,9 +174,9 @@ export class MatrixOperationErrorBoundary extends Component<
         lastErrorTime: null,
       });
 
-      console.log('[DEBUG][MatrixOperationErrorBoundary] Matrix services reset successfully');
+      logger.debug('Matrix services reset successfully');
     } catch (err) {
-      console.error('[ERROR][MatrixOperationErrorBoundary] Failed to reset matrix services:', err);
+      logger.error('Failed to reset matrix services:', err);
     }
   };
 
@@ -189,10 +190,7 @@ export class MatrixOperationErrorBoundary extends Component<
 
     if (this.matrixIntegration) {
       this.matrixIntegration.shutdown().catch((err) => {
-        console.error(
-          '[ERROR][MatrixOperationErrorBoundary] Failed to shutdown matrix integration:',
-          err
-        );
+        logger.error('Failed to shutdown matrix integration:', err);
       });
     }
   }

@@ -2,5 +2,5 @@
  * Performance Utils - Barrel Exports
  */
 
-// Performance utilities will be exported here
 export * from './metrics';
+export * from './performance-monitor';

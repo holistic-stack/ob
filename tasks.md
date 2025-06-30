@@ -1,9 +1,9 @@
 Fix all Biome linting errors and TypeScript compilation issues in the OpenSCAD 3D visualization application codebase. Follow these specific requirements:
 
 **Code Quality Standards:**
-1. Read and follow `CODE_QUALITY_PLAN.md` for systematic approach to code quality improvements
-2. Eliminate ALL implicit `any` types in TypeScript files - use explicit type annotations following `docs/typescript-guidelines.md`
-3. Read `biome.json` configuration to understand and avoid linting violations
+1. Read and follow `docs/typescript-guidelines.md` for systematic approach to code quality improvements
+2. Eliminate ALL implicit `any` types in TypeScript files - use explicit type annotations following TypeScript guidelines
+3. Read `biome.json` configuration to understand and avoid linting violations (note: project has migrated from ESLint to Biome v2.0.6)
 4. Ensure zero TypeScript compilation errors and zero Biome linting errors as success criteria
 
 **Testing Philosophy:**

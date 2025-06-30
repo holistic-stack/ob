@@ -298,7 +298,7 @@ describe('ThreeRenderer Performance', () => {
       const originalPerformance = global.performance;
 
       // Temporarily remove performance API
-      delete (globalThis as unknown as { performance?: unknown }).performance;
+      (globalThis as unknown as { performance?: unknown }).performance = undefined;
 
       expect(() => {
         render(

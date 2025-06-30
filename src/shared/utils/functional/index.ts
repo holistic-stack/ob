@@ -2,6 +2,6 @@
  * Functional Programming Utils - Barrel Exports
  */
 
+export * from './enhanced-composition';
 export * from './pipe';
-// Functional utilities will be exported here
 export * from './result';

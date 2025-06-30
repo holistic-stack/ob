@@ -50,7 +50,9 @@
         "noUnusedVariables": "error",
         "useIsNan": "error",
         "useValidForDirection": "error",
-        "useYield": "error"
+        "useYield": "error",
+        "noVoidElementsWithChildren": "error",
+        "noVoidTypeReturn": "error"
       },
       "security": {
         "noDangerouslySetInnerHtml": "error",
@@ -60,7 +62,14 @@
         "useConst": "error",
         "useDefaultParameterLast": "error",
         "useExponentiationOperator": "error",
-        "useTemplate": "error"
+        "useTemplate": "error",
+        "useShorthandAssign": "error",
+        "useCollapsedElseIf": "error",
+        "useFragmentSyntax": "error"
+      },
+      "performance": {
+        "noAccumulatingSpread": "error",
+        "noDelete": "error"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",

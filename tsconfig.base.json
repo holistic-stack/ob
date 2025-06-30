@@ -17,7 +17,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": false, // Temporarily disabled due to Vite plugin compatibility issues
+    "exactOptionalPropertyTypes": true, // Enhanced type safety for optional properties
 
     // Additional strict checks for bulletproof-react architecture
     "noImplicitOverride": true,
@@ -26,6 +26,9 @@
     "allowUnreachableCode": false,
     "noImplicitThis": true,
     "useUnknownInCatchVariables": true,
+
+    // Enhanced type safety checks
+    "noUncheckedSideEffectImports": true, // TypeScript 5.8+ for safer imports
 
     // Module resolution and imports
     "allowSyntheticDefaultImports": true,

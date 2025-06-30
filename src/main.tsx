@@ -16,25 +16,28 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
+import { createLogger } from './shared/services/logger.service';
 
-console.log('[INIT][Main] Starting OpenSCAD 3D Visualization Application');
-console.log('[DEBUG][Main] React version:', React.version);
-console.log('[DEBUG][Main] Environment:', import.meta.env.MODE);
+const logger = createLogger('Main');
+
+logger.init('Starting OpenSCAD 3D Visualization Application');
+logger.debug('React version:', React.version);
+logger.debug('Environment:', import.meta.env.MODE);
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  console.error('[ERROR][Main] Root element not found');
+  logger.error('Root element not found');
   throw new Error('Root element not found');
 }
 
-console.log('[DEBUG][Main] Creating React root');
+logger.debug('Creating React root');
 const root = ReactDOM.createRoot(rootElement);
 
-console.log('[DEBUG][Main] Rendering application');
+logger.debug('Rendering application');
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
 
-console.log('[INIT][Main] Application initialized successfully');
+logger.init('Application initialized successfully');

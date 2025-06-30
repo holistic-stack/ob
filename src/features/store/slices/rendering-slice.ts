@@ -8,10 +8,13 @@
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import type { StateCreator } from 'zustand';
+import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { AppStore, RenderingError, RenderingSlice } from '../types/store.types.js';
+
+const logger = createLogger('Store');
 
 export const createRenderingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
@@ -28,7 +31,7 @@ export const createRenderingSlice = (
     renderFromAST: async (
       ast: ReadonlyArray<ASTNode>
     ): AsyncResult<ReadonlyArray<THREE.Mesh>, string> => {
-      console.log(`[DEBUG][Store] Starting renderFromAST with ${ast.length} nodes`);
+      logger.debug(`Starting renderFromAST with ${ast.length} nodes`);
 
       set((state) => {
         state.rendering.isRendering = true;
@@ -39,7 +42,7 @@ export const createRenderingSlice = (
 
       return tryCatchAsync(
         async () => {
-          console.log(`[DEBUG][Store] Processing ${ast.length} AST nodes for rendering`);
+          logger.debug(`Processing ${ast.length} AST nodes for rendering`);
 
           // For now, we'll let the R3FScene handle the actual mesh creation
           // This function primarily manages the store state
@@ -61,7 +64,7 @@ export const createRenderingSlice = (
           // Record performance metrics
           get().recordRenderTime(renderTime);
 
-          console.log(`[DEBUG][Store] renderFromAST completed in ${renderTime.toFixed(2)}ms`);
+          logger.debug(`renderFromAST completed in ${renderTime.toFixed(2)}ms`);
           return meshes;
         },
         (err) => {
@@ -69,7 +72,7 @@ export const createRenderingSlice = (
           const renderTime = endTime - startTime;
           const errorMessage = err instanceof Error ? err.message : String(err);
 
-          console.error(`[ERROR][Store] renderFromAST failed:`, errorMessage);
+          logger.error(`renderFromAST failed:`, errorMessage);
 
           set((state) => {
             state.rendering.isRendering = false;

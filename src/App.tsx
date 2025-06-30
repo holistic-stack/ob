@@ -13,14 +13,17 @@ import { StoreConnectedRenderer } from './features/3d-renderer/components/store-
 import type { RenderingError } from './features/3d-renderer/types/renderer.types.js';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 import { type AppStore, useAppStore } from './features/store/app-store';
+import { createLogger } from './shared/services/logger.service';
 import type { PerformanceMetrics } from './shared/types/common.types';
 
 /**
  * Main Application Component
  */
 
+const logger = createLogger('App');
+
 export function App(): React.JSX.Element {
-  console.log('[INIT][App] Rendering OpenSCAD 3D Visualization Application v2.0.0');
+  logger.init('Rendering OpenSCAD 3D Visualization Application v2.0.0');
 
   // Store selectors for application state
   const editorCode: string = useAppStore((state: AppStore) => state.editor.code);
@@ -38,8 +41,8 @@ export function App(): React.JSX.Element {
   // Display render errors if any
   useEffect(() => {
     if (renderErrors.length > 0) {
-      console.error(
-        '[ERROR][App] Render errors detected:',
+      logger.error(
+        'Render errors detected:',
         renderErrors.map((e) => e.message)
       );
     }
@@ -53,14 +56,14 @@ export function App(): React.JSX.Element {
    * Initialize application on mount
    */
   useEffect(() => {
-    console.log('[INIT][App] Application mounted and ready');
+    logger.init('Application mounted and ready');
   }, []);
 
   /**
    * Log application state changes
    */
   useEffect(() => {
-    console.log('[DEBUG][App] Application state updated:', {
+    logger.debug('Application state updated:', {
       status: applicationStatus,
       codeLength: editorCode.length,
       astNodeCount: ast?.length ?? 0,

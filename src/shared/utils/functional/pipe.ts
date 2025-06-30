@@ -5,7 +5,10 @@
  * patterns following functional programming principles.
  */
 
+import { createLogger } from '../../services/logger.service';
 import type { Pipe } from '../../types/functional.types';
+
+const logger = createLogger('FunctionalUtils');
 
 /**
  * Pipe function for left-to-right function composition
@@ -179,7 +182,7 @@ export const tap = <T>(sideEffect: (value: T) => void) => {
  */
 export const trace = <T>(label?: string) => {
   return (value: T): T => {
-    console.log(label ? `${label}:` : 'Trace:', value);
+    logger.debug(label ? `${label}:` : 'Trace:', value);
     return value;
   };
 };

@@ -5,6 +5,8 @@
  * all features following functional programming patterns.
  */
 
+// Services
+export * from './services';
 // Types
 export * from './types';
 

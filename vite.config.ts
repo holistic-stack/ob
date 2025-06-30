@@ -19,7 +19,14 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ['zustand', 'zustand/middleware', 'immer', 'monaco-editor', '@monaco-editor/react'],
+      include: [
+        'zustand',
+        'zustand/middleware',
+        'immer',
+        'monaco-editor',
+        '@monaco-editor/react',
+        'tslog',
+      ],
     },
     build: {
       outDir: 'dist',
@@ -40,7 +47,7 @@ export default defineConfig(({ mode }) => {
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ['zustand', 'clsx', 'class-variance-authority'],
+            utils: ['zustand', 'clsx', 'class-variance-authority', 'tslog'],
           },
         },
       },

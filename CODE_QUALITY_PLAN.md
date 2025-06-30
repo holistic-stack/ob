@@ -1,29 +1,73 @@
-# Code Quality Improvement Plan for OpenSCAD 3D Visualization Application
+# Enhanced Code Quality Improvement Plan for OpenSCAD 3D Visualization Application
 
-This plan outlines a systematic approach to achieve zero Biome warnings/errors and zero TypeScript compilation errors, while adhering to the specified architectural and testing constraints.
+This plan outlines a systematic approach to achieve zero Biome warnings/errors and zero TypeScript compilation errors, while adhering to bulletproof-react architecture, enhanced logging with tslog, and comprehensive testing standards.
 
-## 1. Initial Setup and Environment Validation
+## Enhanced Quality Standards
 
-*   **Goal**: Ensure the environment is ready and baseline lint/type issues are identified.
+### Mandatory Quality Checks
+- **Zero TypeScript compilation errors**: All code must pass `pnpm type-check`
+- **Zero Biome violations**: All code must pass `pnpm biome:check`
+- **Performance targets**: <16ms render times, proper memory management
+- **Enhanced logging**: Comprehensive tslog integration with structured data
+- **Real implementations**: No mocks except Three.js WebGL components
+
+## 1. Enhanced Environment Validation and Baseline Assessment
+
+*   **Goal**: Ensure the environment is ready with enhanced tooling and establish comprehensive baseline metrics.
 *   **Steps**:
-    1.  **Verify Dependencies**: Confirm `pnpm` is installed and all project dependencies are up-to-date by running `pnpm install`.
-    2.  **Baseline Lint**: Execute `pnpm biome:lint` to get an initial report of all Biome warnings and errors.
-    3.  **Baseline Type Check**: Execute `pnpm type-check` to get an initial report of all TypeScript compilation errors.
-    4.  **Review Reports**: Analyze the output from both commands to understand the scope and common patterns of violations.
+    1.  **Verify Enhanced Dependencies**: Confirm `pnpm` is installed and all project dependencies including tslog v4.9.3 are up-to-date by running `pnpm install`.
+    2.  **Enhanced Baseline Assessment**:
+        - Execute `pnpm biome:check` for comprehensive linting and formatting analysis
+        - Execute `pnpm type-check` for TypeScript compilation validation
+        - Run performance benchmarks to establish baseline metrics
+        - Validate tslog integration and logging patterns
+    3.  **Quality Metrics Collection**: Document current state of:
+        - TypeScript error count and categories
+        - Biome violation count and severity levels
+        - Test coverage percentages and performance metrics
+        - Logging pattern compliance across components
 
-## 2. Automated Fixes with Biome
+## 2. Enhanced Automated Fixes and Configuration Optimization
 
-*   **Goal**: Resolve as many Biome violations as possible automatically.
+*   **Goal**: Resolve as many violations as possible automatically while optimizing tool configurations.
 *   **Steps**:
-    1.  **Run `biome:fix`**: Execute `pnpm biome:fix`. This command will attempt to automatically fix fixable Biome issues based on the rules defined in `biome.json`.
-    2.  **Re-run Lint**: After `biome:fix`, run `pnpm biome:lint` again to see which issues remain.
+    1.  **Enhanced Biome Configuration**:
+        - Optimize `biome.json` with performance rules (`noAccumulatingSpread`, `noDelete`)
+        - Enable advanced style rules (`useOptionalChain`, `useShorthandAssign`)
+        - Configure correctness rules (`noVoidElementsWithChildren`, `noVoidTypeReturn`)
+    2.  **TypeScript Configuration Enhancement**:
+        - Optimize `tsconfig.base.json` with TypeScript 5.8+ features
+        - Enable `noUncheckedSideEffectImports` for safer imports
+        - Configure strict type checking with enhanced compiler options
+    3.  **Automated Fix Application**:
+        - Execute `pnpm biome:fix` for automatic resolution of fixable issues
+        - Re-run `pnpm biome:check` to validate automated fixes
+        - Document remaining manual fix requirements
 
-## 3. Systematic Manual Fixes and Refactoring
+## 3. Enhanced Infrastructure Implementation
 
-*   **Goal**: Address all remaining Biome errors, TypeScript compilation errors, and perform strategic refactoring. This will be the most iterative and time-consuming phase.
-*   **Approach**: I will work through the codebase systematically, likely starting with core modules or areas with the highest concentration of errors. I will prioritize TypeScript errors first, as they often reveal deeper type-related issues that Biome might not catch.
+*   **Goal**: Implement enhanced utilities and testing infrastructure to support systematic quality improvements.
+*   **Components**:
+    1.  **Enhanced Functional Composition Utilities**:
+        - Implement `pipeWithLogging`, `safePipe`, `asyncPipe` with tslog integration
+        - Create performance monitoring wrappers (`withPerformanceLogging`)
+        - Develop memoization and debouncing utilities with logging
+    2.  **Performance Monitoring System**:
+        - Implement `EnhancedPerformanceMetrics` interface and monitoring class
+        - Create performance thresholds for different operation categories
+        - Integrate with tslog for comprehensive performance tracking
+    3.  **Enhanced Testing Infrastructure**:
+        - Develop `EnhancedTestRunner` with performance integration
+        - Create assertion utilities with logging (`createAssertion`)
+        - Implement mock tracking system with comprehensive call monitoring
+        - Build test data generators for consistent testing
 
-### 3.1. TypeScript Error Resolution (Prioritized)
+## 4. Systematic Manual Fixes and Refactoring
+
+*   **Goal**: Address all remaining violations using enhanced tooling and systematic approach.
+*   **Approach**: Leverage enhanced utilities for systematic quality improvements, prioritizing TypeScript errors and architectural compliance.
+
+### 4.1. Enhanced TypeScript Error Resolution (Prioritized)
 
 *   **Focus**: Eliminate all TypeScript compilation errors, especially those related to `any` types and unsafe operations.
 *   **Steps**:
@@ -44,7 +88,7 @@ This plan outlines a systematic approach to achieve zero Biome warnings/errors a
         *   Implement type guards and discriminated unions for robust type narrowing.
         *   Adopt `const` assertions for static data.
 
-### 3.2. Biome Error Resolution (Manual)
+### 4.2. Enhanced Biome Error Resolution with Logging Integration
 
 *   **Focus**: Fix remaining Biome errors and warnings that `biome:fix` could not resolve.
 *   **Steps**:
@@ -83,20 +127,50 @@ This plan outlines a systematic approach to achieve zero Biome warnings/errors a
     3.  **Functionality Testing**: Perform a quick manual check or run existing integration/e2e tests (if available) to ensure no functionality is broken.
     4.  **Code Review**: (Implicit, but good practice) Review the changes to ensure adherence to all architectural and quality guidelines.
 
-## Execution Flow Diagram
+## 5. Enhanced Validation and Continuous Monitoring
+
+*   **Goal**: Implement comprehensive validation and monitoring systems for sustained quality.
+*   **Components**:
+    1.  **Mandatory Quality Gates**:
+        - Execute `pnpm biome:check` after every task completion
+        - Execute `pnpm type-check` after every task completion
+        - Validate performance targets (<16ms render times)
+        - Verify logging pattern compliance
+    2.  **Performance Monitoring Integration**:
+        - Use `EnhancedPerformanceMetrics` for operation tracking
+        - Monitor memory usage and execution times
+        - Generate performance reports with tslog integration
+        - Alert on performance threshold violations
+    3.  **Testing Infrastructure Validation**:
+        - Ensure real implementation compliance (no mocks except Three.js WebGL)
+        - Validate test coverage with enhanced testing utilities
+        - Monitor test execution performance and reliability
+        - Maintain co-located test structure
+    4.  **Documentation Synchronization**:
+        - Update development guidelines with enhanced standards
+        - Maintain architectural documentation with current patterns
+        - Document performance benchmarks and optimization results
+        - Keep troubleshooting guides current with enhanced tooling
+
+## Enhanced Execution Flow Diagram
 
 ```mermaid
 graph TD
-    A[Start Code Quality Improvement] --> B{Initial Setup & Validation};
-    B --> C[Run pnpm install];
-    C --> D[Run pnpm lint];
+    A[Start Enhanced Code Quality Improvement] --> B{Enhanced Environment Validation};
+    B --> C[Run pnpm install + tslog integration];
+    C --> D[Run pnpm biome:check];
     D --> E[Run pnpm type-check];
-    E --> F{Review Baseline Reports};
+    E --> F[Collect Performance Baselines];
+    F --> G{Review Enhanced Baseline Reports};
 
-    F --> G[Run pnpm lint:fix];
-    G --> H{Automated Fixes Applied?};
-    H -- Yes --> I[Re-run pnpm lint];
-    H -- No --> I;
+    G --> H[Implement Enhanced Infrastructure];
+    H --> I[Enhanced Functional Composition];
+    I --> J[Performance Monitoring System];
+    J --> K[Enhanced Testing Infrastructure];
+    K --> L[Run pnpm biome:fix];
+    L --> M{Automated Fixes Applied?};
+    M -- Yes --> N[Re-run pnpm biome:check];
+    M -- No --> N;
 
     I --> J{Remaining Biome/TypeScript Issues?};
     J -- Yes --> K[Systematic Manual Fixes & Refactoring];

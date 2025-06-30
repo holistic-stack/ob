@@ -111,12 +111,12 @@ export class BSPTreeNode implements BSPNodeData {
       if (this.back) {
         this.front = this.back;
       } else {
-        delete (this as Record<string, unknown>).front;
+        (this as Record<string, unknown>).front = undefined;
       }
       if (temp) {
         this.back = temp;
       } else {
-        delete (this as Record<string, unknown>).back;
+        (this as Record<string, unknown>).back = undefined;
       }
 
       return success(undefined);

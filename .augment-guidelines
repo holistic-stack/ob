@@ -190,6 +190,313 @@
     - Work that spans multiple files or systems
     </when-to-use>
   </task-management>
+
+  <mcp-services>
+    <purpose>Enhance development workflow through strategic integration of Model Context Protocol (MCP) services for structured reasoning and browser automation, maintaining adherence to existing development methodology and bulletproof-react architecture.</purpose>
+
+    <sequential-thinking>
+      <description>A structured reasoning framework that helps break down complex problems into step-by-step processes, maintaining context across multiple reasoning steps.</description>
+      <when-to-use>
+        - Multi-step debugging processes requiring systematic investigation
+        - Complex feature implementations where the approach isn't immediately clear
+        - Problem-solving scenarios that need careful coordination of multiple components
+        - Planning ahead for tasks requiring structured decomposition
+        - Breaking down complex tasks into logical steps before implementation
+        - Maintaining context across multiple reasoning iterations
+      </when-to-use>
+      <best-practices>
+        - Use Sequential Thinking BEFORE starting complex implementations to ensure proper planning
+        - Apply structured reasoning to decompose problems into manageable steps
+        - Maintain context across multiple reasoning cycles for complex scenarios
+        - Integrate with existing task management system for comprehensive planning
+        - Align reasoning steps with TDD methodology and bulletproof-react architecture
+        - Document reasoning process for future reference and team collaboration
+      </best-practices>
+      <integration-patterns>
+        - Combine with PurposefulToolLeveraging maxim for enhanced problem-solving
+        - Use during Planning stage of AxiomaticWorkflow for robust plan formulation
+        - Apply when encountering complex debugging scenarios requiring systematic approach
+        - Integrate with existing logging patterns: [INIT][SequentialThinking], [DEBUG][SequentialThinking]
+      </integration-patterns>
+    </sequential-thinking>
+
+    <playwright-mcp>
+      <description>Browser automation capabilities using Microsoft's Playwright library for cross-browser testing, web application debugging, and systematic interaction recording.</description>
+      <when-to-use>
+        - Debugging web applications or investigating browser-related issues
+        - Testing React Three Fiber (R3F) applications in browser environments
+        - Investigating Monaco Editor integration issues or rendering problems
+        - Capturing console logs and error messages for systematic debugging
+        - Documenting visual issues with screenshots and interaction recordings
+        - Validating OpenSCAD 3D visualization application functionality
+      </when-to-use>
+      <systematic-workflow>
+        <step-1>Navigate to the application URL and wait for initial page load completion</step-1>
+        <step-2>Use browser_wait_for to ensure critical elements are loaded before proceeding</step-2>
+        <step-3>Perform necessary user interactions (clicks, form inputs, Monaco Editor code changes)</step-3>
+        <step-4>Wait for asynchronous operations to complete (AST parsing, 3D rendering, Zustand state updates)</step-4>
+        <step-5>Retrieve console logs using browser_console_messages after ensuring application state is stable</step-5>
+        <step-6>Document findings with browser_take_screenshot for visual issues or state documentation</step-6>
+        <step-7>Use browser_snapshot for accessibility information when needed</step-7>
+        <step-8>Analyze collected information before proposing solutions</step-8>
+      </systematic-workflow>
+      <best-practices>
+        - Always wait for web application to fully load before attempting interactions
+        - Wait for user interactions to complete before capturing console logs
+        - Use browser_wait_for with specific text or time delays for dynamic content
+        - Capture console messages only after ensuring application state is stable
+        - Take screenshots to document current state when debugging visual issues
+        - Maintain systematic approach: navigate → wait → interact → wait → capture → analyze
+        - Integrate findings with existing error handling patterns and Result&lt;T,E&gt; structures
+      </best-practices>
+      <integration-patterns>
+        - Align with existing development methodology and TDD principles
+        - Use established logging patterns: [INIT][PlaywrightMCP], [DEBUG][PlaywrightMCP], [ERROR][PlaywrightMCP]
+        - Integrate with bulletproof-react architecture debugging workflows
+        - Combine with Sequential Thinking for complex debugging scenarios
+        - Support OpenSCAD 3D visualization application testing and validation
+        - Maintain &lt;16ms render performance targets during browser testing
+      </integration-patterns>
+    </playwright-mcp>
+
+    <unified-debugging-workflow>
+      <description>Systematic approach combining Sequential Thinking and Playwright MCP with existing development methodology for comprehensive problem-solving.</description>
+      <process>
+        <phase-1-analysis>
+          - Use Sequential Thinking to break down the problem into logical investigation steps
+          - Identify which aspects require browser automation vs. code analysis
+          - Plan systematic approach integrating both MCP services with existing tools
+        </phase-1-analysis>
+        <phase-2-investigation>
+          - Execute Playwright MCP workflow for browser-related investigation
+          - Use codebase-retrieval for relevant code context and patterns
+          - Apply ToolAssistedDiagnosis maxim for comprehensive understanding
+        </phase-2-investigation>
+        <phase-3-solution>
+          - Synthesize findings from both MCP services and existing tools
+          - Propose solutions aligned with TDD methodology and bulletproof-react architecture
+          - Maintain adherence to established logging patterns and error handling
+        </phase-3-solution>
+      </process>
+      <alignment-with-existing-methodology>
+        - Integrate with PurposefulToolLeveraging maxim for strategic tool usage
+        - Support AxiomaticWorkflow stages, particularly Planning and Implementation
+        - Maintain consistency with task management system and progress tracking
+        - Align with established principles: DRY, SRP, TDD, functional programming patterns
+        - Support bulletproof-react architecture with co-located tests and real implementations
+        - Preserve Result&lt;T,E&gt; error handling patterns and &lt;16ms render performance targets
+      </alignment-with-existing-methodology>
+    </unified-debugging-workflow>
+  </mcp-services>
+
+  <code-quality-enforcement>
+    <purpose>Mandate systematic code quality and project QA checks after each task step to maintain zero Biome warnings/errors and zero TypeScript compilation errors, following the comprehensive approach outlined in CODE_QUALITY_PLAN.md.</purpose>
+
+    <mandatory-quality-checks>
+      <description>MANDATORY quality validation that MUST be performed after EVERY task step completion, without exception.</description>
+      <commands>
+        <biome-check>
+          <command>pnpm biome:check</command>
+          <success-criteria>Exit code 0 with no warnings or errors</success-criteria>
+          <failure-action>Apply CODE_QUALITY_PLAN.md systematic fixes before proceeding</failure-action>
+        </biome-check>
+        <typescript-check>
+          <command>pnpm type-check</command>
+          <success-criteria>Exit code 0 with no compilation errors</success-criteria>
+          <failure-action>Resolve TypeScript errors per CODE_QUALITY_PLAN.md before proceeding</failure-action>
+        </typescript-check>
+      </commands>
+      <enforcement>
+        - Run BOTH commands after completing ANY task step
+        - NEVER proceed to next task if either command fails
+        - Apply systematic fixes from CODE_QUALITY_PLAN.md when issues are detected
+        - Maintain zero-error state throughout entire development workflow
+      </enforcement>
+    </mandatory-quality-checks>
+
+    <systematic-quality-approach>
+      <description>Follow CODE_QUALITY_PLAN.md systematic approach for comprehensive quality maintenance.</description>
+      <automated-fixes>
+        <step-1>Run `pnpm biome:fix` for automatic resolution of fixable issues</step-1>
+        <step-2>Re-run `pnpm biome:check` to verify automated fixes</step-2>
+      </automated-fixes>
+      <manual-fixes>
+        <typescript-priority>
+          - Eliminate ALL implicit 'any' types with explicit type annotations
+          - Replace explicit 'any' with specific interfaces, union types, or 'unknown'
+          - Exception: 'any' allowed ONLY in src/features/3d-renderer/ and src/features/r3f-renderer/ for Three.js WebGL components
+          - Address unsafe TypeScript operations (noUnsafeAssignment, noUnsafeMemberAccess, etc.)
+          - Comply with docs/typescript-guidelines.md requirements
+        </typescript-priority>
+        <biome-resolution>
+          - Apply useOptionalChain: Replace '||' with '??' for null/undefined handling
+          - Handle noUnusedVariables: Remove unused imports/variables or prefix with underscore
+          - Address all other Biome rules per biome.json configuration
+        </biome-resolution>
+      </manual-fixes>
+    </systematic-quality-approach>
+
+    <architectural-compliance>
+      <description>Ensure all quality fixes maintain adherence to established architectural principles and constraints.</description>
+      <principles>
+        - DRY (Don't Repeat Yourself): Eliminate code duplication through reusable abstractions
+        - SRP (Single Responsibility Principle): Maintain single-purpose components and functions
+        - TDD Methodology: Preserve test-driven development approach with real implementations
+        - Functional Programming: Maintain immutability, pure functions, and functional patterns
+        - Bulletproof-React Architecture: Follow established component and service patterns
+      </principles>
+      <constraints>
+        - Testing: Use real implementations (NO MOCKS except Three.js WebGL components)
+        - Error Handling: Maintain Result&lt;T,E&gt; patterns for robust error management
+        - Performance: Preserve &lt;16ms render targets and 300ms debouncing
+        - Logging: Adhere to [INIT]/[DEBUG]/[ERROR]/[WARN]/[END][ComponentName] patterns
+        - Co-located Tests: Maintain existing test structure (no __tests__ folders)
+      </constraints>
+    </architectural-compliance>
+
+    <integration-with-axiomaticworkflow>
+      <description>Seamless integration of quality checks with existing AxiomaticWorkflow stages.</description>
+      <implementation-stage-integration>
+        - After completing each Task in Phase execution (##8.{phase}.{task})
+        - Before marking any Task as complete in task management system
+        - Before proceeding to next Task or Phase
+        - Before advancing to Verification stage (##10)
+      </implementation-stage-integration>
+      <verification-stage-enhancement>
+        - Include quality check results in ##10. Verification report
+        - Mandate clean `pnpm biome:check` and `pnpm type-check` as verification criteria
+        - Document any quality-related fixes applied during implementation
+      </verification-stage-enhancement>
+    </integration-with-axiomaticworkflow>
+
+    <reference-documentation>
+      <primary-source>CODE_QUALITY_PLAN.md - Comprehensive systematic approach for quality improvement</primary-source>
+      <supporting-docs>
+        - docs/typescript-guidelines.md - TypeScript coding standards and practices
+        - biome.json - Biome linting and formatting configuration
+        - Project memories - Established patterns and architectural decisions
+      </supporting-docs>
+    </reference-documentation>
+  </code-quality-enforcement>
+
+  <tslog-integration>
+    <purpose>Comprehensive logging system using tslog v4.9.3 as a replacement for console.log throughout the OpenSCAD 3D visualization project, maintaining existing logging patterns while providing enhanced capabilities.</purpose>
+
+    <core-principles>
+      <description>Fundamental principles for tslog usage in the project.</description>
+      <pattern-preservation>
+        - Maintain existing [INIT]/[DEBUG]/[ERROR]/[WARN]/[END][ComponentName] patterns
+        - Replace console.log('[DEBUG][ComponentName]') with logger.debug()
+        - Replace console.error('[ERROR][ComponentName]') with logger.error()
+        - Preserve message content while removing manual [TAG][ComponentName] prefixes
+      </pattern-preservation>
+      <performance-optimization>
+        - Use hideLogPositionForProduction for production builds
+        - Leverage tslog's built-in performance features
+        - Maintain &lt;16ms render performance targets
+        - Configure appropriate log levels for different environments
+      </performance-optimization>
+    </core-principles>
+
+    <usage-patterns>
+      <description>Standard patterns for using tslog throughout the application.</description>
+      <component-logger-creation>
+        <step-1>Import createLogger from shared services</step-1>
+        <step-2>Create component-specific logger instance</step-2>
+        <step-3>Use logger methods instead of console methods</step-3>
+        <example>
+          ```typescript
+          import { createLogger } from '../../../shared/services/logger.service';
+
+          const logger = createLogger('ComponentName');
+
+          // Usage
+          logger.init('Component initialized successfully');
+          logger.debug('Processing data', { count: 42 });
+          logger.info('Operation completed');
+          logger.warn('Performance warning detected');
+          logger.error('Operation failed', error);
+          logger.end('Component cleanup completed');
+          ```
+        </example>
+      </component-logger-creation>
+      <service-integration>
+        - Create logger instances at module level for services
+        - Use descriptive component names that match the service/component purpose
+        - Maintain consistent naming conventions across the application
+        - Integrate with existing Result&lt;T,E&gt; error handling patterns
+      </service-integration>
+    </usage-patterns>
+
+    <configuration-details>
+      <description>tslog configuration optimized for the OpenSCAD 3D visualization project.</description>
+      <environment-specific>
+        <development>
+          - Pretty formatting enabled for better readability
+          - All log levels displayed (minLevel: 0)
+          - File position information included for debugging
+          - Colored output for different log levels
+        </development>
+        <production>
+          - JSON formatting for log aggregation services
+          - hideLogPositionForProduction enabled for performance
+          - Optimized log levels to reduce overhead
+          - Structured output for monitoring systems
+        </production>
+      </environment-specific>
+      <vite-integration>
+        - tslog included in optimizeDeps for proper bundling
+        - Added to utils chunk for efficient loading
+        - Compatible with Vite 6.0.0 ESM handling
+        - No additional configuration required for build process
+      </vite-integration>
+    </configuration-details>
+
+    <migration-guidelines>
+      <description>Guidelines for migrating from console.log to tslog.</description>
+      <replacement-patterns>
+        <console-log>Replace console.log('[DEBUG][ComponentName]', message) with logger.debug(message)</console-log>
+        <console-error>Replace console.error('[ERROR][ComponentName]', message) with logger.error(message)</console-error>
+        <console-warn>Replace console.warn('[WARN][ComponentName]', message) with logger.warn(message)</console-warn>
+        <console-info>Replace console.info('[INFO][ComponentName]', message) with logger.info(message)</console-info>
+      </replacement-patterns>
+      <exceptions>
+        - Keep console.log in test files for debugging purposes
+        - Preserve console methods in dev-tools that intentionally intercept them
+        - Maintain console.log in build scripts and validation tools
+        - Worker files may keep console methods due to separate execution context
+      </exceptions>
+    </migration-guidelines>
+
+    <integration-with-existing-methodology>
+      <description>How tslog integrates with established development practices.</description>
+      <bulletproof-react-alignment>
+        - Logger service follows bulletproof-react architecture patterns
+        - Co-located with other shared services in src/shared/services/
+        - Maintains separation of concerns and single responsibility
+        - Provides typed interfaces for consistent usage
+      </bulletproof-react-alignment>
+      <tdd-methodology-support>
+        - Comprehensive test coverage for logger service functionality
+        - Real implementation testing (no mocks for logger service)
+        - Performance testing to ensure &lt;16ms render targets
+        - Integration testing with existing logging patterns
+      </tdd-methodology-support>
+      <quality-assurance-integration>
+        - Zero TypeScript compilation errors maintained
+        - Zero Biome warnings/errors after implementation
+        - Follows docs/typescript-guidelines.md requirements
+        - Maintains Result&lt;T,E&gt; error handling patterns
+      </quality-assurance-integration>
+    </integration-with-existing-methodology>
+
+    <reference-documentation>
+      <primary-source>src/shared/services/logger.service.ts - Main logger service implementation</primary-source>
+      <test-examples>src/shared/services/logger.service.test.ts - Usage examples and testing patterns</test-examples>
+      <configuration>vite.config.ts - Vite integration and optimization settings</configuration>
+      <external-docs>https://github.com/fullstack-build/tslog - Official tslog documentation</external-docs>
+    </reference-documentation>
+  </tslog-integration>
   </YourInstructions>
 
 </AugsterSystemPrompt>

@@ -500,7 +500,7 @@ export class UnifiedParserService {
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
       hash = (hash << 5) - hash + char;
-      hash = hash & hash;
+      hash &= hash;
     }
     return `unified_${Math.abs(hash).toString(36)}`;
   }

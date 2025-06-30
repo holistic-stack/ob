@@ -165,7 +165,7 @@ describe('Import Fix Verification', () => {
       const originalResizeObserver = global.ResizeObserver;
 
       // Temporarily remove ResizeObserver
-      delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+      (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver = undefined;
 
       // The application should not crash
       expect(() => {
@@ -188,7 +188,7 @@ describe('Import Fix Verification', () => {
       const originalPerformance = global.performance;
 
       // Temporarily remove performance API
-      delete (globalThis as unknown as { performance?: unknown }).performance;
+      (globalThis as unknown as { performance?: unknown }).performance = undefined;
 
       // Should not crash when performance API is unavailable
       expect(() => {

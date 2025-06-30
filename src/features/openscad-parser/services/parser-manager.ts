@@ -60,7 +60,7 @@ const createCacheKey = (code: string): string => {
   for (let i = 0; i < code.length; i++) {
     const char = code.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash &= hash; // Convert to 32-bit integer
   }
   return `parse_${Math.abs(hash).toString(36)}`;
 };
