@@ -5,34 +5,25 @@
  * following bulletproof-react service patterns with dependency injection and Result<T,E> error handling.
  */
 
-import type {
-  Material,
-  TypedArray} from "three";
+import type { Material, TypedArray } from 'three';
+import { BufferAttribute, BufferGeometry, Matrix3, Matrix4, Mesh, Vector3 } from 'three';
+import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import { GEOMETRY_CONFIG } from '../config/geometry-config';
+import type { CSGData, PolygonData, SharedData, VertexData } from '../types/geometry.types';
 import {
-  BufferAttribute,
-  BufferGeometry,
-  Matrix3,
-  Matrix4,
-  Mesh,
-  Vector3,
-} from "three";
-import { NBuf2, NBuf3 } from "../utils/NBuf";
-import { Vector } from "../utils/Vector";
-import { BSPTreeNode, BSPTreeService } from "./bsp-tree.service";
-import { MatrixIntegrationService } from "./matrix-integration.service";
-import { matrixServiceContainer } from "./matrix-service-container";
-import type { PolygonData, VertexData, CSGData, SharedData } from "../types/geometry.types";
-import {
-  createVertex,
-  createPolygon,
   clonePolygon,
-  isValidPolygon,
   createPlaneFromPoints,
+  createPolygon,
+  createVertex,
+  isValidPolygon,
   splitPolygonByPlane,
-} from "../utils/geometry-utils";
-import { GEOMETRY_CONFIG } from "../config/geometry-config";
-import { success, error } from "../../../shared/utils/functional/result";
-import type { Result } from "../../../shared/types/result.types";
+} from '../utils/geometry-utils';
+import { NBuf2, NBuf3 } from '../utils/NBuf';
+import { Vector } from '../utils/Vector';
+import { BSPTreeNode, BSPTreeService } from './bsp-tree.service';
+import { MatrixIntegrationService } from './matrix-integration.service';
+import { matrixServiceContainer } from './matrix-service-container';
 
 /**
  * CSG Core Service
@@ -44,9 +35,7 @@ export class CSGCoreService implements CSGData {
   private readonly matrixIntegration: MatrixIntegrationService;
 
   constructor(matrixIntegration?: MatrixIntegrationService) {
-    console.log(
-      "[INIT][CSGCoreService] Initializing enhanced CSG core service",
-    );
+    console.log('[INIT][CSGCoreService] Initializing enhanced CSG core service');
     this.bspService = new BSPTreeService();
     this.matrixIntegration =
       matrixIntegration ?? new MatrixIntegrationService(matrixServiceContainer);
@@ -70,9 +59,7 @@ export class CSGCoreService implements CSGData {
    * Create CSG from polygons
    */
   static fromPolygons(polygons: PolygonData[]): Result<CSGCoreService, string> {
-    console.log(
-      `[DEBUG][CSGCoreService] Creating CSG from ${polygons.length} polygons`,
-    );
+    console.log(`[DEBUG][CSGCoreService] Creating CSG from ${polygons.length} polygons`);
 
     try {
       const csg = new CSGCoreService();
@@ -80,7 +67,7 @@ export class CSGCoreService implements CSGData {
 
       if (validPolygons.length !== polygons.length) {
         console.warn(
-          `[WARN][CSGCoreService] Filtered out ${polygons.length - validPolygons.length} invalid polygons`,
+          `[WARN][CSGCoreService] Filtered out ${polygons.length - validPolygons.length} invalid polygons`
         );
       }
 
@@ -88,7 +75,7 @@ export class CSGCoreService implements CSGData {
       return success(csg);
     } catch (err) {
       const errorMessage = `Failed to create CSG from polygons: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -96,11 +83,8 @@ export class CSGCoreService implements CSGData {
   /**
    * Create CSG from Three.js BufferGeometry
    */
-  static fromGeometry(
-    geom: BufferGeometry,
-    objectIndex?: number,
-  ): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Creating CSG from BufferGeometry");
+  static fromGeometry(geom: BufferGeometry, objectIndex?: number): Result<CSGCoreService, string> {
+    console.log('[DEBUG][CSGCoreService] Creating CSG from BufferGeometry');
 
     try {
       const polys: PolygonData[] = [];
@@ -122,7 +106,7 @@ export class CSGCoreService implements CSGData {
 
       const _triCount = (index.length / 3) | 0;
 
-      for (let i = 0, pli = 0, l = index.length; i < l; i += 3, pli++) {
+      for (let i = 0, _pli = 0, l = index.length; i < l; i += 3, _pli++) {
         const vertices: VertexData[] = [];
 
         for (let j = 0; j < 3; j++) {
@@ -133,9 +117,7 @@ export class CSGCoreService implements CSGData {
           const vt = vi * 2;
 
           if (!posattr?.array || !normalattr?.array) {
-            console.warn(
-              "[WARN][CSGCoreService] Missing position or normal attributes",
-            );
+            console.warn('[WARN][CSGCoreService] Missing position or normal attributes');
             continue;
           }
 
@@ -149,26 +131,22 @@ export class CSGCoreService implements CSGData {
           const v = uvattr?.array?.[vt + 1] ?? 0;
 
           const color = colorattr?.array
-            ? new Vector(
-                colorattr.array[vp],
-                colorattr.array[vp + 1],
-                colorattr.array[vp + 2],
-              )
+            ? new Vector(colorattr.array[vp], colorattr.array[vp + 1], colorattr.array[vp + 2])
             : undefined;
 
           vertices[j] = createVertex(
             new Vector(x, y, z),
             new Vector(nx, ny, nz),
             new Vector(u, v, 0),
-            color,
+            color
           );
         }
 
-        let materialIndex = objectIndex ?? { id: "0" };
+        let materialIndex = objectIndex ?? { id: '0' };
         if (objectIndex === undefined && grps && grps.length > 0) {
           for (const grp of grps) {
             if (i >= grp.start && i < grp.start + grp.count) {
-              materialIndex = grp.materialIndex ?? { id: "0" };
+              materialIndex = grp.materialIndex ?? { id: '0' };
               break;
             }
           }
@@ -176,25 +154,18 @@ export class CSGCoreService implements CSGData {
 
         try {
           const sharedData =
-            typeof materialIndex === "object"
-              ? materialIndex
-              : { id: String(materialIndex) };
+            typeof materialIndex === 'object' ? materialIndex : { id: String(materialIndex) };
           const polygon = createPolygon(vertices, sharedData);
           polys.push(polygon);
         } catch (polygonError) {
-          console.warn(
-            "[WARN][CSGCoreService] Skipping invalid triangle:",
-            polygonError,
-          );
+          console.warn('[WARN][CSGCoreService] Skipping invalid triangle:', polygonError);
         }
       }
 
-      return CSGCoreService.fromPolygons(
-        polys.filter((p) => Number.isFinite(p.plane.normal.x)),
-      );
+      return CSGCoreService.fromPolygons(polys.filter((p) => Number.isFinite(p.plane.normal.x)));
     } catch (err) {
       const errorMessage = `Failed to create CSG from geometry: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -204,10 +175,10 @@ export class CSGCoreService implements CSGData {
    */
   static async toGeometry(
     csg: CSGCoreService,
-    toMatrix: Matrix4,
+    toMatrix: Matrix4
   ): Promise<Result<BufferGeometry, string>> {
     console.log(
-      "[DEBUG][CSGCoreService] Converting CSG to BufferGeometry with enhanced matrix operations",
+      '[DEBUG][CSGCoreService] Converting CSG to BufferGeometry with enhanced matrix operations'
     );
 
     try {
@@ -223,7 +194,7 @@ export class CSGCoreService implements CSGData {
         triCount > GEOMETRY_CONFIG.performance.maxTriangles
       ) {
         return error(
-          `Triangle count ${triCount} exceeds maximum ${GEOMETRY_CONFIG.performance.maxTriangles}`,
+          `Triangle count ${triCount} exceeds maximum ${GEOMETRY_CONFIG.performance.maxTriangles}`
         );
       }
 
@@ -241,9 +212,7 @@ export class CSGCoreService implements CSGData {
 
         if (p.shared !== undefined) {
           const sharedKey =
-            typeof p.shared === "object" &&
-            p.shared !== null &&
-            "id" in p.shared
+            typeof p.shared === 'object' && p.shared !== null && 'id' in p.shared
               ? String(p.shared.id)
               : String(p.shared);
           grps[sharedKey] ??= [];
@@ -255,19 +224,13 @@ export class CSGCoreService implements CSGData {
 
         for (let j = 3; j <= pvlen; j++) {
           const sharedKey =
-            typeof p.shared === "object" &&
-            p.shared !== null &&
-            "id" in p.shared
+            typeof p.shared === 'object' && p.shared !== null && 'id' in p.shared
               ? String(p.shared.id)
               : String(p.shared);
           const grp = p.shared === undefined ? dgrp : grps[sharedKey];
           if (!grp) continue;
 
-          grp.push(
-            vertices.top / 3,
-            vertices.top / 3 + 1,
-            vertices.top / 3 + 2,
-          );
+          grp.push(vertices.top / 3, vertices.top / 3 + 1, vertices.top / 3 + 2);
 
           const v0 = pvs[0];
           const v1 = pvs[j - 2];
@@ -295,12 +258,12 @@ export class CSGCoreService implements CSGData {
         }
       }
 
-      geom.setAttribute("position", new BufferAttribute(vertices.array, 3));
-      geom.setAttribute("normal", new BufferAttribute(normals.array, 3));
-      geom.setAttribute("uv", new BufferAttribute(uvs.array, 2));
+      geom.setAttribute('position', new BufferAttribute(vertices.array, 3));
+      geom.setAttribute('normal', new BufferAttribute(normals.array, 3));
+      geom.setAttribute('uv', new BufferAttribute(uvs.array, 2));
 
       if (colors) {
-        geom.setAttribute("color", new BufferAttribute(colors.array, 3));
+        geom.setAttribute('color', new BufferAttribute(colors.array, 3));
       }
 
       let index: number[] = [];
@@ -321,31 +284,25 @@ export class CSGCoreService implements CSGData {
       }
 
       // Use enhanced matrix operations for robust inversion
-      const matrixIntegration = new MatrixIntegrationService(
-        matrixServiceContainer,
-      );
-      const inversionResult = await matrixIntegration.convertMatrix4ToMLMatrix(
-        toMatrix,
-        {
-          useValidation: true,
-          useTelemetry: true,
-          enableSVDFallback: true,
-        },
-      );
+      const matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      const inversionResult = await matrixIntegration.convertMatrix4ToMLMatrix(toMatrix, {
+        useValidation: true,
+        useTelemetry: true,
+        enableSVDFallback: true,
+      });
 
       if (!inversionResult.success) {
         return error(`Matrix conversion failed: ${inversionResult.error}`);
       }
 
-      const robustInversionResult =
-        await matrixIntegration.performRobustInversion(
-          inversionResult.data.result,
-          {
-            useValidation: true,
-            useTelemetry: true,
-            enableSVDFallback: true,
-          },
-        );
+      const robustInversionResult = await matrixIntegration.performRobustInversion(
+        inversionResult.data.result,
+        {
+          useValidation: true,
+          useTelemetry: true,
+          enableSVDFallback: true,
+        }
+      );
 
       if (!robustInversionResult.success) {
         return error(`Matrix inversion failed: ${robustInversionResult.error}`);
@@ -355,7 +312,7 @@ export class CSGCoreService implements CSGData {
       const conversionService = matrixServiceContainer.getConversionService();
       const matrix4Result = await conversionService.convertMLMatrixToMatrix4(
         robustInversionResult.data.result,
-        { useCache: true, validateInput: true },
+        { useCache: true, validateInput: true }
       );
 
       if (!matrix4Result.success) {
@@ -367,13 +324,11 @@ export class CSGCoreService implements CSGData {
       geom.computeBoundingSphere();
       geom.computeBoundingBox();
 
-      console.log(
-        "[DEBUG][CSGCoreService] Enhanced BufferGeometry conversion completed",
-      );
+      console.log('[DEBUG][CSGCoreService] Enhanced BufferGeometry conversion completed');
       return success(geom);
     } catch (err) {
       const errorMessage = `Failed to convert CSG to geometry: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -381,35 +336,25 @@ export class CSGCoreService implements CSGData {
   /**
    * Create CSG from Three.js Mesh with enhanced matrix validation
    */
-  static async fromMesh(
-    mesh: Mesh,
-    objectIndex?: number,
-  ): Promise<Result<CSGCoreService, string>> {
-    console.log(
-      "[DEBUG][CSGCoreService] Creating CSG from Mesh with enhanced matrix validation",
-    );
+  static async fromMesh(mesh: Mesh, objectIndex?: number): Promise<Result<CSGCoreService, string>> {
+    console.log('[DEBUG][CSGCoreService] Creating CSG from Mesh with enhanced matrix validation');
 
     try {
       // Validate mesh matrix using matrix integration service
-      const matrixIntegration = new MatrixIntegrationService(
-        matrixServiceContainer,
-      );
-      const matrixValidationResult =
-        await matrixIntegration.convertMatrix4ToMLMatrix(mesh.matrix, {
-          useValidation: true,
-          useTelemetry: true,
-        });
+      const matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      const matrixValidationResult = await matrixIntegration.convertMatrix4ToMLMatrix(mesh.matrix, {
+        useValidation: true,
+        useTelemetry: true,
+      });
 
       if (!matrixValidationResult.success) {
-        return error(
-          `Mesh matrix validation failed: ${matrixValidationResult.error}`,
-        );
+        return error(`Mesh matrix validation failed: ${matrixValidationResult.error}`);
       }
 
       if (matrixValidationResult.data.validation?.warnings.length) {
         console.warn(
-          "[WARN][CSGCoreService] Matrix validation warnings:",
-          matrixValidationResult.data.validation.warnings,
+          '[WARN][CSGCoreService] Matrix validation warnings:',
+          matrixValidationResult.data.validation.warnings
         );
       }
 
@@ -421,19 +366,18 @@ export class CSGCoreService implements CSGData {
       const tmpm3 = new Matrix3();
 
       // Use enhanced normal matrix computation
-      const normalMatrixResult =
-        await matrixIntegration.computeEnhancedNormalMatrix(mesh.matrix, {
-          useValidation: true,
-          useTelemetry: true,
-          enableSVDFallback: true,
-        });
+      const normalMatrixResult = await matrixIntegration.computeEnhancedNormalMatrix(mesh.matrix, {
+        useValidation: true,
+        useTelemetry: true,
+        enableSVDFallback: true,
+      });
 
       if (normalMatrixResult.success) {
         tmpm3.copy(normalMatrixResult.data.result);
       } else {
         console.warn(
-          "[WARN][CSGCoreService] Enhanced normal matrix computation failed, using fallback:",
-          normalMatrixResult.error,
+          '[WARN][CSGCoreService] Enhanced normal matrix computation failed, using fallback:',
+          normalMatrixResult.error
         );
         tmpm3.getNormalMatrix(mesh.matrix);
       }
@@ -445,12 +389,8 @@ export class CSGCoreService implements CSGData {
         const transformedVertices: VertexData[] = [];
 
         for (const v of p.vertices) {
-          const transformedPos = ttvv0
-            .copy(v.pos.toVector3())
-            .applyMatrix4(mesh.matrix);
-          const transformedNormal = ttvv0
-            .copy(v.normal.toVector3())
-            .applyMatrix3(tmpm3);
+          const transformedPos = ttvv0.copy(v.pos.toVector3()).applyMatrix4(mesh.matrix);
+          const transformedNormal = ttvv0.copy(v.normal.toVector3()).applyMatrix3(tmpm3);
 
           transformedVertices.push({
             ...v,
@@ -469,7 +409,7 @@ export class CSGCoreService implements CSGData {
       return success(csg);
     } catch (err) {
       const errorMessage = `Failed to create CSG from mesh: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -480,11 +420,9 @@ export class CSGCoreService implements CSGData {
   static async toMesh(
     csg: CSGCoreService,
     toMatrix: Matrix4,
-    toMaterial?: Material | Material[],
+    toMaterial?: Material | Material[]
   ): Promise<Result<Mesh, string>> {
-    console.log(
-      "[DEBUG][CSGCoreService] Converting CSG to Mesh with enhanced matrix operations",
-    );
+    console.log('[DEBUG][CSGCoreService] Converting CSG to Mesh with enhanced matrix operations');
 
     try {
       const geomResult = await CSGCoreService.toGeometry(csg, toMatrix);
@@ -506,7 +444,7 @@ export class CSGCoreService implements CSGData {
       return success(m);
     } catch (err) {
       const errorMessage = `Failed to convert CSG to mesh: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -515,7 +453,7 @@ export class CSGCoreService implements CSGData {
    * Static union operation
    */
   static async union(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
-    console.log("[DEBUG][CSGCoreService] Performing static union operation");
+    console.log('[DEBUG][CSGCoreService] Performing static union operation');
 
     try {
       const csgAResult = await CSGCoreService.fromMesh(meshA);
@@ -527,14 +465,10 @@ export class CSGCoreService implements CSGData {
       const unionResult = csgAResult.data.union(csgBResult.data);
       if (!unionResult.success) return unionResult;
 
-      return CSGCoreService.toMesh(
-        unionResult.data,
-        meshA.matrix,
-        meshA.material,
-      );
+      return CSGCoreService.toMesh(unionResult.data, meshA.matrix, meshA.material);
     } catch (err) {
       const errorMessage = `Static union failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -542,11 +476,8 @@ export class CSGCoreService implements CSGData {
   /**
    * Static subtract operation
    */
-  static async subtract(
-    meshA: Mesh,
-    meshB: Mesh,
-  ): Promise<Result<Mesh, string>> {
-    console.log("[DEBUG][CSGCoreService] Performing static subtract operation");
+  static async subtract(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
+    console.log('[DEBUG][CSGCoreService] Performing static subtract operation');
 
     try {
       const csgAResult = await CSGCoreService.fromMesh(meshA);
@@ -558,14 +489,10 @@ export class CSGCoreService implements CSGData {
       const subtractResult = csgAResult.data.subtract(csgBResult.data);
       if (!subtractResult.success) return subtractResult;
 
-      return CSGCoreService.toMesh(
-        subtractResult.data,
-        meshA.matrix,
-        meshA.material,
-      );
+      return CSGCoreService.toMesh(subtractResult.data, meshA.matrix, meshA.material);
     } catch (err) {
       const errorMessage = `Static subtract failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -573,13 +500,8 @@ export class CSGCoreService implements CSGData {
   /**
    * Static intersect operation
    */
-  static async intersect(
-    meshA: Mesh,
-    meshB: Mesh,
-  ): Promise<Result<Mesh, string>> {
-    console.log(
-      "[DEBUG][CSGCoreService] Performing static intersect operation",
-    );
+  static async intersect(meshA: Mesh, meshB: Mesh): Promise<Result<Mesh, string>> {
+    console.log('[DEBUG][CSGCoreService] Performing static intersect operation');
 
     try {
       const csgAResult = await CSGCoreService.fromMesh(meshA);
@@ -591,14 +513,10 @@ export class CSGCoreService implements CSGData {
       const intersectResult = csgAResult.data.intersect(csgBResult.data);
       if (!intersectResult.success) return intersectResult;
 
-      return CSGCoreService.toMesh(
-        intersectResult.data,
-        meshA.matrix,
-        meshA.material,
-      );
+      return CSGCoreService.toMesh(intersectResult.data, meshA.matrix, meshA.material);
     } catch (err) {
       const errorMessage = `Static intersect failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -607,17 +525,15 @@ export class CSGCoreService implements CSGData {
    * Clone this CSG
    */
   clone(): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Cloning CSG");
+    console.log('[DEBUG][CSGCoreService] Cloning CSG');
 
     try {
       const csg = new CSGCoreService();
-      csg.polygons = this.polygons
-        .map(clonePolygon)
-        .filter((p) => Number.isFinite(p.plane.w));
+      csg.polygons = this.polygons.map(clonePolygon).filter((p) => Number.isFinite(p.plane.w));
       return success(csg);
     } catch (err) {
       const errorMessage = `Failed to clone CSG: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -634,7 +550,7 @@ export class CSGCoreService implements CSGData {
    */
   async toMesh(
     toMatrix?: Matrix4,
-    toMaterial?: Material | Material[],
+    toMaterial?: Material | Material[]
   ): Promise<Result<Mesh, string>> {
     const matrix = toMatrix || new Matrix4().identity();
     return await CSGCoreService.toMesh(this, matrix, toMaterial);
@@ -643,9 +559,7 @@ export class CSGCoreService implements CSGData {
   /**
    * Convert this CSG to a Three.js geometry using enhanced matrix operations
    */
-  async toGeometry(
-    toMatrix?: Matrix4,
-  ): Promise<Result<BufferGeometry, string>> {
+  async toGeometry(toMatrix?: Matrix4): Promise<Result<BufferGeometry, string>> {
     const matrix = toMatrix || new Matrix4().identity();
     return await CSGCoreService.toGeometry(this, matrix);
   }
@@ -654,7 +568,7 @@ export class CSGCoreService implements CSGData {
    * Union operation with another CSG
    */
   union(csg: CSGCoreService): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Performing union operation");
+    console.log('[DEBUG][CSGCoreService] Performing union operation');
 
     try {
       const cloneResult = this.clone();
@@ -672,7 +586,7 @@ export class CSGCoreService implements CSGData {
       return CSGCoreService.fromPolygons(unionResult.data.allPolygons());
     } catch (err) {
       const errorMessage = `Union operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -681,12 +595,11 @@ export class CSGCoreService implements CSGData {
    * Subtract operation with another CSG
    */
   subtract(csg: CSGCoreService): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Performing subtract operation");
+    console.log('[DEBUG][CSGCoreService] Performing subtract operation');
 
     try {
       const cloneResult = this.clone();
-      if (!cloneResult.success)
-        return error(`Failed to clone this CSG: ${cloneResult.error}`);
+      if (!cloneResult.success) return error(`Failed to clone this CSG: ${cloneResult.error}`);
 
       const otherCloneResult = csg.clone();
       if (!otherCloneResult.success)
@@ -696,13 +609,12 @@ export class CSGCoreService implements CSGData {
       const otherTree = new BSPTreeNode(otherCloneResult.data.polygons);
 
       const subtractResult = this.bspService.subtract(thisTree, otherTree);
-      if (!subtractResult.success)
-        return error(`BSP subtract failed: ${subtractResult.error}`);
+      if (!subtractResult.success) return error(`BSP subtract failed: ${subtractResult.error}`);
 
       return CSGCoreService.fromPolygons(subtractResult.data.allPolygons());
     } catch (err) {
       const errorMessage = `Subtract operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -711,12 +623,11 @@ export class CSGCoreService implements CSGData {
    * Intersect operation with another CSG
    */
   intersect(csg: CSGCoreService): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Performing intersect operation");
+    console.log('[DEBUG][CSGCoreService] Performing intersect operation');
 
     try {
       const cloneResult = this.clone();
-      if (!cloneResult.success)
-        return error(`Failed to clone this CSG: ${cloneResult.error}`);
+      if (!cloneResult.success) return error(`Failed to clone this CSG: ${cloneResult.error}`);
 
       const otherCloneResult = csg.clone();
       if (!otherCloneResult.success)
@@ -726,13 +637,12 @@ export class CSGCoreService implements CSGData {
       const otherTree = new BSPTreeNode(otherCloneResult.data.polygons);
 
       const intersectResult = this.bspService.intersect(thisTree, otherTree);
-      if (!intersectResult.success)
-        return error(`BSP intersect failed: ${intersectResult.error}`);
+      if (!intersectResult.success) return error(`BSP intersect failed: ${intersectResult.error}`);
 
       return CSGCoreService.fromPolygons(intersectResult.data.allPolygons());
     } catch (err) {
       const errorMessage = `Intersect operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -741,12 +651,11 @@ export class CSGCoreService implements CSGData {
    * Inverse operation (convert solid space to empty space and vice versa)
    */
   inverse(): Result<CSGCoreService, string> {
-    console.log("[DEBUG][CSGCoreService] Performing inverse operation");
+    console.log('[DEBUG][CSGCoreService] Performing inverse operation');
 
     try {
       const cloneResult = this.clone();
-      if (!cloneResult.success)
-        return error(`Failed to clone CSG: ${cloneResult.error}`);
+      if (!cloneResult.success) return error(`Failed to clone CSG: ${cloneResult.error}`);
 
       const csg = cloneResult.data;
 
@@ -776,7 +685,7 @@ export class CSGCoreService implements CSGData {
       return success(csg);
     } catch (err) {
       const errorMessage = `Inverse operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error("[ERROR][CSGCoreService]", errorMessage);
+      console.error('[ERROR][CSGCoreService]', errorMessage);
       return error(errorMessage);
     }
   }
@@ -822,9 +731,7 @@ export class Vertex {
       this.pos.clone().lerp(other.pos, t),
       this.normal.clone().lerp(other.normal, t),
       this.uv.clone().lerp(other.uv, t),
-      this.color && other.color
-        ? this.color.clone().lerp(other.color, t)
-        : undefined,
+      this.color && other.color ? this.color.clone().lerp(other.color, t) : undefined
     );
   }
 }
@@ -858,7 +765,7 @@ export class Plane {
     coplanarFront: Polygon[],
     coplanarBack: Polygon[],
     front: Polygon[],
-    back: Polygon[],
+    back: Polygon[]
   ): void {
     const result = splitPolygonByPlane(polygon, this);
 
@@ -867,9 +774,9 @@ export class Plane {
         (p) =>
           new Polygon(
             p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-            p.shared,
-          ),
-      ),
+            p.shared
+          )
+      )
     );
 
     coplanarBack.push(
@@ -877,9 +784,9 @@ export class Plane {
         (p) =>
           new Polygon(
             p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-            p.shared,
-          ),
-      ),
+            p.shared
+          )
+      )
     );
 
     front.push(
@@ -887,9 +794,9 @@ export class Plane {
         (p) =>
           new Polygon(
             p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-            p.shared,
-          ),
-      ),
+            p.shared
+          )
+      )
     );
 
     back.push(
@@ -897,9 +804,9 @@ export class Plane {
         (p) =>
           new Polygon(
             p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-            p.shared,
-          ),
-      ),
+            p.shared
+          )
+      )
     );
   }
 
@@ -920,27 +827,23 @@ export class Polygon {
 
   constructor(vertices: Vertex[], shared: SharedData) {
     if (vertices.length < 3) {
-      throw new Error("Polygon must have at least 3 vertices");
+      throw new Error('Polygon must have at least 3 vertices');
     }
 
     this.vertices = vertices.map((v) => v.clone());
     this.shared = shared;
 
     if (vertices.length >= 3 && vertices[0] && vertices[1] && vertices[2]) {
-      this.plane = Plane.fromPoints(
-        vertices[0].pos,
-        vertices[1].pos,
-        vertices[2].pos,
-      );
+      this.plane = Plane.fromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
     } else {
-      throw new Error("Polygon requires at least 3 valid vertices");
+      throw new Error('Polygon requires at least 3 valid vertices');
     }
   }
 
   clone(): Polygon {
     return new Polygon(
       this.vertices.map((v) => v.clone()),
-      this.shared,
+      this.shared
     );
   }
 
@@ -992,8 +895,8 @@ export class Node {
       (p) =>
         new Polygon(
           p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-          p.shared,
-        ),
+          p.shared
+        )
     );
 
     if (this.bspNode.plane) {
@@ -1026,7 +929,7 @@ export class Node {
     if (result.success) {
       this.syncFromBSPNode();
     } else {
-      console.error("[ERROR][Node] Invert operation failed:", result.error);
+      console.error('[ERROR][Node] Invert operation failed:', result.error);
     }
   }
 
@@ -1053,14 +956,11 @@ export class Node {
         (p) =>
           new Polygon(
             p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-            p.shared,
-          ),
+            p.shared
+          )
       );
     } else {
-      console.error(
-        "[ERROR][Node] ClipPolygons operation failed:",
-        result.error,
-      );
+      console.error('[ERROR][Node] ClipPolygons operation failed:', result.error);
       return [];
     }
   }
@@ -1070,7 +970,7 @@ export class Node {
     if (result.success) {
       this.syncFromBSPNode();
     } else {
-      console.error("[ERROR][Node] ClipTo operation failed:", result.error);
+      console.error('[ERROR][Node] ClipTo operation failed:', result.error);
     }
   }
 
@@ -1080,8 +980,8 @@ export class Node {
       (p) =>
         new Polygon(
           p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-          p.shared,
-        ),
+          p.shared
+        )
     );
   }
 
@@ -1106,7 +1006,7 @@ export class Node {
     if (result.success) {
       this.syncFromBSPNode();
     } else {
-      console.error("[ERROR][Node] Build operation failed:", result.error);
+      console.error('[ERROR][Node] Build operation failed:', result.error);
     }
   }
 }

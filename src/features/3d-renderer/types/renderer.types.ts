@@ -1,15 +1,15 @@
 /**
  * 3D Renderer Type Definitions
- * 
+ *
  * Comprehensive type definitions for Three.js + React Three Fiber integration
  * with OpenSCAD AST rendering, CSG operations, and performance monitoring.
  */
 
+import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as React from 'react';
 import type * as THREE from 'three';
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { Result, AsyncResult } from '../../../shared/types/result.types.js';
-import type { PerformanceMetrics, CameraConfig } from '../../../shared/types/common.types.js';
+import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
+import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
 
 /**
  * 3D Scene configuration
@@ -25,8 +25,6 @@ export interface Scene3DConfig {
   readonly maxMeshes: number;
   readonly maxTriangles: number;
 }
-
-
 
 /**
  * Mesh metadata for tracking and optimization
@@ -71,9 +69,9 @@ export interface CSGConfig {
 /**
  * OpenSCAD primitive types
  */
-export type OpenSCADPrimitive = 
+export type OpenSCADPrimitive =
   | 'cube'
-  | 'sphere' 
+  | 'sphere'
   | 'cylinder'
   | 'polyhedron'
   | 'polygon'
@@ -84,7 +82,7 @@ export type OpenSCADPrimitive =
 /**
  * OpenSCAD transformation types
  */
-export type OpenSCADTransformation = 
+export type OpenSCADTransformation =
   | 'translate'
   | 'rotate'
   | 'scale'
@@ -173,10 +171,22 @@ export interface ASTNodeRenderer {
  * Primitive renderer factory
  */
 export interface PrimitiveRendererFactory {
-  readonly createCube: (size: number | readonly [number, number, number]) => Result<THREE.BufferGeometry, string>;
-  readonly createSphere: (radius: number, segments?: number) => Result<THREE.BufferGeometry, string>;
-  readonly createCylinder: (radius: number, height: number, segments?: number) => Result<THREE.BufferGeometry, string>;
-  readonly createPolyhedron: (vertices: ReadonlyArray<readonly [number, number, number]>, faces: ReadonlyArray<ReadonlyArray<number>>) => Result<THREE.BufferGeometry, string>;
+  readonly createCube: (
+    size: number | readonly [number, number, number]
+  ) => Result<THREE.BufferGeometry, string>;
+  readonly createSphere: (
+    radius: number,
+    segments?: number
+  ) => Result<THREE.BufferGeometry, string>;
+  readonly createCylinder: (
+    radius: number,
+    height: number,
+    segments?: number
+  ) => Result<THREE.BufferGeometry, string>;
+  readonly createPolyhedron: (
+    vertices: ReadonlyArray<readonly [number, number, number]>,
+    faces: ReadonlyArray<ReadonlyArray<number>>
+  ) => Result<THREE.BufferGeometry, string>;
 }
 
 /**
@@ -234,7 +244,7 @@ export interface RenderingPerformanceMonitor {
 /**
  * Error types for 3D rendering
  */
-export type RenderingError = 
+export type RenderingError =
   | { readonly type: 'initialization'; readonly message: string }
   | { readonly type: 'geometry'; readonly message: string; readonly nodeType?: string }
   | { readonly type: 'material'; readonly message: string }

@@ -5,36 +5,36 @@
  * following TDD methodology with comprehensive coverage.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  pipe,
   compose,
-  curry,
-  partial,
-  identity,
   constant,
-  flip,
-  memoize,
+  curry,
   debounce,
-  throttle,
-  once,
-  tap,
-  when,
-  unless,
-  prop,
-  path,
-  head,
-  tail,
-  last,
-  init,
-  take,
   drop,
+  flip,
+  head,
+  identity,
+  init,
+  last,
+  memoize,
+  once,
+  partial,
+  path,
+  pipe,
+  prop,
   reverse,
-} from "./pipe";
+  tail,
+  take,
+  tap,
+  throttle,
+  unless,
+  when,
+} from './pipe';
 
-describe("Function Composition Utilities", () => {
-  describe("pipe", () => {
-    it("should compose functions left to right", () => {
+describe('Function Composition Utilities', () => {
+  describe('pipe', () => {
+    it('should compose functions left to right', () => {
       const add1 = (x: number) => x + 1;
       const multiply2 = (x: number) => x * 2;
       const subtract3 = (x: number) => x - 3;
@@ -46,7 +46,7 @@ describe("Function Composition Utilities", () => {
       expect(result).toBe(9);
     });
 
-    it("should work with single function", () => {
+    it('should work with single function', () => {
       const add1 = (x: number) => x + 1;
       const composed = pipe(add1);
 
@@ -54,8 +54,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("compose", () => {
-    it("should compose functions right to left", () => {
+  describe('compose', () => {
+    it('should compose functions right to left', () => {
       const add1 = (x: number): number => x + 1;
       const multiply2 = (x: number): number => x * 2;
       const subtract3 = (x: number): number => x - 3;
@@ -68,15 +68,15 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("curry", () => {
-    it("should curry a binary function", () => {
+  describe('curry', () => {
+    it('should curry a binary function', () => {
       const add = (a: number, b: number) => a + b;
       const curriedAdd = curry(add) as (a: number) => (b: number) => number;
 
       expect(curriedAdd(5)(3)).toBe(8);
     });
 
-    it("should curry a ternary function", () => {
+    it('should curry a ternary function', () => {
       const add3 = (a: number, b: number, c: number) => a + b + c;
       const curriedAdd3 = curry(add3);
 
@@ -84,8 +84,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("partial", () => {
-    it("should partially apply arguments", () => {
+  describe('partial', () => {
+    it('should partially apply arguments', () => {
       const add3 = (a: number, b: number, c: number) => a + b + c;
       const add5AndSomething = partial(add3, 5);
 
@@ -93,16 +93,16 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("identity", () => {
-    it("should return the same value", () => {
+  describe('identity', () => {
+    it('should return the same value', () => {
       expect(identity(42)).toBe(42);
-      expect(identity("test")).toBe("test");
+      expect(identity('test')).toBe('test');
       expect(identity(null)).toBeNull();
     });
   });
 
-  describe("constant", () => {
-    it("should return a function that always returns the same value", () => {
+  describe('constant', () => {
+    it('should return a function that always returns the same value', () => {
       const always42 = constant(42);
 
       expect(always42()).toBe(42);
@@ -110,8 +110,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("flip", () => {
-    it("should reverse argument order", () => {
+  describe('flip', () => {
+    it('should reverse argument order', () => {
       const subtract = (a: number, b: number) => a - b;
       const flippedSubtract = flip(subtract);
 
@@ -120,8 +120,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("memoize", () => {
-    it("should cache function results", () => {
+  describe('memoize', () => {
+    it('should cache function results', () => {
       const expensiveFunction = vi.fn((x: number) => x * x);
       const memoized = memoize(expensiveFunction);
 
@@ -130,23 +130,23 @@ describe("Function Composition Utilities", () => {
       expect(expensiveFunction).toHaveBeenCalledTimes(1);
     });
 
-    it("should use custom key function", () => {
+    it('should use custom key function', () => {
       const fn = vi.fn((obj: { id: number; name: string }) => obj.id * 2);
       const memoized = memoize(fn, (obj) => obj.id.toString());
 
-      memoized({ id: 1, name: "first" });
-      memoized({ id: 1, name: "second" }); // Different object, same id
+      memoized({ id: 1, name: 'first' });
+      memoized({ id: 1, name: 'second' }); // Different object, same id
 
       expect(fn).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("debounce", () => {
+  describe('debounce', () => {
     beforeEach(() => {
       vi.useFakeTimers();
     });
 
-    it("should delay function execution", () => {
+    it('should delay function execution', () => {
       const fn = vi.fn();
       const debounced = debounce(fn, 100);
 
@@ -157,7 +157,7 @@ describe("Function Composition Utilities", () => {
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it("should reset delay on subsequent calls", () => {
+    it('should reset delay on subsequent calls', () => {
       const fn = vi.fn();
       const debounced = debounce(fn, 100);
 
@@ -172,12 +172,12 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("throttle", () => {
+  describe('throttle', () => {
     beforeEach(() => {
       vi.useFakeTimers();
     });
 
-    it("should limit function calls", () => {
+    it('should limit function calls', () => {
       const fn = vi.fn();
       const throttled = throttle(fn, 100);
 
@@ -192,8 +192,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("once", () => {
-    it("should call function only once", () => {
+  describe('once', () => {
+    it('should call function only once', () => {
       const fn = vi.fn(() => 42);
       const onceFunction = once(fn);
 
@@ -203,8 +203,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("tap", () => {
-    it("should execute side effect and return original value", () => {
+  describe('tap', () => {
+    it('should execute side effect and return original value', () => {
       const sideEffect = vi.fn();
       const tapped = tap(sideEffect);
 
@@ -215,8 +215,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("when", () => {
-    it("should apply function when predicate is true", () => {
+  describe('when', () => {
+    it('should apply function when predicate is true', () => {
       const isEven = (x: number) => x % 2 === 0;
       const double = (x: number) => x * 2;
       const conditionalDouble = when(isEven, double);
@@ -226,8 +226,8 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("unless", () => {
-    it("should apply function when predicate is false", () => {
+  describe('unless', () => {
+    it('should apply function when predicate is false', () => {
       const isEven = (x: number) => x % 2 === 0;
       const double = (x: number) => x * 2;
       const conditionalDouble = unless(isEven, double);
@@ -237,78 +237,78 @@ describe("Function Composition Utilities", () => {
     });
   });
 
-  describe("prop", () => {
-    it("should extract property from object", () => {
-      const obj = { name: "John", age: 30 } as const;
-      const getName = prop<typeof obj, "name">("name");
+  describe('prop', () => {
+    it('should extract property from object', () => {
+      const obj = { name: 'John', age: 30 } as const;
+      const getName = prop<typeof obj, 'name'>('name');
 
-      expect(getName(obj)).toBe("John");
+      expect(getName(obj)).toBe('John');
     });
   });
 
-  describe("path", () => {
-    it("should extract nested property", () => {
-      const obj = { user: { profile: { name: "John" } } };
-      const getName = path(["user", "profile", "name"]);
+  describe('path', () => {
+    it('should extract nested property', () => {
+      const obj = { user: { profile: { name: 'John' } } };
+      const getName = path(['user', 'profile', 'name']);
 
-      expect(getName(obj)).toBe("John");
+      expect(getName(obj)).toBe('John');
     });
 
-    it("should return undefined for missing path", () => {
+    it('should return undefined for missing path', () => {
       const obj = { user: {} };
-      const getName = path(["user", "profile", "name"]);
+      const getName = path(['user', 'profile', 'name']);
 
       expect(getName(obj)).toBeUndefined();
     });
   });
 
-  describe("Array utilities", () => {
+  describe('Array utilities', () => {
     const testArray = [1, 2, 3, 4, 5];
 
-    describe("head", () => {
-      it("should return first element", () => {
+    describe('head', () => {
+      it('should return first element', () => {
         expect(head(testArray)).toBe(1);
         expect(head([])).toBeUndefined();
       });
     });
 
-    describe("tail", () => {
-      it("should return all but first element", () => {
+    describe('tail', () => {
+      it('should return all but first element', () => {
         expect(tail(testArray)).toEqual([2, 3, 4, 5]);
         expect(tail([1])).toEqual([]);
       });
     });
 
-    describe("last", () => {
-      it("should return last element", () => {
+    describe('last', () => {
+      it('should return last element', () => {
         expect(last(testArray)).toBe(5);
         expect(last([])).toBeUndefined();
       });
     });
 
-    describe("init", () => {
-      it("should return all but last element", () => {
+    describe('init', () => {
+      it('should return all but last element', () => {
         expect(init(testArray)).toEqual([1, 2, 3, 4]);
         expect(init([1])).toEqual([]);
       });
     });
 
-    describe("take", () => {
-      it("should take first n elements", () => {
+    describe('take', () => {
+      it('should take first n elements', () => {
         expect(take(3)(testArray)).toEqual([1, 2, 3]);
         expect(take(0)(testArray)).toEqual([]);
       });
     });
 
-    describe("drop", () => {
-      it("should drop first n elements", () => {
+    describe('drop', () => {
+      it('should drop first n elements', () => {
         expect(drop(2)(testArray)).toEqual([3, 4, 5]);
         expect(drop(0)(testArray)).toEqual(testArray);
       });
     });
 
-    describe("reverse", () => {
-      it("should reverse array", () => {
+    describe('reverse', () => {
+      it('should reverse array', () => {
         expect(reverse(testArray)).toEqual([5, 4, 3, 2, 1]);
         expect(reverse([])).toEqual([]);
       });

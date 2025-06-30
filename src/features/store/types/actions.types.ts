@@ -1,18 +1,18 @@
 /**
  * Action Type Definitions
- * 
+ *
  * Detailed action type definitions for Zustand store operations
  * following functional programming patterns and type safety.
  */
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
-import type { 
-  EditorPosition, 
-  EditorSelection, 
-  CameraConfig, 
-  AppConfig, 
-  PerformanceMetrics 
+import type {
+  AppConfig,
+  CameraConfig,
+  EditorPosition,
+  EditorSelection,
+  PerformanceMetrics,
 } from '../../../shared/types/common.types';
 import type { AsyncResult } from '../../../shared/types/result.types';
 
@@ -139,23 +139,23 @@ export interface ActionCreators {
   readonly updateCursorPosition: (payload: UpdateCursorPositionPayload) => void;
   readonly updateSelection: (payload: UpdateSelectionPayload) => void;
   readonly loadCode: (payload: LoadCodePayload) => LoadCodeResult;
-  
+
   // Parsing actions
   readonly parseCode: (payload: ParseCodePayload) => ParseCodeResult;
   readonly addParsingError: (payload: AddParsingErrorPayload) => void;
-  
+
   // Rendering actions
   readonly updateMeshes: (payload: UpdateMeshesPayload) => void;
   readonly renderFromAST: (payload: RenderFromASTPayload) => RenderFromASTResult;
   readonly updateCamera: (payload: UpdateCameraPayload) => void;
   readonly addRenderError: (payload: AddRenderErrorPayload) => void;
-  
+
   // Performance actions
   readonly updateMetrics: (payload: UpdateMetricsPayload) => void;
   readonly recordParseTime: (payload: RecordParseTimePayload) => void;
   readonly recordRenderTime: (payload: RecordRenderTimePayload) => void;
   readonly addPerformanceViolation: (payload: AddPerformanceViolationPayload) => void;
-  
+
   // Configuration actions
   readonly updateConfig: (payload: UpdateConfigPayload) => void;
 }
@@ -209,7 +209,7 @@ export interface HistoryState {
 /**
  * Store action types for internal use
  */
-export type StoreActionType = 
+export type StoreActionType =
   | 'UPDATE_CODE'
   | 'UPDATE_CURSOR_POSITION'
   | 'UPDATE_SELECTION'

@@ -5,28 +5,33 @@
  * patterns following functional programming principles.
  */
 
-import type { UnaryFunction, Pipe } from "../../types/functional.types";
+import type { Pipe } from '../../types/functional.types';
 
 /**
  * Pipe function for left-to-right function composition
  * Allows chaining functions in a readable, sequential manner
  */
-export const pipe: Pipe = (...fns: any[]) => (value: any) => fns.reduce((acc, fn) => fn(acc), value);
+export const pipe: Pipe =
+  (...fns: any[]) =>
+  (value: any) =>
+    fns.reduce((acc, fn) => fn(acc), value);
 
-export const compose: Pipe = (...fns: any[]) => (value: any) => fns.reduceRight((acc, fn) => fn(acc), value);
+export const compose: Pipe =
+  (...fns: any[]) =>
+  (value: any) =>
+    fns.reduceRight((acc, fn) => fn(acc), value);
 
 /**
  * Curry function to convert multi-argument functions to curried form
  */
-type Curried<A extends any[], R> =
-  A extends [infer Arg, ...infer Rest]
+type Curried<A extends any[], R> = A extends [infer Arg, ...infer Rest]
   ? (arg: Arg) => Curried<Rest, R>
   : R;
 
 export const curry = <A extends any[], R>(fn: (...args: A) => R): Curried<A, R> => {
   const curried = (...args: any[]): any => {
     if (args.length >= fn.length) {
-      return fn(...args as A);
+      return fn(...(args as A));
     }
     return (...nextArgs: any[]) => curried(...args, ...nextArgs);
   };
@@ -36,11 +41,7 @@ export const curry = <A extends any[], R>(fn: (...args: A) => R): Curried<A, R> 
 /**
  * Partial application utility
  */
-export const partial = <
-  T extends readonly unknown[],
-  U extends readonly unknown[],
-  R,
->(
+export const partial = <T extends readonly unknown[], U extends readonly unknown[], R>(
   fn: (...args: [...T, ...U]) => R,
   ...partialArgs: T
 ) => {
@@ -74,7 +75,7 @@ export const flip = <T, U, V>(fn: (a: T, b: U) => V) => {
  */
 export const memoize = <T extends readonly unknown[], R>(
   fn: (...args: T) => R,
-  keyFn?: (...args: T) => string,
+  keyFn?: (...args: T) => string
 ): ((...args: T) => R) => {
   const cache = new Map<string, R>();
 
@@ -99,7 +100,7 @@ export const memoize = <T extends readonly unknown[], R>(
  */
 export const debounce = <T extends readonly unknown[]>(
   fn: (...args: T) => void,
-  delayMs: number,
+  delayMs: number
 ): ((...args: T) => void) => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -120,10 +121,10 @@ export const debounce = <T extends readonly unknown[]>(
  */
 export const throttle = <T extends readonly unknown[]>(
   fn: (...args: T) => void,
-  delayMs: number,
+  delayMs: number
 ): ((...args: T) => void) => {
   let lastCallTime = 0;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let _timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   return (...args: T): void => {
     const now = Date.now();
@@ -132,13 +133,13 @@ export const throttle = <T extends readonly unknown[]>(
       lastCallTime = now;
       fn(...args);
     } else {
-      timeoutId ??= setTimeout(
+      _timeoutId ??= setTimeout(
         () => {
           lastCallTime = Date.now();
           fn(...args);
-          timeoutId = null;
+          _timeoutId = null;
         },
-        delayMs - (now - lastCallTime),
+        delayMs - (now - lastCallTime)
       );
     }
   };
@@ -148,7 +149,7 @@ export const throttle = <T extends readonly unknown[]>(
  * Once utility - ensures a function is called only once
  */
 export const once = <T extends readonly unknown[], R>(
-  fn: (...args: T) => R,
+  fn: (...args: T) => R
 ): ((...args: T) => R | undefined) => {
   let called = false;
   let result: R;
@@ -178,7 +179,7 @@ export const tap = <T>(sideEffect: (value: T) => void) => {
  */
 export const trace = <T>(label?: string) => {
   return (value: T): T => {
-    console.log(label ? `${label}:` : "Trace:", value);
+    console.log(label ? `${label}:` : 'Trace:', value);
     return value;
   };
 };
@@ -186,10 +187,7 @@ export const trace = <T>(label?: string) => {
 /**
  * Conditional execution utility
  */
-export const when = <T>(
-  predicate: (value: T) => boolean,
-  fn: (value: T) => T,
-) => {
+export const when = <T>(predicate: (value: T) => boolean, fn: (value: T) => T) => {
   return (value: T): T => {
     return predicate(value) ? fn(value) : value;
   };
@@ -198,10 +196,7 @@ export const when = <T>(
 /**
  * Unless utility - opposite of when
  */
-export const unless = <T>(
-  predicate: (value: T) => boolean,
-  fn: (value: T) => T,
-) => {
+export const unless = <T>(predicate: (value: T) => boolean, fn: (value: T) => T) => {
   return (value: T): T => {
     return predicate(value) ? value : fn(value);
   };
@@ -232,12 +227,9 @@ export const path = <T>(keys: ReadonlyArray<string | number>) => {
  * Array utilities for functional programming
  */
 export const head = <T>(array: ReadonlyArray<T>): T | undefined => array[0];
-export const tail = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> =>
-  array.slice(1);
-export const last = <T>(array: ReadonlyArray<T>): T | undefined =>
-  array[array.length - 1];
-export const init = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> =>
-  array.slice(0, -1);
+export const tail = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> => array.slice(1);
+export const last = <T>(array: ReadonlyArray<T>): T | undefined => array[array.length - 1];
+export const init = <T>(array: ReadonlyArray<T>): ReadonlyArray<T> => array.slice(0, -1);
 
 /**
  * Functional array operations

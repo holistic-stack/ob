@@ -1,23 +1,23 @@
 /**
  * Matrix Conversion Service
- * 
+ *
  * Advanced matrix conversion service with dependency injection, robust error handling,
  * performance monitoring, and WeakMap-based cleanup following bulletproof-react patterns.
  */
 
-import { Matrix, inverse, SingularValueDecomposition } from 'ml-matrix';
+import { inverse, Matrix, SingularValueDecomposition } from 'ml-matrix';
 import type { Matrix3, Matrix4 } from 'three';
+import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import type { MATRIX_CONFIG } from '../config/matrix-config';
+import { getCacheKey } from '../config/matrix-config';
 import type {
   MatrixOperationResult,
+  MatrixPerformanceMetrics,
   MatrixValidation,
-  MatrixPerformanceMetrics
 } from '../types/matrix.types';
-import type { MatrixCacheService } from './matrix-cache.service';
 import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters';
-import type { MATRIX_CONFIG} from '../config/matrix-config';
-import { getCacheKey } from '../config/matrix-config';
-import { success, error } from '../../../shared/utils/functional/result';
-import type { Result } from '../../../shared/types/result.types';
+import type { MatrixCacheService } from './matrix-cache.service';
 
 /**
  * Dependency injection interface for MatrixConversionService
@@ -53,11 +53,13 @@ export class MatrixConversionService {
     cacheHitRate: 0,
     memoryUsage: 0,
     largeMatrixOperations: 0,
-    failedOperations: 0
+    failedOperations: 0,
   };
 
   constructor(private readonly deps: MatrixConversionDependencies) {
-    console.log('[INIT][MatrixConversionService] Initializing matrix conversion service with dependencies');
+    console.log(
+      '[INIT][MatrixConversionService] Initializing matrix conversion service with dependencies'
+    );
     this.validateDependencies();
   }
 
@@ -103,13 +105,13 @@ export class MatrixConversionService {
         memoryUsed,
         operationType: operation,
         matrixSize,
-        cacheHit
+        cacheHit,
       },
       metadata: {
         timestamp: Date.now(),
         operationId: this.generateOperationId(operation),
-        inputHash: `${matrixSize[0]}x${matrixSize[1]}_${operation}`
-      }
+        inputHash: `${matrixSize[0]}x${matrixSize[1]}_${operation}`,
+      },
     };
 
     // Update performance metrics
@@ -123,19 +125,20 @@ export class MatrixConversionService {
    */
   private updatePerformanceMetrics(result: MatrixOperationResult): void {
     const newOperationCount = this.performanceMetrics.operationCount + 1;
-    const newTotalExecutionTime = this.performanceMetrics.totalExecutionTime + result.performance.executionTime;
-    
+    const newTotalExecutionTime =
+      this.performanceMetrics.totalExecutionTime + result.performance.executionTime;
+
     const [rows, cols] = result.performance.matrixSize;
     const size = rows * cols;
     const isLargeMatrix = size >= this.deps.config.performance.largeMatrixThreshold;
-    
+
     this.performanceMetrics = {
       ...this.performanceMetrics,
       operationCount: newOperationCount,
       totalExecutionTime: newTotalExecutionTime,
       averageExecutionTime: newTotalExecutionTime / newOperationCount,
-      largeMatrixOperations: isLargeMatrix 
-        ? this.performanceMetrics.largeMatrixOperations + 1 
+      largeMatrixOperations: isLargeMatrix
+        ? this.performanceMetrics.largeMatrixOperations + 1
         : this.performanceMetrics.largeMatrixOperations,
     };
 
@@ -157,11 +160,11 @@ export class MatrixConversionService {
       ...this.performanceMetrics,
       failedOperations: this.performanceMetrics.failedOperations + 1,
     };
-    
+
     if (this.deps.telemetry) {
       this.deps.telemetry.trackOperation(operation, 0, false);
     }
-    
+
     console.error(`[ERROR][MatrixConversionService] Operation ${operation} failed:`, error);
   }
 
@@ -209,7 +212,7 @@ export class MatrixConversionService {
       isValid: errors.length === 0,
       errors,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
@@ -231,7 +234,7 @@ export class MatrixConversionService {
       cacheHitRate: 0,
       memoryUsage: 0,
       largeMatrixOperations: 0,
-      failedOperations: 0
+      failedOperations: 0,
     });
     console.log('[DEBUG][MatrixConversionService] Performance metrics reset');
   }
@@ -268,7 +271,9 @@ export class MatrixConversionService {
       const cachedResult = this.conversionCache.get(matrix4 as unknown as Matrix);
       if (cachedResult && options.useCache !== false) {
         console.log(`[DEBUG][MatrixConversionService] WeakMap cache hit for Matrix4 conversion`);
-        return success(this.createOperationResult(cachedResult, operation, startTime, [4, 4], true));
+        return success(
+          this.createOperationResult(cachedResult, operation, startTime, [4, 4], true)
+        );
       }
 
       // Check persistent cache
@@ -277,9 +282,13 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          console.log(`[DEBUG][MatrixConversionService] Persistent cache hit for Matrix4 conversion`);
+          console.log(
+            `[DEBUG][MatrixConversionService] Persistent cache hit for Matrix4 conversion`
+          );
           this.conversionCache.set(matrix4 as unknown as Matrix, cacheResult.data);
-          return success(this.createOperationResult(cacheResult.data, operation, startTime, [4, 4], true));
+          return success(
+            this.createOperationResult(cacheResult.data, operation, startTime, [4, 4], true)
+          );
         }
       }
 
@@ -294,13 +303,16 @@ export class MatrixConversionService {
       }
 
       const operationResult = this.createOperationResult(result, operation, startTime, [4, 4]);
-      console.log(`[DEBUG][MatrixConversionService] Matrix4 conversion completed in ${operationResult.performance.executionTime}ms`);
+      console.log(
+        `[DEBUG][MatrixConversionService] Matrix4 conversion completed in ${operationResult.performance.executionTime}ms`
+      );
 
       return success(operationResult);
-
     } catch (err) {
       this.recordFailure(operation, err as Error);
-      return error(`Matrix4 conversion failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Matrix4 conversion failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -332,7 +344,9 @@ export class MatrixConversionService {
 
       // Check matrix dimensions
       if (matrix.rows !== 4 || matrix.columns !== 4) {
-        return error(`Matrix must be 4x4 for Matrix4 conversion, got ${matrix.rows}x${matrix.columns}`);
+        return error(
+          `Matrix must be 4x4 for Matrix4 conversion, got ${matrix.rows}x${matrix.columns}`
+        );
       }
 
       // Note: Matrix4 results are not cached in conversionCache as it expects Matrix-to-Matrix conversions
@@ -343,7 +357,9 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          console.log(`[DEBUG][MatrixConversionService] Persistent cache hit for ml-matrix conversion`);
+          console.log(
+            `[DEBUG][MatrixConversionService] Persistent cache hit for ml-matrix conversion`
+          );
           const result = matrixAdapter.toThreeMatrix4(cacheResult.data);
           return success(this.createOperationResult(result, operation, startTime, [4, 4], true));
         }
@@ -359,13 +375,16 @@ export class MatrixConversionService {
       }
 
       const operationResult = this.createOperationResult(result, operation, startTime, [4, 4]);
-      console.log(`[DEBUG][MatrixConversionService] ml-matrix conversion completed in ${operationResult.performance.executionTime}ms`);
+      console.log(
+        `[DEBUG][MatrixConversionService] ml-matrix conversion completed in ${operationResult.performance.executionTime}ms`
+      );
 
       return success(operationResult);
-
     } catch (err) {
       this.recordFailure(operation, err as Error);
-      return error(`ml-matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `ml-matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -397,7 +416,9 @@ export class MatrixConversionService {
 
       // Check if matrix is square
       if (!matrixUtils.isSquare(matrix)) {
-        return error(`Matrix inversion requires square matrix, got ${matrix.rows}x${matrix.columns}`);
+        return error(
+          `Matrix inversion requires square matrix, got ${matrix.rows}x${matrix.columns}`
+        );
       }
 
       // Check cache
@@ -407,7 +428,15 @@ export class MatrixConversionService {
 
         if (cacheResult.success && cacheResult.data) {
           console.log(`[DEBUG][MatrixConversionService] Cache hit for robust inversion`);
-          return success(this.createOperationResult(cacheResult.data, operation, startTime, [matrix.rows, matrix.columns], true));
+          return success(
+            this.createOperationResult(
+              cacheResult.data,
+              operation,
+              startTime,
+              [matrix.rows, matrix.columns],
+              true
+            )
+          );
         }
       }
 
@@ -422,10 +451,15 @@ export class MatrixConversionService {
         const product = matrix.mmul(result);
         const identity = Matrix.eye(matrix.rows);
 
-        if (!matrixUtils.equals(product, identity, options.precision || this.deps.config.operations.precision)) {
+        if (
+          !matrixUtils.equals(
+            product,
+            identity,
+            options.precision || this.deps.config.operations.precision
+          )
+        ) {
           throw new Error('Standard inversion produced poor quality result');
         }
-
       } catch (standardError) {
         console.warn(`[WARN][MatrixConversionService] Standard inversion failed: ${standardError}`);
 
@@ -442,16 +476,15 @@ export class MatrixConversionService {
             const threshold = Math.max(...singularValues) * tolerance;
 
             // Create inverse of singular values with threshold
-            const invSingularValues = singularValues.map(s =>
-              s > threshold ? 1 / s : 0
-            );
+            const invSingularValues = singularValues.map((s) => (s > threshold ? 1 / s : 0));
 
             const invS = Matrix.diag(invSingularValues);
             const svdTyped = svd as unknown as { V: Matrix; U: Matrix };
             result = svdTyped.V.mmul(invS).mmul(svdTyped.U.transpose());
 
-            console.log(`[DEBUG][MatrixConversionService] SVD-based pseudo-inverse completed successfully`);
-
+            console.log(
+              `[DEBUG][MatrixConversionService] SVD-based pseudo-inverse completed successfully`
+            );
           } catch (svdError) {
             this.recordFailure(operation, svdError as Error);
             return error(`Both standard and SVD inversion failed: ${svdError}`);
@@ -468,11 +501,15 @@ export class MatrixConversionService {
         this.deps.cache.set(cacheKey, result);
       }
 
-      const operationResult = this.createOperationResult(result, operation, startTime, [matrix.rows, matrix.columns]);
-      console.log(`[DEBUG][MatrixConversionService] Robust inversion completed in ${operationResult.performance.executionTime}ms`);
+      const operationResult = this.createOperationResult(result, operation, startTime, [
+        matrix.rows,
+        matrix.columns,
+      ]);
+      console.log(
+        `[DEBUG][MatrixConversionService] Robust inversion completed in ${operationResult.performance.executionTime}ms`
+      );
 
       return success(operationResult);
-
     } catch (err) {
       this.recordFailure(operation, err as Error);
       return error(`Robust inversion failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -520,14 +557,22 @@ export class MatrixConversionService {
       // Convert back to Three.js Matrix3
       const threeMatrix3 = matrixAdapter.toThreeMatrix3(normalMatrix);
 
-      const operationResult = this.createOperationResult(threeMatrix3, operation, startTime, [3, 3]);
-      console.log(`[DEBUG][MatrixConversionService] Normal matrix computation completed in ${operationResult.performance.executionTime}ms`);
+      const operationResult = this.createOperationResult(
+        threeMatrix3,
+        operation,
+        startTime,
+        [3, 3]
+      );
+      console.log(
+        `[DEBUG][MatrixConversionService] Normal matrix computation completed in ${operationResult.performance.executionTime}ms`
+      );
 
       return success(operationResult);
-
     } catch (err) {
       this.recordFailure(operation, err as Error);
-      return error(`Normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 

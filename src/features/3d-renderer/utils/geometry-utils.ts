@@ -5,15 +5,15 @@
  * following functional programming patterns and bulletproof-react organization.
  */
 
-import { Vector } from "./Vector";
+import { GEOMETRY_CONFIG } from '../config/geometry-config';
 import type {
-  VertexData,
+  BSPClassification,
   PlaneData,
   PolygonData,
-  BSPClassification,
   SharedData,
-} from "../types/geometry.types";
-import { GEOMETRY_CONFIG } from "../config/geometry-config";
+  VertexData,
+} from '../types/geometry.types';
+import { Vector } from './Vector';
 
 /**
  * Vertex utility functions
@@ -22,7 +22,7 @@ export const createVertex = (
   pos: Vector,
   normal: Vector,
   uv: Vector,
-  color?: Vector,
+  color?: Vector
 ): VertexData => {
   const uvCopy = new Vector().copy(uv);
   uvCopy.z = 0;
@@ -34,9 +34,7 @@ export const createVertex = (
   };
 
   if (color) {
-    (vertexData as VertexData & { color: Vector }).color = new Vector().copy(
-      color,
-    );
+    (vertexData as VertexData & { color: Vector }).color = new Vector().copy(color);
   }
 
   return vertexData;
@@ -64,7 +62,7 @@ export const flipVertex = (vertex: VertexData): VertexData => ({
 export const interpolateVertex = (
   vertex1: VertexData,
   vertex2: VertexData,
-  t: number,
+  t: number
 ): VertexData => {
   const result: VertexData = {
     pos: vertex1.pos.clone().lerp(vertex2.pos, t),
@@ -73,9 +71,7 @@ export const interpolateVertex = (
   };
 
   if (vertex1.color && vertex2.color) {
-    (result as VertexData & { color: Vector }).color = vertex1.color
-      .clone()
-      .lerp(vertex2.color, t);
+    (result as VertexData & { color: Vector }).color = vertex1.color.clone().lerp(vertex2.color, t);
   }
 
   return result;
@@ -89,16 +85,8 @@ export const createPlane = (normal: Vector, w: number): PlaneData => ({
   w,
 });
 
-export const createPlaneFromPoints = (
-  a: Vector,
-  b: Vector,
-  c: Vector,
-): PlaneData => {
-  const n = new Vector()
-    .copy(b)
-    .sub(a)
-    .cross(new Vector().copy(c).sub(a))
-    .normalize();
+export const createPlaneFromPoints = (a: Vector, b: Vector, c: Vector): PlaneData => {
+  const n = new Vector().copy(b).sub(a).cross(new Vector().copy(c).sub(a)).normalize();
   return createPlane(n.clone(), n.dot(a));
 };
 
@@ -115,23 +103,16 @@ export const flipPlane = (plane: PlaneData): PlaneData => ({
 /**
  * Polygon utility functions
  */
-export const createPolygon = (
-  vertices: VertexData[],
-  shared: SharedData,
-): PolygonData => {
+export const createPolygon = (vertices: VertexData[], shared: SharedData): PolygonData => {
   if (vertices.length < 3) {
-    throw new Error("Polygon must have at least 3 vertices");
+    throw new Error('Polygon must have at least 3 vertices');
   }
 
   if (!vertices[0] || !vertices[1] || !vertices[2]) {
-    throw new Error("Polygon requires at least 3 vertices");
+    throw new Error('Polygon requires at least 3 vertices');
   }
 
-  const plane = createPlaneFromPoints(
-    vertices[0].pos,
-    vertices[1].pos,
-    vertices[2].pos,
-  );
+  const plane = createPlaneFromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
 
   return {
     vertices: vertices.map(cloneVertex),
@@ -155,23 +136,20 @@ export const flipPolygon = (polygon: PolygonData): PolygonData => ({
 /**
  * BSP classification utility functions
  */
-export const classifyPointToPlane = (
-  point: Vector,
-  plane: PlaneData,
-): BSPClassification => {
+export const classifyPointToPlane = (point: Vector, plane: PlaneData): BSPClassification => {
   const { epsilon } = GEOMETRY_CONFIG.precision;
   const { coplanar: _coplanar, front: _front, back: _back } = GEOMETRY_CONFIG.bsp;
 
   const t = plane.normal.dot(point) - plane.w;
 
-  if (t < -epsilon) return "back";
-  if (t > epsilon) return "front";
-  return "coplanar";
+  if (t < -epsilon) return 'back';
+  if (t > epsilon) return 'front';
+  return 'coplanar';
 };
 
 export const classifyPolygonToPlane = (
   polygon: PolygonData,
-  plane: PlaneData,
+  plane: PlaneData
 ): BSPClassification => {
   const { coplanar, front, back, spanning: _spanning } = GEOMETRY_CONFIG.bsp;
 
@@ -183,13 +161,13 @@ export const classifyPolygonToPlane = (
     let type: number;
 
     switch (classification) {
-      case "back":
+      case 'back':
         type = back;
         break;
-      case "front":
+      case 'front':
         type = front;
         break;
-      case "coplanar":
+      case 'coplanar':
         type = coplanar;
         break;
       default:
@@ -200,10 +178,10 @@ export const classifyPolygonToPlane = (
     types.push(type);
   }
 
-  if (polygonType === coplanar) return "coplanar";
-  if (polygonType === front) return "front";
-  if (polygonType === back) return "back";
-  return "spanning";
+  if (polygonType === coplanar) return 'coplanar';
+  if (polygonType === front) return 'front';
+  if (polygonType === back) return 'back';
+  return 'spanning';
 };
 
 /**
@@ -211,7 +189,7 @@ export const classifyPolygonToPlane = (
  */
 export const splitPolygonByPlane = (
   polygon: PolygonData,
-  plane: PlaneData,
+  plane: PlaneData
 ): {
   coplanarFront: PolygonData[];
   coplanarBack: PolygonData[];
@@ -240,10 +218,7 @@ export const splitPolygonByPlane = (
   // Handle different cases
   switch (polygonType) {
     case coplanar: {
-      const targetArray =
-        plane.normal.dot(polygon.plane.normal) > 0
-          ? coplanarFront
-          : coplanarBack;
+      const targetArray = plane.normal.dot(polygon.plane.normal) > 0 ? coplanarFront : coplanarBack;
       targetArray.push(polygon);
       break;
     }

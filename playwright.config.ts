@@ -1,9 +1,9 @@
 /**
  * @file Playwright E2E Configuration
- * 
+ *
  * Configuration for end-to-end testing of the OpenSCAD R3F Pipeline application.
  * Focuses on testing the 12-column grid layout and complete user workflows.
- * 
+ *
  * @author OpenSCAD-R3F Pipeline
  * @version 1.0.0
  */
@@ -50,7 +50,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         // Viewport optimized for 12-column grid testing
         viewport: { width: 1280, height: 720 },
@@ -62,14 +62,14 @@ export default defineConfig({
             '--enable-gpu-rasterization',
             '--enable-oop-rasterization',
             '--disable-web-security', // For local development
-          ]
-        }
+          ],
+        },
       },
     },
 
     {
       name: 'firefox',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         viewport: { width: 1280, height: 720 },
       },
@@ -77,7 +77,7 @@ export default defineConfig({
 
     {
       name: 'webkit',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
       },

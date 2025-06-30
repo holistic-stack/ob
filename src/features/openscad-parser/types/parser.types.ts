@@ -1,12 +1,12 @@
 /**
  * OpenSCAD Parser Type Definitions
- * 
+ *
  * Comprehensive type definitions for @holistic-stack/openscad-parser integration
  * with lifecycle management, performance monitoring, and functional patterns.
  */
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { Result, AsyncResult } from '../../../shared/types/result.types';
+import type { AsyncResult, Result } from '../../../shared/types/result.types';
 
 /**
  * Parser configuration options
@@ -98,18 +98,27 @@ export interface CacheEntry {
 /**
  * Parser error types
  */
-export type ParserError = 
-  | { readonly type: 'syntax'; readonly message: string; readonly line?: number; readonly column?: number }
+export type ParserError =
+  | {
+      readonly type: 'syntax';
+      readonly message: string;
+      readonly line?: number;
+      readonly column?: number;
+    }
   | { readonly type: 'semantic'; readonly message: string; readonly node?: ASTNode }
   | { readonly type: 'timeout'; readonly message: string; readonly duration: number }
   | { readonly type: 'memory'; readonly message: string; readonly usage: number }
-  | { readonly type: 'validation'; readonly message: string; readonly errors: ReadonlyArray<string> }
+  | {
+      readonly type: 'validation';
+      readonly message: string;
+      readonly errors: ReadonlyArray<string>;
+    }
   | { readonly type: 'optimization'; readonly message: string; readonly stage: string };
 
 /**
  * Parser event types
  */
-export type ParserEvent = 
+export type ParserEvent =
   | { readonly type: 'parse-start'; readonly code: string }
   | { readonly type: 'parse-complete'; readonly result: ParseResult }
   | { readonly type: 'parse-error'; readonly error: ParserError }

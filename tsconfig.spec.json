@@ -1,12 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    // Test configuration
+    // Test configuration - maintains strict rules for TDD methodology
     "composite": true,
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo-spec",
 
-    // Bundler configuration for Vite tests
+    // TypeScript 5.8+ bundler configuration for Vite tests
     "module": "preserve",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -15,13 +15,20 @@
     // Output configuration
     "outDir": "../../dist/out-tsc",
 
+    // Test-specific relaxations (minimal, following project guidelines)
+    // Note: Only relax rules for Three.js WebGL mocking, maintain strict elsewhere
+    "noUnusedLocals": false, // Allow unused test variables with _ prefix
+    "noUnusedParameters": false, // Allow unused test parameters with _ prefix
+
     // Test-specific types
     "types": [
       "vitest/globals",
       "vitest/importMeta",
       "vite/client",
       "node",
-      "vitest"
+      "vitest",
+      "@types/three", // Three.js types for WebGL testing
+      "@testing-library/jest-dom" // Testing library types
     ]
   },
   "include": [

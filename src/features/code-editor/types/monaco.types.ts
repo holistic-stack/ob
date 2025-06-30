@@ -1,6 +1,6 @@
 /**
  * Monaco Editor Integration Types
- * 
+ *
  * Specific types for Monaco Editor integration with React and TypeScript,
  * including worker configuration and language registration.
  */
@@ -21,10 +21,7 @@ export interface MonacoWorkerConfig {
 export interface MonacoEnvironment {
   readonly getWorkerUrl?: (moduleId: string, label: string) => string;
   readonly getWorker?: (moduleId: string, label: string) => Worker;
-  readonly createTrustedTypesPolicy?: (
-    policyName: string,
-    policyOptions: any
-  ) => any;
+  readonly createTrustedTypesPolicy?: (policyName: string, policyOptions: any) => any;
 }
 
 /**
@@ -259,10 +256,18 @@ export interface MonacoEditorManager {
   ) => Promise<MonacoEditorInstance>;
   readonly registerLanguage: (registration: MonacoLanguageRegistration) => void;
   readonly registerTheme: (registration: MonacoThemeRegistration) => void;
-  readonly registerCompletionProvider: (registration: MonacoCompletionProviderRegistration) => monaco.IDisposable;
-  readonly registerDiagnosticProvider: (registration: MonacoDiagnosticProviderRegistration) => monaco.IDisposable;
-  readonly registerHoverProvider: (registration: MonacoHoverProviderRegistration) => monaco.IDisposable;
-  readonly registerFormattingProvider: (registration: MonacoFormattingProviderRegistration) => monaco.IDisposable;
+  readonly registerCompletionProvider: (
+    registration: MonacoCompletionProviderRegistration
+  ) => monaco.IDisposable;
+  readonly registerDiagnosticProvider: (
+    registration: MonacoDiagnosticProviderRegistration
+  ) => monaco.IDisposable;
+  readonly registerHoverProvider: (
+    registration: MonacoHoverProviderRegistration
+  ) => monaco.IDisposable;
+  readonly registerFormattingProvider: (
+    registration: MonacoFormattingProviderRegistration
+  ) => monaco.IDisposable;
   readonly registerAction: (registration: MonacoActionRegistration) => monaco.IDisposable;
   readonly registerCommand: (registration: MonacoCommandRegistration) => monaco.IDisposable;
   readonly registerKeybinding: (registration: MonacoKeybindingRegistration) => monaco.IDisposable;

@@ -1,14 +1,25 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    // Application-specific settings
-    "lib": ["es2022", "dom", "dom.iterable"],
-    "jsx": "react-jsx",
-    "types": ["node", "vite/client", "vitest/globals", "vitest"]
+    // Application-specific settings for OpenSCAD-Babylon
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx", // React 19 JSX transform
+    "types": [
+      "node",
+      "vite/client",
+      "vitest/globals",
+      "vitest",
+      "@types/three" // Three.js types for 3D rendering
+    ],
+
+    // Application-specific module resolution
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true,
+
+    // Development convenience
+    "noErrorTruncation": true,
+    "preserveWatchOutput": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "vite.config.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "exclude": ["vitest.config.ts", "vite.config.ts"]
 }

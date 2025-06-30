@@ -2,4 +2,4 @@
  * 3D Renderer Hooks - Barrel Exports
  */
 
-export { useThreeRenderer, default as useThreeRendererDefault } from './use-three-renderer';
+export { default as useThreeRendererDefault, useThreeRenderer } from './use-three-renderer';

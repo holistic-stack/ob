@@ -1,18 +1,18 @@
 /**
  * Primitive Renderer Service Test Suite
- * 
+ *
  * Tests for primitive renderer service following TDD methodology
  * with real Three.js geometry creation and OpenSCAD AST rendering.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+import * as THREE from 'three';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock Three.js with proper BufferGeometry types
 vi.mock('three', async () => {
   const actual = await vi.importActual('three');
-  
+
   // Create mocked geometries that extend the base geometry structure
   const mockBoxGeometry = vi.fn().mockImplementation((_width = 1, _height = 1, _depth = 1) => {
     const geometry = Object.create((actual as any).BufferGeometry.prototype);
@@ -24,40 +24,44 @@ vi.mock('three', async () => {
       computeVertexNormals: vi.fn(),
       getAttribute: vi.fn(),
       attributes: { position: { count: 24 } },
-      index: { count: 36 }
+      index: { count: 36 },
     });
     return geometry;
   });
 
-  const mockSphereGeometry = vi.fn().mockImplementation((_radius = 1, _widthSegments = 32, _heightSegments = 16) => {
-    const geometry = Object.create((actual as any).BufferGeometry.prototype);
-    Object.assign(geometry, {
-      type: 'SphereGeometry',
-      dispose: vi.fn(),
-      setAttribute: vi.fn(),
-      setIndex: vi.fn(),
-      computeVertexNormals: vi.fn(),
-      getAttribute: vi.fn(),
-      attributes: { position: { count: 100 } },
-      index: { count: 300 }
+  const mockSphereGeometry = vi
+    .fn()
+    .mockImplementation((_radius = 1, _widthSegments = 32, _heightSegments = 16) => {
+      const geometry = Object.create((actual as any).BufferGeometry.prototype);
+      Object.assign(geometry, {
+        type: 'SphereGeometry',
+        dispose: vi.fn(),
+        setAttribute: vi.fn(),
+        setIndex: vi.fn(),
+        computeVertexNormals: vi.fn(),
+        getAttribute: vi.fn(),
+        attributes: { position: { count: 100 } },
+        index: { count: 300 },
+      });
+      return geometry;
     });
-    return geometry;
-  });
 
-  const mockCylinderGeometry = vi.fn().mockImplementation((_radiusTop = 1, _radiusBottom = 1, _height = 1, _radialSegments = 32) => {
-    const geometry = Object.create((actual as any).BufferGeometry.prototype);
-    Object.assign(geometry, {
-      type: 'CylinderGeometry',
-      dispose: vi.fn(),
-      setAttribute: vi.fn(),
-      setIndex: vi.fn(),
-      computeVertexNormals: vi.fn(),
-      getAttribute: vi.fn(),
-      attributes: { position: { count: 64 } },
-      index: { count: 192 }
+  const mockCylinderGeometry = vi
+    .fn()
+    .mockImplementation((_radiusTop = 1, _radiusBottom = 1, _height = 1, _radialSegments = 32) => {
+      const geometry = Object.create((actual as any).BufferGeometry.prototype);
+      Object.assign(geometry, {
+        type: 'CylinderGeometry',
+        dispose: vi.fn(),
+        setAttribute: vi.fn(),
+        setIndex: vi.fn(),
+        computeVertexNormals: vi.fn(),
+        getAttribute: vi.fn(),
+        attributes: { position: { count: 64 } },
+        index: { count: 192 },
+      });
+      return geometry;
     });
-    return geometry;
-  });
 
   const mockMeshStandardMaterial = vi.fn().mockImplementation((params = {}) => {
     const material = Object.create((actual as any).Material.prototype);
@@ -66,13 +70,13 @@ vi.mock('three', async () => {
       dispose: vi.fn(),
       clone: vi.fn().mockReturnThis(),
       copy: vi.fn().mockReturnThis(),
-      color: (params).color || { r: 1, g: 1, b: 1, getHex: () => 0xffffff },
-      metalness: (params).metalness || 0,
-      roughness: (params).roughness || 1,
-      wireframe: (params).wireframe || false,
-      transparent: (params).transparent || false,
-      opacity: (params).opacity || 1,
-      side: (params).side || 0 // THREE.FrontSide
+      color: params.color || { r: 1, g: 1, b: 1, getHex: () => 0xffffff },
+      metalness: params.metalness || 0,
+      roughness: params.roughness || 1,
+      wireframe: params.wireframe || false,
+      transparent: params.transparent || false,
+      opacity: params.opacity || 1,
+      side: params.side || 0, // THREE.FrontSide
     });
     return material;
   });
@@ -88,25 +92,25 @@ vi.mock('three', async () => {
       Object.assign(material, {
         type: 'MeshBasicMaterial',
         dispose: vi.fn(),
-        wireframe: (params).wireframe || false,
-        transparent: (params).transparent || false,
-        opacity: (params).opacity || 1
+        wireframe: params.wireframe || false,
+        transparent: params.transparent || false,
+        opacity: params.opacity || 1,
       });
       return material;
     }),
     FrontSide: 0,
     DoubleSide: 2,
-    Color: (actual as any).Color
+    Color: (actual as any).Color,
   };
 });
 
+import type { MaterialConfig, PrimitiveParams } from '../types/renderer.types';
 import {
-  createPrimitiveRendererFactory,
   createMaterialFactory,
+  createPrimitiveRendererFactory,
+  renderASTNode,
   renderPrimitive,
-  renderASTNode
 } from './primitive-renderer';
-import type { PrimitiveParams, MaterialConfig } from '../types/renderer.types';
 
 describe('Primitive Renderer Service', () => {
   let geometryFactory: ReturnType<typeof createPrimitiveRendererFactory>;
@@ -126,7 +130,7 @@ describe('Primitive Renderer Service', () => {
     describe('createCube', () => {
       it('should create cube geometry with single size parameter', () => {
         const result = geometryFactory.createCube(2);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.BoxGeometry);
@@ -136,7 +140,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should create cube geometry with array size parameter', () => {
         const result = geometryFactory.createCube([2, 3, 4]);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.BoxGeometry);
@@ -146,7 +150,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for negative dimensions', () => {
         const result = geometryFactory.createCube([-1, 2, 3]);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Cube dimensions must be positive');
@@ -155,7 +159,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for zero dimensions', () => {
         const result = geometryFactory.createCube([1, 0, 3]);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Cube dimensions must be positive');
@@ -166,7 +170,7 @@ describe('Primitive Renderer Service', () => {
     describe('createSphere', () => {
       it('should create sphere geometry with default segments', () => {
         const result = geometryFactory.createSphere(5);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.SphereGeometry);
@@ -176,7 +180,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should create sphere geometry with custom segments', () => {
         const result = geometryFactory.createSphere(3, 16);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.SphereGeometry);
@@ -186,7 +190,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for negative radius', () => {
         const result = geometryFactory.createSphere(-1);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Sphere radius must be positive');
@@ -195,7 +199,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for insufficient segments', () => {
         const result = geometryFactory.createSphere(1, 2);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Sphere segments must be at least 3');
@@ -206,7 +210,7 @@ describe('Primitive Renderer Service', () => {
     describe('createCylinder', () => {
       it('should create cylinder geometry with default segments', () => {
         const result = geometryFactory.createCylinder(2, 5);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.CylinderGeometry);
@@ -216,7 +220,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should create cylinder geometry with custom segments', () => {
         const result = geometryFactory.createCylinder(1, 3, 8);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.CylinderGeometry);
@@ -226,7 +230,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for negative radius', () => {
         const result = geometryFactory.createCylinder(-1, 5);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Cylinder radius must be positive');
@@ -235,7 +239,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for negative height', () => {
         const result = geometryFactory.createCylinder(1, -5);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Cylinder height must be positive');
@@ -249,18 +253,18 @@ describe('Primitive Renderer Service', () => {
           [0, 0, 0],
           [1, 0, 0],
           [0, 1, 0],
-          [0, 0, 1]
+          [0, 0, 1],
         ] as const;
-        
+
         const faces = [
           [0, 1, 2],
           [0, 1, 3],
           [0, 2, 3],
-          [1, 2, 3]
+          [1, 2, 3],
         ] as const;
-        
+
         const result = geometryFactory.createPolyhedron(vertices, faces);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.BufferGeometry);
@@ -270,11 +274,15 @@ describe('Primitive Renderer Service', () => {
       });
 
       it('should fail for insufficient vertices', () => {
-        const vertices = [[0, 0, 0], [1, 0, 0], [0, 1, 0]] as const;
+        const vertices = [
+          [0, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+        ] as const;
         const faces = [[0, 1, 2]] as const;
-        
+
         const result = geometryFactory.createPolyhedron(vertices, faces);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Polyhedron must have at least 4 vertices');
@@ -282,11 +290,16 @@ describe('Primitive Renderer Service', () => {
       });
 
       it('should fail for insufficient faces', () => {
-        const vertices = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]] as const;
+        const vertices = [
+          [0, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 0, 1],
+        ] as const;
         const faces = [[0, 1, 2]] as const;
-        
+
         const result = geometryFactory.createPolyhedron(vertices, faces);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Polyhedron must have at least 4 faces');
@@ -305,11 +318,11 @@ describe('Primitive Renderer Service', () => {
           roughness: 0.7,
           wireframe: false,
           transparent: false,
-          side: 'front'
+          side: 'front',
         };
-        
+
         const result = materialFactory.createStandard(config);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshStandardMaterial);
@@ -332,11 +345,11 @@ describe('Primitive Renderer Service', () => {
           roughness: 0.8,
           wireframe: false,
           transparent: false,
-          side: 'double'
+          side: 'double',
         };
-        
+
         const result = materialFactory.createStandard(config);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.transparent).toBe(true);
@@ -349,7 +362,7 @@ describe('Primitive Renderer Service', () => {
     describe('createWireframe', () => {
       it('should create wireframe material', () => {
         const result = materialFactory.createWireframe('#0000ff');
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshBasicMaterial);
@@ -363,7 +376,7 @@ describe('Primitive Renderer Service', () => {
     describe('createTransparent', () => {
       it('should create transparent material', () => {
         const result = materialFactory.createTransparent('#ffff00', 0.3);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshStandardMaterial);
@@ -375,7 +388,7 @@ describe('Primitive Renderer Service', () => {
 
       it('should fail for invalid opacity values', () => {
         const result = materialFactory.createTransparent('#ffffff', 1.5);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error).toContain('Opacity must be between 0 and 1');
@@ -397,12 +410,12 @@ describe('Primitive Renderer Service', () => {
           roughness: 0.8,
           wireframe: false,
           transparent: false,
-          side: 'front'
-        }
+          side: 'front',
+        },
       };
-      
+
       const result = renderPrimitive(params);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh).toBeInstanceOf(THREE.Mesh);
@@ -427,12 +440,12 @@ describe('Primitive Renderer Service', () => {
           roughness: 0.6,
           wireframe: false,
           transparent: true,
-          side: 'double'
-        }
+          side: 'double',
+        },
       };
-      
+
       const result = renderPrimitive(params);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry).toBeInstanceOf(THREE.SphereGeometry);
@@ -452,12 +465,12 @@ describe('Primitive Renderer Service', () => {
           roughness: 0.8,
           wireframe: false,
           transparent: false,
-          side: 'front'
-        }
+          side: 'front',
+        },
       };
-      
+
       const result = renderPrimitive(params);
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Unsupported primitive type: unknown');
@@ -473,12 +486,12 @@ describe('Primitive Renderer Service', () => {
         center: false,
         location: {
           start: { line: 1, column: 1, offset: 0 },
-          end: { line: 1, column: 10, offset: 9 }
-        }
+          end: { line: 1, column: 10, offset: 9 },
+        },
       };
-      
+
       const result = await renderASTNode(node, 0);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh).toBeInstanceOf(THREE.Mesh);
@@ -494,18 +507,18 @@ describe('Primitive Renderer Service', () => {
         radius: 2,
         location: {
           start: { line: 1, column: 1, offset: 0 },
-          end: { line: 1, column: 10, offset: 9 }
-        }
+          end: { line: 1, column: 10, offset: 9 },
+        },
       };
-      
+
       const result = await renderASTNode(node, 1);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry).toBeInstanceOf(THREE.SphereGeometry);
         expect(result.data.metadata.nodeIndex).toBe(1);
         expect(result.data.metadata.id).toBe('sphere-1');
-        
+
         // Check that transformations were applied
         expect(result.data.mesh.position.y).toBe(1);
         expect(result.data.mesh.rotation.x).toBeCloseTo(Math.PI / 2);
@@ -521,12 +534,12 @@ describe('Primitive Renderer Service', () => {
         center: false,
         location: {
           start: { line: 1, column: 1, offset: 0 },
-          end: { line: 1, column: 10, offset: 9 }
-        }
+          end: { line: 1, column: 10, offset: 9 },
+        },
       };
-      
+
       const result = await renderASTNode(node, 2);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry).toBeInstanceOf(THREE.CylinderGeometry);

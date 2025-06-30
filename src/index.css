@@ -33,8 +33,7 @@
 
 /* Custom font family for code elements (if different from Tailwind's default) */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 /* Custom CSS for glass morphism effects and animations */
@@ -59,7 +58,7 @@ code {
     background: rgba(255, 255, 255, 0.9) !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
   }
-  
+
   .glass-effect-dark {
     background: rgba(0, 0, 0, 0.9) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -103,7 +102,7 @@ code {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   .glass-effect,
   .glass-effect-dark {
     transition: none !important;
@@ -118,7 +117,7 @@ code {
     backdrop-filter: none !important;
     border: 2px solid #000 !important;
   }
-  
+
   .glass-effect-dark {
     background: rgba(0, 0, 0, 0.95) !important;
     backdrop-filter: none !important;
@@ -130,7 +129,7 @@ code {
 .focus\:ring-2:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: 
+  box-shadow:
     0 0 0 2px rgba(59, 130, 246, 0.5),
     0 0 0 4px rgba(59, 130, 246, 0.25);
 }

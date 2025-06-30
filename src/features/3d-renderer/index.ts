@@ -6,64 +6,55 @@
  * enhanced matrix operations with React integration.
  */
 
-// Components
-export * from './components';
-
-// Hooks
-export * from './hooks';
-
-// Providers
-export {
-  MatrixOperationProvider,
-  useMatrixOperationContext,
-  withMatrixOperations,
-  MatrixOperationStatus,
-} from './providers/MatrixOperationProvider';
 export type {
-  MatrixOperationProviderConfig,
-  MatrixOperationContextValue,
-  MatrixOperationProviderProps,
-} from './providers/MatrixOperationProvider';
-
+  APIHealthStatus,
+  APIPerformanceMetrics,
+  BatchOperationConfig,
+  MatrixOperationConfig as APIMatrixOperationConfig,
+  MatrixOperationsAPI,
+} from './api/matrix-operations.api';
 // API Layer
 export {
   createMatrixOperationsAPI,
-  matrixOperationsAPI,
   MatrixOperationsAPIImpl,
+  matrixOperationsAPI,
 } from './api/matrix-operations.api';
-export type {
-  MatrixOperationsAPI,
-  MatrixOperationConfig as APIMatrixOperationConfig,
-  BatchOperationConfig,
-  APIPerformanceMetrics,
-  APIHealthStatus,
-} from './api/matrix-operations.api';
-
+// Components
+export * from './components';
+// Config
+export * from './config';
 // Development Tools
 export * from './dev-tools/MatrixPerformanceProfiler';
-
-// Complete Matrix Operations Bundle
-export {
-  createMatrixOperationsBundle,
-  matrixOperationsBundle,
-  createMatrixOperationsDevProvider,
-  createMatrixOperationsProdProvider,
-  setupMatrixOperations,
-} from './exports/matrix-operations.exports';
 export type {
   MatrixOperationsBundle,
   MatrixOperationsDevProviderProps,
   MatrixOperationsProdProviderProps,
 } from './exports/matrix-operations.exports';
-
+// Complete Matrix Operations Bundle
+export {
+  createMatrixOperationsBundle,
+  createMatrixOperationsDevProvider,
+  createMatrixOperationsProdProvider,
+  matrixOperationsBundle,
+  setupMatrixOperations,
+} from './exports/matrix-operations.exports';
+// Hooks
+export * from './hooks';
+export type {
+  MatrixOperationContextValue,
+  MatrixOperationProviderConfig,
+  MatrixOperationProviderProps,
+} from './providers/MatrixOperationProvider';
+// Providers
+export {
+  MatrixOperationProvider,
+  MatrixOperationStatus,
+  useMatrixOperationContext,
+  withMatrixOperations,
+} from './providers/MatrixOperationProvider';
 // Services
 export * from './services';
-
 // Types
 export * from './types';
-
 // Utils
 export * from './utils';
-
-// Config
-export * from './config';

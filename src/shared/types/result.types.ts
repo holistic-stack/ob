@@ -1,6 +1,6 @@
 /**
  * Result<T,E> Type System for Functional Error Handling
- * 
+ *
  * Provides type-safe error handling patterns following functional programming
  * principles with immutable data structures and explicit error states.
  */
@@ -9,7 +9,7 @@
  * Result type for functional error handling
  * Represents either a successful value or an error state
  */
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: E };
 
@@ -22,9 +22,7 @@ export type AsyncResult<T, E = Error> = Promise<Result<T, E>>;
  * Option type for nullable values
  * Represents either a value or nothing (null/undefined)
  */
-export type Option<T> = 
-  | { readonly some: true; readonly value: T }
-  | { readonly some: false };
+export type Option<T> = { readonly some: true; readonly value: T } | { readonly some: false };
 
 /**
  * Validation Result type for form validation and data validation
@@ -61,18 +59,24 @@ export type FileResult<T> = Result<T, FileError>;
 /**
  * Type guards for Result types
  */
-export const isSuccess = <T, E>(result: Result<T, E>): result is { readonly success: true; readonly data: T } => {
+export const isSuccess = <T, E>(
+  result: Result<T, E>
+): result is { readonly success: true; readonly data: T } => {
   return result.success === true;
 };
 
-export const isError = <T, E>(result: Result<T, E>): result is { readonly success: false; readonly error: E } => {
+export const isError = <T, E>(
+  result: Result<T, E>
+): result is { readonly success: false; readonly error: E } => {
   return result.success === false;
 };
 
 /**
  * Type guards for Option types
  */
-export const isSome = <T>(option: Option<T>): option is { readonly some: true; readonly value: T } => {
+export const isSome = <T>(
+  option: Option<T>
+): option is { readonly some: true; readonly value: T } => {
   return option.some === true;
 };
 
@@ -104,15 +108,16 @@ export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends (infer U)[]
     ? ReadonlyArray<DeepReadonly<U>>
     : T[P] extends object
-    ? DeepReadonly<T[P]>
-    : T[P];
+      ? DeepReadonly<T[P]>
+      : T[P];
 };
 
 /**
- * Async utility type for function types  
+ * Async utility type for function types
  */
-export type AsyncPureFunction<TArgs extends readonly unknown[], TReturn> = 
-  (...args: TArgs) => Promise<TReturn>;
+export type AsyncPureFunction<TArgs extends readonly unknown[], TReturn> = (
+  ...args: TArgs
+) => Promise<TReturn>;
 
 /**
  * Utility type for event handlers

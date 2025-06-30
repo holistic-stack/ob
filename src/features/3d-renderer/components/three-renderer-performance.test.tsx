@@ -1,39 +1,37 @@
 /**
  * Three.js Renderer Performance Tests
- * 
+ *
  * Tests to verify that the performance measurement utilities work correctly
  * and that the import issue is resolved.
  */
 
-import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { Canvas } from '@react-three/fiber';
-
-import { ThreeRenderer } from './three-renderer';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { Canvas } from '@react-three/fiber';
+import { render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThreeRenderer } from './three-renderer';
 
 // Mock React Three Fiber
 vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children }: any) => <div data-testid="r3f-canvas">{children}</div>,
   useFrame: vi.fn(),
   useThree: vi.fn(() => ({
-    scene: { 
-      add: vi.fn(), 
-      remove: vi.fn(), 
+    scene: {
+      add: vi.fn(),
+      remove: vi.fn(),
       clear: vi.fn(),
-      children: []
+      children: [],
     },
-    camera: { 
-      position: { set: vi.fn() }, 
-      lookAt: vi.fn() 
+    camera: {
+      position: { set: vi.fn() },
+      lookAt: vi.fn(),
     },
-    gl: { 
-      render: vi.fn(), 
+    gl: {
+      render: vi.fn(),
       setSize: vi.fn(),
-      domElement: document.createElement('canvas')
-    }
-  }))
+      domElement: document.createElement('canvas'),
+    },
+  })),
 }));
 
 // Mock Three.js
@@ -42,36 +40,36 @@ vi.mock('three', () => ({
     add: vi.fn(),
     remove: vi.fn(),
     clear: vi.fn(),
-    children: []
+    children: [],
   })),
   PerspectiveCamera: vi.fn(() => ({
     position: { set: vi.fn() },
-    lookAt: vi.fn()
+    lookAt: vi.fn(),
   })),
   WebGLRenderer: vi.fn(() => ({
     render: vi.fn(),
     setSize: vi.fn(),
-    domElement: document.createElement('canvas')
+    domElement: document.createElement('canvas'),
   })),
   Mesh: vi.fn(),
   BoxGeometry: vi.fn(),
   SphereGeometry: vi.fn(),
   CylinderGeometry: vi.fn(),
-  MeshStandardMaterial: vi.fn()
+  MeshStandardMaterial: vi.fn(),
 }));
 
 // Mock CSG operations
 vi.mock('../services/csg-operations.service', () => ({
   performUnion: vi.fn().mockResolvedValue({ success: true, value: [] }),
   performDifference: vi.fn().mockResolvedValue({ success: true, value: [] }),
-  performIntersection: vi.fn().mockResolvedValue({ success: true, value: [] })
+  performIntersection: vi.fn().mockResolvedValue({ success: true, value: [] }),
 }));
 
 // Mock primitive renderer
 vi.mock('../services/primitive-renderer.service', () => ({
   renderCube: vi.fn().mockReturnValue({ success: true, value: {} }),
   renderSphere: vi.fn().mockReturnValue({ success: true, value: {} }),
-  renderCylinder: vi.fn().mockReturnValue({ success: true, value: {} })
+  renderCylinder: vi.fn().mockReturnValue({ success: true, value: {} }),
 }));
 
 describe('ThreeRenderer Performance', () => {
@@ -82,8 +80,8 @@ describe('ThreeRenderer Performance', () => {
 
   const defaultProps = {
     ast: [] as ASTNode[],
-    camera: { 
-      position: [5, 5, 5] as const, 
+    camera: {
+      position: [5, 5, 5] as const,
       target: [0, 0, 0] as const,
       zoom: 1,
       fov: 75,
@@ -92,7 +90,7 @@ describe('ThreeRenderer Performance', () => {
       type: 'perspective' as const,
       enableControls: true,
       enableAutoRotate: false,
-      autoRotateSpeed: 1
+      autoRotateSpeed: 1,
     },
     config: {
       enableShadows: false,
@@ -104,19 +102,19 @@ describe('ThreeRenderer Performance', () => {
       directionalLightIntensity: 0.7,
       maxMeshes: 1000,
       maxTriangles: 50000,
-      shadows: true
+      shadows: true,
     },
     onPerformanceUpdate: mockOnPerformanceUpdate,
     onRenderComplete: mockOnRenderComplete,
     onRenderError: mockOnRenderError,
-    onCameraChange: mockOnCameraChange
+    onCameraChange: mockOnCameraChange,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock performance.now() for consistent timing
     vi.spyOn(performance, 'now')
-      .mockReturnValueOnce(0)   // Start time
+      .mockReturnValueOnce(0) // Start time
       .mockReturnValueOnce(15.5); // End time (15.5ms duration)
   });
 
@@ -133,9 +131,9 @@ describe('ThreeRenderer Performance', () => {
           center: false,
           location: {
             start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: 20, offset: 19 }
-          }
-        }
+            end: { line: 1, column: 20, offset: 19 },
+          },
+        },
       ];
 
       render(
@@ -145,11 +143,11 @@ describe('ThreeRenderer Performance', () => {
       );
 
       // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Verify performance measurement was called
       expect(mockOnPerformanceUpdate).toHaveBeenCalled();
-      
+
       // Check that the performance update includes timing data
       const performanceCall = mockOnPerformanceUpdate.mock.calls[0];
       if (performanceCall?.[0]) {
@@ -177,9 +175,9 @@ describe('ThreeRenderer Performance', () => {
           radius: 2,
           location: {
             start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: 15, offset: 14 }
-          }
-        }
+            end: { line: 1, column: 15, offset: 14 },
+          },
+        },
       ];
 
       render(
@@ -189,21 +187,21 @@ describe('ThreeRenderer Performance', () => {
       );
 
       // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       if (mockOnPerformanceUpdate.mock.calls.length > 0) {
         const metrics = mockOnPerformanceUpdate.mock.calls[0][0];
-        
+
         // Verify metrics structure
         expect(metrics).toHaveProperty('renderTime');
         expect(metrics).toHaveProperty('parseTime');
         expect(metrics).toHaveProperty('memoryUsage');
-        
+
         // Verify types
         expect(typeof metrics.renderTime).toBe('number');
         expect(typeof metrics.parseTime).toBe('number');
         expect(typeof metrics.memoryUsage).toBe('number');
-        
+
         // Verify reasonable values
         expect(metrics.renderTime).toBeGreaterThanOrEqual(0);
         expect(metrics.parseTime).toBeGreaterThanOrEqual(0);
@@ -216,9 +214,9 @@ describe('ThreeRenderer Performance', () => {
     it('should not have import errors in browser environment', () => {
       // This test verifies that the component can be imported and used
       // without the ERR_BLOCKED_BY_CLIENT error
-      
+
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       render(
         <Canvas>
           <ThreeRenderer {...defaultProps} />
@@ -226,27 +224,28 @@ describe('ThreeRenderer Performance', () => {
       );
 
       // Check that no console errors were logged related to imports
-      const importErrors = consoleSpy.mock.calls.filter(call => 
-        call.some(arg => 
-          typeof arg === 'string' && 
-          (arg.includes('ERR_BLOCKED_BY_CLIENT') || 
-           arg.includes('metrics.ts') ||
-           arg.includes('Failed to load'))
+      const importErrors = consoleSpy.mock.calls.filter((call) =>
+        call.some(
+          (arg) =>
+            typeof arg === 'string' &&
+            (arg.includes('ERR_BLOCKED_BY_CLIENT') ||
+              arg.includes('metrics.ts') ||
+              arg.includes('Failed to load'))
         )
       );
 
       expect(importErrors).toHaveLength(0);
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should use inline performance measurement function', () => {
       // Test that the inline measureTime function works correctly
       const testFunction = vi.fn(() => 'test result');
-      
+
       // Mock performance.now to return predictable values
       vi.spyOn(performance, 'now')
-        .mockReturnValueOnce(100)  // Start time
+        .mockReturnValueOnce(100) // Start time
         .mockReturnValueOnce(115); // End time (15ms duration)
 
       // This simulates the inline measureTime function
@@ -289,7 +288,7 @@ describe('ThreeRenderer Performance', () => {
     it('should provide fallback timing when performance API fails', () => {
       // Test fallback behavior when performance.now() is not available
       const originalPerformance = global.performance;
-      
+
       // Temporarily remove performance API
       (global as any).performance = undefined;
 

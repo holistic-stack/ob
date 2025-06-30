@@ -7,12 +7,12 @@
 
 import type { Matrix } from 'ml-matrix';
 import type { Matrix3, Matrix4 } from 'three';
-import { MatrixServiceContainer } from './matrix-service-container';
-import type { MatrixValidationResult } from '../types/matrix.types';
-import type { MatrixValidationOptions } from './matrix-validation.service';
-import type { MatrixConversionOptions } from './matrix-conversion.service';
-import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import type { MatrixValidationResult } from '../types/matrix.types';
+import type { MatrixConversionOptions } from './matrix-conversion.service';
+import { MatrixServiceContainer } from './matrix-service-container';
+import type { MatrixValidationOptions } from './matrix-validation.service';
 
 /**
  * Enhanced matrix operation options
@@ -54,7 +54,7 @@ export class MatrixIntegrationService {
 
   constructor(serviceContainer?: MatrixServiceContainer) {
     console.log('[INIT][MatrixIntegrationService] Initializing matrix integration service');
-    
+
     this.serviceContainer = serviceContainer ?? new MatrixServiceContainer();
   }
 
@@ -76,7 +76,7 @@ export class MatrixIntegrationService {
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
     const startTime = Date.now();
     const operation = 'convertMatrix4ToMLMatrix';
-    
+
     console.log(`[DEBUG][MatrixIntegrationService] Enhanced Matrix4 to ml-matrix conversion`);
 
     try {
@@ -89,11 +89,14 @@ export class MatrixIntegrationService {
         ...(options.useCache !== undefined && { useCache: options.useCache }),
         ...(options.useValidation !== undefined && { validateInput: options.useValidation }),
         ...(options.precision !== undefined && { precision: options.precision }),
-        ...(options.timeout !== undefined && { timeout: options.timeout })
+        ...(options.timeout !== undefined && { timeout: options.timeout }),
       };
 
       // Perform conversion
-      const conversionResult = await conversionService.convertMatrix4ToMLMatrix(matrix4, conversionOptions);
+      const conversionResult = await conversionService.convertMatrix4ToMLMatrix(
+        matrix4,
+        conversionOptions
+      );
 
       if (!conversionResult.success) {
         // Track failure in telemetry
@@ -113,7 +116,7 @@ export class MatrixIntegrationService {
           computeEigenvalues: false,
           computeSVD: false,
           enableDetailedAnalysis: true,
-          ...(options.useCache !== undefined && { useCache: options.useCache })
+          ...(options.useCache !== undefined && { useCache: options.useCache }),
         };
 
         const validationResult = await validationService.validateMatrix(matrix, validationOptions);
@@ -132,7 +135,7 @@ export class MatrixIntegrationService {
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, true, {
           memoryUsage: conversionResult.data.performance.memoryUsed,
-          matrixSize: [4, 4]
+          matrixSize: [4, 4],
         });
       }
 
@@ -143,27 +146,30 @@ export class MatrixIntegrationService {
           executionTime,
           memoryUsed: conversionResult.data.performance.memoryUsed,
           cacheHit: conversionResult.data.performance.cacheHit,
-          operationType: operation
+          operationType: operation,
         },
         metadata: {
           timestamp: Date.now(),
           operationId: this.generateOperationId(operation),
-          warnings
-        }
+          warnings,
+        },
       };
 
-      console.log(`[DEBUG][MatrixIntegrationService] Enhanced conversion completed in ${executionTime}ms`);
+      console.log(
+        `[DEBUG][MatrixIntegrationService] Enhanced conversion completed in ${executionTime}ms`
+      );
       return success(enhancedResult);
-
     } catch (err) {
       const executionTime = Date.now() - startTime;
       const telemetryService = this.serviceContainer.getTelemetryService();
-      
+
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, false);
       }
 
-      return error(`Enhanced matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Enhanced matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -176,7 +182,7 @@ export class MatrixIntegrationService {
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
     const startTime = Date.now();
     const operation = 'performRobustInversion';
-    
+
     console.log(`[DEBUG][MatrixIntegrationService] Enhanced robust matrix inversion`);
 
     try {
@@ -193,7 +199,7 @@ export class MatrixIntegrationService {
           ...(options.useCache !== undefined && { useCache: options.useCache }),
           computeEigenvalues: true,
           computeSVD: true,
-          enableDetailedAnalysis: true
+          enableDetailedAnalysis: true,
         });
 
         if (validationResult.success) {
@@ -212,7 +218,7 @@ export class MatrixIntegrationService {
         ...(options.useCache !== undefined && { useCache: options.useCache }),
         enableSVDFallback: options.enableSVDFallback !== false,
         ...(options.precision !== undefined && { precision: options.precision }),
-        validateInput: false // Already validated above
+        validateInput: false, // Already validated above
       });
 
       if (!inversionResult.success) {
@@ -229,7 +235,7 @@ export class MatrixIntegrationService {
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, true, {
           memoryUsage: inversionResult.data.performance.memoryUsed,
-          matrixSize: [matrix.rows, matrix.columns]
+          matrixSize: [matrix.rows, matrix.columns],
         });
       }
 
@@ -240,27 +246,30 @@ export class MatrixIntegrationService {
           executionTime,
           memoryUsed: inversionResult.data.performance.memoryUsed,
           cacheHit: inversionResult.data.performance.cacheHit,
-          operationType: operation
+          operationType: operation,
         },
         metadata: {
           timestamp: Date.now(),
           operationId: this.generateOperationId(operation),
-          warnings
-        }
+          warnings,
+        },
       };
 
-      console.log(`[DEBUG][MatrixIntegrationService] Enhanced inversion completed in ${executionTime}ms`);
+      console.log(
+        `[DEBUG][MatrixIntegrationService] Enhanced inversion completed in ${executionTime}ms`
+      );
       return success(enhancedResult);
-
     } catch (err) {
       const executionTime = Date.now() - startTime;
       const telemetryService = this.serviceContainer.getTelemetryService();
-      
+
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, false);
       }
 
-      return error(`Enhanced matrix inversion failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Enhanced matrix inversion failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -273,7 +282,7 @@ export class MatrixIntegrationService {
   ): Promise<Result<EnhancedMatrixResult<Matrix3>, string>> {
     const startTime = Date.now();
     const operation = 'computeEnhancedNormalMatrix';
-    
+
     console.log(`[DEBUG][MatrixIntegrationService] Enhanced normal matrix computation`);
 
     try {
@@ -285,10 +294,13 @@ export class MatrixIntegrationService {
         enableSVDFallback: options.enableSVDFallback !== false,
         ...(options.useCache !== undefined && { useCache: options.useCache }),
         ...(options.precision !== undefined && { precision: options.precision }),
-        ...(options.useValidation !== undefined && { validateInput: options.useValidation })
+        ...(options.useValidation !== undefined && { validateInput: options.useValidation }),
       };
 
-      const normalResult = await conversionService.computeRobustNormalMatrix(modelMatrix, conversionOptions);
+      const normalResult = await conversionService.computeRobustNormalMatrix(
+        modelMatrix,
+        conversionOptions
+      );
 
       if (!normalResult.success) {
         const executionTime = Date.now() - startTime;
@@ -304,7 +316,7 @@ export class MatrixIntegrationService {
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, true, {
           memoryUsage: normalResult.data.performance.memoryUsed,
-          matrixSize: [3, 3]
+          matrixSize: [3, 3],
         });
       }
 
@@ -314,27 +326,30 @@ export class MatrixIntegrationService {
           executionTime,
           memoryUsed: normalResult.data.performance.memoryUsed,
           cacheHit: normalResult.data.performance.cacheHit,
-          operationType: operation
+          operationType: operation,
         },
         metadata: {
           timestamp: Date.now(),
           operationId: this.generateOperationId(operation),
-          warnings: []
-        }
+          warnings: [],
+        },
       };
 
-      console.log(`[DEBUG][MatrixIntegrationService] Enhanced normal matrix computation completed in ${executionTime}ms`);
+      console.log(
+        `[DEBUG][MatrixIntegrationService] Enhanced normal matrix computation completed in ${executionTime}ms`
+      );
       return success(enhancedResult);
-
     } catch (err) {
       const executionTime = Date.now() - startTime;
       const telemetryService = this.serviceContainer.getTelemetryService();
-      
+
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(operation, executionTime, false);
       }
 
-      return error(`Enhanced normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Enhanced normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -347,8 +362,10 @@ export class MatrixIntegrationService {
   ): Promise<Result<EnhancedMatrixResult<T>[], string>> {
     const startTime = Date.now();
     const batchOperation = 'batchOperations';
-    
-    console.log(`[DEBUG][MatrixIntegrationService] Performing batch operations (${operations.length} operations)`);
+
+    console.log(
+      `[DEBUG][MatrixIntegrationService] Performing batch operations (${operations.length} operations)`
+    );
 
     try {
       const results: EnhancedMatrixResult<T>[] = [];
@@ -359,9 +376,9 @@ export class MatrixIntegrationService {
         try {
           const operation = operations[i];
           if (!operation) continue;
-          
+
           const result = await operation();
-          
+
           if (result.success) {
             results.push(result.data);
             successCount++;
@@ -389,8 +406,8 @@ export class MatrixIntegrationService {
           additionalData: {
             totalOperations: operations.length,
             successfulOperations: successCount,
-            failedOperations: errors.length
-          }
+            failedOperations: errors.length,
+          },
         });
       }
 
@@ -398,13 +415,14 @@ export class MatrixIntegrationService {
         return error(`Batch operations failed: ${errors.join('; ')}`);
       }
 
-      console.log(`[DEBUG][MatrixIntegrationService] Batch operations completed: ${successCount}/${operations.length} successful`);
+      console.log(
+        `[DEBUG][MatrixIntegrationService] Batch operations completed: ${successCount}/${operations.length} successful`
+      );
       return success(results);
-
     } catch (err) {
       const executionTime = Date.now() - startTime;
       const telemetryService = this.serviceContainer.getTelemetryService();
-      
+
       if (telemetryService && options.useTelemetry !== false) {
         telemetryService.trackOperation(batchOperation, executionTime, false);
       }
@@ -446,9 +464,11 @@ export class MatrixIntegrationService {
       if (conversionService) {
         report.conversion = conversionService.getPerformanceMetrics();
       }
-
     } catch (err) {
-      console.error('[ERROR][MatrixIntegrationService] Failed to generate performance report:', err);
+      console.error(
+        '[ERROR][MatrixIntegrationService] Failed to generate performance report:',
+        err
+      );
     }
 
     return report;
@@ -458,7 +478,9 @@ export class MatrixIntegrationService {
    * Optimize configuration based on usage patterns
    */
   async optimizeConfiguration(): Promise<Result<void, string>> {
-    console.log('[DEBUG][MatrixIntegrationService] Optimizing configuration based on usage patterns');
+    console.log(
+      '[DEBUG][MatrixIntegrationService] Optimizing configuration based on usage patterns'
+    );
 
     try {
       const configManager = this.serviceContainer.getConfigManager();
@@ -475,7 +497,7 @@ export class MatrixIntegrationService {
       for (const [operation, breakdown] of Object.entries(telemetryReport.operationBreakdown)) {
         operationMetrics[operation] = {
           averageTime: breakdown.averageTime,
-          count: breakdown.count
+          count: breakdown.count,
         };
       }
 
@@ -483,9 +505,11 @@ export class MatrixIntegrationService {
       const adjustments = configManager.suggestPerformanceThresholdAdjustments(operationMetrics);
 
       if (adjustments.length > 0) {
-        console.log(`[DEBUG][MatrixIntegrationService] Applying ${adjustments.length} performance optimizations`);
+        console.log(
+          `[DEBUG][MatrixIntegrationService] Applying ${adjustments.length} performance optimizations`
+        );
         const result = configManager.applyPerformanceThresholdAdjustments(adjustments);
-        
+
         if (!result.success) {
           return error(`Failed to apply optimizations: ${result.error}`);
         }
@@ -493,9 +517,10 @@ export class MatrixIntegrationService {
 
       console.log('[DEBUG][MatrixIntegrationService] Configuration optimization completed');
       return success(undefined);
-
     } catch (err) {
-      return error(`Configuration optimization failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Configuration optimization failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 

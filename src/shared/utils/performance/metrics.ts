@@ -1,13 +1,13 @@
 /**
  * Performance Monitoring Utilities
- * 
+ *
  * Pure functional utilities for measuring and monitoring application
  * performance following functional programming patterns.
  */
 
 import type { PerformanceMetrics, PerformanceThresholds } from '../../types/common.types';
 import type { Result } from '../../types/result.types';
-import { success, error } from '../functional/result';
+import { error, success } from '../functional/result';
 
 /**
  * Performance measurement utilities
@@ -19,7 +19,9 @@ export const measureTime = <T>(fn: () => T): { result: T; duration: number } => 
   return { result, duration: end - start };
 };
 
-export const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> => {
+export const measureTimeAsync = async <T>(
+  fn: () => Promise<T>
+): Promise<{ result: T; duration: number }> => {
   const start = performance.now();
   const result = await fn();
   const end = performance.now();
@@ -31,7 +33,10 @@ export const measureTimeAsync = async <T>(fn: () => Promise<T>): Promise<{ resul
  */
 export const getMemoryUsage = (): number => {
   if ('memory' in performance) {
-    return (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / (1024 * 1024); // MB
+    return (
+      (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize /
+      (1024 * 1024)
+    ); // MB
   }
   return 0; // Not available in all browsers
 };
@@ -47,13 +52,13 @@ export const createFrameRateMonitor = () => {
   const update = () => {
     frames++;
     const currentTime = performance.now();
-    
+
     if (currentTime - lastTime >= 1000) {
       frameRate = Math.round((frames * 1000) / (currentTime - lastTime));
       frames = 0;
       lastTime = currentTime;
     }
-    
+
     requestAnimationFrame(update);
   };
 
@@ -63,7 +68,7 @@ export const createFrameRateMonitor = () => {
     getFrameRate: () => frameRate,
     stop: () => {
       // Frame rate monitoring will stop when update is no longer called
-    }
+    },
   };
 };
 
@@ -77,19 +82,27 @@ export const validatePerformance = (
   const violations: string[] = [];
 
   if (metrics.renderTime > thresholds.maxRenderTime) {
-    violations.push(`Render time ${metrics.renderTime.toFixed(2)}ms exceeds threshold ${thresholds.maxRenderTime}ms`);
+    violations.push(
+      `Render time ${metrics.renderTime.toFixed(2)}ms exceeds threshold ${thresholds.maxRenderTime}ms`
+    );
   }
 
   if (metrics.parseTime > thresholds.maxParseTime) {
-    violations.push(`Parse time ${metrics.parseTime.toFixed(2)}ms exceeds threshold ${thresholds.maxParseTime}ms`);
+    violations.push(
+      `Parse time ${metrics.parseTime.toFixed(2)}ms exceeds threshold ${thresholds.maxParseTime}ms`
+    );
   }
 
   if (metrics.memoryUsage > thresholds.maxMemoryUsage) {
-    violations.push(`Memory usage ${metrics.memoryUsage.toFixed(2)}MB exceeds threshold ${thresholds.maxMemoryUsage}MB`);
+    violations.push(
+      `Memory usage ${metrics.memoryUsage.toFixed(2)}MB exceeds threshold ${thresholds.maxMemoryUsage}MB`
+    );
   }
 
   if (metrics.frameRate < thresholds.minFrameRate) {
-    violations.push(`Frame rate ${metrics.frameRate}fps below threshold ${thresholds.minFrameRate}fps`);
+    violations.push(
+      `Frame rate ${metrics.frameRate}fps below threshold ${thresholds.minFrameRate}fps`
+    );
   }
 
   if (violations.length > 0) {
@@ -111,7 +124,7 @@ export const createProfiler = (name: string) => {
       measurements.push({
         name: operationName,
         duration,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       return result;
     },
@@ -121,7 +134,7 @@ export const createProfiler = (name: string) => {
       measurements.push({
         name: operationName,
         duration,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       return result;
     },
@@ -132,19 +145,20 @@ export const createProfiler = (name: string) => {
       measurements: Object.freeze([...measurements]),
       summary: {
         totalTime: measurements.reduce((sum, m) => sum + m.duration, 0),
-        averageTime: measurements.length > 0 
-          ? measurements.reduce((sum, m) => sum + m.duration, 0) / measurements.length 
-          : 0,
-        slowestOperation: measurements.reduce((slowest, current) => 
-          current.duration > slowest.duration ? current : slowest, 
+        averageTime:
+          measurements.length > 0
+            ? measurements.reduce((sum, m) => sum + m.duration, 0) / measurements.length
+            : 0,
+        slowestOperation: measurements.reduce(
+          (slowest, current) => (current.duration > slowest.duration ? current : slowest),
           measurements[0] || { name: 'none', duration: 0, timestamp: 0 }
-        )
-      }
+        ),
+      },
     }),
 
     clear: () => {
       measurements.length = 0;
-    }
+    },
   };
 };
 
@@ -160,9 +174,9 @@ export const createDebouncedMonitor = (
 
   const collectMetrics = (): PerformanceMetrics => ({
     renderTime: 0, // Will be set by specific render operations
-    parseTime: 0,  // Will be set by specific parse operations
+    parseTime: 0, // Will be set by specific parse operations
     memoryUsage: getMemoryUsage(),
-    frameRate: frameRateMonitor.getFrameRate()
+    frameRate: frameRateMonitor.getFrameRate(),
   });
 
   const scheduleUpdate = () => {
@@ -196,7 +210,7 @@ export const createDebouncedMonitor = (
 
     updateParseTime: (_parseTime: number) => {
       // This would be called by parse operations to update the metric
-    }
+    },
   };
 };
 
@@ -204,7 +218,8 @@ export const createDebouncedMonitor = (
  * Performance budget utilities
  */
 export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
-  const violations: Array<{ metric: string; value: number; threshold: number; timestamp: number }> = [];
+  const violations: Array<{ metric: string; value: number; threshold: number; timestamp: number }> =
+    [];
 
   return {
     checkRenderTime: (duration: number): boolean => {
@@ -214,7 +229,7 @@ export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
           metric: 'renderTime',
           value: duration,
           threshold: thresholds.maxRenderTime,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
       return withinBudget;
@@ -227,7 +242,7 @@ export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
           metric: 'parseTime',
           value: duration,
           threshold: thresholds.maxParseTime,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
       return withinBudget;
@@ -240,7 +255,7 @@ export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
           metric: 'memoryUsage',
           value: usage,
           threshold: thresholds.maxMemoryUsage,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
       return withinBudget;
@@ -253,7 +268,7 @@ export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
           metric: 'frameRate',
           value: frameRate,
           threshold: thresholds.minFrameRate,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
       return withinBudget;
@@ -267,12 +282,15 @@ export const createPerformanceBudget = (thresholds: PerformanceThresholds) => {
 
     getReport: () => ({
       totalViolations: violations.length,
-      violationsByMetric: violations.reduce((acc, violation) => {
-        acc[violation.metric] = (acc[violation.metric] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-      recentViolations: violations.slice(-10) // Last 10 violations
-    })
+      violationsByMetric: violations.reduce(
+        (acc, violation) => {
+          acc[violation.metric] = (acc[violation.metric] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      recentViolations: violations.slice(-10), // Last 10 violations
+    }),
   };
 };
 
@@ -306,6 +324,6 @@ export const createWebGLMonitor = (gl: WebGLRenderingContext | WebGL2RenderingCo
 
     getMaxViewportDims: () => {
       return gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-    }
+    },
   };
 };

@@ -55,8 +55,7 @@ openscad-babylon/
 #### Development Infrastructure ✅
 - **Vitest** - Unit testing with jsdom environment
 - **Playwright** - E2E and component testing
-- **ESLint** - Code quality with TypeScript rules
-- **Prettier** - Code formatting
+- **Biome v2.0.6** - Unified linting and formatting with TypeScript rules
 - **Storybook 9.0.12** - Component development
 
 ### Vite Configuration Analysis

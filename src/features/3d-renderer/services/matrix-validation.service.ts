@@ -1,24 +1,22 @@
 /**
  * Matrix Validation Service
- * 
+ *
  * Comprehensive matrix analysis and validation service with numerical stability
  * assessment, remediation strategies, and performance monitoring following bulletproof-react patterns.
  */
 
-import type { Matrix} from 'ml-matrix';
+import type { Matrix } from 'ml-matrix';
 import { EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
-import type {
-
-  MatrixValidationResult,
-  MatrixOperationResult,
-  MatrixPerformanceMetrics
-} from '../types/matrix.types';
-import type { MatrixCacheService } from './matrix-cache.service';
-import { matrixUtils } from '../utils/matrix-adapters';
-import type { MATRIX_CONFIG} from '../config/matrix-config';
-import { getCacheKey } from '../config/matrix-config';
-import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import type { MATRIX_CONFIG } from '../config/matrix-config';
+import type {
+  MatrixOperationResult,
+  MatrixPerformanceMetrics,
+  MatrixValidationResult,
+} from '../types/matrix.types';
+import { matrixUtils } from '../utils/matrix-adapters';
+import type { MatrixCacheService } from './matrix-cache.service';
 
 /**
  * Dependency injection interface for MatrixValidationService
@@ -52,11 +50,13 @@ export class MatrixValidationService {
     cacheHitRate: 0,
     memoryUsage: 0,
     largeMatrixOperations: 0,
-    failedOperations: 0
+    failedOperations: 0,
   };
 
   constructor(private readonly deps: MatrixValidationDependencies) {
-    console.log('[INIT][MatrixValidationService] Initializing matrix validation service with dependencies');
+    console.log(
+      '[INIT][MatrixValidationService] Initializing matrix validation service with dependencies'
+    );
     this.validateDependencies();
   }
 
@@ -85,21 +85,24 @@ export class MatrixValidationService {
   /**
    * Update performance metrics
    */
-  private updatePerformanceMetrics(executionTime: number, matrixSize: readonly [number, number]): void {
+  private updatePerformanceMetrics(
+    executionTime: number,
+    matrixSize: readonly [number, number]
+  ): void {
     // Create new metrics object since properties are readonly
     const newOperationCount = this.performanceMetrics.operationCount + 1;
     const newTotalExecutionTime = this.performanceMetrics.totalExecutionTime + executionTime;
-    
+
     const size = matrixSize[0] * matrixSize[1];
     const isLargeMatrix = size >= this.deps.config.performance.largeMatrixThreshold;
-    
+
     this.performanceMetrics = {
       ...this.performanceMetrics,
       operationCount: newOperationCount,
       totalExecutionTime: newTotalExecutionTime,
       averageExecutionTime: newTotalExecutionTime / newOperationCount,
-      largeMatrixOperations: isLargeMatrix 
-        ? this.performanceMetrics.largeMatrixOperations + 1 
+      largeMatrixOperations: isLargeMatrix
+        ? this.performanceMetrics.largeMatrixOperations + 1
         : this.performanceMetrics.largeMatrixOperations,
     };
 
@@ -117,11 +120,11 @@ export class MatrixValidationService {
       ...this.performanceMetrics,
       failedOperations: this.performanceMetrics.failedOperations + 1,
     };
-    
+
     if (this.deps.telemetry) {
       this.deps.telemetry.trackOperation(operation, 0, false);
     }
-    
+
     console.error(`[ERROR][MatrixValidationService] Operation ${operation} failed:`, error);
   }
 
@@ -135,7 +138,7 @@ export class MatrixValidationService {
         const svd = new SingularValueDecomposition(matrix);
         const singularValues = svd.diagonal;
         const maxSV = Math.max(...singularValues);
-        const minSV = Math.min(...singularValues.filter(sv => sv > 0));
+        const minSV = Math.min(...singularValues.filter((sv) => sv > 0));
         return minSV > 0 ? maxSV / minSV : Infinity;
       }
 
@@ -143,8 +146,8 @@ export class MatrixValidationService {
       const eigenDecomp = new EigenvalueDecomposition(matrix);
       const eigenvalues = eigenDecomp.realEigenvalues;
       const maxEigen = Math.max(...eigenvalues.map(Math.abs));
-      const minEigen = Math.min(...eigenvalues.map(Math.abs).filter(ev => ev > 0));
-      
+      const minEigen = Math.min(...eigenvalues.map(Math.abs).filter((ev) => ev > 0));
+
       return minEigen > 0 ? maxEigen / minEigen : Infinity;
     } catch {
       return Infinity;
@@ -227,8 +230,10 @@ export class MatrixValidationService {
   ): Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>> {
     const startTime = Date.now();
     const operation = 'matrixValidation';
-    
-    console.log(`[DEBUG][MatrixValidationService] Validating matrix ${matrix.rows}x${matrix.columns}`);
+
+    console.log(
+      `[DEBUG][MatrixValidationService] Validating matrix ${matrix.rows}x${matrix.columns}`
+    );
 
     try {
       // Note: Validation results are not cached as the cache interface expects Matrix objects
@@ -262,7 +267,7 @@ export class MatrixValidationService {
       const isSymmetric = matrixUtils.isSymmetric(matrix);
       const isOrthogonal = matrixUtils.isOrthogonal(matrix);
       const isPositiveDefinite = matrixUtils.isPositiveDefinite(matrix);
-      
+
       let conditionNumber: number | undefined;
       let rank: number | undefined;
       let determinant: number | undefined;
@@ -309,7 +314,11 @@ export class MatrixValidationService {
       }
 
       // Assess numerical stability
-      const numericalStability = this.assessNumericalStability(conditionNumber, determinant, singularValues);
+      const numericalStability = this.assessNumericalStability(
+        conditionNumber,
+        determinant,
+        singularValues
+      );
 
       // Generate remediation strategies
       const remediationStrategies = this.generateRemediationStrategies(
@@ -322,7 +331,9 @@ export class MatrixValidationService {
 
       // Add warnings based on analysis
       if (numericalStability === 'poor' || numericalStability === 'unstable') {
-        warnings.push(`Matrix has ${numericalStability} numerical stability (condition number: ${conditionNumber.toExponential(2)})`);
+        warnings.push(
+          `Matrix has ${numericalStability} numerical stability (condition number: ${conditionNumber.toExponential(2)})`
+        );
       }
 
       if (isSquare && Math.abs(determinant || 0) < tolerance) {
@@ -343,7 +354,7 @@ export class MatrixValidationService {
         isOrthogonal,
         isSymmetric,
         numericalStability,
-        remediationStrategies
+        remediationStrategies,
       };
 
       // Note: Validation results are not cached as the cache interface expects Matrix objects
@@ -358,18 +369,19 @@ export class MatrixValidationService {
           memoryUsed: matrixUtils.memoryUsage(matrix),
           operationType: operation,
           matrixSize: [matrix.rows, matrix.columns],
-          cacheHit: false
+          cacheHit: false,
         },
         metadata: {
           timestamp: Date.now(),
           operationId: this.generateOperationId(operation),
-          inputHash: matrixUtils.hash(matrix)
-        }
+          inputHash: matrixUtils.hash(matrix),
+        },
       };
 
-      console.log(`[DEBUG][MatrixValidationService] Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`);
+      console.log(
+        `[DEBUG][MatrixValidationService] Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`
+      );
       return success(operationResult);
-
     } catch (err) {
       this.recordFailure(operation, err as Error);
       return error(`Matrix validation failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -394,7 +406,7 @@ export class MatrixValidationService {
       cacheHitRate: 0,
       memoryUsage: 0,
       largeMatrixOperations: 0,
-      failedOperations: 0
+      failedOperations: 0,
     });
     console.log('[DEBUG][MatrixValidationService] Performance metrics reset');
   }

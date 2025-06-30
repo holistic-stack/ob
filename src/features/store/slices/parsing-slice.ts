@@ -5,13 +5,13 @@
  * with performance monitoring and functional error patterns.
  */
 
-import type { StateCreator } from 'zustand';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { AppStore, ParsingSlice } from '../types/store.types.js';
+import type { StateCreator } from 'zustand';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
+import type { AppStore, ParsingSlice } from '../types/store.types.js';
 
 interface ParsingSliceConfig {
   parserService: UnifiedParserService;
@@ -53,7 +53,7 @@ export const createParsingSlice = (
 
             if (!restructureResult.success) {
               console.warn(
-                `[WARN][Store] AST restructuring failed: ${restructureResult.error}, using original AST`,
+                `[WARN][Store] AST restructuring failed: ${restructureResult.error}, using original AST`
               );
             }
 
@@ -72,7 +72,7 @@ export const createParsingSlice = (
             get().recordParseTime(parseTime);
 
             console.log(
-              `[DEBUG][Store] Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`,
+              `[DEBUG][Store] Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
             );
             return ast;
           } else {
@@ -95,7 +95,7 @@ export const createParsingSlice = (
 
           console.error(`[ERROR][Store] Parse failed: ${errorMessage}`);
           return `Parse failed: ${errorMessage}`;
-        },
+        }
       );
     },
 

@@ -1,19 +1,28 @@
 /**
  * Matrix Service Container
- * 
+ *
  * Dependency injection container for matrix services with lifecycle management,
  * service integration, and comprehensive error handling following bulletproof-react patterns.
  */
 
-import { MatrixCacheService } from './matrix-cache.service';
-import { MatrixOperationsAPI } from './matrix-operations.api';
-import { MatrixConversionService, type MatrixConversionDependencies } from './matrix-conversion.service';
-import { MatrixValidationService, type MatrixValidationDependencies } from './matrix-validation.service';
-import { MatrixTelemetryService, type MatrixTelemetryDependencies } from './matrix-telemetry.service';
-import { MatrixConfigManagerService } from './matrix-config-manager.service';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { success, error } from '../../../shared/utils/functional/result';
 import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import { MATRIX_CONFIG } from '../config/matrix-config';
+import { MatrixCacheService } from './matrix-cache.service';
+import { MatrixConfigManagerService } from './matrix-config-manager.service';
+import {
+  type MatrixConversionDependencies,
+  MatrixConversionService,
+} from './matrix-conversion.service';
+import { MatrixOperationsAPI } from './matrix-operations.api';
+import {
+  type MatrixTelemetryDependencies,
+  MatrixTelemetryService,
+} from './matrix-telemetry.service';
+import {
+  type MatrixValidationDependencies,
+  MatrixValidationService,
+} from './matrix-validation.service';
 
 /**
  * Service container configuration
@@ -28,7 +37,13 @@ export interface ServiceContainerConfig {
 /**
  * Service lifecycle state
  */
-export type ServiceLifecycleState = 'uninitialized' | 'initializing' | 'running' | 'stopping' | 'stopped' | 'error';
+export type ServiceLifecycleState =
+  | 'uninitialized'
+  | 'initializing'
+  | 'running'
+  | 'stopping'
+  | 'stopped'
+  | 'error';
 
 /**
  * Service health status
@@ -65,13 +80,13 @@ export class MatrixServiceContainer {
 
   constructor(config: ServiceContainerConfig = {}) {
     console.log('[INIT][MatrixServiceContainer] Initializing service container');
-    
+
     this.config = {
       enableTelemetry: true,
       enableValidation: true,
       enableConfigManager: true,
       autoStartServices: true,
-      ...config
+      ...config,
     };
 
     if (this.config.autoStartServices) {
@@ -105,10 +120,11 @@ export class MatrixServiceContainer {
       this.isInitialized = true;
       console.log('[DEBUG][MatrixServiceContainer] Service initialization completed successfully');
       return success(undefined);
-
     } catch (err) {
       console.error('[ERROR][MatrixServiceContainer] Service initialization failed:', err);
-      return error(`Service initialization failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -151,7 +167,7 @@ export class MatrixServiceContainer {
       this.setServiceState('telemetry', 'initializing');
       try {
         const telemetryDeps: MatrixTelemetryDependencies = {
-          config: this.getConfigManager()?.getCurrentConfig() ?? MATRIX_CONFIG
+          config: this.getConfigManager()?.getCurrentConfig() ?? MATRIX_CONFIG,
         };
         const telemetryService = new MatrixTelemetryService(telemetryDeps);
         this.registerService('telemetry', telemetryService);
@@ -182,7 +198,7 @@ export class MatrixServiceContainer {
       const conversionDeps: MatrixConversionDependencies = {
         cache: cacheService,
         config: currentConfig,
-        telemetry: telemetryService
+        telemetry: telemetryService,
       };
       const conversionService = new MatrixConversionService(conversionDeps);
       this.registerService('conversion', conversionService);
@@ -201,7 +217,7 @@ export class MatrixServiceContainer {
         const validationDeps: MatrixValidationDependencies = {
           cache: cacheService,
           config: currentConfig,
-          telemetry: telemetryService
+          telemetry: telemetryService,
         };
         const validationService = new MatrixValidationService(validationDeps);
         this.registerService('validation', validationService);
@@ -290,21 +306,27 @@ export class MatrixServiceContainer {
    * Get validation service
    */
   getValidationService(): MatrixValidationService | null {
-    return this.hasService('validation') ? this.getService<MatrixValidationService>('validation') : null;
+    return this.hasService('validation')
+      ? this.getService<MatrixValidationService>('validation')
+      : null;
   }
 
   /**
    * Get telemetry service
    */
   getTelemetryService(): MatrixTelemetryService | null {
-    return this.hasService('telemetry') ? this.getService<MatrixTelemetryService>('telemetry') : null;
+    return this.hasService('telemetry')
+      ? this.getService<MatrixTelemetryService>('telemetry')
+      : null;
   }
 
   /**
    * Get configuration manager
    */
   getConfigManager(): MatrixConfigManagerService | null {
-    return this.hasService('configManager') ? this.getService<MatrixConfigManagerService>('configManager') : null;
+    return this.hasService('configManager')
+      ? this.getService<MatrixConfigManagerService>('configManager')
+      : null;
   }
 
   /**
@@ -329,7 +351,7 @@ export class MatrixServiceContainer {
       const startTime = this.serviceStartTimes.get(name) ?? Date.now();
       const errorCount = this.serviceErrorCounts.get(name) ?? 0;
       const uptime = Date.now() - startTime;
-      
+
       let healthy = state === 'running' && errorCount < 5;
 
       // Perform service-specific health checks
@@ -346,7 +368,9 @@ export class MatrixServiceContainer {
           const metrics = (service as any).getPerformanceMetrics();
           if (metrics.failedOperations > metrics.operationCount * 0.1) {
             healthy = false;
-            recommendations.push('High failure rate detected in telemetry - investigate operation failures');
+            recommendations.push(
+              'High failure rate detected in telemetry - investigate operation failures'
+            );
           }
         }
       } catch (err) {
@@ -364,14 +388,14 @@ export class MatrixServiceContainer {
         healthy,
         lastCheck: Date.now(),
         errorCount,
-        uptime
+        uptime,
       });
     }
 
     // Determine overall health
     let overall: 'healthy' | 'degraded' | 'unhealthy';
     const totalServices = serviceStatuses.length;
-    
+
     if (healthyCount === totalServices) {
       overall = 'healthy';
     } else if (healthyCount >= totalServices * 0.7) {
@@ -379,14 +403,16 @@ export class MatrixServiceContainer {
       recommendations.push('Some services are unhealthy - monitor closely');
     } else {
       overall = 'unhealthy';
-      recommendations.push('Critical: Multiple services are unhealthy - immediate attention required');
+      recommendations.push(
+        'Critical: Multiple services are unhealthy - immediate attention required'
+      );
     }
 
     return {
       overall,
       services: serviceStatuses,
       timestamp: Date.now(),
-      recommendations
+      recommendations,
     };
   }
 
@@ -398,7 +424,7 @@ export class MatrixServiceContainer {
 
     try {
       this.setServiceState(serviceName, 'stopping');
-      
+
       // Stop the service if it has a cleanup method
       const service = this.services.get(serviceName);
       if (service && typeof (service as any).dispose === 'function') {
@@ -411,13 +437,16 @@ export class MatrixServiceContainer {
       // Reinitialize the service
       await this.initializeServices();
 
-      console.log(`[DEBUG][MatrixServiceContainer] Service '${serviceName}' restarted successfully`);
+      console.log(
+        `[DEBUG][MatrixServiceContainer] Service '${serviceName}' restarted successfully`
+      );
       return success(undefined);
-
     } catch (err) {
       this.setServiceState(serviceName, 'error');
       this.incrementErrorCount(serviceName);
-      return error(`Failed to restart service '${serviceName}': ${err instanceof Error ? err.message : String(err)}`);
+      return error(
+        `Failed to restart service '${serviceName}': ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -430,11 +459,11 @@ export class MatrixServiceContainer {
     for (const [name, service] of this.services.entries()) {
       try {
         this.setServiceState(name, 'stopping');
-        
+
         if (service && typeof (service as any).dispose === 'function') {
           await (service as any).dispose();
         }
-        
+
         this.setServiceState(name, 'stopped');
         console.log(`[DEBUG][MatrixServiceContainer] Service '${name}' stopped`);
       } catch (err) {
@@ -476,7 +505,7 @@ export class MatrixServiceContainer {
       initialized: this.isInitialized,
       serviceCount: this.services.size,
       runningServices,
-      errorServices
+      errorServices,
     };
   }
 }

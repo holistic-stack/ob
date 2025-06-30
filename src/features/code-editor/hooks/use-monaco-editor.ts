@@ -5,34 +5,31 @@
  * including debounced updates, performance monitoring, and error handling.
  */
 
-import { useRef, useEffect, useCallback, useState } from "react";
-import type * as monaco from "monaco-editor";
-
-import type {
-  UseMonacoEditorOptions,
-  UseMonacoEditorReturn,
-  EditorPerformanceMetrics,
-  EditorStateManager,
-} from "../types/editor.types";
-import { useAppStore } from "../../store";
+import type * as monaco from 'monaco-editor';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { debounce } from '../../../shared/utils/functional/pipe';
+import { tryCatch } from '../../../shared/utils/functional/result';
+import { measureTime } from '../../../shared/utils/performance/metrics';
+import { useAppStore } from '../../store';
 import {
+  selectConfigDebounceMs,
   selectEditorCode,
   selectEditorCursorPosition,
   selectEditorSelection,
-  selectConfigDebounceMs,
-} from "../../store/selectors";
-import {
-  tryCatch,
-} from "../../../shared/utils/functional/result";
-import { debounce } from "../../../shared/utils/functional/pipe";
-import { measureTime } from "../../../shared/utils/performance/metrics";
+} from '../../store/selectors';
+import type {
+  EditorPerformanceMetrics,
+  EditorStateManager,
+  UseMonacoEditorOptions,
+  UseMonacoEditorReturn,
+} from '../types/editor.types';
 
 /**
  * Default options for Monaco Editor hook
  */
 const DEFAULT_OPTIONS: UseMonacoEditorOptions = {
-  language: "openscad",
-  theme: "vs-dark",
+  language: 'openscad',
+  theme: 'vs-dark',
   debounceMs: 300,
   enableSyntaxValidation: true,
   enableAutoCompletion: true,
@@ -42,7 +39,7 @@ const DEFAULT_OPTIONS: UseMonacoEditorOptions = {
  * Monaco Editor hook with Zustand store integration
  */
 export const useMonacoEditor = (
-  options: Partial<UseMonacoEditorOptions> = {},
+  options: Partial<UseMonacoEditorOptions> = {}
 ): UseMonacoEditorReturn => {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
 
@@ -84,7 +81,7 @@ export const useMonacoEditor = (
 
       setMetrics((prev) => ({ ...prev, updateTime: duration }));
     }, mergedOptions.debounceMs || debounceMs),
-    [updateCode, recordParseTime, mergedOptions.debounceMs, debounceMs],
+    []
   );
 
   /**
@@ -101,7 +98,7 @@ export const useMonacoEditor = (
         setMetrics((prev) => ({ ...prev, updateTime: duration }));
       }
     },
-    [code, debouncedUpdateCode, markDirty],
+    [code, debouncedUpdateCode, markDirty]
   );
 
   /**
@@ -121,7 +118,7 @@ export const useMonacoEditor = (
         updateCursorPosition(newPosition);
       }
     },
-    [cursorPosition, updateCursorPosition],
+    [cursorPosition, updateCursorPosition]
   );
 
   /**
@@ -140,7 +137,7 @@ export const useMonacoEditor = (
 
       updateSelection(newSelection);
     },
-    [updateSelection],
+    [updateSelection]
   );
 
   /**
@@ -148,7 +145,7 @@ export const useMonacoEditor = (
    */
   const actions: EditorStateManager = {
     getValue: () => {
-      return editorRef.current?.getValue() || "";
+      return editorRef.current?.getValue() || '';
     },
 
     setValue: (value: string) => {
@@ -208,19 +205,17 @@ export const useMonacoEditor = (
     },
 
     undo: () => {
-      editorRef.current?.trigger("keyboard", "undo", null);
+      editorRef.current?.trigger('keyboard', 'undo', null);
     },
 
     redo: () => {
-      editorRef.current?.trigger("keyboard", "redo", null);
+      editorRef.current?.trigger('keyboard', 'redo', null);
     },
 
     format: async () => {
       if (editorRef.current) {
         const { duration } = await measureTime(async () => {
-          await editorRef.current
-            ?.getAction("editor.action.formatDocument")
-            ?.run();
+          await editorRef.current?.getAction('editor.action.formatDocument')?.run();
         });
 
         setMetrics((prev) => ({ ...prev, validationTime: duration }));
@@ -246,18 +241,14 @@ export const useMonacoEditor = (
           disposables.push(
             editor.onDidChangeModelContent(() => {
               handleContentChange(editor.getValue());
-            }),
+            })
           );
 
           // Cursor position change events
-          disposables.push(
-            editor.onDidChangeCursorPosition(handleCursorPositionChange),
-          );
+          disposables.push(editor.onDidChangeCursorPosition(handleCursorPositionChange));
 
           // Selection change events
-          disposables.push(
-            editor.onDidChangeCursorSelection(handleSelectionChange),
-          );
+          disposables.push(editor.onDidChangeCursorSelection(handleSelectionChange));
 
           // Performance monitoring
           disposables.push(
@@ -266,28 +257,27 @@ export const useMonacoEditor = (
                 // Measure render time
               });
               setMetrics((prev) => ({ ...prev, renderTime: duration }));
-            }),
+            })
           );
 
           // Store disposables for cleanup
-          (editor as unknown as { _hookDisposables: monaco.IDisposable[] })._hookDisposables = disposables;
+          (editor as unknown as { _hookDisposables: monaco.IDisposable[] })._hookDisposables =
+            disposables;
 
-          console.log(
-            "[INIT][useMonacoEditor] Editor initialized successfully",
-          );
+          console.log('[INIT][useMonacoEditor] Editor initialized successfully');
 
           return editor;
         },
         (err) =>
-          `Failed to initialize Monaco Editor: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to initialize Monaco Editor: ${err instanceof Error ? err.message : String(err)}`
       );
 
       if (!result.success) {
         setError(result.error);
-        console.error("[ERROR][useMonacoEditor]", result.error);
+        console.error('[ERROR][useMonacoEditor]', result.error);
       }
     },
-    [handleContentChange, handleCursorPositionChange, handleSelectionChange],
+    [handleContentChange, handleCursorPositionChange, handleSelectionChange]
   );
 
   /**
@@ -295,7 +285,9 @@ export const useMonacoEditor = (
    */
   const cleanupEditor = useCallback(() => {
     if (editorRef.current) {
-      const disposables = (editorRef.current as unknown as { _hookDisposables?: monaco.IDisposable[] })._hookDisposables;
+      const disposables = (
+        editorRef.current as unknown as { _hookDisposables?: monaco.IDisposable[] }
+      )._hookDisposables;
       if (disposables) {
         disposables.forEach((disposable: monaco.IDisposable) => {
           disposable.dispose();
@@ -306,7 +298,7 @@ export const useMonacoEditor = (
       setIsLoading(true);
       setError(null);
 
-      console.log("[CLEANUP][useMonacoEditor] Editor resources cleaned up");
+      console.log('[CLEANUP][useMonacoEditor] Editor resources cleaned up');
     }
   }, []);
 

@@ -5,16 +5,14 @@
  * with matrix services and the complete application workflow.
  */
 
-import React, { act, useEffect, useState } from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-
-import { useAppStore, type AppState } from "../store/app-store";
-import { StoreConnectedEditor } from "../code-editor/components/store-connected-editor";
-import { StoreConnectedRenderer } from "../3d-renderer/components/store-connected-renderer";
-
-import { MatrixServiceContainer } from "../3d-renderer/services/matrix-service-container";
-import { MatrixIntegrationService } from "../3d-renderer/services/matrix-integration.service";
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React, { act, useEffect, useState } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer';
+import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service';
+import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container';
+import { StoreConnectedEditor } from '../code-editor/components/store-connected-editor';
+import { useAppStore } from '../store/app-store';
 
 /**
  * React integration test scenarios
@@ -48,9 +46,7 @@ const REACT_INTEGRATION_SCENARIOS = {
 /**
  * Mock matrix service provider for testing
  */
-const MockMatrixServiceProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+const MockMatrixServiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [serviceContainer] = useState(
     () =>
       new MatrixServiceContainer({
@@ -58,12 +54,10 @@ const MockMatrixServiceProvider: React.FC<{ children: React.ReactNode }> = ({
         enableValidation: true,
         enableConfigManager: true,
         autoStartServices: true,
-      }),
+      })
   );
 
-  const [integrationService] = useState(
-    () => new MatrixIntegrationService(serviceContainer),
-  );
+  const [integrationService] = useState(() => new MatrixIntegrationService(serviceContainer));
 
   useEffect(() => {
     return () => {
@@ -96,7 +90,7 @@ const TestIntegrationComponent: React.FC<{
 
   useEffect(() => {
     if (triggerError) {
-      const error = new Error("Test error for error boundary");
+      const error = new Error('Test error for error boundary');
       onError?.(error);
       throw error;
     }
@@ -112,7 +106,7 @@ const TestIntegrationComponent: React.FC<{
       act(async () => {
         const result = await parseCode(newCode);
         if (!result.success) {
-          console.error("Parsing failed:", result.error);
+          console.error('Parsing failed:', result.error);
         }
       });
     }, 300);
@@ -124,17 +118,10 @@ const TestIntegrationComponent: React.FC<{
       <div data-testid="current-code">{code}</div>
       <div data-testid="ast-count">{parsing.ast.length}</div>
       <div data-testid="mesh-count">{scene3D.meshes.length}</div>
-      <div data-testid="parsing-loading">
-        {parsing.isLoading ? "loading" : "idle"}
-      </div>
-      <div data-testid="scene-loading">
-        {scene3D.isRendering ? "rendering" : "idle"}
-      </div>
+      <div data-testid="parsing-loading">{parsing.isLoading ? 'loading' : 'idle'}</div>
+      <div data-testid="scene-loading">{scene3D.isRendering ? 'rendering' : 'idle'}</div>
 
-      <button
-        data-testid="update-code-button"
-        onClick={() => handleCodeChange("cube([5,5,5]);")}
-      >
+      <button data-testid="update-code-button" onClick={() => handleCodeChange('cube([5,5,5]);')}>
         Update Code
       </button>
 
@@ -162,7 +149,7 @@ class TestErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
-    console.log("[DEBUG][TestErrorBoundary] Caught error:", error);
+    console.log('[DEBUG][TestErrorBoundary] Caught error:', error);
     this.props.onError?.(error);
   }
 
@@ -180,15 +167,13 @@ class TestErrorBoundary extends React.Component<
   }
 }
 
-describe("React Integration Layer Testing", () => {
+describe('React Integration Layer Testing', () => {
   beforeEach(() => {
-    console.log(
-      "[INIT][ReactIntegrationTest] Setting up React integration test environment",
-    );
+    console.log('[INIT][ReactIntegrationTest] Setting up React integration test environment');
 
     // Reset app store
     useAppStore.setState((state) => {
-      state.editor.code = "";
+      state.editor.code = '';
       state.parsing = {
         ast: [],
         isLoading: false,
@@ -219,19 +204,15 @@ describe("React Integration Layer Testing", () => {
   });
 
   afterEach(() => {
-    console.log(
-      "[END][ReactIntegrationTest] Cleaning up React integration test environment",
-    );
+    console.log('[END][ReactIntegrationTest] Cleaning up React integration test environment');
     vi.clearAllMocks();
   });
 
-  describe("Component Lifecycle Integration", () => {
+  describe('Component Lifecycle Integration', () => {
     it(
-      "should handle component mounting and unmounting correctly",
+      'should handle component mounting and unmounting correctly',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing component lifecycle",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing component lifecycle');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.componentLifecycle;
         const renderCounts: number[] = [];
@@ -241,26 +222,22 @@ describe("React Integration Layer Testing", () => {
             <MockMatrixServiceProvider>
               <TestIntegrationComponent
                 onRender={() => {
-                  const count = parseInt(
-                    screen.getByTestId("render-count").textContent ?? "0",
-                  );
+                  const count = parseInt(screen.getByTestId('render-count').textContent ?? '0');
                   renderCounts.push(count);
                 }}
               />
-            </MockMatrixServiceProvider>,
+            </MockMatrixServiceProvider>
           );
 
           // Wait for component to render
           await waitFor(() => {
-            expect(
-              screen.getByTestId("test-integration-component"),
-            ).toBeInTheDocument();
+            expect(screen.getByTestId('test-integration-component')).toBeInTheDocument();
           });
 
           // Verify initial state
-          expect(screen.getByTestId("current-code")).toHaveTextContent("");
-          expect(screen.getByTestId("ast-count")).toHaveTextContent("0");
-          expect(screen.getByTestId("mesh-count")).toHaveTextContent("0");
+          expect(screen.getByTestId('current-code')).toHaveTextContent('');
+          expect(screen.getByTestId('ast-count')).toHaveTextContent('0');
+          expect(screen.getByTestId('mesh-count')).toHaveTextContent('0');
 
           // Unmount component
           unmount();
@@ -270,14 +247,14 @@ describe("React Integration Layer Testing", () => {
         expect(renderCounts.length).toBeGreaterThan(0);
         expect(renderCounts.every((count) => count >= 1)).toBe(true);
       },
-      REACT_INTEGRATION_SCENARIOS.componentLifecycle.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.componentLifecycle.timeoutMs
     );
 
     it(
-      "should integrate with matrix services during component lifecycle",
+      'should integrate with matrix services during component lifecycle',
       async () => {
         console.log(
-          "[DEBUG][ReactIntegrationTest] Testing matrix service integration during lifecycle",
+          '[DEBUG][ReactIntegrationTest] Testing matrix service integration during lifecycle'
         );
 
         let serviceContainer: MatrixServiceContainer | null = null;
@@ -301,9 +278,7 @@ describe("React Integration Layer Testing", () => {
           return (
             <div data-testid="service-integration">
               <div data-testid="service-status">
-                {container.getStatus().initialized
-                  ? "initialized"
-                  : "not-initialized"}
+                {container.getStatus().initialized ? 'initialized' : 'not-initialized'}
               </div>
             </div>
           );
@@ -313,14 +288,12 @@ describe("React Integration Layer Testing", () => {
 
         // Wait for service initialization
         await waitFor(() => {
-          expect(screen.getByTestId("service-status")).toHaveTextContent(
-            "initialized",
-          );
+          expect(screen.getByTestId('service-status')).toHaveTextContent('initialized');
         });
 
         // Verify service container is working
         expect(serviceContainer).toBeDefined();
-        expect(serviceContainer!.getStatus().initialized).toBe(true);
+        expect(serviceContainer?.getStatus().initialized).toBe(true);
 
         // Unmount and verify cleanup
         unmount();
@@ -328,17 +301,15 @@ describe("React Integration Layer Testing", () => {
         // Service should be cleaned up (this is implementation dependent)
         // We can't easily test shutdown without exposing internal state
       },
-      REACT_INTEGRATION_SCENARIOS.componentLifecycle.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.componentLifecycle.timeoutMs
     );
   });
 
-  describe("State Synchronization", () => {
+  describe('State Synchronization', () => {
     it(
-      "should synchronize store state with React components",
+      'should synchronize store state with React components',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing state synchronization",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing state synchronization');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.stateSynchronization;
         const stateUpdates: string[] = [];
@@ -363,46 +334,38 @@ describe("React Integration Layer Testing", () => {
           <MockMatrixServiceProvider>
             <TestIntegrationComponent />
             <StateObserver />
-          </MockMatrixServiceProvider>,
+          </MockMatrixServiceProvider>
         );
 
         // Perform multiple state updates
         for (let i = 0; i < scenario.updateCount; i++) {
-          const button = screen.getByTestId("update-code-button");
+          const button = screen.getByTestId('update-code-button');
 
           act(() => {
             fireEvent.click(button);
           });
 
           // Wait for debounced update
-          await new Promise((resolve) =>
-            setTimeout(resolve, scenario.debounceMs + 100),
-          );
+          await new Promise((resolve) => setTimeout(resolve, scenario.debounceMs + 100));
         }
 
         // Wait for final state synchronization
         await waitFor(() => {
-          expect(screen.getByTestId("observed-code")).toHaveTextContent(
-            "cube([5,5,5]);",
-          );
-          expect(screen.getByTestId("observed-ast-count")).not.toHaveTextContent("0");
+          expect(screen.getByTestId('observed-code')).toHaveTextContent('cube([5,5,5]);');
+          expect(screen.getByTestId('observed-ast-count')).not.toHaveTextContent('0');
         });
 
         // Verify state updates were captured
         expect(stateUpdates.length).toBeGreaterThan(1);
-        expect(stateUpdates[stateUpdates.length - 1]).toContain(
-          "cube([5,5,5]);",
-        );
+        expect(stateUpdates[stateUpdates.length - 1]).toContain('cube([5,5,5]);');
       },
-      REACT_INTEGRATION_SCENARIOS.stateSynchronization.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.stateSynchronization.timeoutMs
     );
 
     it(
-      "should handle concurrent state updates correctly",
+      'should handle concurrent state updates correctly',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing concurrent state updates",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing concurrent state updates');
 
         const ConcurrentUpdater: React.FC = () => {
           const { updateCode, parseCode } = useAppStore();
@@ -410,11 +373,11 @@ describe("React Integration Layer Testing", () => {
 
           const performConcurrentUpdates = async () => {
             const updates = [
-              () => Promise.resolve(updateCode("cube([1,1,1]);")),
-              () => Promise.resolve(updateCode("sphere(2);")),
-              () => Promise.resolve(updateCode("cylinder(h=5, r=1);")),
-              () => parseCode("cube([1,1,1]);"),
-              () => parseCode("sphere(2);"),
+              () => Promise.resolve(updateCode('cube([1,1,1]);')),
+              () => Promise.resolve(updateCode('sphere(2);')),
+              () => Promise.resolve(updateCode('cylinder(h=5, r=1);')),
+              () => parseCode('cube([1,1,1]);'),
+              () => parseCode('sphere(2);'),
             ];
 
             // Execute updates concurrently
@@ -425,10 +388,7 @@ describe("React Integration Layer Testing", () => {
           return (
             <div data-testid="concurrent-updater">
               <div data-testid="update-count">{updateCount}</div>
-              <button
-                data-testid="concurrent-update-button"
-                onClick={performConcurrentUpdates}
-              >
+              <button data-testid="concurrent-update-button" onClick={performConcurrentUpdates}>
                 Concurrent Update
               </button>
             </div>
@@ -439,11 +399,11 @@ describe("React Integration Layer Testing", () => {
           <MockMatrixServiceProvider>
             <ConcurrentUpdater />
             <TestIntegrationComponent />
-          </MockMatrixServiceProvider>,
+          </MockMatrixServiceProvider>
         );
 
         // Trigger concurrent updates
-        const button = screen.getByTestId("concurrent-update-button");
+        const button = screen.getByTestId('concurrent-update-button');
 
         act(() => {
           fireEvent.click(button);
@@ -451,28 +411,22 @@ describe("React Integration Layer Testing", () => {
 
         // Wait for updates to complete
         await waitFor(() => {
-          expect(screen.getByTestId("update-count")).toHaveTextContent("1");
+          expect(screen.getByTestId('update-count')).toHaveTextContent('1');
         });
 
         // State should be consistent (last update should win)
-        const finalCode = screen.getByTestId("current-code").textContent;
-        expect([
-          "cube([1,1,1]);",
-          "sphere(2);",
-          "cylinder(h=5, r=1);",
-        ]).toContain(finalCode);
+        const finalCode = screen.getByTestId('current-code').textContent;
+        expect(['cube([1,1,1]);', 'sphere(2);', 'cylinder(h=5, r=1);']).toContain(finalCode);
       },
-      REACT_INTEGRATION_SCENARIOS.stateSynchronization.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.stateSynchronization.timeoutMs
     );
   });
 
-  describe("Error Boundary Integration", () => {
+  describe('Error Boundary Integration', () => {
     it(
-      "should handle component errors gracefully",
+      'should handle component errors gracefully',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing error boundary integration",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing error boundary integration');
 
         const _scenario = REACT_INTEGRATION_SCENARIOS.errorBoundary;
         const caughtErrors: Error[] = [];
@@ -485,42 +439,36 @@ describe("React Integration Layer Testing", () => {
                 onError={(error) => caughtErrors.push(error)}
               />
             </MockMatrixServiceProvider>
-          </TestErrorBoundary>,
+          </TestErrorBoundary>
         );
 
         // Wait for error to be caught
         await waitFor(() => {
-          expect(
-            screen.getByTestId("error-boundary-fallback"),
-          ).toBeInTheDocument();
+          expect(screen.getByTestId('error-boundary-fallback')).toBeInTheDocument();
         });
 
         // Verify error was caught
         expect(caughtErrors.length).toBeGreaterThan(0);
-        expect(caughtErrors[0]?.message).toContain(
-          "Test error for error boundary",
-        );
+        expect(caughtErrors[0]?.message).toContain('Test error for error boundary');
 
         // Error boundary should display fallback UI
-        expect(screen.getByText("Something went wrong.")).toBeInTheDocument();
+        expect(screen.getByText('Something went wrong.')).toBeInTheDocument();
       },
-      REACT_INTEGRATION_SCENARIOS.errorBoundary.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.errorBoundary.timeoutMs
     );
 
     it(
-      "should recover from service errors in React components",
+      'should recover from service errors in React components',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing service error recovery in React",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing service error recovery in React');
 
         const ServiceErrorComponent: React.FC = () => {
           const { parseCode } = useAppStore();
           const [errorCount, setErrorCount] = useState(0);
-          const [lastError, setLastError] = useState<string>("");
+          const [lastError, setLastError] = useState<string>('');
 
           const triggerServiceError = async () => {
-            const result = await parseCode("invalid_openscad_syntax_that_should_fail!!!");
+            const result = await parseCode('invalid_openscad_syntax_that_should_fail!!!');
             if (!result.success) {
               setErrorCount((prev) => prev + 1);
               setLastError(result.error);
@@ -531,10 +479,7 @@ describe("React Integration Layer Testing", () => {
             <div data-testid="service-error-component">
               <div data-testid="error-count">{errorCount}</div>
               <div data-testid="last-error">{lastError}</div>
-              <button
-                data-testid="trigger-error-button"
-                onClick={triggerServiceError}
-              >
+              <button data-testid="trigger-error-button" onClick={triggerServiceError}>
                 Trigger Service Error
               </button>
             </div>
@@ -544,11 +489,11 @@ describe("React Integration Layer Testing", () => {
         render(
           <MockMatrixServiceProvider>
             <ServiceErrorComponent />
-          </MockMatrixServiceProvider>,
+          </MockMatrixServiceProvider>
         );
 
         // Trigger service error
-        const button = screen.getByTestId("trigger-error-button");
+        const button = screen.getByTestId('trigger-error-button');
 
         act(() => {
           fireEvent.click(button);
@@ -556,27 +501,23 @@ describe("React Integration Layer Testing", () => {
 
         // Wait for error handling
         await waitFor(() => {
-          const errorCount = screen.getByTestId("error-count").textContent;
-          expect(parseInt(errorCount || "0")).toBeGreaterThanOrEqual(0);
+          const errorCount = screen.getByTestId('error-count').textContent;
+          expect(parseInt(errorCount || '0')).toBeGreaterThanOrEqual(0);
         });
 
         // Component should still be functional after error
-        expect(
-          screen.getByTestId("service-error-component"),
-        ).toBeInTheDocument();
-        expect(screen.getByTestId("trigger-error-button")).toBeInTheDocument();
+        expect(screen.getByTestId('service-error-component')).toBeInTheDocument();
+        expect(screen.getByTestId('trigger-error-button')).toBeInTheDocument();
       },
-      REACT_INTEGRATION_SCENARIOS.errorBoundary.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.errorBoundary.timeoutMs
     );
   });
 
-  describe("Performance Integration", () => {
+  describe('Performance Integration', () => {
     it(
-      "should maintain performance during frequent re-renders",
+      'should maintain performance during frequent re-renders',
       async () => {
-        console.log(
-          "[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders",
-        );
+        console.log('[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.performance;
         const renderTimes: number[] = [];
@@ -595,7 +536,7 @@ describe("React Integration Layer Testing", () => {
 
           const triggerRerender = () => {
             updateCode(
-              `cube([${Math.random() * 10},${Math.random() * 10},${Math.random() * 10}]);`,
+              `cube([${Math.random() * 10},${Math.random() * 10},${Math.random() * 10}]);`
             );
           };
 
@@ -603,10 +544,7 @@ describe("React Integration Layer Testing", () => {
             <div data-testid="performance-test-component">
               <div data-testid="render-count">{renderCount}</div>
               <div data-testid="current-code">{code}</div>
-              <button
-                data-testid="trigger-rerender-button"
-                onClick={triggerRerender}
-              >
+              <button data-testid="trigger-rerender-button" onClick={triggerRerender}>
                 Trigger Rerender
               </button>
             </div>
@@ -616,12 +554,12 @@ describe("React Integration Layer Testing", () => {
         render(
           <MockMatrixServiceProvider>
             <PerformanceTestComponent />
-          </MockMatrixServiceProvider>,
+          </MockMatrixServiceProvider>
         );
 
         // Trigger multiple re-renders
         for (let i = 0; i < scenario.renderCount; i++) {
-          const button = screen.getByTestId("trigger-rerender-button");
+          const button = screen.getByTestId('trigger-rerender-button');
 
           act(() => {
             fireEvent.click(button);
@@ -633,18 +571,15 @@ describe("React Integration Layer Testing", () => {
 
         // Wait for final render
         await waitFor(() => {
-          const renderCount = parseInt(
-            screen.getByTestId("render-count").textContent || "0",
-          );
+          const renderCount = parseInt(screen.getByTestId('render-count').textContent || '0');
           expect(renderCount).toBeGreaterThan(scenario.renderCount);
         });
 
         // Analyze performance
-        const averageRenderTime =
-          renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length;
+        const averageRenderTime = renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length;
         const maxRenderTime = Math.max(...renderTimes);
 
-        console.log("[DEBUG][ReactIntegrationTest] Render performance:", {
+        console.log('[DEBUG][ReactIntegrationTest] Render performance:', {
           averageRenderTime,
           maxRenderTime,
           totalRenders: renderTimes.length,
@@ -654,45 +589,41 @@ describe("React Integration Layer Testing", () => {
         expect(averageRenderTime).toBeLessThan(scenario.maxRenderTime);
         expect(maxRenderTime).toBeLessThan(scenario.maxRenderTime * 2); // Allow some variance
       },
-      REACT_INTEGRATION_SCENARIOS.performance.timeoutMs,
+      REACT_INTEGRATION_SCENARIOS.performance.timeoutMs
     );
   });
 
-  describe("Real Component Integration", () => {
-    it("should integrate StoreConnectedEditor with matrix services", async () => {
-      console.log(
-        "[DEBUG][ReactIntegrationTest] Testing StoreConnectedEditor integration",
-      );
+  describe('Real Component Integration', () => {
+    it('should integrate StoreConnectedEditor with matrix services', async () => {
+      console.log('[DEBUG][ReactIntegrationTest] Testing StoreConnectedEditor integration');
 
       render(
         <MockMatrixServiceProvider>
           <StoreConnectedEditor />
-        </MockMatrixServiceProvider>,
+        </MockMatrixServiceProvider>
       );
 
       // Wait for editor to render
       await waitFor(() => {
-        expect(screen.getByTestId("monaco-editor-mock")).toBeInTheDocument();
+        expect(screen.getByTestId('monaco-editor-mock')).toBeInTheDocument();
       });
 
       // Verify editor displays default code
-      const editor = screen.getByTestId("monaco-editor-mock");
-      expect(editor).toHaveAttribute("data-value", "cube([10,10,10]);");
+      const editor = screen.getByTestId('monaco-editor-mock');
+      expect(editor).toHaveAttribute('data-value', 'cube([10,10,10]);');
 
       // Verify editor status
       expect(screen.getByText(/OpenSCAD Code Editor/)).toBeInTheDocument();
     }, 10000);
 
-    it("should integrate StoreConnectedRenderer with matrix services", async () => {
-      console.log(
-        "[DEBUG][ReactIntegrationTest] Testing StoreConnectedRenderer integration",
-      );
+    it('should integrate StoreConnectedRenderer with matrix services', async () => {
+      console.log('[DEBUG][ReactIntegrationTest] Testing StoreConnectedRenderer integration');
 
       // Set up store with AST data
       useAppStore.setState((state) => {
         state.parsing.ast = [
           {
-            type: "cube",
+            type: 'cube',
             size: [10, 10, 10],
             center: false,
             location: {
@@ -706,16 +637,16 @@ describe("React Integration Layer Testing", () => {
       render(
         <MockMatrixServiceProvider>
           <StoreConnectedRenderer />
-        </MockMatrixServiceProvider>,
+        </MockMatrixServiceProvider>
       );
 
       // Wait for renderer to render
       await waitFor(() => {
-        expect(screen.getByTestId("r3f-canvas")).toBeInTheDocument();
+        expect(screen.getByTestId('r3f-canvas')).toBeInTheDocument();
       });
 
       // Verify 3D visualization panel
-      expect(screen.getByText("3D Visualization")).toBeInTheDocument();
+      expect(screen.getByText('3D Visualization')).toBeInTheDocument();
     }, 10000);
   });
 });

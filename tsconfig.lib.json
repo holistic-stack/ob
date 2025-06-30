@@ -1,28 +1,30 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    // Application build configuration
+    // Library build configuration for production
     "composite": true,
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo-lib",
 
-    // Bundler configuration for Vite
-    "module": "preserve",
+    // TypeScript 5.8+ bundler configuration for Vite
+    "module": "preserve", // TypeScript 5.8+ for modern bundlers
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "emitDeclarationOnly": true,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
 
     // Output configuration
     "outDir": "../../dist/out-tsc",
+    "declarationDir": "../../dist/types",
 
-    // Application-specific types
-    "types": [
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts",
-      "vite/client"
-    ]
+    // Strict emit settings for library
+    "removeComments": true,
+    "stripInternal": true,
+    "noEmitOnError": true,
+
+    // Library-specific types
+    "types": ["node", "vite/client", "@types/three"]
   },
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "exclude": [

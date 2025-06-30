@@ -1419,11 +1419,11 @@ This migration checklist ensures a smooth transition from TypeScript 4.8 to 5.8 
 
 ## Project-Specific Lint Rules and Guidelines
 
-### ESLint Configuration for OpenSCAD-Babylon Project
+### Biome Configuration for OpenSCAD-Babylon Project
 
-This section provides project-specific guidelines for fixing common lint issues in the OpenSCAD-Babylon project.
+This section provides project-specific guidelines for fixing common lint issues in the OpenSCAD-Babylon project using Biome v2.
 
-#### 1. Handling `@typescript-eslint/no-explicit-any`
+#### 1. Handling `noExplicitAny`
 
 **Problem**: Using `any` type defeats TypeScript's type safety.
 
@@ -1472,7 +1472,7 @@ function updateMesh(mesh: Mesh, data: BabylonMeshData): void {
 }
 ```
 
-#### 2. Handling `@typescript-eslint/no-unused-vars`
+#### 2. Handling `noUnusedVariables`
 
 **Problem**: Variables defined but never used.
 
@@ -1496,7 +1496,7 @@ function processNode(_unusedParam: string, usedParam: number): number {
 const { used, _unused } = someObject;
 ```
 
-#### 3. Handling `@typescript-eslint/no-non-null-assertion`
+#### 3. Handling `noExtraNonNullAssertion`
 
 **Problem**: Non-null assertions (`!`) can cause runtime errors.
 
@@ -1535,7 +1535,7 @@ function hasRequiredStructure(node: unknown): node is RequiredNode {
 }
 ```
 
-#### 4. Handling `@typescript-eslint/no-floating-promises`
+#### 4. Handling `noMisusedPromises`
 
 **Problem**: Promises that aren't properly handled.
 
@@ -1567,7 +1567,7 @@ const handleProcess = useCallback(async () => {
 }, [content]);
 ```
 
-#### 5. Handling `@typescript-eslint/no-base-to-string`
+#### 5. Handling `noImplicitToString`
 
 **Problem**: Objects being stringified without proper toString method.
 
@@ -1621,7 +1621,7 @@ import type { Material } from 'three';
 import { Vector3, Mesh, Scene, type Material } from 'three';
 ```
 
-#### 7. Handling `@typescript-eslint/prefer-nullish-coalescing`
+#### 7. Handling `useOptionalChain`
 
 **Problem**: Using `||` instead of `??` for null/undefined checks.
 
@@ -1640,7 +1640,7 @@ function getParameter(params: Record<string, unknown>, key: string, defaultValue
 }
 ```
 
-#### 8. Handling `@typescript-eslint/prefer-optional-chain`
+#### 8. Handling `useOptionalChain`
 
 **Problem**: Verbose null/undefined checking.
 

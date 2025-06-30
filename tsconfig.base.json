@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    // TypeScript 5.8 configuration
+    // TypeScript 5.8+ Base Configuration
+    // Aligned with docs/typescript-guidelines.md and ESLint strict rules
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "preserve", // TypeScript 5.8+ for modern bundlers
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    
-    // Strict type checking
+
+    // Strict type checking - aligned with ESLint rules
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -16,35 +17,61 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    
-    // Module resolution
+    "exactOptionalPropertyTypes": false, // Temporarily disabled due to Vite plugin compatibility issues
+
+    // Additional strict checks for bulletproof-react architecture
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+
+    // Module resolution and imports
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    
-    // Emit
+    "verbatimModuleSyntax": true, // TypeScript 5.8+ for better import/export handling
+    "allowImportingTsExtensions": true,
+
+    // Emit configuration
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "removeComments": false,
     "importHelpers": true,
-    
-    // Advanced
+    "preserveValueImports": false, // Deprecated in 5.8, use verbatimModuleSyntax
+    "importsNotUsedAsValues": "remove", // Deprecated in 5.8, use verbatimModuleSyntax
+
+    // Performance and compatibility
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
+    "skipDefaultLibCheck": true,
+    "incremental": true,
     "noEmit": true,
-    
+
+    // TypeScript 5.8 specific options
+    "moduleDetection": "force",
+
     // Paths and base URL for monorepo
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/components/*": ["./src/components/*"]
     }
   },
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "build",
+    "coverage",
+    "playwright-report",
+    "test-results",
+    "**/*.config.{js,ts,mjs}",
+    "public",
+    ".vite"
   ]
 }

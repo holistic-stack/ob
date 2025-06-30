@@ -9,11 +9,12 @@ import type { StateCreator } from 'zustand';
 import type { AppStore, PerformanceSlice } from '../types/store.types.js';
 
 export type { PerformanceSlice };
+
 import type { PerformanceMetrics } from '../../../shared/types/common.types.js';
 
 export const createPerformanceSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
-  get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1]
+  _get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1]
 ): Omit<PerformanceSlice, keyof AppStore['performance']> => ({
   updateMetrics: (metrics: PerformanceMetrics) => {
     set((state) => {

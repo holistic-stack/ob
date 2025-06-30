@@ -5,16 +5,14 @@
  * as Three.js objects within the React Three Fiber context.
  */
 
-import React, { useEffect, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import type { ASTNode } from "@holistic-stack/openscad-parser";
-import type {
-  RenderingMetrics,
-  Mesh3D,
-} from "../types/renderer.types";
-import type { CameraConfig } from "../../../shared/types/common.types";
-import { renderASTNode } from "../services/primitive-renderer";
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { OrbitControls } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
+import type React from 'react';
+import { useEffect, useRef } from 'react';
+import type { CameraConfig } from '../../../shared/types/common.types';
+import { renderASTNode } from '../services/primitive-renderer';
+import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 
 /**
  * Props for the R3F scene component
@@ -42,7 +40,7 @@ const _measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
  * Async performance measurement utility
  */
 const measureTimeAsync = async <T,>(
-  fn: () => Promise<T>,
+  fn: () => Promise<T>
 ): Promise<{ result: T; duration: number }> => {
   const start = performance.now();
   const result = await fn();
@@ -71,71 +69,63 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
    */
   useEffect(() => {
     const updateScene = async () => {
-      console.log(
-        `[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`,
-      );
+      console.log(`[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`);
 
-      const { result: meshes, duration: renderTime } = await measureTimeAsync(
-        async () => {
-          // Clear existing meshes using proper disposal
-          meshesRef.current.forEach((mesh3D) => {
-            scene.remove(mesh3D.mesh);
-            mesh3D.dispose(); // Use the Mesh3D disposal method
-          });
-          meshesRef.current = [];
+      const { result: meshes, duration: renderTime } = await measureTimeAsync(async () => {
+        // Clear existing meshes using proper disposal
+        meshesRef.current.forEach((mesh3D) => {
+          scene.remove(mesh3D.mesh);
+          mesh3D.dispose(); // Use the Mesh3D disposal method
+        });
+        meshesRef.current = [];
 
-          // Create new meshes from AST nodes using proper service
-          const newMeshes: Mesh3D[] = [];
+        // Create new meshes from AST nodes using proper service
+        const newMeshes: Mesh3D[] = [];
 
-          // Process nodes sequentially to maintain order
-          for (let index = 0; index < astNodes.length; index++) {
-            const node = astNodes[index];
-            if (!node) {
-              console.warn(
-                `[DEBUG][R3FScene] Skipping undefined node at index ${index}`,
-              );
-              continue;
-            }
-
-            try {
-              const result = await renderASTNode(node, index);
-              if (result.success) {
-                const mesh3D = result.data;
-
-                // Position meshes in a grid for multiple objects
-                const gridSize = Math.ceil(Math.sqrt(astNodes.length));
-                const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
-                const z =
-                  Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-                mesh3D.mesh.position.set(x, 0, z);
-
-                scene.add(mesh3D.mesh);
-                newMeshes.push(mesh3D);
-
-                console.log(
-                  `[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`,
-                );
-              } else {
-                console.error(
-                  `[ERROR][R3FScene] Failed to render AST node ${index} (${node.type}):`,
-                  result.error,
-                );
-                onRenderError?.({ message: result.error });
-              }
-            } catch (error) {
-              const errorMessage =
-                error instanceof Error ? error.message : String(error);
-              console.error(
-                `[ERROR][R3FScene] Failed to create mesh for node ${index} (${node.type}):`,
-                errorMessage,
-              );
-              onRenderError?.({ message: errorMessage });
-            }
+        // Process nodes sequentially to maintain order
+        for (let index = 0; index < astNodes.length; index++) {
+          const node = astNodes[index];
+          if (!node) {
+            console.warn(`[DEBUG][R3FScene] Skipping undefined node at index ${index}`);
+            continue;
           }
 
-          return newMeshes;
-        },
-      );
+          try {
+            const result = await renderASTNode(node, index);
+            if (result.success) {
+              const mesh3D = result.data;
+
+              // Position meshes in a grid for multiple objects
+              const gridSize = Math.ceil(Math.sqrt(astNodes.length));
+              const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
+              const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
+              mesh3D.mesh.position.set(x, 0, z);
+
+              scene.add(mesh3D.mesh);
+              newMeshes.push(mesh3D);
+
+              console.log(
+                `[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`
+              );
+            } else {
+              console.error(
+                `[ERROR][R3FScene] Failed to render AST node ${index} (${node.type}):`,
+                result.error
+              );
+              onRenderError?.({ message: result.error });
+            }
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(
+              `[ERROR][R3FScene] Failed to create mesh for node ${index} (${node.type}):`,
+              errorMessage
+            );
+            onRenderError?.({ message: errorMessage });
+          }
+        }
+
+        return newMeshes;
+      });
 
       meshesRef.current = meshes;
 
@@ -144,8 +134,8 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 
       // Update performance metrics
       const memoryUsage =
-        (performance as unknown as { memory?: { usedJSHeapSize: number } })
-          .memory?.usedJSHeapSize ?? 0;
+        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize ?? 0;
       const triangleCount = meshes.reduce((total, mesh3D) => {
         const geometry = mesh3D.mesh.geometry;
         if (geometry.index) {
@@ -177,9 +167,9 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 
     // Call the async function
     void updateScene().catch((error) => {
-      console.error("[ERROR][R3FScene] Failed to update scene:", error);
+      console.error('[ERROR][R3FScene] Failed to update scene:', error);
       onRenderError?.({
-        message: error.message ?? "Unknown scene update error",
+        message: error.message ?? 'Unknown scene update error',
       });
     });
   }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate]);
@@ -198,8 +188,8 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       lastPerformanceUpdate.current = now;
 
       const memoryUsage =
-        (performance as unknown as { memory?: { usedJSHeapSize: number } })
-          .memory?.usedJSHeapSize ?? 0;
+        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize ?? 0;
       const currentMeshes = meshesRef.current;
 
       onPerformanceUpdate?.({
@@ -249,11 +239,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
                 controls.object.position.y,
                 controls.object.position.z,
               ] as const,
-              target: [
-                controls.target.x,
-                controls.target.y,
-                controls.target.z,
-              ] as const,
+              target: [controls.target.x, controls.target.y, controls.target.z] as const,
               zoom: camera.zoom,
               fov: camera.fov,
               near: camera.near,

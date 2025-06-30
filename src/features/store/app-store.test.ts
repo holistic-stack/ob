@@ -5,11 +5,14 @@
  * with functional programming patterns and Result<T,E> error handling.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import type { EditorPosition, EditorSelection, CameraConfig } from '../../shared/types/common.types';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type {
+  CameraConfig,
+  EditorPosition,
+  EditorSelection,
+} from '../../shared/types/common.types';
 import { createAppStore } from './app-store';
 
 let store: ReturnType<typeof createAppStore>;
@@ -23,8 +26,8 @@ describe('App Store', () => {
       debounceConfig: {
         parseDelayMs: 0, // Disable debouncing for tests
         renderDelayMs: 0,
-        saveDelayMs: 0
-      }
+        saveDelayMs: 0,
+      },
     });
   });
 
@@ -282,7 +285,7 @@ describe('App Store', () => {
       const camera = {
         position: [5, 5, 5] as const,
         target: [1, 1, 1] as const,
-        zoom: 1.5
+        zoom: 1.5,
       };
       store.getState().updateCamera(camera);
 
@@ -343,7 +346,7 @@ describe('App Store', () => {
         renderTime: 12,
         parseTime: 5,
         memoryUsage: 25,
-        frameRate: 60
+        frameRate: 60,
       };
       store.getState().updateMetrics(metrics);
 

@@ -5,15 +5,13 @@
  * loads without ERR_BLOCKED_BY_CLIENT or R3F Canvas errors.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from 'vitest';
 
-describe("Import Fix Verification", () => {
-  describe("Performance Metrics Import", () => {
-    it("should use inline measureTime function instead of external import", () => {
+describe('Import Fix Verification', () => {
+  describe('Performance Metrics Import', () => {
+    it('should use inline measureTime function instead of external import', () => {
       // Test that the inline measureTime function works correctly
-      const measureTime = <T,>(
-        fn: () => T,
-      ): { result: T; duration: number } => {
+      const measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
         const start = performance.now();
         const result = fn();
         const end = performance.now();
@@ -22,25 +20,23 @@ describe("Import Fix Verification", () => {
 
       // Mock performance.now to return predictable values
       const performanceSpy = vi
-        .spyOn(performance, "now")
+        .spyOn(performance, 'now')
         .mockReturnValueOnce(100) // Start time
         .mockReturnValueOnce(115); // End time (15ms duration)
 
-      const testFunction = vi.fn(() => "test result");
+      const testFunction = vi.fn(() => 'test result');
       const measurement = measureTime(testFunction);
 
-      expect(measurement.result).toBe("test result");
+      expect(measurement.result).toBe('test result');
       expect(measurement.duration).toBe(15);
       expect(testFunction).toHaveBeenCalledOnce();
 
       performanceSpy.mockRestore();
     });
 
-    it("should handle performance measurement without external dependencies", () => {
+    it('should handle performance measurement without external dependencies', () => {
       // Verify that performance measurement doesn't rely on external imports
-      const measureTime = <T,>(
-        fn: () => T,
-      ): { result: T; duration: number } => {
+      const measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
         const start = performance.now();
         const result = fn();
         const end = performance.now();
@@ -58,62 +54,58 @@ describe("Import Fix Verification", () => {
 
       const measurement = measureTime(testFunction);
 
-      expect(typeof measurement.result).toBe("number");
-      expect(typeof measurement.duration).toBe("number");
+      expect(typeof measurement.result).toBe('number');
+      expect(typeof measurement.duration).toBe('number');
       expect(measurement.duration).toBeGreaterThanOrEqual(0);
       expect(measurement.result).toBe(499500); // Sum of 0 to 999
     });
   });
 
-  describe("R3F Scene Component", () => {
-    it("should import R3F scene component without errors", async () => {
+  describe('R3F Scene Component', () => {
+    it('should import R3F scene component without errors', async () => {
       // Test that the R3F scene component can be imported
-      const { R3FScene } = await import("./r3f-scene");
+      const { R3FScene } = await import('./r3f-scene');
 
       expect(R3FScene).toBeDefined();
-      expect(typeof R3FScene).toBe("function");
+      expect(typeof R3FScene).toBe('function');
     });
 
-    it("should import store-connected renderer without errors", async () => {
+    it('should import store-connected renderer without errors', async () => {
       // Test that the store-connected renderer can be imported
-      const { StoreConnectedRenderer } = await import(
-        "./store-connected-renderer"
-      );
+      const { StoreConnectedRenderer } = await import('./store-connected-renderer');
 
       expect(StoreConnectedRenderer).toBeDefined();
-      expect(typeof StoreConnectedRenderer).toBe("function");
+      expect(typeof StoreConnectedRenderer).toBe('function');
     });
   });
 
-  describe("Three.js Renderer Component", () => {
-    it("should import three-renderer component without blocked client errors", async () => {
+  describe('Three.js Renderer Component', () => {
+    it('should import three-renderer component without blocked client errors', async () => {
       // Test that the three-renderer component can be imported without issues
-      const { ThreeRenderer } = await import("./three-renderer");
+      const { ThreeRenderer } = await import('./three-renderer');
 
       expect(ThreeRenderer).toBeDefined();
-      expect(typeof ThreeRenderer).toBe("function");
+      expect(typeof ThreeRenderer).toBe('function');
     });
 
-    it("should not have external performance metrics dependency", () => {
+    it('should not have external performance metrics dependency', () => {
       // Verify that the component doesn't try to import from blocked paths
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // This should not cause any import errors
       expect(() => {
-        void import("./three-renderer");
+        void import('./three-renderer');
       }).not.toThrow();
 
       // Check that no console errors were logged related to blocked imports
       const importErrors = consoleSpy.mock.calls.filter((call) =>
         call.some(
           (arg) =>
-            typeof arg === "string" &&
-            (arg.includes("ERR_BLOCKED_BY_CLIENT") ||
-              arg.includes("metrics.ts") ||
-              arg.includes("Failed to load")),
-        ),
+            typeof arg === 'string' &&
+            (arg.includes('ERR_BLOCKED_BY_CLIENT') ||
+              arg.includes('metrics.ts') ||
+              arg.includes('Failed to load'))
+        )
       );
 
       expect(importErrors).toHaveLength(0);
@@ -122,26 +114,23 @@ describe("Import Fix Verification", () => {
     });
   });
 
-  describe("Application Integration", () => {
-    it("should import main App component without errors", async () => {
+  describe('Application Integration', () => {
+    it('should import main App component without errors', async () => {
       // Test that the main App component can be imported
-      const AppModule = await import("../../../App");
+      const AppModule = await import('../../../App');
 
       expect(AppModule.default).toBeDefined();
-      expect(typeof AppModule.default).toBe("function");
+      expect(typeof AppModule.default).toBe('function');
     });
 
-    it("should verify all store-connected components are available", async () => {
+    it('should verify all store-connected components are available', async () => {
       // Test that all main components can be imported without issues
-      const [
-        { StoreConnectedEditor },
-        { StoreConnectedRenderer },
-        { R3FScene },
-      ] = await Promise.all([
-        import("../../code-editor/components/store-connected-editor"),
-        import("./store-connected-renderer"),
-        import("./r3f-scene"),
-      ]);
+      const [{ StoreConnectedEditor }, { StoreConnectedRenderer }, { R3FScene }] =
+        await Promise.all([
+          import('../../code-editor/components/store-connected-editor'),
+          import('./store-connected-renderer'),
+          import('./r3f-scene'),
+        ]);
 
       expect(StoreConnectedEditor).toBeDefined();
       expect(StoreConnectedRenderer).toBeDefined();
@@ -149,16 +138,14 @@ describe("Import Fix Verification", () => {
     });
   });
 
-  describe("Error Prevention", () => {
-    it("should not have any blocked client import attempts", () => {
+  describe('Error Prevention', () => {
+    it('should not have any blocked client import attempts', () => {
       // Mock console.error to catch any import-related errors
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // Mock fetch to simulate blocked requests
-      const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(() => {
-        throw new Error("ERR_BLOCKED_BY_CLIENT");
+      const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(() => {
+        throw new Error('ERR_BLOCKED_BY_CLIENT');
       });
 
       // The application should not attempt to fetch external metrics
@@ -169,7 +156,7 @@ describe("Import Fix Verification", () => {
       consoleSpy.mockRestore();
     });
 
-    it("should handle missing ResizeObserver gracefully", () => {
+    it('should handle missing ResizeObserver gracefully', () => {
       // Test that the application handles missing browser APIs gracefully
       const originalResizeObserver = global.ResizeObserver;
 
@@ -192,8 +179,8 @@ describe("Import Fix Verification", () => {
     });
   });
 
-  describe("Performance Measurement Fallbacks", () => {
-    it("should handle performance API unavailability", () => {
+  describe('Performance Measurement Fallbacks', () => {
+    it('should handle performance API unavailability', () => {
       const originalPerformance = global.performance;
 
       // Temporarily remove performance API
@@ -203,14 +190,14 @@ describe("Import Fix Verification", () => {
       expect(() => {
         const fallbackMeasure = () => {
           const start = Date.now();
-          const result = "test";
+          const result = 'test';
           const end = Date.now();
           return { result, duration: end - start };
         };
 
         const measurement = fallbackMeasure();
-        expect(measurement.result).toBe("test");
-        expect(typeof measurement.duration).toBe("number");
+        expect(measurement.result).toBe('test');
+        expect(typeof measurement.duration).toBe('number');
       }).not.toThrow();
 
       // Restore performance API

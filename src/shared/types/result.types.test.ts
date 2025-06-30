@@ -1,23 +1,23 @@
 /**
  * Result Types Test Suite
- * 
+ *
  * Tests for functional error handling types and type guards
  * following TDD methodology with comprehensive coverage.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  type Result,
-  type Option,
-  type ValidationResult,
-  type NetworkResult,
-  type NetworkError,
-  isSuccess,
-  isError,
-  isSome,
-  isNone,
+  type Brand,
   type ComponentId,
-  type Brand
+  isError,
+  isNone,
+  isSome,
+  isSuccess,
+  type NetworkError,
+  type NetworkResult,
+  type Option,
+  type Result,
+  type ValidationResult,
 } from './result.types';
 
 describe('Result Types', () => {
@@ -25,7 +25,7 @@ describe('Result Types', () => {
     it('should create success result correctly', () => {
       const result: Result<string, Error> = {
         success: true,
-        data: 'test value'
+        data: 'test value',
       };
 
       expect(result.success).toBe(true);
@@ -38,7 +38,7 @@ describe('Result Types', () => {
       const error = new Error('test error');
       const result: Result<string, Error> = {
         success: false,
-        error
+        error,
       };
 
       expect(result.success).toBe(false);
@@ -53,11 +53,11 @@ describe('Result Types', () => {
       it('should correctly identify success results', () => {
         const successResult: Result<number, string> = {
           success: true,
-          data: 42
+          data: 42,
         };
 
         expect(isSuccess(successResult)).toBe(true);
-        
+
         if (isSuccess(successResult)) {
           // TypeScript should narrow the type here
           expect(successResult.data).toBe(42);
@@ -67,7 +67,7 @@ describe('Result Types', () => {
       it('should correctly identify error results as not success', () => {
         const errorResult: Result<number, string> = {
           success: false,
-          error: 'test error'
+          error: 'test error',
         };
 
         expect(isSuccess(errorResult)).toBe(false);
@@ -78,11 +78,11 @@ describe('Result Types', () => {
       it('should correctly identify error results', () => {
         const errorResult: Result<number, string> = {
           success: false,
-          error: 'test error'
+          error: 'test error',
         };
 
         expect(isError(errorResult)).toBe(true);
-        
+
         if (isError(errorResult)) {
           // TypeScript should narrow the type here
           expect(errorResult.error).toBe('test error');
@@ -92,7 +92,7 @@ describe('Result Types', () => {
       it('should correctly identify success results as not error', () => {
         const successResult: Result<number, string> = {
           success: true,
-          data: 42
+          data: 42,
         };
 
         expect(isError(successResult)).toBe(false);
@@ -104,7 +104,7 @@ describe('Result Types', () => {
     it('should create Some option correctly', () => {
       const option: Option<string> = {
         some: true,
-        value: 'test value'
+        value: 'test value',
       };
 
       expect(option.some).toBe(true);
@@ -115,7 +115,7 @@ describe('Result Types', () => {
 
     it('should create None option correctly', () => {
       const option: Option<string> = {
-        some: false
+        some: false,
       };
 
       expect(option.some).toBe(false);
@@ -125,11 +125,11 @@ describe('Result Types', () => {
       it('should correctly identify Some options', () => {
         const someOption: Option<number> = {
           some: true,
-          value: 42
+          value: 42,
         };
 
         expect(isSome(someOption)).toBe(true);
-        
+
         if (isSome(someOption)) {
           expect(someOption.value).toBe(42);
         }
@@ -137,7 +137,7 @@ describe('Result Types', () => {
 
       it('should correctly identify None options', () => {
         const noneOption: Option<number> = {
-          some: false
+          some: false,
         };
 
         expect(isNone(noneOption)).toBe(true);
@@ -150,7 +150,7 @@ describe('Result Types', () => {
       it('should handle successful validation', () => {
         const result: ValidationResult<{ name: string }> = {
           success: true,
-          data: { name: 'John' }
+          data: { name: 'John' },
         };
 
         expect(isSuccess(result)).toBe(true);
@@ -162,7 +162,7 @@ describe('Result Types', () => {
       it('should handle validation errors', () => {
         const result: ValidationResult<{ name: string }> = {
           success: false,
-          error: ['Name is required', 'Name must be at least 2 characters']
+          error: ['Name is required', 'Name must be at least 2 characters'],
         };
 
         expect(isError(result)).toBe(true);
@@ -177,7 +177,7 @@ describe('Result Types', () => {
       it('should handle successful network operations', () => {
         const result: NetworkResult<{ id: number }> = {
           success: true,
-          data: { id: 123 }
+          data: { id: 123 },
         };
 
         expect(isSuccess(result)).toBe(true);
@@ -187,12 +187,12 @@ describe('Result Types', () => {
         const networkError: NetworkError = {
           status: 404,
           message: 'Not Found',
-          details: { resource: 'user' }
+          details: { resource: 'user' },
         };
 
         const result: NetworkResult<{ id: number }> = {
           success: false,
-          error: networkError
+          error: networkError,
         };
 
         expect(isError(result)).toBe(true);
@@ -207,7 +207,7 @@ describe('Result Types', () => {
   describe('Branded Types', () => {
     it('should create branded types correctly', () => {
       const componentId: ComponentId = 'comp-123' as ComponentId;
-      
+
       // Branded types should be assignable to their base type
       const baseString: string = componentId;
       expect(baseString).toBe('comp-123');
@@ -216,7 +216,7 @@ describe('Result Types', () => {
     it('should work with generic Brand utility type', () => {
       type CustomId = Brand<string, 'CustomId'>;
       const customId: CustomId = 'custom-456' as CustomId;
-      
+
       expect(customId).toBe('custom-456');
     });
   });

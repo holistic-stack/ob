@@ -1,12 +1,12 @@
 /**
  * Enhanced Matrix Type Definitions
- * 
+ *
  * Comprehensive type definitions for matrix operations with Three.js integration,
  * branded types for type safety, and performance optimization types.
  */
 
 import type { Matrix as MLMatrix } from 'ml-matrix';
-import type { Matrix3, Matrix4, Vector3, Quaternion, Euler } from 'three';
+import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 
 /**
  * Branded types for enhanced type safety
@@ -97,14 +97,30 @@ export interface MatrixDecomposition {
 /**
  * Matrix operation types
  */
-export type MatrixOperation = 
-  | 'add' | 'subtract' | 'multiply' | 'divide'
-  | 'transpose' | 'inverse' | 'pseudoInverse'
-  | 'determinant' | 'trace' | 'rank'
-  | 'eigenvalues' | 'eigenvectors'
-  | 'lu' | 'qr' | 'svd' | 'cholesky'
-  | 'solve' | 'norm' | 'condition'
-  | 'transform' | 'rotate' | 'scale' | 'translate';
+export type MatrixOperation =
+  | 'add'
+  | 'subtract'
+  | 'multiply'
+  | 'divide'
+  | 'transpose'
+  | 'inverse'
+  | 'pseudoInverse'
+  | 'determinant'
+  | 'trace'
+  | 'rank'
+  | 'eigenvalues'
+  | 'eigenvectors'
+  | 'lu'
+  | 'qr'
+  | 'svd'
+  | 'cholesky'
+  | 'solve'
+  | 'norm'
+  | 'condition'
+  | 'transform'
+  | 'rotate'
+  | 'scale'
+  | 'translate';
 
 /**
  * Matrix validation types
@@ -228,7 +244,7 @@ export interface IMatrixTelemetry {
     operation: string,
     duration: number,
     success: boolean,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ) => void;
   generateReport: () => unknown;
 }
@@ -263,7 +279,9 @@ export interface PerformanceReport {
  * Matrix configuration override types
  */
 export interface MatrixConfigOverride {
-  readonly performance?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.performance>;
+  readonly performance?: Partial<
+    typeof import('../config/matrix-config').MATRIX_CONFIG.performance
+  >;
   readonly cache?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.cache>;
   readonly operations?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.operations>;
 }
@@ -292,8 +310,13 @@ export const isValidMatrixSize = (rows: number, cols: number): boolean => {
 };
 
 export const isMatrixOperationResult = <T>(obj: unknown): obj is MatrixOperationResult<T> => {
-  return typeof obj === 'object' && obj !== null &&
-    'result' in obj && 'performance' in obj && 'metadata' in obj;
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'result' in obj &&
+    'performance' in obj &&
+    'metadata' in obj
+  );
 };
 
 /**
@@ -318,7 +341,9 @@ export interface MatrixOperationContext {
 }
 
 export interface MatrixOperationProviderConfig {
-  readonly performance?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.performance>;
+  readonly performance?: Partial<
+    typeof import('../config/matrix-config').MATRIX_CONFIG.performance
+  >;
   readonly cache?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.cache>;
   readonly operations?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.operations>;
 }

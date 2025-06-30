@@ -1,16 +1,16 @@
 /**
  * Browser Debug Test
- * 
+ *
  * Playwright test to debug browser issues including the metrics.ts import problem
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Browser Debug', () => {
   test('should load application without import errors', async ({ page }) => {
     // Listen for console errors
     const consoleErrors: string[] = [];
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       if (msg.type() === 'error') {
         consoleErrors.push(msg.text());
       }
@@ -18,7 +18,7 @@ test.describe('Browser Debug', () => {
 
     // Listen for network failures
     const networkErrors: string[] = [];
-    page.on('response', response => {
+    page.on('response', (response) => {
       if (!response.ok()) {
         networkErrors.push(`${response.status()} ${response.url()}`);
       }
@@ -26,7 +26,7 @@ test.describe('Browser Debug', () => {
 
     // Listen for page errors
     const pageErrors: string[] = [];
-    page.on('pageerror', error => {
+    page.on('pageerror', (error) => {
       pageErrors.push(error.message);
     });
 
@@ -37,14 +37,11 @@ test.describe('Browser Debug', () => {
     await page.waitForLoadState('load');
 
     // Check for specific metrics.ts related errors
-    const metricsErrors = [
-      ...consoleErrors,
-      ...networkErrors,
-      ...pageErrors
-    ].filter(error => 
-      error.includes('metrics.ts') || 
-      error.includes('ERR_BLOCKED_BY_CLIENT') ||
-      error.includes('Failed to resolve')
+    const metricsErrors = [...consoleErrors, ...networkErrors, ...pageErrors].filter(
+      (error) =>
+        error.includes('metrics.ts') ||
+        error.includes('ERR_BLOCKED_BY_CLIENT') ||
+        error.includes('Failed to resolve')
     );
 
     // Log all errors for debugging
@@ -70,7 +67,7 @@ test.describe('Browser Debug', () => {
 
   test('should load unified parser service without errors', async ({ page }) => {
     const consoleMessages: string[] = [];
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       consoleMessages.push(`${msg.type()}: ${msg.text()}`);
     });
 
@@ -78,9 +75,8 @@ test.describe('Browser Debug', () => {
     await page.waitForLoadState('load');
 
     // Look for parser service initialization messages
-    const parserMessages = consoleMessages.filter(msg => 
-      msg.includes('UnifiedParserService') || 
-      msg.includes('OpenSCAD parser')
+    const parserMessages = consoleMessages.filter(
+      (msg) => msg.includes('UnifiedParserService') || msg.includes('OpenSCAD parser')
     );
 
     console.log('Parser Service Messages:', parserMessages);
@@ -91,8 +87,8 @@ test.describe('Browser Debug', () => {
 
   test('should check network requests for TypeScript files', async ({ page }) => {
     const tsRequests: string[] = [];
-    
-    page.on('request', request => {
+
+    page.on('request', (request) => {
       const url = request.url();
       if (url.endsWith('.ts') && !url.includes('node_modules')) {
         tsRequests.push(url);

@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom';
-import createFetchMock from 'vitest-fetch-mock';
 import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { findUpSync } from 'find-up';
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
+import createFetchMock from 'vitest-fetch-mock';
 
 // ============================================================================
 // Browser API Mocks for UI Component Testing
@@ -36,7 +36,7 @@ Object.defineProperty(window, 'CSS', {
 // Mock document.createElementNS for SVG filter tests
 Object.defineProperty(document, 'createElementNS', {
   writable: true,
-  value: vi.fn().mockImplementation((namespace: string, tagName: string) => {
+  value: vi.fn().mockImplementation((_namespace: string, tagName: string) => {
     const element = document.createElement(tagName);
     // Add href property for SVG filter elements
     if (tagName === 'filter') {
@@ -78,7 +78,11 @@ export function resolveWasmPath(urlPath: string): string {
   // Extract filename from URL or path
   let normalizedPath: string;
 
-  if (urlPath.startsWith('http://') || urlPath.startsWith('https://') || urlPath.startsWith('file://')) {
+  if (
+    urlPath.startsWith('http://') ||
+    urlPath.startsWith('https://') ||
+    urlPath.startsWith('file://')
+  ) {
     try {
       const url = new URL(urlPath);
       normalizedPath = url.pathname.split('/').pop() ?? urlPath;
@@ -95,15 +99,16 @@ export function resolveWasmPath(urlPath: string): string {
   console.log(`Resolving WASM file: ${normalizedPath}`);
   console.log(`__dirname: ${__dirname}`);
 
-
   // Strategy 1: Use Node.js module resolution algorithm (most reliable)
   const moduleResolutionStrategies = [
     // Try @holistic-stack/tree-sitter-openscad package
     () => {
       try {
-        console.log(`Attempting @holistic-stack/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`);
+        console.log(
+          `Attempting @holistic-stack/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`
+        );
         const packagePath = resolve.sync('@holistic-stack/tree-sitter-openscad/package.json', {
-          basedir: projectRoot
+          basedir: projectRoot,
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
         console.log(`✅ Strategy 1 found package at: ${packagePath}`);
@@ -120,13 +125,12 @@ export function resolveWasmPath(urlPath: string): string {
       console.log(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
-          basedir: projectRoot
+          basedir: projectRoot,
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
 
         return resolvedWasmPath;
       } catch (_e) {
-
         return null;
       }
     },
@@ -135,7 +139,7 @@ export function resolveWasmPath(urlPath: string): string {
     () => {
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
-          basedir: projectRoot
+          basedir: projectRoot,
         });
         return join(dirname(packagePath), 'lib', normalizedPath);
       } catch {
@@ -147,13 +151,13 @@ export function resolveWasmPath(urlPath: string): string {
     () => {
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
-          basedir: __dirname
+          basedir: __dirname,
         });
         return join(dirname(packagePath), 'debug', normalizedPath);
       } catch {
         return null;
       }
-    }
+    },
   ];
 
   // Strategy 2: Use find-up to locate package.json files and resolve from there
@@ -161,19 +165,24 @@ export function resolveWasmPath(urlPath: string): string {
     // Find @holistic-stack/tree-sitter-openscad package.json using matcher function
     () => {
       try {
-        console.log(`Attempting @holistic-stack/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`);
-        const packageJson = findUpSync((directory: string) => {
-          const packagePath = join(directory, 'package.json');
-          try {
-            const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
-            return pkg.name === '@holistic-stack/tree-sitter-openscad' ? packagePath : undefined;
-          } catch {
-            return undefined;
+        console.log(
+          `Attempting @holistic-stack/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`
+        );
+        const packageJson = findUpSync(
+          (directory: string) => {
+            const packagePath = join(directory, 'package.json');
+            try {
+              const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+              return pkg.name === '@holistic-stack/tree-sitter-openscad' ? packagePath : undefined;
+            } catch {
+              return undefined;
+            }
+          },
+          {
+            cwd: projectRoot,
+            type: 'file',
           }
-        }, {
-          cwd: projectRoot,
-          type: 'file'
-        });
+        );
 
         if (packageJson) {
           const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
@@ -182,7 +191,6 @@ export function resolveWasmPath(urlPath: string): string {
         }
         return null;
       } catch (_e) {
-
         return null;
       }
     },
@@ -191,18 +199,21 @@ export function resolveWasmPath(urlPath: string): string {
     () => {
       try {
         console.log(`Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`);
-        const packageJson = findUpSync((directory: string) => {
-          const packagePath = join(directory, 'package.json');
-          try {
-            const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
-            return pkg.name === 'web-tree-sitter' ? packagePath : undefined;
-          } catch {
-            return undefined;
+        const packageJson = findUpSync(
+          (directory: string) => {
+            const packagePath = join(directory, 'package.json');
+            try {
+              const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+              return pkg.name === 'web-tree-sitter' ? packagePath : undefined;
+            } catch {
+              return undefined;
+            }
+          },
+          {
+            cwd: __dirname,
+            type: 'file',
           }
-        }, {
-          cwd: __dirname,
-          type: 'file'
-        });
+        );
 
         if (packageJson) {
           const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
@@ -211,10 +222,9 @@ export function resolveWasmPath(urlPath: string): string {
         }
         return null;
       } catch (_e) {
-
         return null;
       }
-    }
+    },
   ];
 
   // Try all strategies in order of preference
@@ -226,23 +236,24 @@ export function resolveWasmPath(urlPath: string): string {
       try {
         // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
-        console.log(`✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`);
+        console.log(
+          `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`
+        );
         return `file://${resolvedPath}`;
       } catch {
         // File doesn't exist, continue to next strategy
         console.log(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
-        continue;
       }
     }
   }
 
-  throw new Error(`WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`);
+  throw new Error(
+    `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`
+  );
 }
 
-
-
 // Configure vitest-fetch-mock to handle WASM files with better URL handling
-vi.mocked(fetch).mockImplementation(url => {
+vi.mocked(fetch).mockImplementation((url) => {
   console.log('using local fetch mock', url);
   console.log('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
@@ -307,11 +318,12 @@ export async function initializeCSGForTests(): Promise<void> {
       fromMesh: () => ({
         union: () => ({ toMesh: () => null }),
         subtract: () => ({ toMesh: () => null }),
-        intersect: () => ({ toMesh: () => null })
-      })
+        intersect: () => ({ toMesh: () => null }),
+      }),
     };
 
-    (globalThis as typeof globalThis & { __MOCK_THREE_CSG__?: typeof mockCSG }).__MOCK_THREE_CSG__ = mockCSG;
+    (globalThis as typeof globalThis & { __MOCK_THREE_CSG__?: typeof mockCSG }).__MOCK_THREE_CSG__ =
+      mockCSG;
 
     console.log('[DEBUG] ✅ Mock Three.js CSG initialized for testing');
   } catch (error) {
@@ -332,19 +344,19 @@ export function createTestScene(): { scene: unknown; camera: unknown; renderer: 
     add: vi.fn(),
     remove: vi.fn(),
     dispose: vi.fn(),
-    children: []
+    children: [],
   };
 
   const camera = {
     position: { set: vi.fn(), x: 0, y: 0, z: 0 },
     lookAt: vi.fn(),
-    updateProjectionMatrix: vi.fn()
+    updateProjectionMatrix: vi.fn(),
   };
 
   const renderer = {
     render: vi.fn(),
     dispose: vi.fn(),
-    setSize: vi.fn()
+    setSize: vi.fn(),
   };
 
   return { scene, camera, renderer };
@@ -354,7 +366,7 @@ export function createTestScene(): { scene: unknown; camera: unknown; renderer: 
  * Dispose test scene resources properly
  * Following R3F testing patterns
  */
-export function disposeTestScene(scene: unknown, camera: unknown, renderer: unknown): void {
+export function disposeTestScene(scene: unknown, _camera: unknown, renderer: unknown): void {
   console.log('[DEBUG] Disposing test scene resources');
 
   const sceneObj = scene as { dispose?: () => void };

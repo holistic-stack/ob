@@ -5,5 +5,5 @@
  * AST processing, and functional error handling patterns.
  */
 
-export * from './types';
 export * from './services';
+export * from './types';

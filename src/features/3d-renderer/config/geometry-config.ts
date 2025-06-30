@@ -1,6 +1,6 @@
 /**
  * Geometry Configuration
- * 
+ *
  * Centralized configuration for geometric operations, constants, and thresholds
  * following bulletproof-react configuration patterns.
  */
@@ -15,7 +15,7 @@ export const GEOMETRY_CONFIG = {
     /** General tolerance for floating point comparisons */
     tolerance: 1e-10,
     /** Angle threshold for geometric operations */
-    angleThreshold: Math.PI / 180
+    angleThreshold: Math.PI / 180,
   },
 
   /**
@@ -29,7 +29,7 @@ export const GEOMETRY_CONFIG = {
     /** Back polygon classification */
     back: 2,
     /** Spanning polygon classification */
-    spanning: 3
+    spanning: 3,
   },
 
   /**
@@ -43,7 +43,7 @@ export const GEOMETRY_CONFIG = {
     /** Render time threshold in milliseconds */
     renderTimeThreshold: 16, // <16ms requirement
     /** Maximum triangle count for single geometry */
-    maxTriangles: 100000
+    maxTriangles: 100000,
   },
 
   /**
@@ -55,7 +55,7 @@ export const GEOMETRY_CONFIG = {
     /** Minimum buffer size */
     minSize: 1024,
     /** Maximum buffer size */
-    maxSize: 1024 * 1024 * 10 // 10MB
+    maxSize: 1024 * 1024 * 10, // 10MB
   },
 
   /**
@@ -67,8 +67,8 @@ export const GEOMETRY_CONFIG = {
     /** Enable shadow casting for CSG meshes */
     enableShadows: true,
     /** Enable shadow receiving for CSG meshes */
-    enableShadowReceiving: true
-  }
+    enableShadowReceiving: true,
+  },
 } as const;
 
 /**

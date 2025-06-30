@@ -5,26 +5,21 @@
  * OpenSCAD AST rendering, CSG operations, and performance monitoring.
  */
 
-import React, { Suspense, useRef, useCallback, useState, useEffect } from 'react';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { Bounds, Grid, OrbitControls, Stats } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stats, Grid, Bounds } from '@react-three/drei';
+import type React from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-
-import type {
-  RendererProps,
-  Scene3DConfig,
-  Mesh3D,
-  RenderingMetrics,
-  RenderingError
-} from '../types/renderer.types';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import { tryCatch } from '../../../shared/utils/functional/result';
 import type {
-  ASTNode,
-  CubeNode as _OpenSCADCubeNode,
-  SphereNode as _OpenSCADSphereNode,
-  CylinderNode as _OpenSCADCylinderNode
-} from '@holistic-stack/openscad-parser';
-import { success as _success, error as _error, tryCatch } from '../../../shared/utils/functional/result';
+  Mesh3D,
+  RendererProps,
+  RenderingError,
+  RenderingMetrics,
+  Scene3DConfig,
+} from '../types/renderer.types';
 
 // Type-safe interfaces for AST node parameters using proper OpenSCAD parser types
 interface _CubeNodeParams {
@@ -47,6 +42,7 @@ interface _CylinderNodeParams {
   height?: number;
   fn?: number;
 }
+
 import { renderASTNode } from '../services/primitive-renderer';
 
 /**
@@ -72,7 +68,7 @@ const DEFAULT_CONFIG: Scene3DConfig = {
   ambientLightIntensity: 0.4,
   directionalLightIntensity: 0.8,
   maxMeshes: 1000,
-  maxTriangles: 100000
+  maxTriangles: 100000,
 };
 
 /**
@@ -95,109 +91,121 @@ const SceneContent: React.FC<{
   /**
    * Render OpenSCAD primitive from AST node
    */
-  const renderPrimitive = useCallback((node: ASTNode, index: number): Mesh3D | null => {
-    const result = tryCatch(() => {
-      let geometry: THREE.BufferGeometry;
+  const _renderPrimitive = useCallback(
+    (node: ASTNode, index: number): Mesh3D | null => {
+      const result = tryCatch(
+        () => {
+          let geometry: THREE.BufferGeometry;
 
-      switch (node.type) {
-        case 'cube': {
-          const cubeNode = node;
-          const size = cubeNode.size;
-          // Handle ParameterValue type - extract numeric values
-          const sizeValue = typeof size === 'number' ? size : 1;
-          const [x, y, z] = Array.isArray(size) ?
-            (size as number[]).map(v => typeof v === 'number' ? v : 1) :
-            [sizeValue, sizeValue, sizeValue];
-          geometry = new THREE.BoxGeometry(x, y, z);
-          break;
+          switch (node.type) {
+            case 'cube': {
+              const cubeNode = node;
+              const size = cubeNode.size;
+              // Handle ParameterValue type - extract numeric values
+              const sizeValue = typeof size === 'number' ? size : 1;
+              const [x, y, z] = Array.isArray(size)
+                ? (size as number[]).map((v) => (typeof v === 'number' ? v : 1))
+                : [sizeValue, sizeValue, sizeValue];
+              geometry = new THREE.BoxGeometry(x, y, z);
+              break;
+            }
+            case 'sphere': {
+              const sphereNode = node;
+              const radius =
+                typeof sphereNode.radius === 'number'
+                  ? sphereNode.radius
+                  : typeof sphereNode.diameter === 'number'
+                    ? sphereNode.diameter / 2
+                    : 1;
+              const segments = typeof sphereNode.fn === 'number' ? sphereNode.fn : 32;
+              geometry = new THREE.SphereGeometry(radius, segments, segments);
+              break;
+            }
+            case 'cylinder': {
+              const cylinderNode = node;
+              const radius = typeof cylinderNode.r === 'number' ? cylinderNode.r : 1;
+              const height = typeof cylinderNode.h === 'number' ? cylinderNode.h : 1;
+              const segments = typeof cylinderNode.$fn === 'number' ? cylinderNode.$fn : 32;
+              geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
+              break;
+            }
+            default:
+              // Default to a small cube for unknown types
+              geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+          }
+
+          const material = new THREE.MeshStandardMaterial({
+            color: '#ffffff',
+            metalness: 0.1,
+            roughness: 0.8,
+          });
+
+          const mesh = new THREE.Mesh(geometry, material);
+
+          // Apply transformations if present
+          if ('translate' in node && node.translate) {
+            const [x, y, z] = node.translate as [number, number, number];
+            mesh.position.set(x, y, z);
+          }
+
+          if ('rotate' in node && node.rotate) {
+            const [x, y, z] = node.rotate as [number, number, number];
+            mesh.rotation.set(
+              THREE.MathUtils.degToRad(x),
+              THREE.MathUtils.degToRad(y),
+              THREE.MathUtils.degToRad(z)
+            );
+          }
+
+          if ('scale' in node && node.scale) {
+            const scale = node.scale;
+            const [x = 1, y = 1, z = 1] = Array.isArray(scale) ? scale : [scale, scale, scale];
+            mesh.scale.set(x, y, z);
+          }
+
+          // Calculate bounding box
+          geometry.computeBoundingBox();
+          const boundingBox = geometry.boundingBox ?? new THREE.Box3();
+
+          const metadata = {
+            id: `mesh-${index}`,
+            nodeType: node.type || 'unknown',
+            nodeIndex: index,
+            triangleCount: geometry.attributes.position
+              ? geometry.attributes.position.count / 3
+              : 0,
+            vertexCount: geometry.attributes.position ? geometry.attributes.position.count : 0,
+            boundingBox,
+            material: 'standard',
+            color: '#ffffff',
+            opacity: 1,
+            visible: true,
+          };
+
+          return {
+            mesh,
+            metadata,
+            dispose: () => {
+              geometry.dispose();
+              material.dispose();
+            },
+          };
+        },
+        (err) => {
+          const renderError: RenderingError = {
+            type: 'geometry',
+            message: `Failed to render ${node.type}: ${err instanceof Error ? err.message : String(err)}`,
+            nodeType: node.type,
+          };
+          onRenderError?.(renderError);
+          return null;
         }
-        case 'sphere': {
-          const sphereNode = node;
-          const radius = typeof sphereNode.radius === 'number' ? sphereNode.radius :
-                        (typeof sphereNode.diameter === 'number' ? sphereNode.diameter / 2 : 1);
-          const segments = typeof sphereNode.fn === 'number' ? sphereNode.fn : 32;
-          geometry = new THREE.SphereGeometry(radius, segments, segments);
-          break;
-        }
-        case 'cylinder': {
-          const cylinderNode = node;
-          const radius = typeof cylinderNode.r === 'number' ? cylinderNode.r : 1;
-          const height = typeof cylinderNode.h === 'number' ? cylinderNode.h : 1;
-          const segments = typeof cylinderNode.$fn === 'number' ? cylinderNode.$fn : 32;
-          geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
-          break;
-        }
-        default:
-          // Default to a small cube for unknown types
-          geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-      }
+      );
 
-      const material = new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        metalness: 0.1,
-        roughness: 0.8
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-
-      // Apply transformations if present
-      if ('translate' in node && node.translate) {
-        const [x, y, z] = node.translate as [number, number, number];
-        mesh.position.set(x, y, z);
-      }
-
-      if ('rotate' in node && node.rotate) {
-        const [x, y, z] = node.rotate as [number, number, number];
-        mesh.rotation.set(
-          THREE.MathUtils.degToRad(x),
-          THREE.MathUtils.degToRad(y),
-          THREE.MathUtils.degToRad(z)
-        );
-      }
-
-      if ('scale' in node && node.scale) {
-        const scale = node.scale;
-        const [x = 1, y = 1, z = 1] = Array.isArray(scale) ? scale : [scale, scale, scale];
-        mesh.scale.set(x, y, z);
-      }
-
-      // Calculate bounding box
-      geometry.computeBoundingBox();
-      const boundingBox = geometry.boundingBox ?? new THREE.Box3();
-
-      const metadata = {
-        id: `mesh-${index}`,
-        nodeType: node.type || 'unknown',
-        nodeIndex: index,
-        triangleCount: geometry.attributes.position ? geometry.attributes.position.count / 3 : 0,
-        vertexCount: geometry.attributes.position ? geometry.attributes.position.count : 0,
-        boundingBox,
-        material: 'standard',
-        color: '#ffffff',
-        opacity: 1,
-        visible: true
-      };
-
-      return {
-        mesh,
-        metadata,
-        dispose: () => {
-          geometry.dispose();
-          material.dispose();
-        }
-      };
-    }, (err) => {
-      const renderError: RenderingError = {
-        type: 'geometry',
-        message: `Failed to render ${node.type}: ${err instanceof Error ? err.message : String(err)}`,
-        nodeType: node.type
-      };
-      onRenderError?.(renderError);
-      return null;
-    });
-
-    return result.success ? result.data : null;
-  }, [onRenderError]);
+      return result.success ? result.data : null;
+    },
+    [onRenderError]
+  );
 
   /**
    * Render all AST nodes
@@ -212,9 +220,9 @@ const SceneContent: React.FC<{
     setIsRendering(true);
 
     const start = performance.now();
-    
+
     // Clear existing meshes
-    meshes.forEach(meshWrapper => {
+    meshes.forEach((meshWrapper) => {
       scene.remove(meshWrapper.mesh);
       meshWrapper.dispose();
     });
@@ -228,19 +236,25 @@ const SceneContent: React.FC<{
         console.warn(`[DEBUG][ThreeRenderer] Skipping undefined node at index ${i}`);
         continue;
       }
-      
+
       try {
         const result = await renderASTNode(node, i);
-        
+
         if (result.success) {
           scene.add(result.data.mesh);
           newMeshes.push(result.data);
         } else {
-          console.error(`[ERROR][ThreeRenderer] Failed to render node ${i} (${node.type}):`, result.error);
+          console.error(
+            `[ERROR][ThreeRenderer] Failed to render node ${i} (${node.type}):`,
+            result.error
+          );
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`[ERROR][ThreeRenderer] Failed to create mesh for node ${i} (${node.type}):`, errorMessage);
+        console.error(
+          `[ERROR][ThreeRenderer] Failed to create mesh for node ${i} (${node.type}):`,
+          errorMessage
+        );
       }
     }
 
@@ -261,11 +275,11 @@ const SceneContent: React.FC<{
       vertexCount: newMeshes.reduce((sum, m) => sum + m.metadata.vertexCount, 0),
       drawCalls: newMeshes.length,
       textureMemory: 0,
-      bufferMemory: newMeshes.length * 1024 // Rough estimate
+      bufferMemory: newMeshes.length * 1024, // Rough estimate
     };
 
     onPerformanceUpdate?.(metrics);
-  }, [ast, meshes, scene, renderPrimitive, onRenderComplete, onPerformanceUpdate]);
+  }, [ast, meshes, scene, onRenderComplete, onPerformanceUpdate]);
 
   /**
    * Frame loop for performance monitoring
@@ -292,7 +306,7 @@ const SceneContent: React.FC<{
           vertexCount: meshes.reduce((sum, m) => sum + m.metadata.vertexCount, 0),
           drawCalls: meshes.length,
           textureMemory: 0,
-          bufferMemory: meshes.length * 1024
+          bufferMemory: meshes.length * 1024,
         };
         onPerformanceUpdate(metrics);
       }
@@ -311,7 +325,7 @@ const SceneContent: React.FC<{
    */
   useEffect(() => {
     return () => {
-      meshes.forEach(meshWrapper => {
+      meshes.forEach((meshWrapper) => {
         scene.remove(meshWrapper.mesh);
         meshWrapper.dispose();
       });
@@ -358,9 +372,7 @@ const SceneContent: React.FC<{
 
       {/* Bounds for auto-fitting camera */}
       <Bounds fit clip observe margin={1.2}>
-        <group>
-          {/* Meshes are added directly to scene in renderAST */}
-        </group>
+        <group>{/* Meshes are added directly to scene in renderAST */}</group>
       </Bounds>
 
       {/* Performance stats in development */}
@@ -381,7 +393,7 @@ const LoadingFallback: React.FC = () => (
       transform: 'translate(-50%, -50%)',
       color: '#ffffff',
       fontSize: '16px',
-      fontFamily: 'monospace'
+      fontFamily: 'monospace',
     }}
   >
     Initializing 3D Renderer...
@@ -400,34 +412,45 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
   onRenderComplete,
   onRenderError,
   onCameraChange: _onCameraChange,
-  onPerformanceUpdate
+  onPerformanceUpdate,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   /**
    * Handle canvas creation
    */
-  const handleCreated = useCallback(({ gl, scene: _scene, camera: threeCamera }: { gl: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.Camera }) => {
-    // Configure renderer
-    gl.setClearColor(config.backgroundColor);
-    gl.shadowMap.enabled = config.enableShadows;
-    gl.shadowMap.type = THREE.PCFSoftShadowMap;
-    gl.outputColorSpace = THREE.SRGBColorSpace;
-    gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1;
+  const handleCreated = useCallback(
+    ({
+      gl,
+      scene: _scene,
+      camera: threeCamera,
+    }: {
+      gl: THREE.WebGLRenderer;
+      scene: THREE.Scene;
+      camera: THREE.Camera;
+    }) => {
+      // Configure renderer
+      gl.setClearColor(config.backgroundColor);
+      gl.shadowMap.enabled = config.enableShadows;
+      gl.shadowMap.type = THREE.PCFSoftShadowMap;
+      gl.outputColorSpace = THREE.SRGBColorSpace;
+      gl.toneMapping = THREE.ACESFilmicToneMapping;
+      gl.toneMappingExposure = 1;
 
-    // Configure camera
-    if (threeCamera instanceof THREE.PerspectiveCamera) {
-      threeCamera.position.set(camera.position[0], camera.position[1], camera.position[2]);
-      threeCamera.lookAt(camera.target[0], camera.target[1], camera.target[2]);
-      threeCamera.fov = camera.fov;
-      threeCamera.near = camera.near;
-      threeCamera.far = camera.far;
-      threeCamera.updateProjectionMatrix();
-    }
+      // Configure camera
+      if (threeCamera instanceof THREE.PerspectiveCamera) {
+        threeCamera.position.set(camera.position[0], camera.position[1], camera.position[2]);
+        threeCamera.lookAt(camera.target[0], camera.target[1], camera.target[2]);
+        threeCamera.fov = camera.fov;
+        threeCamera.near = camera.near;
+        threeCamera.far = camera.far;
+        threeCamera.updateProjectionMatrix();
+      }
 
-    console.log('[INIT][ThreeRenderer] Three.js renderer initialized');
-  }, [config, camera]);
+      console.log('[INIT][ThreeRenderer] Three.js renderer initialized');
+    },
+    [config, camera]
+  );
 
   return (
     <div
@@ -441,12 +464,12 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
           position: camera.position,
           fov: camera.fov,
           near: camera.near,
-          far: camera.far
+          far: camera.far,
         }}
         gl={{
           antialias: config.enableAntialiasing,
           alpha: true,
-          powerPreference: config.enableHardwareAcceleration ? 'high-performance' : 'default'
+          powerPreference: config.enableHardwareAcceleration ? 'high-performance' : 'default',
         }}
         shadows={config.enableShadows}
         onCreated={handleCreated}

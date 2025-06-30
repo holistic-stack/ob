@@ -1,37 +1,36 @@
 /**
  * Store Selectors Test Suite
- * 
+ *
  * Tests for store selectors following TDD methodology
  * with comprehensive coverage of all selector functions.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { AppState } from '../types/store.types';
-import type { CameraConfig } from '../../../shared/types/common.types';
 import {
-  selectEditorCode,
-  selectEditorIsDirty,
-  selectParsingErrors,
-  selectParsingHasErrors,
-  selectRenderingMeshCount,
-  selectRenderingHasErrors,
-  selectPerformanceStatus,
+  selectAllErrors,
   selectApplicationStatus,
-  selectIsCodeEmpty,
   selectCanParse,
   selectCanRender,
-  selectHasUnsavedChanges,
-  selectIsProcessing,
-  selectHasAnyErrors,
-  selectTotalErrors,
-  selectAllErrors,
-  selectLastActivity,
+  selectDebugInfo,
+  selectEditorCode,
+  selectEditorIsDirty,
   selectEditorStats,
-  selectParsingStats,
-  selectRenderingStats,
-  selectPerformanceStats,
   selectFeatureFlags,
-  selectDebugInfo
+  selectHasAnyErrors,
+  selectHasUnsavedChanges,
+  selectIsCodeEmpty,
+  selectIsProcessing,
+  selectLastActivity,
+  selectParsingErrors,
+  selectParsingHasErrors,
+  selectParsingStats,
+  selectPerformanceStats,
+  selectPerformanceStatus,
+  selectRenderingHasErrors,
+  selectRenderingMeshCount,
+  selectRenderingStats,
+  selectTotalErrors,
 } from './store.selectors';
 
 describe('Store Selectors', () => {
@@ -44,7 +43,7 @@ describe('Store Selectors', () => {
         cursorPosition: { line: 1, column: 8 },
         selection: null,
         isDirty: true,
-        lastSaved: new Date('2024-01-01T10:00:00Z')
+        lastSaved: new Date('2024-01-01T10:00:00Z'),
       },
       parsing: {
         ast: [{ type: 'cube' } as any],
@@ -52,7 +51,7 @@ describe('Store Selectors', () => {
         warnings: ['Warning: deprecated syntax'],
         isLoading: false,
         lastParsed: new Date('2024-01-01T10:01:00Z'),
-        parseTime: 15.5
+        parseTime: 15.5,
       },
       rendering: {
         meshes: [{} as any, {} as any],
@@ -70,18 +69,18 @@ describe('Store Selectors', () => {
           enableControls: true,
           enableAutoRotate: false,
           autoRotateSpeed: 1,
-        }
+        },
       },
       performance: {
         metrics: {
           renderTime: 12.5,
           parseTime: 8.2,
           memoryUsage: 45.7,
-          frameRate: 60
+          frameRate: 60,
         },
         isMonitoring: true,
         violations: [],
-        lastUpdated: new Date('2024-01-01T10:03:00Z')
+        lastUpdated: new Date('2024-01-01T10:03:00Z'),
       },
       config: {
         debounceMs: 300,
@@ -93,9 +92,9 @@ describe('Store Selectors', () => {
           enableMetrics: true,
           maxRenderTime: 16,
           enableWebGL2: true,
-          enableHardwareAcceleration: true
-        }
-      }
+          enableHardwareAcceleration: true,
+        },
+      },
     };
   });
 
@@ -128,88 +127,106 @@ describe('Store Selectors', () => {
   describe('Computed Selectors', () => {
     it('should determine if code is empty', () => {
       expect(selectIsCodeEmpty(mockState)).toBe(false);
-      
+
       const emptyState = { ...mockState, editor: { ...mockState.editor, code: '' } };
       expect(selectIsCodeEmpty(emptyState)).toBe(true);
-      
+
       const whitespaceState = { ...mockState, editor: { ...mockState.editor, code: '   \n  ' } };
       expect(selectIsCodeEmpty(whitespaceState)).toBe(true);
     });
 
     it('should determine if can parse', () => {
       expect(selectCanParse(mockState)).toBe(true);
-      
+
       const loadingState = { ...mockState, parsing: { ...mockState.parsing, isLoading: true } };
       expect(selectCanParse(loadingState)).toBe(false);
-      
+
       const emptyCodeState = { ...mockState, editor: { ...mockState.editor, code: '' } };
       expect(selectCanParse(emptyCodeState)).toBe(false);
-      
-      const disabledState = { ...mockState, config: { ...mockState.config, enableRealTimeParsing: false } };
+
+      const disabledState = {
+        ...mockState,
+        config: { ...mockState.config, enableRealTimeParsing: false },
+      };
       expect(selectCanParse(disabledState)).toBe(false);
     });
 
     it('should determine if can render', () => {
       expect(selectCanRender(mockState)).toBe(true);
-      
-      const renderingState = { ...mockState, rendering: { ...mockState.rendering, isRendering: true } };
+
+      const renderingState = {
+        ...mockState,
+        rendering: { ...mockState.rendering, isRendering: true },
+      };
       expect(selectCanRender(renderingState)).toBe(false);
-      
+
       const noASTState = { ...mockState, parsing: { ...mockState.parsing, ast: [] } };
       expect(selectCanRender(noASTState)).toBe(false);
-      
+
       const errorsState = { ...mockState, parsing: { ...mockState.parsing, errors: ['error'] } };
       expect(selectCanRender(errorsState)).toBe(false);
-      
-      const disabledState = { ...mockState, config: { ...mockState.config, enableRealTimeRendering: false } };
+
+      const disabledState = {
+        ...mockState,
+        config: { ...mockState.config, enableRealTimeRendering: false },
+      };
       expect(selectCanRender(disabledState)).toBe(false);
     });
 
     it('should determine if has unsaved changes', () => {
       expect(selectHasUnsavedChanges(mockState)).toBe(true);
-      
+
       const savedState = { ...mockState, editor: { ...mockState.editor, isDirty: false } };
       expect(selectHasUnsavedChanges(savedState)).toBe(false);
     });
 
     it('should determine if processing', () => {
       expect(selectIsProcessing(mockState)).toBe(false);
-      
+
       const parsingState = { ...mockState, parsing: { ...mockState.parsing, isLoading: true } };
       expect(selectIsProcessing(parsingState)).toBe(true);
-      
-      const renderingState = { ...mockState, rendering: { ...mockState.rendering, isRendering: true } };
+
+      const renderingState = {
+        ...mockState,
+        rendering: { ...mockState.rendering, isRendering: true },
+      };
       expect(selectIsProcessing(renderingState)).toBe(true);
     });
 
     it('should determine if has any errors', () => {
       expect(selectHasAnyErrors(mockState)).toBe(false);
-      
-      const parseErrorState = { ...mockState, parsing: { ...mockState.parsing, errors: ['parse error'] } };
+
+      const parseErrorState = {
+        ...mockState,
+        parsing: { ...mockState.parsing, errors: ['parse error'] },
+      };
       expect(selectHasAnyErrors(parseErrorState)).toBe(true);
-      
-      const renderErrorState = { ...mockState, rendering: { ...mockState.rendering, renderErrors: ['render error'] } };
+
+      const renderErrorState = {
+        ...mockState,
+        rendering: { ...mockState.rendering, renderErrors: ['render error'] },
+      };
       expect(selectHasAnyErrors(renderErrorState)).toBe(true);
     });
 
     it('should count total errors', () => {
       expect(selectTotalErrors(mockState)).toBe(0);
-      
+
       const errorState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['error1', 'error2'] },
-        rendering: { ...mockState.rendering, renderErrors: ['error3'] }
+        rendering: { ...mockState.rendering, renderErrors: ['error3'] },
       };
       expect(selectTotalErrors(errorState)).toBe(3);
     });
 
     it('should get all errors', () => {
       expect(selectAllErrors(mockState)).toEqual([]);
-      
+
       const errorState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['parse error'] },
-        rendering: { ...mockState.rendering, renderErrors: ['render error'] }
+        rendering: { ...mockState.rendering, renderErrors: ['render error'] },
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);
     });
@@ -218,13 +235,13 @@ describe('Store Selectors', () => {
       const lastActivity = selectLastActivity(mockState);
       expect(lastActivity).toBeInstanceOf(Date);
       expect(lastActivity?.getTime()).toBe(new Date('2024-01-01T10:03:00Z').getTime());
-      
+
       const noActivityState = {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
         rendering: { ...mockState.rendering, lastRendered: null },
-        performance: { ...mockState.performance, lastUpdated: null }
+        performance: { ...mockState.performance, lastUpdated: null },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
     });
@@ -240,8 +257,8 @@ describe('Store Selectors', () => {
         ...mockState,
         performance: {
           ...mockState.performance,
-          metrics: { ...mockState.performance.metrics, renderTime: 20 } // > 16ms threshold
-        }
+          metrics: { ...mockState.performance.metrics, renderTime: 20 }, // > 16ms threshold
+        },
       };
       expect(selectPerformanceStatus(warningState)).toBe('warning');
     });
@@ -251,8 +268,8 @@ describe('Store Selectors', () => {
         ...mockState,
         performance: {
           ...mockState.performance,
-          metrics: { ...mockState.performance.metrics, renderTime: 35 } // > 32ms (2x threshold)
-        }
+          metrics: { ...mockState.performance.metrics, renderTime: 35 }, // > 32ms (2x threshold)
+        },
       };
       expect(selectPerformanceStatus(criticalState)).toBe('critical');
     });

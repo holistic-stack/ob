@@ -1,23 +1,23 @@
 /**
  * AST Restructuring Service
- * 
+ *
  * Service for post-processing flat AST structures from the OpenSCAD parser
  * to reconstruct proper hierarchical parent-child relationships for boolean operations.
  */
 
 import type {
   ASTNode,
-  UnionNode,
+  CubeNode,
+  CylinderNode,
   DifferenceNode,
   IntersectionNode,
-  TranslateNode,
   RotateNode,
   ScaleNode,
-  CubeNode,
   SphereNode,
-  CylinderNode,
+  TranslateNode,
+  UnionNode,
 } from '@holistic-stack/openscad-parser';
-import type { Result} from '../../../shared/utils/functional/result';
+import type { Result } from '../../../shared/utils/functional/result';
 import { tryCatch } from '../../../shared/utils/functional/result';
 
 /**
@@ -35,7 +35,7 @@ export interface ASTRestructuringConfig {
 const DEFAULT_CONFIG: ASTRestructuringConfig = {
   enableLogging: true,
   maxDepth: 10,
-  enableSourceLocationAnalysis: true
+  enableSourceLocationAnalysis: true,
 };
 
 /**
@@ -97,10 +97,7 @@ const isNodeInsideCSGBlock = (childNode: ASTNode, csgNode: ASTNode): boolean => 
   const parentEnd = csgNode.location.end;
 
   // Child must be completely within parent's line range
-  const isWithinLineRange = (
-    childStart.line > parentStart.line &&
-    childEnd.line < parentEnd.line
-  );
+  const isWithinLineRange = childStart.line > parentStart.line && childEnd.line < parentEnd.line;
 
   // Child should be indented relative to parent (indicating block nesting)
   const isProperlyIndented = childStart.column > parentStart.column;
@@ -128,15 +125,13 @@ const isNodeInsideTransformBlock = (childNode: ASTNode, transformNode: ASTNode):
   const parentEnd = transformNode.location.end;
 
   // For transform operations, child can be on the same line as opening but must be after the opening brace
-  const isAfterParentStart = (
+  const isAfterParentStart =
     childStart.line > parentStart.line ||
-    (childStart.line === parentStart.line && childStart.column > parentStart.column)
-  );
+    (childStart.line === parentStart.line && childStart.column > parentStart.column);
 
-  const isBeforeParentEnd = (
+  const isBeforeParentEnd =
     childEnd.line < parentEnd.line ||
-    (childEnd.line === parentEnd.line && childEnd.column < parentEnd.column)
-  );
+    (childEnd.line === parentEnd.line && childEnd.column < parentEnd.column);
 
   return isAfterParentStart && isBeforeParentEnd;
 };
@@ -154,15 +149,13 @@ const isNodeContainedWithin = (childNode: ASTNode, parentNode: ASTNode): boolean
   const parentStart = parentNode.location.start;
   const parentEnd = parentNode.location.end;
 
-  const isAfterParentStart = (
+  const isAfterParentStart =
     childStart.line > parentStart.line ||
-    (childStart.line === parentStart.line && childStart.column > parentStart.column)
-  );
+    (childStart.line === parentStart.line && childStart.column > parentStart.column);
 
-  const isBeforeParentEnd = (
+  const isBeforeParentEnd =
     childEnd.line < parentEnd.line ||
-    (childEnd.line === parentEnd.line && childEnd.column < parentEnd.column)
-  );
+    (childEnd.line === parentEnd.line && childEnd.column < parentEnd.column);
 
   return isAfterParentStart && isBeforeParentEnd;
 };
@@ -185,7 +178,9 @@ const findDirectChildrenForNode = (
 
   if (locationBasedChildren.length > 0) {
     if (config.enableLogging) {
-      console.log(`[DEBUG][ASTRestructuringService] Found ${locationBasedChildren.length} children via source location analysis for ${parentNode.type}`);
+      console.log(
+        `[DEBUG][ASTRestructuringService] Found ${locationBasedChildren.length} children via source location analysis for ${parentNode.type}`
+      );
     }
     return locationBasedChildren;
   }
@@ -195,7 +190,9 @@ const findDirectChildrenForNode = (
     const proximityBasedChildren = findChildrenByProximity(parentNode, allNodes, config);
     if (proximityBasedChildren.length > 0) {
       if (config.enableLogging) {
-        console.log(`[DEBUG][ASTRestructuringService] Found ${proximityBasedChildren.length} children via proximity analysis for ${parentNode.type}`);
+        console.log(
+          `[DEBUG][ASTRestructuringService] Found ${proximityBasedChildren.length} children via proximity analysis for ${parentNode.type}`
+        );
       }
       return proximityBasedChildren;
     }
@@ -228,7 +225,10 @@ const findChildrenBySourceLocation = (
   for (const potentialParent of potentialChildren) {
     if (isCSGNode(potentialParent) || isTransformNode(potentialParent)) {
       for (const potentialChild of potentialChildren) {
-        if (potentialChild !== potentialParent && isNodeInsideBlock(potentialChild, potentialParent)) {
+        if (
+          potentialChild !== potentialParent &&
+          isNodeInsideBlock(potentialChild, potentialParent)
+        ) {
           indirectChildren.add(potentialChild);
         }
       }
@@ -236,11 +236,13 @@ const findChildrenBySourceLocation = (
   }
 
   // Return only direct children (not children of other children)
-  const directChildren = potentialChildren.filter(node => !indirectChildren.has(node));
+  const directChildren = potentialChildren.filter((node) => !indirectChildren.has(node));
 
   if (config.enableLogging && directChildren.length > 0) {
-    directChildren.forEach(child => {
-      console.log(`[DEBUG][ASTRestructuringService] Found direct child ${child.type} for parent ${parentNode.type} via source location`);
+    directChildren.forEach((child) => {
+      console.log(
+        `[DEBUG][ASTRestructuringService] Found direct child ${child.type} for parent ${parentNode.type} via source location`
+      );
     });
   }
 
@@ -263,7 +265,7 @@ const findChildrenByProximity = (
   const parentLine = parentNode.location.start.line;
   const proximityThreshold = 5; // Lines within 5 lines of the CSG operation
 
-  const nearbyPrimitives = allNodes.filter(node => {
+  const nearbyPrimitives = allNodes.filter((node) => {
     if (node === parentNode || !isPrimitiveNode(node) || !node.location) {
       return false;
     }
@@ -286,8 +288,10 @@ const findChildrenByProximity = (
   const selectedChildren = nearbyPrimitives.slice(0, maxChildren);
 
   if (config.enableLogging && selectedChildren.length > 0) {
-    selectedChildren.forEach(child => {
-      console.log(`[DEBUG][ASTRestructuringService] Found child ${child.type} for parent ${parentNode.type} via proximity analysis`);
+    selectedChildren.forEach((child) => {
+      console.log(
+        `[DEBUG][ASTRestructuringService] Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
+      );
     });
   }
 
@@ -310,7 +314,9 @@ const restructureCSGNode = (
   let children: ASTNode[] = [];
   if (hasChildren(csgNode) && csgNode.children.length > 0) {
     if (config.enableLogging) {
-      console.log(`[DEBUG][ASTRestructuringService] ${csgNode.type} already has ${csgNode.children.length} children from parser, preserving them`);
+      console.log(
+        `[DEBUG][ASTRestructuringService] ${csgNode.type} already has ${csgNode.children.length} children from parser, preserving them`
+      );
     }
     children = csgNode.children;
   } else {
@@ -320,16 +326,19 @@ const restructureCSGNode = (
     // If no children found via location analysis, try to find primitives that should belong to this CSG operation
     // This handles the case where the parser doesn't correctly process block contents
     if (children.length === 0 && config.enableSourceLocationAnalysis) {
-      const potentialChildren = allNodes.filter(node =>
-        isPrimitiveNode(node) &&
-        node.location &&
-        csgNode.location &&
-        // Look for primitives that are close to this CSG operation
-        Math.abs(node.location.start.line - csgNode.location.start.line) <= 3
+      const potentialChildren = allNodes.filter(
+        (node) =>
+          isPrimitiveNode(node) &&
+          node.location &&
+          csgNode.location &&
+          // Look for primitives that are close to this CSG operation
+          Math.abs(node.location.start.line - csgNode.location.start.line) <= 3
       );
 
       if (potentialChildren.length > 0 && config.enableLogging) {
-        console.log(`[DEBUG][ASTRestructuringService] Found ${potentialChildren.length} potential children for ${csgNode.type} via proximity analysis`);
+        console.log(
+          `[DEBUG][ASTRestructuringService] Found ${potentialChildren.length} potential children for ${csgNode.type} via proximity analysis`
+        );
         children = potentialChildren;
       }
     }
@@ -338,11 +347,13 @@ const restructureCSGNode = (
   // Create new node with proper children
   const restructuredNode = {
     ...csgNode,
-    children
+    children,
   };
 
   if (config.enableLogging) {
-    console.log(`[DEBUG][ASTRestructuringService] ${csgNode.type} now has ${children.length} children`);
+    console.log(
+      `[DEBUG][ASTRestructuringService] ${csgNode.type} now has ${children.length} children`
+    );
   }
 
   return restructuredNode;
@@ -364,7 +375,9 @@ const restructureTransformNode = (
   let children: ASTNode[] = [];
   if (hasChildren(transformNode) && transformNode.children.length > 0) {
     if (config.enableLogging) {
-      console.log(`[DEBUG][ASTRestructuringService] ${transformNode.type} already has ${transformNode.children.length} children from parser, preserving them`);
+      console.log(
+        `[DEBUG][ASTRestructuringService] ${transformNode.type} already has ${transformNode.children.length} children from parser, preserving them`
+      );
     }
     children = transformNode.children;
   } else {
@@ -373,7 +386,7 @@ const restructureTransformNode = (
   }
 
   // Recursively restructure children if they are CSG nodes
-  const restructuredChildren = children.map(child => {
+  const restructuredChildren = children.map((child) => {
     if (isCSGNode(child)) {
       return restructureCSGNode(child, allNodes, config);
     }
@@ -383,11 +396,13 @@ const restructureTransformNode = (
   // Create new node with proper children
   const restructuredNode = {
     ...transformNode,
-    children: restructuredChildren
+    children: restructuredChildren,
   };
 
   if (config.enableLogging) {
-    console.log(`[DEBUG][ASTRestructuringService] ${transformNode.type} now has ${restructuredChildren.length} children`);
+    console.log(
+      `[DEBUG][ASTRestructuringService] ${transformNode.type} now has ${restructuredChildren.length} children`
+    );
   }
 
   return restructuredNode;
@@ -407,7 +422,7 @@ const getTopLevelNodes = (
   for (const parentNode of allNodes) {
     if (isCSGNode(parentNode) || isTransformNode(parentNode)) {
       const children = findDirectChildrenForNode(parentNode, allNodes, config);
-      children.forEach(child => childNodes.add(child));
+      children.forEach((child) => childNodes.add(child));
     }
   }
 
@@ -432,42 +447,49 @@ export const restructureAST = (
   ast: readonly ASTNode[],
   config: Partial<ASTRestructuringConfig> = {}
 ): Result<readonly ASTNode[], string> => {
-  return tryCatch(() => {
-    const finalConfig = { ...DEFAULT_CONFIG, ...config };
+  return tryCatch(
+    () => {
+      const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
-    if (finalConfig.enableLogging) {
-      console.log(`[INIT][ASTRestructuringService] Restructuring AST with ${ast.length} nodes`);
-    }
-
-    // If AST is empty or has only one node, no restructuring needed
-    if (ast.length <= 1) {
       if (finalConfig.enableLogging) {
-        console.log(`[DEBUG][ASTRestructuringService] AST too small for restructuring, returning as-is`);
+        console.log(`[INIT][ASTRestructuringService] Restructuring AST with ${ast.length} nodes`);
       }
-      return ast;
-    }
 
-    // Get top-level nodes (nodes that are not children of other nodes)
-    const topLevelNodes = getTopLevelNodes(ast, finalConfig);
-
-    // Restructure each top-level node
-    const restructuredNodes = topLevelNodes.map(node => {
-      if (isTransformNode(node)) {
-        return restructureTransformNode(node, ast, finalConfig);
-      } else if (isCSGNode(node)) {
-        return restructureCSGNode(node, ast, finalConfig);
-      } else {
-        // Primitive nodes don't need restructuring
-        return node;
+      // If AST is empty or has only one node, no restructuring needed
+      if (ast.length <= 1) {
+        if (finalConfig.enableLogging) {
+          console.log(
+            `[DEBUG][ASTRestructuringService] AST too small for restructuring, returning as-is`
+          );
+        }
+        return ast;
       }
-    });
 
-    if (finalConfig.enableLogging) {
-      console.log(`[DEBUG][ASTRestructuringService] Restructuring complete: ${restructuredNodes.length} top-level nodes`);
-    }
+      // Get top-level nodes (nodes that are not children of other nodes)
+      const topLevelNodes = getTopLevelNodes(ast, finalConfig);
 
-    return Object.freeze(restructuredNodes);
-  }, (err) => `AST restructuring failed: ${err instanceof Error ? err.message : String(err)}`);
+      // Restructure each top-level node
+      const restructuredNodes = topLevelNodes.map((node) => {
+        if (isTransformNode(node)) {
+          return restructureTransformNode(node, ast, finalConfig);
+        } else if (isCSGNode(node)) {
+          return restructureCSGNode(node, ast, finalConfig);
+        } else {
+          // Primitive nodes don't need restructuring
+          return node;
+        }
+      });
+
+      if (finalConfig.enableLogging) {
+        console.log(
+          `[DEBUG][ASTRestructuringService] Restructuring complete: ${restructuredNodes.length} top-level nodes`
+        );
+      }
+
+      return Object.freeze(restructuredNodes);
+    },
+    (err) => `AST restructuring failed: ${err instanceof Error ? err.message : String(err)}`
+  );
 };
 
 /**
@@ -478,6 +500,6 @@ export const createASTRestructuringService = (config?: Partial<ASTRestructuringC
 
   return {
     restructure: (ast: readonly ASTNode[]) => restructureAST(ast, finalConfig),
-    config: finalConfig
+    config: finalConfig,
   };
 };

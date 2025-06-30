@@ -4,7 +4,11 @@ import { Vector3 } from 'three';
  * Represents a 3D vector.
  */
 export class Vector {
-  constructor(public x = 0, public y = 0, public z = 0) {}
+  constructor(
+    public x = 0,
+    public y = 0,
+    public z = 0
+  ) {}
 
   copy(v: Vector | Vector3): Vector {
     this.x = v.x;

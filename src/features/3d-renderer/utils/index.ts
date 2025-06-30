@@ -5,27 +5,24 @@
  * following bulletproof-react patterns.
  */
 
-// Backward compatibility for CSG class and legacy utility classes
-export { CSG, CSGCoreService, Vertex, Plane, Polygon, Node } from '../services/csg-core.service';
-
-// Pure utility exports
-export * from './Vector';
-export * from './NBuf';
-export * from './geometry-utils';
-export * from './matrix-adapters';
-
-// Re-export types for backward compatibility
-export type {
-  VertexData,
-  PlaneData,
-  PolygonData,
-  BSPNodeData,
-  GeometricPrimitive,
-  BufferType
-} from '../types/geometry.types';
-
 // Re-export config for convenience
 export { GEOMETRY_CONFIG } from '../config/geometry-config';
+// Backward compatibility for CSG class and legacy utility classes
+export { CSG, CSGCoreService, Node, Plane, Polygon, Vertex } from '../services/csg-core.service';
+// Re-export types for backward compatibility
+export type {
+  BSPNodeData,
+  BufferType,
+  GeometricPrimitive,
+  PlaneData,
+  PolygonData,
+  VertexData,
+} from '../types/geometry.types';
+export * from './geometry-utils';
+export * from './matrix-adapters';
+export * from './NBuf';
+// Pure utility exports
+export * from './Vector';
 
 // Legacy class exports - these will be removed in future versions
 // Use the new service-based approach instead

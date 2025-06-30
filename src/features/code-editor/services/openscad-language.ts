@@ -1,13 +1,13 @@
 /**
  * OpenSCAD Language Configuration for Monaco Editor
- * 
+ *
  * Comprehensive language definition for OpenSCAD syntax highlighting,
  * auto-completion, and language features in Monaco Editor.
  */
 
 import * as monaco from 'monaco-editor';
-import type { OpenSCADLanguageConfig } from '../types/editor.types';
 import { tryCatch } from '../../../shared/utils/functional/result';
+import type { OpenSCADLanguageConfig } from '../types/editor.types';
 
 /**
  * OpenSCAD language configuration
@@ -15,59 +15,146 @@ import { tryCatch } from '../../../shared/utils/functional/result';
 export const OPENSCAD_LANGUAGE_CONFIG: OpenSCADLanguageConfig = {
   keywords: [
     // Control structures
-    'if', 'else', 'for', 'intersection_for', 'let', 'assign',
+    'if',
+    'else',
+    'for',
+    'intersection_for',
+    'let',
+    'assign',
     // Module definition
-    'module', 'function', 'use', 'include',
+    'module',
+    'function',
+    'use',
+    'include',
     // Special variables
-    'undef', 'true', 'false',
+    'undef',
+    'true',
+    'false',
     // Echo and assert
-    'echo', 'assert'
+    'echo',
+    'assert',
   ],
   operators: [
-    '=', '==', '!=', '<', '<=', '>', '>=',
-    '+', '-', '*', '/', '%', '^',
-    '&&', '||', '!',
-    '?', ':',
-    '[', ']', '(', ')', '{', '}',
-    ',', ';'
+    '=',
+    '==',
+    '!=',
+    '<',
+    '<=',
+    '>',
+    '>=',
+    '+',
+    '-',
+    '*',
+    '/',
+    '%',
+    '^',
+    '&&',
+    '||',
+    '!',
+    '?',
+    ':',
+    '[',
+    ']',
+    '(',
+    ')',
+    '{',
+    '}',
+    ',',
+    ';',
   ],
   builtinFunctions: [
     // Math functions
-    'abs', 'acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'exp', 'floor',
-    'ln', 'log', 'max', 'min', 'pow', 'rands', 'round', 'sign', 'sin', 'sqrt', 'tan',
+    'abs',
+    'acos',
+    'asin',
+    'atan',
+    'atan2',
+    'ceil',
+    'cos',
+    'exp',
+    'floor',
+    'ln',
+    'log',
+    'max',
+    'min',
+    'pow',
+    'rands',
+    'round',
+    'sign',
+    'sin',
+    'sqrt',
+    'tan',
     // String functions
-    'str', 'len', 'search', 'substr',
+    'str',
+    'len',
+    'search',
+    'substr',
     // Vector functions
-    'concat', 'cross', 'norm', 'normalize',
+    'concat',
+    'cross',
+    'norm',
+    'normalize',
     // List functions
-    'reverse', 'sort',
+    'reverse',
+    'sort',
     // Type functions
-    'is_undef', 'is_bool', 'is_num', 'is_string', 'is_list'
+    'is_undef',
+    'is_bool',
+    'is_num',
+    'is_string',
+    'is_list',
   ],
   builtinModules: [
     // 2D primitives
-    'circle', 'square', 'polygon', 'text', 'import',
+    'circle',
+    'square',
+    'polygon',
+    'text',
+    'import',
     // 3D primitives
-    'cube', 'sphere', 'cylinder', 'polyhedron', 'surface',
+    'cube',
+    'sphere',
+    'cylinder',
+    'polyhedron',
+    'surface',
     // Transformations
-    'translate', 'rotate', 'scale', 'resize', 'mirror', 'multmatrix',
-    'color', 'offset', 'hull', 'minkowski',
+    'translate',
+    'rotate',
+    'scale',
+    'resize',
+    'mirror',
+    'multmatrix',
+    'color',
+    'offset',
+    'hull',
+    'minkowski',
     // Boolean operations
-    'union', 'difference', 'intersection',
+    'union',
+    'difference',
+    'intersection',
     // Extrusion
-    'linear_extrude', 'rotate_extrude',
+    'linear_extrude',
+    'rotate_extrude',
     // Projection
     'projection',
     // Children
-    'children'
+    'children',
   ],
   constants: [
     // Mathematical constants
-    'PI', 'E',
+    'PI',
+    'E',
     // Special values
-    '$fa', '$fs', '$fn', '$t', '$vpr', '$vpt', '$vpd', '$vpf',
-    '$children'
-  ]
+    '$fa',
+    '$fs',
+    '$fn',
+    '$t',
+    '$vpr',
+    '$vpt',
+    '$vpd',
+    '$vpf',
+    '$children',
+  ],
 };
 
 /**
@@ -76,33 +163,33 @@ export const OPENSCAD_LANGUAGE_CONFIG: OpenSCADLanguageConfig = {
 export const MONACO_LANGUAGE_CONFIG: monaco.languages.LanguageConfiguration = {
   comments: {
     lineComment: '//',
-    blockComment: ['/*', '*/']
+    blockComment: ['/*', '*/'],
   },
   brackets: [
     ['{', '}'],
     ['[', ']'],
-    ['(', ')']
+    ['(', ')'],
   ],
   autoClosingPairs: [
     { open: '{', close: '}' },
     { open: '[', close: ']' },
     { open: '(', close: ')' },
     { open: '"', close: '"' },
-    { open: "'", close: "'" }
+    { open: "'", close: "'" },
   ],
   surroundingPairs: [
     { open: '{', close: '}' },
     { open: '[', close: ']' },
     { open: '(', close: ')' },
     { open: '"', close: '"' },
-    { open: "'", close: "'" }
+    { open: "'", close: "'" },
   ],
   folding: {
     markers: {
-      start: new RegExp('^\\s*//\\s*#?region\\b'),
-      end: new RegExp('^\\s*//\\s*#?endregion\\b')
-    }
-  }
+      start: /^\s*\/\/\s*#?region\b/,
+      end: /^\s*\/\/\s*#?endregion\b/,
+    },
+  },
 };
 
 /**
@@ -125,15 +212,18 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
   tokenizer: {
     root: [
       // Identifiers and keywords
-      [/[a-z_$][\w$]*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@builtinFunctions': 'predefined',
-          '@builtinModules': 'type',
-          '@constants': 'constant',
-          '@default': 'identifier'
-        }
-      }],
+      [
+        /[a-z_$][\w$]*/,
+        {
+          cases: {
+            '@keywords': 'keyword',
+            '@builtinFunctions': 'predefined',
+            '@builtinModules': 'type',
+            '@constants': 'constant',
+            '@default': 'identifier',
+          },
+        },
+      ],
 
       // Whitespace
       { include: '@whitespace' },
@@ -141,12 +231,15 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
       // Delimiters and operators
       [/[{}()[\]]/, '@brackets'],
       [/[<>](?!@symbols)/, '@brackets'],
-      [/@symbols/, {
-        cases: {
-          '@operators': 'operator',
-          '@default': ''
-        }
-      }],
+      [
+        /@symbols/,
+        {
+          cases: {
+            '@operators': 'operator',
+            '@default': '',
+          },
+        },
+      ],
 
       // Numbers
       [/\d*\.\d+([eE][+-]?\d+)?/, 'number.float'],
@@ -157,27 +250,27 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
       [/[;,.]/, 'delimiter'],
 
       // Strings
-      [/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-terminated string
+      [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-terminated string
       [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
 
       // Characters
       [/'[^\\']'/, 'string'],
       [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
-      [/'/, 'string.invalid']
+      [/'/, 'string.invalid'],
     ],
 
     comment: [
       [/[^/*]+/, 'comment'],
-      [/\/\*/, 'comment', '@push'],    // nested comment
+      [/\/\*/, 'comment', '@push'], // nested comment
       [/\*\//, 'comment', '@pop'],
-      [/[/*]/, 'comment']
+      [/[/*]/, 'comment'],
     ],
 
     string: [
       [/[^\\"]+/, 'string'],
       [/@escapes/, 'string.escape'],
       [/\\./, 'string.escape.invalid'],
-      [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
+      [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
     ],
 
     whitespace: [
@@ -192,25 +285,29 @@ export const MONACO_TOKENIZER: monaco.languages.IMonarchLanguage = {
  * Register OpenSCAD language with Monaco Editor
  */
 export const registerOpenSCADLanguage = (monaco: typeof import('monaco-editor')) => {
-  return tryCatch(() => {
-    // Register the language
-    monaco.languages.register({
-      id: 'openscad',
-      extensions: ['.scad'],
-      aliases: ['OpenSCAD', 'openscad'],
-      mimetypes: ['text/x-openscad']
-    });
+  return tryCatch(
+    () => {
+      // Register the language
+      monaco.languages.register({
+        id: 'openscad',
+        extensions: ['.scad'],
+        aliases: ['OpenSCAD', 'openscad'],
+        mimetypes: ['text/x-openscad'],
+      });
 
-    // Set language configuration
-    monaco.languages.setLanguageConfiguration('openscad', MONACO_LANGUAGE_CONFIG);
+      // Set language configuration
+      monaco.languages.setLanguageConfiguration('openscad', MONACO_LANGUAGE_CONFIG);
 
-    // Set tokenizer for syntax highlighting
-    monaco.languages.setMonarchTokensProvider('openscad', MONACO_TOKENIZER);
+      // Set tokenizer for syntax highlighting
+      monaco.languages.setMonarchTokensProvider('openscad', MONACO_TOKENIZER);
 
-    console.log('[INIT][OpenSCADLanguage] OpenSCAD language registered successfully');
-    
-    return undefined;
-  }, (err) => `Failed to register OpenSCAD language: ${err instanceof Error ? err.message : String(err)}`);
+      console.log('[INIT][OpenSCADLanguage] OpenSCAD language registered successfully');
+
+      return undefined;
+    },
+    (err) =>
+      `Failed to register OpenSCAD language: ${err instanceof Error ? err.message : String(err)}`
+  );
 };
 
 /**
@@ -223,67 +320,71 @@ export const createOpenSCADCompletionProvider = (): monaco.languages.CompletionI
       startLineNumber: position.lineNumber,
       endLineNumber: position.lineNumber,
       startColumn: word.startColumn,
-      endColumn: word.endColumn
+      endColumn: word.endColumn,
     };
 
     const suggestions: monaco.languages.CompletionItem[] = [];
 
     // Add keyword suggestions
-    OPENSCAD_LANGUAGE_CONFIG.keywords.forEach(keyword => {
+    OPENSCAD_LANGUAGE_CONFIG.keywords.forEach((keyword) => {
       suggestions.push({
         label: keyword,
         kind: monaco.languages.CompletionItemKind.Keyword,
         insertText: keyword,
-        range
+        range,
       });
     });
 
     // Add builtin function suggestions
-    OPENSCAD_LANGUAGE_CONFIG.builtinFunctions.forEach(func => {
+    OPENSCAD_LANGUAGE_CONFIG.builtinFunctions.forEach((func) => {
       suggestions.push({
         label: func,
         kind: monaco.languages.CompletionItemKind.Function,
         insertText: `${func}()`,
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range
+        range,
       });
     });
 
     // Add builtin module suggestions
-    OPENSCAD_LANGUAGE_CONFIG.builtinModules.forEach(module => {
+    OPENSCAD_LANGUAGE_CONFIG.builtinModules.forEach((module) => {
       suggestions.push({
         label: module,
         kind: monaco.languages.CompletionItemKind.Module,
         insertText: `${module}()`,
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range
+        range,
       });
     });
 
     // Add constant suggestions
-    OPENSCAD_LANGUAGE_CONFIG.constants.forEach(constant => {
+    OPENSCAD_LANGUAGE_CONFIG.constants.forEach((constant) => {
       suggestions.push({
         label: constant,
         kind: monaco.languages.CompletionItemKind.Constant,
         insertText: constant,
-        range
+        range,
       });
     });
 
     return { suggestions };
-  }
+  },
 });
 
 /**
  * Register OpenSCAD completion provider
  */
 export const registerOpenSCADCompletionProvider = (monaco: typeof import('monaco-editor')) => {
-  return tryCatch(() => {
-    const provider = createOpenSCADCompletionProvider();
-    const disposable = monaco.languages.registerCompletionItemProvider('openscad', provider);
-    
-    console.log('[INIT][OpenSCADLanguage] OpenSCAD completion provider registered successfully');
-    
-    return disposable;
-  }, (err) => `Failed to register OpenSCAD completion provider: ${err instanceof Error ? err.message : String(err)}`);
+  return tryCatch(
+    () => {
+      const provider = createOpenSCADCompletionProvider();
+      const disposable = monaco.languages.registerCompletionItemProvider('openscad', provider);
+
+      console.log('[INIT][OpenSCADLanguage] OpenSCAD completion provider registered successfully');
+
+      return disposable;
+    },
+    (err) =>
+      `Failed to register OpenSCAD completion provider: ${err instanceof Error ? err.message : String(err)}`
+  );
 };

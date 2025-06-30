@@ -5,7 +5,7 @@
  * following bulletproof-react type organization patterns.
  */
 
-import type { Vector } from "../utils/Vector";
+import type { Vector } from '../utils/Vector';
 
 /**
  * Shared data interface for polygons
@@ -59,7 +59,7 @@ export interface PlaneOperations {
     coplanarFront: PolygonData[],
     coplanarBack: PolygonData[],
     front: PolygonData[],
-    back: PolygonData[],
+    back: PolygonData[]
   ): void;
 }
 
@@ -150,11 +150,7 @@ export interface CSGOperations {
 /**
  * Geometric primitive types
  */
-export type GeometricPrimitive =
-  | VertexData
-  | PlaneData
-  | PolygonData
-  | BSPNodeData;
+export type GeometricPrimitive = VertexData | PlaneData | PolygonData | BSPNodeData;
 
 /**
  * Buffer types
@@ -164,35 +160,25 @@ export type BufferType = BufferData3D | BufferData2D;
 /**
  * Classification types for BSP operations
  */
-export type BSPClassification = "coplanar" | "front" | "back" | "spanning";
+export type BSPClassification = 'coplanar' | 'front' | 'back' | 'spanning';
 
 /**
  * Type guards for geometric primitives
  */
 export const isVertexData = (obj: unknown): obj is VertexData => {
-  return Boolean(
-    obj &&
-      typeof obj === "object" &&
-      "pos" in obj &&
-      "normal" in obj &&
-      "uv" in obj,
-  );
+  return Boolean(obj && typeof obj === 'object' && 'pos' in obj && 'normal' in obj && 'uv' in obj);
 };
 
 export const isPlaneData = (obj: unknown): obj is PlaneData => {
-  return Boolean(
-    obj && typeof obj === "object" && "normal" in obj && "w" in obj,
-  );
+  return Boolean(obj && typeof obj === 'object' && 'normal' in obj && 'w' in obj);
 };
 
 export const isPolygonData = (obj: unknown): obj is PolygonData => {
-  return Boolean(
-    obj && typeof obj === "object" && "vertices" in obj && "plane" in obj,
-  );
+  return Boolean(obj && typeof obj === 'object' && 'vertices' in obj && 'plane' in obj);
 };
 
 export const isBSPNodeData = (obj: unknown): obj is BSPNodeData => {
-  return Boolean(obj && typeof obj === "object" && "polygons" in obj);
+  return Boolean(obj && typeof obj === 'object' && 'polygons' in obj);
 };
 
 /**

@@ -1,10 +1,11 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
-import path from "path";
-import react from "@vitejs/plugin-react";
+
+import path from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isDevelopment = mode === "development";
+  const _isDevelopment = mode === 'development';
 
   return {
     plugins: [
@@ -14,55 +15,45 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     optimizeDeps: {
-      include: [
-        "zustand",
-        "zustand/middleware",
-        "immer",
-        "monaco-editor",
-        "@monaco-editor/react",
-      ],
+      include: ['zustand', 'zustand/middleware', 'immer', 'monaco-editor', '@monaco-editor/react'],
     },
     build: {
-      outDir: "dist",
+      outDir: 'dist',
       sourcemap: true,
       // Increase chunk size warning limit for large dependencies
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
-        input: "src/main.tsx",
+        input: 'src/main.tsx',
         output: {
           // Manual chunk splitting for better caching and loading
           manualChunks: {
             // Monaco Editor - large code editor dependency
-            monaco: ["monaco-editor", "@monaco-editor/react"],
+            monaco: ['monaco-editor', '@monaco-editor/react'],
             // Three.js ecosystem - 3D rendering (excluding @types packages)
-            three: ["three", "@react-three/fiber", "@react-three/drei"],
+            three: ['three', '@react-three/fiber', '@react-three/drei'],
             // CSG and parsing libraries
-            parsing: [
-              "web-tree-sitter",
-              "@holistic-stack/openscad-parser",
-              "three-csg-ts",
-            ],
+            parsing: ['web-tree-sitter', '@holistic-stack/openscad-parser', 'three-csg-ts'],
             // React ecosystem
-            "react-vendor": ["react", "react-dom"],
+            'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ["zustand", "clsx", "class-variance-authority"],
+            utils: ['zustand', 'clsx', 'class-variance-authority'],
           },
         },
       },
     },
     test: {
       globals: true,
-      environment: "jsdom",
-      include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-      exclude: ["node_modules/**", "dist/**", "e2e/**"],
-      setupFiles: ["./src/vitest-setup.ts"],
+      environment: 'jsdom',
+      include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+      exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
+      setupFiles: ['./src/vitest-setup.ts'],
       testTimeout: 1000, // Longer timeout for CSG2 operations
       hookTimeout: 1000, // Longer timeout for setup hooks
-      reporters: "verbose",
+      reporters: 'verbose',
     },
   };
 });

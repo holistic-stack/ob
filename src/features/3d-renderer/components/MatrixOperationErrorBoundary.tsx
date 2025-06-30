@@ -1,12 +1,11 @@
 /**
  * Matrix Operation Error Boundary
- * 
+ *
  * React error boundary for matrix operations with graceful degradation,
  * error reporting, and recovery mechanisms following bulletproof-react patterns.
  */
 
-import type { ErrorInfo, ReactNode } from 'react';
-import React, { Component } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import type { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 
 /**
@@ -49,7 +48,7 @@ export class MatrixOperationErrorBoundary extends Component<
 
   constructor(props: MatrixOperationErrorBoundaryProps) {
     super(props);
-    
+
     this.state = {
       hasError: false,
       error: null,
@@ -57,7 +56,7 @@ export class MatrixOperationErrorBoundary extends Component<
       errorId: null,
       retryCount: 0,
       isRecovering: false,
-      lastErrorTime: null
+      lastErrorTime: null,
     };
   }
 
@@ -75,26 +74,26 @@ export class MatrixOperationErrorBoundary extends Component<
     return {
       hasError: true,
       error,
-      lastErrorTime: Date.now()
+      lastErrorTime: Date.now(),
     };
   }
 
   /**
    * Handle component errors
    */
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const errorId = this.generateErrorId();
-    
+
     console.error('[ERROR][MatrixOperationErrorBoundary] Matrix operation error caught:', {
       errorId,
       error: error.message,
       stack: error.stack,
-      componentStack: errorInfo.componentStack
+      componentStack: errorInfo.componentStack,
     });
 
     this.setState({
       errorInfo,
-      errorId
+      errorId,
     });
 
     // Report error to parent component
@@ -111,11 +110,11 @@ export class MatrixOperationErrorBoundary extends Component<
    */
   private readonly scheduleAutoRecovery = (): void => {
     const delay = this.props.retryDelay ?? 2000;
-    
+
     console.log(`[DEBUG][MatrixOperationErrorBoundary] Scheduling auto-recovery in ${delay}ms`);
-    
+
     this.setState({ isRecovering: true });
-    
+
     this.retryTimeoutId = setTimeout(() => {
       this.handleRetry();
     }, delay);
@@ -133,14 +132,16 @@ export class MatrixOperationErrorBoundary extends Component<
       return;
     }
 
-    console.log(`[DEBUG][MatrixOperationErrorBoundary] Retrying operation (attempt ${retryCount + 1}/${maxRetries})`);
+    console.log(
+      `[DEBUG][MatrixOperationErrorBoundary] Retrying operation (attempt ${retryCount + 1}/${maxRetries})`
+    );
 
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       hasError: false,
       error: null,
       errorInfo: null,
       retryCount: prevState.retryCount + 1,
-      isRecovering: false
+      isRecovering: false,
     }));
 
     // Notify parent of recovery attempt
@@ -169,7 +170,7 @@ export class MatrixOperationErrorBoundary extends Component<
         errorId: null,
         retryCount: 0,
         isRecovering: false,
-        lastErrorTime: null
+        lastErrorTime: null,
       });
 
       console.log('[DEBUG][MatrixOperationErrorBoundary] Matrix services reset successfully');
@@ -181,19 +182,22 @@ export class MatrixOperationErrorBoundary extends Component<
   /**
    * Cleanup on unmount
    */
-  componentWillUnmount(): void {
+  override componentWillUnmount(): void {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
     }
-    
+
     if (this.matrixIntegration) {
-      this.matrixIntegration.shutdown().catch(err => {
-        console.error('[ERROR][MatrixOperationErrorBoundary] Failed to shutdown matrix integration:', err);
+      this.matrixIntegration.shutdown().catch((err) => {
+        console.error(
+          '[ERROR][MatrixOperationErrorBoundary] Failed to shutdown matrix integration:',
+          err
+        );
       });
     }
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     const { hasError, error, errorInfo, isRecovering } = this.state;
     const { children, fallback, className = '' } = this.props;
 
@@ -214,9 +218,9 @@ export class MatrixOperationErrorBoundary extends Component<
 
       return (
         <div className={`matrix-operation-error-boundary ${className}`}>
-					<h3>⚠️ Matrix Operation Error</h3>
-					<p>An error occurred during matrix operations. The application is still functional.</p>
-				</div>
+          <h3>⚠️ Matrix Operation Error</h3>
+          <p>An error occurred during matrix operations. The application is still functional.</p>
+        </div>
       );
     }
 

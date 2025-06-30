@@ -5,16 +5,16 @@
  * and input sanitization following functional programming patterns.
  */
 
-import type { ValidationRule } from "../../types/common.types";
-import type { ValidationResult } from "../../types/result.types";
-import { success, error, validate } from "../functional/result";
+import type { ValidationRule } from '../../types/common.types';
+import type { ValidationResult } from '../../types/result.types';
+import { error, success, validate } from '../functional/result';
 
 /**
  * Basic validation functions
  */
-export const required = (message = "This field is required") => {
+export const required = (message = 'This field is required') => {
   return <T>(value: T): string | null => {
-    if (value === null || value === undefined || value === "") {
+    if (value === null || value === undefined || value === '') {
       return message;
     }
     return null;
@@ -42,18 +42,18 @@ export const maxLength = (max: number, message?: string) => {
 export const pattern = (regex: RegExp, message?: string) => {
   return (value: string): string | null => {
     if (!regex.test(value)) {
-      return message ?? "Invalid format";
+      return message ?? 'Invalid format';
     }
     return null;
   };
 };
 
-export const email = (message = "Invalid email address") => {
+export const email = (message = 'Invalid email address') => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return pattern(emailRegex, message);
 };
 
-export const url = (message = "Invalid URL") => {
+export const url = (message = 'Invalid URL') => {
   return (value: string): string | null => {
     try {
       new URL(value);
@@ -85,7 +85,7 @@ export const max = (maximum: number, message?: string) => {
   };
 };
 
-export const integer = (message = "Must be an integer") => {
+export const integer = (message = 'Must be an integer') => {
   return (value: number): string | null => {
     if (!Number.isInteger(value)) {
       return message;
@@ -94,7 +94,7 @@ export const integer = (message = "Must be an integer") => {
   };
 };
 
-export const positive = (message = "Must be positive") => {
+export const positive = (message = 'Must be positive') => {
   return (value: number): string | null => {
     if (value <= 0) {
       return message;
@@ -103,7 +103,7 @@ export const positive = (message = "Must be positive") => {
   };
 };
 
-export const negative = (message = "Must be negative") => {
+export const negative = (message = 'Must be negative') => {
   return (value: number): string | null => {
     if (value >= 0) {
       return message;
@@ -133,7 +133,7 @@ export const maxItems = <T>(maximum: number, message?: string) => {
   };
 };
 
-export const uniqueItems = <T>(message = "Items must be unique") => {
+export const uniqueItems = <T>(message = 'Items must be unique') => {
   return (value: ReadonlyArray<T>): string | null => {
     const unique = new Set(value);
     if (unique.size !== value.length) {
@@ -148,7 +148,7 @@ export const uniqueItems = <T>(message = "Items must be unique") => {
  */
 export const hasProperty = <T extends Record<string, unknown>>(
   property: keyof T,
-  message?: string,
+  message?: string
 ) => {
   return (value: T): string | null => {
     if (!(property in value)) {
@@ -161,15 +161,12 @@ export const hasProperty = <T extends Record<string, unknown>>(
 export const propertyType = <T extends Record<string, unknown>>(
   property: keyof T,
   expectedType: string,
-  message?: string,
+  message?: string
 ) => {
   return (value: T): string | null => {
     const actualType = typeof value[property];
     if (actualType !== expectedType) {
-      return (
-        message ??
-        `Property ${String(property)} must be of type ${expectedType}`
-      );
+      return message ?? `Property ${String(property)} must be of type ${expectedType}`;
     }
     return null;
   };
@@ -180,7 +177,7 @@ export const propertyType = <T extends Record<string, unknown>>(
  */
 export const whenInvalid = <T>(
   condition: (value: T) => boolean,
-  validator: (value: T) => string | null,
+  validator: (value: T) => string | null
 ) => {
   return (value: T): string | null => {
     if (condition(value)) {
@@ -192,7 +189,7 @@ export const whenInvalid = <T>(
 
 export const unlessValid = <T>(
   condition: (value: T) => boolean,
-  validator: (value: T) => string | null,
+  validator: (value: T) => string | null
 ) => {
   return (value: T): string | null => {
     if (!condition(value)) {
@@ -207,7 +204,7 @@ export const unlessValid = <T>(
  */
 export const oneOf = <T>(
   validators: ReadonlyArray<(value: T) => string | null>,
-  message = "Must satisfy at least one condition",
+  message = 'Must satisfy at least one condition'
 ) => {
   return (value: T): string | null => {
     for (const validator of validators) {
@@ -219,9 +216,7 @@ export const oneOf = <T>(
   };
 };
 
-export const allOf = <T>(
-  validators: ReadonlyArray<(value: T) => string | null>,
-) => {
+export const allOf = <T>(validators: ReadonlyArray<(value: T) => string | null>) => {
   return (value: T): string | null => {
     for (const validator of validators) {
       const result = validator(value);
@@ -236,12 +231,12 @@ export const allOf = <T>(
 /**
  * OpenSCAD-specific validators
  */
-export const openscadIdentifier = (message = "Invalid OpenSCAD identifier") => {
+export const openscadIdentifier = (message = 'Invalid OpenSCAD identifier') => {
   const identifierRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
   return pattern(identifierRegex, message);
 };
 
-export const openscadNumber = (message = "Invalid OpenSCAD number") => {
+export const openscadNumber = (message = 'Invalid OpenSCAD number') => {
   return (value: string): string | null => {
     const numberRegex = /^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
     if (!numberRegex.test(value.trim())) {
@@ -258,12 +253,12 @@ export const openscadVector = (dimensions: number, message?: string) => {
     const match = value.trim().match(vectorRegex);
 
     if (!match) {
-      return message ?? "Invalid vector format";
+      return message ?? 'Invalid vector format';
     }
 
     const components = value
       .slice(1, -1)
-      .split(",")
+      .split(',')
       .map((s) => s.trim())
       .filter((s) => s);
     if (components.length !== dimensions) {
@@ -277,17 +272,11 @@ export const openscadVector = (dimensions: number, message?: string) => {
 /**
  * File validation functions
  */
-export const fileExtension = (
-  extensions: ReadonlyArray<string>,
-  message?: string,
-) => {
+export const fileExtension = (extensions: ReadonlyArray<string>, message?: string) => {
   return (filename: string): string | null => {
-    const ext = filename.toLowerCase().split(".").pop();
+    const ext = filename.toLowerCase().split('.').pop();
     if (!ext || !extensions.includes(ext)) {
-      return (
-        message ??
-        `File must have one of these extensions: ${extensions.join(", ")}`
-      );
+      return message ?? `File must have one of these extensions: ${extensions.join(', ')}`;
     }
     return null;
   };
@@ -307,12 +296,12 @@ export const fileSize = (maxSizeBytes: number, message?: string) => {
  * Validation schema builder
  */
 export const createValidationSchema = <T>(
-  rules: ReadonlyArray<ValidationRule<T>>,
+  rules: ReadonlyArray<ValidationRule<T>>
 ): ((value: T) => ValidationResult<T>) => {
   return (value: T) => {
     return validate(
       value,
-      rules.map((rule) => rule.validate),
+      rules.map((rule) => rule.validate)
     );
   };
 };
@@ -322,14 +311,14 @@ export const createValidationSchema = <T>(
  */
 export const validateField = <T>(
   value: T,
-  validators: ReadonlyArray<(value: T) => string | null>,
+  validators: ReadonlyArray<(value: T) => string | null>
 ): ValidationResult<T> => {
   return validate(value, validators);
 };
 
 export const validateForm = <T extends Record<string, unknown>>(
   values: T,
-  schema: Record<keyof T, ReadonlyArray<(value: unknown) => string | null>>,
+  schema: Record<keyof T, ReadonlyArray<(value: unknown) => string | null>>
 ): ValidationResult<T> => {
   const errors: string[] = [];
 

@@ -1,13 +1,14 @@
 /**
  * Matrix Performance Profiler
- * 
+ *
  * Development tool for monitoring matrix operation performance with real-time
  * metrics, visualization, and debugging capabilities following bulletproof-react patterns.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useMatrixOperationContext } from '../providers/MatrixOperationProvider';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { APIPerformanceMetrics } from '../api/matrix-operations.api';
+import { useMatrixOperationContext } from '../providers/MatrixOperationProvider';
 
 /**
  * Performance profiler props
@@ -37,7 +38,7 @@ const PERFORMANCE_THRESHOLDS = {
   averageExecutionTime: 16, // <16ms target
   memoryUsage: 100 * 1024 * 1024, // 100MB
   failureRate: 0.05, // 5%
-  cacheHitRate: 0.8 // 80%
+  cacheHitRate: 0.8, // 80%
 };
 
 /**
@@ -48,7 +49,7 @@ const formatBytes = (bytes: number): string => {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 };
 
 /**
@@ -80,7 +81,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
   showDetails = true,
   position = 'top-right',
   className = '',
-  onPerformanceAlert
+  onPerformanceAlert,
 }) => {
   const { getPerformanceReport, isServiceHealthy } = useMatrixOperationContext();
   const [history, setHistory] = useState<PerformanceHistoryEntry[]>([]);
@@ -104,18 +105,18 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
         totalExecutionTime: report.totalExecutionTime || 0,
         cacheHitRate: report.cacheHitRate || 0,
         memoryUsage: report.memoryUsage || 0,
-        lastOperationTime: report.lastOperationTime || 0
+        lastOperationTime: report.lastOperationTime || 0,
       };
 
       setCurrentMetrics(metrics);
 
       // Add to history
-      setHistory(prev => {
+      setHistory((prev) => {
         const newEntry: PerformanceHistoryEntry = {
           timestamp: Date.now(),
-          metrics
+          metrics,
         };
-        
+
         const newHistory = [...prev, newEntry];
         return newHistory.slice(-maxHistorySize);
       });
@@ -123,20 +124,36 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
       // Check for performance alerts
       if (onPerformanceAlert) {
         if (metrics.averageExecutionTime > PERFORMANCE_THRESHOLDS.averageExecutionTime) {
-          onPerformanceAlert('averageExecutionTime', metrics.averageExecutionTime, PERFORMANCE_THRESHOLDS.averageExecutionTime);
+          onPerformanceAlert(
+            'averageExecutionTime',
+            metrics.averageExecutionTime,
+            PERFORMANCE_THRESHOLDS.averageExecutionTime
+          );
         }
-        
+
         if (metrics.memoryUsage > PERFORMANCE_THRESHOLDS.memoryUsage) {
-          onPerformanceAlert('memoryUsage', metrics.memoryUsage, PERFORMANCE_THRESHOLDS.memoryUsage);
+          onPerformanceAlert(
+            'memoryUsage',
+            metrics.memoryUsage,
+            PERFORMANCE_THRESHOLDS.memoryUsage
+          );
         }
-        
-        const failureRate = metrics.totalOperations > 0 ? metrics.failedOperations / metrics.totalOperations : 0;
+
+        const failureRate =
+          metrics.totalOperations > 0 ? metrics.failedOperations / metrics.totalOperations : 0;
         if (failureRate > PERFORMANCE_THRESHOLDS.failureRate) {
           onPerformanceAlert('failureRate', failureRate, PERFORMANCE_THRESHOLDS.failureRate);
         }
-        
-        if (metrics.cacheHitRate < PERFORMANCE_THRESHOLDS.cacheHitRate && metrics.totalOperations > 10) {
-          onPerformanceAlert('cacheHitRate', metrics.cacheHitRate, PERFORMANCE_THRESHOLDS.cacheHitRate);
+
+        if (
+          metrics.cacheHitRate < PERFORMANCE_THRESHOLDS.cacheHitRate &&
+          metrics.totalOperations > 10
+        ) {
+          onPerformanceAlert(
+            'cacheHitRate',
+            metrics.cacheHitRate,
+            PERFORMANCE_THRESHOLDS.cacheHitRate
+          );
         }
       }
     } catch (err) {
@@ -150,11 +167,13 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
   useEffect(() => {
     if (!enabled) return;
 
-    console.log(`[DEBUG][MatrixPerformanceProfiler] Starting performance monitoring (interval: ${updateInterval}ms)`);
-    
+    console.log(
+      `[DEBUG][MatrixPerformanceProfiler] Starting performance monitoring (interval: ${updateInterval}ms)`
+    );
+
     // Initial update
     updateMetrics();
-    
+
     // Set up interval
     intervalRef.current = setInterval(updateMetrics, updateInterval);
 
@@ -171,19 +190,20 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
     return null;
   }
 
-  const failureRate = currentMetrics.totalOperations > 0 
-    ? currentMetrics.failedOperations / currentMetrics.totalOperations 
-    : 0;
+  const failureRate =
+    currentMetrics.totalOperations > 0
+      ? currentMetrics.failedOperations / currentMetrics.totalOperations
+      : 0;
 
   const positionStyles = {
     'top-left': { top: '10px', left: '10px' },
     'top-right': { top: '10px', right: '10px' },
     'bottom-left': { bottom: '10px', left: '10px' },
-    'bottom-right': { bottom: '10px', right: '10px' }
+    'bottom-right': { bottom: '10px', right: '10px' },
   };
 
   return (
-    <div 
+    <div
       className={`matrix-performance-profiler ${className}`}
       style={{
         position: 'fixed',
@@ -198,17 +218,17 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
         minWidth: '280px',
         maxWidth: '400px',
         border: `2px solid ${isServiceHealthy ? '#4caf50' : '#f44336'}`,
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(4px)',
       }}
     >
       {/* Header */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '8px',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
@@ -222,19 +242,17 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
         aria-expanded={isExpanded}
         aria-label={`Matrix Performance Profiler - ${isExpanded ? 'Collapse' : 'Expand'}`}
       >
-        <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
-          🔍 Matrix Performance
-        </h4>
+        <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>🔍 Matrix Performance</h4>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ 
-            color: isServiceHealthy ? '#4caf50' : '#f44336',
-            fontSize: '16px'
-          }}>
+          <span
+            style={{
+              color: isServiceHealthy ? '#4caf50' : '#f44336',
+              fontSize: '16px',
+            }}
+          >
             {isServiceHealthy ? '●' : '●'}
           </span>
-          <span style={{ fontSize: '10px' }}>
-            {isExpanded ? '▼' : '▶'}
-          </span>
+          <span style={{ fontSize: '10px' }}>{isExpanded ? '▼' : '▶'}</span>
         </div>
       </div>
 
@@ -246,17 +264,27 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
           </div>
           <div>
             <span style={{ color: '#888' }}>Avg:</span>{' '}
-            <span style={{ 
-              color: getPerformanceColor(currentMetrics.averageExecutionTime, PERFORMANCE_THRESHOLDS.averageExecutionTime)
-            }}>
+            <span
+              style={{
+                color: getPerformanceColor(
+                  currentMetrics.averageExecutionTime,
+                  PERFORMANCE_THRESHOLDS.averageExecutionTime
+                ),
+              }}
+            >
               {formatDuration(currentMetrics.averageExecutionTime)}
             </span>
           </div>
           <div>
             <span style={{ color: '#888' }}>Mem:</span>{' '}
-            <span style={{ 
-              color: getPerformanceColor(currentMetrics.memoryUsage, PERFORMANCE_THRESHOLDS.memoryUsage)
-            }}>
+            <span
+              style={{
+                color: getPerformanceColor(
+                  currentMetrics.memoryUsage,
+                  PERFORMANCE_THRESHOLDS.memoryUsage
+                ),
+              }}
+            >
               {formatBytes(currentMetrics.memoryUsage)}
             </span>
           </div>
@@ -273,9 +301,11 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
               <div>Total: {currentMetrics.totalOperations}</div>
               <div style={{ color: '#4caf50' }}>Success: {currentMetrics.successfulOperations}</div>
               <div style={{ color: '#f44336' }}>Failed: {currentMetrics.failedOperations}</div>
-              <div style={{ 
-                color: getPerformanceColor(failureRate, PERFORMANCE_THRESHOLDS.failureRate)
-              }}>
+              <div
+                style={{
+                  color: getPerformanceColor(failureRate, PERFORMANCE_THRESHOLDS.failureRate),
+                }}
+              >
                 Rate: {(failureRate * 100).toFixed(1)}%
               </div>
             </div>
@@ -287,28 +317,42 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <div>
                 Avg Time:{' '}
-                <span style={{ 
-                  color: getPerformanceColor(currentMetrics.averageExecutionTime, PERFORMANCE_THRESHOLDS.averageExecutionTime)
-                }}>
+                <span
+                  style={{
+                    color: getPerformanceColor(
+                      currentMetrics.averageExecutionTime,
+                      PERFORMANCE_THRESHOLDS.averageExecutionTime
+                    ),
+                  }}
+                >
                   {formatDuration(currentMetrics.averageExecutionTime)}
                 </span>
               </div>
-              <div>
-                Total: {formatDuration(currentMetrics.totalExecutionTime)}
-              </div>
+              <div>Total: {formatDuration(currentMetrics.totalExecutionTime)}</div>
               <div>
                 Cache Hit:{' '}
-                <span style={{ 
-                  color: getPerformanceColor(currentMetrics.cacheHitRate, PERFORMANCE_THRESHOLDS.cacheHitRate, true)
-                }}>
+                <span
+                  style={{
+                    color: getPerformanceColor(
+                      currentMetrics.cacheHitRate,
+                      PERFORMANCE_THRESHOLDS.cacheHitRate,
+                      true
+                    ),
+                  }}
+                >
                   {(currentMetrics.cacheHitRate * 100).toFixed(1)}%
                 </span>
               </div>
               <div>
                 Memory:{' '}
-                <span style={{ 
-                  color: getPerformanceColor(currentMetrics.memoryUsage, PERFORMANCE_THRESHOLDS.memoryUsage)
-                }}>
+                <span
+                  style={{
+                    color: getPerformanceColor(
+                      currentMetrics.memoryUsage,
+                      PERFORMANCE_THRESHOLDS.memoryUsage
+                    ),
+                  }}
+                >
                   {formatBytes(currentMetrics.memoryUsage)}
                 </span>
               </div>
@@ -321,18 +365,23 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
               <div style={{ color: '#ccc', marginBottom: '4px' }}>
                 Execution Time Trend (last {Math.min(history.length, 10)})
               </div>
-              <div style={{ 
-                fontFamily: 'monospace', 
-                fontSize: '10px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                padding: '4px',
-                borderRadius: '4px'
-              }}>
+              <div
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '10px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  padding: '4px',
+                  borderRadius: '4px',
+                }}
+              >
                 {history.slice(-10).map((entry, index) => {
                   const time = entry.metrics.averageExecutionTime;
                   const bar = '█'.repeat(Math.max(1, Math.min(20, Math.floor(time / 2))));
-                  const color = getPerformanceColor(time, PERFORMANCE_THRESHOLDS.averageExecutionTime);
-                  
+                  const color = getPerformanceColor(
+                    time,
+                    PERFORMANCE_THRESHOLDS.averageExecutionTime
+                  );
+
                   return (
                     <div key={index} style={{ color }}>
                       {bar} {formatDuration(time)}
@@ -391,7 +440,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
   maxLogSize = 100,
   showStackTraces = false,
   autoScroll = true,
-  className = ''
+  className = '',
 }) => {
   const [logs, setLogs] = useState<DebugLogEntry[]>([]);
   const [isVisible, setIsVisible] = useState(false);
@@ -401,18 +450,21 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
   /**
    * Add log entry
    */
-  const addLog = useCallback((entry: Omit<DebugLogEntry, 'id' | 'timestamp'>) => {
-    const newEntry: DebugLogEntry = {
-      ...entry,
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now()
-    };
+  const addLog = useCallback(
+    (entry: Omit<DebugLogEntry, 'id' | 'timestamp'>) => {
+      const newEntry: DebugLogEntry = {
+        ...entry,
+        id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: Date.now(),
+      };
 
-    setLogs(prev => {
-      const newLogs = [...prev, newEntry];
-      return newLogs.slice(-maxLogSize);
-    });
-  }, [maxLogSize]);
+      setLogs((prev) => {
+        const newLogs = [...prev, newEntry];
+        return newLogs.slice(-maxLogSize);
+      });
+    },
+    [maxLogSize]
+  );
 
   /**
    * Clear logs
@@ -428,7 +480,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     if (autoScroll && logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
-  }, [logs, autoScroll]);
+  }, [autoScroll]);
 
   /**
    * Set up console interception for matrix operations
@@ -441,21 +493,25 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
       debug: console.debug,
       info: console.info,
       warn: console.warn,
-      error: console.error
+      error: console.error,
     };
 
     // Intercept console methods for matrix-related logs
-    const interceptConsole = (level: 'debug' | 'info' | 'warn' | 'error', originalMethod: (...args: unknown[]) => void) => {
+    const interceptConsole = (
+      level: 'debug' | 'info' | 'warn' | 'error',
+      originalMethod: (...args: unknown[]) => void
+    ) => {
       return (...args: unknown[]) => {
         originalMethod.apply(console, args);
 
         const message = args.join(' ');
-        if (message.includes('[MatrixOperations]') ||
-            message.includes('[MatrixIntegration]') ||
-            message.includes('[MatrixConversion]') ||
-            message.includes('[MatrixValidation]') ||
-            message.includes('[MatrixTelemetry]')) {
-
+        if (
+          message.includes('[MatrixOperations]') ||
+          message.includes('[MatrixIntegration]') ||
+          message.includes('[MatrixConversion]') ||
+          message.includes('[MatrixValidation]') ||
+          message.includes('[MatrixTelemetry]')
+        ) {
           // Extract operation name from log message
           const operationMatch = message.match(/\[(\w+)\]/);
           const operation = operationMatch ? operationMatch[1] : 'Unknown';
@@ -494,15 +550,13 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     return null;
   }
 
-  const filteredLogs = filter === 'all'
-    ? logs
-    : logs.filter(log => log.level === filter);
+  const filteredLogs = filter === 'all' ? logs : logs.filter((log) => log.level === filter);
 
   const levelColors = {
     debug: '#888',
     info: '#2196f3',
     warn: '#ff9800',
-    error: '#f44336'
+    error: '#f44336',
   };
 
   return (
@@ -525,7 +579,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
           zIndex: 10000,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
         }}
         title="Matrix Operation Debugger"
       >
@@ -550,31 +604,33 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
             display: 'flex',
             flexDirection: 'column',
             fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-            fontSize: '12px'
+            fontSize: '12px',
           }}
         >
           {/* Header */}
-          <div style={{
-            padding: '12px',
-            borderBottom: '1px solid #333',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <h4 style={{ margin: 0, fontSize: '14px' }}>
-              🐛 Matrix Operation Debugger
-            </h4>
+          <div
+            style={{
+              padding: '12px',
+              borderBottom: '1px solid #333',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <h4 style={{ margin: 0, fontSize: '14px' }}>🐛 Matrix Operation Debugger</h4>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as 'all' | 'debug' | 'info' | 'warn' | 'error')}
+                onChange={(e) =>
+                  setFilter(e.target.value as 'all' | 'debug' | 'info' | 'warn' | 'error')
+                }
                 style={{
                   background: '#333',
                   color: 'white',
                   border: '1px solid #555',
                   borderRadius: '4px',
                   padding: '4px 8px',
-                  fontSize: '11px'
+                  fontSize: '11px',
                 }}
               >
                 <option value="all">All</option>
@@ -592,7 +648,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                   borderRadius: '4px',
                   padding: '4px 8px',
                   fontSize: '11px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 Clear
@@ -604,7 +660,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                   color: 'white',
                   border: 'none',
                   fontSize: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 ×
@@ -620,7 +676,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
               overflow: 'auto',
               padding: '8px',
               fontSize: '11px',
-              lineHeight: '1.4'
+              lineHeight: '1.4',
             }}
           >
             {filteredLogs.length === 0 ? (
@@ -628,7 +684,7 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                 No matrix operation logs yet...
               </div>
             ) : (
-              filteredLogs.map(log => (
+              filteredLogs.map((log) => (
                 <div
                   key={log.id}
                   style={{
@@ -636,10 +692,16 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                     padding: '6px',
                     background: 'rgba(255, 255, 255, 0.05)',
                     borderRadius: '4px',
-                    borderLeft: `3px solid ${levelColors[log.level]}`
+                    borderLeft: `3px solid ${levelColors[log.level]}`,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '4px',
+                    }}
+                  >
                     <span style={{ color: levelColors[log.level], fontWeight: 'bold' }}>
                       [{log.level.toUpperCase()}] {log.operation}
                     </span>
@@ -647,23 +709,25 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                       {new Date(log.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  <div style={{ color: '#ccc' }}>
-                    {log.message}
-                  </div>
+                  <div style={{ color: '#ccc' }}>{log.message}</div>
                   {log.data ? (
                     <details style={{ marginTop: '4px' }}>
                       <summary style={{ color: '#888', cursor: 'pointer', fontSize: '10px' }}>
                         Data
                       </summary>
-                      <pre style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        fontSize: '10px',
-                        overflow: 'auto',
-                        maxHeight: '100px'
-                      }}>
-                        {typeof log.data === 'string' ? log.data : JSON.stringify(log.data, null, 2)}
+                      <pre
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          overflow: 'auto',
+                          maxHeight: '100px',
+                        }}
+                      >
+                        {typeof log.data === 'string'
+                          ? log.data
+                          : JSON.stringify(log.data, null, 2)}
                       </pre>
                     </details>
                   ) : null}
@@ -672,14 +736,16 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
                       <summary style={{ color: '#888', cursor: 'pointer', fontSize: '10px' }}>
                         Stack Trace
                       </summary>
-                      <pre style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        fontSize: '10px',
-                        overflow: 'auto',
-                        maxHeight: '150px'
-                      }}>
+                      <pre
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          overflow: 'auto',
+                          maxHeight: '150px',
+                        }}
+                      >
                         {log.stackTrace}
                       </pre>
                     </details>

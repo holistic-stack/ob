@@ -5,14 +5,14 @@
  * with Zustand store integration and performance monitoring.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useMonacoEditor } from "./use-monaco-editor";
-import { createAppStore } from "../../store/app-store";
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAppStore } from '../../store/app-store';
+import { useMonacoEditor } from './use-monaco-editor';
 
 // Mock Monaco Editor
 const _mockEditor = {
-  getValue: vi.fn(() => ""),
+  getValue: vi.fn(() => ''),
   setValue: vi.fn(),
   getPosition: vi.fn(() => ({ lineNumber: 1, column: 1 })),
   setPosition: vi.fn(),
@@ -29,22 +29,22 @@ const _mockEditor = {
 };
 
 // Mock store
-let mockStore: ReturnType<typeof createAppStore>;
+let _mockStore: ReturnType<typeof createAppStore>;
 
 // Mock performance.now for consistent timing
 const mockPerformanceNow = vi.fn();
-Object.defineProperty(global, "performance", {
+Object.defineProperty(global, 'performance', {
   value: { now: mockPerformanceNow },
   writable: true,
 });
 
-describe("useMonacoEditor Hook", () => {
+describe('useMonacoEditor Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPerformanceNow.mockReturnValue(0);
 
     // Create fresh store for each test
-    mockStore = createAppStore({
+    _mockStore = createAppStore({
       enableDevtools: false,
       enablePersistence: false,
       debounceConfig: {
@@ -59,8 +59,8 @@ describe("useMonacoEditor Hook", () => {
     vi.restoreAllMocks();
   });
 
-  describe("Hook Initialization", () => {
-    it("should initialize with default state", () => {
+  describe('Hook Initialization', () => {
+    it('should initialize with default state', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       expect(result.current.editorRef.current).toBeNull();
@@ -76,10 +76,10 @@ describe("useMonacoEditor Hook", () => {
       expect(result.current.actions).toBeDefined();
     });
 
-    it("should accept custom options", () => {
+    it('should accept custom options', () => {
       const options = {
-        language: "javascript",
-        theme: "vs-light",
+        language: 'javascript',
+        theme: 'vs-light',
         debounceMs: 500,
       };
 
@@ -91,33 +91,33 @@ describe("useMonacoEditor Hook", () => {
     });
   });
 
-  describe("Editor Actions", () => {
-    it("should provide getValue action", () => {
+  describe('Editor Actions', () => {
+    it('should provide getValue action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       // Mock editor is not connected, should return empty string
-      expect(result.current.actions.getValue()).toBe("");
+      expect(result.current.actions.getValue()).toBe('');
     });
 
-    it("should provide setValue action", () => {
+    it('should provide setValue action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
-        result.current.actions.setValue("cube(10);");
+        result.current.actions.setValue('cube(10);');
       });
 
       // setValue should not throw when editor is not connected
       expect(true).toBe(true);
     });
 
-    it("should provide getPosition action", () => {
+    it('should provide getPosition action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       const position = result.current.actions.getPosition();
       expect(position).toEqual({ line: 1, column: 1 });
     });
 
-    it("should provide setPosition action", () => {
+    it('should provide setPosition action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -128,14 +128,14 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide getSelection action", () => {
+    it('should provide getSelection action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       const selection = result.current.actions.getSelection();
       expect(selection).toBeNull();
     });
 
-    it("should provide setSelection action", () => {
+    it('should provide setSelection action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -151,7 +151,7 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide focus action", () => {
+    it('should provide focus action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -162,7 +162,7 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide blur action", () => {
+    it('should provide blur action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -173,7 +173,7 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide undo action", () => {
+    it('should provide undo action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -184,7 +184,7 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide redo action", () => {
+    it('should provide redo action', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       act(() => {
@@ -195,7 +195,7 @@ describe("useMonacoEditor Hook", () => {
       expect(true).toBe(true);
     });
 
-    it("should provide format action", async () => {
+    it('should provide format action', async () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       await act(async () => {
@@ -207,8 +207,8 @@ describe("useMonacoEditor Hook", () => {
     });
   });
 
-  describe("Performance Metrics", () => {
-    it("should initialize with zero metrics", () => {
+  describe('Performance Metrics', () => {
+    it('should initialize with zero metrics', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       expect(result.current.metrics).toEqual({
@@ -219,7 +219,7 @@ describe("useMonacoEditor Hook", () => {
       });
     });
 
-    it("should track performance metrics", () => {
+    it('should track performance metrics', () => {
       mockPerformanceNow
         .mockReturnValueOnce(0) // Start time
         .mockReturnValueOnce(10); // End time
@@ -228,15 +228,15 @@ describe("useMonacoEditor Hook", () => {
 
       // Metrics should be available
       expect(result.current.metrics).toBeDefined();
-      expect(typeof result.current.metrics.renderTime).toBe("number");
-      expect(typeof result.current.metrics.updateTime).toBe("number");
-      expect(typeof result.current.metrics.validationTime).toBe("number");
-      expect(typeof result.current.metrics.completionTime).toBe("number");
+      expect(typeof result.current.metrics.renderTime).toBe('number');
+      expect(typeof result.current.metrics.updateTime).toBe('number');
+      expect(typeof result.current.metrics.validationTime).toBe('number');
+      expect(typeof result.current.metrics.completionTime).toBe('number');
     });
   });
 
-  describe("Error Handling", () => {
-    it("should handle initialization errors gracefully", () => {
+  describe('Error Handling', () => {
+    it('should handle initialization errors gracefully', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       // Hook should initialize without throwing
@@ -244,23 +244,23 @@ describe("useMonacoEditor Hook", () => {
       expect(result.current.isLoading).toBe(true);
     });
 
-    it("should provide error state", () => {
+    it('should provide error state', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       expect(result.current.error).toBeNull();
-      expect(typeof result.current.error).toBe("object"); // null is object type
+      expect(typeof result.current.error).toBe('object'); // null is object type
     });
   });
 
-  describe("Cleanup", () => {
-    it("should cleanup resources on unmount", () => {
+  describe('Cleanup', () => {
+    it('should cleanup resources on unmount', () => {
       const { unmount } = renderHook(() => useMonacoEditor());
 
       // Should not throw on unmount
       expect(() => unmount()).not.toThrow();
     });
 
-    it("should reset state on cleanup", () => {
+    it('should reset state on cleanup', () => {
       const { result, unmount } = renderHook(() => useMonacoEditor());
 
       // Verify initial state
@@ -271,15 +271,15 @@ describe("useMonacoEditor Hook", () => {
     });
   });
 
-  describe("Refs", () => {
-    it("should provide editor ref", () => {
+  describe('Refs', () => {
+    it('should provide editor ref', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       expect(result.current.editorRef).toBeDefined();
       expect(result.current.editorRef.current).toBeNull();
     });
 
-    it("should provide container ref", () => {
+    it('should provide container ref', () => {
       const { result } = renderHook(() => useMonacoEditor());
 
       expect(result.current.containerRef).toBeDefined();
@@ -287,29 +287,29 @@ describe("useMonacoEditor Hook", () => {
     });
   });
 
-  describe("Options Handling", () => {
-    it("should handle empty options", () => {
+  describe('Options Handling', () => {
+    it('should handle empty options', () => {
       const { result } = renderHook(() => useMonacoEditor({}));
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.error).toBeNull();
     });
 
-    it("should handle partial options", () => {
+    it('should handle partial options', () => {
       const { result } = renderHook(() =>
         useMonacoEditor({
-          language: "typescript",
-        }),
+          language: 'typescript',
+        })
       );
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.error).toBeNull();
     });
 
-    it("should handle all options", () => {
+    it('should handle all options', () => {
       const options = {
-        language: "openscad",
-        theme: "vs-dark",
+        language: 'openscad',
+        theme: 'vs-dark',
         debounceMs: 300,
         enableSyntaxValidation: true,
         enableAutoCompletion: true,

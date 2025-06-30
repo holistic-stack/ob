@@ -5,13 +5,13 @@
  * and render error handling with performance monitoring.
  */
 
-import type { StateCreator } from 'zustand';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
-import type { AppStore, RenderingSlice } from '../types/store.types.js';
+import type { StateCreator } from 'zustand';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { AppStore, RenderingSlice } from '../types/store.types.js';
 
 export const createRenderingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
@@ -25,7 +25,9 @@ export const createRenderingSlice = (
       });
     },
 
-    renderFromAST: async (ast: ReadonlyArray<ASTNode>): AsyncResult<ReadonlyArray<THREE.Mesh>, string> => {
+    renderFromAST: async (
+      ast: ReadonlyArray<ASTNode>
+    ): AsyncResult<ReadonlyArray<THREE.Mesh>, string> => {
       console.log(`[DEBUG][Store] Starting renderFromAST with ${ast.length} nodes`);
 
       set((state) => {
@@ -76,7 +78,7 @@ export const createRenderingSlice = (
           });
 
           return `Render failed: ${errorMessage}`;
-        },
+        }
       );
     },
 

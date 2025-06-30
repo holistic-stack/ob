@@ -1,14 +1,14 @@
 /**
  * Store-Connected Renderer Component Tests
- * 
+ *
  * Tests for the Zustand-centric 3D renderer component that verifies
  * proper data flow through the store without direct pipeline access.
  */
 
-import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+import { render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
 
@@ -23,16 +23,14 @@ vi.mock('@react-three/fiber', () => ({
   useThree: vi.fn(() => ({
     scene: { add: vi.fn(), remove: vi.fn(), clear: vi.fn() },
     camera: { position: { set: vi.fn() }, lookAt: vi.fn() },
-    gl: { render: vi.fn(), setSize: vi.fn() }
-  }))
+    gl: { render: vi.fn(), setSize: vi.fn() },
+  })),
 }));
 
 // Mock React Three Drei
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: ({ onChange, ...props }: any) => (
-    <div data-testid="orbit-controls" {...props} />
-  ),
-  Stats: () => <div data-testid="stats" />
+  OrbitControls: ({ onChange, ...props }: any) => <div data-testid="orbit-controls" {...props} />,
+  Stats: () => <div data-testid="stats" />,
 }));
 
 // Mock Three.js renderer component
@@ -44,23 +42,27 @@ vi.mock('./three-renderer', () => ({
         setTimeout(() => onRenderComplete([]), 10);
       }
       if (onPerformanceUpdate) {
-        setTimeout(() => onPerformanceUpdate({
-          renderTime: 15.5,
-          parseTime: 5.2,
-          memoryUsage: 1024 * 1024 * 2.5
-        }), 20);
+        setTimeout(
+          () =>
+            onPerformanceUpdate({
+              renderTime: 15.5,
+              parseTime: 5.2,
+              memoryUsage: 1024 * 1024 * 2.5,
+            }),
+          20
+        );
       }
-    }, [astNodes, onRenderComplete, onPerformanceUpdate]);
+    }, [onRenderComplete, onPerformanceUpdate]);
 
     return (
-      <div 
-        data-testid="three-renderer" 
+      <div
+        data-testid="three-renderer"
         data-ast-count={astNodes?.length || 0}
         data-camera-position={JSON.stringify(camera?.position)}
         {...props}
       />
     );
-  }
+  },
 }));
 
 // Mock store with realistic data
@@ -72,18 +74,18 @@ const mockStoreState = {
     camera: { position: [5, 5, 5], target: [0, 0, 0] },
     isRendering: false,
     meshes: [],
-    renderErrors: []
+    renderErrors: [],
   },
   performance: {
     metrics: {
       renderTime: 0,
       parseTime: 0,
-      memoryUsage: 0
-    }
+      memoryUsage: 0,
+    },
   },
   config: {
-    enableRealTimeRendering: true
-  }
+    enableRealTimeRendering: true,
+  },
 };
 
 const mockStoreActions = {
@@ -91,7 +93,7 @@ const mockStoreActions = {
   updateMetrics: vi.fn(),
   renderFromAST: vi.fn().mockResolvedValue({ success: true, value: [] }),
   addRenderError: vi.fn(),
-  clearRenderErrors: vi.fn()
+  clearRenderErrors: vi.fn(),
 };
 
 // Mock the store
@@ -104,13 +106,14 @@ vi.mock('../../store', () => ({
       if (selectorName === 'selectRenderingCamera') return mockStoreState.rendering.camera;
       if (selectorName === 'selectRenderingState') return mockStoreState.rendering;
       if (selectorName === 'selectPerformanceMetrics') return mockStoreState.performance.metrics;
-      if (selectorName === 'selectConfigEnableRealTimeRendering') return mockStoreState.config.enableRealTimeRendering;
-      
+      if (selectorName === 'selectConfigEnableRealTimeRendering')
+        return mockStoreState.config.enableRealTimeRendering;
+
       // Handle action selectors
       return selector(mockStoreActions);
     }
     return vi.fn();
-  })
+  }),
 }));
 
 describe('StoreConnectedRenderer', () => {
@@ -131,7 +134,7 @@ describe('StoreConnectedRenderer', () => {
   describe('Component Rendering', () => {
     it('should render store-connected renderer component', () => {
       render(<StoreConnectedRenderer />);
-      
+
       expect(screen.getByTestId('store-connected-renderer')).toBeInTheDocument();
       expect(screen.getByTestId('r3f-canvas')).toBeInTheDocument();
       expect(screen.getByTestId('three-renderer')).toBeInTheDocument();
@@ -139,14 +142,14 @@ describe('StoreConnectedRenderer', () => {
 
     it('should apply custom props correctly', () => {
       render(
-        <StoreConnectedRenderer 
+        <StoreConnectedRenderer
           className="custom-class"
           data-testid="custom-renderer"
           width={1024}
           height={768}
         />
       );
-      
+
       const renderer = screen.getByTestId('custom-renderer');
       expect(renderer).toBeInTheDocument();
       expect(renderer).toHaveClass('custom-class');
@@ -156,12 +159,12 @@ describe('StoreConnectedRenderer', () => {
     it('should render orbit controls and stats in development', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       expect(screen.getByTestId('orbit-controls')).toBeInTheDocument();
       expect(screen.getByTestId('stats')).toBeInTheDocument();
-      
+
       process.env.NODE_ENV = originalEnv;
     });
   });
@@ -172,14 +175,14 @@ describe('StoreConnectedRenderer', () => {
         {
           type: 'cube',
           size: [1, 1, 1],
-          center: false
-        }
+          center: false,
+        },
       ];
-      
+
       mockStoreState.parsing.ast = mockAST;
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       const threeRenderer = screen.getByTestId('three-renderer');
       expect(threeRenderer).toHaveAttribute('data-ast-count', '1');
     });
@@ -187,27 +190,30 @@ describe('StoreConnectedRenderer', () => {
     it('should pass camera configuration from store', () => {
       const mockCamera = { position: [10, 10, 10], target: [2, 2, 2] };
       mockStoreState.rendering.camera = mockCamera;
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       const threeRenderer = screen.getByTestId('three-renderer');
-      expect(threeRenderer).toHaveAttribute('data-camera-position', JSON.stringify(mockCamera.position));
+      expect(threeRenderer).toHaveAttribute(
+        'data-camera-position',
+        JSON.stringify(mockCamera.position)
+      );
     });
 
     it('should show rendering indicator when store indicates rendering', () => {
       mockStoreState.rendering.isRendering = true;
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       expect(screen.getByTestId('rendering-indicator')).toBeInTheDocument();
       expect(screen.getByText('Rendering...')).toBeInTheDocument();
     });
 
     it('should display render errors from store', () => {
       mockStoreState.rendering.renderErrors = ['Test error 1' as never, 'Test error 2' as never];
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       expect(screen.getByTestId('error-display')).toBeInTheDocument();
       expect(screen.getByText('Test error 1')).toBeInTheDocument();
       expect(screen.getByText('Test error 2')).toBeInTheDocument();
@@ -217,12 +223,12 @@ describe('StoreConnectedRenderer', () => {
   describe('Store Action Integration', () => {
     it('should call store actions when performance metrics are updated', async () => {
       render(<StoreConnectedRenderer />);
-      
+
       await waitFor(() => {
         expect(mockStoreActions.updateMetrics).toHaveBeenCalledWith({
           renderTime: 15.5,
           parseTime: 5.2,
-          memoryUsage: 1024 * 1024 * 2.5
+          memoryUsage: 1024 * 1024 * 2.5,
         });
       });
     });
@@ -231,19 +237,19 @@ describe('StoreConnectedRenderer', () => {
       const mockAST: ASTNode[] = [
         {
           type: 'sphere',
-          radius: 1
-        }
+          radius: 1,
+        },
       ];
-      
+
       // Initial render
       render(<StoreConnectedRenderer />);
-      
+
       // Update AST in store
       mockStoreState.parsing.ast = mockAST;
-      
+
       // Re-render to trigger effect
       render(<StoreConnectedRenderer />);
-      
+
       await waitFor(() => {
         expect(mockStoreActions.clearRenderErrors).toHaveBeenCalled();
         expect(mockStoreActions.renderFromAST).toHaveBeenCalledWith(mockAST);
@@ -256,15 +262,15 @@ describe('StoreConnectedRenderer', () => {
         {
           type: 'cube',
           size: [1, 1, 1],
-          center: false
-        }
+          center: false,
+        },
       ];
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       // Wait a bit to ensure no rendering is triggered
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       expect(mockStoreActions.renderFromAST).not.toHaveBeenCalled();
     });
   });
@@ -273,50 +279,68 @@ describe('StoreConnectedRenderer', () => {
     it('should display performance metrics in development mode', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
-      
+
       mockStoreState.performance.metrics = {
         renderTime: 25.7,
         parseTime: 8.3,
-        memoryUsage: 1024 * 1024 * 3.2
+        memoryUsage: 1024 * 1024 * 3.2,
       };
       mockStoreState.rendering.meshes = [
         {
           mesh: {} as any,
-          metadata: { nodeType: 'cube', nodeIndex: 0, id: 'cube-0', triangleCount: 12, vertexCount: 8 },
-          dispose: () => {}
-        }, 
+          metadata: {
+            nodeType: 'cube',
+            nodeIndex: 0,
+            id: 'cube-0',
+            triangleCount: 12,
+            vertexCount: 8,
+          },
+          dispose: () => {},
+        },
         {
           mesh: {} as any,
-          metadata: { nodeType: 'sphere', nodeIndex: 1, id: 'sphere-1', triangleCount: 100, vertexCount: 50 },
-          dispose: () => {}
-        }, 
+          metadata: {
+            nodeType: 'sphere',
+            nodeIndex: 1,
+            id: 'sphere-1',
+            triangleCount: 100,
+            vertexCount: 50,
+          },
+          dispose: () => {},
+        },
         {
           mesh: {} as any,
-          metadata: { nodeType: 'cylinder', nodeIndex: 2, id: 'cylinder-2', triangleCount: 64, vertexCount: 32 },
-          dispose: () => {}
-        }
+          metadata: {
+            nodeType: 'cylinder',
+            nodeIndex: 2,
+            id: 'cylinder-2',
+            triangleCount: 64,
+            vertexCount: 32,
+          },
+          dispose: () => {},
+        },
       ] as any;
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       const performanceDisplay = screen.getByTestId('performance-display');
       expect(performanceDisplay).toBeInTheDocument();
       expect(performanceDisplay).toHaveTextContent('Render Time: 25.70ms');
       expect(performanceDisplay).toHaveTextContent('Parse Time: 8.30ms');
       expect(performanceDisplay).toHaveTextContent('Memory: 3.2MB');
       expect(performanceDisplay).toHaveTextContent('Meshes: 3');
-      
+
       process.env.NODE_ENV = originalEnv;
     });
   });
 
   describe('Error Handling', () => {
     it('should handle render errors and update store', async () => {
-      mockStoreActions.renderFromAST.mockResolvedValueOnce({ 
-        success: false, 
-        error: 'Mock render error' 
+      mockStoreActions.renderFromAST.mockResolvedValueOnce({
+        success: false,
+        error: 'Mock render error',
       });
-      
+
       mockStoreState.parsing.ast = [
         {
           type: 'error' as const,
@@ -324,13 +348,13 @@ describe('StoreConnectedRenderer', () => {
           errorCode: 'PARSE_ERROR',
           location: {
             start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: 10, offset: 9 }
-          }
-        }
+            end: { line: 1, column: 10, offset: 9 },
+          },
+        },
       ];
-      
+
       render(<StoreConnectedRenderer />);
-      
+
       await waitFor(() => {
         expect(mockStoreActions.addRenderError).toHaveBeenCalledWith('Mock render error');
       });

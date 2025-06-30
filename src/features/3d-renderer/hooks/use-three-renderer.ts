@@ -1,33 +1,30 @@
 /**
  * Three.js Renderer Hook
- * 
+ *
  * React hook for Three.js renderer integration with Zustand store,
  * including AST rendering, camera controls, and performance monitoring.
  */
 
-import { useRef, useEffect, useCallback, useState } from 'react';
-import * as THREE from 'three';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-
-import type {
-  UseRendererReturn,
-  Scene3DConfig,
-  Mesh3D,
-  RenderingMetrics,
-  RenderingError as _RenderingError
-} from '../types/renderer.types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import { tryCatch } from '../../../shared/utils/functional/result';
+import { measureTime } from '../../../shared/utils/performance/metrics';
 import {
-  useAppStore,
   selectParsingAST,
+  selectPerformanceMetrics,
   selectRenderingCamera,
   selectRenderingState,
-  selectPerformanceMetrics
+  useAppStore,
 } from '../../store';
-import { success as _success, error as _error, tryCatch } from '../../../shared/utils/functional/result';
-import { measureTime } from '../../../shared/utils/performance/metrics';
 import { renderASTNode } from '../services/primitive-renderer';
-import { performCSGOperation as _performCSGOperation, createCSGConfig as _createCSGConfig } from '../services/csg-operations';
+import type {
+  Mesh3D,
+  RenderingMetrics,
+  Scene3DConfig,
+  UseRendererReturn,
+} from '../types/renderer.types';
 
 /**
  * Default camera configuration
@@ -41,7 +38,7 @@ const DEFAULT_CAMERA: CameraConfig = {
   far: 1000,
   enableControls: true,
   enableAutoRotate: false,
-  autoRotateSpeed: 1
+  autoRotateSpeed: 1,
 };
 
 /**
@@ -56,7 +53,7 @@ const DEFAULT_CONFIG: Scene3DConfig = {
   ambientLightIntensity: 0.4,
   directionalLightIntensity: 0.8,
   maxMeshes: 1000,
-  maxTriangles: 100000
+  maxTriangles: 100000,
 };
 
 /**
@@ -67,7 +64,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  
+
   // State
   const [isInitialized, setIsInitialized] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
@@ -83,7 +80,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     vertexCount: 0,
     drawCalls: 0,
     textureMemory: 0,
-    bufferMemory: 0
+    bufferMemory: 0,
   });
 
   // Store selectors and actions
@@ -101,47 +98,51 @@ export const useThreeRenderer = (): UseRendererReturn => {
    * Initialize Three.js scene, camera, and renderer
    */
   const initializeRenderer = useCallback(() => {
-    const result = tryCatch(() => {
-      // Create scene
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(config.backgroundColor);
-      
-      // Create camera
-      const camera = new THREE.PerspectiveCamera(
-        DEFAULT_CAMERA.fov,
-        window.innerWidth / window.innerHeight,
-        DEFAULT_CAMERA.near,
-        DEFAULT_CAMERA.far
-      );
-      camera.position.set(...DEFAULT_CAMERA.position);
-      camera.lookAt(...DEFAULT_CAMERA.target);
-      
-      // Create renderer
-      const renderer = new THREE.WebGLRenderer({
-        antialias: config.enableAntialiasing,
-        alpha: true,
-        powerPreference: config.enableHardwareAcceleration ? 'high-performance' : 'default'
-      });
-      
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setClearColor(config.backgroundColor);
-      renderer.shadowMap.enabled = config.enableShadows;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      
-      // Store references
-      sceneRef.current = scene;
-      cameraRef.current = camera;
-      rendererRef.current = renderer;
-      
-      setIsInitialized(true);
-      setError(null);
-      
-      console.log('[INIT][useThreeRenderer] Three.js renderer initialized');
-      
-      return { scene, camera, renderer };
-    }, (err) => `Failed to initialize Three.js renderer: ${err instanceof Error ? err.message : String(err)}`);
+    const result = tryCatch(
+      () => {
+        // Create scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(config.backgroundColor);
+
+        // Create camera
+        const camera = new THREE.PerspectiveCamera(
+          DEFAULT_CAMERA.fov,
+          window.innerWidth / window.innerHeight,
+          DEFAULT_CAMERA.near,
+          DEFAULT_CAMERA.far
+        );
+        camera.position.set(...DEFAULT_CAMERA.position);
+        camera.lookAt(...DEFAULT_CAMERA.target);
+
+        // Create renderer
+        const renderer = new THREE.WebGLRenderer({
+          antialias: config.enableAntialiasing,
+          alpha: true,
+          powerPreference: config.enableHardwareAcceleration ? 'high-performance' : 'default',
+        });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(config.backgroundColor);
+        renderer.shadowMap.enabled = config.enableShadows;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+        // Store references
+        sceneRef.current = scene;
+        cameraRef.current = camera;
+        rendererRef.current = renderer;
+
+        setIsInitialized(true);
+        setError(null);
+
+        console.log('[INIT][useThreeRenderer] Three.js renderer initialized');
+
+        return { scene, camera, renderer };
+      },
+      (err) =>
+        `Failed to initialize Three.js renderer: ${err instanceof Error ? err.message : String(err)}`
+    );
 
     if (!result.success) {
       setError(result.error);
@@ -152,65 +153,79 @@ export const useThreeRenderer = (): UseRendererReturn => {
   /**
    * Render AST nodes to Three.js meshes
    */
-  const renderAST = useCallback(async (astNodes: ReadonlyArray<ASTNode>) => {
-    if (!sceneRef.current || !isInitialized) {
-      throw new Error('Renderer not initialized');
-    }
-
-    setIsRendering(true);
-    setError(null);
-
-    const { result: newMeshes, duration } = await measureTime(async () => {
-      // Clear existing meshes
-      meshes.forEach(meshWrapper => {
-        sceneRef.current?.remove(meshWrapper.mesh);
-        meshWrapper.dispose();
-      });
-
-      // Render new meshes
-      const renderedMeshes: Mesh3D[] = [];
-      
-      for (let i = 0; i < astNodes.length; i++) {
-        const node = astNodes[i];
-        if (!node) continue;
-        
-        const meshResult = await renderASTNode(node, i);
-        
-        if (meshResult.success) {
-          sceneRef.current?.add(meshResult.data.mesh);
-          renderedMeshes.push(meshResult.data);
-        } else {
-          console.error(`[ERROR][useThreeRenderer] Failed to render node ${i}:`, meshResult.error);
-        }
+  const renderAST = useCallback(
+    async (astNodes: ReadonlyArray<ASTNode>) => {
+      if (!sceneRef.current || !isInitialized) {
+        throw new Error('Renderer not initialized');
       }
 
-      return renderedMeshes;
-    });
+      setIsRendering(true);
+      setError(null);
 
-    const resolvedMeshes = await newMeshes;
-    setMeshes(resolvedMeshes);
-    setIsRendering(false);
+      const { result: newMeshes, duration } = await measureTime(async () => {
+        // Clear existing meshes
+        meshes.forEach((meshWrapper) => {
+          sceneRef.current?.remove(meshWrapper.mesh);
+          meshWrapper.dispose();
+        });
 
-    // Update performance metrics
-    const newMetrics: RenderingMetrics = {
-      renderTime: duration,
-      parseTime: storeMetrics?.parseTime ?? 0,
-      memoryUsage: 0, // Will be calculated separately
-      frameRate: 60, // Will be updated by frame loop
-      meshCount: resolvedMeshes.length,
-      triangleCount: resolvedMeshes.reduce((sum: number, m: Mesh3D) => sum + (m.metadata.triangleCount ?? 0), 0),
-      vertexCount: resolvedMeshes.reduce((sum: number, m: Mesh3D) => sum + (m.metadata.vertexCount ?? 0), 0),
-      drawCalls: resolvedMeshes.length,
-      textureMemory: 0,
-      bufferMemory: resolvedMeshes.length * 1024 // Rough estimate
-    };
+        // Render new meshes
+        const renderedMeshes: Mesh3D[] = [];
 
-    setMetrics(newMetrics);
-    updateStoreMetrics(newMetrics);
-    markDirty();
+        for (let i = 0; i < astNodes.length; i++) {
+          const node = astNodes[i];
+          if (!node) continue;
 
-    console.log(`[DEBUG][useThreeRenderer] Rendered ${resolvedMeshes.length} meshes in ${duration}ms`);
-  }, [meshes, isInitialized, storeMetrics, updateStoreMetrics, markDirty]);
+          const meshResult = await renderASTNode(node, i);
+
+          if (meshResult.success) {
+            sceneRef.current?.add(meshResult.data.mesh);
+            renderedMeshes.push(meshResult.data);
+          } else {
+            console.error(
+              `[ERROR][useThreeRenderer] Failed to render node ${i}:`,
+              meshResult.error
+            );
+          }
+        }
+
+        return renderedMeshes;
+      });
+
+      const resolvedMeshes = await newMeshes;
+      setMeshes(resolvedMeshes);
+      setIsRendering(false);
+
+      // Update performance metrics
+      const newMetrics: RenderingMetrics = {
+        renderTime: duration,
+        parseTime: storeMetrics?.parseTime ?? 0,
+        memoryUsage: 0, // Will be calculated separately
+        frameRate: 60, // Will be updated by frame loop
+        meshCount: resolvedMeshes.length,
+        triangleCount: resolvedMeshes.reduce(
+          (sum: number, m: Mesh3D) => sum + (m.metadata.triangleCount ?? 0),
+          0
+        ),
+        vertexCount: resolvedMeshes.reduce(
+          (sum: number, m: Mesh3D) => sum + (m.metadata.vertexCount ?? 0),
+          0
+        ),
+        drawCalls: resolvedMeshes.length,
+        textureMemory: 0,
+        bufferMemory: resolvedMeshes.length * 1024, // Rough estimate
+      };
+
+      setMetrics(newMetrics);
+      updateStoreMetrics(newMetrics);
+      markDirty();
+
+      console.log(
+        `[DEBUG][useThreeRenderer] Rendered ${resolvedMeshes.length} meshes in ${duration}ms`
+      );
+    },
+    [meshes, isInitialized, storeMetrics, updateStoreMetrics, markDirty]
+  );
 
   /**
    * Clear all meshes from scene
@@ -218,42 +233,59 @@ export const useThreeRenderer = (): UseRendererReturn => {
   const clearScene = useCallback(() => {
     if (!sceneRef.current) return;
 
-    meshes.forEach(meshWrapper => {
+    meshes.forEach((meshWrapper) => {
       sceneRef.current?.remove(meshWrapper.mesh);
       meshWrapper.dispose();
     });
 
     setMeshes([]);
-    setMetrics(prev => ({ ...prev, meshCount: 0, triangleCount: 0, vertexCount: 0, drawCalls: 0 }));
-    
+    setMetrics((prev) => ({
+      ...prev,
+      meshCount: 0,
+      triangleCount: 0,
+      vertexCount: 0,
+      drawCalls: 0,
+    }));
+
     console.log('[DEBUG][useThreeRenderer] Scene cleared');
   }, [meshes]);
 
   /**
    * Update camera configuration
    */
-  const updateCamera = useCallback((newCamera: CameraConfig) => {
-    if (!cameraRef.current) return;
+  const updateCamera = useCallback(
+    (newCamera: CameraConfig) => {
+      if (!cameraRef.current) return;
 
-    // Safely handle camera position
-    if (newCamera.position && Array.isArray(newCamera.position) && newCamera.position.length === 3) {
-      cameraRef.current.position.set(newCamera.position[0], newCamera.position[1], newCamera.position[2]);
-    }
+      // Safely handle camera position
+      if (
+        newCamera.position &&
+        Array.isArray(newCamera.position) &&
+        newCamera.position.length === 3
+      ) {
+        cameraRef.current.position.set(
+          newCamera.position[0],
+          newCamera.position[1],
+          newCamera.position[2]
+        );
+      }
 
-    // Safely handle camera target
-    if (newCamera.target && Array.isArray(newCamera.target) && newCamera.target.length === 3) {
-      cameraRef.current.lookAt(newCamera.target[0], newCamera.target[1], newCamera.target[2]);
-    }
+      // Safely handle camera target
+      if (newCamera.target && Array.isArray(newCamera.target) && newCamera.target.length === 3) {
+        cameraRef.current.lookAt(newCamera.target[0], newCamera.target[1], newCamera.target[2]);
+      }
 
-    cameraRef.current.fov = newCamera.fov;
-    cameraRef.current.near = newCamera.near;
-    cameraRef.current.far = newCamera.far;
-    cameraRef.current.updateProjectionMatrix();
+      cameraRef.current.fov = newCamera.fov;
+      cameraRef.current.near = newCamera.near;
+      cameraRef.current.far = newCamera.far;
+      cameraRef.current.updateProjectionMatrix();
 
-    updateStoreCamera(newCamera);
+      updateStoreCamera(newCamera);
 
-    console.log('[DEBUG][useThreeRenderer] Camera updated');
-  }, [updateStoreCamera]);
+      console.log('[DEBUG][useThreeRenderer] Camera updated');
+    },
+    [updateStoreCamera]
+  );
 
   /**
    * Reset camera to default position
@@ -272,12 +304,12 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
     // Render current frame
     rendererRef.current.render(sceneRef.current, cameraRef.current);
-    
+
     // Get canvas data URL
     const dataURL = rendererRef.current.domElement.toDataURL('image/png');
-    
+
     console.log('[DEBUG][useThreeRenderer] Screenshot captured');
-    
+
     return dataURL;
   }, []);
 
@@ -286,16 +318,16 @@ export const useThreeRenderer = (): UseRendererReturn => {
    */
   useEffect(() => {
     initializeRenderer();
-    
+
     return () => {
       // Cleanup on unmount
       clearScene();
-      
+
       if (rendererRef.current) {
         rendererRef.current.dispose();
         rendererRef.current = null;
       }
-      
+
       sceneRef.current = null;
       cameraRef.current = null;
       setIsInitialized(false);
@@ -307,7 +339,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
    */
   useEffect(() => {
     if (isInitialized && ast.length > 0) {
-      renderAST(ast).catch(err => {
+      renderAST(ast).catch((err) => {
         setError(`Failed to render AST: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (isInitialized && ast.length === 0) {
@@ -338,8 +370,8 @@ export const useThreeRenderer = (): UseRendererReturn => {
       clearScene,
       updateCamera,
       resetCamera,
-      takeScreenshot
-    }
+      takeScreenshot,
+    },
   };
 };
 

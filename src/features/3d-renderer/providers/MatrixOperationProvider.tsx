@@ -1,14 +1,15 @@
 /**
  * Matrix Operation Provider
- * 
+ *
  * React context provider for matrix operations with service management,
  * error boundaries, and performance monitoring following bulletproof-react patterns.
  */
 
+import type React from 'react';
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import { useMatrixOperations, type UseMatrixOperationsReturn } from '../hooks/useMatrixOperations';
+import { type UseMatrixOperationsReturn, useMatrixOperations } from '../hooks/useMatrixOperations';
 
 // Type definitions for provider
 interface PerformanceReport {
@@ -62,7 +63,7 @@ const DEFAULT_CONFIG: MatrixOperationProviderConfig = {
   enableConfigManager: true,
   autoOptimizeConfiguration: false,
   healthCheckInterval: 30000, // 30 seconds
-  performanceReportInterval: 60000 // 1 minute
+  performanceReportInterval: 60000, // 1 minute
 };
 
 /**
@@ -89,15 +90,17 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   config: initialConfig = {},
   onHealthStatusChange,
   onPerformanceReport,
-  onError
+  onError,
 }) => {
   const [config, setConfig] = useState<MatrixOperationProviderConfig>({
     ...DEFAULT_CONFIG,
-    ...initialConfig
+    ...initialConfig,
   });
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastHealthCheck, setLastHealthCheck] = useState<number | null>(null);
-  const [lastPerformanceReport, setLastPerformanceReport] = useState<PerformanceReport | null>(null);
+  const [lastPerformanceReport, setLastPerformanceReport] = useState<PerformanceReport | null>(
+    null
+  );
 
   // Use the matrix operations hook
   const matrixOperations = useMatrixOperations();
@@ -107,7 +110,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
    */
   const updateConfig = useCallback((newConfig: Partial<MatrixOperationProviderConfig>) => {
     console.log('[DEBUG][MatrixOperationProvider] Updating configuration:', newConfig);
-    setConfig(prev => ({ ...prev, ...newConfig }));
+    setConfig((prev) => ({ ...prev, ...newConfig }));
   }, []);
 
   /**
@@ -117,10 +120,10 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
     try {
       const status = await matrixOperations.getHealthStatus();
       const isHealthy = matrixOperations.isServiceHealthy;
-      
+
       setLastHealthCheck(Date.now());
       onHealthStatusChange?.(isHealthy, status);
-      
+
       if (!isHealthy) {
         console.warn('[WARN][MatrixOperationProvider] Matrix services are unhealthy:', status);
       }
@@ -138,10 +141,10 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
       const report = matrixOperations.getPerformanceReport();
       setLastPerformanceReport(report);
       onPerformanceReport?.(report);
-      
+
       console.log('[DEBUG][MatrixOperationProvider] Performance report generated:', {
         timestamp: Date.now(),
-        reportSize: Object.keys(report ?? {}).length
+        reportSize: Object.keys(report ?? {}).length,
       });
     } catch (err) {
       console.error('[ERROR][MatrixOperationProvider] Performance report generation failed:', err);
@@ -158,7 +161,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
     try {
       console.log('[DEBUG][MatrixOperationProvider] Auto-optimizing configuration');
       const result = await matrixOperations.optimizeConfiguration();
-      
+
       if (result.isError) {
         console.warn('[WARN][MatrixOperationProvider] Auto-optimization failed:', result.error);
       } else {
@@ -175,15 +178,15 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
    */
   useEffect(() => {
     console.log('[INIT][MatrixOperationProvider] Initializing matrix operation provider');
-    
+
     const initializeProvider = async () => {
       try {
         // Perform initial health check
         await performHealthCheck();
-        
+
         // Generate initial performance report
         generatePerformanceReport();
-        
+
         setIsInitialized(true);
         console.log('[DEBUG][MatrixOperationProvider] Provider initialized successfully');
       } catch (err) {
@@ -201,10 +204,12 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   useEffect(() => {
     if (!isInitialized || !config.healthCheckInterval) return;
 
-    console.log(`[DEBUG][MatrixOperationProvider] Setting up health check interval: ${config.healthCheckInterval}ms`);
-    
+    console.log(
+      `[DEBUG][MatrixOperationProvider] Setting up health check interval: ${config.healthCheckInterval}ms`
+    );
+
     const interval = setInterval(performHealthCheck, config.healthCheckInterval);
-    
+
     return () => {
       console.log('[DEBUG][MatrixOperationProvider] Clearing health check interval');
       clearInterval(interval);
@@ -217,10 +222,12 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   useEffect(() => {
     if (!isInitialized || !config.performanceReportInterval) return;
 
-    console.log(`[DEBUG][MatrixOperationProvider] Setting up performance report interval: ${config.performanceReportInterval}ms`);
-    
+    console.log(
+      `[DEBUG][MatrixOperationProvider] Setting up performance report interval: ${config.performanceReportInterval}ms`
+    );
+
     const interval = setInterval(generatePerformanceReport, config.performanceReportInterval);
-    
+
     return () => {
       console.log('[DEBUG][MatrixOperationProvider] Clearing performance report interval');
       clearInterval(interval);
@@ -234,10 +241,10 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
     if (!isInitialized || !config.autoOptimizeConfiguration) return;
 
     console.log('[DEBUG][MatrixOperationProvider] Setting up auto-optimization interval');
-    
+
     // Run auto-optimization every 5 minutes if enabled
     const interval = setInterval(autoOptimizeConfiguration, 5 * 60 * 1000);
-    
+
     return () => {
       console.log('[DEBUG][MatrixOperationProvider] Clearing auto-optimization interval');
       clearInterval(interval);
@@ -253,7 +260,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
     updateConfig,
     isInitialized,
     lastHealthCheck,
-    lastPerformanceReport
+    lastPerformanceReport,
   };
 
   return (
@@ -268,11 +275,11 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
  */
 export const useMatrixOperationContext = (): MatrixOperationContextValue => {
   const context = useContext(MatrixOperationContext);
-  
+
   if (!context) {
     throw new Error('useMatrixOperationContext must be used within a MatrixOperationProvider');
   }
-  
+
   return context;
 };
 
@@ -282,17 +289,16 @@ export const useMatrixOperationContext = (): MatrixOperationContextValue => {
 export const withMatrixOperations = <P extends object>(
   Component: React.ComponentType<P>
 ): React.FC<P & { matrixConfig?: Partial<MatrixOperationProviderConfig> }> => {
-  const WrappedComponent: React.FC<P & { matrixConfig?: Partial<MatrixOperationProviderConfig> }> = ({ 
-    matrixConfig, 
-    ...props 
-  }) => (
+  const WrappedComponent: React.FC<
+    P & { matrixConfig?: Partial<MatrixOperationProviderConfig> }
+  > = ({ matrixConfig, ...props }) => (
     <MatrixOperationProvider {...(matrixConfig ? { config: matrixConfig } : {})}>
       <Component {...(props as P)} />
     </MatrixOperationProvider>
   );
 
   WrappedComponent.displayName = `withMatrixOperations(${Component.displayName ?? Component.name})`;
-  
+
   return WrappedComponent;
 };
 
@@ -303,7 +309,8 @@ export const MatrixOperationStatus: React.FC<{
   readonly showDetails?: boolean;
   readonly className?: string;
 }> = ({ showDetails = false, className = '' }) => {
-  const { isServiceHealthy, serviceStatus, lastHealthCheck, lastPerformanceReport, isInitialized } = useMatrixOperationContext();
+  const { isServiceHealthy, serviceStatus, lastHealthCheck, lastPerformanceReport, isInitialized } =
+    useMatrixOperationContext();
 
   if (!isInitialized) {
     return (
@@ -314,13 +321,23 @@ export const MatrixOperationStatus: React.FC<{
   }
 
   return (
-    <div className={`matrix-operation-status ${isServiceHealthy ? 'healthy' : 'unhealthy'} ${className}`}>
-      <span>{isServiceHealthy ? '✅' : '❌'} Matrix Services: {isServiceHealthy ? 'Healthy' : 'Unhealthy'}</span>
-      
+    <div
+      className={`matrix-operation-status ${isServiceHealthy ? 'healthy' : 'unhealthy'} ${className}`}
+    >
+      <span>
+        {isServiceHealthy ? '✅' : '❌'} Matrix Services:{' '}
+        {isServiceHealthy ? 'Healthy' : 'Unhealthy'}
+      </span>
+
       {showDetails && (
         <div className="matrix-operation-details">
-          <div>Last Health Check: {lastHealthCheck ? new Date(lastHealthCheck).toLocaleTimeString() : 'Never'}</div>
-          <div>Services: {serviceStatus?.services ? Object.keys(serviceStatus.services).length : 0}</div>
+          <div>
+            Last Health Check:{' '}
+            {lastHealthCheck ? new Date(lastHealthCheck).toLocaleTimeString() : 'Never'}
+          </div>
+          <div>
+            Services: {serviceStatus?.services ? Object.keys(serviceStatus.services).length : 0}
+          </div>
           <div>Performance Report: {lastPerformanceReport ? 'Available' : 'Not available'}</div>
         </div>
       )}

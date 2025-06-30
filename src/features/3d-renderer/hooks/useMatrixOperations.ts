@@ -1,16 +1,20 @@
 /**
  * Matrix Operations Hook
- * 
+ *
  * React hook for matrix operations with performance tracking, error handling,
  * and integration with the matrix service layer following bulletproof-react patterns.
  */
 
-import { useCallback, useRef, useState, useEffect } from 'react';
 import type { Matrix } from 'ml-matrix';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Matrix3, Matrix4 } from 'three';
-import { MatrixIntegrationService, type EnhancedMatrixOptions, type EnhancedMatrixResult } from '../services/matrix-integration.service';
-import { matrixServiceContainer } from '../services/matrix-service-container';
 import type { Result } from '../../../shared/types/result.types';
+import {
+  type EnhancedMatrixOptions,
+  type EnhancedMatrixResult,
+  MatrixIntegrationService,
+} from '../services/matrix-integration.service';
+import { matrixServiceContainer } from '../services/matrix-service-container';
 
 // Additional type definitions for hook interface
 interface PerformanceReport {
@@ -57,11 +61,13 @@ export interface MatrixOperationState<T> {
   readonly isLoading: boolean;
   readonly isSuccess: boolean;
   readonly isError: boolean;
-  readonly performance?: {
-    readonly executionTime: number;
-    readonly memoryUsed: number;
-    readonly cacheHit: boolean;
-  } | undefined;
+  readonly performance?:
+    | {
+        readonly executionTime: number;
+        readonly memoryUsed: number;
+        readonly cacheHit: boolean;
+      }
+    | undefined;
 }
 
 /**
@@ -73,12 +79,12 @@ export interface UseMatrixOperationsReturn {
     matrix4: Matrix4,
     options?: EnhancedMatrixOptions
   ) => Promise<MatrixOperationState<Matrix>>;
-  
+
   readonly performRobustInversion: (
     matrix: Matrix,
     options?: EnhancedMatrixOptions
   ) => Promise<MatrixOperationState<Matrix>>;
-  
+
   readonly computeNormalMatrix: (
     modelMatrix: Matrix4,
     options?: EnhancedMatrixOptions
@@ -110,7 +116,7 @@ const _createInitialState = <T>(): MatrixOperationState<T> => ({
   error: null,
   isLoading: false,
   isSuccess: false,
-  isError: false
+  isError: false,
 });
 
 /**
@@ -122,24 +128,34 @@ const _createLoadingState = <T>(): MatrixOperationState<T> => ({
   error: null,
   isLoading: true,
   isSuccess: false,
-  isError: false
+  isError: false,
 });
 
 /**
  * Create success state
  */
-const createSuccessState = <T>(data: T, performance?: { readonly executionTime: number; readonly memoryUsed: number; readonly cacheHit: boolean; readonly operationType?: string }): MatrixOperationState<T> => ({
+const createSuccessState = <T>(
+  data: T,
+  performance?: {
+    readonly executionTime: number;
+    readonly memoryUsed: number;
+    readonly cacheHit: boolean;
+    readonly operationType?: string;
+  }
+): MatrixOperationState<T> => ({
   data,
   status: 'success',
   error: null,
   isLoading: false,
   isSuccess: true,
   isError: false,
-  performance: performance ? {
-    executionTime: performance.executionTime,
-    memoryUsed: performance.memoryUsed,
-    cacheHit: performance.cacheHit
-  } : undefined
+  performance: performance
+    ? {
+        executionTime: performance.executionTime,
+        memoryUsed: performance.memoryUsed,
+        cacheHit: performance.cacheHit,
+      }
+    : undefined,
 });
 
 /**
@@ -151,7 +167,7 @@ const createErrorState = <T>(error: string): MatrixOperationState<T> => ({
   error,
   isLoading: false,
   isSuccess: false,
-  isError: true
+  isError: true,
 });
 
 /**
@@ -165,36 +181,45 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   // Initialize matrix integration service
   useEffect(() => {
     console.log('[INIT][useMatrixOperations] Initializing matrix operations hook');
-    
+
     try {
       matrixIntegrationRef.current = new MatrixIntegrationService(matrixServiceContainer);
-      
+
       // Check initial health status
-      matrixIntegrationRef.current.getHealthStatus().then(status => {
-        setIsServiceHealthy(status.overall === 'healthy');
-        setServiceStatus({
-          initialized: true,
-          errors: status.recommendations || [],
-          lastOperation: Date.now(),
-          overall: status.overall,
-          services: status.services,
-          timestamp: status.timestamp,
-          recommendations: status.recommendations
+      matrixIntegrationRef.current
+        .getHealthStatus()
+        .then((status) => {
+          setIsServiceHealthy(status.overall === 'healthy');
+          setServiceStatus({
+            initialized: true,
+            errors: status.recommendations || [],
+            lastOperation: Date.now(),
+            overall: status.overall,
+            services: status.services,
+            timestamp: status.timestamp,
+            recommendations: status.recommendations,
+          });
+        })
+        .catch((err) => {
+          console.error('[ERROR][useMatrixOperations] Failed to get initial health status:', err);
+          setIsServiceHealthy(false);
         });
-      }).catch(err => {
-        console.error('[ERROR][useMatrixOperations] Failed to get initial health status:', err);
-        setIsServiceHealthy(false);
-      });
     } catch (err) {
-      console.error('[ERROR][useMatrixOperations] Failed to initialize matrix integration service:', err);
+      console.error(
+        '[ERROR][useMatrixOperations] Failed to initialize matrix integration service:',
+        err
+      );
       setIsServiceHealthy(false);
     }
 
     return () => {
       console.log('[END][useMatrixOperations] Cleaning up matrix operations hook');
       if (matrixIntegrationRef.current) {
-        matrixIntegrationRef.current.shutdown().catch(err => {
-          console.error('[ERROR][useMatrixOperations] Failed to shutdown matrix integration service:', err);
+        matrixIntegrationRef.current.shutdown().catch((err) => {
+          console.error(
+            '[ERROR][useMatrixOperations] Failed to shutdown matrix integration service:',
+            err
+          );
         });
       }
     };
@@ -203,114 +228,137 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   /**
    * Convert Matrix4 to ml-matrix with React state management
    */
-  const convertMatrix4ToMLMatrix = useCallback(async (
-    matrix4: Matrix4,
-    options: EnhancedMatrixOptions = {}
-  ): Promise<MatrixOperationState<Matrix>> => {
-    console.log('[DEBUG][useMatrixOperations] Converting Matrix4 to ml-matrix');
+  const convertMatrix4ToMLMatrix = useCallback(
+    async (
+      matrix4: Matrix4,
+      options: EnhancedMatrixOptions = {}
+    ): Promise<MatrixOperationState<Matrix>> => {
+      console.log('[DEBUG][useMatrixOperations] Converting Matrix4 to ml-matrix');
 
-    if (!matrixIntegrationRef.current) {
-      return createErrorState('Matrix integration service not initialized');
-    }
-
-    try {
-      const result = await matrixIntegrationRef.current.convertMatrix4ToMLMatrix(matrix4, options);
-      
-      if (result.success) {
-        return createSuccessState(result.data.result, result.data.performance);
-      } else {
-        return createErrorState(result.error);
+      if (!matrixIntegrationRef.current) {
+        return createErrorState('Matrix integration service not initialized');
       }
-    } catch (err) {
-      const errorMessage = `Matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][useMatrixOperations]', errorMessage);
-      return createErrorState(errorMessage);
-    }
-  }, []);
+
+      try {
+        const result = await matrixIntegrationRef.current.convertMatrix4ToMLMatrix(
+          matrix4,
+          options
+        );
+
+        if (result.success) {
+          return createSuccessState(result.data.result, result.data.performance);
+        } else {
+          return createErrorState(result.error);
+        }
+      } catch (err) {
+        const errorMessage = `Matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`;
+        console.error('[ERROR][useMatrixOperations]', errorMessage);
+        return createErrorState(errorMessage);
+      }
+    },
+    []
+  );
 
   /**
    * Perform robust matrix inversion with React state management
    */
-  const performRobustInversion = useCallback(async (
-    matrix: Matrix,
-    options: EnhancedMatrixOptions = {}
-  ): Promise<MatrixOperationState<Matrix>> => {
-    console.log('[DEBUG][useMatrixOperations] Performing robust matrix inversion');
+  const performRobustInversion = useCallback(
+    async (
+      matrix: Matrix,
+      options: EnhancedMatrixOptions = {}
+    ): Promise<MatrixOperationState<Matrix>> => {
+      console.log('[DEBUG][useMatrixOperations] Performing robust matrix inversion');
 
-    if (!matrixIntegrationRef.current) {
-      return createErrorState('Matrix integration service not initialized');
-    }
-
-    try {
-      const result = await matrixIntegrationRef.current.performRobustInversion(matrix, options);
-      
-      if (result.success) {
-        return createSuccessState(result.data.result, result.data.performance);
-      } else {
-        return createErrorState(result.error);
+      if (!matrixIntegrationRef.current) {
+        return createErrorState('Matrix integration service not initialized');
       }
-    } catch (err) {
-      const errorMessage = `Matrix inversion failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][useMatrixOperations]', errorMessage);
-      return createErrorState(errorMessage);
-    }
-  }, []);
+
+      try {
+        const result = await matrixIntegrationRef.current.performRobustInversion(matrix, options);
+
+        if (result.success) {
+          return createSuccessState(result.data.result, result.data.performance);
+        } else {
+          return createErrorState(result.error);
+        }
+      } catch (err) {
+        const errorMessage = `Matrix inversion failed: ${err instanceof Error ? err.message : String(err)}`;
+        console.error('[ERROR][useMatrixOperations]', errorMessage);
+        return createErrorState(errorMessage);
+      }
+    },
+    []
+  );
 
   /**
    * Compute normal matrix with React state management
    */
-  const computeNormalMatrix = useCallback(async (
-    modelMatrix: Matrix4,
-    options: EnhancedMatrixOptions = {}
-  ): Promise<MatrixOperationState<Matrix3>> => {
-    console.log('[DEBUG][useMatrixOperations] Computing normal matrix');
+  const computeNormalMatrix = useCallback(
+    async (
+      modelMatrix: Matrix4,
+      options: EnhancedMatrixOptions = {}
+    ): Promise<MatrixOperationState<Matrix3>> => {
+      console.log('[DEBUG][useMatrixOperations] Computing normal matrix');
 
-    if (!matrixIntegrationRef.current) {
-      return createErrorState('Matrix integration service not initialized');
-    }
-
-    try {
-      const result = await matrixIntegrationRef.current.computeEnhancedNormalMatrix(modelMatrix, options);
-      
-      if (result.success) {
-        return createSuccessState(result.data.result, result.data.performance);
-      } else {
-        return createErrorState(result.error);
+      if (!matrixIntegrationRef.current) {
+        return createErrorState('Matrix integration service not initialized');
       }
-    } catch (err) {
-      const errorMessage = `Normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][useMatrixOperations]', errorMessage);
-      return createErrorState(errorMessage);
-    }
-  }, []);
+
+      try {
+        const result = await matrixIntegrationRef.current.computeEnhancedNormalMatrix(
+          modelMatrix,
+          options
+        );
+
+        if (result.success) {
+          return createSuccessState(result.data.result, result.data.performance);
+        } else {
+          return createErrorState(result.error);
+        }
+      } catch (err) {
+        const errorMessage = `Normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`;
+        console.error('[ERROR][useMatrixOperations]', errorMessage);
+        return createErrorState(errorMessage);
+      }
+    },
+    []
+  );
 
   /**
    * Perform batch operations with React state management
    */
-  const performBatchOperations = useCallback(async <T>(
-    operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
-    options: EnhancedMatrixOptions & { continueOnError?: boolean } = {}
-  ): Promise<MatrixOperationState<EnhancedMatrixResult<T>[]>> => {
-    console.log(`[DEBUG][useMatrixOperations] Performing batch operations (${operations.length} operations)`);
+  const performBatchOperations = useCallback(
+    async <T>(
+      operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
+      options: EnhancedMatrixOptions & { continueOnError?: boolean } = {}
+    ): Promise<MatrixOperationState<EnhancedMatrixResult<T>[]>> => {
+      console.log(
+        `[DEBUG][useMatrixOperations] Performing batch operations (${operations.length} operations)`
+      );
 
-    if (!matrixIntegrationRef.current) {
-      return createErrorState('Matrix integration service not initialized');
-    }
-
-    try {
-      const result = await matrixIntegrationRef.current.performBatchOperations(operations, options);
-      
-      if (result.success) {
-        return createSuccessState(result.data);
-      } else {
-        return createErrorState(result.error);
+      if (!matrixIntegrationRef.current) {
+        return createErrorState('Matrix integration service not initialized');
       }
-    } catch (err) {
-      const errorMessage = `Batch operations failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][useMatrixOperations]', errorMessage);
-      return createErrorState(errorMessage);
-    }
-  }, []);
+
+      try {
+        const result = await matrixIntegrationRef.current.performBatchOperations(
+          operations,
+          options
+        );
+
+        if (result.success) {
+          return createSuccessState(result.data);
+        } else {
+          return createErrorState(result.error);
+        }
+      } catch (err) {
+        const errorMessage = `Batch operations failed: ${err instanceof Error ? err.message : String(err)}`;
+        console.error('[ERROR][useMatrixOperations]', errorMessage);
+        return createErrorState(errorMessage);
+      }
+    },
+    []
+  );
 
   /**
    * Get performance report
@@ -329,15 +377,15 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         failedOperations: 0,
         totalExecutionTime: 0,
         cacheHitRate: 0,
-        lastOperationTime: 0
+        lastOperationTime: 0,
       };
     }
 
     const report = matrixIntegrationRef.current.getPerformanceReport();
 
     // Extract data from the service report structure with proper type assertions
-    const telemetryData = report?.telemetry as Record<string, unknown> ?? {};
-    const cacheData = report?.cache as Record<string, unknown> ?? {};
+    const telemetryData = (report?.telemetry as Record<string, unknown>) ?? {};
+    const cacheData = (report?.cache as Record<string, unknown>) ?? {};
 
     return {
       operationCount: (telemetryData.operationCount as number) ?? 0,
@@ -349,7 +397,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       failedOperations: (telemetryData.failedOperations as number) ?? 0,
       totalExecutionTime: (telemetryData.totalExecutionTime as number) ?? 0,
       cacheHitRate: (cacheData.hitRate as number) ?? 0,
-      lastOperationTime: (telemetryData.lastOperationTime as number) ?? 0
+      lastOperationTime: (telemetryData.lastOperationTime as number) ?? 0,
     };
   }, []);
 
@@ -358,7 +406,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
    */
   const getHealthStatus = useCallback(async () => {
     console.log('[DEBUG][useMatrixOperations] Getting health status');
-    
+
     if (!matrixIntegrationRef.current) {
       return null;
     }
@@ -373,17 +421,20 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         overall: status.overall,
         services: status.services,
         timestamp: status.timestamp,
-        recommendations: status.recommendations
+        recommendations: status.recommendations,
       });
 
       // Convert ContainerHealthReport to HealthStatus
       const healthStatus: HealthStatus = {
         isHealthy: status.overall === 'healthy',
-        services: status.services.reduce((acc, service) => {
-          acc[service.service] = service.healthy;
-          return acc;
-        }, {} as Record<string, boolean>),
-        lastCheck: status.timestamp
+        services: status.services.reduce(
+          (acc, service) => {
+            acc[service.service] = service.healthy;
+            return acc;
+          },
+          {} as Record<string, boolean>
+        ),
+        lastCheck: status.timestamp,
       };
 
       return healthStatus;
@@ -406,7 +457,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
     try {
       const result = await matrixIntegrationRef.current.optimizeConfiguration();
-      
+
       if (result.success) {
         return createSuccessState(undefined);
       } else {
@@ -429,9 +480,9 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       if (matrixIntegrationRef.current) {
         await matrixIntegrationRef.current.shutdown();
       }
-      
+
       matrixIntegrationRef.current = new MatrixIntegrationService(matrixServiceContainer);
-      
+
       // Check health after reset
       const status = await matrixIntegrationRef.current.getHealthStatus();
       setIsServiceHealthy(status.overall === 'healthy');
@@ -442,7 +493,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         overall: status.overall,
         services: status.services,
         timestamp: status.timestamp,
-        recommendations: status.recommendations
+        recommendations: status.recommendations,
       });
     } catch (err) {
       console.error('[ERROR][useMatrixOperations] Failed to reset services:', err);
@@ -460,6 +511,6 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
     optimizeConfiguration,
     resetServices,
     isServiceHealthy,
-    serviceStatus
+    serviceStatus,
   };
 };

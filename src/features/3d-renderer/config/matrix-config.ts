@@ -1,6 +1,6 @@
 /**
  * Matrix Configuration
- * 
+ *
  * Centralized configuration for matrix operations, performance thresholds,
  * and operational parameters following bulletproof-react configuration patterns.
  */
@@ -23,7 +23,7 @@ export const MATRIX_CONFIG = {
     /** Large matrix threshold for special handling */
     largeMatrixThreshold: 1000000,
     /** Batch operation size for large matrices */
-    batchSize: 10000
+    batchSize: 10000,
   },
 
   /**
@@ -41,7 +41,7 @@ export const MATRIX_CONFIG = {
     /** Enable cache compression */
     enableCompression: false,
     /** Cache memory limit (bytes) */
-    memoryLimit: 50 * 1024 * 1024 // 50MB
+    memoryLimit: 50 * 1024 * 1024, // 50MB
   },
 
   /**
@@ -59,7 +59,7 @@ export const MATRIX_CONFIG = {
     /** Default matrix initialization value */
     defaultValue: 0,
     /** Enable bounds checking */
-    enableBoundsChecking: true
+    enableBoundsChecking: true,
   },
 
   /**
@@ -75,7 +75,7 @@ export const MATRIX_CONFIG = {
     /** Enable matrix decomposition caching */
     cacheDecompositions: true,
     /** Maximum cached decompositions */
-    maxDecompositions: 50
+    maxDecompositions: 50,
   },
 
   /**
@@ -91,7 +91,7 @@ export const MATRIX_CONFIG = {
     /** Batch transformation size */
     batchTransformSize: 1000,
     /** Enable transformation caching */
-    cacheTransformations: true
+    cacheTransformations: true,
   },
 
   /**
@@ -107,7 +107,7 @@ export const MATRIX_CONFIG = {
     /** Enable memory usage monitoring */
     enableMemoryMonitoring: true,
     /** Performance log interval (ms) */
-    performanceLogInterval: 10000
+    performanceLogInterval: 10000,
   },
 
   /**
@@ -123,8 +123,8 @@ export const MATRIX_CONFIG = {
     /** Enable fallback to simple operations */
     enableFallback: true,
     /** Timeout for error recovery */
-    recoveryTimeout: 2000
-  }
+    recoveryTimeout: 2000,
+  },
 } as const;
 
 /**
@@ -209,8 +209,10 @@ export const getCacheKey = (operation: string, ...params: (string | number)[]): 
  * Check if operation should use parallel processing
  */
 export const shouldUseParallel = (matrixSize: number): boolean => {
-  return MATRIX_CONFIG.operations.enableParallel && 
-         matrixSize >= MATRIX_CONFIG.performance.largeMatrixThreshold;
+  return (
+    MATRIX_CONFIG.operations.enableParallel &&
+    matrixSize >= MATRIX_CONFIG.performance.largeMatrixThreshold
+  );
 };
 
 /**

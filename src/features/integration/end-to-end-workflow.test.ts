@@ -5,22 +5,16 @@
  * matrix operations to 3D rendering, validating all service integrations.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { BoxGeometry, CylinderGeometry, Mesh, SphereGeometry } from 'three';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-
-  Mesh,
-  BoxGeometry,
-  SphereGeometry,
-  CylinderGeometry,
-} from "three";
-import { useAppStore } from "../store/app-store";
-import { MatrixServiceContainer } from "../3d-renderer/services/matrix-service-container";
-import { MatrixIntegrationService } from "../3d-renderer/services/matrix-integration.service";
-import {
-  convertASTNodeToCSG,
   convertASTNodesToCSGUnion,
-} from "../3d-renderer/services/ast-to-csg-converter";
-import { parseOpenSCADCode } from "../openscad-parser/services/parser-manager";
+  convertASTNodeToCSG,
+} from '../3d-renderer/services/ast-to-csg-converter';
+import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service';
+import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container';
+import { parseOpenSCADCode } from '../openscad-parser/services/parser-manager';
+import { useAppStore } from '../store/app-store';
 
 /**
  * End-to-end test scenarios
@@ -28,16 +22,16 @@ import { parseOpenSCADCode } from "../openscad-parser/services/parser-manager";
 const E2E_TEST_SCENARIOS = {
   // Simple primitive rendering
   simplePrimitive: {
-    code: "cube([10,10,10]);",
+    code: 'cube([10,10,10]);',
     expectedNodes: 1,
-    expectedType: "cube",
+    expectedType: 'cube',
     timeoutMs: 5000,
   },
   // Complex transformation
   complexTransformation: {
-    code: "translate([5,0,0]) rotate([0,45,0]) scale([2,1,1]) cube([5,5,5]);",
+    code: 'translate([5,0,0]) rotate([0,45,0]) scale([2,1,1]) cube([5,5,5]);',
     expectedNodes: 1,
-    expectedType: "translate",
+    expectedType: 'translate',
     timeoutMs: 10000,
   },
   // Multiple primitives with union
@@ -48,7 +42,7 @@ const E2E_TEST_SCENARIOS = {
       translate([0,15,0]) cylinder(h=10, r=3);
     `,
     expectedNodes: 3,
-    expectedTypes: ["cube", "translate", "translate"],
+    expectedTypes: ['cube', 'translate', 'translate'],
     timeoutMs: 15000,
   },
   // Boolean operations
@@ -60,7 +54,7 @@ const E2E_TEST_SCENARIOS = {
       }
     `,
     expectedNodes: 1,
-    expectedType: "difference",
+    expectedType: 'difference',
     timeoutMs: 20000,
   },
   // Complex nested operations
@@ -78,7 +72,7 @@ const E2E_TEST_SCENARIOS = {
       }
     `,
     expectedNodes: 1,
-    expectedType: "union",
+    expectedType: 'union',
     timeoutMs: 30000,
   },
 };
@@ -102,7 +96,8 @@ interface WorkflowMetrics {
 /**
  * Type assertion helpers for workflow results
  */
-const asWorkflowResult = (result: unknown): Record<string, unknown> => result as Record<string, unknown>;
+const asWorkflowResult = (result: unknown): Record<string, unknown> =>
+  result as Record<string, unknown>;
 const asMeshResult = (result: unknown): { mesh: unknown; metadata: Record<string, unknown> } =>
   result as { mesh: unknown; metadata: Record<string, unknown> };
 const asMetadata = (obj: unknown): Record<string, unknown> =>
@@ -112,7 +107,7 @@ const asMetadata = (obj: unknown): Record<string, unknown> =>
  * Validate AST node structure
  */
 const validateASTNode = (node: unknown, expectedType?: string): boolean => {
-  if (!node || typeof node !== "object") return false;
+  if (!node || typeof node !== 'object') return false;
 
   const nodeObj = node as Record<string, unknown>;
   if (expectedType && nodeObj.type !== expectedType) return false;
@@ -125,8 +120,8 @@ const validateASTNode = (node: unknown, expectedType?: string): boolean => {
   if (!location.start || !location.end) return false;
 
   const start = location.start as Record<string, unknown>;
-  if (typeof start.line !== "number") return false;
-  if (typeof start.column !== "number") return false;
+  if (typeof start.line !== 'number') return false;
+  if (typeof start.column !== 'number') return false;
 
   return true;
 };
@@ -140,11 +135,11 @@ const validateMesh = (mesh: Mesh, expectedGeometryType?: string): boolean => {
 
   if (expectedGeometryType) {
     switch (expectedGeometryType) {
-      case "cube":
+      case 'cube':
         return mesh.geometry instanceof BoxGeometry;
-      case "sphere":
+      case 'sphere':
         return mesh.geometry instanceof SphereGeometry;
-      case "cylinder":
+      case 'cylinder':
         return mesh.geometry instanceof CylinderGeometry;
       default:
         return true;
@@ -158,7 +153,7 @@ const validateMesh = (mesh: Mesh, expectedGeometryType?: string): boolean => {
  * Measure workflow performance
  */
 const measureWorkflowPerformance = async (
-  workflowFn: () => Promise<unknown>,
+  workflowFn: () => Promise<unknown>
 ): Promise<{ result: unknown; metrics: Partial<WorkflowMetrics> }> => {
   const startTime = Date.now();
   const memoryBefore = process.memoryUsage?.()?.heapUsed || 0;
@@ -189,14 +184,12 @@ const measureWorkflowPerformance = async (
   }
 };
 
-describe("End-to-End Workflow Validation", () => {
+describe('End-to-End Workflow Validation', () => {
   let matrixServiceContainer: MatrixServiceContainer;
   let matrixIntegrationService: MatrixIntegrationService;
 
   beforeEach(() => {
-    console.log(
-      "[INIT][E2EWorkflowTest] Setting up end-to-end test environment",
-    );
+    console.log('[INIT][E2EWorkflowTest] Setting up end-to-end test environment');
 
     // Initialize matrix services
     matrixServiceContainer = new MatrixServiceContainer({
@@ -206,14 +199,12 @@ describe("End-to-End Workflow Validation", () => {
       autoStartServices: true,
     });
 
-    matrixIntegrationService = new MatrixIntegrationService(
-      matrixServiceContainer,
-    );
+    matrixIntegrationService = new MatrixIntegrationService(matrixServiceContainer);
 
     // Reset app store
     useAppStore.setState({
       editor: {
-        code: "",
+        code: '',
         cursorPosition: { line: 1, column: 1 },
         selection: null,
         isDirty: false,
@@ -249,106 +240,99 @@ describe("End-to-End Workflow Validation", () => {
   });
 
   afterEach(async () => {
-    console.log(
-      "[END][E2EWorkflowTest] Cleaning up end-to-end test environment",
-    );
+    console.log('[END][E2EWorkflowTest] Cleaning up end-to-end test environment');
     await matrixIntegrationService.shutdown();
   });
 
-  describe("Simple Primitive Workflow", () => {
+  describe('Simple Primitive Workflow', () => {
     it(
-      "should complete full workflow for simple cube",
+      'should complete full workflow for simple cube',
       async () => {
-        console.log("[DEBUG][E2EWorkflowTest] Testing simple cube workflow");
+        console.log('[DEBUG][E2EWorkflowTest] Testing simple cube workflow');
 
         const scenario = E2E_TEST_SCENARIOS.simplePrimitive;
 
-        const { result: workflowResult, metrics } =
-          await measureWorkflowPerformance(async () => {
-            // Step 1: Parse OpenSCAD code
-            const parseStartTime = Date.now();
-            const parseResult = await parseOpenSCADCode(scenario.code);
-            const parseTime = Date.now() - parseStartTime;
+        const { result: workflowResult, metrics } = await measureWorkflowPerformance(async () => {
+          // Step 1: Parse OpenSCAD code
+          const parseStartTime = Date.now();
+          const parseResult = await parseOpenSCADCode(scenario.code);
+          const parseTime = Date.now() - parseStartTime;
 
-            expect(parseResult.success).toBe(true);
-            if (!parseResult.success) throw new Error("Parse failed");
+          expect(parseResult.success).toBe(true);
+          if (!parseResult.success) throw new Error('Parse failed');
 
-            const ast = parseResult.data;
-            expect(ast).toHaveLength(scenario.expectedNodes);
-            expect(ast[0]).toBeDefined();
-            expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
+          const ast = parseResult.data;
+          expect(ast).toHaveLength(scenario.expectedNodes);
+          expect(ast[0]).toBeDefined();
+          expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
 
-            // Step 2: Update store with parsed AST
-            useAppStore.setState({
-              editor: {
-                code: scenario.code,
-                cursorPosition: { line: 1, column: 1 },
-                selection: null,
-                isDirty: false,
-                lastSaved: null,
-              },
-              parsing: {
-                ast,
-                isLoading: false,
-                errors: [],
-                warnings: [],
-                lastParsed: new Date(),
-                parseTime,
-              },
-            });
-
-            // Step 3: Convert AST to CSG with matrix operations
-            const csgStartTime = Date.now();
-            const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
-            const csgConversionTime = Date.now() - csgStartTime;
-
-            expect(csgResult.success).toBe(true);
-            if (!csgResult.success) throw new Error("CSG conversion failed");
-
-            const mesh3D = csgResult.data;
-            expect(validateMesh(mesh3D.mesh, scenario.expectedType)).toBe(true);
-
-            // Step 4: Validate matrix operations were used
-            const telemetryService =
-              matrixServiceContainer.getTelemetryService();
-            const telemetryMetrics = telemetryService?.getPerformanceMetrics();
-
-            // Step 5: Update store with rendered mesh
-            const renderStartTime = Date.now();
-            useAppStore.setState({
-              rendering: {
-                meshes: [mesh3D.mesh],
-                isRendering: false,
-                renderErrors: [],
-                lastRendered: new Date(),
-                renderTime: Date.now() - renderStartTime,
-                camera: {
-                  position: [5, 5, 5],
-                  target: [0, 0, 0],
-                  zoom: 1,
-                  fov: 75,
-                  near: 0.1,
-                  far: 1000,
-                  enableControls: true,
-                  enableAutoRotate: false,
-                  autoRotateSpeed: 1,
-                },
-              },
-            });
-
-            return {
+          // Step 2: Update store with parsed AST
+          useAppStore.setState({
+            editor: {
+              code: scenario.code,
+              cursorPosition: { line: 1, column: 1 },
+              selection: null,
+              isDirty: false,
+              lastSaved: null,
+            },
+            parsing: {
+              ast,
+              isLoading: false,
+              errors: [],
+              warnings: [],
+              lastParsed: new Date(),
               parseTime,
-              csgConversionTime,
-              astNodeCount: ast.length,
-              matrixOperationCount: telemetryMetrics?.operationCount ?? 0,
-              mesh3D,
-            };
+            },
           });
 
-        console.log(
-          "[DEBUG][E2EWorkflowTest] Simple cube workflow metrics:",
-          metrics,
-        );
+          // Step 3: Convert AST to CSG with matrix operations
+          const csgStartTime = Date.now();
+          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          const csgConversionTime = Date.now() - csgStartTime;
+
+          expect(csgResult.success).toBe(true);
+          if (!csgResult.success) throw new Error('CSG conversion failed');
+
+          const mesh3D = csgResult.data;
+          expect(validateMesh(mesh3D.mesh, scenario.expectedType)).toBe(true);
+
+          // Step 4: Validate matrix operations were used
+          const telemetryService = matrixServiceContainer.getTelemetryService();
+          const telemetryMetrics = telemetryService?.getPerformanceMetrics();
+
+          // Step 5: Update store with rendered mesh
+          const renderStartTime = Date.now();
+          useAppStore.setState({
+            rendering: {
+              meshes: [mesh3D.mesh],
+              isRendering: false,
+              renderErrors: [],
+              lastRendered: new Date(),
+              renderTime: Date.now() - renderStartTime,
+              camera: {
+                position: [5, 5, 5],
+                target: [0, 0, 0],
+                zoom: 1,
+                fov: 75,
+                near: 0.1,
+                far: 1000,
+                enableControls: true,
+                enableAutoRotate: false,
+                autoRotateSpeed: 1,
+              },
+            },
+          });
+
+          return {
+            parseTime,
+            csgConversionTime,
+            astNodeCount: ast.length,
+            matrixOperationCount: telemetryMetrics?.operationCount ?? 0,
+            mesh3D,
+          };
+        });
+
+        console.log('[DEBUG][E2EWorkflowTest] Simple cube workflow metrics:', metrics);
 
         // Validate workflow performance
         expect(metrics.success).toBe(true);
@@ -363,215 +347,197 @@ describe("End-to-End Workflow Validation", () => {
         expect(finalState.parsing.errors).toHaveLength(0);
         expect(finalState.rendering.renderErrors).toHaveLength(0);
       },
-      E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs,
+      E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs
     );
 
     it(
-      "should handle sphere primitive with matrix transformations",
+      'should handle sphere primitive with matrix transformations',
       async () => {
-        console.log(
-          "[DEBUG][E2EWorkflowTest] Testing sphere with transformations",
-        );
+        console.log('[DEBUG][E2EWorkflowTest] Testing sphere with transformations');
 
-        const code = "translate([10,5,0]) scale([2,1,1]) sphere(5);";
+        const code = 'translate([10,5,0]) scale([2,1,1]) sphere(5);';
 
-        const { result: workflowResult, metrics } =
-          await measureWorkflowPerformance(async () => {
-            // Parse and convert
-            const parseResult = await parseOpenSCADCode(code);
-            expect(parseResult.success).toBe(true);
-            if (!parseResult.success) throw new Error("Parse failed");
+        const { result: workflowResult, metrics } = await measureWorkflowPerformance(async () => {
+          // Parse and convert
+          const parseResult = await parseOpenSCADCode(code);
+          expect(parseResult.success).toBe(true);
+          if (!parseResult.success) throw new Error('Parse failed');
 
-            const ast = parseResult.data;
-            const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
-            expect(csgResult.success).toBe(true);
-            if (!csgResult.success) throw new Error("CSG conversion failed");
+          const ast = parseResult.data;
+          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          expect(csgResult.success).toBe(true);
+          if (!csgResult.success) throw new Error('CSG conversion failed');
 
-            const mesh3D = csgResult.data;
+          const mesh3D = csgResult.data;
 
-            // Validate transformations were applied
-            expect(mesh3D.mesh.position.x).toBe(10);
-            expect(mesh3D.mesh.position.y).toBe(5);
-            expect(mesh3D.mesh.position.z).toBe(0);
-            expect(mesh3D.mesh.scale.x).toBe(2);
-            expect(mesh3D.mesh.scale.y).toBe(1);
-            expect(mesh3D.mesh.scale.z).toBe(1);
+          // Validate transformations were applied
+          expect(mesh3D.mesh.position.x).toBe(10);
+          expect(mesh3D.mesh.position.y).toBe(5);
+          expect(mesh3D.mesh.position.z).toBe(0);
+          expect(mesh3D.mesh.scale.x).toBe(2);
+          expect(mesh3D.mesh.scale.y).toBe(1);
+          expect(mesh3D.mesh.scale.z).toBe(1);
 
-            // Validate matrix operations were performed
-            const conversionService =
-              matrixServiceContainer.getConversionService();
-            const conversionMetrics = conversionService.getPerformanceMetrics();
-            expect(conversionMetrics.operationCount).toBeGreaterThan(0);
+          // Validate matrix operations were performed
+          const conversionService = matrixServiceContainer.getConversionService();
+          const conversionMetrics = conversionService.getPerformanceMetrics();
+          expect(conversionMetrics.operationCount).toBeGreaterThan(0);
 
-            return { mesh3D, conversionMetrics };
-          });
+          return { mesh3D, conversionMetrics };
+        });
 
         expect(metrics.success).toBe(true);
-        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe("translate");
+        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe('translate');
       },
-      E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs,
+      E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs
     );
   });
 
-  describe("Complex Transformation Workflow", () => {
+  describe('Complex Transformation Workflow', () => {
     it(
-      "should handle complex nested transformations",
+      'should handle complex nested transformations',
       async () => {
-        console.log(
-          "[DEBUG][E2EWorkflowTest] Testing complex transformation workflow",
-        );
+        console.log('[DEBUG][E2EWorkflowTest] Testing complex transformation workflow');
 
         const scenario = E2E_TEST_SCENARIOS.complexTransformation;
 
-        const { result: workflowResult, metrics } =
-          await measureWorkflowPerformance(async () => {
-            // Parse complex transformation
-            const parseResult = await parseOpenSCADCode(scenario.code);
-            expect(parseResult.success).toBe(true);
-            if (!parseResult.success) throw new Error("Parse failed");
+        const { result: workflowResult, metrics } = await measureWorkflowPerformance(async () => {
+          // Parse complex transformation
+          const parseResult = await parseOpenSCADCode(scenario.code);
+          expect(parseResult.success).toBe(true);
+          if (!parseResult.success) throw new Error('Parse failed');
 
-            const ast = parseResult.data;
-            expect(ast).toHaveLength(scenario.expectedNodes);
-            expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
+          const ast = parseResult.data;
+          expect(ast).toHaveLength(scenario.expectedNodes);
+          expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
 
-            // Convert with matrix operations
-            const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
-            expect(csgResult.success).toBe(true);
-            if (!csgResult.success) throw new Error("CSG conversion failed");
+          // Convert with matrix operations
+          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          expect(csgResult.success).toBe(true);
+          if (!csgResult.success) throw new Error('CSG conversion failed');
 
-            const mesh3D = csgResult.data;
+          const mesh3D = csgResult.data;
 
-            // Validate all transformations were applied
-            expect(mesh3D.mesh.position.x).toBe(5); // translate
-            expect(mesh3D.mesh.scale.x).toBe(2); // scale
+          // Validate all transformations were applied
+          expect(mesh3D.mesh.position.x).toBe(5); // translate
+          expect(mesh3D.mesh.scale.x).toBe(2); // scale
 
-            // Validate matrix operations for transformations
-            const matrixIntegrationMetrics =
-              await matrixIntegrationService.getPerformanceReport();
-            expect(matrixIntegrationMetrics.conversion).toBeDefined();
+          // Validate matrix operations for transformations
+          const matrixIntegrationMetrics = await matrixIntegrationService.getPerformanceReport();
+          expect(matrixIntegrationMetrics.conversion).toBeDefined();
 
-            return { mesh3D, matrixIntegrationMetrics };
-          });
+          return { mesh3D, matrixIntegrationMetrics };
+        });
 
         expect(metrics.success).toBe(true);
         expect(metrics.totalWorkflowTime).toBeLessThan(scenario.timeoutMs);
         expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).transformations).toBeGreaterThan(
-          0,
+          0
         );
       },
-      E2E_TEST_SCENARIOS.complexTransformation.timeoutMs,
+      E2E_TEST_SCENARIOS.complexTransformation.timeoutMs
     );
   });
 
-  describe("Multiple Primitives Workflow", () => {
+  describe('Multiple Primitives Workflow', () => {
     it(
-      "should handle multiple primitives with union operation",
+      'should handle multiple primitives with union operation',
       async () => {
-        console.log(
-          "[DEBUG][E2EWorkflowTest] Testing multiple primitives workflow",
-        );
+        console.log('[DEBUG][E2EWorkflowTest] Testing multiple primitives workflow');
 
         const scenario = E2E_TEST_SCENARIOS.multiplePrimitives;
 
-        const { result: workflowResult, metrics } =
-          await measureWorkflowPerformance(async () => {
-            // Parse multiple primitives
-            const parseResult = await parseOpenSCADCode(scenario.code);
-            expect(parseResult.success).toBe(true);
-            if (!parseResult.success) throw new Error("Parse failed");
+        const { result: workflowResult, metrics } = await measureWorkflowPerformance(async () => {
+          // Parse multiple primitives
+          const parseResult = await parseOpenSCADCode(scenario.code);
+          expect(parseResult.success).toBe(true);
+          if (!parseResult.success) throw new Error('Parse failed');
 
-            const ast = parseResult.data;
-            expect(ast).toHaveLength(scenario.expectedNodes);
+          const ast = parseResult.data;
+          expect(ast).toHaveLength(scenario.expectedNodes);
 
-            // Validate each AST node
-            scenario.expectedTypes?.forEach((expectedType, index) => {
-              expect(validateASTNode(ast[index]!, expectedType)).toBe(true);
-            });
-
-            // Convert to union CSG
-            const unionResult = await convertASTNodesToCSGUnion(ast);
-            expect(unionResult.success).toBe(true);
-            if (!unionResult.success)
-              throw new Error("Union conversion failed");
-            const unionMesh: unknown = unionResult.data;
-            expect(validateMesh(asMeshResult(unionMesh).mesh as Mesh)).toBe(true);
-            expect(asMeshResult(unionMesh).metadata.nodeType).toBe("union");
-
-            // Validate matrix operations for all primitives
-            // Note: getStatistics method may not be available in current implementation
-            const cacheService = matrixServiceContainer.getCacheService();
-            const cacheStats = cacheService
-              ? { hits: 0, misses: 0 }
-              : { hits: 0, misses: 0 };
-
-            return { unionMesh, cacheStats, astNodeCount: ast.length };
+          // Validate each AST node
+          scenario.expectedTypes?.forEach((expectedType, index) => {
+            expect(validateASTNode(ast[index]!, expectedType)).toBe(true);
           });
+
+          // Convert to union CSG
+          const unionResult = await convertASTNodesToCSGUnion(ast);
+          expect(unionResult.success).toBe(true);
+          if (!unionResult.success) throw new Error('Union conversion failed');
+          const unionMesh: unknown = unionResult.data;
+          expect(validateMesh(asMeshResult(unionMesh).mesh as Mesh)).toBe(true);
+          expect(asMeshResult(unionMesh).metadata.nodeType).toBe('union');
+
+          // Validate matrix operations for all primitives
+          // Note: getStatistics method may not be available in current implementation
+          const cacheService = matrixServiceContainer.getCacheService();
+          const cacheStats = cacheService ? { hits: 0, misses: 0 } : { hits: 0, misses: 0 };
+
+          return { unionMesh, cacheStats, astNodeCount: ast.length };
+        });
 
         expect(metrics.success).toBe(true);
         expect(asWorkflowResult(workflowResult).astNodeCount).toBe(scenario.expectedNodes);
-        expect(asMetadata(asWorkflowResult(workflowResult).unionMesh).triangleCount).toBeGreaterThan(
-          0,
-        );
+        expect(
+          asMetadata(asWorkflowResult(workflowResult).unionMesh).triangleCount
+        ).toBeGreaterThan(0);
       },
-      E2E_TEST_SCENARIOS.multiplePrimitives.timeoutMs,
+      E2E_TEST_SCENARIOS.multiplePrimitives.timeoutMs
     );
   });
 
-  describe("Boolean Operations Workflow", () => {
+  describe('Boolean Operations Workflow', () => {
     it(
-      "should handle difference operation with matrix validation",
+      'should handle difference operation with matrix validation',
       async () => {
-        console.log(
-          "[DEBUG][E2EWorkflowTest] Testing boolean operations workflow",
-        );
+        console.log('[DEBUG][E2EWorkflowTest] Testing boolean operations workflow');
 
         const scenario = E2E_TEST_SCENARIOS.booleanOperations;
 
-        const { result: workflowResult, metrics } =
-          await measureWorkflowPerformance(async () => {
-            // Parse boolean operation
-            const parseResult = await parseOpenSCADCode(scenario.code);
-            expect(parseResult.success).toBe(true);
+        const { result: workflowResult, metrics } = await measureWorkflowPerformance(async () => {
+          // Parse boolean operation
+          const parseResult = await parseOpenSCADCode(scenario.code);
+          expect(parseResult.success).toBe(true);
 
-            if (!parseResult.success) throw new Error("Parse failed");
-            const ast = parseResult.data;
-            expect(ast).toHaveLength(scenario.expectedNodes);
-            expect(validateASTNode(ast[0], scenario.expectedType)).toBe(true);
+          if (!parseResult.success) throw new Error('Parse failed');
+          const ast = parseResult.data;
+          expect(ast).toHaveLength(scenario.expectedNodes);
+          expect(validateASTNode(ast[0], scenario.expectedType)).toBe(true);
 
-            // Convert with CSG operations
-            if (!ast[0]) throw new Error("AST is empty");
-            const csgResult = await convertASTNodeToCSG(ast[0], 0);
-            expect(csgResult.success).toBe(true);
+          // Convert with CSG operations
+          if (!ast[0]) throw new Error('AST is empty');
+          const csgResult = await convertASTNodeToCSG(ast[0], 0);
+          expect(csgResult.success).toBe(true);
 
-            if (!csgResult.success) throw new Error("CSG conversion failed");
-            const mesh3D: unknown = csgResult.data;
-            expect(asMetadata(mesh3D).nodeType).toBe(scenario.expectedType);
+          if (!csgResult.success) throw new Error('CSG conversion failed');
+          const mesh3D: unknown = csgResult.data;
+          expect(asMetadata(mesh3D).nodeType).toBe(scenario.expectedType);
 
-            // Validate matrix operations for boolean operations
-            const validationService =
-              matrixServiceContainer.getValidationService();
-            const validationMetrics =
-              validationService?.getPerformanceMetrics();
+          // Validate matrix operations for boolean operations
+          const validationService = matrixServiceContainer.getValidationService();
+          const validationMetrics = validationService?.getPerformanceMetrics();
 
-            // Boolean operations should involve matrix transformations
-            expect(validationMetrics?.operationCount).toBeGreaterThan(0);
+          // Boolean operations should involve matrix transformations
+          expect(validationMetrics?.operationCount).toBeGreaterThan(0);
 
-            return { mesh3D, validationMetrics };
-          });
+          return { mesh3D, validationMetrics };
+        });
 
         expect(metrics.success).toBe(true);
-        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe("difference");
-        expect((asWorkflowResult(workflowResult).validationMetrics as Record<string, unknown>).operationCount).toBeGreaterThan(
-          0,
-        );
+        expect(asMetadata(asWorkflowResult(workflowResult).mesh3D).nodeType).toBe('difference');
+        expect(
+          (asWorkflowResult(workflowResult).validationMetrics as Record<string, unknown>)
+            .operationCount
+        ).toBeGreaterThan(0);
       },
-      E2E_TEST_SCENARIOS.booleanOperations.timeoutMs,
+      E2E_TEST_SCENARIOS.booleanOperations.timeoutMs
     );
   });
 
-  describe("Performance and Integration Validation", () => {
-    it("should maintain performance targets across full workflow", async () => {
-      console.log("[DEBUG][E2EWorkflowTest] Testing performance targets");
+  describe('Performance and Integration Validation', () => {
+    it('should maintain performance targets across full workflow', async () => {
+      console.log('[DEBUG][E2EWorkflowTest] Testing performance targets');
 
       const testCases = [
         E2E_TEST_SCENARIOS.simplePrimitive,
@@ -589,9 +555,9 @@ describe("End-to-End Workflow Validation", () => {
           const parseResult = await parseOpenSCADCode(scenario.code);
           expect(parseResult.success).toBe(true);
 
-          if (!parseResult.success) throw new Error("Parse failed");
+          if (!parseResult.success) throw new Error('Parse failed');
           const ast = parseResult.data;
-          if (!ast[0]) throw new Error("AST is empty");
+          if (!ast[0]) throw new Error('AST is empty');
           const csgResult = await convertASTNodeToCSG(ast[0], 0);
           expect(csgResult.success).toBe(true);
 
@@ -604,20 +570,15 @@ describe("End-to-End Workflow Validation", () => {
         performanceResults.push({
           scenario:
             Object.keys(E2E_TEST_SCENARIOS).find(
-              (key) =>
-                E2E_TEST_SCENARIOS[key as keyof typeof E2E_TEST_SCENARIOS] ===
-                scenario,
-            ) ?? "unknown",
+              (key) => E2E_TEST_SCENARIOS[key as keyof typeof E2E_TEST_SCENARIOS] === scenario
+            ) ?? 'unknown',
           metrics,
         });
       }
 
       // Validate performance targets
       performanceResults.forEach(({ scenario, metrics }) => {
-        console.log(
-          `[DEBUG][E2EWorkflowTest] ${scenario} performance:`,
-          metrics,
-        );
+        console.log(`[DEBUG][E2EWorkflowTest] ${scenario} performance:`, metrics);
 
         expect(metrics.success).toBe(true);
         expect(metrics.totalWorkflowTime).toBeLessThan(5000); // <5s for any workflow
@@ -633,12 +594,10 @@ describe("End-to-End Workflow Validation", () => {
       expect(finalHealth.overall).toMatch(/^(healthy|degraded)$/);
     }, 30000);
 
-    it("should validate service integration consistency", async () => {
-      console.log(
-        "[DEBUG][E2EWorkflowTest] Testing service integration consistency",
-      );
+    it('should validate service integration consistency', async () => {
+      console.log('[DEBUG][E2EWorkflowTest] Testing service integration consistency');
 
-      const code = "rotate([45,0,0]) cube([10,10,10]);";
+      const code = 'rotate([45,0,0]) cube([10,10,10]);';
 
       // Perform workflow multiple times to test consistency
       const results: unknown[] = [];
@@ -647,13 +606,13 @@ describe("End-to-End Workflow Validation", () => {
         const parseResult = await parseOpenSCADCode(code);
         expect(parseResult.success).toBe(true);
 
-        if (!parseResult.success) throw new Error("Parse failed");
+        if (!parseResult.success) throw new Error('Parse failed');
         const ast = parseResult.data;
         const firstNode = ast[0];
-        if (!firstNode) throw new Error("AST is empty");
+        if (!firstNode) throw new Error('AST is empty');
         const csgResult = await convertASTNodeToCSG(firstNode, 0);
         expect(csgResult.success).toBe(true);
-        if (!csgResult.success) throw new Error("CSG conversion failed");
+        if (!csgResult.success) throw new Error('CSG conversion failed');
 
         results.push(csgResult.data);
       }
@@ -665,9 +624,7 @@ describe("End-to-End Workflow Validation", () => {
         const firstResultObj = firstResult as Record<string, unknown>;
 
         expect(asMetadata(resultObj).nodeType).toBe(asMetadata(firstResultObj).nodeType);
-        expect(asMetadata(resultObj).triangleCount).toBe(
-          asMetadata(firstResultObj).triangleCount,
-        );
+        expect(asMetadata(resultObj).triangleCount).toBe(asMetadata(firstResultObj).triangleCount);
 
         // Matrix transformations should be identical
         const resultMesh = resultObj.mesh as Record<string, unknown>;
@@ -675,25 +632,14 @@ describe("End-to-End Workflow Validation", () => {
         const resultRotation = resultMesh.rotation as Record<string, unknown>;
         const firstResultRotation = firstResultMesh.rotation as Record<string, unknown>;
 
-        expect(resultRotation.x).toBeCloseTo(
-          firstResultRotation.x as number,
-          5,
-        );
-        expect(resultRotation.y).toBeCloseTo(
-          firstResultRotation.y as number,
-          5,
-        );
-        expect(resultRotation.z).toBeCloseTo(
-          firstResultRotation.z as number,
-          5,
-        );
+        expect(resultRotation.x).toBeCloseTo(firstResultRotation.x as number, 5);
+        expect(resultRotation.y).toBeCloseTo(firstResultRotation.y as number, 5);
+        expect(resultRotation.z).toBeCloseTo(firstResultRotation.z as number, 5);
       });
 
       // Cache should show high hit rate for repeated operations
       const cacheService = matrixServiceContainer.getCacheService();
-      const cacheStats = cacheService
-        ? { hits: 5, misses: 3 }
-        : { hits: 0, misses: 1 };
+      const cacheStats = cacheService ? { hits: 5, misses: 3 } : { hits: 0, misses: 1 };
       const hitRate = cacheStats.hits / (cacheStats.hits + cacheStats.misses);
 
       expect(hitRate).toBeGreaterThan(0.6); // >60% cache hit rate

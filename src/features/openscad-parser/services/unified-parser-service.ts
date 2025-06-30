@@ -1,16 +1,16 @@
 /**
  * @file Unified OpenSCAD Parser Service
- * 
+ *
  * Combines the best features from the reference implementation with our dynamic loading approach.
  * Provides comprehensive OpenSCAD parsing with editor integration features.
- * 
+ *
  * Based on reference: docs/openscad-editor/openscad-editor/src/lib/services/openscad-parser-service.ts
  * Enhanced with: Dynamic loading, Result<T,E> patterns, and performance monitoring
  */
 
+import type { OpenscadParser } from '@holistic-stack/openscad-parser';
+import { type ASTNode, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 import type * as TreeSitter from 'web-tree-sitter';
-import type { OpenscadParser} from '@holistic-stack/openscad-parser';
-import { SimpleErrorHandler, type ASTNode } from '@holistic-stack/openscad-parser';
 import type { AsyncResult } from '../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../shared/utils/functional/result';
 
@@ -106,7 +106,7 @@ const DEFAULT_CONFIG: UnifiedParserConfig = {
   retryAttempts: 3,
   enableLogging: true,
   enableCaching: true,
-  maxCacheSize: 50
+  maxCacheSize: 50,
 } as const;
 
 /**
@@ -125,7 +125,7 @@ interface CacheEntry {
 
 /**
  * Unified OpenSCAD Parser Service
- * 
+ *
  * Combines dynamic loading with comprehensive parsing features.
  * Maintains document state for efficient editor integration.
  */
@@ -135,20 +135,20 @@ export class UnifiedParserService {
   private readonly errorHandler: SimpleErrorHandler;
   private readonly config: UnifiedParserConfig;
   private initPromise: Promise<void> | null = null;
-  
+
   // Document state
   private documentTree: TreeSitter.Tree | null = null;
   private documentAST: ReadonlyArray<ASTNode> | null = null;
   private lastParseErrors: ReadonlyArray<ParseError> = [];
   private lastParseResult: UnifiedParseResult | null = null;
-  
+
   // Caching
   private readonly cache = new Map<string, CacheEntry>();
 
   constructor(config: Partial<UnifiedParserConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.errorHandler = new SimpleErrorHandler();
-    
+
     if (this.config.enableLogging) {
       console.log('[INIT][UnifiedParserService] Created with config:', this.config);
     }
@@ -213,7 +213,7 @@ export class UnifiedParserService {
 
         const finalResult: UnifiedParseResult = {
           ...result,
-          parseTime
+          parseTime,
         };
 
         // Update document state
@@ -347,13 +347,15 @@ export class UnifiedParserService {
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         if (this.config.enableLogging) {
-          console.log(`[DEBUG][UnifiedParserService] Initialization attempt ${attempt}/${this.config.retryAttempts}`);
+          console.log(
+            `[DEBUG][UnifiedParserService] Initialization attempt ${attempt}/${this.config.retryAttempts}`
+          );
         }
 
         // Use dynamic import with timeout
         const parser = await Promise.race([
           this.loadParserDynamically(),
-          this.createTimeoutPromise()
+          this.createTimeoutPromise(),
         ]);
 
         this.parser = parser;
@@ -364,16 +366,18 @@ export class UnifiedParserService {
         }
 
         return;
-
       } catch (attemptError) {
         lastError = attemptError instanceof Error ? attemptError : new Error(String(attemptError));
 
         if (this.config.enableLogging) {
-          console.warn(`[WARN][UnifiedParserService] Attempt ${attempt} failed:`, lastError.message);
+          console.warn(
+            `[WARN][UnifiedParserService] Attempt ${attempt} failed:`,
+            lastError.message
+          );
         }
 
         if (attempt < this.config.retryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
@@ -447,13 +451,15 @@ export class UnifiedParserService {
       return {
         cst: null,
         ast: null,
-        errors: [{
-          message: `Failed to parse AST: ${astError instanceof Error ? astError.message : String(astError)}`,
-          location: { line: 1, column: 1 },
-          severity: 'error'
-        }],
+        errors: [
+          {
+            message: `Failed to parse AST: ${astError instanceof Error ? astError.message : String(astError)}`,
+            location: { line: 1, column: 1 },
+            severity: 'error',
+          },
+        ],
         success: false,
-        parseTime: 0
+        parseTime: 0,
       };
     }
 
@@ -462,7 +468,7 @@ export class UnifiedParserService {
     const errors: ParseError[] = parserErrors.map((errorMessage: string) => ({
       message: errorMessage,
       location: { line: 0, column: 0 },
-      severity: 'error' as const
+      severity: 'error' as const,
     }));
 
     const success = errors.length === 0 && ast !== null;
@@ -472,7 +478,7 @@ export class UnifiedParserService {
       ast,
       errors: Object.freeze(errors),
       success,
-      parseTime: 0 // Will be set by caller
+      parseTime: 0, // Will be set by caller
     };
   }
 
@@ -493,7 +499,7 @@ export class UnifiedParserService {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return `unified_${Math.abs(hash).toString(36)}`;
@@ -536,7 +542,7 @@ export class UnifiedParserService {
     this.cache.set(key, {
       result,
       timestamp: Date.now(),
-      codeHash: key
+      codeHash: key,
     });
   }
 
@@ -572,7 +578,7 @@ export class UnifiedParserService {
             name: moduleName,
             type: 'module',
             range: this.getNodeRange(node),
-            children: []
+            children: [],
           });
         }
         break;
@@ -585,7 +591,7 @@ export class UnifiedParserService {
             name: funcName,
             type: 'function',
             range: this.getNodeRange(node),
-            children: []
+            children: [],
           });
         }
         break;
@@ -598,7 +604,7 @@ export class UnifiedParserService {
             name: varName,
             type: 'variable',
             range: this.getNodeRange(node),
-            children: []
+            children: [],
           });
         }
         break;
@@ -635,7 +641,7 @@ export class UnifiedParserService {
       startLine: node.startPosition.row,
       startColumn: node.startPosition.column,
       endLine: node.endPosition.row,
-      endColumn: node.endPosition.column
+      endColumn: node.endPosition.column,
     };
   }
 
@@ -645,7 +651,7 @@ export class UnifiedParserService {
   private getNodeLocation(node: TreeSitter.Node): DocumentSymbol['location'] {
     return {
       line: node.startPosition.row,
-      column: node.startPosition.column
+      column: node.startPosition.column,
     };
   }
 
@@ -725,7 +731,7 @@ export class UnifiedParserService {
 
     return {
       contents: Object.freeze(contents),
-      range: this.getNodeRange(node)
+      range: this.getNodeRange(node),
     };
   }
 
@@ -743,7 +749,7 @@ export class UnifiedParserService {
             name: moduleName,
             type: 'module',
             location: this.getNodeLocation(node),
-            documentation: `Module definition: ${moduleName}`
+            documentation: `Module definition: ${moduleName}`,
           });
         }
         break;
@@ -756,7 +762,7 @@ export class UnifiedParserService {
             name: funcName,
             type: 'function',
             location: this.getNodeLocation(node),
-            documentation: `Function definition: ${funcName}`
+            documentation: `Function definition: ${funcName}`,
           });
         }
         break;
@@ -769,7 +775,7 @@ export class UnifiedParserService {
             name: varName,
             type: 'variable',
             location: this.getNodeLocation(node),
-            documentation: `Variable assignment: ${varName}`
+            documentation: `Variable assignment: ${varName}`,
           });
         }
         break;
@@ -789,7 +795,9 @@ export class UnifiedParserService {
 /**
  * Create unified parser service instance
  */
-export const createUnifiedParserService = (config?: Partial<UnifiedParserConfig>): UnifiedParserService => {
+export const createUnifiedParserService = (
+  config?: Partial<UnifiedParserConfig>
+): UnifiedParserService => {
   return new UnifiedParserService(config);
 };
 
@@ -821,7 +829,9 @@ export const disposeGlobalUnifiedParserService = (): void => {
 /**
  * Parse OpenSCAD code using global unified service (convenience function)
  */
-export const parseOpenSCADCodeUnified = async (code: string): AsyncResult<UnifiedParseResult, string> => {
+export const parseOpenSCADCodeUnified = async (
+  code: string
+): AsyncResult<UnifiedParseResult, string> => {
   const service = getGlobalUnifiedParserService();
   return service.parseDocument(code);
 };

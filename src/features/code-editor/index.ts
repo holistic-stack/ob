@@ -1,6 +1,6 @@
 /**
  * Code Editor Feature - Barrel Exports
- * 
+ *
  * Monaco editor integration with OpenSCAD syntax highlighting,
  * real-time parsing, and functional programming patterns.
  */

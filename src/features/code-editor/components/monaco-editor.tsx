@@ -5,39 +5,36 @@
  * Zustand store integration, and functional programming patterns.
  */
 
-import React, { useRef, useEffect, useCallback, useState } from "react";
-import MonacoEditor from "@monaco-editor/react";
-import type * as monaco from "monaco-editor";
-
+import MonacoEditor from '@monaco-editor/react';
+import type * as monaco from 'monaco-editor';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { debounce } from '../../../shared/utils/functional/pipe';
+import { tryCatch } from '../../../shared/utils/functional/result';
 import type {
-  MonacoEditorProps,
   EditorChangeEvent,
   EditorCursorEvent,
-  EditorSelectionEvent,
   EditorFocusEvent,
-} from "../types/editor.types";
-import type { MonacoEditorConfig } from "../types/editor.types";
-import {
-  tryCatch,
-} from "../../../shared/utils/functional/result";
-import { debounce } from "../../../shared/utils/functional/pipe";
+  EditorSelectionEvent,
+  MonacoEditorConfig,
+  MonacoEditorProps,
+} from '../types/editor.types';
 
 /**
  * Default Monaco Editor configuration
  */
 const DEFAULT_CONFIG: MonacoEditorConfig = {
-  theme: "vs-dark",
+  theme: 'vs-dark',
   fontSize: 14,
   fontFamily: 'Consolas, "Courier New", monospace',
-  lineNumbers: "on",
+  lineNumbers: 'on',
   minimap: {
     enabled: true,
-    side: "right",
+    side: 'right',
   },
-  wordWrap: "on",
+  wordWrap: 'on',
   automaticLayout: true,
   scrollBeyondLastLine: false,
-  renderWhitespace: "boundary",
+  renderWhitespace: 'boundary',
   tabSize: 2,
   insertSpaces: true,
 };
@@ -47,12 +44,12 @@ const DEFAULT_CONFIG: MonacoEditorConfig = {
  */
 export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   value,
-  language = "openscad",
-  theme = "vs-dark",
+  language = 'openscad',
+  theme = 'vs-dark',
   config = {},
   readOnly = false,
   className,
-  "data-testid": testId,
+  'data-testid': testId,
   onChange,
   onCursorPositionChange,
   onSelectionChange,
@@ -71,7 +68,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
       ...DEFAULT_CONFIG,
       ...config,
     }),
-    [config],
+    [config]
   );
 
   // Debounced change handler for performance
@@ -79,17 +76,14 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
     debounce((event: EditorChangeEvent) => {
       onChange?.(event);
     }, 300),
-    [onChange],
+    []
   );
 
   /**
    * Handle editor mount
    */
   const handleEditorMount = useCallback(
-    (
-      editor: monaco.editor.IStandaloneCodeEditor,
-      _monaco: typeof import("monaco-editor"),
-    ) => {
+    (editor: monaco.editor.IStandaloneCodeEditor, _monaco: typeof import('monaco-editor')) => {
       const result = tryCatch(
         () => {
           editorRef.current = editor;
@@ -127,7 +121,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
                 };
                 debouncedOnChange(changeEvent);
               }
-            }),
+            })
           );
 
           // Cursor position change events
@@ -145,7 +139,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
                   })),
                 };
                 onCursorPositionChange(cursorEvent);
-              }),
+              })
             );
           }
 
@@ -168,7 +162,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
                   })),
                 };
                 onSelectionChange(selectionEvent);
-              }),
+              })
             );
           }
 
@@ -178,7 +172,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
               editor.onDidFocusEditorWidget(() => {
                 const focusEvent: EditorFocusEvent = { hasFocus: true };
                 onFocus(focusEvent);
-              }),
+              })
             );
           }
 
@@ -187,7 +181,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
               editor.onDidBlurEditorWidget(() => {
                 const focusEvent: EditorFocusEvent = { hasFocus: false };
                 onBlur(focusEvent);
-              }),
+              })
             );
           }
 
@@ -200,12 +194,12 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
           return editor;
         },
         (err) =>
-          `Failed to mount Monaco Editor: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to mount Monaco Editor: ${err instanceof Error ? err.message : String(err)}`
       );
 
       if (!result.success) {
         setError(result.error);
-        console.error("[ERROR][MonacoEditor]", result.error);
+        console.error('[ERROR][MonacoEditor]', result.error);
       }
     },
     [
@@ -218,7 +212,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
       onFocus,
       onBlur,
       onMount,
-    ],
+    ]
   );
 
   /**
@@ -244,11 +238,11 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
         }
       },
       (err) =>
-        `Failed to unmount Monaco Editor: ${err instanceof Error ? err.message : String(err)}`,
+        `Failed to unmount Monaco Editor: ${err instanceof Error ? err.message : String(err)}`
     );
 
     if (!result.success) {
-      console.error("[ERROR][MonacoEditor]", result.error);
+      console.error('[ERROR][MonacoEditor]', result.error);
     }
   }, [onUnmount]);
 
@@ -267,17 +261,17 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
   if (error) {
     return (
       <div
-        className={`monaco-editor-error ${className || ""}`}
-        data-testid={`${testId || "monaco-editor"}-error`}
+        className={`monaco-editor-error ${className || ''}`}
+        data-testid={`${testId || 'monaco-editor'}-error`}
         style={{
-          height: "400px",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#1e1e1e",
-          color: "#d4d4d4",
-          fontFamily: "monospace",
+          height: '400px',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#1e1e1e',
+          color: '#d4d4d4',
+          fontFamily: 'monospace',
         }}
       >
         <div>
@@ -290,9 +284,9 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
 
   return (
     <div
-      className={`monaco-editor-container ${className || ""}`}
-      data-testid={testId || "monaco-editor"}
-      style={{ height: "400px", width: "100%" }}
+      className={`monaco-editor-container ${className || ''}`}
+      data-testid={testId || 'monaco-editor'}
+      style={{ height: '400px', width: '100%' }}
     >
       <MonacoEditor
         height="100%"
@@ -308,12 +302,12 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
         loading={
           <div
             style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#1e1e1e",
-              color: "#d4d4d4",
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#1e1e1e',
+              color: '#d4d4d4',
             }}
           >
             Loading Monaco Editor...

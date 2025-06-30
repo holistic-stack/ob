@@ -1,11 +1,9 @@
 /**
  * Functional Programming Types
- * 
+ *
  * Advanced type definitions for functional programming patterns,
  * higher-order functions, and composition utilities.
  */
-
-
 
 /**
  * Function composition types
@@ -22,7 +20,13 @@ export interface Pipe {
   <A, B, C>(f1: (a: A) => B, f2: (b: B) => C): (a: A) => C;
   <A, B, C, D>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D): (a: A) => D;
   <A, B, C, D, E>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D, f4: (d: D) => E): (a: A) => E;
-  <A, B, C, D, E, F>(f1: (a: A) => B, f2: (b: B) => C, f3: (c: C) => D, f4: (d: D) => E, f5: (e: E) => F): (a: A) => F;
+  <A, B, C, D, E, F>(
+    f1: (a: A) => B,
+    f2: (b: B) => C,
+    f3: (c: C) => D,
+    f4: (d: D) => E,
+    f5: (e: E) => F
+  ): (a: A) => F;
 }
 
 /**
@@ -156,11 +160,9 @@ export type Partial2<T, U, V, W> = (arg1: T, arg2: U) => (arg3: V) => W;
 /**
  * Function constraint types
  */
-export type PureFunction<TArgs extends readonly unknown[], TReturn> = 
-  (...args: TArgs) => TReturn;
+export type PureFunction<TArgs extends readonly unknown[], TReturn> = (...args: TArgs) => TReturn;
 
-export type ImpureFunction<TArgs extends readonly unknown[], TReturn> = 
-  (...args: TArgs) => TReturn;
+export type ImpureFunction<TArgs extends readonly unknown[], TReturn> = (...args: TArgs) => TReturn;
 
 /**
  * Immutability helper types
@@ -169,8 +171,8 @@ export type Immutable<T> = {
   readonly [P in keyof T]: T[P] extends (infer U)[]
     ? ReadonlyArray<Immutable<U>>
     : T[P] extends object
-    ? Immutable<T[P]>
-    : T[P];
+      ? Immutable<T[P]>
+      : T[P];
 };
 
 /**
@@ -205,7 +207,15 @@ export interface FunctionalObject<T> {
 /**
  * Type-level programming utilities
  */
-export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]] ? H : never;
-export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Rest] ? Rest : never;
-export type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer L] ? L : never;
-export type Init<T extends readonly unknown[]> = T extends readonly [...infer Rest, unknown] ? Rest : never;
+export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]]
+  ? H
+  : never;
+export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Rest]
+  ? Rest
+  : never;
+export type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer L]
+  ? L
+  : never;
+export type Init<T extends readonly unknown[]> = T extends readonly [...infer Rest, unknown]
+  ? Rest
+  : never;

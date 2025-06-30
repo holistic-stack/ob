@@ -5,7 +5,7 @@
  * React Three Fiber integration, and WebGL optimization.
  */
 
-import type * as THREE from "three";
+import type * as THREE from 'three';
 
 /**
  * Basic Three.js object types for React Three Fiber compatibility
@@ -83,12 +83,12 @@ export interface WebGLConfig {
   readonly alpha: boolean;
   readonly premultipliedAlpha: boolean;
   readonly preserveDrawingBuffer: boolean;
-  readonly powerPreference: "default" | "high-performance" | "low-power";
+  readonly powerPreference: 'default' | 'high-performance' | 'low-power';
   readonly failIfMajorPerformanceCaveat: boolean;
   readonly depth: boolean;
   readonly stencil: boolean;
   readonly logarithmicDepthBuffer: boolean;
-  readonly precision: "highp" | "mediump" | "lowp";
+  readonly precision: 'highp' | 'mediump' | 'lowp';
 }
 
 /**
@@ -260,7 +260,7 @@ export interface SceneOptimization {
  * Scene export configuration
  */
 export interface ExportConfig {
-  readonly format: "gltf" | "obj" | "stl" | "ply" | "dae";
+  readonly format: 'gltf' | 'obj' | 'stl' | 'ply' | 'dae';
   readonly binary: boolean;
   readonly embedImages: boolean;
   readonly includeCustomExtensions: boolean;
@@ -277,7 +277,7 @@ export interface ExportConfig {
  * Scene import configuration
  */
 export interface ImportConfig {
-  readonly format: "gltf" | "obj" | "fbx" | "dae" | "3ds" | "ply" | "stl";
+  readonly format: 'gltf' | 'obj' | 'fbx' | 'dae' | '3ds' | 'ply' | 'stl';
   readonly scale: number;
   readonly center: boolean;
   readonly flipY: boolean;

@@ -8,18 +8,14 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-
-import type { AppStore, AppState, StoreOptions } from './types/store.types.js';
-import type {
-  AppConfig,
-  CameraConfig
-} from '../../shared/types/common.types.js';
+import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import { UnifiedParserService } from '../openscad-parser/services/unified-parser-service.js';
-import { createPerformanceSlice } from './slices/performance-slice.js';
+import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
+import { createPerformanceSlice } from './slices/performance-slice.js';
 import { createRenderingSlice } from './slices/rendering-slice.js';
-import { createConfigSlice } from './slices/config-slice.js';
+import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
 /**
  * Default application configuration
@@ -29,7 +25,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   enableAutoSave: false,
   enableRealTimeParsing: true,
   enableRealTimeRendering: true,
-  theme: "dark",
+  theme: 'dark',
   performance: {
     enableMetrics: true,
     maxRenderTime: 16,
@@ -56,7 +52,7 @@ export const DEFAULT_CAMERA: CameraConfig = {
 /**
  * Default OpenSCAD code for initialization
  */
-export const DEFAULT_OPENSCAD_CODE = "cube([10,10,10]);";
+export const DEFAULT_OPENSCAD_CODE = 'cube([10,10,10]);';
 
 /**
  * Shared parser service instance
@@ -123,7 +119,7 @@ export const createAppStore = (
       renderDelayMs: 300,
       saveDelayMs: 1000,
     },
-  },
+  }
 ) => {
   return create<AppStore>()(
     devtools(
@@ -140,7 +136,7 @@ export const createAppStore = (
           ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
         })),
         {
-          name: "openscad-app-store",
+          name: 'openscad-app-store',
           partialize: (state) => ({
             config: state.config,
             editor: {
@@ -151,13 +147,13 @@ export const createAppStore = (
               camera: state.rendering.camera,
             },
           }),
-        },
+        }
       ),
       {
         enabled: options.enableDevtools,
-        name: "OpenSCAD App Store",
-      },
-    ),
+        name: 'OpenSCAD App Store',
+      }
+    )
   );
 };
 
@@ -167,7 +163,7 @@ export const createAppStore = (
 const initializeStore = async (store: ReturnType<typeof createAppStore>) => {
   const state = store.getState();
 
-  console.log("[INIT][Store] Initializing store with current code:", {
+  console.log('[INIT][Store] Initializing store with current code:', {
     codeLength: state.editor.code.length,
     astLength: state.parsing.ast.length,
     enableRealTimeParsing: state.config.enableRealTimeParsing,
@@ -175,12 +171,12 @@ const initializeStore = async (store: ReturnType<typeof createAppStore>) => {
 
   // Parse current code if we have any code and no AST yet
   if (state.editor.code.length > 0 && state.parsing.ast.length === 0) {
-    console.log("[INIT][Store] Triggering initial parsing of current code");
+    console.log('[INIT][Store] Triggering initial parsing of current code');
 
     // Trigger initial parsing of current code
     await state.parseCode(state.editor.code);
 
-    console.log("[INIT][Store] Initial code parsed successfully");
+    console.log('[INIT][Store] Initial code parsed successfully');
   }
 };
 
@@ -216,7 +212,10 @@ export const useAppStore = create<AppStore>()(
         };
         return {
           ...createInitialState(defaultStoreOptions),
-          ...createEditorSlice(set, get, { parserService, debounceConfig: defaultStoreOptions.debounceConfig }),
+          ...createEditorSlice(set, get, {
+            parserService,
+            debounceConfig: defaultStoreOptions.debounceConfig,
+          }),
           ...createParsingSlice(set, get, { parserService }),
           ...createRenderingSlice(set, get),
           ...createPerformanceSlice(set, get),
@@ -224,7 +223,7 @@ export const useAppStore = create<AppStore>()(
         };
       }),
       {
-        name: "openscad-app-store",
+        name: 'openscad-app-store',
         partialize: (state) => ({
           config: state.config,
           editor: {
@@ -235,13 +234,13 @@ export const useAppStore = create<AppStore>()(
             camera: state.rendering.camera,
           },
         }),
-      },
+      }
     ),
     {
       enabled: true,
-      name: "OpenSCAD App Store",
-    },
-  ),
+      name: 'OpenSCAD App Store',
+    }
+  )
 );
 
 export type { AppState, AppStore };

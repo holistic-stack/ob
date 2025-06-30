@@ -5,17 +5,12 @@
  * with real @holistic-stack/openscad-parser, lifecycle management, and functional patterns.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { OpenscadParser } from '@holistic-stack/openscad-parser';
 import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type {
-  ParserManager} from './parser-manager';
-import {
-  createParserManager
-} from './parser-manager';
-import type {
-  ParserConfig
-} from '../types/parser.types';
+import { OpenscadParser } from '@holistic-stack/openscad-parser';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { ParserConfig } from '../types/parser.types';
+import type { ParserManager } from './parser-manager';
+import { createParserManager } from './parser-manager';
 
 describe('OpenSCAD Parser Manager', () => {
   let parserManager: ParserManager;
@@ -33,7 +28,7 @@ describe('OpenSCAD Parser Manager', () => {
       maxParseTime: 5000,
       maxASTNodes: 10000,
       enableCaching: true,
-      cacheSize: 100
+      cacheSize: 100,
     };
 
     parserManager = createParserManager(defaultConfig);
@@ -48,7 +43,7 @@ describe('OpenSCAD Parser Manager', () => {
   describe('Parser Manager Creation', () => {
     it('should create parser manager with default configuration', () => {
       const manager = createParserManager();
-      
+
       expect(manager).toBeDefined();
       expect(typeof manager.parse).toBe('function');
       expect(typeof manager.validate).toBe('function');
@@ -63,11 +58,11 @@ describe('OpenSCAD Parser Manager', () => {
         maxParseTime: 10000,
         maxASTNodes: 5000,
         enableCaching: false,
-        cacheSize: 50
+        cacheSize: 50,
       };
-      
+
       const manager = createParserManager(customConfig);
-      
+
       expect(manager).toBeDefined();
       expect(manager.getConfig().enableOptimization).toBe(false);
       expect(manager.getConfig().maxParseTime).toBe(10000);
@@ -75,7 +70,7 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should provide parser configuration access', () => {
       const config = parserManager.getConfig();
-      
+
       expect(config).toEqual(defaultConfig);
       expect(config.enableOptimization).toBe(true);
       expect(config.enableValidation).toBe(true);
@@ -84,12 +79,12 @@ describe('OpenSCAD Parser Manager', () => {
     it('should allow configuration updates', () => {
       const newConfig: Partial<ParserConfig> = {
         enableOptimization: false,
-        maxParseTime: 8000
+        maxParseTime: 8000,
       };
-      
+
       parserManager.updateConfig(newConfig);
       const updatedConfig = parserManager.getConfig();
-      
+
       expect(updatedConfig.enableOptimization).toBe(false);
       expect(updatedConfig.maxParseTime).toBe(8000);
       expect(updatedConfig.enableValidation).toBe(true); // Should remain unchanged
@@ -195,9 +190,7 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should detect AST validation errors', async () => {
       // Create an invalid AST structure
-      const invalidAST: ASTNode[] = [
-        { type: 'invalid_node' as any, parameters: [] }
-      ];
+      const invalidAST: ASTNode[] = [{ type: 'invalid_node' as any, parameters: [] }];
 
       const result = await parserManager.validate(invalidAST);
 
@@ -231,7 +224,7 @@ describe('OpenSCAD Parser Manager', () => {
     it('should optimize AST when enabled', async () => {
       const originalAST: ASTNode[] = [
         { type: 'cube', size: [10, 10, 10] },
-        { type: 'cube', size: [10, 10, 10] } // Duplicate
+        { type: 'cube', size: [10, 10, 10] }, // Duplicate
       ];
 
       const result = await parserManager.optimize(originalAST);
@@ -295,7 +288,7 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should provide performance statistics', () => {
       const stats = parserManager.getPerformanceStats();
-      
+
       expect(stats).toBeDefined();
       expect(typeof stats.totalParses).toBe('number');
       expect(typeof stats.averageParseTime).toBe('number');
@@ -355,9 +348,9 @@ describe('OpenSCAD Parser Manager', () => {
     it('should handle parser initialization errors', () => {
       const invalidConfig = {
         maxParseTime: -1, // Invalid
-        maxASTNodes: 0 // Invalid
+        maxASTNodes: 0, // Invalid
       } as ParserConfig;
-      
+
       expect(() => createParserManager(invalidConfig)).toThrow();
     });
 

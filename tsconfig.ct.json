@@ -1,17 +1,32 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // Playwright Component Testing configuration
     "jsx": "react-jsx",
-    "target": "ESNext",
-    "module": "commonjs",
-    "moduleResolution": "Node",
+    "target": "ES2022", // Align with base config
+    "module": "commonjs", // Required for Playwright
+    "moduleResolution": "node", // Required for Playwright
     "sourceMap": true,
     "outDir": "./test-results",
-    "types": ["node", "@playwright/experimental-ct-react"]
+
+    // Playwright-specific settings
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+
+    // Component testing types
+    "types": [
+      "node",
+      "@playwright/experimental-ct-react",
+      "@types/three", // Three.js types for component testing
+      "vite/client"
+    ]
   },
   "include": [
     "src/**/*.vspec.tsx",
+    "src/**/*.ct.tsx", // Component test files
     "src/**/*.tsx",
     "src/**/*.ts"
-  ]
+  ],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"]
 }

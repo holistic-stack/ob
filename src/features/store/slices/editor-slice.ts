@@ -6,12 +6,16 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { AppStore, EditorSlice } from '../types/store.types.js';
-import type { EditorPosition, EditorSelection, DebounceConfig } from '../../../shared/types/common.types.js';
+import type {
+  DebounceConfig,
+  EditorPosition,
+  EditorSelection,
+} from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
+import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
+import type { AppStore, EditorSlice } from '../types/store.types.js';
 
 interface EditorSliceConfig {
   parserService: UnifiedParserService;
@@ -88,8 +92,7 @@ export const createEditorSlice = (
             state.editor.lastSaved = new Date();
           });
         },
-        (err) =>
-          `Failed to save code: ${err instanceof Error ? err.message : String(err)}`,
+        (err) => `Failed to save code: ${err instanceof Error ? err.message : String(err)}`
       );
     },
 
@@ -107,8 +110,7 @@ export const createEditorSlice = (
             state.editor.selection = null;
           });
         },
-        (err) =>
-          `Failed to load code: ${err instanceof Error ? err.message : String(err)}`,
+        (err) => `Failed to load code: ${err instanceof Error ? err.message : String(err)}`
       );
     },
 

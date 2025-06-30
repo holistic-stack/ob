@@ -1,12 +1,12 @@
 import type React from 'react';
 /**
  * Common Types for OpenSCAD 3D Visualization Application
- * 
+ *
  * Shared type definitions used across all features following
  * functional programming patterns and immutable data structures.
  */
 
-import type { ComponentId, Brand } from './result.types';
+import type { Brand, ComponentId } from './result.types';
 
 /**
  * Application-wide configuration types

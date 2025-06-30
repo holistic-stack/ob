@@ -16,23 +16,23 @@
  * OpenSCAD code → Store → AST → Three.js rendering
  */
 
-import React, { useEffect, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
 import { Stats } from '@react-three/drei';
-
-import { useAppStore } from '../../store';
-import {
-  selectParsingAST,
-  selectRenderingCamera,
-  selectRenderingState,
-  selectPerformanceMetrics,
-  selectConfigEnableRealTimeRendering
-} from '../../store/selectors';
-import { R3FScene } from './r3f-scene';
-import type { RenderingMetrics, Mesh3D } from '../types/renderer.types';
+import { Canvas } from '@react-three/fiber';
+import type React from 'react';
+import { useCallback, useEffect } from 'react';
+import type * as THREE from 'three';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { Result } from '../../../shared/types/result.types';
-import type * as THREE from 'three';
+import { useAppStore } from '../../store';
+import {
+  selectConfigEnableRealTimeRendering,
+  selectParsingAST,
+  selectPerformanceMetrics,
+  selectRenderingCamera,
+  selectRenderingState,
+} from '../../store/selectors';
+import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
+import { R3FScene } from './r3f-scene';
 
 /**
  * Props for the store-connected renderer
@@ -51,7 +51,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   className = '',
   'data-testid': testId = 'store-connected-renderer',
   width = 800,
-  height = 600
+  height = 600,
 }) => {
   console.log('[INIT][StoreConnectedRenderer] Initializing store-connected 3D renderer');
 
@@ -73,38 +73,53 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   /**
    * Handle camera changes - update store
    */
-  const handleCameraChange = useCallback((newCamera: CameraConfig) => {
-    console.log('[DEBUG][StoreConnectedRenderer] Camera changed, updating store');
-    updateCamera(newCamera);
-  }, [updateCamera]);
+  const handleCameraChange = useCallback(
+    (newCamera: CameraConfig) => {
+      console.log('[DEBUG][StoreConnectedRenderer] Camera changed, updating store');
+      updateCamera(newCamera);
+    },
+    [updateCamera]
+  );
 
   /**
    * Handle performance metrics updates - update store
    */
-  const handlePerformanceUpdate = useCallback((metrics: RenderingMetrics) => {
-    console.log('[DEBUG][StoreConnectedRenderer] Performance metrics updated');
-    updateMetrics(metrics);
-  }, [updateMetrics]);
+  const handlePerformanceUpdate = useCallback(
+    (metrics: RenderingMetrics) => {
+      console.log('[DEBUG][StoreConnectedRenderer] Performance metrics updated');
+      updateMetrics(metrics);
+    },
+    [updateMetrics]
+  );
 
   /**
    * Handle render completion - update store state
    */
-  const handleRenderComplete = useCallback((meshes: ReadonlyArray<Mesh3D>) => {
-    console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
+  const handleRenderComplete = useCallback(
+    (meshes: ReadonlyArray<Mesh3D>) => {
+      console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
 
-    // Update store with actual mesh data
-    updateMeshes(meshes.map(m => m.mesh));
+      // Update store with actual mesh data
+      updateMeshes(meshes.map((m) => m.mesh));
 
-    console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
-  }, []);
+      console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
+    },
+    [
+      // Update store with actual mesh data
+      updateMeshes,
+    ]
+  );
 
   /**
    * Handle render errors - update store
    */
-  const handleRenderError = useCallback((error: { message: string }) => {
-    console.log('[ERROR][StoreConnectedRenderer] Render error:', error.message);
-    addRenderError(error.message);
-  }, [addRenderError]);
+  const handleRenderError = useCallback(
+    (error: { message: string }) => {
+      console.log('[ERROR][StoreConnectedRenderer] Render error:', error.message);
+      addRenderError(error.message);
+    },
+    [addRenderError]
+  );
 
   /**
    * Effect: Trigger rendering when AST changes (if real-time rendering is enabled)
@@ -116,22 +131,24 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
     console.log('[DEBUG][StoreConnectedRenderer] AST changed, triggering render');
     clearRenderErrors();
-    
+
     // Trigger rendering through store action
-    renderFromAST(ast).then(
-      (result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
+    renderFromAST(ast)
+      .then((result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
         if (result.success) {
-          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`);
+          console.log(
+            `[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`
+          );
         } else {
           console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
           addRenderError(result.error);
         }
-      }
-    ).catch((error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
-      addRenderError(errorMessage);
-    });
+      })
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
+        addRenderError(errorMessage);
+      });
   }, [ast, enableRealTimeRendering, renderFromAST, clearRenderErrors, addRenderError]);
 
   /**
@@ -144,7 +161,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       meshCount: renderingState.meshes.length,
       errorCount: renderingState.renderErrors.length,
       cameraPosition: camera?.position,
-      lastRenderTime: performanceMetrics.renderTime
+      lastRenderTime: performanceMetrics.renderTime,
     });
   }, [ast, renderingState, camera, performanceMetrics]);
 
@@ -158,11 +175,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     far: 1000,
     enableControls: true,
     enableAutoRotate: false,
-    autoRotateSpeed: 1
+    autoRotateSpeed: 1,
   };
 
   return (
-    <div 
+    <div
       className={`store-connected-renderer ${className}`}
       data-testid={testId}
       style={{ width, height }}
@@ -172,7 +189,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           position: defaultCamera.position,
           fov: 75,
           near: 0.1,
-          far: 1000
+          far: 1000,
         }}
         style={{ width: '100%', height: '100%' }}
       >
@@ -192,7 +209,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
       {/* Rendering status indicator */}
       {renderingState.isRendering && (
-        <div 
+        <div
           className="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded"
           data-testid="rendering-indicator"
         >
@@ -202,20 +219,22 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
       {/* Error display */}
       {renderingState.renderErrors.length > 0 && (
-        <div 
+        <div
           className="absolute bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded max-w-md"
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
           {renderingState.renderErrors.map((error: string, index: number) => (
-            <div key={index} className="text-sm">{error}</div>
+            <div key={index} className="text-sm">
+              {error}
+            </div>
           ))}
         </div>
       )}
 
       {/* Performance metrics display (development only) */}
       {process.env.NODE_ENV === 'development' && (
-        <div 
+        <div
           className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-2 rounded text-sm"
           data-testid="performance-display"
         >

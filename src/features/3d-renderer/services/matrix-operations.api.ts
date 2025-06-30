@@ -1,28 +1,39 @@
 /**
  * Matrix Operations API
- * 
+ *
  * Unified API abstraction layer for matrix operations with caching, performance monitoring,
  * and error handling following bulletproof-react service patterns.
  */
 
-import { Matrix, inverse, LuDecomposition, QrDecomposition, EigenvalueDecomposition, CholeskyDecomposition } from 'ml-matrix';
-import type { Vector3, Euler } from 'three';
+import {
+  CholeskyDecomposition,
+  EigenvalueDecomposition,
+  inverse,
+  LuDecomposition,
+  Matrix,
+  QrDecomposition,
+} from 'ml-matrix';
+import type { Euler, Vector3 } from 'three';
 import { Matrix4, Quaternion } from 'three';
-import type { 
-  MatrixOperation,
-  MatrixOperationResult,
+import type { Result } from '../../../shared/types/result.types';
+import { error, success } from '../../../shared/utils/functional/result';
+import {
+  getCacheKey,
+  getOperationTimeout,
+  isMatrixSizeValid,
+  MATRIX_CONFIG,
+} from '../config/matrix-config';
+import type {
   MatrixBatchOperation,
   MatrixBatchResult,
   MatrixDecomposition,
+  MatrixOperation,
+  MatrixOperationResult,
   MatrixValidation,
   TransformationMatrix,
-
 } from '../types/matrix.types';
-import { MatrixCacheService } from './matrix-cache.service';
 import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters';
-import { MATRIX_CONFIG, getCacheKey, isMatrixSizeValid, getOperationTimeout } from '../config/matrix-config';
-import { success, error } from '../../../shared/utils/functional/result';
-import type { Result } from '../../../shared/types/result.types';
+import { MatrixCacheService } from './matrix-cache.service';
 
 /**
  * Matrix Operations API Service
@@ -54,9 +65,10 @@ export class MatrixOperationsAPI {
     cacheHit = false
   ): MatrixOperationResult<T> {
     const executionTime = Date.now() - startTime;
-    const memoryUsed = typeof result === 'object' && result && 'rows' in result && 'columns' in result
-      ? matrixUtils.memoryUsage(result as unknown as Matrix)
-      : 0;
+    const memoryUsed =
+      typeof result === 'object' && result && 'rows' in result && 'columns' in result
+        ? matrixUtils.memoryUsage(result as unknown as Matrix)
+        : 0;
 
     const operationResult: MatrixOperationResult<T> = {
       result,
@@ -65,13 +77,13 @@ export class MatrixOperationsAPI {
         memoryUsed,
         operationType: operation,
         matrixSize,
-        cacheHit
+        cacheHit,
       },
       metadata: {
         timestamp: Date.now(),
         operationId: this.generateOperationId(),
-        inputHash: `${matrixSize[0]}x${matrixSize[1]}_${operation}`
-      }
+        inputHash: `${matrixSize[0]}x${matrixSize[1]}_${operation}`,
+      },
     };
 
     // Update cache metrics
@@ -108,21 +120,32 @@ export class MatrixOperationsAPI {
     // Operation-specific validations
     switch (operation) {
       case 'multiply':
-        if (matrices.length >= 2 && matrices[0] && matrices[1] && matrices[0].columns !== matrices[1].rows) {
-          errors.push(`Matrix multiplication dimension mismatch: ${matrices[0].rows}x${matrices[0].columns} × ${matrices[1].rows}x${matrices[1].columns}`);
+        if (
+          matrices.length >= 2 &&
+          matrices[0] &&
+          matrices[1] &&
+          matrices[0].columns !== matrices[1].rows
+        ) {
+          errors.push(
+            `Matrix multiplication dimension mismatch: ${matrices[0].rows}x${matrices[0].columns} × ${matrices[1].rows}x${matrices[1].columns}`
+          );
         }
         break;
-      
+
       case 'inverse':
       case 'determinant':
         if (matrices.length > 0 && matrices[0] && !matrixUtils.isSquare(matrices[0])) {
           errors.push(`Operation ${operation} requires square matrix`);
         }
         break;
-      
+
       case 'eigenvalues':
       case 'eigenvectors':
-        if (matrices.length > 0 && matrices[0] && (!matrixUtils.isSquare(matrices[0]) || !matrixUtils.isSymmetric(matrices[0]))) {
+        if (
+          matrices.length > 0 &&
+          matrices[0] &&
+          (!matrixUtils.isSquare(matrices[0]) || !matrixUtils.isSymmetric(matrices[0]))
+        ) {
           warnings.push('Eigenvalue computation works best with symmetric matrices');
         }
         break;
@@ -132,7 +155,7 @@ export class MatrixOperationsAPI {
       isValid: errors.length === 0,
       errors,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
@@ -147,9 +170,8 @@ export class MatrixOperationsAPI {
     timeout?: number
   ): Promise<Result<MatrixOperationResult<T>, string>> {
     const startTime = Date.now();
-    const matrixSize: readonly [number, number] = matrices.length > 0 && matrices[0] 
-      ? [matrices[0].rows, matrices[0].columns] 
-      : [0, 0];
+    const matrixSize: readonly [number, number] =
+      matrices.length > 0 && matrices[0] ? [matrices[0].rows, matrices[0].columns] : [0, 0];
 
     try {
       // Validate operation
@@ -163,13 +185,15 @@ export class MatrixOperationsAPI {
         const cachedResult = this.cache.get(cacheKey);
         if (cachedResult.success && cachedResult.data) {
           console.log(`[DEBUG][MatrixOperationsAPI] Cache hit for ${operation}: ${cacheKey}`);
-          return success(this.createOperationResult(
-            cachedResult.data as T,
-            operation,
-            startTime,
-            matrixSize,
-            true
-          ));
+          return success(
+            this.createOperationResult(
+              cachedResult.data as T,
+              operation,
+              startTime,
+              matrixSize,
+              true
+            )
+          );
         }
       }
 
@@ -180,10 +204,7 @@ export class MatrixOperationsAPI {
       });
 
       // Execute operation with timeout
-      const result = await Promise.race([
-        Promise.resolve(operationFn()),
-        timeoutPromise
-      ]);
+      const result = await Promise.race([Promise.resolve(operationFn()), timeoutPromise]);
 
       // Cache result if applicable
       if (cacheKey && result instanceof Matrix) {
@@ -191,10 +212,11 @@ export class MatrixOperationsAPI {
       }
 
       const operationResult = this.createOperationResult(result, operation, startTime, matrixSize);
-      
-      console.log(`[DEBUG][MatrixOperationsAPI] Operation ${operation} completed in ${operationResult.performance.executionTime}ms`);
-      return success(operationResult);
 
+      console.log(
+        `[DEBUG][MatrixOperationsAPI] Operation ${operation} completed in ${operationResult.performance.executionTime}ms`
+      );
+      return success(operationResult);
     } catch (err) {
       this.cache.recordFailure();
       const errorMessage = `Operation ${operation} failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -233,10 +255,15 @@ export class MatrixOperationsAPI {
 
   async pseudoInverse(matrix: Matrix): Promise<Result<MatrixOperationResult<Matrix>, string>> {
     const cacheKey = getCacheKey('pseudoInverse', matrixUtils.hash(matrix));
-    return this.executeOperation('pseudoInverse', [matrix], () => {
-      // Use ML-Matrix pseudoInverse method with proper type handling
-      return (matrix as unknown as { pseudoInverse(): Matrix }).pseudoInverse();
-    }, cacheKey);
+    return this.executeOperation(
+      'pseudoInverse',
+      [matrix],
+      () => {
+        // Use ML-Matrix pseudoInverse method with proper type handling
+        return (matrix as unknown as { pseudoInverse(): Matrix }).pseudoInverse();
+      },
+      cacheKey
+    );
   }
 
   /**
@@ -244,10 +271,15 @@ export class MatrixOperationsAPI {
    */
   async determinant(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
     const cacheKey = getCacheKey('determinant', matrixUtils.hash(matrix));
-    return this.executeOperation('determinant', [matrix], () => {
-      // Use ML-Matrix determinant method with proper type handling
-      return (matrix as unknown as { determinant(): number }).determinant();
-    }, cacheKey);
+    return this.executeOperation(
+      'determinant',
+      [matrix],
+      () => {
+        // Use ML-Matrix determinant method with proper type handling
+        return (matrix as unknown as { determinant(): number }).determinant();
+      },
+      cacheKey
+    );
   }
 
   async trace(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
@@ -257,72 +289,88 @@ export class MatrixOperationsAPI {
 
   async rank(matrix: Matrix): Promise<Result<MatrixOperationResult<number>, string>> {
     const cacheKey = getCacheKey('rank', matrixUtils.hash(matrix));
-    return this.executeOperation('rank', [matrix], () => {
-      // Use ML-Matrix rank method with proper type handling
-      return (matrix as unknown as { rank(): number }).rank();
-    }, cacheKey);
+    return this.executeOperation(
+      'rank',
+      [matrix],
+      () => {
+        // Use ML-Matrix rank method with proper type handling
+        return (matrix as unknown as { rank(): number }).rank();
+      },
+      cacheKey
+    );
   }
 
   /**
    * Matrix decompositions
    */
-  async decompose(matrix: Matrix): Promise<Result<MatrixOperationResult<MatrixDecomposition>, string>> {
+  async decompose(
+    matrix: Matrix
+  ): Promise<Result<MatrixOperationResult<MatrixDecomposition>, string>> {
     const cacheKey = getCacheKey('decompose', matrixUtils.hash(matrix));
-    
-    return this.executeOperation('lu', [matrix], () => {
-      const decomposition: Record<string, unknown> = {}; // Use Record to allow property assignment
-      
-      try {
-        if (matrixUtils.isSquare(matrix)) {
-          const lu = new LuDecomposition(matrix);
-          decomposition.lu = {
-            L: lu.lowerTriangularMatrix,
-            U: lu.upperTriangularMatrix,
-            P: Matrix.diag(lu.pivotPermutationVector)
+
+    return this.executeOperation(
+      'lu',
+      [matrix],
+      () => {
+        const decomposition: Record<string, unknown> = {}; // Use Record to allow property assignment
+
+        try {
+          if (matrixUtils.isSquare(matrix)) {
+            const lu = new LuDecomposition(matrix);
+            decomposition.lu = {
+              L: lu.lowerTriangularMatrix,
+              U: lu.upperTriangularMatrix,
+              P: Matrix.diag(lu.pivotPermutationVector),
+            };
+          }
+
+          const qr = new QrDecomposition(matrix);
+          decomposition.qr = {
+            Q: qr.orthogonalMatrix,
+            R: qr.upperTriangularMatrix,
           };
+
+          if (matrix.rows >= matrix.columns) {
+            const svd = (
+              matrix as unknown as { svd(): { U: Matrix; s: number[]; V: Matrix } }
+            ).svd(); // Use proper typing for svd method
+            decomposition.svd = {
+              U: svd.U,
+              S: Matrix.diag(svd.s),
+              V: svd.V,
+            };
+          }
+
+          if (matrixUtils.isSquare(matrix) && matrixUtils.isSymmetric(matrix)) {
+            const eigen = new EigenvalueDecomposition(matrix);
+            decomposition.eigenvalues = {
+              values: eigen.realEigenvalues,
+              vectors: eigen.eigenvectorMatrix,
+            };
+          }
+
+          if (matrixUtils.isSquare(matrix) && matrixUtils.isPositiveDefinite(matrix)) {
+            const cholesky = new CholeskyDecomposition(matrix);
+            decomposition.cholesky = cholesky.lowerTriangularMatrix;
+          }
+        } catch (err) {
+          console.warn(`[WARN][MatrixOperationsAPI] Some decompositions failed: ${err}`);
         }
 
-        const qr = new QrDecomposition(matrix);
-        decomposition.qr = {
-          Q: qr.orthogonalMatrix,
-          R: qr.upperTriangularMatrix
-        };
-
-        if (matrix.rows >= matrix.columns) {
-          const svd = (matrix as unknown as { svd(): { U: Matrix; s: number[]; V: Matrix } }).svd(); // Use proper typing for svd method
-          decomposition.svd = {
-            U: svd.U,
-            S: Matrix.diag(svd.s),
-            V: svd.V
-          };
-        }
-
-        if (matrixUtils.isSquare(matrix) && matrixUtils.isSymmetric(matrix)) {
-          const eigen = new EigenvalueDecomposition(matrix);
-          decomposition.eigenvalues = {
-            values: eigen.realEigenvalues,
-            vectors: eigen.eigenvectorMatrix
-          };
-        }
-
-        if (matrixUtils.isSquare(matrix) && matrixUtils.isPositiveDefinite(matrix)) {
-          const cholesky = new CholeskyDecomposition(matrix);
-          decomposition.cholesky = cholesky.lowerTriangularMatrix;
-        }
-      } catch (err) {
-        console.warn(`[WARN][MatrixOperationsAPI] Some decompositions failed: ${err}`);
-      }
-      
-      return decomposition as MatrixDecomposition; // Cast back to proper type
-    }, cacheKey);
+        return decomposition as MatrixDecomposition; // Cast back to proper type
+      },
+      cacheKey
+    );
   }
 
   /**
    * Three.js integration methods
    */
-  async fromThreeMatrix4(threeMatrix: Matrix4): Promise<Result<MatrixOperationResult<Matrix>, string>> {
+  async fromThreeMatrix4(
+    threeMatrix: Matrix4
+  ): Promise<Result<MatrixOperationResult<Matrix>, string>> {
     const startTime = Date.now();
-    
+
     try {
       const result = matrixAdapter.fromThreeMatrix4(threeMatrix);
       const operationResult = this.createOperationResult(result, 'transform', startTime, [4, 4]);
@@ -336,10 +384,13 @@ export class MatrixOperationsAPI {
 
   async toThreeMatrix4(matrix: Matrix): Promise<Result<MatrixOperationResult<Matrix4>, string>> {
     const startTime = Date.now();
-    
+
     try {
       const result = matrixAdapter.toThreeMatrix4(matrix);
-      const operationResult = this.createOperationResult(result, 'transform', startTime, [matrix.rows, matrix.columns]);
+      const operationResult = this.createOperationResult(result, 'transform', startTime, [
+        matrix.rows,
+        matrix.columns,
+      ]);
       return success(operationResult);
     } catch (err) {
       const errorMessage = `Three.js Matrix4 conversion failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -354,11 +405,15 @@ export class MatrixOperationsAPI {
     scale: Vector3
   ): Promise<Result<MatrixOperationResult<TransformationMatrix>, string>> {
     const startTime = Date.now();
-    
+
     try {
       const matrix4 = new Matrix4();
-      matrix4.compose(position, rotation instanceof Quaternion ? rotation : new Quaternion().setFromEuler(rotation), scale);
-      
+      matrix4.compose(
+        position,
+        rotation instanceof Quaternion ? rotation : new Quaternion().setFromEuler(rotation),
+        scale
+      );
+
       const result = matrixAdapter.fromThreeMatrix4(matrix4) as TransformationMatrix;
       const operationResult = this.createOperationResult(result, 'transform', startTime, [4, 4]);
       return success(operationResult);
@@ -372,9 +427,11 @@ export class MatrixOperationsAPI {
   /**
    * Batch operations
    */
-  async executeBatch(operations: MatrixBatchOperation[]): Promise<Result<MatrixBatchResult, string>> {
+  async executeBatch(
+    operations: MatrixBatchOperation[]
+  ): Promise<Result<MatrixBatchResult, string>> {
     console.log(`[DEBUG][MatrixOperationsAPI] Executing batch of ${operations.length} operations`);
-    
+
     const startTime = Date.now();
     const batchId = this.generateOperationId();
     const results: MatrixOperationResult[] = [];
@@ -392,7 +449,7 @@ export class MatrixOperationsAPI {
         try {
           // Execute operation based on type
           let result: Result<MatrixOperationResult, string>;
-          
+
           switch (op.operation) {
             case 'add':
               if (op.inputs.length >= 2 && op.inputs[0] && op.inputs[1]) {
@@ -401,7 +458,7 @@ export class MatrixOperationsAPI {
                 result = error('Add operation requires 2 matrices');
               }
               break;
-            
+
             case 'multiply':
               if (op.inputs.length >= 2 && op.inputs[0] && op.inputs[1]) {
                 result = await this.multiply(op.inputs[0], op.inputs[1]);
@@ -409,7 +466,7 @@ export class MatrixOperationsAPI {
                 result = error('Multiply operation requires 2 matrices');
               }
               break;
-            
+
             case 'transpose':
               if (op.inputs.length >= 1 && op.inputs[0]) {
                 result = await this.transpose(op.inputs[0]);
@@ -417,7 +474,7 @@ export class MatrixOperationsAPI {
                 result = error('Transpose operation requires 1 matrix');
               }
               break;
-            
+
             default:
               result = error(`Unsupported batch operation: ${op.operation}`);
           }
@@ -441,12 +498,13 @@ export class MatrixOperationsAPI {
         totalTime,
         successCount,
         failureCount,
-        batchId
+        batchId,
       };
 
-      console.log(`[DEBUG][MatrixOperationsAPI] Batch completed: ${successCount} success, ${failureCount} failures in ${totalTime}ms`);
+      console.log(
+        `[DEBUG][MatrixOperationsAPI] Batch completed: ${successCount} success, ${failureCount} failures in ${totalTime}ms`
+      );
       return success(batchResult);
-
     } catch (err) {
       const errorMessage = `Batch execution failed: ${err instanceof Error ? err.message : String(err)}`;
       console.error('[ERROR][MatrixOperationsAPI]', errorMessage);
