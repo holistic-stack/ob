@@ -77,6 +77,7 @@ vi.mock('three', () => ({
   Box3: vi.fn(() => ({ min: { x: 0, y: 0, z: 0 }, max: { x: 1, y: 1, z: 1 } })),
   PCFSoftShadowMap: 1,
   sRGBEncoding: 3001,
+  SRGBColorSpace: 'srgb',
   ACESFilmicToneMapping: 4,
 }));
 

@@ -188,8 +188,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockOnRenderComplete).toHaveBeenCalledWith([]);
     });
@@ -213,8 +213,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockScene.add).toHaveBeenCalled();
       expect(mockOnRenderComplete).toHaveBeenCalled();
@@ -238,8 +238,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockScene.add).toHaveBeenCalled();
       expect(mockOnRenderComplete).toHaveBeenCalled();
@@ -265,8 +265,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockScene.add).toHaveBeenCalled();
       expect(mockOnRenderComplete).toHaveBeenCalled();
@@ -299,8 +299,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockScene.add).toHaveBeenCalledTimes(2);
       expect(mockOnRenderComplete).toHaveBeenCalled();
@@ -315,8 +315,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockOnPerformanceUpdate).toHaveBeenCalled();
 
@@ -348,8 +348,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockOnPerformanceUpdate).toHaveBeenCalled();
 
@@ -366,8 +366,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for orbit controls to trigger change
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for orbit controls to trigger change
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockOnCameraChange).toHaveBeenCalledWith({
         position: [5, 5, 5],
@@ -400,8 +400,8 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      // Wait for effects to run
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait longer for effects to run and async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to render AST node'),
@@ -433,7 +433,7 @@ describe('R3FScene', () => {
         </Canvas>
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockOnRenderError).toHaveBeenCalled();
       const errorCall = mockOnRenderError.mock.calls[0];

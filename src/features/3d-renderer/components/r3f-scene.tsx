@@ -11,9 +11,13 @@ import { useFrame, useThree } from '@react-three/fiber';
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import type * as THREE from 'three';
+import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
+
+// Create logger instance for this component
+const logger = createLogger('R3FScene');
 
 /**
  * Props for the R3F scene component
@@ -70,108 +74,108 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
    */
   useEffect(() => {
     const updateScene = async () => {
-      console.log(`[DEBUG][R3FScene] Updating scene with ${astNodes.length} AST nodes`);
+      logger.debug(`Updating scene with ${astNodes.length} AST nodes`);
 
-      const { result: meshes, duration: renderTime } = await measureTimeAsync(async () => {
-        // Clear existing meshes using proper disposal
-        meshesRef.current.forEach((mesh3D) => {
-          scene.remove(mesh3D.mesh);
-          mesh3D.dispose(); // Use the Mesh3D disposal method
-        });
-        meshesRef.current = [];
+      try {
+        const { result: meshes, duration: renderTime } = await measureTimeAsync(async () => {
+          // Clear existing meshes using proper disposal
+          meshesRef.current.forEach((mesh3D) => {
+            scene.remove(mesh3D.mesh);
+            mesh3D.dispose(); // Use the Mesh3D disposal method
+          });
+          meshesRef.current = [];
 
-        // Create new meshes from AST nodes using proper service
-        const newMeshes: Mesh3D[] = [];
+          // Create new meshes from AST nodes using proper service
+          const newMeshes: Mesh3D[] = [];
 
-        // Process nodes sequentially to maintain order
-        for (let index = 0; index < astNodes.length; index++) {
-          const node = astNodes[index];
-          if (!node) {
-            console.warn(`[DEBUG][R3FScene] Skipping undefined node at index ${index}`);
-            continue;
-          }
-
-          try {
-            const result = await renderASTNode(node, index);
-            if (result.success) {
-              const mesh3D = result.data;
-
-              // Position meshes in a grid for multiple objects
-              const gridSize = Math.ceil(Math.sqrt(astNodes.length));
-              const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
-              const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-              (mesh3D.mesh as THREE.Mesh).position.set(x, 0, z);
-
-              scene.add(mesh3D.mesh);
-              newMeshes.push(mesh3D);
-
-              console.log(
-                `[DEBUG][R3FScene] Successfully created mesh for ${node.type} at index ${index}`
-              );
-            } else {
-              // Type narrowing: result.success is false, so result.error exists
-              console.error(
-                `[ERROR][R3FScene] Failed to render AST node ${index} (${node.type}):`,
-                result.error
-              );
-              onRenderError?.({ message: result.error });
+          // Process nodes sequentially to maintain order
+          for (let index = 0; index < astNodes.length; index++) {
+            const node = astNodes[index];
+            if (!node) {
+              logger.warn(`Skipping undefined node at index ${index}`);
+              continue;
             }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error(
-              `[ERROR][R3FScene] Failed to create mesh for node ${index} (${node.type}):`,
-              errorMessage
-            );
-            onRenderError?.({ message: errorMessage });
+
+            try {
+              const result = await renderASTNode(node, index);
+              if (result.success) {
+                const mesh3D = result.data;
+
+                // Position meshes in a grid for multiple objects
+                const gridSize = Math.ceil(Math.sqrt(astNodes.length));
+                const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
+                const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
+                (mesh3D.mesh as THREE.Mesh).position.set(x, 0, z);
+
+                scene.add(mesh3D.mesh);
+                newMeshes.push(mesh3D);
+
+                logger.debug(`Successfully created mesh for ${node.type} at index ${index}`);
+              } else {
+                // Type narrowing: result.success is false, so result.error exists
+                logger.error(`Failed to render AST node ${index} (${node.type}):`, result.error);
+                onRenderError?.({ message: result.error });
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              logger.error(`Failed to create mesh for node ${index} (${node.type}):`, errorMessage);
+              onRenderError?.({ message: errorMessage });
+            }
           }
-        }
 
-        return newMeshes;
-      });
+          return newMeshes;
+        });
 
-      meshesRef.current = meshes;
+        meshesRef.current = meshes;
 
-      // Report render completion
-      onRenderComplete?.(meshes);
+        // Report render completion
+        logger.debug(`Calling onRenderComplete with ${meshes.length} meshes`);
+        onRenderComplete?.(meshes);
 
-      // Update performance metrics
-      const memoryUsage =
-        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
-          ?.usedJSHeapSize ?? 0;
-      const triangleCount = meshes.reduce((total, mesh3D) => {
-        const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-        if (geometry.index) {
-          return total + (geometry.index as THREE.BufferAttribute).count / 3;
-        } else if (geometry.attributes.position) {
-          return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
-        }
-        return total;
-      }, 0);
+        // Update performance metrics
+        const memoryUsage =
+          (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+            ?.usedJSHeapSize ?? 0;
+        const triangleCount = meshes.reduce((total, mesh3D) => {
+          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
+          if (geometry.index) {
+            return total + (geometry.index as THREE.BufferAttribute).count / 3;
+          } else if (geometry.attributes.position) {
+            return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
+          }
+          return total;
+        }, 0);
 
-      const vertexCount = meshes.reduce((total, mesh3D) => {
-        const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-        return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
-      }, 0);
+        const vertexCount = meshes.reduce((total, mesh3D) => {
+          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
+          return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
+        }, 0);
 
-      onPerformanceUpdate?.({
-        renderTime,
-        parseTime: 0, // AST parsing happens elsewhere
-        memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
-        frameRate: 60, // Approximate - will be updated in frame loop
-        meshCount: meshes.length,
-        triangleCount,
-        vertexCount,
-        drawCalls: meshes.length, // Approximate - one draw call per mesh
-        textureMemory: 0, // Not tracking texture memory yet
-        bufferMemory: 0, // Not tracking buffer memory yet
-      });
+        onPerformanceUpdate?.({
+          renderTime,
+          parseTime: 0, // AST parsing happens elsewhere
+          memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
+          frameRate: 60, // Approximate - will be updated in frame loop
+          meshCount: meshes.length,
+          triangleCount,
+          vertexCount,
+          drawCalls: meshes.length, // Approximate - one draw call per mesh
+          textureMemory: 0, // Not tracking texture memory yet
+          bufferMemory: 0, // Not tracking buffer memory yet
+        });
+      } catch (error) {
+        logger.error('Failed to update scene:', error);
+        onRenderError?.({
+          message: error instanceof Error ? error.message : 'Unknown scene update error',
+        });
+      }
     };
 
     // Call the async function
     void updateScene().catch((error) => {
-      console.error('[ERROR][R3FScene] Failed to update scene:', error);
+      logger.error('Failed to update scene:', error);
       onRenderError?.({
-        message: error.message ?? 'Unknown scene update error',
+        message: error instanceof Error ? error.message : 'Unknown scene update error',
       });
     });
   }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate]);

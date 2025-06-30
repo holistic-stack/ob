@@ -7,6 +7,7 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
+import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
 import { error, tryCatch } from '../../../shared/utils/functional/result';
 import type {
@@ -17,6 +18,9 @@ import type {
   PrimitiveRendererFactory,
 } from '../types/renderer.types';
 import { convertASTNodeToCSG } from './ast-to-csg-converter';
+
+// Create logger instance for this service
+const logger = createLogger('PrimitiveRenderer');
 
 /**
  * Default material configuration
@@ -373,7 +377,7 @@ export const renderASTNode = async (
   node: ASTNode,
   index: number
 ): Promise<Result<Mesh3D, string>> => {
-  console.log(`[DEBUG][PrimitiveRenderer] Rendering AST node ${index}: ${node.type} using CSG`);
+  logger.debug(`Rendering AST node ${index}: ${node.type} using CSG`);
 
   // Use the new CSG converter for all OpenSCAD primitives
   const csgResult = await convertASTNodeToCSG(node, index, {
@@ -392,12 +396,9 @@ export const renderASTNode = async (
   });
 
   if (csgResult.success) {
-    console.log(`[DEBUG][PrimitiveRenderer] Successfully rendered ${node.type} using CSG`);
+    logger.debug(`Successfully rendered ${node.type} using CSG`);
   } else {
-    console.error(
-      `[ERROR][PrimitiveRenderer] Failed to render ${node.type} using CSG:`,
-      csgResult.error
-    );
+    logger.error(`Failed to render ${node.type} using CSG:`, csgResult.error);
   }
 
   return csgResult;

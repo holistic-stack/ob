@@ -60,6 +60,7 @@ vi.mock('three', () => ({
   Color: vi.fn(),
   PCFSoftShadowMap: 1,
   sRGBEncoding: 3001,
+  SRGBColorSpace: 'srgb',
   ACESFilmicToneMapping: 4,
 }));
 
