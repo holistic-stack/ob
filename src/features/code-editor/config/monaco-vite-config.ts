@@ -66,9 +66,16 @@ export const createMonacoEditorConfig = (
 };
 
 /**
+ * Monaco configuration interface for validation
+ */
+export interface MonacoConfigValidation {
+  readonly [key: string]: unknown;
+}
+
+/**
  * Validate Monaco Editor configuration
  */
-export const validateMonacoConfig = (config: any): Result<void, string> => {
+export const validateMonacoConfig = (config: MonacoConfigValidation): Result<void, string> => {
   return tryCatch(
     () => {
       if (!config || typeof config !== 'object') {
@@ -241,7 +248,9 @@ export const configureMonacoEnvironment = (): Result<void, string> => {
     () => {
       // Set up Monaco environment for web workers
       if (typeof window !== 'undefined') {
-        (window as any).MonacoEnvironment = MONACO_ENVIRONMENT_CONFIG;
+        (
+          window as Window & { MonacoEnvironment?: typeof MONACO_ENVIRONMENT_CONFIG }
+        ).MonacoEnvironment = MONACO_ENVIRONMENT_CONFIG;
       }
 
       console.log('[INIT][MonacoViteConfig] Monaco Editor environment configured');

@@ -299,15 +299,18 @@ class OpenSCADLanguageService {
    */
   private _getWordAtPosition(line: string, column: number): string | null {
     const wordRegex = /\b\w+\b/g;
-    let match;
+    let matchResult: RegExpExecArray | null;
 
-    while ((match = wordRegex.exec(line)) !== null) {
-      const start = match.index;
-      const end = match.index + match[0].length;
+    matchResult = wordRegex.exec(line);
+    while (matchResult !== null) {
+      const start = matchResult.index;
+      const end = matchResult.index + matchResult[0].length;
 
       if (column >= start && column <= end) {
-        return match[0];
+        return matchResult[0];
       }
+
+      matchResult = wordRegex.exec(line);
     }
 
     return null;

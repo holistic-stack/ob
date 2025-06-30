@@ -21,7 +21,7 @@ export interface MonacoWorkerConfig {
 export interface MonacoEnvironment {
   readonly getWorkerUrl?: (moduleId: string, label: string) => string;
   readonly getWorker?: (moduleId: string, label: string) => Worker;
-  readonly createTrustedTypesPolicy?: (policyName: string, policyOptions: any) => any;
+  readonly createTrustedTypesPolicy?: (policyName: string, policyOptions: unknown) => unknown;
 }
 
 /**
@@ -136,7 +136,7 @@ export interface MonacoActionRegistration {
   readonly contextMenuGroupId?: string;
   readonly contextMenuOrder?: number;
   readonly precondition?: string;
-  readonly run: (editor: monaco.editor.ICodeEditor, ...args: any[]) => void | Promise<void>;
+  readonly run: (editor: monaco.editor.ICodeEditor, ...args: unknown[]) => void | Promise<void>;
 }
 
 /**
@@ -144,7 +144,7 @@ export interface MonacoActionRegistration {
  */
 export interface MonacoCommandRegistration {
   readonly id: string;
-  readonly handler: (accessor: any, ...args: any[]) => void | Promise<void>;
+  readonly handler: (accessor: unknown, ...args: unknown[]) => void | Promise<void>;
 }
 
 /**
@@ -161,7 +161,7 @@ export interface MonacoKeybindingRegistration {
  */
 export interface MonacoServiceRegistration {
   readonly id: string;
-  readonly service: any;
+  readonly service: unknown;
   readonly override?: boolean;
 }
 

@@ -12,10 +12,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock Three.js with proper BufferGeometry types
 vi.mock('three', async () => {
   const actual = await vi.importActual('three');
+  const threeModule = actual as typeof import('three');
 
   // Create mocked geometries that extend the base geometry structure
   const mockBoxGeometry = vi.fn().mockImplementation((_width = 1, _height = 1, _depth = 1) => {
-    const geometry = Object.create((actual as any).BufferGeometry.prototype);
+    const geometry = Object.create(threeModule.BufferGeometry.prototype);
     Object.assign(geometry, {
       type: 'BoxGeometry',
       dispose: vi.fn(),
@@ -32,7 +33,7 @@ vi.mock('three', async () => {
   const mockSphereGeometry = vi
     .fn()
     .mockImplementation((_radius = 1, _widthSegments = 32, _heightSegments = 16) => {
-      const geometry = Object.create((actual as any).BufferGeometry.prototype);
+      const geometry = Object.create(threeModule.BufferGeometry.prototype);
       Object.assign(geometry, {
         type: 'SphereGeometry',
         dispose: vi.fn(),
@@ -49,7 +50,7 @@ vi.mock('three', async () => {
   const mockCylinderGeometry = vi
     .fn()
     .mockImplementation((_radiusTop = 1, _radiusBottom = 1, _height = 1, _radialSegments = 32) => {
-      const geometry = Object.create((actual as any).BufferGeometry.prototype);
+      const geometry = Object.create(threeModule.BufferGeometry.prototype);
       Object.assign(geometry, {
         type: 'CylinderGeometry',
         dispose: vi.fn(),
@@ -64,7 +65,7 @@ vi.mock('three', async () => {
     });
 
   const mockMeshStandardMaterial = vi.fn().mockImplementation((params = {}) => {
-    const material = Object.create((actual as any).Material.prototype);
+    const material = Object.create(threeModule.Material.prototype);
     Object.assign(material, {
       type: 'MeshStandardMaterial',
       dispose: vi.fn(),
@@ -88,7 +89,7 @@ vi.mock('three', async () => {
     CylinderGeometry: mockCylinderGeometry,
     MeshStandardMaterial: mockMeshStandardMaterial,
     MeshBasicMaterial: vi.fn().mockImplementation((params = {}) => {
-      const material = Object.create((actual as any).Material.prototype);
+      const material = Object.create(threeModule.Material.prototype);
       Object.assign(material, {
         type: 'MeshBasicMaterial',
         dispose: vi.fn(),
@@ -100,7 +101,7 @@ vi.mock('three', async () => {
     }),
     FrontSide: 0,
     DoubleSide: 2,
-    Color: (actual as any).Color,
+    Color: threeModule.Color,
   };
 });
 
@@ -327,11 +328,21 @@ describe('Primitive Renderer Service', () => {
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshStandardMaterial);
           expect(result.data.type).toBe('MeshStandardMaterial');
-          expect((result.data as any).color.getHex()).toBe(0xff0000);
-          expect((result.data as any).opacity).toBe(1);
-          expect((result.data as any).metalness).toBe(0.2);
-          expect((result.data as any).roughness).toBe(0.7);
-          expect((result.data as any).wireframe).toBe(false);
+
+          // Type assertion for material properties
+          const material = result.data as THREE.MeshStandardMaterial & {
+            color: { getHex(): number };
+            opacity: number;
+            metalness: number;
+            roughness: number;
+            wireframe: boolean;
+          };
+
+          expect(material.color.getHex()).toBe(0xff0000);
+          expect(material.opacity).toBe(1);
+          expect(material.metalness).toBe(0.2);
+          expect(material.roughness).toBe(0.7);
+          expect(material.wireframe).toBe(false);
           expect(result.data.transparent).toBe(false);
           expect(result.data.side).toBe(THREE.FrontSide);
         }
@@ -366,7 +377,13 @@ describe('Primitive Renderer Service', () => {
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data).toBeInstanceOf(THREE.MeshBasicMaterial);
-          expect((result.data as any).wireframe).toBe(true);
+
+          // Type assertion for wireframe material properties
+          const material = result.data as THREE.MeshBasicMaterial & {
+            wireframe: boolean;
+          };
+
+          expect(material.wireframe).toBe(true);
           expect(result.data.transparent).toBe(true);
           expect(result.data.opacity).toBe(0.8);
         }
@@ -455,7 +472,7 @@ describe('Primitive Renderer Service', () => {
 
     it('should fail for unsupported primitive type', () => {
       const params: PrimitiveParams = {
-        type: 'unknown' as any,
+        type: 'unknown' as unknown as PrimitiveParams['type'],
         parameters: {},
         transformations: [],
         material: {

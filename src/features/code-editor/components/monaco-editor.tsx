@@ -186,7 +186,9 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
           }
 
           // Store disposables for cleanup
-          (editor as any)._disposables = disposables;
+          (
+            editor as monaco.editor.IStandaloneCodeEditor & { _disposables?: monaco.IDisposable[] }
+          )._disposables = disposables;
 
           // Call onMount callback
           onMount?.(editor);
@@ -223,7 +225,11 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
       () => {
         if (editorRef.current) {
           // Dispose event listeners
-          const disposables = (editorRef.current as any)._disposables;
+          const disposables = (
+            editorRef.current as monaco.editor.IStandaloneCodeEditor & {
+              _disposables?: monaco.IDisposable[];
+            }
+          )._disposables;
           if (disposables) {
             disposables.forEach((disposable: monaco.IDisposable) => {
               disposable.dispose();

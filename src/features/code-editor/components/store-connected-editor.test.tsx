@@ -7,7 +7,7 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+import type { EditorChangeEvent, EditorCursorEvent, EditorSelection } from '../types/editor.types';
 import { StoreConnectedEditor } from './store-connected-editor';
 
 // Mock Monaco Editor
@@ -18,14 +18,22 @@ vi.mock('./monaco-editor', () => ({
     onCursorPositionChange,
     onSelectionChange,
     ...props
-  }: any) => {
+  }: {
+    value?: string;
+    onChange?: (event: EditorChangeEvent) => void;
+    onCursorPositionChange?: (event: EditorCursorEvent) => void;
+    onSelectionChange?: (selection: unknown) => void;
+    [key: string]: unknown;
+  }) => {
     return (
       <div data-testid="monaco-editor-mock" {...props}>
         <textarea
           data-testid="monaco-textarea"
           value={value}
-          onChange={(e) => onChange?.({ value: e.target.value })}
-          onFocus={() => onCursorPositionChange?.({ position: { lineNumber: 1, column: 1 } })}
+          onChange={(e) => onChange?.({ value: e.target.value, changes: [], versionId: 1 })}
+          onFocus={() =>
+            onCursorPositionChange?.({ position: { line: 1, column: 1 }, secondaryPositions: [] })
+          }
           onSelect={() =>
             onSelectionChange?.({
               selection: {
@@ -34,6 +42,7 @@ vi.mock('./monaco-editor', () => ({
                 endLineNumber: 1,
                 endColumn: 5,
               },
+              secondarySelections: [],
             })
           }
         />
@@ -46,12 +55,12 @@ vi.mock('./monaco-editor', () => ({
 const mockStoreState = {
   editor: {
     code: '',
-    selection: null,
+    selection: null as EditorSelection | null,
     isDirty: false,
   },
   parsing: {
-    errors: [],
-    warnings: [],
+    errors: [] as string[],
+    warnings: [] as string[],
   },
   config: {
     enableRealTimeParsing: true,
@@ -151,11 +160,11 @@ describe('StoreConnectedEditor', () => {
 
     it('should display selection information from store', () => {
       mockStoreState.editor.selection = {
-        startLine: 2,
+        startLineNumber: 2,
         startColumn: 5,
-        endLine: 2,
+        endLineNumber: 2,
         endColumn: 10,
-      } as any;
+      };
 
       render(<StoreConnectedEditor />);
 
@@ -163,10 +172,7 @@ describe('StoreConnectedEditor', () => {
     });
 
     it('should display parsing errors from store', () => {
-      mockStoreState.parsing.errors = [
-        { message: 'Syntax error at line 1', line: 1, column: 1 },
-        { message: 'Missing semicolon', line: 2, column: 5 },
-      ] as any;
+      mockStoreState.parsing.errors = ['Syntax error at line 1', 'Missing semicolon'];
 
       render(<StoreConnectedEditor />);
 
@@ -176,12 +182,12 @@ describe('StoreConnectedEditor', () => {
     });
 
     it('should display parsing warnings from store', () => {
-      mockStoreState.parsing.warnings = [{ message: 'Deprecated function used' }] as any;
+      mockStoreState.parsing.warnings = ['Test warning'];
 
       render(<StoreConnectedEditor />);
 
       expect(screen.getByText('1 warning')).toBeInTheDocument();
-      expect(screen.getByText('Deprecated function used')).toBeInTheDocument();
+      expect(screen.getByText('Test warning')).toBeInTheDocument();
     });
   });
 
@@ -238,7 +244,7 @@ describe('StoreConnectedEditor', () => {
     });
 
     it('should show error panel when errors exist', () => {
-      mockStoreState.parsing.errors = [{ message: 'Test error', line: 1, column: 1 }] as any;
+      mockStoreState.parsing.errors = ['Test error'];
 
       render(<StoreConnectedEditor />);
 
@@ -247,7 +253,7 @@ describe('StoreConnectedEditor', () => {
     });
 
     it('should show error panel when warnings exist', () => {
-      mockStoreState.parsing.warnings = [{ message: 'Test warning', line: 1, column: 1 }] as any;
+      mockStoreState.parsing.warnings = ['Test warning'];
 
       render(<StoreConnectedEditor />);
 

@@ -30,13 +30,17 @@ export interface ParsingState {
   readonly parseTime: number;
 }
 
+import type { RenderingError } from '../../3d-renderer/types/renderer.types.js';
+
 /**
  * Represents a rendering error with a unique ID.
  */
-export interface RenderError {
-  readonly id: string;
-  readonly message: string;
-}
+export type RenderError = RenderingError;
+
+/**
+ * Re-export RenderingError for convenience
+ */
+export type { RenderingError };
 
 /**
  * 3D rendering state
@@ -44,7 +48,7 @@ export interface RenderError {
 export interface RenderingState {
   readonly meshes: ReadonlyArray<THREE.Mesh>;
   readonly isRendering: boolean;
-  readonly renderErrors: ReadonlyArray<RenderError>;
+  readonly renderErrors: ReadonlyArray<RenderingError>;
   readonly lastRendered: Date | null;
   readonly renderTime: number;
   readonly camera: CameraConfig;
@@ -107,7 +111,7 @@ export interface RenderingActions {
   clearScene: () => void;
   updateCamera: (camera: Partial<CameraConfig>) => void;
   resetCamera: () => void;
-  addRenderError: (error: string) => void;
+  addRenderError: (error: RenderingError) => void;
   clearRenderErrors: () => void;
 }
 

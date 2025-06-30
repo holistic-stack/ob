@@ -12,28 +12,28 @@ import type { Pipe } from '../../types/functional.types';
  * Allows chaining functions in a readable, sequential manner
  */
 export const pipe: Pipe =
-  (...fns: any[]) =>
-  (value: any) =>
+  (...fns: Array<(value: unknown) => unknown>) =>
+  (value: unknown) =>
     fns.reduce((acc, fn) => fn(acc), value);
 
 export const compose: Pipe =
-  (...fns: any[]) =>
-  (value: any) =>
+  (...fns: Array<(value: unknown) => unknown>) =>
+  (value: unknown) =>
     fns.reduceRight((acc, fn) => fn(acc), value);
 
 /**
  * Curry function to convert multi-argument functions to curried form
  */
-type Curried<A extends any[], R> = A extends [infer Arg, ...infer Rest]
+type Curried<A extends readonly unknown[], R> = A extends readonly [infer Arg, ...infer Rest]
   ? (arg: Arg) => Curried<Rest, R>
   : R;
 
-export const curry = <A extends any[], R>(fn: (...args: A) => R): Curried<A, R> => {
-  const curried = (...args: any[]): any => {
+export const curry = <A extends readonly unknown[], R>(fn: (...args: A) => R): Curried<A, R> => {
+  const curried = (...args: readonly unknown[]): unknown => {
     if (args.length >= fn.length) {
       return fn(...(args as A));
     }
-    return (...nextArgs: any[]) => curried(...args, ...nextArgs);
+    return (...nextArgs: readonly unknown[]) => curried(...args, ...nextArgs);
   };
   return curried as Curried<A, R>;
 };

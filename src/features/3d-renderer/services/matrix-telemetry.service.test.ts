@@ -367,7 +367,7 @@ describe('MatrixTelemetryService', () => {
           ...MATRIX_CONFIG.debug,
           enablePerformanceLogging: false as const,
         },
-      } as typeof MATRIX_CONFIG;
+      } as unknown as typeof MATRIX_CONFIG;
 
       const debugService = new MatrixTelemetryService({ config: debugConfig });
       debugService.trackOperation('add', 5, true);

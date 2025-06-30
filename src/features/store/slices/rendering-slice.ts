@@ -11,7 +11,7 @@ import type { StateCreator } from 'zustand';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
-import type { AppStore, RenderError, RenderingSlice } from '../types/store.types.js';
+import type { AppStore, RenderingError, RenderingSlice } from '../types/store.types.js';
 
 export const createRenderingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
@@ -75,7 +75,10 @@ export const createRenderingSlice = (
             state.rendering.isRendering = false;
             state.rendering.renderTime = renderTime;
           });
-          get().addRenderError(errorMessage); // Use the new addRenderError
+          get().addRenderError({
+            type: 'geometry',
+            message: errorMessage,
+          }); // Use the new addRenderError
 
           return `Render failed: ${errorMessage}`;
         }
@@ -113,13 +116,9 @@ export const createRenderingSlice = (
       });
     },
 
-    addRenderError: (message: string) => {
+    addRenderError: (error: RenderingError) => {
       set((state) => {
-        const newError: RenderError = {
-          id: crypto.randomUUID(), // Generate a unique ID
-          message,
-        };
-        state.rendering.renderErrors = [...state.rendering.renderErrors, newError];
+        state.rendering.renderErrors = [...state.rendering.renderErrors, error];
       });
     },
 

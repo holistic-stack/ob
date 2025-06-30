@@ -7,7 +7,11 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createMonacoEditorConfig, validateMonacoConfig } from './monaco-vite-config';
+import {
+  createMonacoEditorConfig,
+  type MonacoConfigValidation,
+  validateMonacoConfig,
+} from './monaco-vite-config';
 
 describe('Monaco Editor Vite Configuration', () => {
   beforeEach(() => {
@@ -299,7 +303,7 @@ describe('Monaco Editor Vite Configuration', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid configuration gracefully', () => {
-      const invalidConfig = null as any;
+      const invalidConfig = null as unknown as MonacoConfigValidation;
 
       const result = validateMonacoConfig(invalidConfig);
 

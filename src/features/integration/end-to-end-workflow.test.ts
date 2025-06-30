@@ -264,7 +264,9 @@ describe('End-to-End Workflow Validation', () => {
           const ast = parseResult.data;
           expect(ast).toHaveLength(scenario.expectedNodes);
           expect(ast[0]).toBeDefined();
-          expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
+          if (ast[0]) {
+            expect(validateASTNode(ast[0], scenario.expectedType)).toBe(true);
+          }
 
           // Step 2: Update store with parsed AST
           useAppStore.setState({
@@ -287,7 +289,8 @@ describe('End-to-End Workflow Validation', () => {
 
           // Step 3: Convert AST to CSG with matrix operations
           const csgStartTime = Date.now();
-          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          if (!ast[0]) throw new Error('AST node is undefined');
+          const csgResult = await convertASTNodeToCSG(ast[0], 0);
           const csgConversionTime = Date.now() - csgStartTime;
 
           expect(csgResult.success).toBe(true);
@@ -364,7 +367,8 @@ describe('End-to-End Workflow Validation', () => {
           if (!parseResult.success) throw new Error('Parse failed');
 
           const ast = parseResult.data;
-          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          if (!ast[0]) throw new Error('AST node is undefined');
+          const csgResult = await convertASTNodeToCSG(ast[0], 0);
           expect(csgResult.success).toBe(true);
           if (!csgResult.success) throw new Error('CSG conversion failed');
 
@@ -409,10 +413,11 @@ describe('End-to-End Workflow Validation', () => {
 
           const ast = parseResult.data;
           expect(ast).toHaveLength(scenario.expectedNodes);
-          expect(validateASTNode(ast[0]!, scenario.expectedType)).toBe(true);
+          if (!ast[0]) throw new Error('AST node is undefined');
+          expect(validateASTNode(ast[0], scenario.expectedType)).toBe(true);
 
           // Convert with matrix operations
-          const csgResult = await convertASTNodeToCSG(ast[0]!, 0);
+          const csgResult = await convertASTNodeToCSG(ast[0], 0);
           expect(csgResult.success).toBe(true);
           if (!csgResult.success) throw new Error('CSG conversion failed');
 
@@ -458,7 +463,9 @@ describe('End-to-End Workflow Validation', () => {
 
           // Validate each AST node
           scenario.expectedTypes?.forEach((expectedType, index) => {
-            expect(validateASTNode(ast[index]!, expectedType)).toBe(true);
+            const node = ast[index];
+            if (!node) throw new Error(`AST node at index ${index} is undefined`);
+            expect(validateASTNode(node, expectedType)).toBe(true);
           });
 
           // Convert to union CSG

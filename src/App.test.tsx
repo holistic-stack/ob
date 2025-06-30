@@ -32,8 +32,27 @@ vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
   ),
 }));
 
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { Mesh3D } from './features/3d-renderer/types/renderer.types.js';
+
 // Mock store state
-const mockStoreState = {
+const mockStoreState: {
+  application: { status: string };
+  editor: { code: string };
+  parsing: { ast: ASTNode[] };
+  rendering: {
+    isRendering: boolean;
+    meshes: Mesh3D[];
+    renderErrors: string[];
+  };
+  performance: {
+    metrics: {
+      renderTime: number;
+      parseTime: number;
+      memoryUsage: number;
+    };
+  };
+} = {
   application: {
     status: 'idle',
   },
@@ -133,7 +152,7 @@ describe('App', () => {
             start: { line: 1, column: 1, offset: 0 },
             end: { line: 1, column: 20, offset: 19 },
           },
-        },
+        } as ASTNode,
         {
           type: 'sphere',
           radius: 1,
@@ -141,7 +160,7 @@ describe('App', () => {
             start: { line: 2, column: 1, offset: 21 },
             end: { line: 2, column: 15, offset: 35 },
           },
-        },
+        } as ASTNode,
       ];
       mockStoreState.rendering.meshes = [
         {
@@ -159,7 +178,7 @@ describe('App', () => {
             visible: true,
           },
           dispose: vi.fn(), // Use vi.fn() for empty functions
-        },
+        } as Mesh3D,
         {
           mesh: {} as THREE.Mesh,
           metadata: {
@@ -175,7 +194,7 @@ describe('App', () => {
             visible: true,
           },
           dispose: vi.fn(),
-        },
+        } as Mesh3D,
         {
           mesh: {} as THREE.Mesh,
           metadata: {
@@ -191,7 +210,7 @@ describe('App', () => {
             visible: true,
           },
           dispose: vi.fn(),
-        },
+        } as Mesh3D,
       ];
       mockStoreState.performance.metrics.renderTime = 15.5;
 

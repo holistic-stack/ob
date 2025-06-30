@@ -121,11 +121,15 @@ const TestIntegrationComponent: React.FC<{
       <div data-testid="parsing-loading">{parsing.isLoading ? 'loading' : 'idle'}</div>
       <div data-testid="scene-loading">{scene3D.isRendering ? 'rendering' : 'idle'}</div>
 
-      <button data-testid="update-code-button" onClick={() => handleCodeChange('cube([5,5,5]);')}>
+      <button
+        type="button"
+        data-testid="update-code-button"
+        onClick={() => handleCodeChange('cube([5,5,5]);')}
+      >
         Update Code
       </button>
 
-      <button data-testid="parse-code-button" onClick={() => parseCode(code)}>
+      <button type="button" data-testid="parse-code-button" onClick={() => parseCode(code)}>
         Parse Code
       </button>
     </div>
@@ -148,12 +152,12 @@ class TestErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
     console.log('[DEBUG][TestErrorBoundary] Caught error:', error);
     this.props.onError?.(error);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div data-testid="error-boundary-fallback">
@@ -257,16 +261,17 @@ describe('React Integration Layer Testing', () => {
           '[DEBUG][ReactIntegrationTest] Testing matrix service integration during lifecycle'
         );
 
-        let serviceContainer: MatrixServiceContainer | null = null;
+        let serviceContainer: MatrixServiceContainer | undefined;
 
         const TestServiceIntegration: React.FC = () => {
           const [container] = useState(() => {
-            serviceContainer = new MatrixServiceContainer({
+            const newContainer = new MatrixServiceContainer({
               enableTelemetry: true,
               enableValidation: true,
               autoStartServices: true,
             });
-            return serviceContainer;
+            serviceContainer = newContainer;
+            return newContainer;
           });
 
           useEffect(() => {
@@ -278,7 +283,7 @@ describe('React Integration Layer Testing', () => {
           return (
             <div data-testid="service-integration">
               <div data-testid="service-status">
-                {container.getStatus().initialized ? 'initialized' : 'not-initialized'}
+                {container.getStatus()?.initialized ? 'initialized' : 'not-initialized'}
               </div>
             </div>
           );
@@ -388,7 +393,11 @@ describe('React Integration Layer Testing', () => {
           return (
             <div data-testid="concurrent-updater">
               <div data-testid="update-count">{updateCount}</div>
-              <button data-testid="concurrent-update-button" onClick={performConcurrentUpdates}>
+              <button
+                type="button"
+                data-testid="concurrent-update-button"
+                onClick={performConcurrentUpdates}
+              >
                 Concurrent Update
               </button>
             </div>
@@ -479,7 +488,11 @@ describe('React Integration Layer Testing', () => {
             <div data-testid="service-error-component">
               <div data-testid="error-count">{errorCount}</div>
               <div data-testid="last-error">{lastError}</div>
-              <button data-testid="trigger-error-button" onClick={triggerServiceError}>
+              <button
+                type="button"
+                data-testid="trigger-error-button"
+                onClick={triggerServiceError}
+              >
                 Trigger Service Error
               </button>
             </div>
@@ -544,7 +557,7 @@ describe('React Integration Layer Testing', () => {
             <div data-testid="performance-test-component">
               <div data-testid="render-count">{renderCount}</div>
               <div data-testid="current-code">{code}</div>
-              <button data-testid="trigger-rerender-button" onClick={triggerRerender}>
+              <button type="button" data-testid="trigger-rerender-button" onClick={triggerRerender}>
                 Trigger Rerender
               </button>
             </div>

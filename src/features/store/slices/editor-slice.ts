@@ -25,8 +25,10 @@ interface EditorSliceConfig {
 export const createEditorSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
-  { parserService, debounceConfig }: EditorSliceConfig
+  { parserService: _parserService, debounceConfig }: EditorSliceConfig
 ): Omit<EditorSlice, keyof AppStore['editor']> => {
+  // Note: parserService is passed for consistency with other slices but not used directly
+  // Editor slice delegates parsing to the parsing slice via store.parseCode()
   // Debounced functions
   const debouncedParseInternal = debounce((code: string) => {
     const store = get();

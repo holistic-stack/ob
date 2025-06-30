@@ -114,6 +114,8 @@ export interface CompletionProvider {
  */
 export interface SyntaxError {
   readonly message: string;
+  readonly line: number;
+  readonly column: number;
   readonly startLineNumber: number;
   readonly startColumn: number;
   readonly endLineNumber: number;

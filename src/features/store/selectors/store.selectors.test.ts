@@ -5,8 +5,10 @@
  * with comprehensive coverage of all selector functions.
  */
 
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { AppState } from '../types/store.types';
+import type { AppState, RenderingError } from '../types/store.types';
 import {
   selectAllErrors,
   selectApplicationStatus,
@@ -46,7 +48,7 @@ describe('Store Selectors', () => {
         lastSaved: new Date('2024-01-01T10:00:00Z'),
       },
       parsing: {
-        ast: [{ type: 'cube' } as any],
+        ast: [{ type: 'cube' } as ASTNode],
         errors: [],
         warnings: ['Warning: deprecated syntax'],
         isLoading: false,
@@ -54,9 +56,9 @@ describe('Store Selectors', () => {
         parseTime: 15.5,
       },
       rendering: {
-        meshes: [{} as any, {} as any],
+        meshes: [{} as THREE.Mesh, {} as THREE.Mesh],
         isRendering: false,
-        renderErrors: [],
+        renderErrors: [] as RenderingError[],
         lastRendered: new Date('2024-01-01T10:02:00Z'),
         renderTime: 25.3,
         camera: {
@@ -204,7 +206,10 @@ describe('Store Selectors', () => {
 
       const renderErrorState = {
         ...mockState,
-        rendering: { ...mockState.rendering, renderErrors: ['render error'] },
+        rendering: {
+          ...mockState.rendering,
+          renderErrors: [{ type: 'webgl' as const, message: 'render error' }],
+        },
       };
       expect(selectHasAnyErrors(renderErrorState)).toBe(true);
     });
@@ -215,7 +220,10 @@ describe('Store Selectors', () => {
       const errorState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['error1', 'error2'] },
-        rendering: { ...mockState.rendering, renderErrors: ['error3'] },
+        rendering: {
+          ...mockState.rendering,
+          renderErrors: [{ type: 'csg' as const, message: 'error3' }],
+        },
       };
       expect(selectTotalErrors(errorState)).toBe(3);
     });
@@ -226,7 +234,10 @@ describe('Store Selectors', () => {
       const errorState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['parse error'] },
-        rendering: { ...mockState.rendering, renderErrors: ['render error'] },
+        rendering: {
+          ...mockState.rendering,
+          renderErrors: [{ type: 'csg' as const, message: 'render error' }],
+        },
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);
     });

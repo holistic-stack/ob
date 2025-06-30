@@ -8,7 +8,7 @@
           console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`);
         } else {
           console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
-          addRenderError(result.error);
+          addRenderError({ type: 'initialization', message: result.error });
         }
       },
       (error: any) => {ively through
@@ -116,7 +116,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleRenderError = useCallback(
     (error: { message: string }) => {
       console.log('[ERROR][StoreConnectedRenderer] Render error:', error.message);
-      addRenderError(error.message);
+      addRenderError({ type: 'webgl', message: error.message });
     },
     [addRenderError]
   );
@@ -141,13 +141,16 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           );
         } else {
           console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
-          addRenderError(result.error);
+          addRenderError({ type: 'initialization', message: result.error });
         }
       })
       .catch((error: unknown) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
-        addRenderError(errorMessage);
+        addRenderError({
+          type: 'initialization',
+          message: errorMessage,
+        });
       });
   }, [ast, enableRealTimeRendering, renderFromAST, clearRenderErrors, addRenderError]);
 
@@ -224,8 +227,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {renderingState.renderErrors.map((error) => (
-            <div key={error.id} className="text-sm">
+          {renderingState.renderErrors.map((error, index) => (
+            <div
+              key={`render-error-${error.type}-${error.message.slice(0, 30)}-${index}`}
+              className="text-sm"
+            >
               {error.message}
             </div>
           ))}

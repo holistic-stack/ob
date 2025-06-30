@@ -6,6 +6,9 @@
  */
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
+
+export type { ASTNode } from '@holistic-stack/openscad-parser';
+
 import type { AsyncResult, Result } from '../../../shared/types/result.types';
 
 /**

@@ -429,7 +429,10 @@ describe('Matrix Adapters', () => {
       const backToThree = matrixAdapter.toThreeMatrix3(mlMatrix);
 
       for (let i = 0; i < 9; i++) {
-        expect(backToThree.elements[i]).toBeCloseTo(originalMatrix3.elements[i]!, 10);
+        const originalElement = originalMatrix3.elements[i];
+        if (originalElement !== undefined) {
+          expect(backToThree.elements[i]).toBeCloseTo(originalElement, 10);
+        }
       }
     });
   });

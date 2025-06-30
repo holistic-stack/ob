@@ -5,6 +5,7 @@
  * Monaco Editor → Zustand store → AST parsing → R3F rendering
  */
 
+import type { CubeNode } from '@holistic-stack/openscad-parser';
 import { Canvas } from '@react-three/fiber';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -12,20 +13,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { R3FScene } from '../3d-renderer/components/r3f-scene';
 import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from '../code-editor/components/store-connected-editor';
+import type { MonacoEditorProps } from '../code-editor/types/editor.types';
 import { useAppStore } from '../store/app-store';
 
 // Mock Monaco Editor
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ value, onChange, ...props }: any) => {
+  default: ({ value, onChange, onFocus, onBlur, ...props }: MonacoEditorProps) => {
     React.useEffect(() => {
       // Simulate Monaco Editor initialization
       if (onChange && value) {
-        setTimeout(() => onChange(value), 10);
+        setTimeout(() => onChange({ value, changes: [], versionId: 1 }), 10);
       }
     }, [value, onChange]);
 
     return (
       <div data-testid="monaco-editor-mock" data-value={value} {...props}>
+        <textarea
+          data-testid="monaco-textarea"
+          value={value}
+          onChange={(e) => onChange?.({ value: e.target.value, changes: [], versionId: 1 })}
+          onFocus={() => onFocus?.({ hasFocus: true })}
+          onBlur={() => onBlur?.({ hasFocus: false })}
+        />
         Monaco Editor: {value}
       </div>
     );
@@ -34,7 +43,7 @@ vi.mock('@monaco-editor/react', () => ({
 
 // Mock React Three Fiber
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: any) => <div data-testid="r3f-canvas">{children}</div>,
+  Canvas: ({ children }: React.PropsWithChildren) => <div data-testid="r3f-canvas">{children}</div>,
   useFrame: vi.fn(),
   useThree: vi.fn(() => ({
     scene: {
@@ -58,7 +67,9 @@ vi.mock('@react-three/fiber', () => ({
 
 // Mock React Three Drei
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: (props: any) => <div data-testid="orbit-controls" {...props} />,
+  OrbitControls: (props: Record<string, unknown>) => (
+    <div data-testid="orbit-controls" {...props} />
+  ),
   Stats: () => <div data-testid="stats" />,
 }));
 
@@ -217,7 +228,10 @@ describe('Default Initialization End-to-End', () => {
       if (result.success) {
         expect(result.data).toHaveLength(1);
         expect(result.data[0]?.type).toBe('cube');
-        expect((result.data[0] as any)?.size).toEqual([10, 10, 10]);
+        if (result.data[0]?.type === 'cube') {
+          const cubeNode = result.data[0] as CubeNode;
+          expect(cubeNode.size).toEqual([10, 10, 10]);
+        }
       }
     });
 

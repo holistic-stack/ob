@@ -266,8 +266,8 @@ describe('App Store', () => {
 
     it('should clear scene', () => {
       // First set some rendering state
-      store.getState().updateMeshes([{} as any]);
-      store.getState().addRenderError('test error');
+      store.getState().updateMeshes([{} as THREE.Mesh]);
+      store.getState().addRenderError({ type: 'initialization', message: 'test error' });
       expect(store.getState().rendering.meshes).toHaveLength(1);
       expect(store.getState().rendering.renderErrors).toHaveLength(1);
 
@@ -319,7 +319,7 @@ describe('App Store', () => {
     });
 
     it('should add render error', () => {
-      const error = 'Render error occurred';
+      const error = { type: 'webgl' as const, message: 'Render error occurred' };
       store.getState().addRenderError(error);
 
       const state = store.getState();
@@ -328,8 +328,8 @@ describe('App Store', () => {
 
     it('should clear render errors', () => {
       // First add some errors
-      store.getState().addRenderError('error 1');
-      store.getState().addRenderError('error 2');
+      store.getState().addRenderError({ type: 'geometry', message: 'error 1' });
+      store.getState().addRenderError({ type: 'material', message: 'error 2' });
       expect(store.getState().rendering.renderErrors).toHaveLength(2);
 
       // Then clear them

@@ -84,6 +84,7 @@ vi.mock('./three-renderer', () => ({
               drawCalls: 0,
               textureMemory: 0,
               bufferMemory: 0,
+              frameRate: 60,
             }),
           20
         );
@@ -247,8 +248,8 @@ describe('StoreConnectedRenderer', () => {
 
     it('should display render errors from store', () => {
       mockStoreState.rendering.renderErrors = [
-        { id: '1', message: 'Test error 1' },
-        { id: '2', message: 'Test error 2' },
+        { type: 'initialization', message: 'Test error 1' },
+        { type: 'initialization', message: 'Test error 2' },
       ];
 
       render(<StoreConnectedRenderer />);
@@ -323,12 +324,6 @@ describe('StoreConnectedRenderer', () => {
         renderTime: 25.7,
         parseTime: 8.3,
         memoryUsage: 1024 * 1024 * 3.2,
-        meshCount: 0,
-        triangleCount: 0,
-        vertexCount: 0,
-        drawCalls: 0,
-        textureMemory: 0,
-        bufferMemory: 0,
       };
       mockStoreState.rendering.meshes = [
         {

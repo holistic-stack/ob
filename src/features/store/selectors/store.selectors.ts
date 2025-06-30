@@ -150,7 +150,7 @@ export const selectTotalErrors = (state: AppState): number =>
 
 export const selectAllErrors = (state: AppState): ReadonlyArray<string> => [
   ...state.parsing.errors,
-  ...state.rendering.renderErrors,
+  ...state.rendering.renderErrors.map((error) => error.message),
 ];
 
 export const selectLastActivity = (state: AppState): Date | null => {

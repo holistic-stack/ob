@@ -138,7 +138,7 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
 
         if (onRenderComplete) {
           const mockMeshes = ast.map((node, index) => ({
-            mesh: mockMesh as THREE.Mesh,
+            mesh: mockMesh as unknown as THREE.Mesh,
             metadata: {
               id: `mesh-${index}`,
               nodeType: node.type || 'unknown',

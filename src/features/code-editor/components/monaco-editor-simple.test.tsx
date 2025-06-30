@@ -6,6 +6,7 @@
  */
 
 import { fireEvent, render, screen } from '@testing-library/react';
+import type * as monaco from 'monaco-editor';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonacoEditorProps } from '../types/editor.types';
@@ -35,8 +36,8 @@ const MockMonacoEditor: React.FC<MonacoEditorProps> = ({
         setValue: (newValue: string) => setEditorValue(newValue),
         focus: vi.fn(),
         dispose: vi.fn(),
-      };
-      onMount(mockEditor as any);
+      } as unknown as monaco.editor.IStandaloneCodeEditor;
+      onMount(mockEditor);
     }
   }, [onMount, editorValue]);
 

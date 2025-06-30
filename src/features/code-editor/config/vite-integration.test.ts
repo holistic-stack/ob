@@ -160,8 +160,11 @@ describe('Vite Monaco Editor Integration', () => {
 
       expect(mockWindow.MonacoEnvironment).toBeDefined();
       if (mockWindow.MonacoEnvironment) {
-        expect(typeof (mockWindow.MonacoEnvironment as any).getWorkerUrl).toBe('function');
-        expect(typeof (mockWindow.MonacoEnvironment as any).getWorker).toBe('function');
+        const environment = mockWindow.MonacoEnvironment as typeof MonacoEnvironment;
+        if (environment) {
+          expect(typeof environment.getWorkerUrl).toBe('function');
+          expect(typeof environment.getWorker).toBe('function');
+        }
       }
     });
   });

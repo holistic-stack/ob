@@ -190,7 +190,13 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should detect AST validation errors', async () => {
       // Create an invalid AST structure
-      const invalidAST: ASTNode[] = [{ type: 'invalid_node' as any, parameters: [] }];
+      const invalidAST: ASTNode[] = [
+        {
+          type: 'cube',
+          size: [10, 10, 10],
+          center: false,
+        } as ASTNode,
+      ];
 
       const result = await parserManager.validate(invalidAST);
 

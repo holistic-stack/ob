@@ -10,6 +10,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import type * as THREE from 'three';
 import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
+import type { RenderingError } from './features/3d-renderer/types/renderer.types.js';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 import { type AppStore, useAppStore } from './features/store/app-store';
 import type { PerformanceMetrics } from './shared/types/common.types';
@@ -31,13 +32,16 @@ export function App(): React.JSX.Element {
   const performanceMetrics: PerformanceMetrics = useAppStore(
     (state: AppStore) => state.performance.metrics
   );
-  const renderErrors: ReadonlyArray<string> = useAppStore(
+  const renderErrors: ReadonlyArray<RenderingError> = useAppStore(
     (state: AppStore) => state.rendering.renderErrors
   );
   // Display render errors if any
   useEffect(() => {
     if (renderErrors.length > 0) {
-      console.error('[ERROR][App] Render errors detected:', renderErrors);
+      console.error(
+        '[ERROR][App] Render errors detected:',
+        renderErrors.map((e) => e.message)
+      );
     }
   }, [renderErrors]);
 

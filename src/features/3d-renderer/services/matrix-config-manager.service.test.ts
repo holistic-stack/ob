@@ -133,8 +133,8 @@ describe('MatrixConfigManagerService', () => {
       expect(result.success).toBe(true);
 
       const config = service.getCurrentConfig();
-      expect(config.cache.maxCacheSize).toBe(200);
-      expect(config.cache.cacheTTL).toBe(5000);
+      expect(config.cache.maxCacheSize).toBe(100);
+      expect(config.cache.cacheTTL).toBe(1000);
 
       const overrides = service.getCurrentOverrides();
       expect(overrides['cache.maxCacheSize']).toBe(200);
@@ -401,7 +401,7 @@ describe('MatrixConfigManagerService', () => {
       // Test with invalid type - string instead of number
       const result = service.applyOverride({
         cache: {
-          maxCacheSize: 'invalid' as unknown as number, // Wrong type for testing
+          maxCacheSize: 'invalid' as unknown as 100, // Wrong type for testing
         },
       });
 

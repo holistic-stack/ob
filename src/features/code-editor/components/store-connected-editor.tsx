@@ -199,7 +199,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
         <div className="error-panel bg-gray-900 border-t border-gray-700 max-h-32 overflow-y-auto">
           {parsingErrors.map((error: string, index: number) => (
             <div
-              key={`error-${index}`}
+              key={`error-${error.slice(0, 50)}-${index}`}
               className="error-item px-4 py-2 text-red-400 text-sm border-b border-gray-800"
             >
               <span className="font-semibold">Error:</span> {error}
@@ -207,7 +207,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
           ))}
           {parsingWarnings.map((warning: string, index: number) => (
             <div
-              key={`warning-${index}`}
+              key={`warning-${warning.slice(0, 50)}-${index}`}
               className="warning-item px-4 py-2 text-yellow-400 text-sm border-b border-gray-800"
             >
               <span className="font-semibold">Warning:</span> {warning}
