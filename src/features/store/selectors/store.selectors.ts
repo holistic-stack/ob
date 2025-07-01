@@ -5,6 +5,7 @@
  * following functional programming patterns and memoization.
  */
 
+import { createSelector } from 'reselect';
 import type { AppConfig, EditorState } from '../../../shared/types/common.types';
 import type {
   AppState,
@@ -53,24 +54,32 @@ export const selectParsingHasWarnings = (state: AppState): boolean =>
 /**
  * Rendering selectors
  */
-export const selectRenderingState = (state: AppState): RenderingState => state.rendering;
+export const selectRenderingState = (state: AppState): RenderingState | undefined =>
+  state.rendering;
 
-export const selectRenderingMeshes = (state: AppState) => state.rendering.meshes;
+// Default empty arrays - defined outside to prevent re-creation
+const EMPTY_MESHES: ReadonlyArray<any> = [];
+const EMPTY_ERRORS: ReadonlyArray<any> = [];
 
-export const selectRenderingIsRendering = (state: AppState): boolean => state.rendering.isRendering;
+export const selectRenderingMeshes = (state: AppState) => state.rendering?.meshes ?? EMPTY_MESHES;
 
-export const selectRenderingErrors = (state: AppState) => state.rendering.renderErrors;
+export const selectRenderingIsRendering = (state: AppState): boolean =>
+  state.rendering?.isRendering ?? false;
 
-export const selectRenderingLastRendered = (state: AppState) => state.rendering.lastRendered;
+export const selectRenderingErrors = (state: AppState) => state.rendering?.renderErrors ?? EMPTY_ERRORS;
 
-export const selectRenderingTime = (state: AppState): number => state.rendering.renderTime;
+export const selectRenderingLastRendered = (state: AppState) =>
+  state.rendering?.lastRendered ?? null;
 
-export const selectRenderingCamera = (state: AppState) => state.rendering.camera;
+export const selectRenderingTime = (state: AppState): number => state.rendering?.renderTime ?? 0;
+
+export const selectRenderingCamera = (state: AppState) => state.rendering?.camera ?? null;
 
 export const selectRenderingHasErrors = (state: AppState): boolean =>
-  state.rendering.renderErrors.length > 0;
+  (state.rendering?.renderErrors?.length ?? 0) > 0;
 
-export const selectRenderingMeshCount = (state: AppState): number => state.rendering.meshes.length;
+export const selectRenderingMeshCount = (state: AppState): number =>
+  state.rendering?.meshes?.length ?? 0;
 
 /**
  * Performance selectors
@@ -132,7 +141,7 @@ export const selectCanParse = (state: AppState): boolean =>
   state.config.enableRealTimeParsing;
 
 export const selectCanRender = (state: AppState): boolean =>
-  !state.rendering.isRendering &&
+  !(state.rendering?.isRendering ?? false) &&
   state.parsing.ast.length > 0 &&
   state.parsing.errors.length === 0 &&
   state.config.enableRealTimeRendering;
@@ -140,29 +149,37 @@ export const selectCanRender = (state: AppState): boolean =>
 export const selectHasUnsavedChanges = (state: AppState): boolean => state.editor.isDirty;
 
 export const selectIsProcessing = (state: AppState): boolean =>
-  state.parsing.isLoading || state.rendering.isRendering;
+  state.parsing.isLoading || (state.rendering?.isRendering ?? false);
 
 export const selectHasAnyErrors = (state: AppState): boolean =>
-  state.parsing.errors.length > 0 || state.rendering.renderErrors.length > 0;
+  state.parsing.errors.length > 0 || (state.rendering?.renderErrors?.length ?? 0) > 0;
 
 export const selectTotalErrors = (state: AppState): number =>
-  state.parsing.errors.length + state.rendering.renderErrors.length;
+  state.parsing.errors.length + (state.rendering?.renderErrors?.length ?? 0);
 
 export const selectAllErrors = (state: AppState): ReadonlyArray<string> => [
   ...state.parsing.errors,
-  ...state.rendering.renderErrors.map((error) => error.message),
+  ...(state.rendering?.renderErrors?.map((error) => error.message) ?? []),
 ];
 
-export const selectLastActivity = (state: AppState): Date | null => {
-  const dates = [
-    state.editor.lastSaved,
-    state.parsing.lastParsed,
-    state.rendering.lastRendered,
-    state.performance.lastUpdated,
-  ].filter((date): date is Date => date !== null);
+export const selectLastActivity = createSelector(
+  [
+    (state: AppState) => state.editor.lastSaved,
+    (state: AppState) => state.parsing.lastParsed,
+    (state: AppState) => state.rendering?.lastRendered,
+    (state: AppState) => state.performance.lastUpdated,
+  ],
+  (editorLastSaved, parsingLastParsed, renderingLastRendered, performanceLastUpdated) => {
+    const dates = [
+      editorLastSaved,
+      parsingLastParsed,
+      renderingLastRendered,
+      performanceLastUpdated,
+    ].filter((date): date is Date => date !== null);
 
-  return dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
-};
+    return dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+  }
+);
 
 export const selectPerformanceStatus = (state: AppState): 'good' | 'warning' | 'critical' => {
   const { renderTime, parseTime, frameRate } = state.performance.metrics;
@@ -180,11 +197,11 @@ export const selectPerformanceStatus = (state: AppState): 'good' | 'warning' | '
 };
 
 export const selectApplicationStatus = (state: AppState): 'idle' | 'working' | 'error' => {
-  if (state.parsing.errors.length > 0 || state.rendering.renderErrors.length > 0) {
+  if (state.parsing.errors.length > 0 || (state.rendering?.renderErrors?.length ?? 0) > 0) {
     return 'error';
   }
 
-  if (state.parsing.isLoading || state.rendering.isRendering) {
+  if (state.parsing.isLoading || (state.rendering?.isRendering ?? false)) {
     return 'working';
   }
 
@@ -194,61 +211,95 @@ export const selectApplicationStatus = (state: AppState): 'idle' | 'working' | '
 /**
  * Memoized selectors for complex computations
  */
-export const selectEditorStats = (state: AppState) => ({
-  codeLength: state.editor.code.length,
-  lineCount: state.editor.code.split('\n').length,
-  wordCount: state.editor.code.split(/\s+/).filter((word) => word.length > 0).length,
-  isDirty: state.editor.isDirty,
-  lastSaved: state.editor.lastSaved,
-});
+export const selectEditorStats = createSelector([(state: AppState) => state.editor], (editor) => ({
+  codeLength: editor.code.length,
+  lineCount: editor.code.split('\n').length,
+  wordCount: editor.code.split(/\s+/).filter((word) => word.length > 0).length,
+  isDirty: editor.isDirty,
+  lastSaved: editor.lastSaved,
+}));
 
-export const selectParsingStats = (state: AppState) => ({
-  nodeCount: state.parsing.ast.length,
-  errorCount: state.parsing.errors.length,
-  warningCount: state.parsing.warnings.length,
-  parseTime: state.parsing.parseTime,
-  lastParsed: state.parsing.lastParsed,
-  isLoading: state.parsing.isLoading,
-});
+export const selectParsingStats = createSelector(
+  [(state: AppState) => state.parsing],
+  (parsing) => ({
+    nodeCount: parsing.ast.length,
+    errorCount: parsing.errors.length,
+    warningCount: parsing.warnings.length,
+    parseTime: parsing.parseTime,
+    lastParsed: parsing.lastParsed,
+    isLoading: parsing.isLoading,
+  })
+);
 
-export const selectRenderingStats = (state: AppState) => ({
-  meshCount: state.rendering.meshes.length,
-  errorCount: state.rendering.renderErrors.length,
-  renderTime: state.rendering.renderTime,
-  lastRendered: state.rendering.lastRendered,
-  isRendering: state.rendering.isRendering,
-  camera: state.rendering.camera,
-});
+export const selectRenderingStats = createSelector(
+  [(state: AppState) => state.rendering],
+  (rendering) => ({
+    meshCount: rendering?.meshes?.length ?? 0,
+    errorCount: rendering?.renderErrors?.length ?? 0,
+    renderTime: rendering?.renderTime ?? 0,
+    lastRendered: rendering?.lastRendered ?? null,
+    isRendering: rendering?.isRendering ?? false,
+    camera: rendering?.camera ?? null,
+  })
+);
 
-export const selectPerformanceStats = (state: AppState) => ({
-  ...state.performance.metrics,
-  violationCount: state.performance.violations.length,
-  isMonitoring: state.performance.isMonitoring,
-  lastUpdated: state.performance.lastUpdated,
-  status: selectPerformanceStatus(state),
-});
+export const selectPerformanceStats = createSelector(
+  [
+    (state: AppState) => state.performance.metrics,
+    (state: AppState) => state.performance.violations.length,
+    (state: AppState) => state.performance.isMonitoring,
+    (state: AppState) => state.performance.lastUpdated,
+    selectPerformanceStatus,
+  ],
+  (metrics, violationCount, isMonitoring, lastUpdated, status) => ({
+    ...metrics,
+    violationCount,
+    isMonitoring,
+    lastUpdated,
+    status,
+  })
+);
 
 /**
  * Feature flag selectors
  */
-export const selectFeatureFlags = (state: AppState) => ({
-  realTimeParsing: state.config.enableRealTimeParsing,
-  realTimeRendering: state.config.enableRealTimeRendering,
-  autoSave: state.config.enableAutoSave,
-  performanceMetrics: state.config.performance.enableMetrics,
-  webGL2: state.config.performance.enableWebGL2,
-  hardwareAcceleration: state.config.performance.enableHardwareAcceleration,
-});
+export const selectFeatureFlags = createSelector([(state: AppState) => state.config], (config) => ({
+  realTimeParsing: config.enableRealTimeParsing,
+  realTimeRendering: config.enableRealTimeRendering,
+  autoSave: config.enableAutoSave,
+  performanceMetrics: config.performance.enableMetrics,
+  webGL2: config.performance.enableWebGL2,
+  hardwareAcceleration: config.performance.enableHardwareAcceleration,
+}));
 
 /**
  * Debug selectors for development
  */
-export const selectDebugInfo = (state: AppState) => ({
-  editorState: selectEditorStats(state),
-  parsingState: selectParsingStats(state),
-  renderingState: selectRenderingStats(state),
-  performanceState: selectPerformanceStats(state),
-  applicationStatus: selectApplicationStatus(state),
-  lastActivity: selectLastActivity(state),
-  featureFlags: selectFeatureFlags(state),
-});
+export const selectDebugInfo = createSelector(
+  [
+    selectEditorStats,
+    selectParsingStats,
+    selectRenderingStats,
+    selectPerformanceStats,
+    selectApplicationStatus,
+    selectLastActivity,
+    selectFeatureFlags,
+  ],
+  (
+    editorState,
+    parsingState,
+    renderingState,
+    performanceState,
+    applicationStatus,
+    lastActivity,
+    featureFlags
+  ) => ({
+    editorState,
+    parsingState,
+    renderingState,
+    performanceState,
+    applicationStatus,
+    lastActivity,
+    featureFlags,
+  })
+);

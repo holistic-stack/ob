@@ -8,7 +8,7 @@
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { AppState, RenderingError } from '../types/store.types';
+import type { AppState, RenderingError, RenderingState } from '../types/store.types';
 import {
   selectAllErrors,
   selectApplicationStatus,
@@ -156,9 +156,9 @@ describe('Store Selectors', () => {
     it('should determine if can render', () => {
       expect(selectCanRender(mockState)).toBe(true);
 
-      const renderingState = {
+      const renderingState: AppState = {
         ...mockState,
-        rendering: { ...mockState.rendering, isRendering: true },
+        rendering: { ...mockState.rendering, isRendering: true } as RenderingState,
       };
       expect(selectCanRender(renderingState)).toBe(false);
 
@@ -188,9 +188,9 @@ describe('Store Selectors', () => {
       const parsingState = { ...mockState, parsing: { ...mockState.parsing, isLoading: true } };
       expect(selectIsProcessing(parsingState)).toBe(true);
 
-      const renderingState = {
+      const renderingState: AppState = {
         ...mockState,
-        rendering: { ...mockState.rendering, isRendering: true },
+        rendering: { ...mockState.rendering, isRendering: true } as RenderingState,
       };
       expect(selectIsProcessing(renderingState)).toBe(true);
     });
@@ -204,12 +204,12 @@ describe('Store Selectors', () => {
       };
       expect(selectHasAnyErrors(parseErrorState)).toBe(true);
 
-      const renderErrorState = {
+      const renderErrorState: AppState = {
         ...mockState,
         rendering: {
           ...mockState.rendering,
           renderErrors: [{ type: 'webgl' as const, message: 'render error' }],
-        },
+        } as RenderingState,
       };
       expect(selectHasAnyErrors(renderErrorState)).toBe(true);
     });
@@ -217,13 +217,13 @@ describe('Store Selectors', () => {
     it('should count total errors', () => {
       expect(selectTotalErrors(mockState)).toBe(0);
 
-      const errorState = {
+      const errorState: AppState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['error1', 'error2'] },
         rendering: {
           ...mockState.rendering,
           renderErrors: [{ type: 'csg' as const, message: 'error3' }],
-        },
+        } as RenderingState,
       };
       expect(selectTotalErrors(errorState)).toBe(3);
     });
@@ -231,13 +231,13 @@ describe('Store Selectors', () => {
     it('should get all errors', () => {
       expect(selectAllErrors(mockState)).toEqual([]);
 
-      const errorState = {
+      const errorState: AppState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['parse error'] },
         rendering: {
           ...mockState.rendering,
           renderErrors: [{ type: 'csg' as const, message: 'render error' }],
-        },
+        } as RenderingState,
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);
     });
@@ -247,11 +247,11 @@ describe('Store Selectors', () => {
       expect(lastActivity).toBeInstanceOf(Date);
       expect(lastActivity?.getTime()).toBe(new Date('2024-01-01T10:03:00Z').getTime());
 
-      const noActivityState = {
+      const noActivityState: AppState = {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
-        rendering: { ...mockState.rendering, lastRendered: null },
+        rendering: { ...mockState.rendering, lastRendered: null } as RenderingState,
         performance: { ...mockState.performance, lastUpdated: null },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
@@ -327,9 +327,9 @@ describe('Store Selectors', () => {
       expect(stats.meshCount).toBe(2);
       expect(stats.errorCount).toBe(0);
       expect(stats.renderTime).toBe(25.3);
-      expect(stats.lastRendered).toEqual(mockState.rendering.lastRendered);
+      expect(stats.lastRendered).toEqual(mockState.rendering?.lastRendered);
       expect(stats.isRendering).toBe(false);
-      expect(stats.camera).toEqual(mockState.rendering.camera);
+      expect(stats.camera).toEqual(mockState.rendering?.camera);
     });
 
     it('should select performance stats', () => {

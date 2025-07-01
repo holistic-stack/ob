@@ -144,7 +144,7 @@ export const createAppStore = (
               lastSaved: state.editor.lastSaved,
             },
             rendering: {
-              camera: state.rendering.camera,
+              camera: state.rendering?.camera ?? null,
             },
           }),
         }
@@ -231,7 +231,7 @@ export const useAppStore = create<AppStore>()(
             lastSaved: state.editor.lastSaved,
           },
           rendering: {
-            camera: state.rendering.camera,
+            camera: state.rendering?.camera ?? null,
           },
         }),
       }

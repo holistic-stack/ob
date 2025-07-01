@@ -53,14 +53,14 @@ describe('App Store', () => {
 
     it('should have correct initial rendering state', () => {
       const state = store.getState();
-      expect(state.rendering.meshes).toEqual([]);
-      expect(state.rendering.isRendering).toBe(false);
-      expect(state.rendering.renderErrors).toEqual([]);
-      expect(state.rendering.lastRendered).toBeNull();
-      expect(state.rendering.renderTime).toBe(0);
-      expect(state.rendering.camera.position).toEqual([10, 10, 10]);
-      expect(state.rendering.camera.target).toEqual([0, 0, 0]);
-      expect(state.rendering.camera.zoom).toBe(1);
+      expect(state.rendering?.meshes).toEqual([]);
+      expect(state.rendering?.isRendering).toBe(false);
+      expect(state.rendering?.renderErrors).toEqual([]);
+      expect(state.rendering?.lastRendered).toBeNull();
+      expect(state.rendering?.renderTime).toBe(0);
+      expect(state.rendering?.camera?.position).toEqual([10, 10, 10]);
+      expect(state.rendering?.camera?.target).toEqual([0, 0, 0]);
+      expect(state.rendering?.camera?.zoom).toBe(1);
     });
 
     it('should have correct initial performance state', () => {
@@ -247,8 +247,8 @@ describe('App Store', () => {
       store.getState().updateMeshes(meshes);
 
       const state = store.getState();
-      expect(state.rendering.meshes).toEqual(meshes);
-      expect(state.rendering.lastRendered).toBeInstanceOf(Date);
+      expect(state.rendering?.meshes).toEqual(meshes);
+      expect(state.rendering?.lastRendered).toBeInstanceOf(Date);
     });
 
     it('should render from AST successfully', async () => {
@@ -258,27 +258,27 @@ describe('App Store', () => {
       expect(result.success).toBe(true);
 
       const state = store.getState();
-      expect(state.rendering.isRendering).toBe(false);
-      expect(state.rendering.lastRendered).toBeInstanceOf(Date);
-      expect(state.rendering.renderTime).toBeGreaterThan(0);
-      expect(state.rendering.renderErrors).toEqual([]);
+      expect(state.rendering?.isRendering).toBe(false);
+      expect(state.rendering?.lastRendered).toBeInstanceOf(Date);
+      expect(state.rendering?.renderTime).toBeGreaterThan(0);
+      expect(state.rendering?.renderErrors).toEqual([]);
     });
 
     it('should clear scene', () => {
       // First set some rendering state
       store.getState().updateMeshes([{} as THREE.Mesh]);
       store.getState().addRenderError({ type: 'initialization', message: 'test error' });
-      expect(store.getState().rendering.meshes).toHaveLength(1);
-      expect(store.getState().rendering.renderErrors).toHaveLength(1);
+      expect(store.getState().rendering?.meshes).toHaveLength(1);
+      expect(store.getState().rendering?.renderErrors).toHaveLength(1);
 
       // Then clear the scene
       store.getState().clearScene();
 
       const state = store.getState();
-      expect(state.rendering.meshes).toEqual([]);
-      expect(state.rendering.renderErrors).toEqual([]);
-      expect(state.rendering.lastRendered).toBeNull();
-      expect(state.rendering.renderTime).toBe(0);
+      expect(state.rendering?.meshes).toEqual([]);
+      expect(state.rendering?.renderErrors).toEqual([]);
+      expect(state.rendering?.lastRendered).toBeNull();
+      expect(state.rendering?.renderTime).toBe(0);
     });
 
     it('should update camera', () => {
@@ -290,7 +290,7 @@ describe('App Store', () => {
       store.getState().updateCamera(camera);
 
       const state = store.getState();
-      expect(state.rendering.camera).toEqual(camera);
+      expect(state.rendering?.camera).toEqual(camera);
     });
 
     it('should reset camera to default', () => {
@@ -307,15 +307,15 @@ describe('App Store', () => {
         autoRotateSpeed: 1,
       };
       store.getState().updateCamera(customCamera);
-      expect(store.getState().rendering.camera).toEqual(customCamera);
+      expect(store.getState().rendering?.camera).toEqual(customCamera);
 
       // Then reset
       store.getState().resetCamera();
 
       const state = store.getState();
-      expect(state.rendering.camera.position).toEqual([10, 10, 10]);
-      expect(state.rendering.camera.target).toEqual([0, 0, 0]);
-      expect(state.rendering.camera.zoom).toBe(1);
+      expect(state.rendering?.camera?.position).toEqual([10, 10, 10]);
+      expect(state.rendering?.camera?.target).toEqual([0, 0, 0]);
+      expect(state.rendering?.camera?.zoom).toBe(1);
     });
 
     it('should add render error', () => {
@@ -323,20 +323,20 @@ describe('App Store', () => {
       store.getState().addRenderError(error);
 
       const state = store.getState();
-      expect(state.rendering.renderErrors).toContain(error);
+      expect(state.rendering?.renderErrors).toContain(error);
     });
 
     it('should clear render errors', () => {
       // First add some errors
       store.getState().addRenderError({ type: 'geometry', message: 'error 1' });
       store.getState().addRenderError({ type: 'material', message: 'error 2' });
-      expect(store.getState().rendering.renderErrors).toHaveLength(2);
+      expect(store.getState().rendering?.renderErrors).toHaveLength(2);
 
       // Then clear them
       store.getState().clearRenderErrors();
 
       const state = store.getState();
-      expect(state.rendering.renderErrors).toEqual([]);
+      expect(state.rendering?.renderErrors).toEqual([]);
     });
   });
 

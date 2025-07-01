@@ -1,17 +1,7 @@
 /**
  * Store-Connected Three.js Renderer Component
  *
- * Zustand-centric React component that renders 3D sc    // Trigger rendering through store action
-    renderFromAST(ast).then(
-      (result: any) => {
-        if (result.success) {
-          console.log(`[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`);
-        } else {
-          console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
-          addRenderError({ type: 'initialization', message: result.error });
-        }
-      },
-      (error: any) => {ively through
+ * Zustand-centric React component that renders 3D scenes exclusively through
  * the application store, implementing the proper data flow:
  * OpenSCAD code → Store → AST → Three.js rendering
  */
@@ -19,7 +9,7 @@
 import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type React from 'react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type * as THREE from 'three';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { Result } from '../../../shared/types/result.types';
@@ -31,8 +21,36 @@ import {
   selectRenderingCamera,
   selectRenderingState,
 } from '../../store/selectors';
+import type { RenderingState } from '../../store/types/store.types';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 import { R3FScene } from './r3f-scene';
+
+// Default fallback objects - defined outside component to prevent re-creation
+const DEFAULT_RENDERING_STATE: RenderingState = {
+  meshes: [],
+  isRendering: false,
+  renderErrors: [],
+  lastRendered: null,
+  renderTime: 0,
+  camera: {
+    position: [5, 5, 5] as readonly [number, number, number],
+    target: [0, 0, 0] as readonly [number, number, number],
+    zoom: 1,
+    fov: 75,
+    near: 0.1,
+    far: 1000,
+    enableControls: true,
+    enableAutoRotate: false,
+    autoRotateSpeed: 1,
+  },
+};
+
+const DEFAULT_PERFORMANCE_METRICS = {
+  renderTime: 0,
+  parseTime: 0,
+  memoryUsage: 0,
+  frameRate: 60,
+};
 
 /**
  * Props for the store-connected renderer
@@ -55,20 +73,68 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 }) => {
   console.log('[INIT][StoreConnectedRenderer] Initializing store-connected 3D renderer');
 
-  // Store selectors - all data comes from Zustand
-  const ast = useAppStore(selectParsingAST);
-  const camera = useAppStore(selectRenderingCamera);
-  const renderingState = useAppStore(selectRenderingState);
-  const performanceMetrics = useAppStore(selectPerformanceMetrics);
-  const enableRealTimeRendering = useAppStore(selectConfigEnableRealTimeRendering);
+  // Store selectors - all data comes from Zustand with proper fallbacks
+  const ast = useAppStore((state) => selectParsingAST(state) ?? []);
+  const camera = useAppStore(
+    (state) =>
+      selectRenderingCamera(state) ??
+      ({
+        position: [5, 5, 5] as readonly [number, number, number],
+        target: [0, 0, 0] as readonly [number, number, number],
+        zoom: 1,
+        fov: 75,
+        near: 0.1,
+        far: 1000,
+        enableControls: true,
+        enableAutoRotate: false,
+        autoRotateSpeed: 1,
+      } as CameraConfig)
+  );
+  const renderingState = useAppStore(selectRenderingState) ?? DEFAULT_RENDERING_STATE;
+  const performanceMetrics = useAppStore(selectPerformanceMetrics) ?? DEFAULT_PERFORMANCE_METRICS;
+  const enableRealTimeRendering = useAppStore(selectConfigEnableRealTimeRendering) ?? true;
 
-  // Store actions - all mutations go through Zustand
-  const updateCamera = useAppStore((state) => state.updateCamera);
-  const updateMetrics = useAppStore((state) => state.updateMetrics);
-  const renderFromAST = useAppStore((state) => state.renderFromAST);
-  const addRenderError = useAppStore((state) => state.addRenderError);
-  const clearRenderErrors = useAppStore((state) => state.clearRenderErrors);
-  const updateMeshes = useAppStore((state) => state.updateMeshes);
+  // Store actions - all mutations go through Zustand with fallbacks
+  const updateCamera = useAppStore(
+    (state) =>
+      state.updateCamera ??
+      (() => {
+        /* fallback */
+      })
+  );
+  const updateMetrics = useAppStore(
+    (state) =>
+      state.updateMetrics ??
+      (() => {
+        /* fallback */
+      })
+  );
+  const renderFromAST = useAppStore(
+    (state) =>
+      state.renderFromAST ??
+      (() => Promise.resolve({ success: false, error: 'Store not initialized' }))
+  );
+  const addRenderError = useAppStore(
+    (state) =>
+      state.addRenderError ??
+      (() => {
+        /* fallback */
+      })
+  );
+  const clearRenderErrors = useAppStore(
+    (state) =>
+      state.clearRenderErrors ??
+      (() => {
+        /* fallback */
+      })
+  );
+  const updateMeshes = useAppStore(
+    (state) =>
+      state.updateMeshes ??
+      (() => {
+        /* fallback */
+      })
+  );
 
   /**
    * Handle camera changes - update store
@@ -160,26 +226,16 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   useEffect(() => {
     console.log('[DEBUG][StoreConnectedRenderer] Store state updated:', {
       astNodeCount: ast?.length ?? 0,
-      isRendering: renderingState.isRendering,
-      meshCount: renderingState.meshes.length,
-      errorCount: renderingState.renderErrors.length,
-      cameraPosition: camera?.position,
-      lastRenderTime: performanceMetrics.renderTime,
+      isRendering: renderingState?.isRendering ?? false,
+      meshCount: renderingState?.meshes?.length ?? 0,
+      errorCount: renderingState?.renderErrors?.length ?? 0,
+      cameraPosition: camera?.position ?? [0, 0, 0],
+      lastRenderTime: performanceMetrics?.renderTime ?? 0,
     });
   }, [ast, renderingState, camera, performanceMetrics]);
 
-  // Default camera configuration
-  const defaultCamera: CameraConfig = camera ?? {
-    position: [5, 5, 5],
-    target: [0, 0, 0],
-    zoom: 1,
-    fov: 75,
-    near: 0.1,
-    far: 1000,
-    enableControls: true,
-    enableAutoRotate: false,
-    autoRotateSpeed: 1,
-  };
+  // Camera is already properly typed from the selector with fallback
+  const defaultCamera: CameraConfig = camera;
 
   return (
     <div
@@ -211,7 +267,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       </Canvas>
 
       {/* Rendering status indicator */}
-      {renderingState.isRendering && (
+      {renderingState?.isRendering && (
         <div
           className="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded"
           data-testid="rendering-indicator"
@@ -221,13 +277,13 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       )}
 
       {/* Error display */}
-      {renderingState.renderErrors.length > 0 && (
+      {renderingState?.renderErrors?.length > 0 && (
         <div
           className="absolute bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded max-w-md"
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {renderingState.renderErrors.map((error, index) => (
+          {(renderingState?.renderErrors ?? []).map((error, index) => (
             <div
               key={`render-error-${error.type}-${error.message.slice(0, 30)}-${index}`}
               className="text-sm"
@@ -244,10 +300,10 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-2 rounded text-sm"
           data-testid="performance-display"
         >
-          <div>Render Time: {performanceMetrics.renderTime.toFixed(2)}ms</div>
-          <div>Parse Time: {performanceMetrics.parseTime.toFixed(2)}ms</div>
-          <div>Memory: {(performanceMetrics.memoryUsage / 1024 / 1024).toFixed(1)}MB</div>
-          <div>Meshes: {renderingState.meshes.length}</div>
+          <div>Render Time: {performanceMetrics?.renderTime?.toFixed(2) ?? '0.00'}ms</div>
+          <div>Parse Time: {performanceMetrics?.parseTime?.toFixed(2) ?? '0.00'}ms</div>
+          <div>Memory: {((performanceMetrics?.memoryUsage ?? 0) / 1024 / 1024).toFixed(1)}MB</div>
+          <div>Meshes: {renderingState?.meshes?.length ?? 0}</div>
         </div>
       )}
     </div>

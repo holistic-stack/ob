@@ -346,9 +346,9 @@ describe('End-to-End Workflow Validation', () => {
         const finalState = useAppStore.getState();
         expect(finalState.editor.code).toBe(scenario.code);
         expect(finalState.parsing.ast).toHaveLength(scenario.expectedNodes);
-        expect(finalState.rendering.meshes).toHaveLength(1);
+        expect(finalState.rendering?.meshes).toHaveLength(1);
         expect(finalState.parsing.errors).toHaveLength(0);
-        expect(finalState.rendering.renderErrors).toHaveLength(0);
+        expect(finalState.rendering?.renderErrors).toHaveLength(0);
       },
       E2E_TEST_SCENARIOS.simplePrimitive.timeoutMs
     );

@@ -117,9 +117,9 @@ const TestIntegrationComponent: React.FC<{
       <div data-testid="render-count">{renderCount}</div>
       <div data-testid="current-code">{code}</div>
       <div data-testid="ast-count">{parsing.ast.length}</div>
-      <div data-testid="mesh-count">{scene3D.meshes.length}</div>
+      <div data-testid="mesh-count">{scene3D?.meshes?.length ?? 0}</div>
       <div data-testid="parsing-loading">{parsing.isLoading ? 'loading' : 'idle'}</div>
-      <div data-testid="scene-loading">{scene3D.isRendering ? 'rendering' : 'idle'}</div>
+      <div data-testid="scene-loading">{scene3D?.isRendering ? 'rendering' : 'idle'}</div>
 
       <button
         type="button"

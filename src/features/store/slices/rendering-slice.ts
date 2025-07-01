@@ -12,19 +12,21 @@ import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
-import type { AppStore, RenderingError, RenderingSlice } from '../types/store.types.js';
+import type { AppStore, RenderingActions, RenderingError } from '../types/store.types.js';
 
 const logger = createLogger('Store');
 
 export const createRenderingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1]
-): Omit<RenderingSlice, keyof AppStore['rendering']> => {
+): RenderingActions => {
   return {
     updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => {
       set((state) => {
-        state.rendering.meshes = [...meshes];
-        state.rendering.lastRendered = new Date();
+        if (state.rendering) {
+          state.rendering.meshes = [...meshes];
+          state.rendering.lastRendered = new Date();
+        }
       });
     },
 
@@ -34,8 +36,10 @@ export const createRenderingSlice = (
       logger.debug(`Starting renderFromAST with ${ast.length} nodes`);
 
       set((state) => {
-        state.rendering.isRendering = true;
-        state.rendering.renderErrors = [];
+        if (state.rendering) {
+          state.rendering.isRendering = true;
+          state.rendering.renderErrors = [];
+        }
       });
 
       const startTime = performance.now();
@@ -55,10 +59,12 @@ export const createRenderingSlice = (
           const renderTime = endTime - startTime;
 
           set((state) => {
-            state.rendering.isRendering = false;
-            state.rendering.lastRendered = new Date();
-            state.rendering.renderTime = renderTime;
-            // Don't update meshes here - let R3FScene handle that
+            if (state.rendering) {
+              state.rendering.isRendering = false;
+              state.rendering.lastRendered = new Date();
+              state.rendering.renderTime = renderTime;
+              // Don't update meshes here - let R3FScene handle that
+            }
           });
 
           // Record performance metrics
@@ -75,8 +81,10 @@ export const createRenderingSlice = (
           logger.error(`renderFromAST failed:`, errorMessage);
 
           set((state) => {
-            state.rendering.isRendering = false;
-            state.rendering.renderTime = renderTime;
+            if (state.rendering) {
+              state.rendering.isRendering = false;
+              state.rendering.renderTime = renderTime;
+            }
           });
           get().addRenderError({
             type: 'geometry',
@@ -90,44 +98,54 @@ export const createRenderingSlice = (
 
     clearScene: () => {
       set((state) => {
-        state.rendering.meshes = [];
-        state.rendering.renderErrors = [];
-        state.rendering.lastRendered = null;
-        state.rendering.renderTime = 0;
+        if (state.rendering) {
+          state.rendering.meshes = [];
+          state.rendering.renderErrors = [];
+          state.rendering.lastRendered = null;
+          state.rendering.renderTime = 0;
+        }
       });
     },
 
     updateCamera: (cameraUpdate: Partial<CameraConfig>) => {
       set((state) => {
-        Object.assign(state.rendering.camera, cameraUpdate);
+        if (state.rendering) {
+          Object.assign(state.rendering.camera, cameraUpdate);
+        }
       });
     },
 
     resetCamera: () => {
       set((state) => {
-        state.rendering.camera = {
-          position: [10, 10, 10],
-          target: [0, 0, 0],
-          zoom: 1,
-          fov: 75,
-          near: 0.1,
-          far: 1000,
-          enableControls: true,
-          enableAutoRotate: false,
-          autoRotateSpeed: 1,
-        };
+        if (state.rendering) {
+          Object.assign(state.rendering.camera, {
+            position: [10, 10, 10],
+            target: [0, 0, 0],
+            zoom: 1,
+            fov: 75,
+            near: 0.1,
+            far: 1000,
+            enableControls: true,
+            enableAutoRotate: false,
+            autoRotateSpeed: 1,
+          });
+        }
       });
     },
 
     addRenderError: (error: RenderingError) => {
       set((state) => {
-        state.rendering.renderErrors = [...state.rendering.renderErrors, error];
+        if (state.rendering) {
+          state.rendering.renderErrors = [...state.rendering.renderErrors, error];
+        }
       });
     },
 
     clearRenderErrors: () => {
       set((state) => {
-        state.rendering.renderErrors = [];
+        if (state.rendering) {
+          state.rendering.renderErrors = [];
+        }
       });
     },
   };

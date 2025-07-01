@@ -12,7 +12,15 @@ import type * as THREE from 'three';
 import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
 import type { RenderingError } from './features/3d-renderer/types/renderer.types.js';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
-import { type AppStore, useAppStore } from './features/store/app-store';
+import { useAppStore } from './features/store/app-store';
+import {
+  selectEditorCode,
+  selectParsingAST,
+  selectPerformanceMetrics,
+  selectRenderingErrors,
+  selectRenderingIsRendering,
+  selectRenderingMeshes,
+} from './features/store/selectors';
 import { createLogger } from './shared/services/logger.service';
 import type { PerformanceMetrics } from './shared/types/common.types';
 
@@ -26,18 +34,12 @@ export function App(): React.JSX.Element {
   logger.init('Rendering OpenSCAD 3D Visualization Application v2.0.0');
 
   // Store selectors for application state
-  const editorCode: string = useAppStore((state: AppStore) => state.editor.code);
-  const ast: ReadonlyArray<ASTNode> = useAppStore((state: AppStore) => state.parsing.ast);
-  const applicationStatus: boolean = useAppStore((state: AppStore) => state.rendering.isRendering);
-  const renderingStateMeshes: ReadonlyArray<THREE.Mesh> = useAppStore(
-    (state: AppStore) => state.rendering.meshes
-  );
-  const performanceMetrics: PerformanceMetrics = useAppStore(
-    (state: AppStore) => state.performance.metrics
-  );
-  const renderErrors: ReadonlyArray<RenderingError> = useAppStore(
-    (state: AppStore) => state.rendering.renderErrors
-  );
+  const editorCode: string = useAppStore(selectEditorCode);
+  const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
+  const applicationStatus: boolean = useAppStore(selectRenderingIsRendering);
+  const renderingStateMeshes: ReadonlyArray<THREE.Mesh> = useAppStore(selectRenderingMeshes);
+  const performanceMetrics: PerformanceMetrics = useAppStore(selectPerformanceMetrics);
+  const renderErrors: ReadonlyArray<RenderingError> = useAppStore(selectRenderingErrors);
   // Display render errors if any
   useEffect(() => {
     if (renderErrors.length > 0) {

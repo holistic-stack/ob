@@ -70,7 +70,7 @@ export interface PerformanceState {
 export interface AppState {
   readonly editor: EditorState;
   readonly parsing: ParsingState;
-  readonly rendering: RenderingState;
+  readonly rendering?: RenderingState;
   readonly performance: PerformanceState;
   readonly config: AppConfig;
 }
