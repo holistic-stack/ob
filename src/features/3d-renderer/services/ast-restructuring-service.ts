@@ -354,9 +354,7 @@ const restructureCSGNode = (
   };
 
   if (config.enableLogging) {
-    logger.debug(
-      `${csgNode.type} now has ${children.length} children`
-    );
+    logger.debug(`${csgNode.type} now has ${children.length} children`);
   }
 
   return restructuredNode;
@@ -403,9 +401,7 @@ const restructureTransformNode = (
   };
 
   if (config.enableLogging) {
-    logger.debug(
-      `${transformNode.type} now has ${restructuredChildren.length} children`
-    );
+    logger.debug(`${transformNode.type} now has ${restructuredChildren.length} children`);
   }
 
   return restructuredNode;
@@ -461,9 +457,7 @@ export const restructureAST = (
       // If AST is empty or has only one node, no restructuring needed
       if (ast.length <= 1) {
         if (finalConfig.enableLogging) {
-          logger.debug(
-            `AST too small for restructuring, returning as-is`
-          );
+          logger.debug(`AST too small for restructuring, returning as-is`);
         }
         return ast;
       }
@@ -484,9 +478,7 @@ export const restructureAST = (
       });
 
       if (finalConfig.enableLogging) {
-        logger.debug(
-          `Restructuring complete: ${restructuredNodes.length} top-level nodes`
-        );
+        logger.debug(`Restructuring complete: ${restructuredNodes.length} top-level nodes`);
       }
 
       return Object.freeze(restructuredNodes);

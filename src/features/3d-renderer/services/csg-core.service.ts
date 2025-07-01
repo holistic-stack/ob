@@ -69,9 +69,7 @@ export class CSGCoreService implements CSGData {
       const validPolygons = polygons.filter(isValidPolygon);
 
       if (validPolygons.length !== polygons.length) {
-        logger.warn(
-          `Filtered out ${polygons.length - validPolygons.length} invalid polygons`
-        );
+        logger.warn(`Filtered out ${polygons.length - validPolygons.length} invalid polygons`);
       }
 
       csg._polygons = validPolygons;
@@ -192,10 +190,7 @@ export class CSGCoreService implements CSGData {
       }
 
       if (matrixValidationResult.data.validation?.warnings.length) {
-        logger.warn(
-          'Matrix validation warnings:',
-          matrixValidationResult.data.validation.warnings
-        );
+        logger.warn('Matrix validation warnings:', matrixValidationResult.data.validation.warnings);
       }
 
       const csgResult = CSGCoreService.fromGeometry(mesh.geometry, objectIndex);
@@ -261,9 +256,7 @@ export class CSGCoreService implements CSGData {
     csg: CSGCoreService,
     toMatrix: Matrix4
   ): Promise<Result<BufferGeometry, string>> {
-    logger.debug(
-      'Converting CSG to BufferGeometry with enhanced matrix operations'
-    );
+    logger.debug('Converting CSG to BufferGeometry with enhanced matrix operations');
 
     try {
       let triCount = 0;

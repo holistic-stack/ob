@@ -350,9 +350,7 @@ export class UnifiedParserService {
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         if (this.config.enableLogging) {
-          logger.debug(
-            `Initialization attempt ${attempt}/${this.config.retryAttempts}`
-          );
+          logger.debug(`Initialization attempt ${attempt}/${this.config.retryAttempts}`);
         }
 
         // Use dynamic import with timeout
@@ -373,10 +371,7 @@ export class UnifiedParserService {
         lastError = attemptError instanceof Error ? attemptError : new Error(String(attemptError));
 
         if (this.config.enableLogging) {
-          logger.warn(
-            `Attempt ${attempt} failed:`,
-            lastError.message
-          );
+          logger.warn(`Attempt ${attempt} failed:`, lastError.message);
         }
 
         if (attempt < this.config.retryAttempts) {

@@ -285,9 +285,7 @@ export const matrixFactory: MatrixFactory = {
   },
 
   fromArray: (data: readonly number[][], validate = true): Matrix => {
-    logger.debug(
-      `Creating matrix from array ${data.length}x${data[0]?.length || 0}`
-    );
+    logger.debug(`Creating matrix from array ${data.length}x${data[0]?.length || 0}`);
 
     if (validate) {
       if (data.length === 0) {

@@ -5,11 +5,11 @@
  * extracted from Node.ts utility class following bulletproof-react service patterns.
  */
 
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import type { BSPNodeData, PlaneData, PolygonData } from '../types/geometry.types.js';
 import { clonePolygon, isValidPolygon, splitPolygonByPlane } from '../utils/geometry-utils.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
 
 const bspNodeLogger = createLogger('BSPTreeNode');
 const bspServiceLogger = createLogger('BSPTreeService');

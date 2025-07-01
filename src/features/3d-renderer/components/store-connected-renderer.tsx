@@ -10,9 +10,9 @@ import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { Result } from '../../../shared/types/result.types.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeRendering,

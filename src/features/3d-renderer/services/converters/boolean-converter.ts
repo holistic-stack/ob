@@ -35,12 +35,8 @@ export const convertUnionNode = async (
     }
 
     if (!node.children || node.children.length === 0) {
-      logger.warn(
-        `Union node has no children, creating placeholder mesh`
-      );
-      logger.debug(
-        `This indicates AST restructuring may not be working correctly`
-      );
+      logger.warn(`Union node has no children, creating placeholder mesh`);
+      logger.debug(`This indicates AST restructuring may not be working correctly`);
       // Create a simple cube as placeholder when no children
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       const mesh = new THREE.Mesh(geometry, material);
@@ -95,9 +91,7 @@ export const convertUnionNode = async (
         }
         nextMesh.updateMatrix();
 
-        logger.debug(
-          `Performing union operation ${i}/${childMeshes.length - 1}`
-        );
+        logger.debug(`Performing union operation ${i}/${childMeshes.length - 1}`);
         // Use the correct three-csg-ts API
         const unionResult = await CSGCoreService.union(resultMesh, nextMesh);
         if (!unionResult.success) {
@@ -108,9 +102,7 @@ export const convertUnionNode = async (
 
       resultMesh.material = material;
 
-      logger.debug(
-        `CSG union completed successfully with actual combined geometry`
-      );
+      logger.debug(`CSG union completed successfully with actual combined geometry`);
       return resultMesh;
     } catch (csgError) {
       logger.error(`CSG union failed:`, csgError);
@@ -134,10 +126,7 @@ export const convertIntersectionNode = async (
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
     logger.debug(`Converting intersection node:`, node);
-    logger.debug(
-      `Intersection node children count:`,
-      node.children?.length || 0
-    );
+    logger.debug(`Intersection node children count:`, node.children?.length || 0);
 
     if (node.children && node.children.length > 0) {
       logger.debug(
@@ -147,12 +136,8 @@ export const convertIntersectionNode = async (
     }
 
     if (!node.children || node.children.length === 0) {
-      logger.warn(
-        `Intersection node has no children, creating placeholder mesh`
-      );
-      logger.debug(
-        `This indicates AST restructuring may not be working correctly`
-      );
+      logger.warn(`Intersection node has no children, creating placeholder mesh`);
+      logger.debug(`This indicates AST restructuring may not be working correctly`);
       // Create a simple sphere as placeholder when no children
       const geometry = new THREE.SphereGeometry(1, 32, 32);
       const mesh = new THREE.Mesh(geometry, material);
@@ -179,9 +164,7 @@ export const convertIntersectionNode = async (
       return firstMesh;
     }
 
-    logger.debug(
-      `Performing CSG intersection on ${childMeshes.length} meshes`
-    );
+    logger.debug(`Performing CSG intersection on ${childMeshes.length} meshes`);
 
     try {
       const firstMesh = childMeshes[0];
@@ -262,9 +245,7 @@ export const convertDifferenceNode = async (
       return firstMesh;
     }
 
-    logger.debug(
-      `Performing CSG difference on ${childMeshes.length} meshes`
-    );
+    logger.debug(`Performing CSG difference on ${childMeshes.length} meshes`);
 
     try {
       const firstMesh = childMeshes[0];

@@ -57,9 +57,7 @@ export class MatrixValidationService {
   };
 
   constructor(private readonly deps: MatrixValidationDependencies) {
-    logger.init(
-      'Initializing matrix validation service with dependencies'
-    );
+    logger.init('Initializing matrix validation service with dependencies');
     this.validateDependencies();
   }
 
@@ -234,9 +232,7 @@ export class MatrixValidationService {
     const startTime = Date.now();
     const operation = 'matrixValidation';
 
-    logger.debug(
-      `Validating matrix ${matrix.rows}x${matrix.columns}`
-    );
+    logger.debug(`Validating matrix ${matrix.rows}x${matrix.columns}`);
 
     try {
       // Note: Validation results are not cached as the cache interface expects Matrix objects

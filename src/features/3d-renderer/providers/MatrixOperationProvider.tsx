@@ -10,7 +10,10 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { createLogger } from '../../../shared/services/logger.service.js';
 
-import { type UseMatrixOperationsReturn, useMatrixOperations } from '../hooks/useMatrixOperations.js';
+import {
+  type UseMatrixOperationsReturn,
+  useMatrixOperations,
+} from '../hooks/useMatrixOperations.js';
 
 const logger = createLogger('MatrixOperationProvider');
 

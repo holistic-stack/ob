@@ -309,9 +309,7 @@ export const convertASTNodesToCSGUnion = async (
         },
       };
 
-      logger.debug(
-        `Successfully created CSG union with ${metadata.triangleCount} triangles`
-      );
+      logger.debug(`Successfully created CSG union with ${metadata.triangleCount} triangles`);
       return mesh3D;
     },
     (err) => `Failed to create CSG union: ${err instanceof Error ? err.message : String(err)}`

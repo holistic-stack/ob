@@ -533,7 +533,9 @@ describe('React Integration Layer Testing', () => {
     it(
       'should maintain performance during frequent re-renders',
       async () => {
-        logger.debug('[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders');
+        logger.debug(
+          '[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders'
+        );
 
         const scenario = REACT_INTEGRATION_SCENARIOS.performance;
         const renderTimes: number[] = [];

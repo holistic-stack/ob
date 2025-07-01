@@ -405,7 +405,9 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should maintain stability under heavy concurrent load',
       async () => {
-        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Testing heavy concurrent load stability');
+        logger.debug(
+          '[DEBUG][MatrixServiceConcurrentTest] Testing heavy concurrent load stability'
+        );
 
         const config = CONCURRENT_TEST_CONFIG.heavy;
         const startTime = Date.now();

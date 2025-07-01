@@ -217,9 +217,7 @@ export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProv
             showDetails: true,
             position: 'top-right' as const,
             onPerformanceAlert: (metric: string, value: number, threshold: number) => {
-              logger.warn(
-                `Performance alert: ${metric} = ${value} (threshold: ${threshold})`
-              );
+              logger.warn(`Performance alert: ${metric} = ${value} (threshold: ${threshold})`);
             },
           }
         : null,

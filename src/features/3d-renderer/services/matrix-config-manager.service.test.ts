@@ -53,7 +53,9 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Configuration Validation', () => {
     it('should validate valid configuration properties', () => {
-      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing valid configuration validation');
+      logger.debug(
+        '[DEBUG][MatrixConfigManagerServiceTest] Testing valid configuration validation'
+      );
 
       const result = service.applyOverride({
         performance: {
@@ -338,7 +340,9 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should handle malformed JSON in import', () => {
-      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing malformed JSON import handling');
+      logger.debug(
+        '[DEBUG][MatrixConfigManagerServiceTest] Testing malformed JSON import handling'
+      );
 
       const result = service.importConfiguration('invalid json {');
 

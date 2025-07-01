@@ -383,7 +383,9 @@ describe('MatrixTelemetryService', () => {
 
   describe('Regression Recommendations', () => {
     it('should provide specific recommendations for different operations', () => {
-      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing operation-specific recommendations');
+      logger.debug(
+        '[DEBUG][MatrixTelemetryServiceTest] Testing operation-specific recommendations'
+      );
 
       const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing

@@ -410,7 +410,9 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should maintain operation tracking during errors', async () => {
-      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing operation tracking during errors');
+      logger.debug(
+        '[DEBUG][MatrixIntegrationServiceTest] Testing operation tracking during errors'
+      );
 
       const telemetryService = serviceContainer.getTelemetryService();
       const initialMetrics = telemetryService?.getPerformanceMetrics();

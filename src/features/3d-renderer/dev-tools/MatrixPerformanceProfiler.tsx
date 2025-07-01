@@ -538,9 +538,6 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
 
     console.debug = interceptConsole('debug', originalConsole.debug);
     console.info = interceptConsole('info', originalConsole.info);
-    };
-    };
-
     logger.warn = interceptConsole('warn', originalConsole.warn);
     logger.error = interceptConsole('error', originalConsole.error);
 

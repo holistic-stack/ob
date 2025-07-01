@@ -217,9 +217,7 @@ export const convertMirrorNode = async (
 
       mesh.scale.set(scaleX, scaleY, scaleZ);
 
-      logger.debug(
-        `Applied mirror transformation: scale(${scaleX}, ${scaleY}, ${scaleZ})`
-      );
+      logger.debug(`Applied mirror transformation: scale(${scaleX}, ${scaleY}, ${scaleZ})`);
     }
 
     mesh.updateMatrix();
@@ -267,9 +265,7 @@ export const convertRotateExtrudeNode = async (
     const mesh = new THREE.Mesh(geometry, material);
 
     mesh.updateMatrix();
-    logger.debug(
-      `Applied rotate_extrude with ${segments} segments (${angle}deg)`
-    );
+    logger.debug(`Applied rotate_extrude with ${segments} segments (${angle}deg)`);
 
     return mesh;
   });

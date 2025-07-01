@@ -283,9 +283,7 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          logger.debug(
-            `Persistent cache hit for Matrix4 conversion`
-          );
+          logger.debug(`Persistent cache hit for Matrix4 conversion`);
           this.conversionCache.set(matrix4 as unknown as Matrix, cacheResult.data);
           return success(
             this.createOperationResult(cacheResult.data, operation, startTime, [4, 4], true)
@@ -358,9 +356,7 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          logger.debug(
-            `Persistent cache hit for ml-matrix conversion`
-          );
+          logger.debug(`Persistent cache hit for ml-matrix conversion`);
           const result = matrixAdapter.toThreeMatrix4(cacheResult.data);
           return success(this.createOperationResult(result, operation, startTime, [4, 4], true));
         }
@@ -483,9 +479,7 @@ export class MatrixConversionService {
             const svdTyped = svd as unknown as { V: Matrix; U: Matrix };
             result = svdTyped.V.mmul(invS).mmul(svdTyped.U.transpose());
 
-            logger.debug(
-              `SVD-based pseudo-inverse completed successfully`
-            );
+            logger.debug(`SVD-based pseudo-inverse completed successfully`);
           } catch (svdError) {
             this.recordFailure(operation, svdError as Error);
             return error(`Both standard and SVD inversion failed: ${svdError}`);
@@ -506,9 +500,7 @@ export class MatrixConversionService {
         matrix.rows,
         matrix.columns,
       ]);
-      logger.debug(
-        `Robust inversion completed in ${operationResult.performance.executionTime}ms`
-      );
+      logger.debug(`Robust inversion completed in ${operationResult.performance.executionTime}ms`);
 
       return success(operationResult);
     } catch (err) {

@@ -58,15 +58,16 @@ export const selectRenderingState = (state: AppState): RenderingState | undefine
   state.rendering;
 
 // Default empty arrays - defined outside to prevent re-creation
-const EMPTY_MESHES: ReadonlyArray<any> = [];
-const EMPTY_ERRORS: ReadonlyArray<any> = [];
+const EMPTY_MESHES: ReadonlyArray<unknown> = [];
+const EMPTY_ERRORS: ReadonlyArray<unknown> = [];
 
 export const selectRenderingMeshes = (state: AppState) => state.rendering?.meshes ?? EMPTY_MESHES;
 
 export const selectRenderingIsRendering = (state: AppState): boolean =>
   state.rendering?.isRendering ?? false;
 
-export const selectRenderingErrors = (state: AppState) => state.rendering?.renderErrors ?? EMPTY_ERRORS;
+export const selectRenderingErrors = (state: AppState) =>
+  state.rendering?.renderErrors ?? EMPTY_ERRORS;
 
 export const selectRenderingLastRendered = (state: AppState) =>
   state.rendering?.lastRendered ?? null;

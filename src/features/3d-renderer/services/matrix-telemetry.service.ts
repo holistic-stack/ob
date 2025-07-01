@@ -9,7 +9,7 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import type { MATRIX_CONFIG } from '../config/matrix-config.js';
 import type { MatrixPerformanceMetrics } from '../types/matrix.types.js';
 
-const logger = createLogger('MatrixTelemetryService');
+const _logger = createLogger('MatrixTelemetryService');
 
 const logger = createLogger('MatrixTelemetryService');
 
@@ -272,9 +272,7 @@ export class MatrixTelemetryService {
   private trackPerformanceRegression(regression: PerformanceRegression): void {
     // Store regression data for inclusion in reports
     // This could be expanded to maintain a separate regression history
-    logger.debug(
-      `Tracking regression: ${regression.operation} (${regression.severity})`
-    );
+    logger.debug(`Tracking regression: ${regression.operation} (${regression.severity})`);
   }
 
   /**

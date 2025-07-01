@@ -5,13 +5,12 @@
  * with performance monitoring and functional error patterns.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import type { StateCreator } from 'zustand';
-import type { AsyncResult } from '../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
-import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
-import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
-import type { AppStore, ParsingSlice } from '../types/store.types.js';
+import { createLogger } from '@/shared/services/logger.service.js';
+import { tryCatchAsync } from '@/shared/utils/try-catch.utils.js';
+import { restructureAST } from '../utils/ast-restructure.utils.js';
+import type { ParsingSlice } from './parsing-slice.types.js';
+
+const logger = createLogger('ParsingSlice');
 
 interface ParsingSliceConfig {
   parserService: UnifiedParserService;

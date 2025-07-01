@@ -202,7 +202,9 @@ export function resolveWasmPath(urlPath: string): string {
     // Find web-tree-sitter package.json using matcher function
     () => {
       try {
-        logger.debug(`Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`);
+        logger.debug(
+          `Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`
+        );
         const packageJson = findUpSync(
           (directory: string) => {
             const packagePath = join(directory, 'package.json');

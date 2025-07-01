@@ -274,10 +274,7 @@ export class MatrixConfigManagerService {
         }
 
         if (validationResult.warnings.length > 0) {
-          logger.warn(
-            `Configuration warning for ${key}:`,
-            validationResult.warnings
-          );
+          logger.warn(`Configuration warning for ${key}:`, validationResult.warnings);
         }
 
         // Apply the override
@@ -389,9 +386,7 @@ export class MatrixConfigManagerService {
       this.changeHistory.shift();
     }
 
-    logger.debug(
-      `Configuration changed: ${section}.${property} = ${newValue} (${reason})`
-    );
+    logger.debug(`Configuration changed: ${section}.${property} = ${newValue} (${reason})`);
   }
 
   /**
@@ -501,16 +496,12 @@ export class MatrixConfigManagerService {
   applyPerformanceThresholdAdjustments(
     adjustments: PerformanceThresholdAdjustment[]
   ): Result<void, string> {
-    logger.debug(
-      `Applying ${adjustments.length} threshold adjustments`
-    );
+    logger.debug(`Applying ${adjustments.length} threshold adjustments`);
 
     try {
       for (const adjustment of adjustments) {
         if (adjustment.confidence < 0.5) {
-          logger.warn(
-            `Skipping low-confidence adjustment for ${adjustment.operation}`
-          );
+          logger.warn(`Skipping low-confidence adjustment for ${adjustment.operation}`);
           continue;
         }
 

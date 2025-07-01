@@ -5,9 +5,9 @@
  * worker configuration, and performance optimization following functional programming patterns.
  */
 
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
 
 const logger = createLogger('MonacoViteConfig');
 

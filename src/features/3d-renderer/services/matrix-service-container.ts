@@ -5,6 +5,7 @@
  * service integration, and comprehensive error handling following bulletproof-react patterns.
  */
 
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import { MATRIX_CONFIG } from '../config/matrix-config.js';
@@ -23,7 +24,6 @@ import {
   type MatrixValidationDependencies,
   MatrixValidationService,
 } from './matrix-validation.service.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
 
 const logger = createLogger('MatrixServiceContainer');
 
@@ -448,9 +448,7 @@ export class MatrixServiceContainer {
       // Reinitialize the service
       await this.initializeServices();
 
-      logger.debug(
-        `Service '${serviceName}' restarted successfully`
-      );
+      logger.debug(`Service '${serviceName}' restarted successfully`);
       return success(undefined);
     } catch (err) {
       this.setServiceState(serviceName, 'error');

@@ -158,9 +158,7 @@ export class MatrixIntegrationService {
         },
       };
 
-      logger.debug(
-        `Enhanced conversion completed in ${executionTime}ms`
-      );
+      logger.debug(`Enhanced conversion completed in ${executionTime}ms`);
       return success(enhancedResult);
     } catch (err) {
       const executionTime = Date.now() - startTime;
@@ -258,9 +256,7 @@ export class MatrixIntegrationService {
         },
       };
 
-      logger.debug(
-        `Enhanced inversion completed in ${executionTime}ms`
-      );
+      logger.debug(`Enhanced inversion completed in ${executionTime}ms`);
       return success(enhancedResult);
     } catch (err) {
       const executionTime = Date.now() - startTime;
@@ -338,9 +334,7 @@ export class MatrixIntegrationService {
         },
       };
 
-      logger.debug(
-        `Enhanced normal matrix computation completed in ${executionTime}ms`
-      );
+      logger.debug(`Enhanced normal matrix computation completed in ${executionTime}ms`);
       return success(enhancedResult);
     } catch (err) {
       const executionTime = Date.now() - startTime;
@@ -366,9 +360,7 @@ export class MatrixIntegrationService {
     const startTime = Date.now();
     const batchOperation = 'batchOperations';
 
-    logger.debug(
-      `Performing batch operations (${operations.length} operations)`
-    );
+    logger.debug(`Performing batch operations (${operations.length} operations)`);
 
     try {
       const results: EnhancedMatrixResult<T>[] = [];
@@ -418,9 +410,7 @@ export class MatrixIntegrationService {
         return error(`Batch operations failed: ${errors.join('; ')}`);
       }
 
-      logger.debug(
-        `Batch operations completed: ${successCount}/${operations.length} successful`
-      );
+      logger.debug(`Batch operations completed: ${successCount}/${operations.length} successful`);
       return success(results);
     } catch (err) {
       const executionTime = Date.now() - startTime;
@@ -468,10 +458,7 @@ export class MatrixIntegrationService {
         report.conversion = conversionService.getPerformanceMetrics();
       }
     } catch (err) {
-      logger.error(
-        'Failed to generate performance report:',
-        err
-      );
+      logger.error('Failed to generate performance report:', err);
     }
 
     return report;
@@ -481,9 +468,7 @@ export class MatrixIntegrationService {
    * Optimize configuration based on usage patterns
    */
   async optimizeConfiguration(): Promise<Result<void, string>> {
-    logger.debug(
-      'Optimizing configuration based on usage patterns'
-    );
+    logger.debug('Optimizing configuration based on usage patterns');
 
     try {
       const configManager = this.serviceContainer.getConfigManager();
@@ -508,9 +493,7 @@ export class MatrixIntegrationService {
       const adjustments = configManager.suggestPerformanceThresholdAdjustments(operationMetrics);
 
       if (adjustments.length > 0) {
-        logger.debug(
-          `Applying ${adjustments.length} performance optimizations`
-        );
+        logger.debug(`Applying ${adjustments.length} performance optimizations`);
         const result = configManager.applyPerformanceThresholdAdjustments(adjustments);
 
         if (!result.success) {
