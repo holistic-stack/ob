@@ -5,7 +5,6 @@
  * following functional programming patterns and immutable data structures.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import type {
   AppConfig,
@@ -17,6 +16,7 @@ import type {
   PerformanceMetrics,
 } from '../../../shared/types/common.types';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
  * Parsing state for OpenSCAD AST processing

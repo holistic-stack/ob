@@ -5,13 +5,13 @@
  * including AST rendering, camera controls, and performance monitoring.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
 import { measureTime } from '../../../shared/utils/performance/metrics.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import {
   selectParsingAST,
   selectPerformanceMetrics,

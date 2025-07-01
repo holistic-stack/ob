@@ -5,10 +5,10 @@
  * and that the import issue is resolved.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { Canvas } from '@react-three/fiber';
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { ThreeRenderer } from './three-renderer';
 
 interface MockCanvasProps {

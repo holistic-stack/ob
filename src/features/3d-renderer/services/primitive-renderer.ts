@@ -5,11 +5,11 @@
  * with support for all OpenSCAD primitives and transformations.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
 import { error, tryCatch } from '../../../shared/utils/functional/result';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   MaterialConfig,
   MaterialFactory,

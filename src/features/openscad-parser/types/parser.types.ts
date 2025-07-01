@@ -5,9 +5,9 @@
  * with lifecycle management, performance monitoring, and functional patterns.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { ASTNode } from '../core/ast-types.js';
 
-export type { ASTNode } from '@holistic-stack/openscad-parser';
+export type { ASTNode } from '../core/ast-types.js';
 
 import type { AsyncResult, Result } from '../../../shared/types/result.types';
 

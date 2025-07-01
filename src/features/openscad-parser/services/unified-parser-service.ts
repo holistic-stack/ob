@@ -8,12 +8,12 @@
  * Enhanced with: Dynamic loading, Result<T,E> patterns, and performance monitoring
  */
 
-import type { OpenscadParser } from '@holistic-stack/openscad-parser';
-import { type ASTNode, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 import type * as TreeSitter from 'web-tree-sitter';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { ASTNode } from '../core/ast-types.js';
+import { type OpenscadParser, SimpleErrorHandler } from '../core/index.js';
 
 const logger = createLogger('UnifiedParserService');
 
@@ -401,7 +401,7 @@ export class UnifiedParserService {
     }
 
     // Dynamic import to avoid blocking main thread
-    const { OpenscadParser, SimpleErrorHandler } = await import('@holistic-stack/openscad-parser');
+    const { OpenscadParser, SimpleErrorHandler } = await import('../core/index.js');
 
     const errorHandler = new SimpleErrorHandler();
     const parser = new OpenscadParser(errorHandler);

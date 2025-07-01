@@ -1,13 +1,13 @@
+import * as THREE from 'three';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
 import type {
   ASTNode,
   DifferenceNode,
   IntersectionNode,
   UnionNode,
-} from '@holistic-stack/openscad-parser';
-import * as THREE from 'three';
-import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { Result } from '../../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
+} from '../../../openscad-parser/core/ast-types.js';
 import { CSGCoreService } from '../csg-core.service.js';
 
 const logger = createLogger('BooleanConverter');

@@ -5,11 +5,11 @@
  * with support for primitives, transformations, and boolean operations.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { MaterialConfig, Mesh3D } from '../types/renderer.types.js';
 import {
   convertDifferenceNode,

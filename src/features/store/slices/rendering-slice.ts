@@ -5,13 +5,13 @@
  * and render error handling with performance monitoring.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { AppStore, RenderingActions, RenderingError } from '../types/store.types.js';
 
 const logger = createLogger('Store');

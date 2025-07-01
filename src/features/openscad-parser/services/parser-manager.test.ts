@@ -2,12 +2,12 @@
  * OpenSCAD Parser Manager Test Suite
  *
  * Tests for OpenSCAD parser integration following TDD methodology
- * with real @holistic-stack/openscad-parser, lifecycle management, and functional patterns.
+ * with real ../core/ast-types.js, lifecycle management, and functional patterns.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import { OpenscadParser } from '@holistic-stack/openscad-parser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { ASTNode } from '../core/ast-types.js';
+import { OpenscadParser, SimpleErrorHandler } from '../core/index.js';
 import type { ParserConfig } from '../types/parser.types';
 import type { ParserManager } from './parser-manager';
 import { createParserManager } from './parser-manager';
@@ -19,7 +19,8 @@ describe('OpenSCAD Parser Manager', () => {
 
   beforeEach(async () => {
     // Create and initialize real OpenSCAD parser
-    openscadParser = new OpenscadParser();
+    const errorHandler = new SimpleErrorHandler();
+    openscadParser = new OpenscadParser(errorHandler);
     await openscadParser.init();
 
     defaultConfig = {

@@ -2,15 +2,15 @@
  * AST Restructuring Service Tests
  */
 
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type {
   ASTNode,
   CubeNode,
   SphereNode,
   TranslateNode,
   UnionNode,
-} from '@holistic-stack/openscad-parser';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service.js';
+} from '../../openscad-parser/core/ast-types.js';
 import { createASTRestructuringService, restructureAST } from './ast-restructuring-service.js';
 
 const logger = createLogger('ASTRestructuringServiceTest');

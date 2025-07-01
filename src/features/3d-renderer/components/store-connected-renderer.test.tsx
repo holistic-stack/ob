@@ -5,12 +5,12 @@
  * proper data flow through the store without direct pipeline access.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { RenderError } from '../../store/types/store.types';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 

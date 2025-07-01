@@ -5,8 +5,6 @@
  * with lifecycle management, caching, performance monitoring, and functional patterns.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
-import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
 import {
@@ -15,6 +13,8 @@ import {
   tryCatch,
   tryCatchAsync,
 } from '../../../shared/utils/functional/result.js';
+import type { ASTNode } from '../core/ast-types.js';
+import { OpenscadParser, SimpleErrorHandler } from '../core/index.js';
 import type {
   ASTOptimizationResult,
   ASTValidationResult,

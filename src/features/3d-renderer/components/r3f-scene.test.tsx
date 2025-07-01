@@ -5,12 +5,17 @@
  * proper Three.js object creation and R3F integration.
  */
 
-import type { ASTNode, CubeNode, CylinderNode, SphereNode } from '@holistic-stack/openscad-parser';
 import { Canvas } from '@react-three/fiber';
 import { render } from '@testing-library/react';
 import React from 'react';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  ASTNode,
+  CubeNode,
+  CylinderNode,
+  SphereNode,
+} from '../../openscad-parser/core/ast-types.js';
 // import { type Mesh3D } from '../types/renderer.types';
 
 import { R3FScene } from './r3f-scene';

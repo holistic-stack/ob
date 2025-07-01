@@ -1,4 +1,4 @@
-import type { ASTNode, SourceLocation } from '@holistic-stack/openscad-parser';
+import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
 
 /**
  * Mirror node interface for type safety

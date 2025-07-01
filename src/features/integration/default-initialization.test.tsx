@@ -5,7 +5,6 @@
  * Monaco Editor → Zustand store → AST parsing → R3F rendering
  */
 
-import type { CubeNode } from '@holistic-stack/openscad-parser';
 import { Canvas } from '@react-three/fiber';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -14,6 +13,7 @@ import { R3FScene } from '../3d-renderer/components/r3f-scene';
 import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from '../code-editor/components/store-connected-editor';
 import type { MonacoEditorProps } from '../code-editor/types/editor.types';
+import type { CubeNode } from '../openscad-parser/core/ast-types.js';
 import { useAppStore } from '../store/app-store';
 
 // Mock Monaco Editor

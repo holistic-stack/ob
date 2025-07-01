@@ -5,11 +5,11 @@
  * with OpenSCAD AST rendering, CSG operations, and performance monitoring.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as React from 'react';
 import type * as THREE from 'three';
 import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
 import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
  * 3D Scene configuration

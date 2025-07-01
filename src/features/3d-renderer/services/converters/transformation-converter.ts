@@ -1,14 +1,14 @@
+import * as THREE from 'three';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
 import type {
   ASTNode,
   RotateNode,
   ScaleNode,
   SourceLocation,
   TranslateNode,
-} from '@holistic-stack/openscad-parser';
-import * as THREE from 'three';
-import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { Result } from '../../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
+} from '../../../openscad-parser/core/ast-types.js';
 
 const logger = createLogger('TransformationConverter');
 
@@ -45,10 +45,8 @@ export const convertTranslateNode = async (
 
     // Apply translation - extract vector from TranslateNode
     // The TranslateNode should have a 'v' property with [x, y, z] vector
-    const translationVector: readonly [number, number, number] =
-      Array.isArray(node.v) && node.v.length === 2
-        ? [node.v[0], node.v[1], 0] // Pad 2D vector with 0 for Z-axis
-        : (node.v ?? [0, 0, 0]);
+    const translationVector: [number, number, number] =
+      Array.isArray(node.v) && node.v.length === 3 ? [node.v[0], node.v[1], node.v[2]] : [0, 0, 0];
 
     const [x, y, z] = translationVector;
 
@@ -153,8 +151,12 @@ export const convertScaleNode = async (
 
     // Apply scaling - need to check the actual structure of ScaleNode
     if (node.v) {
-      const [x, y, z] = node.v;
-      mesh.scale.set(x, y, z);
+      if (typeof node.v === 'number') {
+        mesh.scale.set(node.v, node.v, node.v);
+      } else if (Array.isArray(node.v) && node.v.length === 3) {
+        const [x, y, z] = node.v;
+        mesh.scale.set(x, y, z);
+      }
     }
 
     mesh.updateMatrix();

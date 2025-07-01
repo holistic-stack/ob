@@ -5,7 +5,6 @@
  * as Three.js objects within the React Three Fiber context.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import type * as React from 'react';
@@ -13,6 +12,7 @@ import { useEffect, useRef } from 'react';
 import type * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 

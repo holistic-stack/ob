@@ -1,8 +1,12 @@
-import type { CubeNode, CylinderNode, SphereNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { Result } from '../../../../shared/types/result.types.js';
 import { tryCatch } from '../../../../shared/utils/functional/result.js';
+import type {
+  CubeNode,
+  CylinderNode,
+  SphereNode,
+} from '../../../openscad-parser/core/ast-types.js';
 
 const logger = createLogger('PrimitiveConverter');
 

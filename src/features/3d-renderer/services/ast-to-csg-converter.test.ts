@@ -5,6 +5,9 @@
  * Tests the complete pipeline from OpenSCAD AST nodes to Three.js CSG meshes.
  */
 
+import * as THREE from 'three';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type {
   ASTNode,
   CubeNode,
@@ -17,10 +20,7 @@ import type {
   SphereNode,
   TranslateNode,
   UnionNode,
-} from '@holistic-stack/openscad-parser';
-import * as THREE from 'three';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service.js';
+} from '../../openscad-parser/core/ast-types.js';
 
 import { convertASTNodesToCSGUnion, convertASTNodeToCSG } from './ast-to-csg-converter.js';
 

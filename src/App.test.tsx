@@ -32,8 +32,8 @@ vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
   ),
 }));
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { Mesh3D } from './features/3d-renderer/types/renderer.types.js';
+import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 
 // Mock store state
 const mockStoreState: {

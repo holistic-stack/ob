@@ -5,12 +5,12 @@
  * with React Three Fiber integration and OpenSCAD AST rendering.
  */
 
-import type { ASTNode, CubeNode, SphereNode } from '@holistic-stack/openscad-parser';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import type { ASTNode, CubeNode, SphereNode } from '../../openscad-parser/core/ast-types.js';
 import type { RendererProps, Scene3DConfig } from '../types/renderer.types';
 
 interface MockCanvasProps {

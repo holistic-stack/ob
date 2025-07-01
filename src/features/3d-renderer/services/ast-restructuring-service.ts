@@ -5,6 +5,9 @@
  * to reconstruct proper hierarchical parent-child relationships for boolean operations.
  */
 
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/utils/functional/result';
+import { tryCatch } from '../../../shared/utils/functional/result';
 import type {
   ASTNode,
   CubeNode,
@@ -16,10 +19,7 @@ import type {
   SphereNode,
   TranslateNode,
   UnionNode,
-} from '@holistic-stack/openscad-parser';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type { Result } from '../../../shared/utils/functional/result';
-import { tryCatch } from '../../../shared/utils/functional/result';
+} from '../../openscad-parser/core/ast-types.js';
 
 const logger = createLogger('ASTRestructuringService');
 

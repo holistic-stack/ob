@@ -5,9 +5,9 @@
  * with comprehensive coverage of all selector functions.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { AppState, RenderingError, RenderingState } from '../types/store.types';
 import {
   selectAllErrors,

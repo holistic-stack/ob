@@ -5,9 +5,9 @@
  * with real Three.js geometry creation and OpenSCAD AST rendering.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 // Mock Three.js with proper BufferGeometry types
 vi.mock('three', async () => {

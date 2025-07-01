@@ -5,13 +5,13 @@
  * with performance monitoring and functional error patterns.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
 import type { AppStore } from '../app-store.js';
 import type { ParsingActions } from './parsing-slice.types.js';

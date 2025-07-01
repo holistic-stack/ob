@@ -5,10 +5,10 @@
  * with Zustand store integration and Three.js scene management.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { act, renderHook } from '@testing-library/react';
 import type * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { createAppStore } from '../../store/app-store';
 import { useThreeRenderer } from './use-three-renderer';
 

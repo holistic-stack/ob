@@ -5,7 +5,6 @@
  * with functional programming patterns and Result<T,E> error handling.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type {
@@ -13,6 +12,7 @@ import type {
   EditorPosition,
   EditorSelection,
 } from '../../shared/types/common.types';
+import type { ASTNode } from '../openscad-parser/core/ast-types.js';
 import { createAppStore } from './app-store';
 
 let store: ReturnType<typeof createAppStore>;

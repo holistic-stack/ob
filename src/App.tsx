@@ -5,13 +5,13 @@
  * Integrates Monaco Editor for code input with Three.js renderer for 3D output.
  */
 
-import type { ASTNode } from '@holistic-stack/openscad-parser';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import type * as THREE from 'three';
 import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
 import type { RenderingError } from './features/3d-renderer/types/renderer.types.js';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
+import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { useAppStore } from './features/store/app-store';
 import {
   selectEditorCode,
