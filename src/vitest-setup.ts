@@ -6,7 +6,7 @@ import { findUpSync } from 'find-up';
 import resolve from 'resolve';
 import { vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { createLogger } from '../shared/services/logger.service.js';
+import { createLogger } from './shared/services/logger.service.js';
 
 const logger = createLogger('VitestSetup');
 

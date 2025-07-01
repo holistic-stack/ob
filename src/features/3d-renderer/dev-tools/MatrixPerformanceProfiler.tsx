@@ -500,27 +500,27 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     // Intercept console methods for matrix-related logs
     const interceptConsole = (
       level: 'debug' | 'info' | 'warn' | 'error',
-      originalMethod: (...args: unknown[]) => void
+      originalMethod: (message?: unknown, ...args: unknown[]) => void
     ) => {
-      return (...args: unknown[]) => {
-        originalMethod.apply(console, args);
+      return (message?: unknown, ...args: unknown[]) => {
+        originalMethod.apply(console, [message, ...args]);
 
-        const message = args.join(' ');
+        const messageStr = `${String(message ?? '')} ${args.map(String).join(' ')}`;
         if (
-          message.includes('[MatrixOperations]') ||
-          message.includes('[MatrixIntegration]') ||
-          message.includes('[MatrixConversion]') ||
-          message.includes('[MatrixValidation]') ||
-          message.includes('[MatrixTelemetry]')
+          messageStr.includes('[MatrixOperations]') ||
+          messageStr.includes('[MatrixIntegration]') ||
+          messageStr.includes('[MatrixConversion]') ||
+          messageStr.includes('[MatrixValidation]') ||
+          messageStr.includes('[MatrixTelemetry]')
         ) {
           // Extract operation name from log message
-          const operationMatch = message.match(/\[(\w+)\]/);
+          const operationMatch = messageStr.match(/\[(\w+)\]/);
           const operation = operationMatch ? operationMatch[1] : 'Unknown';
 
           const logPayload: Omit<DebugLogEntry, 'id' | 'timestamp'> = {
             level,
             operation: operation ?? 'Unknown',
-            message,
+            message: messageStr,
             data: args.length > 1 ? args.slice(1) : undefined,
           };
 
@@ -536,10 +536,22 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
       };
     };
 
-    console.debug = interceptConsole('debug', originalConsole.debug);
-    console.info = interceptConsole('info', originalConsole.info);
-    logger.warn = interceptConsole('warn', originalConsole.warn);
-    logger.error = interceptConsole('error', originalConsole.error);
+    console.debug = interceptConsole(
+      'debug',
+      originalConsole.debug as (message?: unknown, ...args: unknown[]) => void
+    );
+    console.info = interceptConsole(
+      'info',
+      originalConsole.info as (message?: unknown, ...args: unknown[]) => void
+    );
+    logger.warn = interceptConsole(
+      'warn',
+      originalConsole.warn as (message?: unknown, ...args: unknown[]) => void
+    );
+    logger.error = interceptConsole(
+      'error',
+      originalConsole.error as (message?: unknown, ...args: unknown[]) => void
+    );
 
     return () => {
       // Restore original console methods

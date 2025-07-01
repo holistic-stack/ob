@@ -11,13 +11,14 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
 import { measureTime } from '../../../shared/utils/performance/metrics.js';
+import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigDebounceMs,
   selectEditorCode,
   selectEditorCursorPosition,
   selectEditorSelection,
-} from '../../store/selectors.js';
+} from '../../store/selectors/index.js';
 import type {
   EditorPerformanceMetrics,
   EditorStateManager,
@@ -66,11 +67,11 @@ export const useMonacoEditor = (
   const _selection = useAppStore(selectEditorSelection);
   const debounceMs = useAppStore(selectConfigDebounceMs);
 
-  const updateCode = useAppStore((state) => state.updateCode);
-  const updateCursorPosition = useAppStore((state) => state.updateCursorPosition);
-  const updateSelection = useAppStore((state) => state.updateSelection);
-  const markDirty = useAppStore((state) => state.markDirty);
-  const recordParseTime = useAppStore((state) => state.recordParseTime);
+  const updateCode = useAppStore((state: AppStore) => state.updateCode);
+  const updateCursorPosition = useAppStore((state: AppStore) => state.updateCursorPosition);
+  const updateSelection = useAppStore((state: AppStore) => state.updateSelection);
+  const markDirty = useAppStore((state: AppStore) => state.markDirty);
+  const recordParseTime = useAppStore((state: AppStore) => state.recordParseTime);
 
   /**
    * Debounced code update handler
@@ -79,7 +80,7 @@ export const useMonacoEditor = (
     debounce((newCode: string) => {
       const { result: _parseResult, duration } = measureTime(() => {
         updateCode(newCode);
-        recordParseTime(duration);
+        recordParseTime(duration as number);
       });
 
       setMetrics((prev) => ({ ...prev, updateTime: duration }));

@@ -8,6 +8,7 @@
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
 import { createLogger } from '../../../shared/services/logger.service.js';
+import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeParsing,
@@ -16,7 +17,7 @@ import {
   selectEditorSelection,
   selectParsingErrors,
   selectParsingWarnings,
-} from '../../store/selectors.js';
+} from '../../store/selectors/index.js';
 import type {
   EditorChangeEvent,
   EditorCursorEvent,
@@ -56,11 +57,11 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   const enableRealTimeParsing = useAppStore(selectConfigEnableRealTimeParsing);
 
   // Store actions - all mutations go through Zustand
-  const updateCode = useAppStore((state) => state.updateCode);
-  const updateSelection = useAppStore((state) => state.updateSelection);
-  const updateCursorPosition = useAppStore((state) => state.updateCursorPosition);
-  const markDirty = useAppStore((state) => state.markDirty);
-  const _parseAST = useAppStore((state) => state.parseAST);
+  const updateCode = useAppStore((state: AppStore) => state.updateCode);
+  const updateSelection = useAppStore((state: AppStore) => state.updateSelection);
+  const updateCursorPosition = useAppStore((state: AppStore) => state.updateCursorPosition);
+  const markDirty = useAppStore((state: AppStore) => state.markDirty);
+  const _parseAST = useAppStore((state: AppStore) => state.parseAST);
 
   /**
    * Handle code changes - update store with 300ms debouncing

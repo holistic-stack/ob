@@ -6,11 +6,13 @@
  */
 
 import { createSelector } from 'reselect';
+import type { Mesh } from 'three';
 import type { AppConfig, EditorState } from '../../../shared/types/common.types';
 import type {
   AppState,
   ParsingState,
   PerformanceState,
+  RenderingError,
   RenderingState,
 } from '../types/store.types';
 
@@ -58,8 +60,8 @@ export const selectRenderingState = (state: AppState): RenderingState | undefine
   state.rendering;
 
 // Default empty arrays - defined outside to prevent re-creation
-const EMPTY_MESHES: ReadonlyArray<unknown> = [];
-const EMPTY_ERRORS: ReadonlyArray<unknown> = [];
+const EMPTY_MESHES: ReadonlyArray<Mesh> = [];
+const EMPTY_ERRORS: ReadonlyArray<RenderingError> = [];
 
 export const selectRenderingMeshes = (state: AppState) => state.rendering?.meshes ?? EMPTY_MESHES;
 

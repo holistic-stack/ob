@@ -7,7 +7,7 @@
 
 import { BoxGeometry, CylinderGeometry, Mesh, SphereGeometry } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service.js';
+import { createLogger } from '../../shared/services/logger.service.js';
 import {
   convertASTNodesToCSGUnion,
   convertASTNodeToCSG,

@@ -277,8 +277,11 @@ export class BSPTreeNode implements BSPNodeData {
 
       if (back.length > 0) {
         this.back ??= new BSPTreeNode();
-        const backBuildResult = this.back.back.build(back);
-        if (!backBuildResult.success) return backBuildResult;
+        if (this.back) {
+          this.back ??= new BSPTreeNode();
+          const backBuildResult = this.back.build(back);
+          if (!backBuildResult.success) return backBuildResult;
+        }
       }
 
       bspNodeLogger.debug('BSP tree build completed successfully');

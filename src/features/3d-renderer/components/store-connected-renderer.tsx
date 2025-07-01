@@ -10,9 +10,11 @@ import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
+import type * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { Result } from '../../../shared/types/result.types.js';
+import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeRendering,
@@ -20,10 +22,10 @@ import {
   selectPerformanceMetrics,
   selectRenderingCamera,
   selectRenderingState,
-} from '../../store/selectors.js';
-import type { RenderingState } from '../../store/types/store.types.js';
-import type { Mesh3D, RenderingMetrics } from '../types/renderer.types.js';
-import { R3FScene } from './r3f-scene.js';
+} from '../../store/selectors/index.js';
+import type { RenderingState } from '../../store/types/store.types';
+import type { Mesh3D, RenderingError, RenderingMetrics } from '../types/renderer.types';
+import { R3FScene } from './r3f-scene';
 
 const logger = createLogger('StoreConnectedRenderer');
 
@@ -76,9 +78,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   logger.init('Initializing store-connected 3D renderer');
 
   // Store selectors - all data comes from Zustand with proper fallbacks
-  const ast = useAppStore((state) => selectParsingAST(state) ?? []);
+  const ast = useAppStore((state: AppStore) => selectParsingAST(state) ?? []);
   const camera = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       selectRenderingCamera(state) ??
       ({
         position: [5, 5, 5] as readonly [number, number, number],
@@ -98,40 +100,40 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
   // Store actions - all mutations go through Zustand with fallbacks
   const updateCamera = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.updateCamera ??
       (() => {
         /* fallback */
       })
   );
   const updateMetrics = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.updateMetrics ??
       (() => {
         /* fallback */
       })
   );
   const renderFromAST = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.renderFromAST ??
       (() => Promise.resolve({ success: false, error: 'Store not initialized' }))
   );
   const addRenderError = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.addRenderError ??
       (() => {
         /* fallback */
       })
   );
   const clearRenderErrors = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.clearRenderErrors ??
       (() => {
         /* fallback */
       })
   );
   const updateMeshes = useAppStore(
-    (state) =>
+    (state: AppStore) =>
       state.updateMeshes ??
       (() => {
         /* fallback */
@@ -283,7 +285,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           data-testid="error-display"
         >
           <div className="font-semibold">Render Errors:</div>
-          {(renderingState?.renderErrors ?? []).map((error, index) => (
+          {(renderingState?.renderErrors ?? []).map((error: RenderingError, index: number) => (
             <div
               key={`render-error-${error.type}-${error.message.slice(0, 30)}-${index}`}
               className="text-sm"

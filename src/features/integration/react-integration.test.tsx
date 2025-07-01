@@ -8,7 +8,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React, { act, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service.js';
+import { createLogger } from '../../shared/services/logger.service.js';
 import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer.js';
 import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container.js';

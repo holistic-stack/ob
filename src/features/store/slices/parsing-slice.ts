@@ -5,10 +5,16 @@
  * with performance monitoring and functional error patterns.
  */
 
-import { createLogger } from '@/shared/services/logger.service.js';
-import { tryCatchAsync } from '@/shared/utils/try-catch.utils.js';
-import { restructureAST } from '../utils/ast-restructure.utils.js';
-import type { ParsingSlice } from './parsing-slice.types.js';
+import type { ASTNode } from '@holistic-stack/openscad-parser';
+import type { WritableDraft } from 'immer';
+import type { StateCreator } from 'zustand';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { AsyncResult } from '../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
+import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
+import type { AppStore } from '../app-store.js';
+import type { ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
 
@@ -20,7 +26,7 @@ export const createParsingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
   { parserService }: ParsingSliceConfig
-): Omit<ParsingSlice, keyof AppStore['parsing']> => {
+): ParsingActions => {
   return {
     parseCode: async (code: string): AsyncResult<ReadonlyArray<ASTNode>, string> => {
       set((state) => {
@@ -60,7 +66,7 @@ export const createParsingSlice = (
             const endTime = performance.now();
             const parseTime = endTime - startTime;
 
-            set((state) => {
+            set((state: WritableDraft<AppStore>) => {
               state.parsing.ast = [...ast];
               state.parsing.isLoading = false;
               state.parsing.lastParsed = new Date();
@@ -76,17 +82,17 @@ export const createParsingSlice = (
             return ast;
           } else {
             const errorMessage = parseResult.success
-              ? parseResult.data.errors.map((e) => e.message).join('; ')
+              ? parseResult.data.errors.map((e: { message: string }) => e.message).join('; ')
               : parseResult.error;
             throw new Error(errorMessage);
           }
         },
-        (err) => {
+        (err: unknown) => {
           const endTime = performance.now();
           const parseTime = endTime - startTime;
           const errorMessage = err instanceof Error ? err.message : String(err);
 
-          set((state) => {
+          set((state: WritableDraft<AppStore>) => {
             state.parsing.isLoading = false;
             state.parsing.errors = [errorMessage];
             state.parsing.parseTime = parseTime;
@@ -127,7 +133,7 @@ export const createParsingSlice = (
     },
 
     clearParsingErrors: () => {
-      set((state) => {
+      set((state: WritableDraft<AppStore>) => {
         state.parsing.errors = [];
       });
     },

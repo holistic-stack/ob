@@ -3,6 +3,20 @@
  *
  * Pure functions for geometric operations extracted from utility classes
  * following functional programming patterns and bulletproof-react organization.
+ *
+ * This module contains pure mathematical functions for:
+ * - Vertex operations (creation, cloning, interpolation)
+ * - Plane operations (creation, validation, transformation)
+ * - Polygon operations (creation, validation, splitting)
+ * - BSP classification and spatial operations
+ * - Geometric validation utilities
+ *
+ * All functions are pure (no side effects) and follow functional programming principles.
+ * They integrate with the service layer through dependency injection patterns.
+ *
+ * @module GeometryUtils
+ * @version 1.0.0
+ * @since Phase 0 - Architectural Reorganization
  */
 
 import { GEOMETRY_CONFIG } from '../config/geometry-config';
@@ -15,8 +29,15 @@ import type {
 } from '../types/geometry.types';
 import { Vector } from './Vector';
 
+// ============================================================================
+// VERTEX OPERATIONS
+// ============================================================================
+
 /**
  * Vertex utility functions
+ *
+ * Pure functions for creating, manipulating, and validating vertex data.
+ * All functions follow immutable patterns and return new instances.
  */
 export const createVertex = (
   pos: Vector,
@@ -77,8 +98,15 @@ export const interpolateVertex = (
   return result;
 };
 
+// ============================================================================
+// PLANE OPERATIONS
+// ============================================================================
+
 /**
  * Plane utility functions
+ *
+ * Pure functions for creating, manipulating, and validating plane data.
+ * Planes are used for BSP tree operations and spatial partitioning.
  */
 export const createPlane = (normal: Vector, w: number): PlaneData => ({
   normal: normal.clone(),
@@ -100,8 +128,15 @@ export const flipPlane = (plane: PlaneData): PlaneData => ({
   w: -plane.w,
 });
 
+// ============================================================================
+// POLYGON OPERATIONS
+// ============================================================================
+
 /**
  * Polygon utility functions
+ *
+ * Pure functions for creating, manipulating, and validating polygon data.
+ * Polygons are the fundamental building blocks for CSG operations.
  */
 export const createPolygon = (vertices: VertexData[], shared: SharedData): PolygonData => {
   if (vertices.length < 3) {
@@ -133,8 +168,15 @@ export const flipPolygon = (polygon: PolygonData): PolygonData => ({
   plane: flipPlane(polygon.plane),
 });
 
+// ============================================================================
+// BSP CLASSIFICATION OPERATIONS
+// ============================================================================
+
 /**
  * BSP classification utility functions
+ *
+ * Pure functions for Binary Space Partitioning operations including
+ * point-to-plane classification and polygon splitting algorithms.
  */
 export const classifyPointToPlane = (point: Vector, plane: PlaneData): BSPClassification => {
   const { epsilon } = GEOMETRY_CONFIG.precision;
@@ -275,8 +317,15 @@ export const splitPolygonByPlane = (
   };
 };
 
+// ============================================================================
+// VALIDATION UTILITIES
+// ============================================================================
+
 /**
  * Validation utility functions
+ *
+ * Pure functions for validating geometric data integrity and consistency.
+ * Used throughout the system to ensure data quality and prevent errors.
  */
 export const isValidVertex = (vertex: VertexData): boolean => {
   return (

@@ -11,7 +11,6 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { MaterialConfig, Mesh3D } from '../types/renderer.types.js';
-import { createMaterial } from '../utils/material-utils.js';
 import {
   convertDifferenceNode,
   convertIntersectionNode,
@@ -31,6 +30,7 @@ import {
   convertTranslateNode,
 } from './converters/transformation-converter.js';
 import { CSGCoreService } from './csg-core.service.js';
+import { createMaterial } from './material.service.js';
 
 const logger = createLogger('ASTToCSGConverter');
 
