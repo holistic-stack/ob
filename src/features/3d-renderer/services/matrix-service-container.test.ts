@@ -6,23 +6,26 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MatrixCacheService } from './matrix-cache.service';
-import { MatrixConfigManagerService } from './matrix-config-manager.service';
-import { MatrixConversionService } from './matrix-conversion.service';
-import { MatrixOperationsAPI } from './matrix-operations.api';
-import { MatrixServiceContainer } from './matrix-service-container';
-import { MatrixTelemetryService } from './matrix-telemetry.service';
-import { MatrixValidationService } from './matrix-validation.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MatrixCacheService } from './matrix-cache.service.js';
+import { MatrixConfigManagerService } from './matrix-config-manager.service.js';
+import { MatrixConversionService } from './matrix-conversion.service.js';
+import { MatrixOperationsAPI } from './matrix-operations.api.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+import { MatrixTelemetryService } from './matrix-telemetry.service.js';
+import { MatrixValidationService } from './matrix-validation.service.js';
+
+const logger = createLogger('MatrixServiceContainerTest');
 
 describe('MatrixServiceContainer', () => {
   let container: MatrixServiceContainer;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixServiceContainerTest] Setting up test environment');
+    logger.init('Setting up test environment');
   });
 
   afterEach(async () => {
-    console.log('[END][MatrixServiceContainerTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     if (container) {
       await container.shutdown();
     }
@@ -30,7 +33,7 @@ describe('MatrixServiceContainer', () => {
 
   describe('Service Container Initialization', () => {
     it('should initialize with default configuration', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing default initialization');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing default initialization');
 
       container = new MatrixServiceContainer();
 
@@ -41,7 +44,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should initialize with custom configuration', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing custom configuration');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing custom configuration');
 
       container = new MatrixServiceContainer({
         enableTelemetry: false,
@@ -65,7 +68,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should support manual initialization', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing manual initialization');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing manual initialization');
 
       container = new MatrixServiceContainer({
         autoStartServices: false,
@@ -83,7 +86,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should register and retrieve core services', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing core service registration');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing core service registration');
 
       expect(container.hasService('cache')).toBe(true);
       expect(container.hasService('conversion')).toBe(true);
@@ -100,7 +103,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should register and retrieve optional services', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing optional service registration');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing optional service registration');
 
       const telemetryService = container.getTelemetryService();
       expect(telemetryService).toBeInstanceOf(MatrixTelemetryService);
@@ -113,7 +116,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should throw error for non-existent services', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing non-existent service error');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing non-existent service error');
 
       expect(() => {
         container.getService('nonExistentService');
@@ -121,7 +124,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should return null for disabled optional services', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing disabled optional services');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing disabled optional services');
 
       const containerWithoutOptional = new MatrixServiceContainer({
         enableTelemetry: false,
@@ -143,7 +146,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should inject dependencies correctly', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing dependency injection');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing dependency injection');
 
       const conversionService = container.getConversionService();
       const cacheService = container.getCacheService();
@@ -159,7 +162,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should handle service interdependencies', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing service interdependencies');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing service interdependencies');
 
       const telemetryService = container.getTelemetryService();
       const validationService = container.getValidationService();
@@ -182,7 +185,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should perform health checks on all services', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing health checks');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing health checks');
 
       const healthReport = await container.performHealthCheck();
 
@@ -203,7 +206,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should detect unhealthy services', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing unhealthy service detection');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing unhealthy service detection');
 
       // Simulate service errors by accessing private methods (for testing)
       const containerAny = container as unknown as { incrementErrorCount: (name: string) => void };
@@ -221,7 +224,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should provide health recommendations', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing health recommendations');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing health recommendations');
 
       const healthReport = await container.performHealthCheck();
 
@@ -240,7 +243,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should track service states correctly', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing service state tracking');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing service state tracking');
 
       const status = container.getStatus();
 
@@ -255,7 +258,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should handle service restart', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing service restart');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing service restart');
 
       const initialStatus = container.getStatus();
       expect(initialStatus.runningServices).toContain('cache');
@@ -272,7 +275,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should handle service restart failures gracefully', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing service restart failure handling');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing service restart failure handling');
 
       const result = await container.restartService('nonExistentService');
       expect(result.success).toBe(false);
@@ -288,7 +291,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should shutdown all services cleanly', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing clean shutdown');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing clean shutdown');
 
       const initialStatus = container.getStatus();
       expect(initialStatus.initialized).toBe(true);
@@ -303,7 +306,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should handle shutdown errors gracefully', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing shutdown error handling');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing shutdown error handling');
 
       // Mock a service with a failing dispose method
       const mockService = {
@@ -317,7 +320,7 @@ describe('MatrixServiceContainer', () => {
       containerAny.services.set('mockService', mockService);
       containerAny.serviceStates.set('mockService', 'running');
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'error').mockImplementation(() => {
         // do nothing
       });
 
@@ -334,7 +337,7 @@ describe('MatrixServiceContainer', () => {
 
   describe('Error Handling', () => {
     it('should handle initialization failures', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing initialization failure handling');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing initialization failure handling');
 
       // Mock a failing service initialization
       const _originalMatrixCacheService = (global as unknown as { MatrixCacheService: unknown })
@@ -348,7 +351,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should maintain container integrity on service failures', async () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing container integrity on failures');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing container integrity on failures');
 
       container = new MatrixServiceContainer();
 
@@ -377,7 +380,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should integrate with configuration manager', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing configuration manager integration');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing configuration manager integration');
 
       const configManager = container.getConfigManager();
       expect(configManager).toBeDefined();
@@ -391,7 +394,7 @@ describe('MatrixServiceContainer', () => {
     });
 
     it('should use configuration in dependent services', () => {
-      console.log('[DEBUG][MatrixServiceContainerTest] Testing configuration usage in services');
+      logger.debug('[DEBUG][MatrixServiceContainerTest] Testing configuration usage in services');
 
       const configManager = container.getConfigManager();
       const conversionService = container.getConversionService();

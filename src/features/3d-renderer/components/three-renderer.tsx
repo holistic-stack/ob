@@ -11,15 +11,18 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type React from 'react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { CameraConfig } from '../../../shared/types/common.types';
-import { tryCatch } from '../../../shared/utils/functional/result';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { CameraConfig } from '../../../shared/types/common.types.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
 import type {
   Mesh3D,
   RendererProps,
   RenderingError,
   RenderingMetrics,
   Scene3DConfig,
-} from '../types/renderer.types';
+} from '../types/renderer.types.js';
+
+const logger = createLogger('ThreeRenderer');
 
 // Type-safe interfaces for AST node parameters using proper OpenSCAD parser types
 interface _CubeNodeParams {
@@ -233,7 +236,7 @@ const SceneContent: React.FC<{
     for (let i = 0; i < ast.length; i++) {
       const node = ast[i];
       if (!node) {
-        console.warn(`[DEBUG][ThreeRenderer] Skipping undefined node at index ${i}`);
+        logger.warn(`Skipping undefined node at index ${i}`);
         continue;
       }
 
@@ -244,17 +247,11 @@ const SceneContent: React.FC<{
           scene.add(result.data.mesh);
           newMeshes.push(result.data);
         } else {
-          console.error(
-            `[ERROR][ThreeRenderer] Failed to render node ${i} (${node.type}):`,
-            result.error
-          );
+          logger.error(`Failed to render node ${i} (${node.type}):`, result.error);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(
-          `[ERROR][ThreeRenderer] Failed to create mesh for node ${i} (${node.type}):`,
-          errorMessage
-        );
+        logger.error(`Failed to create mesh for node ${i} (${node.type}):`, errorMessage);
       }
     }
 
@@ -447,7 +444,7 @@ export const ThreeRenderer: React.FC<RendererProps> = ({
         threeCamera.updateProjectionMatrix();
       }
 
-      console.log('[INIT][ThreeRenderer] Three.js renderer initialized');
+      logger.init('Three.js renderer initialized');
     },
     [config, camera]
   );

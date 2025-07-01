@@ -7,14 +7,17 @@
 
 import { Matrix } from 'ml-matrix';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { matrixFactory } from '../utils/matrix-adapters';
-import { MatrixCacheService } from './matrix-cache.service';
-import type { MatrixTelemetryService } from './matrix-telemetry.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { matrixFactory } from '../utils/matrix-adapters.js';
+import { MatrixCacheService } from './matrix-cache.service.js';
+import type { MatrixTelemetryService } from './matrix-telemetry.service.js';
 import {
   type MatrixValidationDependencies,
   MatrixValidationService,
-} from './matrix-validation.service';
+} from './matrix-validation.service.js';
+
+const logger = createLogger('MatrixValidationServiceTest');
 
 describe('MatrixValidationService', () => {
   let service: MatrixValidationService;
@@ -23,7 +26,7 @@ describe('MatrixValidationService', () => {
   let dependencies: MatrixValidationDependencies;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixValidationServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
 
     // Create real cache service for testing
     mockCache = new MatrixCacheService();
@@ -45,13 +48,13 @@ describe('MatrixValidationService', () => {
   });
 
   afterEach(() => {
-    console.log('[END][MatrixValidationServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     service.resetPerformanceMetrics();
   });
 
   describe('Dependency Injection', () => {
     it('should validate required dependencies on construction', () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing dependency validation');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing dependency validation');
 
       expect(() => {
         new MatrixValidationService({
@@ -69,7 +72,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should work without optional telemetry dependency', () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing optional telemetry dependency');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing optional telemetry dependency');
 
       const serviceWithoutTelemetry = new MatrixValidationService({
         cache: mockCache,
@@ -83,7 +86,7 @@ describe('MatrixValidationService', () => {
 
   describe('Basic Matrix Validation', () => {
     it('should validate well-conditioned identity matrix', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing identity matrix validation');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing identity matrix validation');
 
       const matrix = matrixFactory.identity(3);
 
@@ -108,7 +111,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should detect invalid matrix dimensions', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing invalid matrix dimensions');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing invalid matrix dimensions');
 
       const matrix = new Matrix(0, 0); // Invalid dimensions
 
@@ -121,7 +124,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should detect NaN and infinite values', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing NaN/infinite value detection');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing NaN/infinite value detection');
 
       const matrix = matrixFactory.identity(3);
       matrix.set(0, 0, NaN);
@@ -138,7 +141,7 @@ describe('MatrixValidationService', () => {
 
   describe('Numerical Stability Assessment', () => {
     it('should assess excellent stability for well-conditioned matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing excellent stability assessment');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing excellent stability assessment');
 
       const matrix = matrixFactory.diagonal([1, 2, 3]); // Well-conditioned
 
@@ -153,7 +156,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should assess poor stability for ill-conditioned matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing poor stability assessment');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing poor stability assessment');
 
       // Create an ill-conditioned matrix
       const matrix = new Matrix([
@@ -173,7 +176,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should detect singular matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing singular matrix detection');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing singular matrix detection');
 
       // Create a singular matrix (rank deficient)
       const matrix = new Matrix([
@@ -197,7 +200,7 @@ describe('MatrixValidationService', () => {
 
   describe('Matrix Property Analysis', () => {
     it('should correctly identify symmetric matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing symmetric matrix identification');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing symmetric matrix identification');
 
       const matrix = new Matrix([
         [1, 2, 3],
@@ -215,7 +218,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should correctly identify orthogonal matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing orthogonal matrix identification');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing orthogonal matrix identification');
 
       // Create a rotation matrix (orthogonal)
       const angle = Math.PI / 4;
@@ -234,7 +237,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should correctly identify positive definite matrices', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixValidationServiceTest] Testing positive definite matrix identification'
       );
 
@@ -257,7 +260,7 @@ describe('MatrixValidationService', () => {
 
   describe('Eigenvalue and SVD Analysis', () => {
     it('should compute eigenvalues when requested', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing eigenvalue computation');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing eigenvalue computation');
 
       const matrix = matrixFactory.diagonal([1, 2, 3]);
 
@@ -276,7 +279,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should compute singular values when requested', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing SVD computation');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing SVD computation');
 
       const matrix = matrixFactory.diagonal([3, 2, 1]);
 
@@ -298,7 +301,7 @@ describe('MatrixValidationService', () => {
 
   describe('Remediation Strategies', () => {
     it('should suggest SVD for unstable matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing SVD remediation suggestion');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing SVD remediation suggestion');
 
       // Create a very ill-conditioned matrix
       const matrix = new Matrix([
@@ -318,7 +321,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should suggest regularization for singular matrices', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing regularization suggestion');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing regularization suggestion');
 
       const matrix = new Matrix([
         [1, 2],
@@ -337,7 +340,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should suggest block processing for large matrices', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixValidationServiceTest] Testing large matrix processing suggestion'
       );
 
@@ -359,7 +362,7 @@ describe('MatrixValidationService', () => {
 
   describe('Caching and Performance', () => {
     it('should use cache for repeated validations', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing cache usage');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing cache usage');
 
       const matrix = matrixFactory.identity(3);
 
@@ -379,7 +382,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should track performance metrics', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing performance metrics');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing performance metrics');
 
       const matrix = matrixFactory.identity(3);
 
@@ -392,7 +395,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should track telemetry when available', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing telemetry tracking');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing telemetry tracking');
 
       const matrix = matrixFactory.identity(3);
 
@@ -408,7 +411,7 @@ describe('MatrixValidationService', () => {
 
   describe('Error Handling', () => {
     it('should handle validation errors gracefully', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing error handling');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing error handling');
 
       const matrix = new Matrix(0, 0); // Invalid matrix
 
@@ -421,7 +424,7 @@ describe('MatrixValidationService', () => {
     });
 
     it('should record failed operations in metrics', async () => {
-      console.log('[DEBUG][MatrixValidationServiceTest] Testing failure recording');
+      logger.debug('[DEBUG][MatrixValidationServiceTest] Testing failure recording');
 
       const initialMetrics = service.getPerformanceMetrics();
       const initialFailures = initialMetrics.failedOperations;

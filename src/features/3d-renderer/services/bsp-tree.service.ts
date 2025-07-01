@@ -5,10 +5,14 @@
  * extracted from Node.ts utility class following bulletproof-react service patterns.
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import type { BSPNodeData, PlaneData, PolygonData } from '../types/geometry.types';
-import { clonePolygon, isValidPolygon, splitPolygonByPlane } from '../utils/geometry-utils';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import type { BSPNodeData, PlaneData, PolygonData } from '../types/geometry.types.js';
+import { clonePolygon, isValidPolygon, splitPolygonByPlane } from '../utils/geometry-utils.js';
+import { createLogger } from '../../../shared/services/logger.service.js';
+
+const bspNodeLogger = createLogger('BSPTreeNode');
+const bspServiceLogger = createLogger('BSPTreeService');
 
 /**
  * BSP Tree Node implementation
@@ -21,12 +25,12 @@ export class BSPTreeNode implements BSPNodeData {
   public back?: BSPTreeNode;
 
   constructor(polygons?: PolygonData[]) {
-    console.log('[INIT][BSPTreeNode] Creating BSP tree node');
+    bspNodeLogger.init('Creating BSP tree node');
 
     if (polygons) {
       const buildResult = this.build(polygons);
       if (!buildResult.success) {
-        console.error('[ERROR][BSPTreeNode] Failed to build BSP tree:', buildResult.error);
+        bspNodeLogger.error('Failed to build BSP tree:', buildResult.error);
       }
     }
   }
@@ -35,7 +39,7 @@ export class BSPTreeNode implements BSPNodeData {
    * Clone this BSP tree node
    */
   clone(): BSPTreeNode {
-    console.log('[DEBUG][BSPTreeNode] Cloning BSP tree node');
+    bspNodeLogger.debug('Cloning BSP tree node');
 
     const node = new BSPTreeNode();
     if (this.plane) {
@@ -59,7 +63,7 @@ export class BSPTreeNode implements BSPNodeData {
    * Invert this BSP tree (convert solid space to empty space and vice versa)
    */
   invert(): Result<void, string> {
-    console.log('[DEBUG][BSPTreeNode] Inverting BSP tree');
+    bspNodeLogger.debug('Inverting BSP tree');
 
     try {
       // Flip all polygons
@@ -122,7 +126,7 @@ export class BSPTreeNode implements BSPNodeData {
       return success(undefined);
     } catch (err) {
       const errorMessage = `BSP tree inversion failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeNode]', errorMessage);
+      bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -131,7 +135,7 @@ export class BSPTreeNode implements BSPNodeData {
    * Remove all polygons that are inside this BSP tree
    */
   clipPolygons(polygons: PolygonData[]): Result<PolygonData[], string> {
-    console.log(`[DEBUG][BSPTreeNode] Clipping ${polygons.length} polygons`);
+    bspNodeLogger.debug(`Clipping ${polygons.length} polygons`);
 
     try {
       if (!this.plane) {
@@ -143,7 +147,7 @@ export class BSPTreeNode implements BSPNodeData {
 
       for (const polygon of polygons) {
         if (!isValidPolygon(polygon)) {
-          console.warn('[WARN][BSPTreeNode] Skipping invalid polygon during clipping');
+          bspNodeLogger.warn('Skipping invalid polygon during clipping');
           continue;
         }
 
@@ -169,7 +173,7 @@ export class BSPTreeNode implements BSPNodeData {
       return success(front.concat(back));
     } catch (err) {
       const errorMessage = `Polygon clipping failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeNode]', errorMessage);
+      bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -178,7 +182,7 @@ export class BSPTreeNode implements BSPNodeData {
    * Remove all polygons in this BSP tree that are inside the other BSP tree
    */
   clipTo(bsp: BSPTreeNode): Result<void, string> {
-    console.log('[DEBUG][BSPTreeNode] Clipping to another BSP tree');
+    bspNodeLogger.debug('Clipping to another BSP tree');
 
     try {
       const clipResult = bsp.clipPolygons(this.polygons);
@@ -199,7 +203,7 @@ export class BSPTreeNode implements BSPNodeData {
       return success(undefined);
     } catch (err) {
       const errorMessage = `BSP tree clipping failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeNode]', errorMessage);
+      bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -225,7 +229,7 @@ export class BSPTreeNode implements BSPNodeData {
    * Build a BSP tree from a list of polygons
    */
   build(polygons: PolygonData[]): Result<void, string> {
-    console.log(`[DEBUG][BSPTreeNode] Building BSP tree from ${polygons.length} polygons`);
+    bspNodeLogger.debug(`Building BSP tree from ${polygons.length} polygons`);
 
     try {
       if (polygons.length === 0) {
@@ -235,8 +239,8 @@ export class BSPTreeNode implements BSPNodeData {
       // Validate polygons
       const validPolygons = polygons.filter(isValidPolygon);
       if (validPolygons.length !== polygons.length) {
-        console.warn(
-          `[WARN][BSPTreeNode] Filtered out ${polygons.length - validPolygons.length} invalid polygons`
+        bspNodeLogger.warn(
+          `Filtered out ${polygons.length - validPolygons.length} invalid polygons`
         );
       }
 
@@ -254,7 +258,7 @@ export class BSPTreeNode implements BSPNodeData {
 
       for (const polygon of validPolygons) {
         if (!this.plane) {
-          console.warn('[BSPTreeNode] No plane defined for split operation');
+          bspNodeLogger.warn('No plane defined for split operation');
           continue;
         }
 
@@ -273,15 +277,15 @@ export class BSPTreeNode implements BSPNodeData {
 
       if (back.length > 0) {
         this.back ??= new BSPTreeNode();
-        const backBuildResult = this.back.build(back);
+        const backBuildResult = this.back.back.build(back);
         if (!backBuildResult.success) return backBuildResult;
       }
 
-      console.log('[DEBUG][BSPTreeNode] BSP tree build completed successfully');
+      bspNodeLogger.debug('BSP tree build completed successfully');
       return success(undefined);
     } catch (err) {
       const errorMessage = `BSP tree build failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeNode]', errorMessage);
+      bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -293,21 +297,21 @@ export class BSPTreeNode implements BSPNodeData {
  */
 export class BSPTreeService {
   constructor() {
-    console.log('[INIT][BSPTreeService] Initializing BSP tree service');
+    bspServiceLogger.init('Initializing BSP tree service');
   }
 
   /**
    * Create a new BSP tree from polygons
    */
   createBSPTree(polygons: PolygonData[]): Result<BSPTreeNode, string> {
-    console.log(`[DEBUG][BSPTreeService] Creating BSP tree from ${polygons.length} polygons`);
+    bspServiceLogger.debug(`Creating BSP tree from ${polygons.length} polygons`);
 
     try {
       const node = new BSPTreeNode(polygons);
       return success(node);
     } catch (err) {
       const errorMessage = `BSP tree creation failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeService]', errorMessage);
+      bspServiceLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -316,7 +320,7 @@ export class BSPTreeService {
    * Perform union operation on two BSP trees
    */
   union(treeA: BSPTreeNode, treeB: BSPTreeNode): Result<BSPTreeNode, string> {
-    console.log('[DEBUG][BSPTreeService] Performing BSP tree union');
+    bspServiceLogger.debug('Performing BSP tree union');
 
     try {
       const a = treeA.clone();
@@ -349,7 +353,7 @@ export class BSPTreeService {
       return success(a);
     } catch (err) {
       const errorMessage = `BSP tree union failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeService]', errorMessage);
+      bspServiceLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -358,7 +362,7 @@ export class BSPTreeService {
    * Perform subtraction operation on two BSP trees
    */
   subtract(treeA: BSPTreeNode, treeB: BSPTreeNode): Result<BSPTreeNode, string> {
-    console.log('[DEBUG][BSPTreeService] Performing BSP tree subtraction');
+    bspServiceLogger.debug('Performing BSP tree subtraction');
 
     try {
       const a = treeA.clone();
@@ -399,7 +403,7 @@ export class BSPTreeService {
       return success(a);
     } catch (err) {
       const errorMessage = `BSP tree subtraction failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeService]', errorMessage);
+      bspServiceLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -408,7 +412,7 @@ export class BSPTreeService {
    * Perform intersection operation on two BSP trees
    */
   intersect(treeA: BSPTreeNode, treeB: BSPTreeNode): Result<BSPTreeNode, string> {
-    console.log('[DEBUG][BSPTreeService] Performing BSP tree intersection');
+    bspServiceLogger.debug('Performing BSP tree intersection');
 
     try {
       const a = treeA.clone();
@@ -445,7 +449,7 @@ export class BSPTreeService {
       return success(a);
     } catch (err) {
       const errorMessage = `BSP tree intersection failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][BSPTreeService]', errorMessage);
+      bspServiceLogger.error(errorMessage);
       return error(errorMessage);
     }
   }

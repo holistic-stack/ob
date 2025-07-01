@@ -10,32 +10,35 @@ import type {
   UnionNode,
 } from '@holistic-stack/openscad-parser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createASTRestructuringService, restructureAST } from './ast-restructuring-service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { createASTRestructuringService, restructureAST } from './ast-restructuring-service.js';
+
+const logger = createLogger('ASTRestructuringServiceTest');
 
 describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
   beforeEach(() => {
-    console.log('[INIT][ASTRestructuringServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
   });
 
   afterEach(() => {
-    console.log('[END][ASTRestructuringServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
   });
 
   describe('restructureAST', () => {
     it('should handle empty AST', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing empty AST');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing empty AST');
 
       const result = restructureAST([]);
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toEqual([]);
-        console.log('[DEBUG][ASTRestructuringServiceTest] Empty AST handled correctly');
+        logger.debug('[DEBUG][ASTRestructuringServiceTest] Empty AST handled correctly');
       }
     });
 
     it('should handle single node AST', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing single node AST');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing single node AST');
 
       const cubeNode: CubeNode = {
         type: 'cube',
@@ -52,12 +55,12 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toEqual([cubeNode]);
-        console.log('[DEBUG][ASTRestructuringServiceTest] Single node AST handled correctly');
+        logger.debug('[DEBUG][ASTRestructuringServiceTest] Single node AST handled correctly');
       }
     });
 
     it('should restructure flat AST with union and primitives', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing union restructuring');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing union restructuring');
 
       // Simulate flat AST structure from parser
       const unionNode: UnionNode = {
@@ -108,12 +111,12 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         expect(childTypes).toContain('cube');
         expect(childTypes).toContain('sphere');
 
-        console.log('[DEBUG][ASTRestructuringServiceTest] Union restructuring successful');
+        logger.debug('[DEBUG][ASTRestructuringServiceTest] Union restructuring successful');
       }
     });
 
     it('should restructure nested transform with CSG operation', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing nested transform restructuring');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing nested transform restructuring');
 
       // Simulate translate(union(cube, sphere)) structure
       const translateNode: TranslateNode = {
@@ -179,14 +182,14 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         expect(primitiveTypes).toContain('cube');
         expect(primitiveTypes).toContain('sphere');
 
-        console.log(
+        logger.debug(
           '[DEBUG][ASTRestructuringServiceTest] Nested transform restructuring successful'
         );
       }
     });
 
     it('should handle nodes without source locations gracefully', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing nodes without source locations');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing nodes without source locations');
 
       const unionNode: UnionNode = {
         type: 'union',
@@ -214,7 +217,7 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
         expect(restructuredAST[0]?.type).toBe('union');
         expect(restructuredAST[1]?.type).toBe('cube');
 
-        console.log(
+        logger.debug(
           '[DEBUG][ASTRestructuringServiceTest] Nodes without locations handled gracefully'
         );
       }
@@ -223,7 +226,7 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
 
   describe('createASTRestructuringService', () => {
     it('should create service with default config', () => {
-      console.log('[DEBUG][ASTRestructuringServiceTest] Testing service creation');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Testing service creation');
 
       const service = createASTRestructuringService();
 
@@ -232,11 +235,11 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
       expect(service.config.enableSourceLocationAnalysis).toBe(true);
       expect(typeof service.restructure).toBe('function');
 
-      console.log('[DEBUG][ASTRestructuringServiceTest] Service creation successful');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Service creation successful');
     });
 
     it('should create service with custom config', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][ASTRestructuringServiceTest] Testing service creation with custom config'
       );
 
@@ -249,7 +252,7 @@ describe('[INIT][ASTRestructuringService] AST Restructuring Service', () => {
       expect(service.config.maxDepth).toBe(5);
       expect(service.config.enableSourceLocationAnalysis).toBe(true); // Default value
 
-      console.log('[DEBUG][ASTRestructuringServiceTest] Custom service creation successful');
+      logger.debug('[DEBUG][ASTRestructuringServiceTest] Custom service creation successful');
     });
   });
 });

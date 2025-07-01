@@ -6,8 +6,11 @@
  */
 
 import * as monaco from 'monaco-editor';
-import { tryCatch } from '../../../shared/utils/functional/result';
-import type { OpenSCADLanguageConfig } from '../types/editor.types';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
+import type { OpenSCADLanguageConfig } from '../types/editor.types.js';
+
+const logger = createLogger('OpenSCADLanguage');
 
 /**
  * OpenSCAD language configuration
@@ -301,7 +304,7 @@ export const registerOpenSCADLanguage = (monaco: typeof import('monaco-editor'))
       // Set tokenizer for syntax highlighting
       monaco.languages.setMonarchTokensProvider('openscad', MONACO_TOKENIZER);
 
-      console.log('[INIT][OpenSCADLanguage] OpenSCAD language registered successfully');
+      logger.init('OpenSCAD language registered successfully');
 
       return undefined;
     },
@@ -380,7 +383,7 @@ export const registerOpenSCADCompletionProvider = (monaco: typeof import('monaco
       const provider = createOpenSCADCompletionProvider();
       const disposable = monaco.languages.registerCompletionItemProvider('openscad', provider);
 
-      console.log('[INIT][OpenSCADLanguage] OpenSCAD completion provider registered successfully');
+      logger.init('OpenSCAD completion provider registered successfully');
 
       return disposable;
     },

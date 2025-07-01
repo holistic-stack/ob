@@ -20,8 +20,11 @@ import type {
 } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 
-import { convertASTNodesToCSGUnion, convertASTNodeToCSG } from './ast-to-csg-converter';
+import { convertASTNodesToCSGUnion, convertASTNodeToCSG } from './ast-to-csg-converter.js';
+
+const logger = createLogger('ASTToCSGConverterTest');
 
 /**
  * Mirror node interface for testing
@@ -47,12 +50,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   let scene: THREE.Scene;
 
   beforeEach(() => {
-    console.log('[INIT][ASTToCSGConverterTest] Setting up test environment');
+    logger.init('Setting up test environment');
     scene = new THREE.Scene();
   });
 
   afterEach(() => {
-    console.log('[END][ASTToCSGConverterTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     // Dispose of all scene objects
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
@@ -69,7 +72,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
   describe('convertASTNodeToCSG', () => {
     it('should convert cube AST node to CSG mesh', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing cube conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing cube conversion');
 
       const cubeNode: CubeNode = {
         type: 'cube',
@@ -114,12 +117,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Test disposal
         expect(() => mesh3D.dispose()).not.toThrow();
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Cube conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Cube conversion successful');
       }
     });
 
     it('should convert sphere AST node to CSG mesh', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing sphere conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing sphere conversion');
 
       const sphereNode: SphereNode = {
         type: 'sphere',
@@ -152,12 +155,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         const boundingBox = geometry.boundingBox;
         expect(boundingBox?.getSize(new THREE.Vector3())).toEqual(new THREE.Vector3(10, 10, 10));
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Sphere conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Sphere conversion successful');
       }
     });
 
     it('should convert cylinder AST node to CSG mesh', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing cylinder conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing cylinder conversion');
 
       const cylinderNode: CylinderNode = {
         type: 'cylinder',
@@ -195,12 +198,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Verify positioning (cylinder should be positioned with base at origin when center=false)
         expect(mesh3D.mesh.position.y).toBeCloseTo(7.5, 1); // height / 2
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Cylinder conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Cylinder conversion successful');
       }
     });
 
     it('should handle unsupported AST node types', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing unsupported node type');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing unsupported node type');
 
       // Create a mock unsupported node that extends the base ASTNode interface
       const unsupportedNode = {
@@ -217,12 +220,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Unsupported AST node type for CSG conversion: unsupported');
-        console.log('[DEBUG][ASTToCSGConverterTest] Unsupported node type handled correctly');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Unsupported node type handled correctly');
       }
     });
 
     it('should apply custom material configuration', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing custom material configuration');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing custom material configuration');
 
       const cubeNode: CubeNode = {
         type: 'cube',
@@ -264,7 +267,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.color).toBe('#ff0000');
         expect(mesh3D.metadata.opacity).toBe(0.8);
 
-        console.log(
+        logger.debug(
           '[DEBUG][ASTToCSGConverterTest] Custom material configuration applied correctly'
         );
       }
@@ -273,7 +276,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
   describe('Transformation Operations', () => {
     it('should convert translate node with child', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing translate node conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing translate node conversion');
 
       const cubeChild: CubeNode = {
         type: 'cube',
@@ -314,12 +317,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('translate');
         expect(mesh3D.metadata.nodeIndex).toBe(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Translate node conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Translate node conversion successful');
       }
     });
 
     it('should convert rotate node with child', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing rotate node conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing rotate node conversion');
 
       const sphereChild: SphereNode = {
         type: 'sphere',
@@ -359,12 +362,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('rotate');
         expect(mesh3D.metadata.nodeIndex).toBe(1);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Rotate node conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Rotate node conversion successful');
       }
     });
 
     it('should convert scale node with child', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing scale node conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing scale node conversion');
 
       const cylinderChild: CylinderNode = {
         type: 'cylinder',
@@ -406,12 +409,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('scale');
         expect(mesh3D.metadata.nodeIndex).toBe(2);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Scale node conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Scale node conversion successful');
       }
     });
 
     it('should handle transformation nodes without children', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing transformation node without children');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing transformation node without children');
 
       const translateNode: TranslateNode = {
         type: 'translate',
@@ -428,14 +431,14 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Translate node must have children');
-        console.log('[DEBUG][ASTToCSGConverterTest] Empty transformation node handled correctly');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Empty transformation node handled correctly');
       }
     });
   });
 
   describe('Advanced Operations', () => {
     it('should convert mirror node with child', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing mirror node conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing mirror node conversion');
 
       const cubeChild: CubeNode = {
         type: 'cube',
@@ -476,12 +479,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('mirror');
         expect(mesh3D.metadata.nodeIndex).toBe(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Mirror node conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Mirror node conversion successful');
       }
     });
 
     it('should convert rotate_extrude node', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing rotate_extrude node conversion');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing rotate_extrude node conversion');
 
       const rotateExtrudeNode: RotateExtrudeNode = {
         type: 'rotate_extrude',
@@ -507,14 +510,14 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('rotate_extrude');
         expect(mesh3D.metadata.nodeIndex).toBe(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Rotate_extrude node conversion successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Rotate_extrude node conversion successful');
       }
     });
   });
 
   describe('CSG Boolean Operations', () => {
     it('should convert union node with placeholder when no children', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing union node without children');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing union node without children');
 
       const unionNode: UnionNode = {
         type: 'union',
@@ -539,12 +542,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('union');
         expect(mesh3D.metadata.nodeIndex).toBe(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Union placeholder creation successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Union placeholder creation successful');
       }
     });
 
     it('should convert intersection node with placeholder when no children', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing intersection node without children');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing intersection node without children');
 
       const intersectionNode: IntersectionNode = {
         type: 'intersection',
@@ -569,12 +572,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('intersection');
         expect(mesh3D.metadata.nodeIndex).toBe(1);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Intersection placeholder creation successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Intersection placeholder creation successful');
       }
     });
 
     it('should convert difference node with placeholder when no children', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing difference node without children');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing difference node without children');
 
       const differenceNode: DifferenceNode = {
         type: 'difference',
@@ -599,14 +602,14 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('difference');
         expect(mesh3D.metadata.nodeIndex).toBe(2);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Difference placeholder creation successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Difference placeholder creation successful');
       }
     });
   });
 
   describe('convertASTNodesToCSGUnion', () => {
     it('should create CSG union from multiple AST nodes', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing CSG union operation');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing CSG union operation');
 
       const nodes = [
         {
@@ -648,12 +651,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.mesh.geometry).not.toBeInstanceOf(THREE.BoxGeometry);
         expect(mesh3D.mesh.geometry).not.toBeInstanceOf(THREE.SphereGeometry);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] CSG union operation successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] CSG union operation successful');
       }
     });
 
     it('should handle single node as pass-through', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing single node pass-through');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing single node pass-through');
 
       const nodes = [
         {
@@ -678,26 +681,26 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.metadata.nodeType).toBe('union');
         expect(mesh3D.metadata.triangleCount).toBeGreaterThan(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Single node pass-through successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Single node pass-through successful');
       }
     });
 
     it('should handle empty node array', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing empty node array');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing empty node array');
 
       const result = await convertASTNodesToCSGUnion([]);
 
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('No AST nodes provided for CSG union');
-        console.log('[DEBUG][ASTToCSGConverterTest] Empty node array handled correctly');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Empty node array handled correctly');
       }
     });
   });
 
   describe('Performance and Memory Management', () => {
     it('should complete conversion within performance requirements', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing performance requirements');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing performance requirements');
 
       const cubeNode: CubeNode = {
         type: 'cube',
@@ -717,13 +720,13 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
       expect(result.success).toBe(true);
       expect(duration).toBeLessThan(100); // Should complete within 100ms
 
-      console.log(
+      logger.debug(
         `[DEBUG][ASTToCSGConverterTest] Conversion completed in ${duration.toFixed(2)}ms`
       );
     });
 
     it('should properly dispose of resources', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing resource disposal');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing resource disposal');
 
       const sphereNode: SphereNode = {
         type: 'sphere',
@@ -751,14 +754,14 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         const positionAttribute = mesh3D.mesh.geometry.getAttribute('position');
         expect(positionAttribute).toBeDefined();
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Resource disposal successful');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Resource disposal successful');
       }
     });
   });
 
   describe('Validation Test Case', () => {
     it('should handle the specific OpenSCAD validation case with correct positioning', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][ASTToCSGConverterTest] Testing validation case with translate and boolean operations'
       );
 
@@ -817,12 +820,12 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         // Verify metadata
         expect(mesh3D.metadata.nodeType).toBe('translate');
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Left translate positioning verified: X=-24');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Left translate positioning verified: X=-24');
       }
     });
 
     it('should handle translate with positive X coordinate (right side)', async () => {
-      console.log('[DEBUG][ASTToCSGConverterTest] Testing right side translate positioning');
+      logger.debug('[DEBUG][ASTToCSGConverterTest] Testing right side translate positioning');
 
       // Test translate with positive X coordinate (right side)
       const rightTranslateNode: TranslateNode = {
@@ -873,7 +876,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
         expect(mesh3D.mesh.position.y).toBe(0);
         expect(mesh3D.mesh.position.z).toBe(0);
 
-        console.log('[DEBUG][ASTToCSGConverterTest] Right translate positioning verified: X=24');
+        logger.debug('[DEBUG][ASTToCSGConverterTest] Right translate positioning verified: X=24');
       }
     });
   });

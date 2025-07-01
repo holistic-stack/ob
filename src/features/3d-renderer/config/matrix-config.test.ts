@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import {
   getBatchSize,
   getCacheConfig,
@@ -22,12 +23,14 @@ import {
   isMemoryUsageValid,
   MATRIX_CONFIG,
   shouldUseParallel,
-} from './matrix-config';
+} from './matrix-config.js';
+
+const logger = createLogger('MatrixConfigTest');
 
 describe('Matrix Configuration', () => {
   describe('Configuration Structure', () => {
     it('should have all required configuration sections', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing configuration structure');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing configuration structure');
 
       expect(MATRIX_CONFIG.performance).toBeDefined();
       expect(MATRIX_CONFIG.cache).toBeDefined();
@@ -39,7 +42,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should have valid performance configuration', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing performance configuration');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing performance configuration');
 
       const perf = MATRIX_CONFIG.performance;
       expect(perf.maxDirectOperationSize).toBeGreaterThan(0);
@@ -52,7 +55,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should have valid cache configuration', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cache configuration');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cache configuration');
 
       const cache = MATRIX_CONFIG.cache;
       expect(cache.maxCacheSize).toBeGreaterThan(0);
@@ -63,7 +66,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should have valid operation defaults', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing operation defaults');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing operation defaults');
 
       const ops = MATRIX_CONFIG.operations;
       expect(ops.precision).toBeGreaterThan(0);
@@ -78,35 +81,35 @@ describe('Matrix Configuration', () => {
 
   describe('Configuration Getters', () => {
     it('should return performance thresholds correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing performance thresholds getter');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing performance thresholds getter');
 
       const thresholds = getMatrixPerformanceThresholds();
       expect(thresholds).toEqual(MATRIX_CONFIG.performance);
     });
 
     it('should return cache config correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cache config getter');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cache config getter');
 
       const cacheConfig = getCacheConfig();
       expect(cacheConfig).toEqual(MATRIX_CONFIG.cache);
     });
 
     it('should return operation defaults correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing operation defaults getter');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing operation defaults getter');
 
       const defaults = getOperationDefaults();
       expect(defaults).toEqual(MATRIX_CONFIG.operations);
     });
 
     it('should return Three.js config correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing Three.js config getter');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing Three.js config getter');
 
       const threeConfig = getThreeJSConfig();
       expect(threeConfig).toEqual(MATRIX_CONFIG.threeJS);
     });
 
     it('should return CSG config correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing CSG config getter');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing CSG config getter');
 
       const csgConfig = getCSGConfig();
       expect(csgConfig).toEqual(MATRIX_CONFIG.csg);
@@ -115,7 +118,7 @@ describe('Matrix Configuration', () => {
 
   describe('Matrix Size Validation', () => {
     it('should validate matrix sizes correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing matrix size validation');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing matrix size validation');
 
       // Valid sizes
       expect(isMatrixSizeValid(10, 10)).toBe(true);
@@ -127,7 +130,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should identify cacheable matrices correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cacheable matrix identification');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cacheable matrix identification');
 
       // Small matrix - should be cacheable
       expect(isMatrixCacheable(10, 10)).toBe(true);
@@ -138,7 +141,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should identify large matrices correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing large matrix identification');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing large matrix identification');
 
       // Small matrix
       expect(isLargeMatrix(10, 10)).toBe(false);
@@ -151,7 +154,7 @@ describe('Matrix Configuration', () => {
 
   describe('Batch Size Calculation', () => {
     it('should calculate batch size correctly for small matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing batch size for small matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing batch size for small matrices');
 
       const smallSize = 100;
       const batchSize = getBatchSize(smallSize);
@@ -159,7 +162,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should limit batch size for large matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing batch size for large matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing batch size for large matrices');
 
       const largeSize = MATRIX_CONFIG.performance.batchSize * 2;
       const batchSize = getBatchSize(largeSize);
@@ -169,7 +172,7 @@ describe('Matrix Configuration', () => {
 
   describe('Memory Usage Validation', () => {
     it('should validate memory usage correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing memory usage validation');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing memory usage validation');
 
       // Valid memory usage
       const validUsage = MATRIX_CONFIG.performance.maxMemoryUsage / 2;
@@ -183,7 +186,7 @@ describe('Matrix Configuration', () => {
 
   describe('Cache Key Generation', () => {
     it('should generate cache keys correctly', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cache key generation');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cache key generation');
 
       const key = getCacheKey('add', 'hash1', 'hash2');
       expect(key).toBe('matrix_add_hash1_hash2');
@@ -191,14 +194,14 @@ describe('Matrix Configuration', () => {
     });
 
     it('should handle different parameter types in cache keys', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cache key with mixed parameters');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cache key with mixed parameters');
 
       const key = getCacheKey('multiply', 'hash1', 42, 'hash2');
       expect(key).toBe('matrix_multiply_hash1_42_hash2');
     });
 
     it('should handle empty parameters in cache keys', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing cache key with no parameters');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing cache key with no parameters');
 
       const key = getCacheKey('transpose');
       expect(key).toBe('matrix_transpose_');
@@ -207,21 +210,21 @@ describe('Matrix Configuration', () => {
 
   describe('Parallel Processing Configuration', () => {
     it('should determine parallel processing correctly for small matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing parallel processing for small matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing parallel processing for small matrices');
 
       const smallSize = 100;
       expect(shouldUseParallel(smallSize)).toBe(false);
     });
 
     it('should determine parallel processing correctly for large matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing parallel processing for large matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing parallel processing for large matrices');
 
       const largeSize = MATRIX_CONFIG.performance.largeMatrixThreshold;
       expect(shouldUseParallel(largeSize)).toBe(true);
     });
 
     it('should respect parallel processing configuration', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing parallel processing configuration respect');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing parallel processing configuration respect');
 
       // Test assumes enableParallel is true in config
       const largeSize = MATRIX_CONFIG.performance.largeMatrixThreshold;
@@ -231,7 +234,7 @@ describe('Matrix Configuration', () => {
 
   describe('Worker Thread Configuration', () => {
     it('should return valid worker thread count', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing worker thread count');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing worker thread count');
 
       const threadCount = getWorkerThreadCount();
       expect(threadCount).toBeGreaterThan(0);
@@ -239,7 +242,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should respect hardware concurrency limits', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing hardware concurrency limits');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing hardware concurrency limits');
 
       const threadCount = getWorkerThreadCount();
       const hardwareConcurrency = navigator.hardwareConcurrency || 4;
@@ -249,7 +252,7 @@ describe('Matrix Configuration', () => {
 
   describe('Operation Timeout Calculation', () => {
     it('should calculate timeout correctly for small matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing timeout for small matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing timeout for small matrices');
 
       const smallSize = 100;
       const timeout = getOperationTimeout(smallSize);
@@ -257,7 +260,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should scale timeout for large matrices', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing timeout scaling for large matrices');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing timeout scaling for large matrices');
 
       const largeSize = MATRIX_CONFIG.performance.maxDirectOperationSize * 2;
       const timeout = getOperationTimeout(largeSize);
@@ -265,7 +268,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should cap timeout at maximum value', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing timeout maximum cap');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing timeout maximum cap');
 
       const veryLargeSize = MATRIX_CONFIG.performance.maxDirectOperationSize * 10;
       const timeout = getOperationTimeout(veryLargeSize);
@@ -276,7 +279,7 @@ describe('Matrix Configuration', () => {
 
   describe('Configuration Immutability', () => {
     it('should be read-only configuration object', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing configuration read-only nature');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing configuration read-only nature');
 
       // Configuration should be accessible for reading
       const originalValue = MATRIX_CONFIG.performance.maxDirectOperationSize;
@@ -293,7 +296,7 @@ describe('Matrix Configuration', () => {
 
   describe('Configuration Consistency', () => {
     it('should have consistent size relationships', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing configuration consistency');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing configuration consistency');
 
       const perf = MATRIX_CONFIG.performance;
 
@@ -309,7 +312,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should have consistent memory relationships', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing memory configuration consistency');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing memory configuration consistency');
 
       const perf = MATRIX_CONFIG.performance;
       const cache = MATRIX_CONFIG.cache;
@@ -319,7 +322,7 @@ describe('Matrix Configuration', () => {
     });
 
     it('should have consistent timeout relationships', () => {
-      console.log('[DEBUG][MatrixConfigTest] Testing timeout configuration consistency');
+      logger.debug('[DEBUG][MatrixConfigTest] Testing timeout configuration consistency');
 
       const perf = MATRIX_CONFIG.performance;
       const errorHandling = MATRIX_CONFIG.errorHandling;

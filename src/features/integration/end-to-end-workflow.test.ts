@@ -7,14 +7,17 @@
 
 import { BoxGeometry, CylinderGeometry, Mesh, SphereGeometry } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import {
   convertASTNodesToCSGUnion,
   convertASTNodeToCSG,
-} from '../3d-renderer/services/ast-to-csg-converter';
-import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service';
-import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container';
-import { parseOpenSCADCode } from '../openscad-parser/services/parser-manager';
-import { useAppStore } from '../store/app-store';
+} from '../3d-renderer/services/ast-to-csg-converter.js';
+import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service.js';
+import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container.js';
+import { parseOpenSCADCode } from '../openscad-parser/services/parser-manager.js';
+import { useAppStore } from '../store/app-store.js';
+
+const logger = createLogger('E2EWorkflowTest');
 
 /**
  * End-to-end test scenarios
@@ -189,7 +192,7 @@ describe('End-to-End Workflow Validation', () => {
   let matrixIntegrationService: MatrixIntegrationService;
 
   beforeEach(() => {
-    console.log('[INIT][E2EWorkflowTest] Setting up end-to-end test environment');
+    logger.init('Setting up end-to-end test environment');
 
     // Initialize matrix services
     matrixServiceContainer = new MatrixServiceContainer({
@@ -240,7 +243,7 @@ describe('End-to-End Workflow Validation', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][E2EWorkflowTest] Cleaning up end-to-end test environment');
+    logger.end('Cleaning up end-to-end test environment');
     await matrixIntegrationService.shutdown();
   });
 
@@ -248,7 +251,7 @@ describe('End-to-End Workflow Validation', () => {
     it(
       'should complete full workflow for simple cube',
       async () => {
-        console.log('[DEBUG][E2EWorkflowTest] Testing simple cube workflow');
+        logger.debug('[DEBUG][E2EWorkflowTest] Testing simple cube workflow');
 
         const scenario = E2E_TEST_SCENARIOS.simplePrimitive;
 
@@ -335,7 +338,7 @@ describe('End-to-End Workflow Validation', () => {
           };
         });
 
-        console.log('[DEBUG][E2EWorkflowTest] Simple cube workflow metrics:', metrics);
+        logger.debug('[DEBUG][E2EWorkflowTest] Simple cube workflow metrics:', metrics);
 
         // Validate workflow performance
         expect(metrics.success).toBe(true);
@@ -356,7 +359,7 @@ describe('End-to-End Workflow Validation', () => {
     it(
       'should handle sphere primitive with matrix transformations',
       async () => {
-        console.log('[DEBUG][E2EWorkflowTest] Testing sphere with transformations');
+        logger.debug('[DEBUG][E2EWorkflowTest] Testing sphere with transformations');
 
         const code = 'translate([10,5,0]) scale([2,1,1]) sphere(5);';
 
@@ -401,7 +404,7 @@ describe('End-to-End Workflow Validation', () => {
     it(
       'should handle complex nested transformations',
       async () => {
-        console.log('[DEBUG][E2EWorkflowTest] Testing complex transformation workflow');
+        logger.debug('[DEBUG][E2EWorkflowTest] Testing complex transformation workflow');
 
         const scenario = E2E_TEST_SCENARIOS.complexTransformation;
 
@@ -448,7 +451,7 @@ describe('End-to-End Workflow Validation', () => {
     it(
       'should handle multiple primitives with union operation',
       async () => {
-        console.log('[DEBUG][E2EWorkflowTest] Testing multiple primitives workflow');
+        logger.debug('[DEBUG][E2EWorkflowTest] Testing multiple primitives workflow');
 
         const scenario = E2E_TEST_SCENARIOS.multiplePrimitives;
 
@@ -498,7 +501,7 @@ describe('End-to-End Workflow Validation', () => {
     it(
       'should handle difference operation with matrix validation',
       async () => {
-        console.log('[DEBUG][E2EWorkflowTest] Testing boolean operations workflow');
+        logger.debug('[DEBUG][E2EWorkflowTest] Testing boolean operations workflow');
 
         const scenario = E2E_TEST_SCENARIOS.booleanOperations;
 
@@ -544,7 +547,7 @@ describe('End-to-End Workflow Validation', () => {
 
   describe('Performance and Integration Validation', () => {
     it('should maintain performance targets across full workflow', async () => {
-      console.log('[DEBUG][E2EWorkflowTest] Testing performance targets');
+      logger.debug('[DEBUG][E2EWorkflowTest] Testing performance targets');
 
       const testCases = [
         E2E_TEST_SCENARIOS.simplePrimitive,
@@ -585,7 +588,7 @@ describe('End-to-End Workflow Validation', () => {
 
       // Validate performance targets
       performanceResults.forEach(({ scenario, metrics }) => {
-        console.log(`[DEBUG][E2EWorkflowTest] ${scenario} performance:`, metrics);
+        logger.debug(`[DEBUG][E2EWorkflowTest] ${scenario} performance:`, metrics);
 
         expect(metrics.success).toBe(true);
         expect(metrics.totalWorkflowTime).toBeLessThan(5000); // <5s for any workflow
@@ -602,7 +605,7 @@ describe('End-to-End Workflow Validation', () => {
     }, 30000);
 
     it('should validate service integration consistency', async () => {
-      console.log('[DEBUG][E2EWorkflowTest] Testing service integration consistency');
+      logger.debug('[DEBUG][E2EWorkflowTest] Testing service integration consistency');
 
       const code = 'rotate([45,0,0]) cube([10,10,10]);';
 

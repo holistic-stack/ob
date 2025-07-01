@@ -6,13 +6,16 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { UnifiedParserService } from './unified-parser-service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { UnifiedParserService } from './unified-parser-service.js';
 import {
   createUnifiedParserService,
   disposeGlobalUnifiedParserService,
   getGlobalUnifiedParserService,
   parseOpenSCADCodeUnified,
-} from './unified-parser-service';
+} from './unified-parser-service.js';
+
+const logger = createLogger('UnifiedParserServiceTest');
 
 describe('UnifiedParserService', () => {
   let service: UnifiedParserService;
@@ -40,18 +43,18 @@ describe('UnifiedParserService', () => {
     });
 
     it('should transition to ready state after initialization', async () => {
-      console.log('[DEBUG][Test] Testing initialization');
+      logger.debug('[DEBUG][Test] Testing initialization');
 
       await service.initialize();
 
       expect(service.getState()).toBe('ready');
       expect(service.isReady()).toBe(true);
 
-      console.log('[END][Test] Initialization test completed');
+      logger.debug('[END][Test] Initialization test completed');
     }, 30000);
 
     it('should handle multiple initialization calls gracefully', async () => {
-      console.log('[DEBUG][Test] Testing multiple initialization calls');
+      logger.debug('[DEBUG][Test] Testing multiple initialization calls');
 
       const init1 = service.initialize();
       const init2 = service.initialize();
@@ -61,7 +64,7 @@ describe('UnifiedParserService', () => {
 
       expect(service.getState()).toBe('ready');
 
-      console.log('[END][Test] Multiple initialization test completed');
+      logger.debug('[END][Test] Multiple initialization test completed');
     }, 30000);
   });
 
@@ -71,7 +74,7 @@ describe('UnifiedParserService', () => {
     });
 
     it('should parse simple cube code successfully', async () => {
-      console.log('[DEBUG][Test] Testing cube parsing');
+      logger.debug('[DEBUG][Test] Testing cube parsing');
 
       const code = 'cube([10,10,10]);';
       const result = await service.parseDocument(code);
@@ -87,15 +90,15 @@ describe('UnifiedParserService', () => {
 
         if (parseResult.ast) {
           expect(parseResult.ast.length).toBeGreaterThan(0);
-          console.log('[DEBUG][Test] Parsed AST:', parseResult.ast[0]);
+          logger.debug('[DEBUG][Test] Parsed AST:', parseResult.ast[0]);
         }
       }
 
-      console.log('[END][Test] Cube parsing test completed');
+      logger.debug('[END][Test] Cube parsing test completed');
     }, 30000);
 
     it('should parse sphere code successfully', async () => {
-      console.log('[DEBUG][Test] Testing sphere parsing');
+      logger.debug('[DEBUG][Test] Testing sphere parsing');
 
       const code = 'sphere(r=5);';
       const result = await service.parseDocument(code);
@@ -112,11 +115,11 @@ describe('UnifiedParserService', () => {
         }
       }
 
-      console.log('[END][Test] Sphere parsing test completed');
+      logger.debug('[END][Test] Sphere parsing test completed');
     }, 30000);
 
     it('should handle empty code gracefully', async () => {
-      console.log('[DEBUG][Test] Testing empty code parsing');
+      logger.debug('[DEBUG][Test] Testing empty code parsing');
 
       const result = await service.parseDocument('');
 
@@ -128,11 +131,11 @@ describe('UnifiedParserService', () => {
         expect(parseResult.cst).toBeDefined();
       }
 
-      console.log('[END][Test] Empty code parsing test completed');
+      logger.debug('[END][Test] Empty code parsing test completed');
     }, 30000);
 
     it('should handle complex OpenSCAD code', async () => {
-      console.log('[DEBUG][Test] Testing complex code parsing');
+      logger.debug('[DEBUG][Test] Testing complex code parsing');
 
       const code = `
         module myModule(size = 10) {
@@ -157,11 +160,11 @@ describe('UnifiedParserService', () => {
         expect(parseResult.ast).toBeDefined();
       }
 
-      console.log('[END][Test] Complex code parsing test completed');
+      logger.debug('[END][Test] Complex code parsing test completed');
     }, 30000);
 
     it('should cache parse results', async () => {
-      console.log('[DEBUG][Test] Testing parse result caching');
+      logger.debug('[DEBUG][Test] Testing parse result caching');
 
       const code = 'cube([5,5,5]);';
 
@@ -180,10 +183,10 @@ describe('UnifiedParserService', () => {
       expect(result2.success).toBe(true);
       expect(duration2).toBeLessThan(duration1); // Should be faster due to caching
 
-      console.log(
+      logger.debug(
         `[DEBUG][Test] First parse: ${duration1.toFixed(2)}ms, Cached parse: ${duration2.toFixed(2)}ms`
       );
-      console.log('[END][Test] Parse result caching test completed');
+      logger.debug('[END][Test] Parse result caching test completed');
     }, 30000);
   });
 
@@ -193,7 +196,7 @@ describe('UnifiedParserService', () => {
     });
 
     it('should maintain document state after parsing', async () => {
-      console.log('[DEBUG][Test] Testing document state management');
+      logger.debug('[DEBUG][Test] Testing document state management');
 
       const code = 'cube([10,10,10]);';
       const result = await service.parseDocument(code);
@@ -213,11 +216,11 @@ describe('UnifiedParserService', () => {
         expect(lastResult.success).toBe(true);
       }
 
-      console.log('[END][Test] Document state management test completed');
+      logger.debug('[END][Test] Document state management test completed');
     }, 30000);
 
     it('should clear state on new parse', async () => {
-      console.log('[DEBUG][Test] Testing state clearing on new parse');
+      logger.debug('[DEBUG][Test] Testing state clearing on new parse');
 
       // First parse
       await service.parseDocument('cube([1,1,1]);');
@@ -229,7 +232,7 @@ describe('UnifiedParserService', () => {
 
       expect(firstAST).not.toEqual(secondAST);
 
-      console.log('[END][Test] State clearing test completed');
+      logger.debug('[END][Test] State clearing test completed');
     }, 30000);
   });
 
@@ -254,7 +257,7 @@ describe('UnifiedParserService', () => {
     });
 
     it('should extract document outline', async () => {
-      console.log('[DEBUG][Test] Testing document outline extraction');
+      logger.debug('[DEBUG][Test] Testing document outline extraction');
 
       const outline = service.getDocumentOutline();
 
@@ -274,12 +277,12 @@ describe('UnifiedParserService', () => {
         expect(moduleItem.name).toBe('testModule');
       }
 
-      console.log('[DEBUG][Test] Found outline items:', outline.length);
-      console.log('[END][Test] Document outline test completed');
+      logger.debug('[DEBUG][Test] Found outline items:', outline.length);
+      logger.debug('[END][Test] Document outline test completed');
     }, 30000);
 
     it('should extract document symbols', async () => {
-      console.log('[DEBUG][Test] Testing document symbols extraction');
+      logger.debug('[DEBUG][Test] Testing document symbols extraction');
 
       const symbols = service.getDocumentSymbols();
 
@@ -299,12 +302,12 @@ describe('UnifiedParserService', () => {
         expect(moduleSymbol.documentation).toContain('testModule');
       }
 
-      console.log('[DEBUG][Test] Found symbols:', symbols.length);
-      console.log('[END][Test] Document symbols test completed');
+      logger.debug('[DEBUG][Test] Found symbols:', symbols.length);
+      logger.debug('[END][Test] Document symbols test completed');
     }, 30000);
 
     it('should provide hover information', async () => {
-      console.log('[DEBUG][Test] Testing hover information');
+      logger.debug('[DEBUG][Test] Testing hover information');
 
       // Test hover at different positions
       const hoverInfo = service.getHoverInfo({ line: 1, column: 8, offset: 7 }); // Should be on 'testModule'
@@ -314,10 +317,10 @@ describe('UnifiedParserService', () => {
         expect(hoverInfo.contents.length).toBeGreaterThan(0);
         expect(hoverInfo.range).toBeDefined();
 
-        console.log('[DEBUG][Test] Hover info:', hoverInfo.contents);
+        logger.debug('[DEBUG][Test] Hover info:', hoverInfo.contents);
       }
 
-      console.log('[END][Test] Hover information test completed');
+      logger.debug('[END][Test] Hover information test completed');
     }, 30000);
   });
 
@@ -327,7 +330,7 @@ describe('UnifiedParserService', () => {
     });
 
     it('should handle syntax errors gracefully', async () => {
-      console.log('[DEBUG][Test] Testing syntax error handling');
+      logger.debug('[DEBUG][Test] Testing syntax error handling');
 
       const invalidCode = 'cube([invalid syntax here';
       const result = await service.parseDocument(invalidCode);
@@ -341,15 +344,15 @@ describe('UnifiedParserService', () => {
 
         if (!parseResult.success) {
           expect(parseResult.errors.length).toBeGreaterThan(0);
-          console.log('[DEBUG][Test] Parse errors:', parseResult.errors);
+          logger.debug('[DEBUG][Test] Parse errors:', parseResult.errors);
         }
       }
 
-      console.log('[END][Test] Syntax error handling test completed');
+      logger.debug('[END][Test] Syntax error handling test completed');
     }, 30000);
 
     it('should handle initialization timeout gracefully', async () => {
-      console.log('[DEBUG][Test] Testing initialization timeout');
+      logger.debug('[DEBUG][Test] Testing initialization timeout');
 
       const timeoutService = createUnifiedParserService({
         timeoutMs: 1, // Very short timeout
@@ -364,13 +367,13 @@ describe('UnifiedParserService', () => {
         timeoutService.dispose();
       }
 
-      console.log('[END][Test] Initialization timeout test completed');
+      logger.debug('[END][Test] Initialization timeout test completed');
     }, 10000);
   });
 
   describe('Resource Management', () => {
     it('should dispose resources properly', () => {
-      console.log('[DEBUG][Test] Testing resource disposal');
+      logger.debug('[DEBUG][Test] Testing resource disposal');
 
       service.dispose();
 
@@ -382,11 +385,11 @@ describe('UnifiedParserService', () => {
       expect(service.getLastErrors()).toEqual([]);
       expect(service.getLastParseResult()).toBeNull();
 
-      console.log('[END][Test] Resource disposal test completed');
+      logger.debug('[END][Test] Resource disposal test completed');
     });
 
     it('should handle multiple dispose calls safely', () => {
-      console.log('[DEBUG][Test] Testing multiple dispose calls');
+      logger.debug('[DEBUG][Test] Testing multiple dispose calls');
 
       service.dispose();
       service.dispose(); // Should not throw
@@ -394,13 +397,13 @@ describe('UnifiedParserService', () => {
 
       expect(service.getState()).toBe('disposed');
 
-      console.log('[END][Test] Multiple dispose test completed');
+      logger.debug('[END][Test] Multiple dispose test completed');
     });
   });
 
   describe('Factory Functions', () => {
     it('should create service with custom config', () => {
-      console.log('[DEBUG][Test] Testing custom config creation');
+      logger.debug('[DEBUG][Test] Testing custom config creation');
 
       const customService = createUnifiedParserService({
         timeoutMs: 20000,
@@ -414,11 +417,11 @@ describe('UnifiedParserService', () => {
 
       customService.dispose();
 
-      console.log('[END][Test] Custom config creation test completed');
+      logger.debug('[END][Test] Custom config creation test completed');
     });
 
     it('should provide global service instance', () => {
-      console.log('[DEBUG][Test] Testing global service instance');
+      logger.debug('[DEBUG][Test] Testing global service instance');
 
       const global1 = getGlobalUnifiedParserService();
       const global2 = getGlobalUnifiedParserService();
@@ -434,11 +437,11 @@ describe('UnifiedParserService', () => {
 
       disposeGlobalUnifiedParserService();
 
-      console.log('[END][Test] Global service instance test completed');
+      logger.debug('[END][Test] Global service instance test completed');
     });
 
     it('should work with convenience function', async () => {
-      console.log('[DEBUG][Test] Testing convenience function');
+      logger.debug('[DEBUG][Test] Testing convenience function');
 
       const result = await parseOpenSCADCodeUnified('cube([3,3,3]);');
 
@@ -452,7 +455,7 @@ describe('UnifiedParserService', () => {
 
       disposeGlobalUnifiedParserService();
 
-      console.log('[END][Test] Convenience function test completed');
+      logger.debug('[END][Test] Convenience function test completed');
     }, 30000);
   });
 
@@ -462,7 +465,7 @@ describe('UnifiedParserService', () => {
     });
 
     it('should parse code within reasonable time', async () => {
-      console.log('[DEBUG][Test] Testing parsing performance');
+      logger.debug('[DEBUG][Test] Testing parsing performance');
 
       const code = 'cube([10,10,10]); sphere(r=5); cylinder(r=3, h=10);';
       const startTime = performance.now();
@@ -478,8 +481,8 @@ describe('UnifiedParserService', () => {
         expect(result.data.parseTime).toBeGreaterThan(0);
       }
 
-      console.log(`[DEBUG][Test] Total time: ${duration.toFixed(2)}ms`);
-      console.log('[END][Test] Parsing performance test completed');
+      logger.debug(`[DEBUG][Test] Total time: ${duration.toFixed(2)}ms`);
+      logger.debug('[END][Test] Parsing performance test completed');
     }, 30000);
   });
 });

@@ -7,22 +7,25 @@
 
 import type * as monaco from 'monaco-editor';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { debounce } from '../../../shared/utils/functional/pipe';
-import { tryCatch } from '../../../shared/utils/functional/result';
-import { measureTime } from '../../../shared/utils/performance/metrics';
-import { useAppStore } from '../../store';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { debounce } from '../../../shared/utils/functional/pipe.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
+import { measureTime } from '../../../shared/utils/performance/metrics.js';
+import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigDebounceMs,
   selectEditorCode,
   selectEditorCursorPosition,
   selectEditorSelection,
-} from '../../store/selectors';
+} from '../../store/selectors.js';
 import type {
   EditorPerformanceMetrics,
   EditorStateManager,
   UseMonacoEditorOptions,
   UseMonacoEditorReturn,
-} from '../types/editor.types';
+} from '../types/editor.types.js';
+
+const logger = createLogger('useMonacoEditor');
 
 /**
  * Default options for Monaco Editor hook
@@ -264,7 +267,7 @@ export const useMonacoEditor = (
           (editor as unknown as { _hookDisposables: monaco.IDisposable[] })._hookDisposables =
             disposables;
 
-          console.log('[INIT][useMonacoEditor] Editor initialized successfully');
+          logger.init('Editor initialized successfully');
 
           return editor;
         },
@@ -274,7 +277,7 @@ export const useMonacoEditor = (
 
       if (!result.success) {
         setError(result.error);
-        console.error('[ERROR][useMonacoEditor]', result.error);
+        logger.error(result.error);
       }
     },
     [handleContentChange, handleCursorPositionChange, handleSelectionChange]
@@ -298,7 +301,7 @@ export const useMonacoEditor = (
       setIsLoading(true);
       setError(null);
 
-      console.log('[CLEANUP][useMonacoEditor] Editor resources cleaned up');
+      logger.end('Editor resources cleaned up');
     }
   }, []);
 

@@ -7,7 +7,8 @@
 
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
-import { useAppStore } from '../../store';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeParsing,
   selectEditorCode,
@@ -15,13 +16,15 @@ import {
   selectEditorSelection,
   selectParsingErrors,
   selectParsingWarnings,
-} from '../../store/selectors';
+} from '../../store/selectors.js';
 import type {
   EditorChangeEvent,
   EditorCursorEvent,
   EditorSelectionEvent,
-} from '../types/editor.types';
-import { MonacoEditorComponent } from './monaco-editor';
+} from '../types/editor.types.js';
+import { MonacoEditorComponent } from './monaco-editor.js';
+
+const logger = createLogger('StoreConnectedEditor');
 
 /**
  * Props for the store-connected editor
@@ -42,7 +45,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   height = '100%',
   width = '100%',
 }) => {
-  console.log('[INIT][StoreConnectedEditor] Initializing store-connected Monaco Editor');
+  logger.init('Initializing store-connected Monaco Editor');
 
   // Store selectors - all data comes from Zustand
   const code = useAppStore(selectEditorCode);
@@ -64,7 +67,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    */
   const handleCodeChange = useCallback(
     (event: EditorChangeEvent) => {
-      console.log('[DEBUG][StoreConnectedEditor] Code changed, updating store');
+      logger.debug('Code changed, updating store');
 
       // Update code in store (this will trigger debounced parsing if enabled)
       updateCode(event.value);
@@ -72,7 +75,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       // Mark as dirty for save state tracking
       markDirty();
 
-      console.log(`[DEBUG][StoreConnectedEditor] Code updated: ${event.value.length} characters`);
+      logger.debug(`Code updated: ${event.value.length} characters`);
     },
     [updateCode, markDirty]
   );
@@ -82,7 +85,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    */
   const handleCursorChange = useCallback(
     (event: EditorCursorEvent) => {
-      console.log('[DEBUG][StoreConnectedEditor] Cursor position changed');
+      logger.debug('Cursor position changed');
       updateCursorPosition({
         line: event.position.line,
         column: event.position.column,
@@ -96,7 +99,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    */
   const handleSelectionChange = useCallback(
     (event: EditorSelectionEvent) => {
-      console.log('[DEBUG][StoreConnectedEditor] Selection changed');
+      logger.debug('Selection changed');
       updateSelection({
         startLineNumber: event.selection.startLineNumber,
         startColumn: event.selection.startColumn,
@@ -111,7 +114,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    * Effect: Log store state changes for debugging
    */
   useEffect(() => {
-    console.log('[DEBUG][StoreConnectedEditor] Store state updated:', {
+    logger.debug('Store state updated:', {
       codeLength: code.length,
       isDirty,
       errorCount: parsingErrors.length,
@@ -126,7 +129,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    */
   useEffect(() => {
     if (!enableRealTimeParsing && code.length > 0) {
-      console.log('[DEBUG][StoreConnectedEditor] Manual parsing trigger');
+      logger.debug('Manual parsing trigger');
       // Manual parsing can be triggered here if needed
       // For now, we rely on the store's debounced parsing
     }

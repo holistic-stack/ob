@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import {
   type MatrixOperationConfig as APIMatrixOperationConfig,
   createMatrixOperationsAPI,
@@ -16,6 +17,8 @@ import {
   useMatrixOperationContext,
   withMatrixOperations,
 } from '../providers/MatrixOperationProvider.js';
+
+const logger = createLogger('MatrixOperationsExports');
 
 /**
  * Matrix Operations Exports
@@ -200,7 +203,7 @@ export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProv
         enableAutoRecovery: true,
         showErrorDetails: process.env.NODE_ENV === 'development',
         onError: (error: Error, errorInfo: unknown, errorId: string) => {
-          console.error('[MatrixOperationsDevProvider] Error caught:', {
+          logger.error('Error caught:', {
             error,
             errorInfo,
             errorId,
@@ -214,8 +217,8 @@ export const createMatrixOperationsDevProvider = (props: MatrixOperationsDevProv
             showDetails: true,
             position: 'top-right' as const,
             onPerformanceAlert: (metric: string, value: number, threshold: number) => {
-              console.warn(
-                `[MatrixOperationsDevProvider] Performance alert: ${metric} = ${value} (threshold: ${threshold})`
+              logger.warn(
+                `Performance alert: ${metric} = ${value} (threshold: ${threshold})`
               );
             },
           }
@@ -272,7 +275,7 @@ export const createMatrixOperationsProdProvider = (props: MatrixOperationsProdPr
         showErrorDetails: false,
         onError: (error: Error, _errorInfo: unknown, errorId: string) => {
           // Log to external monitoring service in production
-          console.error('[MatrixOperationsProdProvider] Production error:', {
+          logger.error('Production error:', {
             errorId,
             message: error.message,
             timestamp: Date.now(),

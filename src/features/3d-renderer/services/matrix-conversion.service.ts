@@ -7,17 +7,20 @@
 
 import { inverse, Matrix, SingularValueDecomposition } from 'ml-matrix';
 import type { Matrix3, Matrix4 } from 'three';
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import type { MATRIX_CONFIG } from '../config/matrix-config';
-import { getCacheKey } from '../config/matrix-config';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import type { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { getCacheKey } from '../config/matrix-config.js';
 import type {
   MatrixOperationResult,
   MatrixPerformanceMetrics,
   MatrixValidation,
-} from '../types/matrix.types';
-import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters';
-import type { MatrixCacheService } from './matrix-cache.service';
+} from '../types/matrix.types.js';
+import { matrixAdapter, matrixUtils } from '../utils/matrix-adapters.js';
+import type { MatrixCacheService } from './matrix-cache.service.js';
+
+const logger = createLogger('MatrixConversionService');
 
 /**
  * Dependency injection interface for MatrixConversionService
@@ -57,9 +60,7 @@ export class MatrixConversionService {
   };
 
   constructor(private readonly deps: MatrixConversionDependencies) {
-    console.log(
-      '[INIT][MatrixConversionService] Initializing matrix conversion service with dependencies'
-    );
+    logger.init('Initializing matrix conversion service with dependencies');
     this.validateDependencies();
   }
 
@@ -73,7 +74,7 @@ export class MatrixConversionService {
     if (!this.deps.config) {
       throw new Error('Matrix configuration dependency is required');
     }
-    console.log('[DEBUG][MatrixConversionService] Dependencies validated successfully');
+    logger.debug('Dependencies validated successfully');
   }
 
   /**
@@ -165,7 +166,7 @@ export class MatrixConversionService {
       this.deps.telemetry.trackOperation(operation, 0, false);
     }
 
-    console.error(`[ERROR][MatrixConversionService] Operation ${operation} failed:`, error);
+    logger.error(`Operation ${operation} failed:`, error);
   }
 
   /**
@@ -236,7 +237,7 @@ export class MatrixConversionService {
       largeMatrixOperations: 0,
       failedOperations: 0,
     });
-    console.log('[DEBUG][MatrixConversionService] Performance metrics reset');
+    logger.debug('Performance metrics reset');
   }
 
   /**
@@ -249,7 +250,7 @@ export class MatrixConversionService {
     const startTime = Date.now();
     const operation = 'matrix4ToMLMatrix';
 
-    console.log(`[DEBUG][MatrixConversionService] Converting Matrix4 to ml-matrix`);
+    logger.debug(`Converting Matrix4 to ml-matrix`);
 
     try {
       // Input validation
@@ -263,14 +264,14 @@ export class MatrixConversionService {
         }
 
         if (validation.warnings.length > 0) {
-          console.warn(`[WARN][MatrixConversionService] ${validation.warnings.join(', ')}`);
+          logger.warn(`${validation.warnings.join(', ')}`);
         }
       }
 
       // Check WeakMap cache first
       const cachedResult = this.conversionCache.get(matrix4 as unknown as Matrix);
       if (cachedResult && options.useCache !== false) {
-        console.log(`[DEBUG][MatrixConversionService] WeakMap cache hit for Matrix4 conversion`);
+        logger.debug(`WeakMap cache hit for Matrix4 conversion`);
         return success(
           this.createOperationResult(cachedResult, operation, startTime, [4, 4], true)
         );
@@ -282,8 +283,8 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          console.log(
-            `[DEBUG][MatrixConversionService] Persistent cache hit for Matrix4 conversion`
+          logger.debug(
+            `Persistent cache hit for Matrix4 conversion`
           );
           this.conversionCache.set(matrix4 as unknown as Matrix, cacheResult.data);
           return success(
@@ -303,8 +304,8 @@ export class MatrixConversionService {
       }
 
       const operationResult = this.createOperationResult(result, operation, startTime, [4, 4]);
-      console.log(
-        `[DEBUG][MatrixConversionService] Matrix4 conversion completed in ${operationResult.performance.executionTime}ms`
+      logger.debug(
+        `Matrix4 conversion completed in ${operationResult.performance.executionTime}ms`
       );
 
       return success(operationResult);
@@ -326,7 +327,7 @@ export class MatrixConversionService {
     const startTime = Date.now();
     const operation = 'mlMatrixToMatrix4';
 
-    console.log(`[DEBUG][MatrixConversionService] Converting ml-matrix to Matrix4`);
+    logger.debug(`Converting ml-matrix to Matrix4`);
 
     try {
       // Input validation
@@ -338,7 +339,7 @@ export class MatrixConversionService {
         }
 
         if (validation.warnings.length > 0) {
-          console.warn(`[WARN][MatrixConversionService] ${validation.warnings.join(', ')}`);
+          logger.warn(`${validation.warnings.join(', ')}`);
         }
       }
 
@@ -357,8 +358,8 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          console.log(
-            `[DEBUG][MatrixConversionService] Persistent cache hit for ml-matrix conversion`
+          logger.debug(
+            `Persistent cache hit for ml-matrix conversion`
           );
           const result = matrixAdapter.toThreeMatrix4(cacheResult.data);
           return success(this.createOperationResult(result, operation, startTime, [4, 4], true));
@@ -375,8 +376,8 @@ export class MatrixConversionService {
       }
 
       const operationResult = this.createOperationResult(result, operation, startTime, [4, 4]);
-      console.log(
-        `[DEBUG][MatrixConversionService] ml-matrix conversion completed in ${operationResult.performance.executionTime}ms`
+      logger.debug(
+        `ml-matrix conversion completed in ${operationResult.performance.executionTime}ms`
       );
 
       return success(operationResult);
@@ -398,7 +399,7 @@ export class MatrixConversionService {
     const startTime = Date.now();
     const operation = 'robustInverse';
 
-    console.log(`[DEBUG][MatrixConversionService] Performing robust matrix inversion`);
+    logger.debug(`Performing robust matrix inversion`);
 
     try {
       // Input validation
@@ -410,7 +411,7 @@ export class MatrixConversionService {
         }
 
         if (validation.warnings.length > 0) {
-          console.warn(`[WARN][MatrixConversionService] ${validation.warnings.join(', ')}`);
+          logger.warn(`${validation.warnings.join(', ')}`);
         }
       }
 
@@ -427,7 +428,7 @@ export class MatrixConversionService {
         const cacheResult = this.deps.cache.get(cacheKey);
 
         if (cacheResult.success && cacheResult.data) {
-          console.log(`[DEBUG][MatrixConversionService] Cache hit for robust inversion`);
+          logger.debug(`Cache hit for robust inversion`);
           return success(
             this.createOperationResult(
               cacheResult.data,
@@ -444,7 +445,7 @@ export class MatrixConversionService {
 
       try {
         // Attempt standard inversion first
-        console.log(`[DEBUG][MatrixConversionService] Attempting standard matrix inversion`);
+        logger.debug(`Attempting standard matrix inversion`);
         result = inverse(matrix);
 
         // Verify inversion quality
@@ -461,10 +462,10 @@ export class MatrixConversionService {
           throw new Error('Standard inversion produced poor quality result');
         }
       } catch (standardError) {
-        console.warn(`[WARN][MatrixConversionService] Standard inversion failed: ${standardError}`);
+        logger.warn(`Standard inversion failed: ${standardError}`);
 
         if (options.enableSVDFallback !== false) {
-          console.log(`[DEBUG][MatrixConversionService] Falling back to SVD-based pseudo-inverse`);
+          logger.debug(`Falling back to SVD-based pseudo-inverse`);
 
           try {
             // Use SVD-based pseudo-inverse
@@ -482,8 +483,8 @@ export class MatrixConversionService {
             const svdTyped = svd as unknown as { V: Matrix; U: Matrix };
             result = svdTyped.V.mmul(invS).mmul(svdTyped.U.transpose());
 
-            console.log(
-              `[DEBUG][MatrixConversionService] SVD-based pseudo-inverse completed successfully`
+            logger.debug(
+              `SVD-based pseudo-inverse completed successfully`
             );
           } catch (svdError) {
             this.recordFailure(operation, svdError as Error);
@@ -505,8 +506,8 @@ export class MatrixConversionService {
         matrix.rows,
         matrix.columns,
       ]);
-      console.log(
-        `[DEBUG][MatrixConversionService] Robust inversion completed in ${operationResult.performance.executionTime}ms`
+      logger.debug(
+        `Robust inversion completed in ${operationResult.performance.executionTime}ms`
       );
 
       return success(operationResult);
@@ -526,7 +527,7 @@ export class MatrixConversionService {
     const startTime = Date.now();
     const operation = 'robustNormalMatrix';
 
-    console.log(`[DEBUG][MatrixConversionService] Computing robust normal matrix`);
+    logger.debug(`Computing robust normal matrix`);
 
     try {
       // Convert to ml-matrix
@@ -563,8 +564,8 @@ export class MatrixConversionService {
         startTime,
         [3, 3]
       );
-      console.log(
-        `[DEBUG][MatrixConversionService] Normal matrix computation completed in ${operationResult.performance.executionTime}ms`
+      logger.debug(
+        `Normal matrix computation completed in ${operationResult.performance.executionTime}ms`
       );
 
       return success(operationResult);
@@ -582,7 +583,7 @@ export class MatrixConversionService {
   clearCache(): void {
     // WeakMap doesn't have a clear method, but we can create a new instance
     Object.setPrototypeOf(this.conversionCache, WeakMap.prototype);
-    console.log('[DEBUG][MatrixConversionService] WeakMap cache cleared');
+    logger.debug('WeakMap cache cleared');
   }
 }
 

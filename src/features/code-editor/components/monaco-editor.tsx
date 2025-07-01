@@ -8,8 +8,9 @@
 import MonacoEditor from '@monaco-editor/react';
 import type * as monaco from 'monaco-editor';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { debounce } from '../../../shared/utils/functional/pipe';
-import { tryCatch } from '../../../shared/utils/functional/result';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { debounce } from '../../../shared/utils/functional/pipe.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
 import type {
   EditorChangeEvent,
   EditorCursorEvent,
@@ -17,7 +18,9 @@ import type {
   EditorSelectionEvent,
   MonacoEditorConfig,
   MonacoEditorProps,
-} from '../types/editor.types';
+} from '../types/editor.types.js';
+
+const logger = createLogger('MonacoEditor');
 
 /**
  * Default Monaco Editor configuration
@@ -201,7 +204,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
 
       if (!result.success) {
         setError(result.error);
-        console.error('[ERROR][MonacoEditor]', result.error);
+        logger.error(result.error);
       }
     },
     [
@@ -248,7 +251,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
     );
 
     if (!result.success) {
-      console.error('[ERROR][MonacoEditor]', result.error);
+      logger.error(result.error);
     }
   }, [onUnmount]);
 

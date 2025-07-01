@@ -8,9 +8,12 @@
 import { Matrix } from 'ml-matrix';
 import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixServiceContainer } from './matrix-service-container';
-import type { MatrixTelemetryService } from './matrix-telemetry.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+import type { MatrixTelemetryService } from './matrix-telemetry.service.js';
+
+const logger = createLogger('MatrixServiceConcurrentTest');
 
 /**
  * Concurrent testing configuration
@@ -184,7 +187,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
   let integrationService: MatrixIntegrationService;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixServiceConcurrentTest] Setting up concurrent test environment');
+    logger.init('Setting up concurrent test environment');
 
     serviceContainer = new MatrixServiceContainer({
       enableTelemetry: true,
@@ -197,7 +200,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][MatrixServiceConcurrentTest] Cleaning up concurrent test environment');
+    logger.end('Cleaning up concurrent test environment');
     await integrationService.shutdown();
   });
 
@@ -205,7 +208,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should handle light concurrent matrix conversions',
       async () => {
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Testing light concurrent conversions');
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Testing light concurrent conversions');
 
         const config = CONCURRENT_TEST_CONFIG.light;
         const startTime = Date.now();
@@ -226,7 +229,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
         const concurrentExecutionTime = Date.now() - startTime;
         const metrics = calculateConcurrentMetrics(results, concurrentExecutionTime);
 
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Light concurrent metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Light concurrent metrics:', metrics);
 
         // Validate concurrent performance
         expect(metrics.errorRate).toBeLessThan(0.05); // <5% error rate
@@ -240,7 +243,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should maintain cache consistency under concurrent access',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceConcurrentTest] Testing cache consistency under concurrent access'
         );
 
@@ -311,7 +314,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should handle medium concurrent validation operations',
       async () => {
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Testing medium concurrent validations');
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Testing medium concurrent validations');
 
         const config = CONCURRENT_TEST_CONFIG.medium;
         const startTime = Date.now();
@@ -339,7 +342,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
         const concurrentExecutionTime = Date.now() - startTime;
         const metrics = calculateConcurrentMetrics(results, concurrentExecutionTime);
 
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Medium concurrent metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Medium concurrent metrics:', metrics);
 
         // Validate concurrent performance for medium load
         expect(metrics.errorRate).toBeLessThan(0.1); // <10% error rate
@@ -353,7 +356,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should handle concurrent batch operations',
       async () => {
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Testing concurrent batch operations');
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Testing concurrent batch operations');
 
         const config = CONCURRENT_TEST_CONFIG.medium;
 
@@ -402,7 +405,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should maintain stability under heavy concurrent load',
       async () => {
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Testing heavy concurrent load stability');
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Testing heavy concurrent load stability');
 
         const config = CONCURRENT_TEST_CONFIG.heavy;
         const startTime = Date.now();
@@ -441,7 +444,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
         const concurrentExecutionTime = Date.now() - startTime;
         const metrics = calculateConcurrentMetrics(results, concurrentExecutionTime);
 
-        console.log('[DEBUG][MatrixServiceConcurrentTest] Heavy concurrent metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceConcurrentTest] Heavy concurrent metrics:', metrics);
 
         // Validate stability under heavy load
         expect(metrics.errorRate).toBeLessThan(0.2); // <20% error rate (more lenient for heavy load)
@@ -460,7 +463,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should maintain data integrity under concurrent modifications',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceConcurrentTest] Testing data integrity under concurrent modifications'
         );
 
@@ -515,7 +518,7 @@ describe('Matrix Service Concurrent Operations Testing', () => {
     it(
       'should handle concurrent service container access',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceConcurrentTest] Testing concurrent service container access'
         );
 

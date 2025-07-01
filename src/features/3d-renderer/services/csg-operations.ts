@@ -6,10 +6,13 @@
  */
 
 import * as THREE from 'three';
-import type { AsyncResult, Result } from '../../../shared/types/result.types';
-import { error, success, tryCatch } from '../../../shared/utils/functional/result';
-import type { CSGConfig, CSGOperation } from '../types/renderer.types';
-import { CSG } from './csg-core.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
+import { error, success, tryCatch } from '../../../shared/utils/functional/result.js';
+import type { CSGConfig, CSGOperation } from '../types/renderer.types.js';
+import { CSG } from './csg-core.service.js';
+
+const logger = createLogger('CSGOperations');
 
 // Inline performance measurement to avoid import issues
 const measureTime = <T>(fn: () => T): { result: T; duration: number } => {
@@ -381,7 +384,7 @@ export const performCSGOperation = async (config: CSGConfig): AsyncResult<THREE.
       resultMesh.geometry.computeBoundingSphere();
     }
 
-    console.log(`[DEBUG][CSGOperations] ${config.operation} completed in ${duration}ms`);
+    logger.debug(`${config.operation} completed in ${duration}ms`);
 
     return success(resultMesh);
   });

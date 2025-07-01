@@ -8,14 +8,17 @@
 import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { matrixFactory } from '../utils/matrix-adapters';
-import { MatrixCacheService } from './matrix-cache.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { matrixFactory } from '../utils/matrix-adapters.js';
+import { MatrixCacheService } from './matrix-cache.service.js';
 import {
   type MatrixConversionDependencies,
   MatrixConversionService,
-} from './matrix-conversion.service';
-import type { MatrixTelemetryService } from './matrix-telemetry.service';
+} from './matrix-conversion.service.js';
+import type { MatrixTelemetryService } from './matrix-telemetry.service.js';
+
+const logger = createLogger('MatrixConversionServiceTest');
 
 describe('MatrixConversionService', () => {
   let service: MatrixConversionService;
@@ -24,7 +27,7 @@ describe('MatrixConversionService', () => {
   let dependencies: MatrixConversionDependencies;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixConversionServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
 
     // Create real cache service for testing
     mockCache = new MatrixCacheService();
@@ -46,14 +49,14 @@ describe('MatrixConversionService', () => {
   });
 
   afterEach(() => {
-    console.log('[END][MatrixConversionServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     service.clearCache();
     service.resetPerformanceMetrics();
   });
 
   describe('Dependency Injection', () => {
     it('should validate required dependencies on construction', () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing dependency validation');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing dependency validation');
 
       expect(() => {
         new MatrixConversionService({
@@ -71,7 +74,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should work without optional telemetry dependency', () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing optional telemetry dependency');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing optional telemetry dependency');
 
       const serviceWithoutTelemetry = new MatrixConversionService({
         cache: mockCache,
@@ -85,7 +88,7 @@ describe('MatrixConversionService', () => {
 
   describe('Matrix4 to ml-matrix Conversion', () => {
     it('should convert Three.js Matrix4 to ml-matrix correctly', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing Matrix4 to ml-matrix conversion');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing Matrix4 to ml-matrix conversion');
 
       const threeMatrix = new Matrix4().makeTranslation(1, 2, 3);
 
@@ -108,7 +111,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should use cache for repeated conversions', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConversionServiceTest] Testing cache usage for Matrix4 conversion'
       );
 
@@ -130,7 +133,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should validate input when requested', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing input validation');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing input validation');
 
       // Create a matrix with invalid values
       const invalidMatrix = new Matrix4();
@@ -149,7 +152,7 @@ describe('MatrixConversionService', () => {
 
   describe('ml-matrix to Matrix4 Conversion', () => {
     it('should convert ml-matrix to Three.js Matrix4 correctly', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing ml-matrix to Matrix4 conversion');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing ml-matrix to Matrix4 conversion');
 
       const matrix = matrixFactory.identity(4);
       matrix.set(0, 3, 5); // Set translation x
@@ -172,7 +175,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should reject non-4x4 matrices', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing dimension validation');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing dimension validation');
 
       const matrix = matrixFactory.identity(3); // 3x3 matrix
 
@@ -187,7 +190,7 @@ describe('MatrixConversionService', () => {
 
   describe('Robust Matrix Inversion', () => {
     it('should perform standard inversion for well-conditioned matrices', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing standard matrix inversion');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing standard matrix inversion');
 
       const matrix = matrixFactory.identity(3);
       matrix.set(0, 0, 2); // Make it non-singular
@@ -209,7 +212,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should fall back to SVD for singular matrices', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConversionServiceTest] Testing SVD fallback for singular matrices'
       );
 
@@ -234,7 +237,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should reject non-square matrices', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing non-square matrix rejection');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing non-square matrix rejection');
 
       const matrix = new Matrix(3, 4); // Non-square matrix
 
@@ -249,7 +252,7 @@ describe('MatrixConversionService', () => {
 
   describe('Normal Matrix Computation', () => {
     it('should compute normal matrix correctly', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing normal matrix computation');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing normal matrix computation');
 
       const modelMatrix = new Matrix4().makeScale(2, 3, 4);
 
@@ -271,7 +274,7 @@ describe('MatrixConversionService', () => {
 
   describe('Performance Monitoring', () => {
     it('should track performance metrics', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing performance metrics tracking');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing performance metrics tracking');
 
       const matrix = matrixFactory.identity(4);
 
@@ -286,7 +289,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should reset performance metrics', () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing performance metrics reset');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing performance metrics reset');
 
       service.resetPerformanceMetrics();
 
@@ -297,7 +300,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should track telemetry when available', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing telemetry tracking');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing telemetry tracking');
 
       const matrix = matrixFactory.identity(4);
 
@@ -309,7 +312,7 @@ describe('MatrixConversionService', () => {
 
   describe('Error Handling', () => {
     it('should handle conversion errors gracefully', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing error handling');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing error handling');
 
       // Create an invalid matrix that will cause conversion to fail
       const invalidMatrix = new Matrix(0, 0); // Empty matrix
@@ -323,7 +326,7 @@ describe('MatrixConversionService', () => {
     });
 
     it('should record failed operations in metrics', async () => {
-      console.log('[DEBUG][MatrixConversionServiceTest] Testing failure recording');
+      logger.debug('[DEBUG][MatrixConversionServiceTest] Testing failure recording');
 
       const initialMetrics = service.getPerformanceMetrics();
       const initialFailures = initialMetrics.failedOperations;

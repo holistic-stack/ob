@@ -33,7 +33,7 @@ export const createParsingSlice = (
 
       return tryCatchAsync(
         async () => {
-          console.log(`[DEBUG][Store] Starting parse of ${code.length} characters`);
+          logger.debug(`Starting parse of ${code.length} characters`);
 
           // Ensure parser is initialized
           await parserService.initialize();
@@ -45,15 +45,15 @@ export const createParsingSlice = (
             const rawAST = parseResult.data.ast;
 
             // Apply AST restructuring to fix hierarchical relationships
-            console.log(`[DEBUG][Store] Restructuring AST with ${rawAST.length} nodes`);
+            logger.debug(`Restructuring AST with ${rawAST.length} nodes`);
             const restructureResult = restructureAST(rawAST, {
               enableLogging: true,
               enableSourceLocationAnalysis: true,
             });
 
             if (!restructureResult.success) {
-              console.warn(
-                `[WARN][Store] AST restructuring failed: ${restructureResult.error}, using original AST`
+              logger.warn(
+                `AST restructuring failed: ${restructureResult.error}, using original AST`
               );
             }
 
@@ -71,8 +71,8 @@ export const createParsingSlice = (
             // Record performance metrics
             get().recordParseTime(parseTime);
 
-            console.log(
-              `[DEBUG][Store] Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
+            logger.debug(
+              `Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
             );
             return ast;
           } else {
@@ -93,7 +93,7 @@ export const createParsingSlice = (
             state.parsing.parseTime = parseTime;
           });
 
-          console.error(`[ERROR][Store] Parse failed: ${errorMessage}`);
+          logger.error(`Parse failed: ${errorMessage}`);
           return `Parse failed: ${errorMessage}`;
         }
       );

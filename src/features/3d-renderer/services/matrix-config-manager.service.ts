@@ -5,10 +5,13 @@
  * and performance threshold management following bulletproof-react patterns.
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MATRIX_CONFIG, type MatrixConfig } from '../config/matrix-config';
-import type { MatrixConfigOverride } from '../types/matrix.types';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import { MATRIX_CONFIG, type MatrixConfig } from '../config/matrix-config.js';
+import type { MatrixConfigOverride } from '../types/matrix.types.js';
+
+const logger = createLogger('MatrixConfigManagerService');
 
 /**
  * Environment-specific configuration
@@ -63,7 +66,7 @@ export class MatrixConfigManagerService {
   private readonly performanceBaselines = new Map<string, number>();
 
   constructor() {
-    console.log('[INIT][MatrixConfigManagerService] Initializing configuration manager');
+    logger.init('Initializing configuration manager');
 
     this.currentConfig = { ...MATRIX_CONFIG };
     this.initializeValidationRules();
@@ -150,7 +153,7 @@ export class MatrixConfigManagerService {
       };
     });
 
-    console.log('[DEBUG][MatrixConfigManagerService] Validation rules initialized');
+    logger.debug('Validation rules initialized');
   }
 
   /**
@@ -166,7 +169,7 @@ export class MatrixConfigManagerService {
     this.performanceBaselines.set('eigenvalues', 50);
     this.performanceBaselines.set('svd', 30);
 
-    console.log('[DEBUG][MatrixConfigManagerService] Performance baselines initialized');
+    logger.debug('Performance baselines initialized');
   }
 
   /**
@@ -174,9 +177,7 @@ export class MatrixConfigManagerService {
    */
   private applyEnvironmentSpecificConfig(): void {
     const environment = this.detectEnvironment();
-    console.log(
-      `[DEBUG][MatrixConfigManagerService] Applying ${environment} environment configuration`
-    );
+    logger.debug(`Applying ${environment} environment configuration`);
 
     const envConfig = this.getEnvironmentConfig();
     const envSpecific = envConfig[environment];
@@ -273,8 +274,8 @@ export class MatrixConfigManagerService {
         }
 
         if (validationResult.warnings.length > 0) {
-          console.warn(
-            `[WARN][MatrixConfigManagerService] Configuration warning for ${key}:`,
+          logger.warn(
+            `Configuration warning for ${key}:`,
             validationResult.warnings
           );
         }
@@ -388,8 +389,8 @@ export class MatrixConfigManagerService {
       this.changeHistory.shift();
     }
 
-    console.log(
-      `[DEBUG][MatrixConfigManagerService] Configuration changed: ${section}.${property} = ${newValue} (${reason})`
+    logger.debug(
+      `Configuration changed: ${section}.${property} = ${newValue} (${reason})`
     );
   }
 
@@ -404,7 +405,7 @@ export class MatrixConfigManagerService {
    * Apply configuration override
    */
   applyOverride(override: MatrixConfigOverride): Result<void, string> {
-    console.log('[DEBUG][MatrixConfigManagerService] Applying configuration override');
+    logger.debug('Applying configuration override');
     return this.mergeConfiguration(override as Partial<MatrixConfig>);
   }
 
@@ -412,7 +413,7 @@ export class MatrixConfigManagerService {
    * Reset configuration to defaults
    */
   resetToDefaults(): void {
-    console.log('[DEBUG][MatrixConfigManagerService] Resetting configuration to defaults');
+    logger.debug('Resetting configuration to defaults');
 
     this.currentConfig = { ...MATRIX_CONFIG };
     this.configOverrides.clear();
@@ -431,7 +432,7 @@ export class MatrixConfigManagerService {
    * Validate entire configuration
    */
   validateConfiguration(): ConfigValidationResult {
-    console.log('[DEBUG][MatrixConfigManagerService] Validating entire configuration');
+    logger.debug('Validating entire configuration');
 
     const allErrors: string[] = [];
     const allWarnings: string[] = [];
@@ -460,7 +461,7 @@ export class MatrixConfigManagerService {
   suggestPerformanceThresholdAdjustments(
     operationMetrics: Record<string, { averageTime: number; count: number }>
   ): PerformanceThresholdAdjustment[] {
-    console.log('[DEBUG][MatrixConfigManagerService] Analyzing performance thresholds');
+    logger.debug('Analyzing performance thresholds');
 
     const adjustments: PerformanceThresholdAdjustment[] = [];
 
@@ -500,15 +501,15 @@ export class MatrixConfigManagerService {
   applyPerformanceThresholdAdjustments(
     adjustments: PerformanceThresholdAdjustment[]
   ): Result<void, string> {
-    console.log(
-      `[DEBUG][MatrixConfigManagerService] Applying ${adjustments.length} threshold adjustments`
+    logger.debug(
+      `Applying ${adjustments.length} threshold adjustments`
     );
 
     try {
       for (const adjustment of adjustments) {
         if (adjustment.confidence < 0.5) {
-          console.warn(
-            `[WARN][MatrixConfigManagerService] Skipping low-confidence adjustment for ${adjustment.operation}`
+          logger.warn(
+            `Skipping low-confidence adjustment for ${adjustment.operation}`
           );
           continue;
         }
@@ -597,7 +598,7 @@ export class MatrixConfigManagerService {
         'Configuration imported from backup'
       );
 
-      console.log('[DEBUG][MatrixConfigManagerService] Configuration imported successfully');
+      logger.debug('Configuration imported successfully');
       return success(undefined);
     } catch (err) {
       return error(

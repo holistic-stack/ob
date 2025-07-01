@@ -8,6 +8,7 @@
 import { CholeskyDecomposition, determinant, Matrix } from 'ml-matrix';
 import type { Euler } from 'three';
 import { Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import { MATRIX_CONFIG } from '../config/matrix-config.js';
@@ -20,11 +21,13 @@ import type {
   TransformationMatrix,
 } from '../types/matrix.types.js';
 
+const logger = createLogger('MatrixAdapters');
+
 /**
  * Convert Three.js Matrix3 to ml-matrix
  */
 export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<Matrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Three.js Matrix3 to ml-matrix');
+  logger.debug('Converting Three.js Matrix3 to ml-matrix');
 
   try {
     const elements = threeMatrix.elements;
@@ -38,7 +41,7 @@ export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<Matrix, string> =
     return success(matrix);
   } catch (err) {
     const errorMessage = `Failed to convert Three.js Matrix3: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -47,7 +50,7 @@ export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<Matrix, string> =
  * Convert Three.js Matrix4 to ml-matrix
  */
 export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<Matrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Three.js Matrix4 to ml-matrix');
+  logger.debug('Converting Three.js Matrix4 to ml-matrix');
 
   try {
     const elements = threeMatrix.elements;
@@ -62,7 +65,7 @@ export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<Matrix, string> =
     return success(matrix);
   } catch (err) {
     const errorMessage = `Failed to convert Three.js Matrix4: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -71,7 +74,7 @@ export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<Matrix, string> =
  * Convert ml-matrix to Three.js Matrix3
  */
 export const toThreeMatrix3 = (matrix: Matrix): Result<Matrix3, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting ml-matrix to Three.js Matrix3');
+  logger.debug('Converting ml-matrix to Three.js Matrix3');
 
   try {
     if (matrix.rows !== 3 || matrix.columns !== 3) {
@@ -94,7 +97,7 @@ export const toThreeMatrix3 = (matrix: Matrix): Result<Matrix3, string> => {
     return success(threeMatrix);
   } catch (err) {
     const errorMessage = `Failed to convert to Three.js Matrix3: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -103,7 +106,7 @@ export const toThreeMatrix3 = (matrix: Matrix): Result<Matrix3, string> => {
  * Convert ml-matrix to Three.js Matrix4
  */
 export const toThreeMatrix4 = (matrix: Matrix): Result<Matrix4, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting ml-matrix to Three.js Matrix4');
+  logger.debug('Converting ml-matrix to Three.js Matrix4');
 
   try {
     if (matrix.rows !== 4 || matrix.columns !== 4) {
@@ -133,7 +136,7 @@ export const toThreeMatrix4 = (matrix: Matrix): Result<Matrix4, string> => {
     return success(threeMatrix);
   } catch (err) {
     const errorMessage = `Failed to convert to Three.js Matrix4: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -144,7 +147,7 @@ export const toThreeMatrix4 = (matrix: Matrix): Result<Matrix4, string> => {
 export const fromTransform = (
   transform: ThreeJSTransformData
 ): Result<TransformationMatrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Three.js transform to transformation matrix');
+  logger.debug('Converting Three.js transform to transformation matrix');
 
   try {
     const matrixResult = fromThreeMatrix4(transform.matrix);
@@ -153,7 +156,7 @@ export const fromTransform = (
     return success(matrixResult.data as TransformationMatrix);
   } catch (err) {
     const errorMessage = `Failed to convert transform: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -162,7 +165,7 @@ export const fromTransform = (
  * Convert transformation matrix to Three.js transform data
  */
 export const toTransform = (matrix: TransformationMatrix): Result<ThreeJSTransformData, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting transformation matrix to Three.js transform');
+  logger.debug('Converting transformation matrix to Three.js transform');
 
   try {
     const threeMatrixResult = toThreeMatrix4(matrix);
@@ -188,7 +191,7 @@ export const toTransform = (matrix: TransformationMatrix): Result<ThreeJSTransfo
     return success(transform);
   } catch (err) {
     const errorMessage = `Failed to convert to transform: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -197,7 +200,7 @@ export const toTransform = (matrix: TransformationMatrix): Result<ThreeJSTransfo
  * Create matrix from Vector3
  */
 export const fromVector3 = (vector: Vector3): Result<Matrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Vector3 to matrix');
+  logger.debug('Converting Vector3 to matrix');
 
   try {
     const data = [[vector.x], [vector.y], [vector.z]];
@@ -205,7 +208,7 @@ export const fromVector3 = (vector: Vector3): Result<Matrix, string> => {
     return success(matrix);
   } catch (err) {
     const errorMessage = `Failed to convert Vector3: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -214,7 +217,7 @@ export const fromVector3 = (vector: Vector3): Result<Matrix, string> => {
  * Create matrix from Quaternion
  */
 export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Quaternion to rotation matrix');
+  logger.debug('Converting Quaternion to rotation matrix');
 
   try {
     const matrix4 = new Matrix4().makeRotationFromQuaternion(quaternion);
@@ -226,7 +229,7 @@ export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, s
     return success(matrixResult.data as RotationMatrix);
   } catch (err) {
     const errorMessage = `Failed to convert Quaternion: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -235,7 +238,7 @@ export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, s
  * Create matrix from Euler angles
  */
 export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
-  console.log('[DEBUG][MatrixAdapters] Converting Euler to rotation matrix');
+  logger.debug('Converting Euler to rotation matrix');
 
   try {
     const matrix4 = new Matrix4().makeRotationFromEuler(euler);
@@ -247,7 +250,7 @@ export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
     return success(matrixResult.data as RotationMatrix);
   } catch (err) {
     const errorMessage = `Failed to convert Euler: ${err instanceof Error ? err.message : String(err)}`;
-    console.error('[ERROR][MatrixAdapters]', errorMessage);
+    logger.error(errorMessage);
     return error(errorMessage);
   }
 };
@@ -257,33 +260,33 @@ export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
  */
 export const matrixFactory: MatrixFactory = {
   identity: (size: number): Matrix => {
-    console.log(`[DEBUG][MatrixAdapters] Creating ${size}x${size} identity matrix`);
+    logger.debug(`Creating ${size}x${size} identity matrix`);
     return Matrix.eye(size);
   },
 
   zeros: (rows: number, cols: number): Matrix => {
-    console.log(`[DEBUG][MatrixAdapters] Creating ${rows}x${cols} zero matrix`);
+    logger.debug(`Creating ${rows}x${cols} zero matrix`);
     return Matrix.zeros(rows, cols);
   },
 
   ones: (rows: number, cols: number): Matrix => {
-    console.log(`[DEBUG][MatrixAdapters] Creating ${rows}x${cols} ones matrix`);
+    logger.debug(`Creating ${rows}x${cols} ones matrix`);
     return Matrix.ones(rows, cols);
   },
 
   random: (rows: number, cols: number, min = 0, max = 1): Matrix => {
-    console.log(`[DEBUG][MatrixAdapters] Creating ${rows}x${cols} random matrix [${min}, ${max}]`);
+    logger.debug(`Creating ${rows}x${cols} random matrix [${min}, ${max}]`);
     return Matrix.random(rows, cols);
   },
 
   diagonal: (values: readonly number[]): Matrix => {
-    console.log(`[DEBUG][MatrixAdapters] Creating diagonal matrix with ${values.length} values`);
+    logger.debug(`Creating diagonal matrix with ${values.length} values`);
     return Matrix.diag(values);
   },
 
   fromArray: (data: readonly number[][], validate = true): Matrix => {
-    console.log(
-      `[DEBUG][MatrixAdapters] Creating matrix from array ${data.length}x${data[0]?.length || 0}`
+    logger.debug(
+      `Creating matrix from array ${data.length}x${data[0]?.length || 0}`
     );
 
     if (validate) {

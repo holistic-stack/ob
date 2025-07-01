@@ -8,11 +8,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React, { act, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer';
-import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service';
-import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container';
-import { StoreConnectedEditor } from '../code-editor/components/store-connected-editor';
-import { useAppStore } from '../store/app-store';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { StoreConnectedRenderer } from '../3d-renderer/components/store-connected-renderer.js';
+import { MatrixIntegrationService } from '../3d-renderer/services/matrix-integration.service.js';
+import { MatrixServiceContainer } from '../3d-renderer/services/matrix-service-container.js';
+import { StoreConnectedEditor } from '../code-editor/components/store-connected-editor.js';
+import { useAppStore } from '../store/app-store.js';
+
+const logger = createLogger('ReactIntegrationTest');
 
 /**
  * React integration test scenarios
@@ -106,7 +109,7 @@ const TestIntegrationComponent: React.FC<{
       act(async () => {
         const result = await parseCode(newCode);
         if (!result.success) {
-          console.error('Parsing failed:', result.error);
+          logger.error('Parsing failed:', result.error);
         }
       });
     }, 300);
@@ -153,7 +156,7 @@ class TestErrorBoundary extends React.Component<
   }
 
   override componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
-    console.log('[DEBUG][TestErrorBoundary] Caught error:', error);
+    logger.debug('Caught error:', error);
     this.props.onError?.(error);
   }
 
@@ -173,7 +176,7 @@ class TestErrorBoundary extends React.Component<
 
 describe('React Integration Layer Testing', () => {
   beforeEach(() => {
-    console.log('[INIT][ReactIntegrationTest] Setting up React integration test environment');
+    logger.init('Setting up React integration test environment');
 
     // Reset app store
     useAppStore.setState((state) => {
@@ -208,7 +211,7 @@ describe('React Integration Layer Testing', () => {
   });
 
   afterEach(() => {
-    console.log('[END][ReactIntegrationTest] Cleaning up React integration test environment');
+    logger.end('Cleaning up React integration test environment');
     vi.clearAllMocks();
   });
 
@@ -216,7 +219,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should handle component mounting and unmounting correctly',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing component lifecycle');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing component lifecycle');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.componentLifecycle;
         const renderCounts: number[] = [];
@@ -257,7 +260,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should integrate with matrix services during component lifecycle',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][ReactIntegrationTest] Testing matrix service integration during lifecycle'
         );
 
@@ -314,7 +317,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should synchronize store state with React components',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing state synchronization');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing state synchronization');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.stateSynchronization;
         const stateUpdates: string[] = [];
@@ -370,7 +373,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should handle concurrent state updates correctly',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing concurrent state updates');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing concurrent state updates');
 
         const ConcurrentUpdater: React.FC = () => {
           const { updateCode, parseCode } = useAppStore();
@@ -435,7 +438,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should handle component errors gracefully',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing error boundary integration');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing error boundary integration');
 
         const _scenario = REACT_INTEGRATION_SCENARIOS.errorBoundary;
         const caughtErrors: Error[] = [];
@@ -469,7 +472,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should recover from service errors in React components',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing service error recovery in React');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing service error recovery in React');
 
         const ServiceErrorComponent: React.FC = () => {
           const { parseCode } = useAppStore();
@@ -530,7 +533,7 @@ describe('React Integration Layer Testing', () => {
     it(
       'should maintain performance during frequent re-renders',
       async () => {
-        console.log('[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders');
+        logger.debug('[DEBUG][ReactIntegrationTest] Testing performance during frequent re-renders');
 
         const scenario = REACT_INTEGRATION_SCENARIOS.performance;
         const renderTimes: number[] = [];
@@ -592,7 +595,7 @@ describe('React Integration Layer Testing', () => {
         const averageRenderTime = renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length;
         const maxRenderTime = Math.max(...renderTimes);
 
-        console.log('[DEBUG][ReactIntegrationTest] Render performance:', {
+        logger.debug('[DEBUG][ReactIntegrationTest] Render performance:', {
           averageRenderTime,
           maxRenderTime,
           totalRenders: renderTimes.length,
@@ -608,7 +611,7 @@ describe('React Integration Layer Testing', () => {
 
   describe('Real Component Integration', () => {
     it('should integrate StoreConnectedEditor with matrix services', async () => {
-      console.log('[DEBUG][ReactIntegrationTest] Testing StoreConnectedEditor integration');
+      logger.debug('[DEBUG][ReactIntegrationTest] Testing StoreConnectedEditor integration');
 
       render(
         <MockMatrixServiceProvider>
@@ -630,7 +633,7 @@ describe('React Integration Layer Testing', () => {
     }, 10000);
 
     it('should integrate StoreConnectedRenderer with matrix services', async () => {
-      console.log('[DEBUG][ReactIntegrationTest] Testing StoreConnectedRenderer integration');
+      logger.debug('[DEBUG][ReactIntegrationTest] Testing StoreConnectedRenderer integration');
 
       // Set up store with AST data
       useAppStore.setState((state) => {

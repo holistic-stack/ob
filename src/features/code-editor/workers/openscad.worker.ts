@@ -6,9 +6,12 @@
  */
 
 import * as monaco from 'monaco-editor';
+import { createLogger } from '../../../shared/services/logger.service.js';
 
 // Import OpenSCAD language configuration
-import { OPENSCAD_LANGUAGE_CONFIG } from '../services/openscad-language';
+import { OPENSCAD_LANGUAGE_CONFIG } from '../services/openscad-language.js';
+
+const logger = createLogger('OpenSCADWorker');
 
 // Global worker context types
 interface WorkerContext {
@@ -30,7 +33,7 @@ export class OpenSCADWorker {
     this._ctx = ctx;
     this._languageService = new OpenSCADLanguageService();
 
-    console.log('[INIT][OpenSCADWorker] OpenSCAD language worker initialized');
+    logger.init('OpenSCAD language worker initialized');
   }
 
   /**
@@ -47,7 +50,7 @@ export class OpenSCADWorker {
     try {
       return await this._languageService.validateCode(code);
     } catch (error) {
-      console.error('[ERROR][OpenSCADWorker] Code validation failed:', error);
+      logger.error('Code validation failed:', error);
       return [];
     }
   }
@@ -62,7 +65,7 @@ export class OpenSCADWorker {
     try {
       return await this._languageService.getCompletions(code, position);
     } catch (error) {
-      console.error('[ERROR][OpenSCADWorker] Completion failed:', error);
+      logger.error('Completion failed:', error);
       return [];
     }
   }
@@ -77,7 +80,7 @@ export class OpenSCADWorker {
     try {
       return await this._languageService.getHoverInfo(code, position);
     } catch (error) {
-      console.error('[ERROR][OpenSCADWorker] Hover info failed:', error);
+      logger.error('Hover info failed:', error);
       return null;
     }
   }

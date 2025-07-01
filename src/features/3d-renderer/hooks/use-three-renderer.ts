@@ -8,23 +8,26 @@
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { CameraConfig } from '../../../shared/types/common.types';
-import { tryCatch } from '../../../shared/utils/functional/result';
-import { measureTime } from '../../../shared/utils/performance/metrics';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { CameraConfig } from '../../../shared/types/common.types.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
+import { measureTime } from '../../../shared/utils/performance/metrics.js';
 import {
   selectParsingAST,
   selectPerformanceMetrics,
   selectRenderingCamera,
   selectRenderingState,
   useAppStore,
-} from '../../store';
-import { renderASTNode } from '../services/primitive-renderer';
+} from '../../store/index.js';
+import { renderASTNode } from '../services/primitive-renderer.js';
 import type {
   Mesh3D,
   RenderingMetrics,
   Scene3DConfig,
   UseRendererReturn,
-} from '../types/renderer.types';
+} from '../types/renderer.types.js';
+
+const logger = createLogger('useThreeRenderer');
 
 /**
  * Default camera configuration
@@ -136,7 +139,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
         setIsInitialized(true);
         setError(null);
 
-        console.log('[INIT][useThreeRenderer] Three.js renderer initialized');
+        logger.init('Three.js renderer initialized');
 
         return { scene, camera, renderer };
       },
@@ -146,7 +149,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
     if (!result.success) {
       setError(result.error);
-      console.error('[ERROR][useThreeRenderer]', result.error);
+      logger.error(result.error);
     }
   }, [config]);
 
@@ -182,10 +185,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
             sceneRef.current?.add(meshResult.data.mesh);
             renderedMeshes.push(meshResult.data);
           } else {
-            console.error(
-              `[ERROR][useThreeRenderer] Failed to render node ${i}:`,
-              meshResult.error
-            );
+            logger.error(`Failed to render node ${i}:`, meshResult.error);
           }
         }
 
@@ -220,9 +220,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       updateStoreMetrics(newMetrics);
       markDirty();
 
-      console.log(
-        `[DEBUG][useThreeRenderer] Rendered ${resolvedMeshes.length} meshes in ${duration}ms`
-      );
+      logger.debug(`Rendered ${resolvedMeshes.length} meshes in ${duration}ms`);
     },
     [meshes, isInitialized, storeMetrics, updateStoreMetrics, markDirty]
   );
@@ -247,7 +245,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       drawCalls: 0,
     }));
 
-    console.log('[DEBUG][useThreeRenderer] Scene cleared');
+    logger.debug('Scene cleared');
   }, [meshes]);
 
   /**
@@ -282,7 +280,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
       updateStoreCamera(newCamera);
 
-      console.log('[DEBUG][useThreeRenderer] Camera updated');
+      logger.debug('Camera updated');
     },
     [updateStoreCamera]
   );
@@ -308,7 +306,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     // Get canvas data URL
     const dataURL = rendererRef.current.domElement.toDataURL('image/png');
 
-    console.log('[DEBUG][useThreeRenderer] Screenshot captured');
+    logger.debug('Screenshot captured');
 
     return dataURL;
   }, []);

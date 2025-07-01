@@ -8,6 +8,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import { UnifiedParserService } from '../openscad-parser/services/unified-parser-service.js';
 import { createConfigSlice } from './slices/config-slice.js';
@@ -16,6 +17,8 @@ import { createParsingSlice } from './slices/parsing-slice.js';
 import { createPerformanceSlice } from './slices/performance-slice.js';
 import { createRenderingSlice } from './slices/rendering-slice.js';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
+
+const logger = createLogger('Store');
 
 /**
  * Default application configuration
@@ -163,7 +166,7 @@ export const createAppStore = (
 const initializeStore = async (store: ReturnType<typeof createAppStore>) => {
   const state = store.getState();
 
-  console.log('[INIT][Store] Initializing store with current code:', {
+  logger.init('Initializing store with current code:', {
     codeLength: state.editor.code.length,
     astLength: state.parsing.ast.length,
     enableRealTimeParsing: state.config.enableRealTimeParsing,
@@ -171,12 +174,12 @@ const initializeStore = async (store: ReturnType<typeof createAppStore>) => {
 
   // Parse current code if we have any code and no AST yet
   if (state.editor.code.length > 0 && state.parsing.ast.length === 0) {
-    console.log('[INIT][Store] Triggering initial parsing of current code');
+    logger.init('Triggering initial parsing of current code');
 
     // Trigger initial parsing of current code
     await state.parseCode(state.editor.code);
 
-    console.log('[INIT][Store] Initial code parsed successfully');
+    logger.init('Initial code parsed successfully');
   }
 };
 

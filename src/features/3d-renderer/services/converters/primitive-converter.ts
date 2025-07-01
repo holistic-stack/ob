@@ -1,7 +1,10 @@
 import type { CubeNode, CylinderNode, SphereNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch } from '../../../../shared/utils/functional/result';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
+import { tryCatch } from '../../../../shared/utils/functional/result.js';
+
+const logger = createLogger('PrimitiveConverter');
 
 /**
  * Convert cube AST node to Three.js mesh
@@ -12,7 +15,7 @@ export const convertCubeToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
-      console.log(`[DEBUG][PrimitiveConverter] Converting cube node:`, {
+      logger.debug(`Converting cube node:`, {
         size: node.size,
         center: node.center,
       });
@@ -34,7 +37,7 @@ export const convertCubeToMesh = (
       }
 
       mesh.updateMatrix();
-      console.log(`[DEBUG][PrimitiveConverter] Created cube mesh: ${width}x${height}x${depth}`);
+      logger.debug(`Created cube mesh: ${width}x${height}x${depth}`);
 
       return mesh;
     },
@@ -51,7 +54,7 @@ export const convertSphereToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
-      console.log(`[DEBUG][PrimitiveConverter] Converting sphere node:`, {
+      logger.debug(`Converting sphere node:`, {
         radius: node.radius,
       });
 
@@ -62,7 +65,7 @@ export const convertSphereToMesh = (
       const mesh = new THREE.Mesh(geometry, material);
 
       mesh.updateMatrix();
-      console.log(`[DEBUG][PrimitiveConverter] Created sphere mesh: radius=${radius}`);
+      logger.debug(`Created sphere mesh: radius=${radius}`);
 
       return mesh;
     },
@@ -79,7 +82,7 @@ export const convertCylinderToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
-      console.log(`[DEBUG][PrimitiveConverter] Converting cylinder node:`, {
+      logger.debug(`Converting cylinder node:`, {
         h: node.h,
         r: node.r,
         center: node.center,
@@ -99,7 +102,7 @@ export const convertCylinderToMesh = (
       }
 
       mesh.updateMatrix();
-      console.log(`[DEBUG][PrimitiveConverter] Created cylinder mesh: r=${radius}, h=${height}`);
+      logger.debug(`Created cylinder mesh: r=${radius}, h=${height}`);
 
       return mesh;
     },

@@ -8,9 +8,12 @@
 import { Matrix } from 'ml-matrix';
 import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { matrixFactory } from '../utils/matrix-adapters';
-import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixServiceContainer } from './matrix-service-container';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { matrixFactory } from '../utils/matrix-adapters.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+
+const logger = createLogger('PerformanceRegressionTest');
 
 /**
  * Performance baseline configuration
@@ -231,7 +234,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
   let performanceMeasurements: PerformanceMeasurement[] = [];
 
   beforeEach(() => {
-    console.log('[INIT][PerformanceRegressionTest] Setting up performance test environment');
+    logger.init('Setting up performance test environment');
 
     serviceContainer = new MatrixServiceContainer({
       enableTelemetry: true,
@@ -245,12 +248,12 @@ describe('Matrix Performance Regression Testing Framework', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][PerformanceRegressionTest] Cleaning up performance test environment');
+    logger.end('Cleaning up performance test environment');
 
     // Generate and log performance report
     if (performanceMeasurements.length > 0) {
       const report = generateRegressionReport(performanceMeasurements);
-      console.log('[PERFORMANCE][Report]', JSON.stringify(report, null, 2));
+      logger.info('[PERFORMANCE][Report]', JSON.stringify(report, null, 2));
 
       // Assert no critical regressions
       expect(report.summary.criticalRegressions).toHaveLength(0);
@@ -264,7 +267,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain Matrix4 to ml-matrix conversion performance',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][PerformanceRegressionTest] Testing Matrix4 to ml-matrix conversion performance'
         );
 
@@ -287,7 +290,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
 
         performanceMeasurements.push(measurement);
 
-        console.log('[DEBUG][PerformanceRegressionTest] Matrix4 conversion performance:', {
+        logger.debug('[DEBUG][PerformanceRegressionTest] Matrix4 conversion performance:', {
           average: measurement.averageTime.toFixed(2),
           baseline: measurement.baseline,
           regression: measurement.regressionPercent.toFixed(1),
@@ -307,7 +310,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain normal matrix computation performance',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][PerformanceRegressionTest] Testing normal matrix computation performance'
         );
 
@@ -339,7 +342,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain basic validation performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing basic validation performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing basic validation performance');
 
         const testMatrix = matrixFactory.identity(4);
 
@@ -371,7 +374,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain numerical stability analysis performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing numerical stability performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing numerical stability performance');
 
         const testMatrix = new Matrix([
           [1, 2, 3, 4],
@@ -409,7 +412,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain cache get operation performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing cache get performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing cache get performance');
 
         const cacheService = serviceContainer.getCacheService();
         const testKey = 'performance_test_key';
@@ -439,7 +442,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain cache set operation performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing cache set performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing cache set performance');
 
         const cacheService = serviceContainer.getCacheService();
 
@@ -467,7 +470,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain health check performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing health check performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing health check performance');
 
         const measurement = await measurePerformance(
           async () => {
@@ -492,7 +495,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
     it(
       'should maintain overall workflow performance',
       async () => {
-        console.log('[DEBUG][PerformanceRegressionTest] Testing end-to-end workflow performance');
+        logger.debug('[DEBUG][PerformanceRegressionTest] Testing end-to-end workflow performance');
 
         // This is a composite test that measures overall system performance
         const workflowMeasurements: number[] = [];
@@ -529,7 +532,7 @@ describe('Matrix Performance Regression Testing Framework', () => {
           workflowMeasurements.reduce((a, b) => a + b, 0) / workflowMeasurements.length;
         const maxWorkflowTime = Math.max(...workflowMeasurements);
 
-        console.log('[DEBUG][PerformanceRegressionTest] End-to-end workflow performance:', {
+        logger.debug('[DEBUG][PerformanceRegressionTest] End-to-end workflow performance:', {
           average: averageWorkflowTime.toFixed(2),
           max: maxWorkflowTime.toFixed(2),
           samples: workflowMeasurements.length,

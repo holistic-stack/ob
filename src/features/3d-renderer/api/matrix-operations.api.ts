@@ -7,14 +7,17 @@
 
 import type { Matrix } from 'ml-matrix';
 import { type Matrix3, Matrix4 } from 'three';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
+import { error, success } from '../../../shared/utils/functional/result.js';
 import {
   type EnhancedMatrixOptions,
   type EnhancedMatrixResult,
   MatrixIntegrationService,
-} from '../services/matrix-integration.service';
-import { matrixServiceContainer } from '../services/matrix-service-container';
+} from '../services/matrix-integration.service.js';
+import { matrixServiceContainer } from '../services/matrix-service-container.js';
+
+const logger = createLogger('MatrixOperationsAPI');
 
 /**
  * Matrix operation configuration
@@ -143,7 +146,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   private metrics: APIPerformanceMetrics;
 
   constructor(config: Partial<MatrixOperationConfig> = {}) {
-    console.log('[INIT][MatrixOperationsAPI] Initializing matrix operations API');
+    logger.init('Initializing matrix operations API');
 
     this.config = { ...DEFAULT_API_CONFIG, ...config };
     this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
@@ -188,20 +191,16 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     const startTime = Date.now();
 
     try {
-      console.log(`[DEBUG][MatrixOperationsAPI] Executing ${operationName}`);
+      logger.debug(`Executing ${operationName}`);
       const result = await operation();
 
       const executionTime = Date.now() - startTime;
       this.trackOperation(result.success, executionTime);
 
       if (result.success) {
-        console.log(
-          `[DEBUG][MatrixOperationsAPI] ${operationName} completed successfully in ${executionTime}ms`
-        );
+        logger.debug(`${operationName} completed successfully in ${executionTime}ms`);
       } else {
-        console.warn(
-          `[WARN][MatrixOperationsAPI] ${operationName} failed: ${!result.success ? result.error : 'Unknown error'}`
-        );
+        logger.warn(`${operationName} failed: ${!result.success ? result.error : 'Unknown error'}`);
       }
 
       return result;
@@ -210,7 +209,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       this.trackOperation(false, executionTime);
 
       const errorMessage = `${operationName} failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error(`[ERROR][MatrixOperationsAPI] ${errorMessage}`);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -425,7 +424,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Reset metrics
    */
   resetMetrics(): void {
-    console.log('[DEBUG][MatrixOperationsAPI] Resetting performance metrics');
+    logger.debug('Resetting performance metrics');
 
     this.metrics = {
       totalOperations: 0,
@@ -444,7 +443,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async updateConfiguration(config: Partial<MatrixOperationConfig>): Promise<Result<void, string>> {
     try {
-      console.log('[DEBUG][MatrixOperationsAPI] Updating configuration:', config);
+      logger.debug('Updating configuration:', config);
 
       this.config = { ...this.config, ...config };
 
@@ -458,7 +457,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       }
     } catch (err) {
       const errorMessage = `Configuration update failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixOperationsAPI]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -477,13 +476,13 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Shutdown API
    */
   async shutdown(): Promise<void> {
-    console.log('[DEBUG][MatrixOperationsAPI] Shutting down matrix operations API');
+    logger.debug('Shutting down matrix operations API');
 
     try {
       await this.matrixIntegration.shutdown();
-      console.log('[END][MatrixOperationsAPI] Matrix operations API shutdown complete');
+      logger.end('Matrix operations API shutdown complete');
     } catch (err) {
-      console.error('[ERROR][MatrixOperationsAPI] Shutdown error:', err);
+      logger.error('Shutdown error:', err);
     }
   }
 
@@ -492,7 +491,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async restart(): Promise<Result<void, string>> {
     try {
-      console.log('[DEBUG][MatrixOperationsAPI] Restarting matrix operations API');
+      logger.debug('Restarting matrix operations API');
 
       await this.shutdown();
       this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
@@ -501,7 +500,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       return success(undefined);
     } catch (err) {
       const errorMessage = `API restart failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixOperationsAPI]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }

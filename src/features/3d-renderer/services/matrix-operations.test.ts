@@ -7,25 +7,28 @@
 
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { matrixFactory, matrixUtils } from '../utils/matrix-adapters';
-import { MatrixOperationsAPI } from './matrix-operations.api';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { matrixFactory, matrixUtils } from '../utils/matrix-adapters.js';
+import { MatrixOperationsAPI } from './matrix-operations.api.js';
+
+const logger = createLogger('MatrixOperationsTest');
 
 describe('MatrixOperationsAPI', () => {
   let api: MatrixOperationsAPI;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixOperationsTest] Setting up test environment');
+    logger.init('Setting up test environment');
     api = new MatrixOperationsAPI();
   });
 
   afterEach(() => {
-    console.log('[END][MatrixOperationsTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     api.clearCache();
   });
 
   describe('Basic Matrix Operations', () => {
     it('should perform matrix addition correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix addition');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix addition');
 
       const a = matrixFactory.fromArray([
         [1, 2],
@@ -52,7 +55,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should perform matrix multiplication correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix multiplication');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix multiplication');
 
       const a = matrixFactory.fromArray([
         [1, 2],
@@ -78,7 +81,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should handle matrix transpose correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix transpose');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix transpose');
 
       const matrix = matrixFactory.fromArray([
         [1, 2, 3],
@@ -100,7 +103,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should calculate matrix inverse correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix inverse');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix inverse');
 
       const matrix = matrixFactory.fromArray([
         [2, 1],
@@ -123,7 +126,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Matrix Properties', () => {
     it('should calculate determinant correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing determinant calculation');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing determinant calculation');
 
       const matrix = matrixFactory.fromArray([
         [2, 1],
@@ -139,7 +142,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should calculate trace correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing trace calculation');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing trace calculation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -155,7 +158,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should calculate rank correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing rank calculation');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing rank calculation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -173,7 +176,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Three.js Integration', () => {
     it('should convert Three.js Matrix4 to ml-matrix correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing Three.js Matrix4 conversion');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing Three.js Matrix4 conversion');
 
       const threeMatrix = new Matrix4().makeTranslation(1, 2, 3);
 
@@ -191,7 +194,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should convert ml-matrix to Three.js Matrix4 correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing ml-matrix to Three.js conversion');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing ml-matrix to Three.js conversion');
 
       const matrix = matrixFactory.identity(4);
       matrix.set(0, 3, 5); // Set translation x
@@ -210,7 +213,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should create transformation matrix correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing transformation matrix creation');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing transformation matrix creation');
 
       const position = new Vector3(1, 2, 3);
       const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 4);
@@ -232,7 +235,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Matrix Decomposition', () => {
     it('should perform matrix decomposition correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix decomposition');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix decomposition');
 
       const matrix = matrixFactory.fromArray([
         [4, 2, 1],
@@ -273,7 +276,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Batch Operations', () => {
     it('should execute batch operations correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing batch operations');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing batch operations');
 
       const a = matrixFactory.fromArray([
         [1, 2],
@@ -321,7 +324,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Caching and Performance', () => {
     it('should cache matrix operations correctly', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing matrix operation caching');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix operation caching');
 
       const a = matrixFactory.fromArray([
         [1, 2],
@@ -348,7 +351,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should provide performance metrics', () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing performance metrics');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing performance metrics');
 
       const metrics = api.getPerformanceMetrics();
 
@@ -360,7 +363,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should provide cache statistics', () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing cache statistics');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing cache statistics');
 
       const stats = api.getCacheStats();
 
@@ -374,7 +377,7 @@ describe('MatrixOperationsAPI', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid matrix operations gracefully', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing error handling');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing error handling');
 
       const a = matrixFactory.fromArray([[1, 2]]); // 1x2 matrix
       const _b = matrixFactory.fromArray([[3], [4]]); // 2x1 matrix
@@ -390,7 +393,7 @@ describe('MatrixOperationsAPI', () => {
     });
 
     it('should handle singular matrix inverse gracefully', async () => {
-      console.log('[DEBUG][MatrixOperationsTest] Testing singular matrix handling');
+      logger.debug('[DEBUG][MatrixOperationsTest] Testing singular matrix handling');
 
       const singularMatrix = matrixFactory.fromArray([
         [1, 2],

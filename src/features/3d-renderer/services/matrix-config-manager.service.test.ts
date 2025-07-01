@@ -6,25 +6,28 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { MatrixConfigManagerService } from './matrix-config-manager.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { MatrixConfigManagerService } from './matrix-config-manager.service.js';
+
+const logger = createLogger('MatrixConfigManagerServiceTest');
 
 describe('MatrixConfigManagerService', () => {
   let service: MatrixConfigManagerService;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixConfigManagerServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
     service = new MatrixConfigManagerService();
   });
 
   afterEach(() => {
-    console.log('[END][MatrixConfigManagerServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     service.resetToDefaults();
   });
 
   describe('Initialization', () => {
     it('should initialize with default configuration', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing default initialization');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing default initialization');
 
       const config = service.getCurrentConfig();
       expect(config).toBeDefined();
@@ -35,7 +38,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should apply environment-specific configuration', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing environment-specific configuration'
       );
 
@@ -50,7 +53,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Configuration Validation', () => {
     it('should validate valid configuration properties', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing valid configuration validation');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing valid configuration validation');
 
       const result = service.applyOverride({
         performance: {
@@ -67,7 +70,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should reject invalid configuration values', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing invalid configuration rejection'
       );
 
@@ -84,9 +87,9 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should provide warnings for potentially problematic values', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration warnings');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration warnings');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -106,7 +109,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should validate entire configuration', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing complete configuration validation'
       );
 
@@ -119,7 +122,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Configuration Overrides', () => {
     it('should apply and track configuration overrides', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration overrides');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration overrides');
 
       const _originalMaxSize = service.getCurrentConfig().cache.maxCacheSize;
 
@@ -142,7 +145,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should maintain change history', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing change history tracking');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing change history tracking');
 
       service.applyOverride({
         performance: {
@@ -167,7 +170,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should reset to defaults', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing reset to defaults');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing reset to defaults');
 
       // Apply some overrides
       service.applyOverride({
@@ -194,7 +197,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Performance Threshold Management', () => {
     it('should suggest threshold adjustments based on metrics', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing threshold adjustment suggestions'
       );
 
@@ -228,7 +231,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should apply threshold adjustments with confidence filtering', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing threshold adjustment application'
       );
 
@@ -249,7 +252,7 @@ describe('MatrixConfigManagerService', () => {
         },
       ];
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -268,7 +271,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Configuration Import/Export', () => {
     it('should export configuration correctly', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration export');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration export');
 
       // Apply some overrides first
       service.applyOverride({
@@ -290,7 +293,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should import valid configuration', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration import');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration import');
 
       const configToImport = {
         config: {
@@ -316,7 +319,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should reject invalid configuration imports', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing invalid configuration import rejection'
       );
 
@@ -335,7 +338,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should handle malformed JSON in import', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing malformed JSON import handling');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing malformed JSON import handling');
 
       const result = service.importConfiguration('invalid json {');
 
@@ -348,7 +351,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Environment Detection', () => {
     it('should detect test environment correctly', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing environment detection');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing environment detection');
 
       // In vitest, NODE_ENV should be 'test'
       const config = service.getCurrentConfig();
@@ -361,7 +364,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Nested Configuration Handling', () => {
     it('should handle deeply nested configuration overrides', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing nested configuration handling');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing nested configuration handling');
 
       const result = service.applyOverride({
         performance: {
@@ -376,7 +379,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should maintain non-overridden nested properties', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing preservation of non-overridden properties'
       );
 
@@ -396,7 +399,7 @@ describe('MatrixConfigManagerService', () => {
 
   describe('Error Handling', () => {
     it('should handle configuration validation errors gracefully', () => {
-      console.log('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration error handling');
+      logger.debug('[DEBUG][MatrixConfigManagerServiceTest] Testing configuration error handling');
 
       // Test with invalid type - string instead of number
       const result = service.applyOverride({
@@ -412,7 +415,7 @@ describe('MatrixConfigManagerService', () => {
     });
 
     it('should maintain configuration integrity on failed overrides', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixConfigManagerServiceTest] Testing configuration integrity on failures'
       );
 

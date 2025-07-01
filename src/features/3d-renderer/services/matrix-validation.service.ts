@@ -7,16 +7,19 @@
 
 import type { Matrix } from 'ml-matrix';
 import { EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import type { MATRIX_CONFIG } from '../config/matrix-config';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import type { MATRIX_CONFIG } from '../config/matrix-config.js';
 import type {
   MatrixOperationResult,
   MatrixPerformanceMetrics,
   MatrixValidationResult,
-} from '../types/matrix.types';
-import { matrixUtils } from '../utils/matrix-adapters';
-import type { MatrixCacheService } from './matrix-cache.service';
+} from '../types/matrix.types.js';
+import { matrixUtils } from '../utils/matrix-adapters.js';
+import type { MatrixCacheService } from './matrix-cache.service.js';
+
+const logger = createLogger('MatrixValidationService');
 
 /**
  * Dependency injection interface for MatrixValidationService
@@ -54,8 +57,8 @@ export class MatrixValidationService {
   };
 
   constructor(private readonly deps: MatrixValidationDependencies) {
-    console.log(
-      '[INIT][MatrixValidationService] Initializing matrix validation service with dependencies'
+    logger.init(
+      'Initializing matrix validation service with dependencies'
     );
     this.validateDependencies();
   }
@@ -70,7 +73,7 @@ export class MatrixValidationService {
     if (!this.deps.config) {
       throw new Error('Matrix configuration dependency is required');
     }
-    console.log('[DEBUG][MatrixValidationService] Dependencies validated successfully');
+    logger.debug('Dependencies validated successfully');
   }
 
   /**
@@ -125,7 +128,7 @@ export class MatrixValidationService {
       this.deps.telemetry.trackOperation(operation, 0, false);
     }
 
-    console.error(`[ERROR][MatrixValidationService] Operation ${operation} failed:`, error);
+    logger.error(`Operation ${operation} failed:`, error);
   }
 
   /**
@@ -231,8 +234,8 @@ export class MatrixValidationService {
     const startTime = Date.now();
     const operation = 'matrixValidation';
 
-    console.log(
-      `[DEBUG][MatrixValidationService] Validating matrix ${matrix.rows}x${matrix.columns}`
+    logger.debug(
+      `Validating matrix ${matrix.rows}x${matrix.columns}`
     );
 
     try {
@@ -281,7 +284,7 @@ export class MatrixValidationService {
       try {
         rank = (matrix as unknown as { rank?(): number }).rank?.() ?? 0;
       } catch (err) {
-        console.warn(`[WARN][MatrixValidationService] Failed to compute rank: ${err}`);
+        logger.warn(`Failed to compute rank: ${err}`);
       }
 
       // Compute determinant for square matrices
@@ -289,7 +292,7 @@ export class MatrixValidationService {
         try {
           determinant = (matrix as unknown as { determinant?(): number }).determinant?.() ?? 0;
         } catch (err) {
-          console.warn(`[WARN][MatrixValidationService] Failed to compute determinant: ${err}`);
+          logger.warn(`Failed to compute determinant: ${err}`);
         }
       }
 
@@ -299,7 +302,7 @@ export class MatrixValidationService {
           const eigenDecomp = new EigenvalueDecomposition(matrix);
           eigenvalues = eigenDecomp.realEigenvalues;
         } catch (err) {
-          console.warn(`[WARN][MatrixValidationService] Failed to compute eigenvalues: ${err}`);
+          logger.warn(`Failed to compute eigenvalues: ${err}`);
         }
       }
 
@@ -309,7 +312,7 @@ export class MatrixValidationService {
           const svd = new SingularValueDecomposition(matrix);
           singularValues = svd.diagonal;
         } catch (err) {
-          console.warn(`[WARN][MatrixValidationService] Failed to compute SVD: ${err}`);
+          logger.warn(`Failed to compute SVD: ${err}`);
         }
       }
 
@@ -378,8 +381,8 @@ export class MatrixValidationService {
         },
       };
 
-      console.log(
-        `[DEBUG][MatrixValidationService] Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`
+      logger.debug(
+        `Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`
       );
       return success(operationResult);
     } catch (err) {
@@ -408,7 +411,7 @@ export class MatrixValidationService {
       largeMatrixOperations: 0,
       failedOperations: 0,
     });
-    console.log('[DEBUG][MatrixValidationService] Performance metrics reset');
+    logger.debug('Performance metrics reset');
   }
 }
 

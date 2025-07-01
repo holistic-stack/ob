@@ -17,8 +17,11 @@ import type {
   TranslateNode,
   UnionNode,
 } from '@holistic-stack/openscad-parser';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/utils/functional/result';
 import { tryCatch } from '../../../shared/utils/functional/result';
+
+const logger = createLogger('ASTRestructuringService');
 
 /**
  * Configuration for AST restructuring
@@ -178,8 +181,8 @@ const findDirectChildrenForNode = (
 
   if (locationBasedChildren.length > 0) {
     if (config.enableLogging) {
-      console.log(
-        `[DEBUG][ASTRestructuringService] Found ${locationBasedChildren.length} children via source location analysis for ${parentNode.type}`
+      logger.debug(
+        `Found ${locationBasedChildren.length} children via source location analysis for ${parentNode.type}`
       );
     }
     return locationBasedChildren;
@@ -190,8 +193,8 @@ const findDirectChildrenForNode = (
     const proximityBasedChildren = findChildrenByProximity(parentNode, allNodes, config);
     if (proximityBasedChildren.length > 0) {
       if (config.enableLogging) {
-        console.log(
-          `[DEBUG][ASTRestructuringService] Found ${proximityBasedChildren.length} children via proximity analysis for ${parentNode.type}`
+        logger.debug(
+          `Found ${proximityBasedChildren.length} children via proximity analysis for ${parentNode.type}`
         );
       }
       return proximityBasedChildren;
@@ -240,8 +243,8 @@ const findChildrenBySourceLocation = (
 
   if (config.enableLogging && directChildren.length > 0) {
     directChildren.forEach((child) => {
-      console.log(
-        `[DEBUG][ASTRestructuringService] Found direct child ${child.type} for parent ${parentNode.type} via source location`
+      logger.debug(
+        `Found direct child ${child.type} for parent ${parentNode.type} via source location`
       );
     });
   }
@@ -289,8 +292,8 @@ const findChildrenByProximity = (
 
   if (config.enableLogging && selectedChildren.length > 0) {
     selectedChildren.forEach((child) => {
-      console.log(
-        `[DEBUG][ASTRestructuringService] Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
+      logger.debug(
+        `Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
       );
     });
   }
@@ -307,15 +310,15 @@ const restructureCSGNode = (
   config: ASTRestructuringConfig
 ): UnionNode | DifferenceNode | IntersectionNode => {
   if (config.enableLogging) {
-    console.log(`[DEBUG][ASTRestructuringService] Restructuring ${csgNode.type} node`);
+    logger.debug(`Restructuring ${csgNode.type} node`);
   }
 
   // If the CSG node already has children from the parser, preserve them
   let children: ASTNode[] = [];
   if (hasChildren(csgNode) && csgNode.children.length > 0) {
     if (config.enableLogging) {
-      console.log(
-        `[DEBUG][ASTRestructuringService] ${csgNode.type} already has ${csgNode.children.length} children from parser, preserving them`
+      logger.debug(
+        `${csgNode.type} already has ${csgNode.children.length} children from parser, preserving them`
       );
     }
     children = csgNode.children;
@@ -336,8 +339,8 @@ const restructureCSGNode = (
       );
 
       if (potentialChildren.length > 0 && config.enableLogging) {
-        console.log(
-          `[DEBUG][ASTRestructuringService] Found ${potentialChildren.length} potential children for ${csgNode.type} via proximity analysis`
+        logger.debug(
+          `Found ${potentialChildren.length} potential children for ${csgNode.type} via proximity analysis`
         );
         children = potentialChildren;
       }
@@ -351,8 +354,8 @@ const restructureCSGNode = (
   };
 
   if (config.enableLogging) {
-    console.log(
-      `[DEBUG][ASTRestructuringService] ${csgNode.type} now has ${children.length} children`
+    logger.debug(
+      `${csgNode.type} now has ${children.length} children`
     );
   }
 
@@ -368,15 +371,15 @@ const restructureTransformNode = (
   config: ASTRestructuringConfig
 ): TranslateNode | RotateNode | ScaleNode => {
   if (config.enableLogging) {
-    console.log(`[DEBUG][ASTRestructuringService] Restructuring ${transformNode.type} node`);
+    logger.debug(`Restructuring ${transformNode.type} node`);
   }
 
   // If the transform node already has children from the parser, preserve them
   let children: ASTNode[] = [];
   if (hasChildren(transformNode) && transformNode.children.length > 0) {
     if (config.enableLogging) {
-      console.log(
-        `[DEBUG][ASTRestructuringService] ${transformNode.type} already has ${transformNode.children.length} children from parser, preserving them`
+      logger.debug(
+        `${transformNode.type} already has ${transformNode.children.length} children from parser, preserving them`
       );
     }
     children = transformNode.children;
@@ -400,8 +403,8 @@ const restructureTransformNode = (
   };
 
   if (config.enableLogging) {
-    console.log(
-      `[DEBUG][ASTRestructuringService] ${transformNode.type} now has ${restructuredChildren.length} children`
+    logger.debug(
+      `${transformNode.type} now has ${restructuredChildren.length} children`
     );
   }
 
@@ -434,7 +437,7 @@ const getTopLevelNodes = (
   }
 
   if (config.enableLogging) {
-    console.log(`[DEBUG][ASTRestructuringService] Found ${topLevelNodes.length} top-level nodes`);
+    logger.debug(`Found ${topLevelNodes.length} top-level nodes`);
   }
 
   return topLevelNodes;
@@ -452,14 +455,14 @@ export const restructureAST = (
       const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
       if (finalConfig.enableLogging) {
-        console.log(`[INIT][ASTRestructuringService] Restructuring AST with ${ast.length} nodes`);
+        logger.init(`Restructuring AST with ${ast.length} nodes`);
       }
 
       // If AST is empty or has only one node, no restructuring needed
       if (ast.length <= 1) {
         if (finalConfig.enableLogging) {
-          console.log(
-            `[DEBUG][ASTRestructuringService] AST too small for restructuring, returning as-is`
+          logger.debug(
+            `AST too small for restructuring, returning as-is`
           );
         }
         return ast;
@@ -481,8 +484,8 @@ export const restructureAST = (
       });
 
       if (finalConfig.enableLogging) {
-        console.log(
-          `[DEBUG][ASTRestructuringService] Restructuring complete: ${restructuredNodes.length} top-level nodes`
+        logger.debug(
+          `Restructuring complete: ${restructuredNodes.length} top-level nodes`
         );
       }
 

@@ -8,16 +8,19 @@
 import { Matrix } from 'ml-matrix';
 import { Matrix3, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { matrixFactory } from '../utils/matrix-adapters';
-import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixServiceContainer } from './matrix-service-container';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { matrixFactory } from '../utils/matrix-adapters.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+
+const logger = createLogger('MatrixIntegrationServiceTest');
 
 describe('MatrixIntegrationService', () => {
   let service: MatrixIntegrationService;
   let serviceContainer: MatrixServiceContainer;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixIntegrationServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
 
     serviceContainer = new MatrixServiceContainer({
       enableTelemetry: true,
@@ -30,13 +33,13 @@ describe('MatrixIntegrationService', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][MatrixIntegrationServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     await service.shutdown();
   });
 
   describe('Enhanced Matrix Conversion', () => {
     it('should perform enhanced Matrix4 to ml-matrix conversion', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing enhanced Matrix4 conversion');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing enhanced Matrix4 conversion');
 
       const matrix4 = new Matrix4().makeTranslation(1, 2, 3);
 
@@ -74,7 +77,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should handle conversion with validation warnings', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing conversion with validation warnings'
       );
 
@@ -96,7 +99,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should work without optional services', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing conversion without optional services'
       );
 
@@ -127,7 +130,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Enhanced Matrix Inversion', () => {
     it('should perform robust inversion with validation', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing enhanced robust inversion');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing enhanced robust inversion');
 
       const matrix = matrixFactory.identity(3);
       matrix.set(0, 0, 2);
@@ -161,7 +164,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should handle singular matrices with SVD fallback', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing singular matrix with SVD fallback'
       );
 
@@ -189,7 +192,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should fail gracefully for invalid matrices', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing invalid matrix handling');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing invalid matrix handling');
 
       const invalidMatrix = new Matrix(0, 0); // Empty matrix
 
@@ -204,7 +207,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Enhanced Normal Matrix Computation', () => {
     it('should compute normal matrix with enhanced features', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing enhanced normal matrix computation'
       );
 
@@ -237,7 +240,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Batch Operations', () => {
     it('should perform batch operations successfully', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing batch operations');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing batch operations');
 
       const operations = [
         () => service.convertMatrix4ToMLMatrix(new Matrix4().makeTranslation(1, 0, 0)),
@@ -262,7 +265,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should handle batch operations with errors', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing batch operations with errors');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing batch operations with errors');
 
       const operations = [
         () => service.convertMatrix4ToMLMatrix(new Matrix4().makeTranslation(1, 0, 0)),
@@ -291,7 +294,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Performance Reporting', () => {
     it('should generate comprehensive performance report', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing performance reporting');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing performance reporting');
 
       // Perform some operations to generate data
       await service.convertMatrix4ToMLMatrix(new Matrix4().makeTranslation(1, 2, 3));
@@ -315,7 +318,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should handle missing services in performance report', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing performance report with missing services'
       );
 
@@ -336,7 +339,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Configuration Optimization', () => {
     it('should optimize configuration based on usage patterns', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing configuration optimization');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing configuration optimization');
 
       // Perform some operations to generate telemetry data
       for (let i = 0; i < 10; i++) {
@@ -349,7 +352,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should handle optimization without required services', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing optimization without required services'
       );
 
@@ -373,7 +376,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Health Monitoring', () => {
     it('should provide health status', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing health status');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing health status');
 
       const healthStatus = await service.getHealthStatus();
 
@@ -390,7 +393,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Error Handling and Resilience', () => {
     it('should handle service failures gracefully', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing service failure handling');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing service failure handling');
 
       // Test with invalid input that should trigger error handling
       const invalidMatrix4 = new Matrix4();
@@ -407,7 +410,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should maintain operation tracking during errors', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing operation tracking during errors');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing operation tracking during errors');
 
       const telemetryService = serviceContainer.getTelemetryService();
       const initialMetrics = telemetryService?.getPerformanceMetrics();
@@ -425,7 +428,7 @@ describe('MatrixIntegrationService', () => {
 
   describe('Integration with Existing Systems', () => {
     it('should integrate with existing matrix operations', async () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing integration with existing operations'
       );
 
@@ -445,7 +448,7 @@ describe('MatrixIntegrationService', () => {
     });
 
     it('should maintain compatibility with CSG operations', async () => {
-      console.log('[DEBUG][MatrixIntegrationServiceTest] Testing CSG operation compatibility');
+      logger.debug('[DEBUG][MatrixIntegrationServiceTest] Testing CSG operation compatibility');
 
       // Test normal matrix computation for CSG operations
       const transformMatrix = new Matrix4()

@@ -6,15 +6,18 @@
  */
 
 import type { Matrix } from 'ml-matrix';
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MATRIX_CONFIG } from '../config/matrix-config';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
 import type {
   MatrixCacheEntry,
   MatrixOperationResult,
   MatrixPerformanceMetrics,
-} from '../types/matrix.types';
-import { matrixUtils } from '../utils/matrix-adapters';
+} from '../types/matrix.types.js';
+import { matrixUtils } from '../utils/matrix-adapters.js';
+
+const logger = createLogger('MatrixCacheService');
 
 /**
  * LRU Cache Node for doubly linked list
@@ -49,7 +52,7 @@ export class MatrixCacheService {
   private cacheMisses = 0;
 
   constructor() {
-    console.log('[INIT][MatrixCacheService] Initializing matrix cache service');
+    logger.init('Initializing matrix cache service');
     this.initializeCache();
   }
 
@@ -146,7 +149,7 @@ export class MatrixCacheService {
       this.cache.delete(evicted.key);
       this.currentMemoryUsage -= evicted.entry.size;
 
-      console.log(`[DEBUG][MatrixCacheService] Evicted cache entry: ${evicted.key}`);
+      logger.debug(`Evicted cache entry: ${evicted.key}`);
     }
   }
 
@@ -176,14 +179,14 @@ export class MatrixCacheService {
    * Get matrix from cache
    */
   get(key: string): Result<Matrix | null, string> {
-    console.log(`[DEBUG][MatrixCacheService] Cache get: ${key}`);
+    logger.debug(`Cache get: ${key}`);
 
     try {
       const node = this.cache.get(key);
 
       if (!node) {
         this.cacheMisses++;
-        console.log(`[DEBUG][MatrixCacheService] Cache miss: ${key}`);
+        logger.debug(`Cache miss: ${key}`);
         return success(null);
       }
 
@@ -192,7 +195,7 @@ export class MatrixCacheService {
       const age = now - node.entry.timestamp;
 
       if (age > MATRIX_CONFIG.cache.cacheTTL) {
-        console.log(`[DEBUG][MatrixCacheService] Cache entry expired: ${key}`);
+        logger.debug(`Cache entry expired: ${key}`);
         this.delete(key);
         this.cacheMisses++;
         return success(null);
@@ -209,11 +212,11 @@ export class MatrixCacheService {
       this.moveToHead(node);
       this.cacheHits++;
 
-      console.log(`[DEBUG][MatrixCacheService] Cache hit: ${key}`);
+      logger.debug(`Cache hit: ${key}`);
       return success(node.entry.matrix.clone());
     } catch (err) {
       const errorMessage = `Cache get failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixCacheService]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -222,7 +225,7 @@ export class MatrixCacheService {
    * Set matrix in cache
    */
   set(key: string, matrix: Matrix, metadata: Record<string, unknown> = {}): Result<void, string> {
-    console.log(`[DEBUG][MatrixCacheService] Cache set: ${key}`);
+    logger.debug(`Cache set: ${key}`);
 
     try {
       const memoryNeeded = this.calculateMemoryUsage(matrix);
@@ -251,11 +254,11 @@ export class MatrixCacheService {
       this.addToHead(node);
       this.currentMemoryUsage += entry.size;
 
-      console.log(`[DEBUG][MatrixCacheService] Cached matrix: ${key} (${entry.size} bytes)`);
+      logger.debug(`Cached matrix: ${key} (${entry.size} bytes)`);
       return success(undefined);
     } catch (err) {
       const errorMessage = `Cache set failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixCacheService]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -264,7 +267,7 @@ export class MatrixCacheService {
    * Delete matrix from cache
    */
   delete(key: string): Result<boolean, string> {
-    console.log(`[DEBUG][MatrixCacheService] Cache delete: ${key}`);
+    logger.debug(`Cache delete: ${key}`);
 
     try {
       const node = this.cache.get(key);
@@ -277,11 +280,11 @@ export class MatrixCacheService {
       this.cache.delete(key);
       this.currentMemoryUsage -= node.entry.size;
 
-      console.log(`[DEBUG][MatrixCacheService] Deleted cache entry: ${key}`);
+      logger.debug(`Deleted cache entry: ${key}`);
       return success(true);
     } catch (err) {
       const errorMessage = `Cache delete failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixCacheService]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -307,18 +310,18 @@ export class MatrixCacheService {
    * Clear all cache entries
    */
   clear(): Result<void, string> {
-    console.log('[DEBUG][MatrixCacheService] Clearing cache');
+    logger.debug('Clearing cache');
 
     try {
       this.cache.clear();
       this.currentMemoryUsage = 0;
       this.initializeCache();
 
-      console.log('[DEBUG][MatrixCacheService] Cache cleared');
+      logger.debug('Cache cleared');
       return success(undefined);
     } catch (err) {
       const errorMessage = `Cache clear failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixCacheService]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }
@@ -394,7 +397,7 @@ export class MatrixCacheService {
    * Cleanup expired entries
    */
   cleanup(): Result<number, string> {
-    console.log('[DEBUG][MatrixCacheService] Running cache cleanup');
+    logger.debug('Running cache cleanup');
 
     try {
       const now = Date.now();
@@ -409,11 +412,11 @@ export class MatrixCacheService {
         }
       }
 
-      console.log(`[DEBUG][MatrixCacheService] Cleaned ${cleanedCount} expired entries`);
+      logger.debug(`Cleaned ${cleanedCount} expired entries`);
       return success(cleanedCount);
     } catch (err) {
       const errorMessage = `Cache cleanup failed: ${err instanceof Error ? err.message : String(err)}`;
-      console.error('[ERROR][MatrixCacheService]', errorMessage);
+      logger.error(errorMessage);
       return error(errorMessage);
     }
   }

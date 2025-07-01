@@ -9,21 +9,23 @@
 import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type React from 'react';
-import { useCallback, useEffect, useMemo } from 'react';
-import type * as THREE from 'three';
-import type { CameraConfig } from '../../../shared/types/common.types';
-import type { Result } from '../../../shared/types/result.types';
-import { useAppStore } from '../../store';
+import { useCallback, useEffect } from 'react';
+import type { CameraConfig } from '../../../shared/types/common.types.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeRendering,
   selectParsingAST,
   selectPerformanceMetrics,
   selectRenderingCamera,
   selectRenderingState,
-} from '../../store/selectors';
-import type { RenderingState } from '../../store/types/store.types';
-import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
-import { R3FScene } from './r3f-scene';
+} from '../../store/selectors.js';
+import type { RenderingState } from '../../store/types/store.types.js';
+import type { Mesh3D, RenderingMetrics } from '../types/renderer.types.js';
+import { R3FScene } from './r3f-scene.js';
+
+const logger = createLogger('StoreConnectedRenderer');
 
 // Default fallback objects - defined outside component to prevent re-creation
 const DEFAULT_RENDERING_STATE: RenderingState = {
@@ -71,7 +73,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   width = 800,
   height = 600,
 }) => {
-  console.log('[INIT][StoreConnectedRenderer] Initializing store-connected 3D renderer');
+  logger.init('Initializing store-connected 3D renderer');
 
   // Store selectors - all data comes from Zustand with proper fallbacks
   const ast = useAppStore((state) => selectParsingAST(state) ?? []);
@@ -141,7 +143,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handleCameraChange = useCallback(
     (newCamera: CameraConfig) => {
-      console.log('[DEBUG][StoreConnectedRenderer] Camera changed, updating store');
+      logger.debug('Camera changed, updating store');
       updateCamera(newCamera);
     },
     [updateCamera]
@@ -152,7 +154,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handlePerformanceUpdate = useCallback(
     (metrics: RenderingMetrics) => {
-      console.log('[DEBUG][StoreConnectedRenderer] Performance metrics updated');
+      logger.debug('Performance metrics updated');
       updateMetrics(metrics);
     },
     [updateMetrics]
@@ -163,12 +165,12 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handleRenderComplete = useCallback(
     (meshes: ReadonlyArray<Mesh3D>) => {
-      console.log(`[DEBUG][StoreConnectedRenderer] Render completed with ${meshes.length} meshes`);
+      logger.debug(`Render completed with ${meshes.length} meshes`);
 
       // Update store with actual mesh data
       updateMeshes(meshes.map((m) => m.mesh));
 
-      console.log(`[DEBUG][StoreConnectedRenderer] Updated store with ${meshes.length} meshes`);
+      logger.debug(`Updated store with ${meshes.length} meshes`);
     },
     [
       // Update store with actual mesh data
@@ -181,7 +183,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handleRenderError = useCallback(
     (error: { message: string }) => {
-      console.log('[ERROR][StoreConnectedRenderer] Render error:', error.message);
+      logger.error('Render error:', error.message);
       addRenderError({ type: 'webgl', message: error.message });
     },
     [addRenderError]
@@ -195,24 +197,22 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       return;
     }
 
-    console.log('[DEBUG][StoreConnectedRenderer] AST changed, triggering render');
+    logger.debug('AST changed, triggering render');
     clearRenderErrors();
 
     // Trigger rendering through store action
     renderFromAST(ast)
       .then((result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
         if (result.success) {
-          console.log(
-            `[DEBUG][StoreConnectedRenderer] AST rendering successful: ${result.data?.length ?? 0} meshes`
-          );
+          logger.debug(`AST rendering successful: ${result.data?.length ?? 0} meshes`);
         } else {
-          console.log('[ERROR][StoreConnectedRenderer] AST rendering failed:', result.error);
+          logger.error('AST rendering failed:', result.error);
           addRenderError({ type: 'initialization', message: result.error });
         }
       })
       .catch((error: unknown) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.log('[ERROR][StoreConnectedRenderer] AST rendering exception:', errorMessage);
+        logger.error('AST rendering exception:', errorMessage);
         addRenderError({
           type: 'initialization',
           message: errorMessage,
@@ -224,7 +224,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Effect: Log store state changes for debugging
    */
   useEffect(() => {
-    console.log('[DEBUG][StoreConnectedRenderer] Store state updated:', {
+    logger.debug('Store state updated:', {
       astNodeCount: ast?.length ?? 0,
       isRendering: renderingState?.isRendering ?? false,
       meshCount: renderingState?.meshes?.length ?? 0,

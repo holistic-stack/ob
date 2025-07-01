@@ -7,29 +7,32 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
-import type { Result } from '../../../shared/types/result.types';
-import { error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result';
-import type { MaterialConfig, Mesh3D } from '../types/renderer.types';
-import { createMaterial } from '../utils/material-utils';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import type { MaterialConfig, Mesh3D } from '../types/renderer.types.js';
+import { createMaterial } from '../utils/material-utils.js';
 import {
   convertDifferenceNode,
   convertIntersectionNode,
   convertUnionNode,
-} from './converters/boolean-converter';
-import type { MirrorNode, RotateExtrudeNode } from './converters/converter.types';
+} from './converters/boolean-converter.js';
+import type { MirrorNode, RotateExtrudeNode } from './converters/converter.types.js';
 import {
   convertCubeToMesh,
   convertCylinderToMesh,
   convertSphereToMesh,
-} from './converters/primitive-converter';
+} from './converters/primitive-converter.js';
 import {
   convertMirrorNode,
   convertRotateExtrudeNode,
   convertRotateNode,
   convertScaleNode,
   convertTranslateNode,
-} from './converters/transformation-converter';
-import { CSGCoreService } from './csg-core.service';
+} from './converters/transformation-converter.js';
+import { CSGCoreService } from './csg-core.service.js';
+
+const logger = createLogger('ASTToCSGConverter');
 
 /**
  * Default material configuration for CSG operations
@@ -71,7 +74,7 @@ const convertASTNodeToMesh = async (
   node: ASTNode,
   material: THREE.Material
 ): Promise<Result<THREE.Mesh, string>> => {
-  console.log(`[DEBUG][ASTToCSGConverter] Converting AST node type: ${node.type}`);
+  logger.debug(`Converting AST node type: ${node.type}`);
 
   switch (node.type) {
     case 'cube':
@@ -126,7 +129,7 @@ export const convertASTNodeToCSG = async (
 ): Promise<Result<Mesh3D, string>> => {
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
-  console.log(`[INIT][ASTToCSGConverter] Converting AST node ${index} (${node.type}) to CSG`);
+  logger.init(`Converting AST node ${index} (${node.type}) to CSG`);
 
   // Create material
   const material = createMaterial(finalConfig.material);
@@ -173,7 +176,7 @@ export const convertASTNodeToCSG = async (
         },
       };
 
-      console.log(`[DEBUG][ASTToCSGConverter] Successfully converted ${node.type} to CSG mesh`);
+      logger.debug(`Successfully converted ${node.type} to CSG mesh`);
       return mesh3D;
     },
     (err) =>
@@ -190,7 +193,7 @@ export const convertASTNodesToCSGUnion = async (
 ): Promise<Result<Mesh3D, string>> => {
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
-  console.log(`[INIT][ASTToCSGConverter] Converting ${nodes.length} AST nodes to CSG union`);
+  logger.init(`Converting ${nodes.length} AST nodes to CSG union`);
 
   return tryCatchAsync(
     async () => {
@@ -236,7 +239,7 @@ export const convertASTNodesToCSGUnion = async (
         }
         resultMesh = firstMesh;
       } else {
-        console.log(`[DEBUG][ASTToCSGConverter] Performing CSG union on ${meshes.length} meshes`);
+        logger.debug(`Performing CSG union on ${meshes.length} meshes`);
 
         const firstMesh = meshes[0];
         if (!firstMesh) {
@@ -249,10 +252,10 @@ export const convertASTNodesToCSGUnion = async (
             throw new Error(`Failed to prepare first mesh for CSG: ${firstCSGResult.error}`);
           }
           resultMesh = firstCSGResult.data;
-          console.log(`[DEBUG][ASTToCSGConverter] Prepared first mesh for CSG operations`);
+          logger.debug(`Prepared first mesh for CSG operations`);
 
           for (let i = 1; i < meshes.length; i++) {
-            console.log(`[DEBUG][ASTToCSGConverter] Processing mesh ${i + 1} of ${meshes.length}`);
+            logger.debug(`Processing mesh ${i + 1} of ${meshes.length}`);
             const currentMesh = meshes[i];
             if (!currentMesh) {
               throw new Error(`Mesh ${i} is undefined`);
@@ -262,12 +265,12 @@ export const convertASTNodesToCSGUnion = async (
               throw new Error(`Union operation ${i} failed: ${unionResult.error}`);
             }
             resultMesh = unionResult.data;
-            console.log(`[DEBUG][ASTToCSGConverter] Union operation ${i} completed`);
+            logger.debug(`Union operation ${i} completed`);
           }
 
-          console.log(`[DEBUG][ASTToCSGConverter] CSG union completed successfully`);
+          logger.debug(`CSG union completed successfully`);
         } catch (csgError) {
-          console.error(`[ERROR][ASTToCSGConverter] CSG union failed:`, csgError);
+          logger.error(`CSG union failed:`, csgError);
           throw new Error(
             `CSG union operation failed: ${csgError instanceof Error ? csgError.message : String(csgError)}`
           );
@@ -306,8 +309,8 @@ export const convertASTNodesToCSGUnion = async (
         },
       };
 
-      console.log(
-        `[DEBUG][ASTToCSGConverter] Successfully created CSG union with ${metadata.triangleCount} triangles`
+      logger.debug(
+        `Successfully created CSG union with ${metadata.triangleCount} triangles`
       );
       return mesh3D;
     },

@@ -6,26 +6,29 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { matrixFactory } from '../utils/matrix-adapters';
-import { MatrixCacheService } from './matrix-cache.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { matrixFactory } from '../utils/matrix-adapters.js';
+import { MatrixCacheService } from './matrix-cache.service.js';
+
+const logger = createLogger('MatrixCacheServiceTest');
 
 describe('MatrixCacheService', () => {
   let cacheService: MatrixCacheService;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixCacheServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
     cacheService = new MatrixCacheService();
   });
 
   afterEach(() => {
-    console.log('[END][MatrixCacheServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     cacheService.clear();
   });
 
   describe('Basic Cache Operations', () => {
     it('should store and retrieve matrix correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing basic cache operations');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing basic cache operations');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -49,7 +52,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should return null for non-existent keys', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing non-existent key retrieval');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing non-existent key retrieval');
 
       const getResult = cacheService.get('non_existent_key');
       expect(getResult.success).toBe(true);
@@ -59,7 +62,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should check if key exists correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing key existence check');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing key existence check');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -74,7 +77,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should delete entries correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing cache deletion');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing cache deletion');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -95,7 +98,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should clear all entries correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing cache clearing');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing cache clearing');
 
       const matrix1 = matrixFactory.fromArray([
         [1, 2],
@@ -122,7 +125,7 @@ describe('MatrixCacheService', () => {
 
   describe('LRU Eviction', () => {
     it('should evict least recently used entries when cache is full', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing LRU eviction');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing LRU eviction');
 
       // Create small matrices to test eviction logic
       const _matrices = Array.from({ length: 5 }, (_, i) =>
@@ -152,7 +155,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should move accessed entries to head of LRU list', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing LRU access ordering');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing LRU access ordering');
 
       const matrix1 = matrixFactory.fromArray([
         [1, 2],
@@ -183,7 +186,7 @@ describe('MatrixCacheService', () => {
 
   describe('TTL (Time To Live)', () => {
     it('should expire entries after TTL', async () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing TTL expiration');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing TTL expiration');
 
       // Mock Date.now to control time
       const originalNow = Date.now;
@@ -209,7 +212,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should clean up expired entries', async () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing expired entry cleanup');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing expired entry cleanup');
 
       // Mock Date.now to control time
       const originalNow = Date.now;
@@ -248,7 +251,7 @@ describe('MatrixCacheService', () => {
 
   describe('Memory Management', () => {
     it('should track memory usage correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing memory usage tracking');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing memory usage tracking');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -264,7 +267,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should calculate utilization percentage correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing utilization calculation');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing utilization calculation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -280,7 +283,7 @@ describe('MatrixCacheService', () => {
 
   describe('Performance Metrics', () => {
     it('should track cache hit and miss rates', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing hit/miss rate tracking');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing hit/miss rate tracking');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -301,7 +304,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should update performance metrics correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing performance metrics updates');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing performance metrics updates');
 
       const mockOperationResult = {
         result: matrixFactory.fromArray([
@@ -331,7 +334,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should record failures correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing failure recording');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing failure recording');
 
       const initialStats = cacheService.getStats();
       cacheService.recordFailure();
@@ -343,7 +346,7 @@ describe('MatrixCacheService', () => {
 
   describe('Cache Entry Metadata', () => {
     it('should store and retrieve entry metadata correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing entry metadata');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing entry metadata');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -365,7 +368,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should update access count on retrieval', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing access count updates');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing access count updates');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -387,7 +390,7 @@ describe('MatrixCacheService', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid operations gracefully', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing error handling');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing error handling');
 
       const deleteResult = cacheService.delete('non_existent_key');
       expect(deleteResult.success).toBe(true);
@@ -397,7 +400,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should return null metadata for non-existent entries', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing non-existent metadata retrieval');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing non-existent metadata retrieval');
 
       const metadata = cacheService.getEntryMetadata('non_existent_key');
       expect(metadata).toBeNull();
@@ -406,7 +409,7 @@ describe('MatrixCacheService', () => {
 
   describe('Cache Keys Management', () => {
     it('should return all cache keys correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing cache keys retrieval');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing cache keys retrieval');
 
       const matrix1 = matrixFactory.fromArray([
         [1, 2],
@@ -427,7 +430,7 @@ describe('MatrixCacheService', () => {
     });
 
     it('should handle empty cache keys correctly', () => {
-      console.log('[DEBUG][MatrixCacheServiceTest] Testing empty cache keys');
+      logger.debug('[DEBUG][MatrixCacheServiceTest] Testing empty cache keys');
 
       const keys = cacheService.getKeys();
       expect(keys).toEqual([]);

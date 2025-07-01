@@ -7,12 +7,15 @@
 
 import type { Matrix } from 'ml-matrix';
 import type { Matrix3, Matrix4 } from 'three';
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import type { MatrixValidationResult } from '../types/matrix.types';
-import type { MatrixConversionOptions } from './matrix-conversion.service';
-import { MatrixServiceContainer } from './matrix-service-container';
-import type { MatrixValidationOptions } from './matrix-validation.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import type { MatrixValidationResult } from '../types/matrix.types.js';
+import type { MatrixConversionOptions } from './matrix-conversion.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+import type { MatrixValidationOptions } from './matrix-validation.service.js';
+
+const logger = createLogger('MatrixIntegrationService');
 
 /**
  * Enhanced matrix operation options
@@ -53,7 +56,7 @@ export class MatrixIntegrationService {
   private readonly operationCounter = new Map<string, number>();
 
   constructor(serviceContainer?: MatrixServiceContainer) {
-    console.log('[INIT][MatrixIntegrationService] Initializing matrix integration service');
+    logger.init('Initializing matrix integration service');
 
     this.serviceContainer = serviceContainer ?? new MatrixServiceContainer();
   }
@@ -77,7 +80,7 @@ export class MatrixIntegrationService {
     const startTime = Date.now();
     const operation = 'convertMatrix4ToMLMatrix';
 
-    console.log(`[DEBUG][MatrixIntegrationService] Enhanced Matrix4 to ml-matrix conversion`);
+    logger.debug(`Enhanced Matrix4 to ml-matrix conversion`);
 
     try {
       const conversionService = this.serviceContainer.getConversionService();
@@ -155,8 +158,8 @@ export class MatrixIntegrationService {
         },
       };
 
-      console.log(
-        `[DEBUG][MatrixIntegrationService] Enhanced conversion completed in ${executionTime}ms`
+      logger.debug(
+        `Enhanced conversion completed in ${executionTime}ms`
       );
       return success(enhancedResult);
     } catch (err) {
@@ -183,7 +186,7 @@ export class MatrixIntegrationService {
     const startTime = Date.now();
     const operation = 'performRobustInversion';
 
-    console.log(`[DEBUG][MatrixIntegrationService] Enhanced robust matrix inversion`);
+    logger.debug(`Enhanced robust matrix inversion`);
 
     try {
       const conversionService = this.serviceContainer.getConversionService();
@@ -255,8 +258,8 @@ export class MatrixIntegrationService {
         },
       };
 
-      console.log(
-        `[DEBUG][MatrixIntegrationService] Enhanced inversion completed in ${executionTime}ms`
+      logger.debug(
+        `Enhanced inversion completed in ${executionTime}ms`
       );
       return success(enhancedResult);
     } catch (err) {
@@ -283,7 +286,7 @@ export class MatrixIntegrationService {
     const startTime = Date.now();
     const operation = 'computeEnhancedNormalMatrix';
 
-    console.log(`[DEBUG][MatrixIntegrationService] Enhanced normal matrix computation`);
+    logger.debug(`Enhanced normal matrix computation`);
 
     try {
       const conversionService = this.serviceContainer.getConversionService();
@@ -335,8 +338,8 @@ export class MatrixIntegrationService {
         },
       };
 
-      console.log(
-        `[DEBUG][MatrixIntegrationService] Enhanced normal matrix computation completed in ${executionTime}ms`
+      logger.debug(
+        `Enhanced normal matrix computation completed in ${executionTime}ms`
       );
       return success(enhancedResult);
     } catch (err) {
@@ -363,8 +366,8 @@ export class MatrixIntegrationService {
     const startTime = Date.now();
     const batchOperation = 'batchOperations';
 
-    console.log(
-      `[DEBUG][MatrixIntegrationService] Performing batch operations (${operations.length} operations)`
+    logger.debug(
+      `Performing batch operations (${operations.length} operations)`
     );
 
     try {
@@ -415,8 +418,8 @@ export class MatrixIntegrationService {
         return error(`Batch operations failed: ${errors.join('; ')}`);
       }
 
-      console.log(
-        `[DEBUG][MatrixIntegrationService] Batch operations completed: ${successCount}/${operations.length} successful`
+      logger.debug(
+        `Batch operations completed: ${successCount}/${operations.length} successful`
       );
       return success(results);
     } catch (err) {
@@ -440,7 +443,7 @@ export class MatrixIntegrationService {
     validation?: unknown;
     conversion?: unknown;
   } {
-    console.log('[DEBUG][MatrixIntegrationService] Generating performance report');
+    logger.debug('Generating performance report');
 
     const report: Record<string, unknown> = {};
 
@@ -465,8 +468,8 @@ export class MatrixIntegrationService {
         report.conversion = conversionService.getPerformanceMetrics();
       }
     } catch (err) {
-      console.error(
-        '[ERROR][MatrixIntegrationService] Failed to generate performance report:',
+      logger.error(
+        'Failed to generate performance report:',
         err
       );
     }
@@ -478,8 +481,8 @@ export class MatrixIntegrationService {
    * Optimize configuration based on usage patterns
    */
   async optimizeConfiguration(): Promise<Result<void, string>> {
-    console.log(
-      '[DEBUG][MatrixIntegrationService] Optimizing configuration based on usage patterns'
+    logger.debug(
+      'Optimizing configuration based on usage patterns'
     );
 
     try {
@@ -505,8 +508,8 @@ export class MatrixIntegrationService {
       const adjustments = configManager.suggestPerformanceThresholdAdjustments(operationMetrics);
 
       if (adjustments.length > 0) {
-        console.log(
-          `[DEBUG][MatrixIntegrationService] Applying ${adjustments.length} performance optimizations`
+        logger.debug(
+          `Applying ${adjustments.length} performance optimizations`
         );
         const result = configManager.applyPerformanceThresholdAdjustments(adjustments);
 
@@ -515,7 +518,7 @@ export class MatrixIntegrationService {
         }
       }
 
-      console.log('[DEBUG][MatrixIntegrationService] Configuration optimization completed');
+      logger.debug('Configuration optimization completed');
       return success(undefined);
     } catch (err) {
       return error(
@@ -535,7 +538,7 @@ export class MatrixIntegrationService {
    * Shutdown integration service
    */
   async shutdown(): Promise<void> {
-    console.log('[DEBUG][MatrixIntegrationService] Shutting down integration service');
+    logger.debug('Shutting down integration service');
     await this.serviceContainer.shutdown();
   }
 }

@@ -6,8 +6,11 @@ import type {
   TranslateNode,
 } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
+
+const logger = createLogger('TransformationConverter');
 
 /**
  * Convert translate node to mesh by processing children and applying transformation
@@ -21,7 +24,7 @@ export const convertTranslateNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][TransformationConverter] Converting translate node:`, node);
+    logger.debug(`Converting translate node:`, node);
 
     // TranslateNode should have children and a vector parameter
     if (!node.children || node.children.length === 0) {
@@ -55,15 +58,15 @@ export const convertTranslateNode = async (
     // For now, use direct mapping and verify with test case
     mesh.position.set(x, y, z);
 
-    console.log(`[DEBUG][TransformationConverter] Applied translation [${x}, ${y}, ${z}] to mesh`);
-    console.log(`[DEBUG][TransformationConverter] Mesh position after translation:`, {
+    logger.debug(`Applied translation [${x}, ${y}, ${z}] to mesh`);
+    logger.debug(`Mesh position after translation:`, {
       x: mesh.position.x,
       y: mesh.position.y,
       z: mesh.position.z,
     });
 
     mesh.updateMatrix();
-    console.log(`[DEBUG][TransformationConverter] Applied translation to mesh`);
+    logger.debug(`Applied translation to mesh`);
 
     return mesh;
   });
@@ -81,7 +84,7 @@ export const convertRotateNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][TransformationConverter] Converting rotate node:`, node);
+    logger.debug(`Converting rotate node:`, node);
 
     if (!node.children || node.children.length === 0) {
       throw new Error('Rotate node must have children');
@@ -113,7 +116,7 @@ export const convertRotateNode = async (
     }
 
     mesh.updateMatrix();
-    console.log(`[DEBUG][TransformationConverter] Applied rotation to mesh`);
+    logger.debug(`Applied rotation to mesh`);
 
     return mesh;
   });
@@ -131,7 +134,7 @@ export const convertScaleNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][TransformationConverter] Converting scale node:`, node);
+    logger.debug(`Converting scale node:`, node);
 
     if (!node.children || node.children.length === 0) {
       throw new Error('Scale node must have children');
@@ -155,7 +158,7 @@ export const convertScaleNode = async (
     }
 
     mesh.updateMatrix();
-    console.log(`[DEBUG][TransformationConverter] Applied scaling to mesh`);
+    logger.debug(`Applied scaling to mesh`);
 
     return mesh;
   });
@@ -184,7 +187,7 @@ export const convertMirrorNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][TransformationConverter] Converting mirror node:`, node);
+    logger.debug(`Converting mirror node:`, node);
 
     if (!node.children || node.children.length === 0) {
       throw new Error('Mirror node must have children');
@@ -214,13 +217,13 @@ export const convertMirrorNode = async (
 
       mesh.scale.set(scaleX, scaleY, scaleZ);
 
-      console.log(
-        `[DEBUG][TransformationConverter] Applied mirror transformation: scale(${scaleX}, ${scaleY}, ${scaleZ})`
+      logger.debug(
+        `Applied mirror transformation: scale(${scaleX}, ${scaleY}, ${scaleZ})`
       );
     }
 
     mesh.updateMatrix();
-    console.log(`[DEBUG][TransformationConverter] Applied mirroring to mesh`);
+    logger.debug(`Applied mirroring to mesh`);
 
     return mesh;
   });
@@ -248,7 +251,7 @@ export const convertRotateExtrudeNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][TransformationConverter] Converting rotate_extrude node:`, node);
+    logger.debug(`Converting rotate_extrude node:`, node);
 
     if (!node.children || node.children.length === 0) {
       throw new Error('Rotate_extrude node must have children');
@@ -264,8 +267,8 @@ export const convertRotateExtrudeNode = async (
     const mesh = new THREE.Mesh(geometry, material);
 
     mesh.updateMatrix();
-    console.log(
-      `[DEBUG][TransformationConverter] Applied rotate_extrude with ${segments} segments (${angle}°)`
+    logger.debug(
+      `Applied rotate_extrude with ${segments} segments (${angle}deg)`
     );
 
     return mesh;

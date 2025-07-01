@@ -11,8 +11,11 @@
 import type { OpenscadParser } from '@holistic-stack/openscad-parser';
 import { type ASTNode, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
 import type * as TreeSitter from 'web-tree-sitter';
-import type { AsyncResult } from '../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../shared/utils/functional/result';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { AsyncResult } from '../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+
+const logger = createLogger('UnifiedParserService');
 
 /**
  * Enhanced parse error interface with location information
@@ -150,7 +153,7 @@ export class UnifiedParserService {
     this.errorHandler = new SimpleErrorHandler();
 
     if (this.config.enableLogging) {
-      console.log('[INIT][UnifiedParserService] Created with config:', this.config);
+      logger.init('Created with config:', this.config);
     }
   }
 
@@ -189,7 +192,7 @@ export class UnifiedParserService {
    */
   public async parseDocument(content: string): AsyncResult<UnifiedParseResult, string> {
     if (this.config.enableLogging) {
-      console.log(`[DEBUG][UnifiedParserService] Parse request for ${content.length} characters`);
+      logger.debug(`Parse request for ${content.length} characters`);
     }
 
     return tryCatchAsync(
@@ -225,7 +228,7 @@ export class UnifiedParserService {
         }
 
         if (this.config.enableLogging) {
-          console.log(`[DEBUG][UnifiedParserService] Parsed in ${parseTime.toFixed(2)}ms`);
+          logger.debug(`Parsed in ${parseTime.toFixed(2)}ms`);
         }
 
         return finalResult;
@@ -233,7 +236,7 @@ export class UnifiedParserService {
       (parseError) => {
         const errorMessage = `Parse failed: ${parseError instanceof Error ? parseError.message : String(parseError)}`;
         if (this.config.enableLogging) {
-          console.error('[ERROR][UnifiedParserService]', errorMessage);
+          logger.error(errorMessage);
         }
         return errorMessage;
       }
@@ -296,7 +299,7 @@ export class UnifiedParserService {
    */
   public dispose(): void {
     if (this.config.enableLogging) {
-      console.log('[DEBUG][UnifiedParserService] Disposing resources');
+      logger.debug('Disposing resources');
     }
 
     if (this.parser) {
@@ -313,7 +316,7 @@ export class UnifiedParserService {
     this.initPromise = null;
 
     if (this.config.enableLogging) {
-      console.log('[END][UnifiedParserService] Resources disposed');
+      logger.end('Resources disposed');
     }
   }
 
@@ -339,7 +342,7 @@ export class UnifiedParserService {
     this.state = 'initializing';
 
     if (this.config.enableLogging) {
-      console.log('[INIT][UnifiedParserService] Starting parser initialization');
+      logger.init('Starting parser initialization');
     }
 
     let lastError: Error | null = null;
@@ -347,8 +350,8 @@ export class UnifiedParserService {
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         if (this.config.enableLogging) {
-          console.log(
-            `[DEBUG][UnifiedParserService] Initialization attempt ${attempt}/${this.config.retryAttempts}`
+          logger.debug(
+            `Initialization attempt ${attempt}/${this.config.retryAttempts}`
           );
         }
 
@@ -362,7 +365,7 @@ export class UnifiedParserService {
         this.state = 'ready';
 
         if (this.config.enableLogging) {
-          console.log('[END][UnifiedParserService] Parser initialized successfully');
+          logger.end('Parser initialized successfully');
         }
 
         return;
@@ -370,8 +373,8 @@ export class UnifiedParserService {
         lastError = attemptError instanceof Error ? attemptError : new Error(String(attemptError));
 
         if (this.config.enableLogging) {
-          console.warn(
-            `[WARN][UnifiedParserService] Attempt ${attempt} failed:`,
+          logger.warn(
+            `Attempt ${attempt} failed:`,
             lastError.message
           );
         }
@@ -388,7 +391,7 @@ export class UnifiedParserService {
     );
 
     if (this.config.enableLogging) {
-      console.error('[ERROR][UnifiedParserService]', finalError.message);
+      logger.error(finalError.message);
     }
 
     throw finalError;
@@ -399,7 +402,7 @@ export class UnifiedParserService {
    */
   private async loadParserDynamically(): Promise<OpenscadParser> {
     if (this.config.enableLogging) {
-      console.log('[DEBUG][UnifiedParserService] Loading parser with dynamic import');
+      logger.debug('Loading parser with dynamic import');
     }
 
     // Dynamic import to avoid blocking main thread
@@ -412,7 +415,7 @@ export class UnifiedParserService {
     await parser.init();
 
     if (this.config.enableLogging) {
-      console.log('[DEBUG][UnifiedParserService] Parser loaded and initialized');
+      logger.debug('Parser loaded and initialized');
     }
 
     return parser;
@@ -445,7 +448,7 @@ export class UnifiedParserService {
       ast = this.parser.parseAST(content);
     } catch (astError) {
       if (this.config.enableLogging) {
-        console.warn('[WARN][UnifiedParserService] AST parsing failed:', astError);
+        logger.warn('AST parsing failed:', astError);
       }
 
       return {

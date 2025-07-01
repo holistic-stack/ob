@@ -7,8 +7,11 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { APIPerformanceMetrics } from '../api/matrix-operations.api';
-import { useMatrixOperationContext } from '../providers/MatrixOperationProvider';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { APIPerformanceMetrics } from '../api/matrix-operations.api.js';
+import { useMatrixOperationContext } from '../providers/MatrixOperationProvider.js';
+
+const logger = createLogger('MatrixPerformanceProfiler');
 
 /**
  * Performance profiler props
@@ -157,7 +160,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
         }
       }
     } catch (err) {
-      console.error('[ERROR][MatrixPerformanceProfiler] Failed to update metrics:', err);
+      logger.error('Failed to update metrics:', err);
     }
   }, [getPerformanceReport, maxHistorySize, onPerformanceAlert]);
 
@@ -167,9 +170,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
   useEffect(() => {
     if (!enabled) return;
 
-    console.log(
-      `[DEBUG][MatrixPerformanceProfiler] Starting performance monitoring (interval: ${updateInterval}ms)`
-    );
+    logger.debug(`Starting performance monitoring (interval: ${updateInterval}ms)`);
 
     // Initial update
     updateMetrics();
@@ -182,7 +183,7 @@ export const MatrixPerformanceProfiler: React.FC<MatrixPerformanceProfilerProps>
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      console.log('[END][MatrixPerformanceProfiler] Performance monitoring stopped');
+      logger.end('Performance monitoring stopped');
     };
   }, [enabled, updateInterval, updateMetrics]);
 
@@ -489,11 +490,11 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
     if (!enabled) return;
 
     const originalConsole = {
-      log: console.log,
-      debug: console.debug,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
+      log: logger.info,
+      debug: logger.debug,
+      info: logger.info,
+      warn: logger.warn,
+      error: logger.error,
     };
 
     // Intercept console methods for matrix-related logs
@@ -537,8 +538,11 @@ export const MatrixOperationDebugger: React.FC<MatrixOperationDebuggerProps> = (
 
     console.debug = interceptConsole('debug', originalConsole.debug);
     console.info = interceptConsole('info', originalConsole.info);
-    console.warn = interceptConsole('warn', originalConsole.warn);
-    console.error = interceptConsole('error', originalConsole.error);
+    };
+    };
+
+    logger.warn = interceptConsole('warn', originalConsole.warn);
+    logger.error = interceptConsole('error', originalConsole.error);
 
     return () => {
       // Restore original console methods

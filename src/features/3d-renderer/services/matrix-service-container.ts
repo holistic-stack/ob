@@ -5,24 +5,27 @@
  * service integration, and comprehensive error handling following bulletproof-react patterns.
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MATRIX_CONFIG } from '../config/matrix-config';
-import { MatrixCacheService } from './matrix-cache.service';
-import { MatrixConfigManagerService } from './matrix-config-manager.service';
+import type { Result } from '../../../shared/types/result.types.js';
+import { error, success } from '../../../shared/utils/functional/result.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { MatrixCacheService } from './matrix-cache.service.js';
+import { MatrixConfigManagerService } from './matrix-config-manager.service.js';
 import {
   type MatrixConversionDependencies,
   MatrixConversionService,
-} from './matrix-conversion.service';
-import { MatrixOperationsAPI } from './matrix-operations.api';
+} from './matrix-conversion.service.js';
+import { MatrixOperationsAPI } from './matrix-operations.api.js';
 import {
   type MatrixTelemetryDependencies,
   MatrixTelemetryService,
-} from './matrix-telemetry.service';
+} from './matrix-telemetry.service.js';
 import {
   type MatrixValidationDependencies,
   MatrixValidationService,
-} from './matrix-validation.service';
+} from './matrix-validation.service.js';
+import { createLogger } from '../../../shared/services/logger.service.js';
+
+const logger = createLogger('MatrixServiceContainer');
 
 /**
  * Service container configuration
@@ -79,7 +82,7 @@ export class MatrixServiceContainer {
   private isInitialized = false;
 
   constructor(config: ServiceContainerConfig = {}) {
-    console.log('[INIT][MatrixServiceContainer] Initializing service container');
+    logger.init('Initializing service container');
 
     this.config = {
       enableTelemetry: true,
@@ -102,7 +105,7 @@ export class MatrixServiceContainer {
       return success(undefined);
     }
 
-    console.log('[DEBUG][MatrixServiceContainer] Starting service initialization');
+    logger.debug('Starting service initialization');
 
     try {
       // Initialize core services first (no dependencies)
@@ -118,10 +121,10 @@ export class MatrixServiceContainer {
       }
 
       this.isInitialized = true;
-      console.log('[DEBUG][MatrixServiceContainer] Service initialization completed successfully');
+      logger.debug('Service initialization completed successfully');
       return success(undefined);
     } catch (err) {
-      console.error('[ERROR][MatrixServiceContainer] Service initialization failed:', err);
+      logger.error('Service initialization failed:', err);
       return error(
         `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`
       );
@@ -132,7 +135,7 @@ export class MatrixServiceContainer {
    * Initialize core services (no dependencies)
    */
   private async initializeCoreServices(): Promise<void> {
-    console.log('[DEBUG][MatrixServiceContainer] Initializing core services');
+    logger.debug('Initializing core services');
 
     // Initialize cache service
     this.setServiceState('cache', 'initializing');
@@ -140,7 +143,7 @@ export class MatrixServiceContainer {
       const cacheService = new MatrixCacheService();
       this.registerService('cache', cacheService);
       this.setServiceState('cache', 'running');
-      console.log('[DEBUG][MatrixServiceContainer] Cache service initialized');
+      logger.debug('Cache service initialized');
     } catch (err) {
       this.setServiceState('cache', 'error');
       this.incrementErrorCount('cache');
@@ -154,7 +157,7 @@ export class MatrixServiceContainer {
         const configManager = new MatrixConfigManagerService();
         this.registerService('configManager', configManager);
         this.setServiceState('configManager', 'running');
-        console.log('[DEBUG][MatrixServiceContainer] Configuration manager initialized');
+        logger.debug('Configuration manager initialized');
       } catch (err) {
         this.setServiceState('configManager', 'error');
         this.incrementErrorCount('configManager');
@@ -172,7 +175,7 @@ export class MatrixServiceContainer {
         const telemetryService = new MatrixTelemetryService(telemetryDeps);
         this.registerService('telemetry', telemetryService);
         this.setServiceState('telemetry', 'running');
-        console.log('[DEBUG][MatrixServiceContainer] Telemetry service initialized');
+        logger.debug('Telemetry service initialized');
       } catch (err) {
         this.setServiceState('telemetry', 'error');
         this.incrementErrorCount('telemetry');
@@ -185,7 +188,7 @@ export class MatrixServiceContainer {
    * Initialize dependent services
    */
   private async initializeDependentServices(): Promise<void> {
-    console.log('[DEBUG][MatrixServiceContainer] Initializing dependent services');
+    logger.debug('Initializing dependent services');
 
     const cacheService = this.getService<MatrixCacheService>('cache');
     const telemetryService = this.getService<MatrixTelemetryService>('telemetry');
@@ -203,7 +206,7 @@ export class MatrixServiceContainer {
       const conversionService = new MatrixConversionService(conversionDeps);
       this.registerService('conversion', conversionService);
       this.setServiceState('conversion', 'running');
-      console.log('[DEBUG][MatrixServiceContainer] Conversion service initialized');
+      logger.debug('Conversion service initialized');
     } catch (err) {
       this.setServiceState('conversion', 'error');
       this.incrementErrorCount('conversion');
@@ -222,7 +225,7 @@ export class MatrixServiceContainer {
         const validationService = new MatrixValidationService(validationDeps);
         this.registerService('validation', validationService);
         this.setServiceState('validation', 'running');
-        console.log('[DEBUG][MatrixServiceContainer] Validation service initialized');
+        logger.debug('Validation service initialized');
       } catch (err) {
         this.setServiceState('validation', 'error');
         this.incrementErrorCount('validation');
@@ -236,7 +239,7 @@ export class MatrixServiceContainer {
       const operationsAPI = new MatrixOperationsAPI();
       this.registerService('operations', operationsAPI);
       this.setServiceState('operations', 'running');
-      console.log('[DEBUG][MatrixServiceContainer] Operations API initialized');
+      logger.debug('Operations API initialized');
     } catch (err) {
       this.setServiceState('operations', 'error');
       this.incrementErrorCount('operations');
@@ -251,7 +254,7 @@ export class MatrixServiceContainer {
     this.services.set(name, service);
     this.serviceStartTimes.set(name, Date.now());
     this.serviceErrorCounts.set(name, 0);
-    console.log(`[DEBUG][MatrixServiceContainer] Service '${name}' registered`);
+    logger.debug(`Service '${name}' registered`);
   }
 
   /**
@@ -259,7 +262,7 @@ export class MatrixServiceContainer {
    */
   private setServiceState(name: string, state: ServiceLifecycleState): void {
     this.serviceStates.set(name, state);
-    console.log(`[DEBUG][MatrixServiceContainer] Service '${name}' state: ${state}`);
+    logger.debug(`Service '${name}' state: ${state}`);
   }
 
   /**
@@ -340,7 +343,7 @@ export class MatrixServiceContainer {
    * Perform health check on all services
    */
   async performHealthCheck(): Promise<ContainerHealthReport> {
-    console.log('[DEBUG][MatrixServiceContainer] Performing health check');
+    logger.debug('Performing health check');
 
     const serviceStatuses: ServiceHealthStatus[] = [];
     const recommendations: string[] = [];
@@ -423,7 +426,7 @@ export class MatrixServiceContainer {
    * Restart a specific service
    */
   async restartService(serviceName: string): Promise<Result<void, string>> {
-    console.log(`[DEBUG][MatrixServiceContainer] Restarting service: ${serviceName}`);
+    logger.debug(`Restarting service: ${serviceName}`);
 
     try {
       this.setServiceState(serviceName, 'stopping');
@@ -445,8 +448,8 @@ export class MatrixServiceContainer {
       // Reinitialize the service
       await this.initializeServices();
 
-      console.log(
-        `[DEBUG][MatrixServiceContainer] Service '${serviceName}' restarted successfully`
+      logger.debug(
+        `Service '${serviceName}' restarted successfully`
       );
       return success(undefined);
     } catch (err) {
@@ -462,7 +465,7 @@ export class MatrixServiceContainer {
    * Shutdown all services
    */
   async shutdown(): Promise<void> {
-    console.log('[DEBUG][MatrixServiceContainer] Shutting down service container');
+    logger.debug('Shutting down service container');
 
     for (const [name, service] of this.services.entries()) {
       try {
@@ -478,9 +481,9 @@ export class MatrixServiceContainer {
         }
 
         this.setServiceState(name, 'stopped');
-        console.log(`[DEBUG][MatrixServiceContainer] Service '${name}' stopped`);
+        logger.debug(`Service '${name}' stopped`);
       } catch (err) {
-        console.error(`[ERROR][MatrixServiceContainer] Failed to stop service '${name}':`, err);
+        logger.error(`Failed to stop service '${name}':`, err);
         this.setServiceState(name, 'error');
       }
     }
@@ -491,7 +494,7 @@ export class MatrixServiceContainer {
     this.serviceErrorCounts.clear();
     this.isInitialized = false;
 
-    console.log('[DEBUG][MatrixServiceContainer] Service container shutdown completed');
+    logger.debug('Service container shutdown completed');
   }
 
   /**

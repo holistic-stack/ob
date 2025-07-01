@@ -5,9 +5,12 @@ import type {
   UnionNode,
 } from '@holistic-stack/openscad-parser';
 import * as THREE from 'three';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result';
-import { CSGCoreService } from '../csg-core.service';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
+import { CSGCoreService } from '../csg-core.service.js';
+
+const logger = createLogger('BooleanConverter');
 
 /**
  * Convert union node to mesh by processing children and performing CSG union
@@ -21,22 +24,22 @@ export const convertUnionNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][BooleanConverter] Converting union node:`, node);
-    console.log(`[DEBUG][BooleanConverter] Union node children count:`, node.children?.length || 0);
+    logger.debug(`Converting union node:`, node);
+    logger.debug(`Union node children count:`, node.children?.length || 0);
 
     if (node.children && node.children.length > 0) {
-      console.log(
-        `[DEBUG][BooleanConverter] Union node children types:`,
+      logger.debug(
+        `Union node children types:`,
         node.children.map((child) => child.type)
       );
     }
 
     if (!node.children || node.children.length === 0) {
-      console.warn(
-        `[WARN][BooleanConverter] Union node has no children, creating placeholder mesh`
+      logger.warn(
+        `Union node has no children, creating placeholder mesh`
       );
-      console.log(
-        `[DEBUG][BooleanConverter] This indicates AST restructuring may not be working correctly`
+      logger.debug(
+        `This indicates AST restructuring may not be working correctly`
       );
       // Create a simple cube as placeholder when no children
       const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -69,11 +72,11 @@ export const convertUnionNode = async (
       if (!firstMesh) {
         throw new Error('First child mesh is undefined');
       }
-      console.log(`[DEBUG][BooleanConverter] Union has single child, returning as-is`);
+      logger.debug(`Union has single child, returning as-is`);
       return firstMesh;
     }
 
-    console.log(`[DEBUG][BooleanConverter] Performing CSG union on ${childMeshes.length} meshes`);
+    logger.debug(`Performing CSG union on ${childMeshes.length} meshes`);
 
     try {
       const firstMesh = childMeshes[0];
@@ -92,8 +95,8 @@ export const convertUnionNode = async (
         }
         nextMesh.updateMatrix();
 
-        console.log(
-          `[DEBUG][BooleanConverter] Performing union operation ${i}/${childMeshes.length - 1}`
+        logger.debug(
+          `Performing union operation ${i}/${childMeshes.length - 1}`
         );
         // Use the correct three-csg-ts API
         const unionResult = await CSGCoreService.union(resultMesh, nextMesh);
@@ -105,12 +108,12 @@ export const convertUnionNode = async (
 
       resultMesh.material = material;
 
-      console.log(
-        `[DEBUG][BooleanConverter] CSG union completed successfully with actual combined geometry`
+      logger.debug(
+        `CSG union completed successfully with actual combined geometry`
       );
       return resultMesh;
     } catch (csgError) {
-      console.error(`[ERROR][BooleanConverter] CSG union failed:`, csgError);
+      logger.error(`CSG union failed:`, csgError);
       throw new Error(
         `CSG union operation failed: ${csgError instanceof Error ? csgError.message : String(csgError)}`
       );
@@ -130,25 +133,25 @@ export const convertIntersectionNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][BooleanConverter] Converting intersection node:`, node);
-    console.log(
-      `[DEBUG][BooleanConverter] Intersection node children count:`,
+    logger.debug(`Converting intersection node:`, node);
+    logger.debug(
+      `Intersection node children count:`,
       node.children?.length || 0
     );
 
     if (node.children && node.children.length > 0) {
-      console.log(
-        `[DEBUG][BooleanConverter] Intersection node children types:`,
+      logger.debug(
+        `Intersection node children types:`,
         node.children.map((child) => child.type)
       );
     }
 
     if (!node.children || node.children.length === 0) {
-      console.warn(
-        `[WARN][BooleanConverter] Intersection node has no children, creating placeholder mesh`
+      logger.warn(
+        `Intersection node has no children, creating placeholder mesh`
       );
-      console.log(
-        `[DEBUG][BooleanConverter] This indicates AST restructuring may not be working correctly`
+      logger.debug(
+        `This indicates AST restructuring may not be working correctly`
       );
       // Create a simple sphere as placeholder when no children
       const geometry = new THREE.SphereGeometry(1, 32, 32);
@@ -176,8 +179,8 @@ export const convertIntersectionNode = async (
       return firstMesh;
     }
 
-    console.log(
-      `[DEBUG][BooleanConverter] Performing CSG intersection on ${childMeshes.length} meshes`
+    logger.debug(
+      `Performing CSG intersection on ${childMeshes.length} meshes`
     );
 
     try {
@@ -207,10 +210,10 @@ export const convertIntersectionNode = async (
 
       resultMesh.material = material;
 
-      console.log(`[DEBUG][BooleanConverter] CSG intersection completed successfully`);
+      logger.debug(`CSG intersection completed successfully`);
       return resultMesh;
     } catch (csgError) {
-      console.error(`[ERROR][BooleanConverter] CSG intersection failed:`, csgError);
+      logger.error(`CSG intersection failed:`, csgError);
       throw new Error(
         `CSG intersection operation failed: ${csgError instanceof Error ? csgError.message : String(csgError)}`
       );
@@ -230,10 +233,10 @@ export const convertDifferenceNode = async (
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
-    console.log(`[DEBUG][BooleanConverter] Converting difference node:`, node);
+    logger.debug(`Converting difference node:`, node);
 
     if (!node.children || node.children.length === 0) {
-      console.log(`[DEBUG][BooleanConverter] Difference node has no children, creating empty mesh`);
+      logger.debug(`Difference node has no children, creating empty mesh`);
       // For now, create a simple cylinder as placeholder when no children
       const geometry = new THREE.CylinderGeometry(1, 1, 2, 32);
       const mesh = new THREE.Mesh(geometry, material);
@@ -259,8 +262,8 @@ export const convertDifferenceNode = async (
       return firstMesh;
     }
 
-    console.log(
-      `[DEBUG][BooleanConverter] Performing CSG difference on ${childMeshes.length} meshes`
+    logger.debug(
+      `Performing CSG difference on ${childMeshes.length} meshes`
     );
 
     try {
@@ -290,10 +293,10 @@ export const convertDifferenceNode = async (
 
       resultMesh.material = material;
 
-      console.log(`[DEBUG][BooleanConverter] CSG difference completed successfully`);
+      logger.debug(`CSG difference completed successfully`);
       return resultMesh;
     } catch (csgError) {
-      console.error(`[ERROR][BooleanConverter] CSG difference failed:`, csgError);
+      logger.error(`CSG difference failed:`, csgError);
       throw new Error(
         `CSG difference operation failed: ${csgError instanceof Error ? csgError.message : String(csgError)}`
       );

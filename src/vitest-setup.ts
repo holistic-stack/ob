@@ -6,6 +6,9 @@ import { findUpSync } from 'find-up';
 import resolve from 'resolve';
 import { vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { createLogger } from '../shared/services/logger.service.js';
+
+const logger = createLogger('VitestSetup');
 
 // ============================================================================
 // Browser API Mocks for UI Component Testing
@@ -87,9 +90,9 @@ export function resolveWasmPath(urlPath: string): string {
     try {
       const url = new URL(urlPath);
       normalizedPath = url.pathname.split('/').pop() ?? urlPath;
-      console.log(`Extracted filename from URL: ${normalizedPath}`);
+      logger.debug(`Extracted filename from URL: ${normalizedPath}`);
     } catch (_error) {
-      console.warn(`Failed to parse URL: ${urlPath}, using as-is`);
+      logger.warn(`Failed to parse URL: ${urlPath}, using as-is`);
       normalizedPath = urlPath;
     }
   } else {
@@ -97,33 +100,33 @@ export function resolveWasmPath(urlPath: string): string {
     normalizedPath = urlPath.replace(/^\.?\//, '');
   }
 
-  console.log(`Resolving WASM file: ${normalizedPath}`);
-  console.log(`__dirname: ${__dirname}`);
+  logger.debug(`Resolving WASM file: ${normalizedPath}`);
+  logger.debug(`__dirname: ${__dirname}`);
 
   // Strategy 1: Use Node.js module resolution algorithm (most reliable)
   const moduleResolutionStrategies = [
     // Try @holistic-stack/tree-sitter-openscad package
     () => {
       try {
-        console.log(
+        logger.debug(
           `Attempting @holistic-stack/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`
         );
         const packagePath = resolve.sync('@holistic-stack/tree-sitter-openscad/package.json', {
           basedir: projectRoot,
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
-        console.log(`✅ Strategy 1 found package at: ${packagePath}`);
-        console.log(`✅ Strategy 1 resolved path: ${resolvedWasmPath}`);
+        logger.debug(`✅ Strategy 1 found package at: ${packagePath}`);
+        logger.debug(`✅ Strategy 1 resolved path: ${resolvedWasmPath}`);
         return resolvedWasmPath;
       } catch (e) {
-        console.log(`❌ Strategy 1 failed: ${e instanceof Error ? e.message : String(e)}`);
+        logger.debug(`❌ Strategy 1 failed: ${e instanceof Error ? e.message : String(e)}`);
         return null;
       }
     },
 
     // Try web-tree-sitter package
     () => {
-      console.log(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
+      logger.debug(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
           basedir: projectRoot,
@@ -166,7 +169,7 @@ export function resolveWasmPath(urlPath: string): string {
     // Find @holistic-stack/tree-sitter-openscad package.json using matcher function
     () => {
       try {
-        console.log(
+        logger.debug(
           `Attempting @holistic-stack/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`
         );
         const packageJson = findUpSync(
@@ -199,7 +202,7 @@ export function resolveWasmPath(urlPath: string): string {
     // Find web-tree-sitter package.json using matcher function
     () => {
       try {
-        console.log(`Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`);
+        logger.debug(`Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`);
         const packageJson = findUpSync(
           (directory: string) => {
             const packagePath = join(directory, 'package.json');
@@ -237,13 +240,13 @@ export function resolveWasmPath(urlPath: string): string {
       try {
         // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
-        console.log(
+        logger.debug(
           `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`
         );
         return `file://${resolvedPath}`;
       } catch {
         // File doesn't exist, continue to next strategy
-        console.log(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
+        logger.debug(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
       }
     }
   }
@@ -255,8 +258,8 @@ export function resolveWasmPath(urlPath: string): string {
 
 // Configure vitest-fetch-mock to handle WASM files with better URL handling
 vi.mocked(fetch).mockImplementation((url) => {
-  console.log('using local fetch mock', url);
-  console.log('URL type:', typeof url, 'URL constructor:', url.constructor.name);
+  logger.debug('using local fetch mock', url);
+  logger.debug('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
   // Handle both string and URL objects
   let urlPath: string;
@@ -288,7 +291,7 @@ vi.mocked(fetch).mockImplementation((url) => {
     const localFile = readFileSync(actualPath);
     const uint8Array = new Uint8Array(localFile);
 
-    console.log(`Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
+    logger.debug(`Successfully loaded WASM file: ${urlPath} (${uint8Array.length} bytes)`);
 
     return Promise.resolve({
       ok: true,
@@ -296,7 +299,7 @@ vi.mocked(fetch).mockImplementation((url) => {
       bytes: () => Promise.resolve(uint8Array),
     } as unknown as Response);
   } catch (error) {
-    console.error('Failed to read WASM file:', urlPath, error);
+    logger.error('Failed to read WASM file:', urlPath, error);
     return Promise.resolve({
       ok: false,
       status: 404,
@@ -311,7 +314,7 @@ vi.mocked(fetch).mockImplementation((url) => {
  * Provides fallback mock CSG if real CSG initialization fails
  */
 export async function initializeCSGForTests(): Promise<void> {
-  console.log('[INIT] Initializing Three.js CSG for tests');
+  logger.info('Initializing Three.js CSG for tests');
 
   try {
     // Mock Three.js CSG for testing
@@ -326,10 +329,10 @@ export async function initializeCSGForTests(): Promise<void> {
     (globalThis as typeof globalThis & { __MOCK_THREE_CSG__?: typeof mockCSG }).__MOCK_THREE_CSG__ =
       mockCSG;
 
-    console.log('[DEBUG] ✅ Mock Three.js CSG initialized for testing');
+    logger.debug('✅ Mock Three.js CSG initialized for testing');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn('[WARN] Three.js CSG initialization failed:', errorMessage);
+    logger.warn('Three.js CSG initialization failed:', errorMessage);
   }
 }
 
@@ -338,7 +341,7 @@ export async function initializeCSGForTests(): Promise<void> {
  * Following R3F testing patterns
  */
 export function createTestScene(): { scene: unknown; camera: unknown; renderer: unknown } {
-  console.log('[DEBUG] Creating test Three.js scene');
+  logger.debug('Creating test Three.js scene');
 
   // Mock Three.js objects for testing
   const scene = {
@@ -368,7 +371,7 @@ export function createTestScene(): { scene: unknown; camera: unknown; renderer: 
  * Following R3F testing patterns
  */
 export function disposeTestScene(scene: unknown, _camera: unknown, renderer: unknown): void {
-  console.log('[DEBUG] Disposing test scene resources');
+  logger.debug('Disposing test scene resources');
 
   const sceneObj = scene as { dispose?: () => void };
   if (sceneObj?.dispose) {

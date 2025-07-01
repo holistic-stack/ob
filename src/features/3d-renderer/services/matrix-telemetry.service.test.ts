@@ -6,18 +6,21 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MATRIX_CONFIG } from '../config/matrix-config';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MATRIX_CONFIG } from '../config/matrix-config.js';
 import {
   type MatrixTelemetryDependencies,
   MatrixTelemetryService,
-} from './matrix-telemetry.service';
+} from './matrix-telemetry.service.js';
+
+const logger = createLogger('MatrixTelemetryServiceTest');
 
 describe('MatrixTelemetryService', () => {
   let service: MatrixTelemetryService;
   let dependencies: MatrixTelemetryDependencies;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixTelemetryServiceTest] Setting up test environment');
+    logger.init('Setting up test environment');
 
     // Setup dependencies
     dependencies = {
@@ -29,13 +32,13 @@ describe('MatrixTelemetryService', () => {
   });
 
   afterEach(() => {
-    console.log('[END][MatrixTelemetryServiceTest] Cleaning up test environment');
+    logger.end('Cleaning up test environment');
     service.reset();
   });
 
   describe('Operation Tracking', () => {
     it('should track successful operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing successful operation tracking');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing successful operation tracking');
 
       service.trackOperation('add', 5, true, {
         memoryUsage: 1024,
@@ -51,7 +54,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should track failed operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing failed operation tracking');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing failed operation tracking');
 
       service.trackOperation('inverse', 10, false);
 
@@ -61,7 +64,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should track multiple operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing multiple operation tracking');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing multiple operation tracking');
 
       service.trackOperation('add', 2, true);
       service.trackOperation('multiply', 8, true);
@@ -76,7 +79,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should track large matrix operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing large matrix operation tracking');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing large matrix operation tracking');
 
       const largeSize = Math.ceil(Math.sqrt(MATRIX_CONFIG.performance.largeMatrixThreshold)) + 1;
 
@@ -91,9 +94,9 @@ describe('MatrixTelemetryService', () => {
 
   describe('Performance Regression Detection', () => {
     it('should detect minor performance regressions', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing minor regression detection');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing minor regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -112,9 +115,9 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should detect moderate performance regressions', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing moderate regression detection');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing moderate regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -133,9 +136,9 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should detect severe performance regressions', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing severe regression detection');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing severe regression detection');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -154,11 +157,11 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should not detect regressions for operations within baseline', () => {
-      console.log(
+      logger.debug(
         '[DEBUG][MatrixTelemetryServiceTest] Testing no regression for normal operations'
       );
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -184,7 +187,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should generate comprehensive telemetry report', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing comprehensive report generation');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing comprehensive report generation');
 
       const report = service.generateReport();
 
@@ -204,7 +207,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should detect regressions in report period', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing regression detection in report');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing regression detection in report');
 
       const report = service.generateReport();
 
@@ -215,7 +218,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should generate appropriate recommendations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing recommendation generation');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing recommendation generation');
 
       const report = service.generateReport();
 
@@ -226,7 +229,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should analyze performance trends', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing trend analysis');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing trend analysis');
 
       const report = service.generateReport();
 
@@ -240,7 +243,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should handle empty time periods', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing empty period handling');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing empty period handling');
 
       service.reset();
       const report = service.generateReport();
@@ -253,7 +256,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should support custom time ranges', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing custom time range reporting');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing custom time range reporting');
 
       const now = Date.now();
       const oneHourAgo = now - 60 * 60 * 1000;
@@ -267,7 +270,7 @@ describe('MatrixTelemetryService', () => {
 
   describe('Performance Metrics', () => {
     it('should calculate accurate performance metrics', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing performance metrics calculation');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing performance metrics calculation');
 
       service.trackOperation('add', 5, true, { memoryUsage: 100 });
       service.trackOperation('multiply', 10, true, { memoryUsage: 200 });
@@ -283,7 +286,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should handle metrics with no operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing metrics with no operations');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing metrics with no operations');
 
       const metrics = service.getPerformanceMetrics();
 
@@ -297,7 +300,7 @@ describe('MatrixTelemetryService', () => {
 
   describe('Data Management', () => {
     it('should maintain history size limit', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing history size limit');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing history size limit');
 
       // Track more operations than the history limit (assuming 10000 limit)
       for (let i = 0; i < 15000; i++) {
@@ -310,7 +313,7 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should reset telemetry data', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing telemetry reset');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing telemetry reset');
 
       service.trackOperation('add', 5, true);
       service.trackOperation('multiply', 10, true);
@@ -328,9 +331,9 @@ describe('MatrixTelemetryService', () => {
 
   describe('Logging and Debugging', () => {
     it('should log operations when debugging is enabled', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing debug logging');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing debug logging');
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {
         // Mock implementation to suppress console logs during testing
       });
 
@@ -354,9 +357,9 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should not log operations when debugging is disabled', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing disabled debug logging');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing disabled debug logging');
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {
         // Mock implementation to suppress console logs during testing
       });
 
@@ -380,9 +383,9 @@ describe('MatrixTelemetryService', () => {
 
   describe('Regression Recommendations', () => {
     it('should provide specific recommendations for different operations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing operation-specific recommendations');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing operation-specific recommendations');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 
@@ -402,9 +405,9 @@ describe('MatrixTelemetryService', () => {
     });
 
     it('should provide severity-appropriate recommendations', () => {
-      console.log('[DEBUG][MatrixTelemetryServiceTest] Testing severity-based recommendations');
+      logger.debug('[DEBUG][MatrixTelemetryServiceTest] Testing severity-based recommendations');
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      const consoleSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {
         // Mock implementation to suppress console warnings during testing
       });
 

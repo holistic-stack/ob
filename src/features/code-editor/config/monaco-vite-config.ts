@@ -5,8 +5,11 @@
  * worker configuration, and performance optimization following functional programming patterns.
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { tryCatch } from '../../../shared/utils/functional/result';
+import type { Result } from '../../../shared/types/result.types.js';
+import { tryCatch } from '../../../shared/utils/functional/result.js';
+import { createLogger } from '../../../shared/services/logger.service.js';
+
+const logger = createLogger('MonacoViteConfig');
 
 /**
  * Custom worker configuration
@@ -253,7 +256,7 @@ export const configureMonacoEnvironment = (): Result<void, string> => {
         ).MonacoEnvironment = MONACO_ENVIRONMENT_CONFIG;
       }
 
-      console.log('[INIT][MonacoViteConfig] Monaco Editor environment configured');
+      logger.init('Monaco Editor environment configured');
 
       return undefined;
     },
@@ -277,7 +280,7 @@ export const validateMonacoInstallation = (): Result<void, string> => {
       // Check if vite-plugin-monaco-editor is configured
       // This would be validated during build time
 
-      console.log('[INIT][MonacoViteConfig] Monaco Editor installation validated');
+      logger.init('Monaco Editor installation validated');
 
       return undefined;
     },

@@ -8,8 +8,11 @@
 import type React from 'react';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createLogger } from '../../../shared/services/logger.service.js';
 
-import { type UseMatrixOperationsReturn, useMatrixOperations } from '../hooks/useMatrixOperations';
+import { type UseMatrixOperationsReturn, useMatrixOperations } from '../hooks/useMatrixOperations.js';
+
+const logger = createLogger('MatrixOperationProvider');
 
 // Type definitions for provider
 interface PerformanceReport {
@@ -109,7 +112,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
    * Update configuration
    */
   const updateConfig = useCallback((newConfig: Partial<MatrixOperationProviderConfig>) => {
-    console.log('[DEBUG][MatrixOperationProvider] Updating configuration:', newConfig);
+    logger.debug('Updating configuration:', newConfig);
     setConfig((prev) => ({ ...prev, ...newConfig }));
   }, []);
 
@@ -125,10 +128,10 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
       onHealthStatusChange?.(isHealthy, status);
 
       if (!isHealthy) {
-        console.warn('[WARN][MatrixOperationProvider] Matrix services are unhealthy:', status);
+        logger.warn('Matrix services are unhealthy:', status);
       }
     } catch (err) {
-      console.error('[ERROR][MatrixOperationProvider] Health check failed:', err);
+      logger.error('Health check failed:', err);
       onError?.(err instanceof Error ? err : new Error(String(err)));
     }
   }, [matrixOperations, onHealthStatusChange, onError]);
@@ -142,12 +145,12 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
       setLastPerformanceReport(report);
       onPerformanceReport?.(report);
 
-      console.log('[DEBUG][MatrixOperationProvider] Performance report generated:', {
+      logger.debug('Performance report generated:', {
         timestamp: Date.now(),
         reportSize: Object.keys(report ?? {}).length,
       });
     } catch (err) {
-      console.error('[ERROR][MatrixOperationProvider] Performance report generation failed:', err);
+      logger.error('Performance report generation failed:', err);
       onError?.(err instanceof Error ? err : new Error(String(err)));
     }
   }, [matrixOperations, onPerformanceReport, onError]);
@@ -159,16 +162,16 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
     if (!config.autoOptimizeConfiguration) return;
 
     try {
-      console.log('[DEBUG][MatrixOperationProvider] Auto-optimizing configuration');
+      logger.debug('Auto-optimizing configuration');
       const result = await matrixOperations.optimizeConfiguration();
 
       if (result.isError) {
-        console.warn('[WARN][MatrixOperationProvider] Auto-optimization failed:', result.error);
+        logger.warn('Auto-optimization failed:', result.error);
       } else {
-        console.log('[DEBUG][MatrixOperationProvider] Auto-optimization completed successfully');
+        logger.debug('Auto-optimization completed successfully');
       }
     } catch (err) {
-      console.error('[ERROR][MatrixOperationProvider] Auto-optimization error:', err);
+      logger.error('Auto-optimization error:', err);
       onError?.(err instanceof Error ? err : new Error(String(err)));
     }
   }, [config.autoOptimizeConfiguration, matrixOperations, onError]);
@@ -177,7 +180,7 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
    * Initialize provider
    */
   useEffect(() => {
-    console.log('[INIT][MatrixOperationProvider] Initializing matrix operation provider');
+    logger.init('Initializing matrix operation provider');
 
     const initializeProvider = async () => {
       try {
@@ -188,9 +191,9 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
         generatePerformanceReport();
 
         setIsInitialized(true);
-        console.log('[DEBUG][MatrixOperationProvider] Provider initialized successfully');
+        logger.debug('Provider initialized successfully');
       } catch (err) {
-        console.error('[ERROR][MatrixOperationProvider] Provider initialization failed:', err);
+        logger.error('Provider initialization failed:', err);
         onError?.(err instanceof Error ? err : new Error(String(err)));
       }
     };
@@ -204,14 +207,12 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   useEffect(() => {
     if (!isInitialized || !config.healthCheckInterval) return;
 
-    console.log(
-      `[DEBUG][MatrixOperationProvider] Setting up health check interval: ${config.healthCheckInterval}ms`
-    );
+    logger.debug(`Setting up health check interval: ${config.healthCheckInterval}ms`);
 
     const interval = setInterval(performHealthCheck, config.healthCheckInterval);
 
     return () => {
-      console.log('[DEBUG][MatrixOperationProvider] Clearing health check interval');
+      logger.debug('Clearing health check interval');
       clearInterval(interval);
     };
   }, [isInitialized, config.healthCheckInterval, performHealthCheck]);
@@ -222,14 +223,12 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   useEffect(() => {
     if (!isInitialized || !config.performanceReportInterval) return;
 
-    console.log(
-      `[DEBUG][MatrixOperationProvider] Setting up performance report interval: ${config.performanceReportInterval}ms`
-    );
+    logger.debug(`Setting up performance report interval: ${config.performanceReportInterval}ms`);
 
     const interval = setInterval(generatePerformanceReport, config.performanceReportInterval);
 
     return () => {
-      console.log('[DEBUG][MatrixOperationProvider] Clearing performance report interval');
+      logger.debug('Clearing performance report interval');
       clearInterval(interval);
     };
   }, [isInitialized, config.performanceReportInterval, generatePerformanceReport]);
@@ -240,13 +239,13 @@ export const MatrixOperationProvider: React.FC<MatrixOperationProviderProps> = (
   useEffect(() => {
     if (!isInitialized || !config.autoOptimizeConfiguration) return;
 
-    console.log('[DEBUG][MatrixOperationProvider] Setting up auto-optimization interval');
+    logger.debug('Setting up auto-optimization interval');
 
     // Run auto-optimization every 5 minutes if enabled
     const interval = setInterval(autoOptimizeConfiguration, 5 * 60 * 1000);
 
     return () => {
-      console.log('[DEBUG][MatrixOperationProvider] Clearing auto-optimization interval');
+      logger.debug('Clearing auto-optimization interval');
       clearInterval(interval);
     };
   }, [isInitialized, config.autoOptimizeConfiguration, autoOptimizeConfiguration]);

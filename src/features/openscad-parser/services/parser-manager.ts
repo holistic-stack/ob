@@ -7,6 +7,7 @@
 
 import type { ASTNode } from '@holistic-stack/openscad-parser';
 import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
 import {
   error,
@@ -26,6 +27,8 @@ import type {
   ParserManager,
   PerformanceStats,
 } from '../types/parser.types.js';
+
+const logger = createLogger('ParserManager');
 
 // Inline performance measurement to avoid import issues
 const measureTimeAsync = async <T>(
@@ -195,7 +198,7 @@ class ParserManagerImpl implements ParserManager {
     const errorHandler = new SimpleErrorHandler();
     this.parser = new OpenscadParser(errorHandler);
 
-    console.log('[INIT][ParserManager] Parser manager initialized');
+    logger.init('Parser manager initialized');
   }
 
   /**
@@ -205,7 +208,7 @@ class ParserManagerImpl implements ParserManager {
     if (!this.initialized) {
       await this.parser.init();
       this.initialized = true;
-      console.log('[INIT][ParserManager] OpenSCAD parser initialized');
+      logger.init('OpenSCAD parser initialized');
     }
   }
 
@@ -452,7 +455,7 @@ class ParserManagerImpl implements ParserManager {
       this.clearCache();
     }
 
-    console.log('[DEBUG][ParserManager] Configuration updated');
+    logger.debug('Configuration updated');
 
     return success(undefined);
   }
@@ -484,7 +487,7 @@ class ParserManagerImpl implements ParserManager {
       },
     };
 
-    console.log('[DEBUG][ParserManager] Performance statistics reset');
+    logger.debug('Performance statistics reset');
   }
 
   /**
@@ -492,7 +495,7 @@ class ParserManagerImpl implements ParserManager {
    */
   clearCache(): void {
     this.context.cache.clear();
-    console.log('[DEBUG][ParserManager] Cache cleared');
+    logger.debug('Cache cleared');
   }
 
   /**
@@ -538,7 +541,7 @@ class ParserManagerImpl implements ParserManager {
       disposed: true,
     };
 
-    console.log('[CLEANUP][ParserManager] Parser manager disposed');
+    logger.end('Parser manager disposed');
   }
 
   /**
@@ -665,7 +668,7 @@ class ParserManagerImpl implements ParserManager {
       try {
         listener(event);
       } catch (e) {
-        console.error('[ERROR][ParserManager] Event listener error:', e);
+        logger.error('Event listener error:', e);
       }
     });
   }

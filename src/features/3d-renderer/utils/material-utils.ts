@@ -1,11 +1,14 @@
 import * as THREE from 'three';
-import type { MaterialConfig } from '../types/renderer.types';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { MaterialConfig } from '../types/renderer.types.js';
+
+const logger = createLogger('MaterialUtils');
 
 /**
  * Create Three.js material from configuration
  */
 export const createMaterial = (config: MaterialConfig): THREE.MeshStandardMaterial => {
-  console.log(`[DEBUG][MaterialUtils] Creating material with color: ${config.color}`);
+  logger.debug(`Creating material with color: ${config.color}`);
 
   return new THREE.MeshStandardMaterial({
     color: config.color,

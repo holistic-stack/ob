@@ -8,11 +8,14 @@
 import { Matrix } from 'ml-matrix';
 import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Result } from '../../../shared/types/result.types';
-import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types';
-import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixServiceContainer } from './matrix-service-container';
-import type { MatrixValidationOptions } from './matrix-validation.service';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { Result } from '../../../shared/types/result.types.js';
+import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+import type { MatrixValidationOptions } from './matrix-validation.service.js';
+
+const logger = createLogger('MatrixServiceRecoveryTest');
 
 /**
  * Recovery test scenarios
@@ -152,7 +155,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
   let failureInjector: FailureInjector;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixServiceRecoveryTest] Setting up recovery test environment');
+    logger.init('Setting up recovery test environment');
 
     serviceContainer = new MatrixServiceContainer({
       enableTelemetry: true,
@@ -166,7 +169,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][MatrixServiceRecoveryTest] Cleaning up recovery test environment');
+    logger.end('Cleaning up recovery test environment');
     await integrationService.shutdown();
   });
 
@@ -174,7 +177,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should recover from cache service failures',
       async () => {
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Testing cache service failure recovery');
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Testing cache service failure recovery');
 
         const _config = RECOVERY_SCENARIOS.serviceFailure;
         const cacheService = serviceContainer.getCacheService();
@@ -230,7 +233,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         const successfulOperations = results.filter((r) => r.success).length;
         const recoveryRate = successfulOperations / results.length;
 
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Cache failure recovery rate:',
           recoveryRate
         );
@@ -249,7 +252,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should handle validation service failures gracefully',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Testing validation service failure handling'
         );
 
@@ -297,7 +300,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         const successCount = results.filter((r) => r).length;
         const recoveryRate = successCount / results.length;
 
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Validation failure recovery rate:',
           recoveryRate
         );
@@ -314,7 +317,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should handle memory pressure gracefully',
       async () => {
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Testing memory pressure recovery');
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Testing memory pressure recovery');
 
         const config = RECOVERY_SCENARIOS.memoryPressure;
         const results: Array<{ success: boolean; memoryUsage: number }> = [];
@@ -357,11 +360,11 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         const averageMemoryUsage =
           results.reduce((sum, r) => sum + r.memoryUsage, 0) / results.length;
 
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Memory pressure recovery rate:',
           recoveryRate
         );
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Average memory usage per operation:',
           averageMemoryUsage
         );
@@ -381,7 +384,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should handle invalid input gracefully',
       async () => {
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Testing invalid input handling');
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Testing invalid input handling');
 
         const problematicMatrices = [
           createProblematicMatrix('singular'),
@@ -440,7 +443,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should implement circuit breaker pattern for failing operations',
       async () => {
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Testing circuit breaker pattern');
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Testing circuit breaker pattern');
 
         const config = RECOVERY_SCENARIOS.ioFailure;
         failureInjector = new FailureInjector(config.failureRate);
@@ -500,7 +503,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         const circuitOpenCount = results.filter((r) => r.circuitOpen).length;
         const successCount = results.filter((r) => r.success).length;
 
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Circuit breaker stats:', {
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Circuit breaker stats:', {
           failureStats,
           circuitOpenCount,
           successCount,
@@ -523,7 +526,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should detect and recover from service degradation',
       async () => {
-        console.log(
+        logger.debug(
           '[DEBUG][MatrixServiceRecoveryTest] Testing service degradation detection and recovery'
         );
 
@@ -546,7 +549,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
 
         // Check health after errors
         const degradedHealth = await integrationService.getHealthStatus();
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Health after errors:', degradedHealth);
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Health after errors:', degradedHealth);
 
         // Health should be degraded but not completely unhealthy
         expect(degradedHealth.overall).toMatch(/^(degraded|unhealthy)$/);
@@ -565,7 +568,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
 
         // Check health after recovery
         const recoveredHealth = await integrationService.getHealthStatus();
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Health after recovery:', recoveredHealth);
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Health after recovery:', recoveredHealth);
 
         // Health should improve or at least not get worse
         expect(recoveredHealth.services.length).toBeGreaterThan(0);
@@ -577,7 +580,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
     it(
       'should restart failed services automatically',
       async () => {
-        console.log('[DEBUG][MatrixServiceRecoveryTest] Testing automatic service restart');
+        logger.debug('[DEBUG][MatrixServiceRecoveryTest] Testing automatic service restart');
 
         // Get initial service status
         const initialStatus = serviceContainer.getStatus();

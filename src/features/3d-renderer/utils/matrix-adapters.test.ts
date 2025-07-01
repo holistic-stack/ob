@@ -7,6 +7,7 @@
 
 import { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import {
   fromEuler,
   fromQuaternion,
@@ -18,12 +19,14 @@ import {
   matrixUtils,
   toThreeMatrix3,
   toThreeMatrix4,
-} from './matrix-adapters';
+} from './matrix-adapters.js';
+
+const logger = createLogger('MatrixAdaptersTest');
 
 describe('Matrix Adapters', () => {
   describe('Three.js Matrix Conversions', () => {
     it('should convert Three.js Matrix3 to ml-matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing Matrix3 to ml-matrix conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix3 to ml-matrix conversion');
 
       const threeMatrix = new Matrix3().set(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
@@ -43,7 +46,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should convert Three.js Matrix4 to ml-matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing Matrix4 to ml-matrix conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix4 to ml-matrix conversion');
 
       const threeMatrix = new Matrix4().makeTranslation(1, 2, 3);
 
@@ -62,7 +65,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should convert ml-matrix to Three.js Matrix3 correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix3 conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix3 conversion');
 
       const matrix = matrixFactory.fromArray([
         [1, 2, 3],
@@ -84,7 +87,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should convert ml-matrix to Three.js Matrix4 correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix4 conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix4 conversion');
 
       const matrix = matrixFactory.identity(4);
       matrix.set(0, 3, 5);
@@ -104,7 +107,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should handle invalid matrix dimensions', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing invalid matrix dimensions');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing invalid matrix dimensions');
 
       const invalidMatrix = matrixFactory.fromArray([
         [1, 2],
@@ -122,7 +125,7 @@ describe('Matrix Adapters', () => {
 
   describe('Vector and Rotation Conversions', () => {
     it('should convert Vector3 to matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing Vector3 to matrix conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Vector3 to matrix conversion');
 
       const vector = new Vector3(1, 2, 3);
 
@@ -140,7 +143,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should convert Quaternion to rotation matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing Quaternion to rotation matrix conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Quaternion to rotation matrix conversion');
 
       const quaternion = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2);
 
@@ -160,7 +163,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should convert Euler angles to rotation matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing Euler to rotation matrix conversion');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Euler to rotation matrix conversion');
 
       const euler = new Euler(0, Math.PI / 2, 0, 'XYZ');
 
@@ -182,7 +185,7 @@ describe('Matrix Adapters', () => {
 
   describe('Matrix Factory', () => {
     it('should create identity matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing identity matrix creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing identity matrix creation');
 
       const matrix = matrixFactory.identity(3);
 
@@ -196,7 +199,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should create zero matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing zero matrix creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing zero matrix creation');
 
       const matrix = matrixFactory.zeros(2, 3);
 
@@ -210,7 +213,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should create ones matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing ones matrix creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing ones matrix creation');
 
       const matrix = matrixFactory.ones(2, 2);
 
@@ -224,7 +227,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should create random matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing random matrix creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing random matrix creation');
 
       const matrix = matrixFactory.random(3, 3);
 
@@ -240,7 +243,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should create diagonal matrix correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing diagonal matrix creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing diagonal matrix creation');
 
       const values = [1, 2, 3];
       const matrix = matrixFactory.diagonal(values);
@@ -255,7 +258,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should create matrix from array correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing matrix from array creation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing matrix from array creation');
 
       const data = [
         [1, 2, 3],
@@ -272,7 +275,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should validate array data when creating matrix', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing array validation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing array validation');
 
       const invalidData = [
         [1, 2],
@@ -285,7 +288,7 @@ describe('Matrix Adapters', () => {
 
   describe('Matrix Utils', () => {
     it('should correctly identify square matrices', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing square matrix identification');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing square matrix identification');
 
       const square = matrixFactory.fromArray([
         [1, 2],
@@ -301,7 +304,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should correctly identify symmetric matrices', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing symmetric matrix identification');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing symmetric matrix identification');
 
       const symmetric = matrixFactory.fromArray([
         [1, 2],
@@ -317,7 +320,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should correctly identify orthogonal matrices', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing orthogonal matrix identification');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing orthogonal matrix identification');
 
       const identity = matrixFactory.identity(2);
       const nonOrthogonal = matrixFactory.fromArray([
@@ -330,7 +333,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should correctly identify singular matrices', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing singular matrix identification');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing singular matrix identification');
 
       const singular = matrixFactory.fromArray([
         [0, 0],
@@ -346,7 +349,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should compare matrices for equality correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing matrix equality');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing matrix equality');
 
       const a = matrixFactory.fromArray([
         [1, 2],
@@ -366,7 +369,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should calculate matrix hash correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing matrix hash calculation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing matrix hash calculation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -380,7 +383,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should calculate matrix size correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing matrix size calculation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing matrix size calculation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2, 3],
@@ -392,7 +395,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should estimate memory usage correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing memory usage estimation');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing memory usage estimation');
 
       const matrix = matrixFactory.fromArray([
         [1, 2],
@@ -407,7 +410,7 @@ describe('Matrix Adapters', () => {
 
   describe('Matrix Adapter Interface', () => {
     it('should provide consistent adapter interface', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing adapter interface consistency');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing adapter interface consistency');
 
       const threeMatrix4 = new Matrix4().makeTranslation(1, 2, 3);
       const mlMatrix = matrixAdapter.fromThreeMatrix4(threeMatrix4);
@@ -421,7 +424,7 @@ describe('Matrix Adapters', () => {
     });
 
     it('should handle round-trip conversions correctly', () => {
-      console.log('[DEBUG][MatrixAdaptersTest] Testing round-trip conversions');
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing round-trip conversions');
 
       const originalMatrix3 = new Matrix3().set(1, 2, 3, 4, 5, 6, 7, 8, 9);
 

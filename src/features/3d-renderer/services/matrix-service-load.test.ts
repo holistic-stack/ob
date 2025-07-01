@@ -8,8 +8,11 @@
 import { Matrix } from 'ml-matrix';
 import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { MatrixIntegrationService } from './matrix-integration.service';
-import { MatrixServiceContainer } from './matrix-service-container';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { MatrixServiceContainer } from './matrix-service-container.js';
+
+const logger = createLogger('MatrixServiceLoadTest');
 
 /**
  * Load testing configuration
@@ -155,7 +158,7 @@ describe('Matrix Service Load Testing', () => {
   let integrationService: MatrixIntegrationService;
 
   beforeEach(() => {
-    console.log('[INIT][MatrixServiceLoadTest] Setting up load test environment');
+    logger.init('Setting up load test environment');
 
     serviceContainer = new MatrixServiceContainer({
       enableTelemetry: true,
@@ -168,7 +171,7 @@ describe('Matrix Service Load Testing', () => {
   });
 
   afterEach(async () => {
-    console.log('[END][MatrixServiceLoadTest] Cleaning up load test environment');
+    logger.end('Cleaning up load test environment');
     await integrationService.shutdown();
   });
 
@@ -176,7 +179,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should handle light load operations efficiently',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Running light load test');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Running light load test');
 
         const config = LOAD_TEST_CONFIG.light;
         const results: Array<{ success: boolean; executionTime: number }> = [];
@@ -221,7 +224,7 @@ describe('Matrix Service Load Testing', () => {
           0 // cacheStats.hits
         );
 
-        console.log('[DEBUG][MatrixServiceLoadTest] Light load metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Light load metrics:', metrics);
 
         // Validate performance requirements
         expect(metrics.errorRate).toBeLessThan(0.01); // <1% error rate
@@ -235,7 +238,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should maintain cache efficiency under light load',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Testing cache efficiency under light load');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Testing cache efficiency under light load');
 
         const config = LOAD_TEST_CONFIG.light;
         const testMatrix = createTestMatrix4();
@@ -255,7 +258,7 @@ describe('Matrix Service Load Testing', () => {
         const hitRate = cacheStats.cacheHitRate;
         expect(hitRate).toBeGreaterThan(0.8); // >80% cache hit rate
 
-        console.log('[DEBUG][MatrixServiceLoadTest] Cache hit rate:', hitRate);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Cache hit rate:', hitRate);
       },
       LOAD_TEST_CONFIG.light.timeoutMs
     );
@@ -265,7 +268,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should handle medium load with acceptable performance',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Running medium load test');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Running medium load test');
 
         const config = LOAD_TEST_CONFIG.medium;
         const results: Array<{ success: boolean; executionTime: number }> = [];
@@ -309,7 +312,7 @@ describe('Matrix Service Load Testing', () => {
           0 // cacheStats.hits
         );
 
-        console.log('[DEBUG][MatrixServiceLoadTest] Medium load metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Medium load metrics:', metrics);
 
         // Validate performance requirements for medium load
         expect(metrics.errorRate).toBeLessThan(0.05); // <5% error rate
@@ -325,7 +328,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should maintain stability under heavy load',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Running heavy load test');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Running heavy load test');
 
         const config = LOAD_TEST_CONFIG.heavy;
         const results: Array<{ success: boolean; executionTime: number }> = [];
@@ -380,7 +383,7 @@ describe('Matrix Service Load Testing', () => {
           0 // cacheStats.hits
         );
 
-        console.log('[DEBUG][MatrixServiceLoadTest] Heavy load metrics:', metrics);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Heavy load metrics:', metrics);
 
         // Validate performance requirements for heavy load
         expect(metrics.errorRate).toBeLessThan(0.1); // <10% error rate
@@ -400,7 +403,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should manage memory efficiently during sustained operations',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Testing memory management under load');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Testing memory management under load');
 
         const config = LOAD_TEST_CONFIG.medium;
         const memorySnapshots: number[] = [];
@@ -427,7 +430,7 @@ describe('Matrix Service Load Testing', () => {
           memorySnapshots.push(measureMemoryUsage());
         }
 
-        console.log('[DEBUG][MatrixServiceLoadTest] Memory snapshots:', memorySnapshots);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Memory snapshots:', memorySnapshots);
 
         // Memory should not grow unbounded
         const initialMemory = memorySnapshots[0] ?? 0;
@@ -454,7 +457,7 @@ describe('Matrix Service Load Testing', () => {
     it(
       'should maintain service health during load testing',
       async () => {
-        console.log('[DEBUG][MatrixServiceLoadTest] Testing service health under load');
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Testing service health under load');
 
         const config = LOAD_TEST_CONFIG.medium;
 
@@ -487,7 +490,7 @@ describe('Matrix Service Load Testing', () => {
 
         // Final health check
         const finalHealth = await integrationService.getHealthStatus();
-        console.log('[DEBUG][MatrixServiceLoadTest] Final health status:', finalHealth);
+        logger.debug('[DEBUG][MatrixServiceLoadTest] Final health status:', finalHealth);
 
         // Services should still be functional
         expect(finalHealth.services.length).toBeGreaterThan(0);

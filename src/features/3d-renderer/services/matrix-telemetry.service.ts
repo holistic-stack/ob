@@ -5,9 +5,11 @@
  * regression detection, and comprehensive reporting following bulletproof-react patterns.
  */
 
-import { createLogger } from '../../../shared/services/logger.service';
-import type { MATRIX_CONFIG } from '../config/matrix-config';
-import type { MatrixPerformanceMetrics } from '../types/matrix.types';
+import { createLogger } from '../../../shared/services/logger.service.js';
+import type { MATRIX_CONFIG } from '../config/matrix-config.js';
+import type { MatrixPerformanceMetrics } from '../types/matrix.types.js';
+
+const logger = createLogger('MatrixTelemetryService');
 
 const logger = createLogger('MatrixTelemetryService');
 
@@ -87,7 +89,7 @@ export class MatrixTelemetryService {
   private lastReportTime = 0;
 
   constructor(private readonly deps: MatrixTelemetryDependencies) {
-    console.log('[INIT][MatrixTelemetryService] Initializing matrix telemetry service');
+    logger.init('Initializing matrix telemetry service');
 
     this.maxHistorySize = 10000; // Keep last 10k operations
     this.reportingInterval = this.deps.config.debug.performanceLogInterval;
@@ -113,7 +115,7 @@ export class MatrixTelemetryService {
     this.performanceBaselines.set('validation', 15);
     this.performanceBaselines.set('conversion', 2);
 
-    console.log('[DEBUG][MatrixTelemetryService] Performance baselines initialized');
+    logger.debug('Performance baselines initialized');
   }
 
   /**
@@ -125,7 +127,7 @@ export class MatrixTelemetryService {
     this.regressionThresholds.set('moderate', 2.0); // 100% slower than baseline
     this.regressionThresholds.set('severe', 3.0); // 200% slower than baseline
 
-    console.log('[DEBUG][MatrixTelemetryService] Regression thresholds initialized');
+    logger.debug('Regression thresholds initialized');
   }
 
   /**
@@ -214,7 +216,7 @@ export class MatrixTelemetryService {
         recommendations: this.generateRegressionRecommendations(operation, severity, deviation),
       };
 
-      console.warn(`[WARN][MatrixTelemetryService] Performance regression detected:`, regression);
+      logger.warn(`Performance regression detected:`, regression);
 
       // Track regression for reporting
       this.trackPerformanceRegression(regression);
@@ -270,8 +272,8 @@ export class MatrixTelemetryService {
   private trackPerformanceRegression(regression: PerformanceRegression): void {
     // Store regression data for inclusion in reports
     // This could be expanded to maintain a separate regression history
-    console.log(
-      `[DEBUG][MatrixTelemetryService] Tracking regression: ${regression.operation} (${regression.severity})`
+    logger.debug(
+      `Tracking regression: ${regression.operation} (${regression.severity})`
     );
   }
 
@@ -295,7 +297,7 @@ export class MatrixTelemetryService {
     const report = this.generateReport();
 
     if (this.deps.config.debug.enablePerformanceLogging) {
-      console.log('[INFO][MatrixTelemetryService] Periodic Performance Report:', {
+      logger.info('Periodic Performance Report:', {
         totalOperations: report.summary.totalOperations,
         successRate: `${(report.summary.successRate * 100).toFixed(1)}%`,
         avgExecutionTime: `${report.summary.averageExecutionTime.toFixed(2)}ms`,
@@ -308,7 +310,7 @@ export class MatrixTelemetryService {
    * Generate comprehensive telemetry report
    */
   generateReport(timeRange?: readonly [number, number]): TelemetryReport {
-    console.log('[DEBUG][MatrixTelemetryService] Generating telemetry report');
+    logger.debug('Generating telemetry report');
 
     const now = Date.now();
     const [startTime, endTime] = timeRange || [now - this.reportingInterval, now];
@@ -585,7 +587,7 @@ export class MatrixTelemetryService {
   reset(): void {
     this.operationHistory.length = 0;
     this.lastReportTime = 0;
-    console.log('[DEBUG][MatrixTelemetryService] Telemetry data reset');
+    logger.debug('Telemetry data reset');
   }
 
   /**
