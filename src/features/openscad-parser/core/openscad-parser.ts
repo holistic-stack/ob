@@ -11,6 +11,7 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import { tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from './ast-types.js';
 import type { IErrorHandler } from './error-handler.interface.js';
+import { VisitorASTGenerator } from './visitor-ast-generator.js';
 
 const logger = createLogger('OpenscadParser');
 
@@ -23,6 +24,7 @@ export class OpenscadParser {
   private language: Language | null = null;
   private previousTree: Tree | null = null;
   private isInitialized = false;
+  private source = ''; // Store source code for visitor pattern
 
   /**
    * Create new OpenSCAD parser instance
@@ -103,6 +105,9 @@ export class OpenscadParser {
         this.ensureInitialized();
 
         logger.debug(`Parsing OpenSCAD content (${content.length} characters)`);
+
+        // Store source code for visitor pattern
+        this.source = content;
 
         // Clear previous errors
         this.errorHandler.clear();
@@ -225,14 +230,41 @@ export class OpenscadParser {
    * @param tree - Tree-sitter parse tree
    * @returns Array of AST nodes
    */
-  private convertCSTToAST(_tree: Tree): ReadonlyArray<ASTNode> {
-    // TODO: Implement CST to AST conversion using visitor pattern
-    // This will be implemented in Phase 1.3 with BaseASTVisitor
-    logger.debug('CST to AST conversion - placeholder implementation');
+  private convertCSTToAST(tree: Tree): ReadonlyArray<ASTNode> {
+    logger.debug('Converting CST to AST using visitor pattern');
 
-    // For now, return empty array to maintain API compatibility
-    // This will be replaced with proper visitor-based conversion
-    return [];
+    const result = tryCatch(
+      () => {
+        // Create visitor AST generator
+        const generator = new VisitorASTGenerator(tree, this.source, this.errorHandler);
+
+        // Generate AST from CST
+        const ast = generator.generate();
+
+        // Get conversion statistics
+        const stats = generator.getConversionStats();
+        logger.debug(
+          `CST conversion completed: ${stats.totalCSTNodes} CST nodes → ${ast.length} AST nodes`
+        );
+
+        // Cleanup generator
+        generator.dispose();
+
+        return ast;
+      },
+      (err) => {
+        const errorMessage = `CST to AST conversion failed: ${err instanceof Error ? err.message : String(err)}`;
+        this.errorHandler.logError(errorMessage);
+        logger.error(errorMessage);
+        throw err;
+      }
+    );
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
   }
 
   /**

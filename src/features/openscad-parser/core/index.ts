@@ -7,6 +7,10 @@
  */
 
 export * from './ast-types.js';
+export * from './csg/index.js';
 export type { IErrorHandler } from './error-handler.interface.js';
 export { OpenscadParser } from './openscad-parser.js';
+// Advanced AST processing modules
+export * from './optimization/index.js';
 export { SimpleErrorHandler } from './simple-error-handler.js';
+export * from './visitors/index.js';

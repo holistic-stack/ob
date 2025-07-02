@@ -204,6 +204,43 @@ export interface RangeExpressionNode extends BaseASTNode {
 }
 
 /**
+ * Unary expression node (e.g., -x, !condition)
+ */
+export interface UnaryExpressionNode extends BaseASTNode {
+  readonly type: 'unary_expression';
+  readonly operator: string;
+  readonly operand: ASTNode;
+}
+
+/**
+ * Conditional expression node (e.g., condition ? true_expr : false_expr)
+ */
+export interface ConditionalExpressionNode extends BaseASTNode {
+  readonly type: 'conditional_expression';
+  readonly condition: ASTNode;
+  readonly trueExpression: ASTNode;
+  readonly falseExpression: ASTNode;
+}
+
+/**
+ * Function call node (e.g., sin(x))
+ */
+export interface FunctionCallNode extends BaseASTNode {
+  readonly type: 'function_call';
+  readonly name: string;
+  readonly arguments: ASTNode[];
+}
+
+/**
+ * Module call node (e.g., cube(10))
+ */
+export interface ModuleCallNode extends BaseASTNode {
+  readonly type: 'module_call';
+  readonly name: string;
+  readonly arguments: ASTNode[];
+}
+
+/**
  * Module definition node
  */
 export interface ModuleDefinitionNode extends BaseASTNode {
@@ -271,6 +308,10 @@ export type ASTNode =
   | VariableNode
   | VectorExpressionNode
   | BinaryExpressionNode
+  | UnaryExpressionNode
+  | ConditionalExpressionNode
+  | FunctionCallNode
+  | ModuleCallNode
   | RangeExpressionNode
   | ModuleDefinitionNode
   | FunctionDefinitionNode
