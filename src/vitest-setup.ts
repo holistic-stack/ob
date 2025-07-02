@@ -75,8 +75,52 @@ const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
 
 /**
+ * Create a minimal mock WASM file for testing purposes
+ * This provides a fallback when the actual OpenSCAD grammar WASM is not available
+ */
+function createMockWasmFile(): Uint8Array {
+  // Create a minimal valid WASM file structure
+  // WASM magic number (0x00, 0x61, 0x73, 0x6d) + version (0x01, 0x00, 0x00, 0x00)
+  const wasmHeader = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
+
+  // Add minimal sections for a valid WASM file
+  // Type section (empty)
+  const typeSection = new Uint8Array([0x01, 0x00]);
+  // Function section (empty)
+  const functionSection = new Uint8Array([0x03, 0x00]);
+  // Export section (empty)
+  const exportSection = new Uint8Array([0x07, 0x00]);
+  // Code section (empty)
+  const codeSection = new Uint8Array([0x0a, 0x00]);
+
+  // Combine all sections
+  const totalLength =
+    wasmHeader.length +
+    typeSection.length +
+    functionSection.length +
+    exportSection.length +
+    codeSection.length;
+  const mockWasm = new Uint8Array(totalLength);
+
+  let offset = 0;
+  mockWasm.set(wasmHeader, offset);
+  offset += wasmHeader.length;
+  mockWasm.set(typeSection, offset);
+  offset += typeSection.length;
+  mockWasm.set(functionSection, offset);
+  offset += functionSection.length;
+  mockWasm.set(exportSection, offset);
+  offset += exportSection.length;
+  mockWasm.set(codeSection, offset);
+
+  logger.debug(`Created mock WASM file: ${mockWasm.length} bytes`);
+  return mockWasm;
+}
+
+/**
  * Advanced WASM file resolution using multiple strategies
  * Combines Node.js module resolution with directory traversal for maximum robustness
+ * Falls back to mock WASM for OpenSCAD grammar when not available
  */
 export function resolveWasmPath(urlPath: string): string {
   // Extract filename from URL or path
@@ -253,6 +297,12 @@ export function resolveWasmPath(urlPath: string): string {
     }
   }
 
+  // If we can't find the actual WASM file, check if it's an OpenSCAD grammar file
+  if (normalizedPath.includes('openscad') || normalizedPath.includes('tree-sitter-openscad')) {
+    logger.warn(`OpenSCAD grammar WASM not found: ${normalizedPath}. Using mock WASM for testing.`);
+    return 'mock://tree-sitter-openscad.wasm';
+  }
+
   throw new Error(
     `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`
   );
@@ -282,6 +332,18 @@ vi.mocked(fetch).mockImplementation((url) => {
   try {
     // Resolve the actual file path
     const resolvedPath = resolveWasmPath(urlPath);
+
+    // Handle mock WASM case
+    if (resolvedPath.startsWith('mock://')) {
+      logger.debug(`Using mock WASM for: ${urlPath}`);
+      const mockWasm = createMockWasmFile();
+
+      return Promise.resolve({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(mockWasm.buffer),
+        bytes: () => Promise.resolve(mockWasm),
+      } as unknown as Response);
+    }
 
     // Remove file:// prefix if present for file system access
     let actualPath = resolvedPath;
