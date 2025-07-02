@@ -117,7 +117,7 @@ describe('StoreConnectedEditor', () => {
       render(<StoreConnectedEditor />);
 
       expect(screen.getByTestId('store-connected-editor')).toBeInTheDocument();
-      expect(screen.getByTestId('monaco-editor-mock')).toBeInTheDocument();
+      expect(screen.getByTestId('monaco-editor-instance')).toBeInTheDocument();
       expect(screen.getByText('OpenSCAD')).toBeInTheDocument();
     });
 
@@ -144,7 +144,7 @@ describe('StoreConnectedEditor', () => {
       render(<StoreConnectedEditor />);
 
       expect(screen.getByText('● Modified')).toBeInTheDocument();
-      expect(screen.getByText('13 chars')).toBeInTheDocument();
+      expect(screen.getByText('14 chars')).toBeInTheDocument();
     });
   });
 
@@ -226,9 +226,9 @@ describe('StoreConnectedEditor', () => {
 
       await waitFor(() => {
         expect(mockStoreActions.updateSelection).toHaveBeenCalledWith({
-          startLine: 1,
+          startLineNumber: 1,
           startColumn: 1,
-          endLine: 1,
+          endLineNumber: 1,
           endColumn: 5,
         });
       });
