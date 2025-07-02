@@ -23,7 +23,7 @@ A comprehensive, production-ready OpenSCAD 3D visualization application featurin
 ```
 OpenSCAD Code (Monaco Editor)
      ↓
-AST Parsing (@holistic-stack/openscad-parser)
+AST Parsing (Custom OpenSCAD Parser)
      ↓
 AST-to-CSG Conversion (Enhanced Boolean Operations)
      ↓

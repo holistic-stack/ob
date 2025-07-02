@@ -6,7 +6,8 @@
  * Following TypeScript 5.8, DRY, and SRP principles.
  */
 
-import TreeSitter, { type Language, type Node, type Parser, type Tree } from 'web-tree-sitter';
+import * as TreeSitter from 'web-tree-sitter';
+import type { Language, Node, Parser, Tree } from 'web-tree-sitter';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import { tryCatch, tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from './ast-types.js';

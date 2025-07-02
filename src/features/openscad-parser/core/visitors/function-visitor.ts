@@ -9,7 +9,7 @@
 
 import type { Node } from 'web-tree-sitter';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode, FunctionDefinitionNode, LiteralNode, VariableNode } from '../ast-types.js';
+import type { ASTNode, FunctionDefinitionNode, LiteralNode, VariableNode, FunctionCallNode } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
 
@@ -160,16 +160,48 @@ export class FunctionVisitor extends BaseASTVisitor {
     // Parse arguments
     const args = this.parseFunctionArguments(node);
 
-    // Create function call node - use a generic approach since function_call isn't in AST union
-    // In practice, this would be handled by creating a proper AST node type
-    const functionCallNode: VariableNode = {
-      type: 'variable',
-      name: `${functionName}(${Object.keys(args).join(', ')})`,
+    // Convert arguments object to array of AST nodes
+    const argumentNodes: ASTNode[] = Object.entries(args).map(([key, value]) => {
+      const argLocation = this.createSourceLocation(node); // Use node location as fallback
+
+      if (typeof value === 'string') {
+        return {
+          type: 'literal',
+          value: value,
+          location: argLocation,
+        } as ASTNode;
+      } else if (typeof value === 'number') {
+        return {
+          type: 'literal',
+          value: value,
+          location: argLocation,
+        } as ASTNode;
+      } else if (typeof value === 'boolean') {
+        return {
+          type: 'literal',
+          value: value,
+          location: argLocation,
+        } as ASTNode;
+      } else {
+        // For complex values, create a literal with string representation
+        return {
+          type: 'literal',
+          value: String(value),
+          location: argLocation,
+        } as ASTNode;
+      }
+    });
+
+    // Create proper function call node
+    const functionCallNode: FunctionCallNode = {
+      type: 'function_call',
+      name: functionName,
+      arguments: argumentNodes,
       location,
     };
 
     logger.debug(
-      `Created function call: ${functionName} (built-in: ${isBuiltIn}) with ${Object.keys(args).length} arguments`
+      `Created function call: ${functionName} (built-in: ${isBuiltIn}) with ${argumentNodes.length} arguments`
     );
     return functionCallNode;
   }

@@ -83,6 +83,12 @@ export class MatrixIntegrationService {
     logger.debug(`Enhanced Matrix4 to ml-matrix conversion`);
 
     try {
+      // Ensure services are initialized before accessing them
+      const initResult = await this.serviceContainer.ensureInitialized();
+      if (!initResult.success) {
+        return error(`Failed to initialize matrix services: ${initResult.error}`);
+      }
+
       const conversionService = this.serviceContainer.getConversionService();
       const validationService = this.serviceContainer.getValidationService();
       const telemetryService = this.serviceContainer.getTelemetryService();
@@ -187,6 +193,12 @@ export class MatrixIntegrationService {
     logger.debug(`Enhanced robust matrix inversion`);
 
     try {
+      // Ensure services are initialized before accessing them
+      const initResult = await this.serviceContainer.ensureInitialized();
+      if (!initResult.success) {
+        return error(`Failed to initialize matrix services: ${initResult.error}`);
+      }
+
       const conversionService = this.serviceContainer.getConversionService();
       const validationService = this.serviceContainer.getValidationService();
       const telemetryService = this.serviceContainer.getTelemetryService();
@@ -285,6 +297,12 @@ export class MatrixIntegrationService {
     logger.debug(`Enhanced normal matrix computation`);
 
     try {
+      // Ensure services are initialized before accessing them
+      const initResult = await this.serviceContainer.ensureInitialized();
+      if (!initResult.success) {
+        return error(`Failed to initialize matrix services: ${initResult.error}`);
+      }
+
       const conversionService = this.serviceContainer.getConversionService();
       const telemetryService = this.serviceContainer.getTelemetryService();
 

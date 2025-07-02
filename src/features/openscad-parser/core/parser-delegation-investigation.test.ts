@@ -12,7 +12,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import { UnifiedParserService } from '../services/unified-parser-service.js';
-import type { ASTNode, CubeNode, SphereNode, UnionNode } from './ast-types.js';
+import type { CubeNode, SphereNode, UnionNode } from './ast-types.js';
 
 const logger = createLogger('ParserDelegationInvestigation');
 

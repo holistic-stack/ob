@@ -8,7 +8,7 @@
  */
 
 import * as THREE from 'three';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type {
   ASTNode,
@@ -24,6 +24,107 @@ import type {
 import { ASTToCSGConverter, DEFAULT_CSG_CONFIG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterTest');
+
+// Mock matrix services to prevent initialization stalling
+vi.mock('../../../3d-renderer/services/matrix-service-container.js', () => ({
+  MatrixServiceContainer: vi.fn().mockImplementation(() => ({
+    ensureInitialized: vi.fn().mockResolvedValue({ success: true }),
+    getConversionService: vi.fn().mockReturnValue({
+      convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
+        success: true,
+        data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+      }),
+    }),
+    getValidationService: vi.fn().mockReturnValue(null),
+    getTelemetryService: vi.fn().mockReturnValue(null),
+  })),
+  matrixServiceContainer: {
+    ensureInitialized: vi.fn().mockResolvedValue({ success: true }),
+    getConversionService: vi.fn().mockReturnValue({
+      convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
+        success: true,
+        data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+      }),
+    }),
+    getValidationService: vi.fn().mockReturnValue(null),
+    getTelemetryService: vi.fn().mockReturnValue(null),
+  },
+}));
+
+vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
+  MatrixIntegrationService: vi.fn().mockImplementation(() => ({
+    convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        result: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        validation: undefined,
+        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'convert' },
+        metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
+      },
+    }),
+    performRobustInversion: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        result: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        validation: undefined,
+        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'invert' },
+        metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
+      },
+    }),
+    computeEnhancedNormalMatrix: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        result: new THREE.Matrix3(),
+        validation: undefined,
+        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'normal' },
+        metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
+      },
+    }),
+  })),
+}));
+
+// Mock CSG operations to prevent matrix service initialization stalling
+vi.mock('../../../3d-renderer/services/csg-operations.js', () => {
+  const mockMesh = {
+    geometry: {
+      dispose: vi.fn(),
+      attributes: {
+        position: {
+          count: 24, // 8 vertices * 3 components = 24 for a cube
+          array: new Float32Array(24),
+        },
+        normal: {
+          count: 24,
+          array: new Float32Array(24),
+        },
+      },
+      computeVertexNormals: vi.fn(),
+      computeBoundingBox: vi.fn(),
+      computeBoundingSphere: vi.fn(),
+      clone: vi.fn().mockReturnThis(),
+    },
+    material: { dispose: vi.fn() },
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+    updateMatrix: vi.fn(),
+    updateMatrixWorld: vi.fn(),
+    clone: vi.fn().mockReturnThis(),
+  };
+
+  return {
+    performCSGOperation: vi.fn().mockResolvedValue({
+      success: true,
+      data: mockMesh,
+    }),
+    createCSGConfig: vi.fn().mockReturnValue({
+      operation: 'union',
+      meshes: [],
+      enableOptimization: true,
+      maxComplexity: 10000,
+    }),
+  };
+});
 
 describe('[INIT][ASTToCSGConverter] AST-to-CSG Conversion Tests', () => {
   let converter: ASTToCSGConverter;

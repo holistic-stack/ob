@@ -8,7 +8,7 @@ Comprehensive implementation plan for creating a production-ready OpenSCAD 3D vi
 
 ### Technology Stack ✅ (All Dependencies Installed)
 - **React 19.0.0** + **TypeScript 5.8.3** + **Vite 6.0.0**
-- **@holistic-stack/openscad-parser 0.1.2** - AST parsing
+- **Custom OpenSCAD Parser** - AST parsing with web-tree-sitter
 - **@monaco-editor/react 4.7.0** - Code editing
 - **@react-three/fiber 9.1.2** + **three-csg-ts 3.2.0** - 3D rendering
 - **zustand 5.0.5** - State management

@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
             // Three.js ecosystem - 3D rendering (excluding @types packages)
             three: ['three', '@react-three/fiber', '@react-three/drei'],
             // CSG and parsing libraries
-            parsing: ['web-tree-sitter', '@holistic-stack/openscad-parser', 'three-csg-ts'],
+            parsing: ['web-tree-sitter', 'three-csg-ts'],
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
@@ -54,7 +54,13 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       globals: true,
+      isolate: true,
       environment: 'jsdom',
+      environmentOptions: {
+        jsdom: {
+          resources: 'usable',
+        },
+      },
       include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
       exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
       setupFiles: ['./src/vitest-setup.ts'],

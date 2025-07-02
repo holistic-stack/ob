@@ -80,6 +80,7 @@ export class MatrixServiceContainer {
   private readonly serviceErrorCounts = new Map<string, number>();
   private readonly config: ServiceContainerConfig;
   private isInitialized = false;
+  private initializationPromise: Promise<Result<void, string>> | null = null;
 
   constructor(config: ServiceContainerConfig = {}) {
     logger.init('Initializing service container');
@@ -92,9 +93,8 @@ export class MatrixServiceContainer {
       ...config,
     };
 
-    if (this.config.autoStartServices) {
-      this.initializeServices();
-    }
+    // Don't auto-start services in constructor to avoid async issues
+    // Services will be initialized on first access
   }
 
   /**
@@ -105,8 +105,23 @@ export class MatrixServiceContainer {
       return success(undefined);
     }
 
+    // If initialization is already in progress, return the existing promise
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
     logger.debug('Starting service initialization');
 
+    // Create and store the initialization promise
+    this.initializationPromise = this.performInitialization();
+
+    return this.initializationPromise;
+  }
+
+  /**
+   * Perform the actual initialization work
+   */
+  private async performInitialization(): Promise<Result<void, string>> {
     try {
       // Initialize core services first (no dependencies)
       await this.initializeCoreServices();
@@ -124,6 +139,8 @@ export class MatrixServiceContainer {
       logger.debug('Service initialization completed successfully');
       return success(undefined);
     } catch (err) {
+      // Reset the promise so initialization can be retried
+      this.initializationPromise = null;
       logger.error('Service initialization failed:', err);
       return error(
         `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`
@@ -271,6 +288,19 @@ export class MatrixServiceContainer {
   private incrementErrorCount(name: string): void {
     const current = this.serviceErrorCounts.get(name) ?? 0;
     this.serviceErrorCounts.set(name, current + 1);
+  }
+
+  /**
+   * Ensure services are initialized
+   */
+  async ensureInitialized(): Promise<Result<void, string>> {
+    if (!this.isInitialized && !this.initializationPromise) {
+      return this.initializeServices();
+    }
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+    return success(undefined);
   }
 
   /**

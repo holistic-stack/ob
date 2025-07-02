@@ -9,7 +9,7 @@
 
 import type { Node } from 'web-tree-sitter';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode, LiteralNode, ModuleDefinitionNode, VariableNode } from '../ast-types.js';
+import type { ASTNode, FunctionCallNode, LiteralNode, ModuleDefinitionNode, VariableNode } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
 
@@ -112,15 +112,17 @@ export class ModuleVisitor extends BaseASTVisitor {
     // Parse children (for module calls with child objects)
     const _children = this.parseModuleChildren(node);
 
-    // Create a generic AST node for module calls - use variable as placeholder
-    // This will be handled by the renderer as a user-defined module
-    const moduleCallNode: VariableNode = {
-      type: 'variable',
-      name: `${moduleName}(${Object.keys(args).join(', ')})`,
+    // Create a function call AST node for module instantiations
+    // In OpenSCAD, module instantiations are essentially function calls
+    const moduleCallNode: FunctionCallNode = {
+      type: 'function_call',
+      name: moduleName,
+      arguments: Object.values(args),
       location,
+      isBuiltIn: this.isBuiltInModule(moduleName),
     };
 
-    logger.debug(`Created module call: ${moduleName} with ${Object.keys(args).length} arguments`);
+    logger.debug(`Created module call: ${moduleName} with ${Object.values(args).length} arguments`);
     return moduleCallNode;
   }
 
@@ -211,6 +213,31 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
 
     return body;
+  }
+
+  /**
+   * Check if a module name is a built-in OpenSCAD module
+   * @param moduleName - Name of the module to check
+   * @returns True if the module is built-in
+   */
+  private isBuiltInModule(moduleName: string): boolean {
+    const builtInModules = [
+      // Primitive shapes
+      'cube', 'sphere', 'cylinder', 'polyhedron',
+      // 2D shapes
+      'circle', 'square', 'polygon', 'text',
+      // Transformations
+      'translate', 'rotate', 'scale', 'mirror', 'resize',
+      'multmatrix', 'color', 'offset',
+      // Boolean operations
+      'union', 'difference', 'intersection', 'hull', 'minkowski',
+      // Extrusion
+      'linear_extrude', 'rotate_extrude',
+      // Special
+      'projection', 'surface', 'import'
+    ];
+
+    return builtInModules.includes(moduleName);
   }
 
   /**

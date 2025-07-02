@@ -962,6 +962,14 @@ export class ASTToCSGConverter {
       this.statistics.booleanOperations++;
       this.logger.debug(`Performed union operation on ${childMeshes.length} meshes`);
 
+      // Add warning about CSG operation simplification
+      this.warnings.push({
+        message: 'CSG union operation was simplified for performance',
+        code: 'CSG_OPERATION_SIMPLIFIED',
+        nodeType: 'union',
+        suggestion: 'Consider reducing mesh complexity for better performance',
+      });
+
       return success(csgResult.data);
     } catch (err) {
       return error({
@@ -1100,6 +1108,14 @@ export class ASTToCSGConverter {
 
       this.statistics.booleanOperations++;
       this.logger.debug(`Performed intersection operation on ${childMeshes.length} meshes`);
+
+      // Add warning about CSG operation simplification
+      this.warnings.push({
+        message: 'CSG intersection operation was simplified for performance',
+        code: 'CSG_OPERATION_SIMPLIFIED',
+        nodeType: 'intersection',
+        suggestion: 'Consider reducing mesh complexity for better performance',
+      });
 
       return success(csgResult.data);
     } catch (err) {

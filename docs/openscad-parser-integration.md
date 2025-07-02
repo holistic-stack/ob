@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide documents the completed integration of @holistic-stack/openscad-parser v0.1.2 following functional programming principles, TDD methodology, and Result<T,E> error handling patterns.
+This guide documents the completed integration of the custom OpenSCAD parser implementation following functional programming principles, TDD methodology, and Result<T,E> error handling patterns.
 
 ## ✅ Implementation Status
 
@@ -20,8 +20,8 @@ This guide documents the completed integration of @holistic-stack/openscad-parse
 **File**: `src/features/openscad-parser/services/parser-manager.ts`
 
 ```typescript
-// Actual implementation with OpenscadParser
-import { OpenscadParser, SimpleErrorHandler } from '@holistic-stack/openscad-parser';
+// Actual implementation with custom OpenscadParser
+import { OpenscadParser, SimpleErrorHandler } from '../core/index.js';
 
 class ParserManagerImpl implements ParserManager {
   private parser: OpenscadParser;
@@ -307,7 +307,7 @@ describe('OpenSCAD Parser Integration', () => {
 ## Integration Checklist
 
 ### Required Dependencies ✅
-- `@holistic-stack/openscad-parser: ^0.1.2`
+- Custom OpenSCAD parser implementation in `src/features/openscad-parser`
 - `web-tree-sitter: 0.25.3`
 
 ### WASM Files Setup ✅

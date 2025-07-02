@@ -8,6 +8,10 @@ import { vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { createLogger } from './shared/services/logger.service.js';
 
+// ============================================================================
+// Real Web-Tree-Sitter Setup for Testing
+// ============================================================================
+
 const logger = createLogger('VitestSetup');
 
 // ============================================================================
@@ -147,27 +151,33 @@ export function resolveWasmPath(urlPath: string): string {
   logger.debug(`Resolving WASM file: ${normalizedPath}`);
   logger.debug(`__dirname: ${__dirname}`);
 
-  // Strategy 1: Use Node.js module resolution algorithm (most reliable)
-  const moduleResolutionStrategies = [
-    // Try @holistic-stack/tree-sitter-openscad package
+  // Strategy 1: Check public directory first (where WASM files are located)
+  const publicDirectoryStrategies = [
+    // Try public directory (main location for WASM files)
     () => {
+      logger.debug(`Attempting public directory strategy for ${normalizedPath}`);
       try {
-        logger.debug(
-          `Attempting @holistic-stack/tree-sitter-openscad strategy 1 (direct) for ${normalizedPath}`
-        );
-        const packagePath = resolve.sync('@holistic-stack/tree-sitter-openscad/package.json', {
-          basedir: projectRoot,
-        });
-        const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
-        logger.debug(`✅ Strategy 1 found package at: ${packagePath}`);
-        logger.debug(`✅ Strategy 1 resolved path: ${resolvedWasmPath}`);
-        return resolvedWasmPath;
-      } catch (e) {
-        logger.debug(`❌ Strategy 1 failed: ${e instanceof Error ? e.message : String(e)}`);
+        const publicWasmPath = join(projectRoot, 'public', normalizedPath);
+        return publicWasmPath;
+      } catch {
         return null;
       }
     },
 
+    // Try root directory
+    () => {
+      logger.debug(`Attempting root directory strategy for ${normalizedPath}`);
+      try {
+        const rootWasmPath = join(projectRoot, normalizedPath);
+        return rootWasmPath;
+      } catch {
+        return null;
+      }
+    },
+  ];
+
+  // Strategy 2: Use Node.js module resolution algorithm (fallback)
+  const moduleResolutionStrategies = [
     // Try web-tree-sitter package
     () => {
       logger.debug(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
@@ -210,39 +220,6 @@ export function resolveWasmPath(urlPath: string): string {
 
   // Strategy 2: Use find-up to locate package.json files and resolve from there
   const findUpStrategies = [
-    // Find @holistic-stack/tree-sitter-openscad package.json using matcher function
-    () => {
-      try {
-        logger.debug(
-          `Attempting @holistic-stack/tree-sitter-openscad strategy 4 (find-up direct) for ${normalizedPath}`
-        );
-        const packageJson = findUpSync(
-          (directory: string) => {
-            const packagePath = join(directory, 'package.json');
-            try {
-              const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
-              return pkg.name === '@holistic-stack/tree-sitter-openscad' ? packagePath : undefined;
-            } catch {
-              return undefined;
-            }
-          },
-          {
-            cwd: projectRoot,
-            type: 'file',
-          }
-        );
-
-        if (packageJson) {
-          const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
-
-          return resolvedWasmPath;
-        }
-        return null;
-      } catch (_e) {
-        return null;
-      }
-    },
-
     // Find web-tree-sitter package.json using matcher function
     () => {
       try {
@@ -277,8 +254,8 @@ export function resolveWasmPath(urlPath: string): string {
     },
   ];
 
-  // Try all strategies in order of preference
-  const allStrategies = [...moduleResolutionStrategies, ...findUpStrategies];
+  // Try all strategies in order of preference (public directory first, then modules, then find-up)
+  const allStrategies = [...publicDirectoryStrategies, ...moduleResolutionStrategies, ...findUpStrategies];
 
   for (const [index, strategy] of allStrategies.entries()) {
     const resolvedPath = strategy();
@@ -295,12 +272,6 @@ export function resolveWasmPath(urlPath: string): string {
         logger.debug(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
       }
     }
-  }
-
-  // If we can't find the actual WASM file, check if it's an OpenSCAD grammar file
-  if (normalizedPath.includes('openscad') || normalizedPath.includes('tree-sitter-openscad')) {
-    logger.warn(`OpenSCAD grammar WASM not found: ${normalizedPath}. Using mock WASM for testing.`);
-    return 'mock://tree-sitter-openscad.wasm';
   }
 
   throw new Error(
@@ -332,18 +303,6 @@ vi.mocked(fetch).mockImplementation((url) => {
   try {
     // Resolve the actual file path
     const resolvedPath = resolveWasmPath(urlPath);
-
-    // Handle mock WASM case
-    if (resolvedPath.startsWith('mock://')) {
-      logger.debug(`Using mock WASM for: ${urlPath}`);
-      const mockWasm = createMockWasmFile();
-
-      return Promise.resolve({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(mockWasm.buffer),
-        bytes: () => Promise.resolve(mockWasm),
-      } as unknown as Response);
-    }
 
     // Remove file:// prefix if present for file system access
     let actualPath = resolvedPath;
@@ -397,6 +356,29 @@ export async function initializeCSGForTests(): Promise<void> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.warn('Three.js CSG initialization failed:', errorMessage);
+  }
+
+  // Mock matrix services to prevent initialization stalling
+  try {
+    const mockMatrixService = {
+      ensureInitialized: () => Promise.resolve({ success: true }),
+      getConversionService: () => ({
+        convertMatrix4ToMLMatrix: () => Promise.resolve({
+          success: true,
+          data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        }),
+      }),
+      getValidationService: () => null,
+      getTelemetryService: () => null,
+    };
+
+    (globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }).__MOCK_MATRIX_SERVICE__ =
+      mockMatrixService;
+
+    logger.debug('✅ Mock Matrix Service initialized for testing');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn('Matrix Service mock initialization failed:', errorMessage);
   }
 }
 

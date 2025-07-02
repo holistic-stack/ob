@@ -90,12 +90,37 @@ export class CompositeVisitor extends BaseASTVisitor {
   override visitStatement(node: Node): ASTNode | null {
     this.logNodeProcessing(node, 'Delegating statement');
 
-    // Try each visitor's statement handler
+    // Handle the generic 'statement' wrapper node from real OpenSCAD grammar
+    if (node.type === 'statement') {
+      logger.debug(`Processing statement wrapper with ${node.childCount} children`);
+
+      // Look for the actual content inside the statement wrapper
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child && !this.isNonSemanticNode(child)) {
+          logger.debug(`Found statement content: ${child.type} at ${child.startPosition.row}:${child.startPosition.column}`);
+
+          // Delegate the actual content to the appropriate visitor
+          const result = this.visitNode(child);
+          if (result !== null) {
+            logger.debug(`Statement content ${child.type} handled successfully`);
+            return result;
+          }
+        }
+      }
+
+      logger.debug('No semantic content found in statement wrapper');
+      return null;
+    }
+
+    // For other statement types, try each visitor's statement handler
     for (const visitor of this.visitors) {
-      const result = visitor.visitStatement(node);
-      if (result !== null) {
-        logger.debug(`Statement ${node.type} handled by ${visitor.constructor.name}`);
-        return result;
+      if (typeof visitor.visitStatement === 'function') {
+        const result = visitor.visitStatement(node);
+        if (result !== null) {
+          logger.debug(`Statement ${node.type} handled by ${visitor.constructor.name}`);
+          return result;
+        }
       }
     }
 
@@ -195,14 +220,33 @@ export class CompositeVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Check if a node is non-semantic (whitespace, punctuation, etc.)
+   * @param node - CST node to check
+   * @returns True if the node is non-semantic
+   */
+  private isNonSemanticNode(node: Node): boolean {
+    const nonSemanticTypes = [
+      'comment',
+      'whitespace',
+      '(', ')', '{', '}', '[', ']', ';', ',',
+      'line_comment',
+      'block_comment',
+      '\n',
+      ' ',
+      '\t'
+    ];
+
+    return nonSemanticTypes.includes(node.type) ||
+           (node.type.length === 1 && /[^\w]/.test(node.type)); // Single non-word characters
+  }
+
+  /**
    * Handle nodes that no visitor could process
    * @param node - Unhandled CST node
    */
   private handleUnhandledNode(node: Node): void {
     // Skip common non-semantic nodes
-    const ignoredTypes = ['comment', 'whitespace', '(', ')', '{', '}', '[', ']', ';', ','];
-
-    if (ignoredTypes.includes(node.type)) {
+    if (this.isNonSemanticNode(node)) {
       return;
     }
 
@@ -228,6 +272,9 @@ export class CompositeVisitor extends BaseASTVisitor {
    */
   getSupportedNodeTypes(): string[] {
     return [
+      // Wrapper nodes
+      'statement',
+      'expression_statement',
       // Primitives
       'cube',
       'sphere',

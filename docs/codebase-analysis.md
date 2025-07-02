@@ -34,7 +34,7 @@ openscad-babylon/
 - **React 19.0.0** - Latest React with concurrent features
 - **TypeScript 5.8.3** - Strict mode configuration active
 - **Vite 6.0.0** - Ultra-fast development with optimized chunks
-- **@holistic-stack/openscad-parser 0.1.2** - AST parsing ready
+- **Custom OpenSCAD Parser** - AST parsing with web-tree-sitter
 - **@monaco-editor/react 4.7.0** - Code editor integration
 - **monaco-editor 0.52.2** - Core editor functionality
 - **@react-three/fiber 9.1.2** - React Three.js integration
@@ -66,7 +66,7 @@ openscad-babylon/
 manualChunks: {
   'monaco': ['monaco-editor', '@monaco-editor/react'],
   'three': ['three', '@react-three/fiber', '@react-three/drei'],
-  'parsing': ['web-tree-sitter', '@holistic-stack/openscad-parser', 'three-csg-ts'],
+  'parsing': ['web-tree-sitter', 'three-csg-ts'],
   'react-vendor': ['react', 'react-dom'],
   'utils': ['zustand', 'clsx', 'class-variance-authority']
 }
