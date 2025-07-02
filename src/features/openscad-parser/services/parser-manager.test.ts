@@ -30,6 +30,8 @@ describe('OpenSCAD Parser Manager', () => {
       maxASTNodes: 10000,
       enableCaching: true,
       cacheSize: 100,
+      enablePerformanceMonitoring: true,
+      logLevel: 'info',
     };
 
     parserManager = createParserManager(defaultConfig);
@@ -378,19 +380,22 @@ describe('OpenSCAD Parser Manager', () => {
 
     it('should handle memory limit exceeded', async () => {
       // Create a manager with a very low node limit
-      const lowLimitConfig = { ...defaultConfig, maxASTNodes: 1 };
+      const lowLimitConfig = { ...defaultConfig, maxASTNodes: 5 };
       const lowLimitManager = createParserManager(lowLimitConfig);
 
-      // Parse complex code that might exceed the limit
-      const complexCode = Array(100).fill('cube([1, 1, 1]);').join('\n');
+      // Parse complex code that will exceed the limit
+      const complexCode = Array(10).fill('cube([1, 1, 1]);').join('\n');
 
       const result = await lowLimitManager.parse(complexCode);
 
-      // The result might succeed or fail depending on actual parsing
+      // Should fail due to node limit exceeded
       expect(result).toBeDefined();
-      expect(typeof result.success).toBe('boolean');
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('AST node limit exceeded');
+      }
 
       lowLimitManager.dispose();
-    });
+    }, 5000);
   });
 });

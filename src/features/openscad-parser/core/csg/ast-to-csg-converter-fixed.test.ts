@@ -6,10 +6,9 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createLogger } from '../../../../shared/services/logger.service.js';
 
 // Mock all matrix services BEFORE any imports
-vi.mock('../../3d-renderer/services/matrix-service-container.js', () => ({
+vi.mock('../../../3d-renderer/services/matrix-service-container.js', () => ({
   MatrixServiceContainer: vi.fn().mockImplementation(() => ({
     ensureInitialized: vi.fn().mockResolvedValue({ success: true }),
     getConversionService: vi.fn().mockReturnValue(null),
@@ -24,7 +23,7 @@ vi.mock('../../3d-renderer/services/matrix-service-container.js', () => ({
   },
 }));
 
-vi.mock('../../3d-renderer/services/matrix-integration.service.js', () => ({
+vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
   MatrixIntegrationService: vi.fn().mockImplementation(() => ({
     convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
       success: true,
@@ -46,15 +45,41 @@ vi.mock('../../3d-renderer/services/matrix-integration.service.js', () => ({
 }));
 
 // Mock CSG operations
-vi.mock('../../3d-renderer/services/csg-operations.js', () => {
+vi.mock('../../../3d-renderer/services/csg-operations.js', () => {
   const mockMesh = {
-    geometry: { dispose: vi.fn() },
-    material: { dispose: vi.fn() },
-    position: { x: 0, y: 0, z: 0 },
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
+    geometry: {
+      dispose: vi.fn(),
+      attributes: {},
+      index: null,
+    },
+    material: {
+      dispose: vi.fn(),
+      color: { r: 1, g: 1, b: 1 },
+    },
+    position: {
+      x: 0, y: 0, z: 0,
+      set: vi.fn(),
+      copy: vi.fn(),
+    },
+    rotation: {
+      x: 0, y: 0, z: 0,
+      set: vi.fn(),
+      copy: vi.fn(),
+    },
+    scale: {
+      x: 1, y: 1, z: 1,
+      set: vi.fn(),
+      copy: vi.fn(),
+    },
+    matrix: {
+      elements: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      copy: vi.fn(),
+      multiply: vi.fn(),
+    },
     updateMatrix: vi.fn(),
     clone: vi.fn().mockReturnThis(),
+    type: 'Mesh',
+    uuid: 'mock-uuid',
   };
 
   return {
@@ -72,6 +97,7 @@ vi.mock('../../3d-renderer/services/csg-operations.js', () => {
 });
 
 // Now import the modules after mocking
+import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { CubeNode, SourceLocation, UnionNode } from '../ast-types.js';
 import { ASTToCSGConverter, DEFAULT_CSG_CONFIG } from './ast-to-csg-converter.js';
 

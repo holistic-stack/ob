@@ -99,24 +99,40 @@ const validateASTNodes = (
 
     // Check for common node types and their required properties
     switch (node.type) {
+      case 'function_call':
+        if (!('name' in node) || typeof node.name !== 'string') {
+          errors.push('Function call node missing name property');
+        }
+        if (!('arguments' in node) || !Array.isArray(node.arguments)) {
+          errors.push('Function call node missing arguments array');
+        }
+        break;
       case 'cube':
         if (!('size' in node)) {
           warnings.push('Cube node missing size property');
         }
         break;
       case 'sphere':
-        // SphereNode has 'radius' property, not 'r'
         if (!('radius' in node)) {
           warnings.push('Sphere node missing radius property');
         }
         break;
       case 'cylinder':
-        // Check for cylinder properties (need to verify what properties actually exist)
         if (!('radius' in node) && !('r' in node)) {
           warnings.push('Cylinder node missing radius property');
         }
         if (!('height' in node) && !('h' in node)) {
           warnings.push('Cylinder node missing height property');
+        }
+        break;
+      case 'variable':
+        if (!('name' in node) || typeof node.name !== 'string') {
+          errors.push('Variable node missing name property');
+        }
+        break;
+      case 'module_definition':
+        if (!('name' in node) || typeof node.name !== 'string') {
+          errors.push('Module definition node missing name property');
         }
         break;
     }
@@ -256,8 +272,9 @@ class ParserManagerImpl implements ParserManager {
           resolve(error(`Parse operation timed out after ${this.context.config.maxParseTime}ms`));
         }, this.context.config.maxParseTime);
 
-        tryCatch(
-          async () => {
+        // Use async/await with proper error handling
+        (async () => {
+          try {
             // Ensure parser is initialized
             await this.ensureInitialized();
 
@@ -286,8 +303,7 @@ class ParserManagerImpl implements ParserManager {
               },
             };
             resolve(success(parseResult));
-          },
-          (err) => {
+          } catch (err) {
             clearTimeout(timeoutId);
             const errorMessage = `Parse failed: ${err instanceof Error ? err.message : String(err)}`;
             this.emitEvent({
@@ -296,7 +312,7 @@ class ParserManagerImpl implements ParserManager {
             });
             resolve(error(errorMessage));
           }
-        );
+        })();
       });
     });
 
@@ -357,17 +373,21 @@ class ParserManagerImpl implements ParserManager {
             isValid: validationResult.valid,
             errors: validationResult.errors || [],
             warnings: validationResult.warnings || [],
-            validationTime: duration,
+            validationTime: 0, // Will be set after measurement
           };
-
-          this.updateValidationStats(duration);
-          this.emitEvent({ type: 'validation-complete', result: astValidationResult });
 
           return astValidationResult;
         },
         (err: unknown) => `Validation failed: ${err instanceof Error ? err.message : String(err)}`
       );
     });
+
+    if (result.success) {
+      // Update the validation time after measurement
+      result.data.validationTime = duration;
+      this.updateValidationStats(duration);
+      this.emitEvent({ type: 'validation-complete', result: result.data });
+    }
 
     return result;
   }
@@ -410,18 +430,22 @@ class ParserManagerImpl implements ParserManager {
             originalNodeCount,
             optimizedNodeCount,
             reductionPercentage,
-            optimizationTime: duration,
+            optimizationTime: 0, // Will be set after measurement
             optimizations: ['duplicate-removal'], // Simple optimization
           };
-
-          this.updateOptimizationStats(duration);
-          this.emitEvent({ type: 'optimization-complete', result: optimizationResult });
 
           return optimizationResult;
         },
         (err: unknown) => `Optimization failed: ${err instanceof Error ? err.message : String(err)}`
       );
     });
+
+    if (result.success) {
+      // Update the optimization time after measurement
+      result.data.optimizationTime = duration;
+      this.updateOptimizationStats(duration);
+      this.emitEvent({ type: 'optimization-complete', result: result.data });
+    }
 
     return result;
   }

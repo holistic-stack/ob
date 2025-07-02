@@ -11,10 +11,14 @@ import type { Node } from 'web-tree-sitter';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type {
   ASTNode,
+  CubeNode,
+  CylinderNode,
   DifferenceNode,
+  FunctionCallNode,
   HullNode,
   IntersectionNode,
   MinkowskiNode,
+  SphereNode,
   UnionNode,
 } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
@@ -43,6 +47,8 @@ export class CSGVisitor extends BaseASTVisitor {
     switch (node.type) {
       case 'function_call':
         return this.visitFunctionCall(node);
+      case 'module_instantiation':
+        return this.visitModuleInstantiation(node);
       case 'union':
       case 'difference':
       case 'intersection':
@@ -68,6 +74,35 @@ export class CSGVisitor extends BaseASTVisitor {
     const functionName = this.getNodeText(nameNode);
 
     switch (functionName) {
+      case 'union':
+        return this.visitUnion(node);
+      case 'difference':
+        return this.visitDifference(node);
+      case 'intersection':
+        return this.visitIntersection(node);
+      case 'hull':
+        return this.visitHull(node);
+      case 'minkowski':
+        return this.visitMinkowski(node);
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Visit a module instantiation node and check if it's a CSG operation
+   * @param node - Module instantiation CST node
+   * @returns CSG AST node or null if not a CSG operation
+   */
+  private visitModuleInstantiation(node: Node): ASTNode | null {
+    const nameNode = node.childForFieldName('name');
+    if (!nameNode) {
+      return null;
+    }
+
+    const moduleName = this.getNodeText(nameNode);
+
+    switch (moduleName) {
       case 'union':
         return this.visitUnion(node);
       case 'difference':
@@ -319,10 +354,146 @@ export class CSGVisitor extends BaseASTVisitor {
    * @param node - CSG function CST node
    * @returns Array of child AST nodes (to be processed by other visitors)
    */
-  private parseChildren(_node: Node): ASTNode[] {
-    // For now, return empty array - children will be processed by the composite visitor
-    // In a full implementation, this would recursively process child nodes
-    // but we need to avoid circular dependencies between visitors
-    return [];
+  private parseChildren(node: Node): ASTNode[] {
+    const children: ASTNode[] = [];
+
+    // Debug: Log all child node types to understand the structure
+    logger.debug(`CSG node has ${node.childCount} children:`);
+    for (let i = 0; i < node.childCount; i++) {
+      const child = node.child(i);
+      if (child) {
+        logger.debug(`  Child ${i}: ${child.type} (${this.getNodeText(child).slice(0, 20)}...)`);
+      }
+    }
+
+    // Find the block statement or body that contains the children
+    const blockNode = this.findChildOfType(node, 'block_statement') ||
+                      this.findChildOfType(node, 'body') ||
+                      this.findChildOfType(node, 'statement_list') ||
+                      this.findChildOfType(node, 'block');
+
+    if (!blockNode) {
+      logger.debug('No block statement found in CSG operation');
+      return children;
+    }
+
+    logger.debug(`Found block with ${blockNode.childCount} children`);
+
+    // Parse each statement in the block
+    for (let i = 0; i < blockNode.childCount; i++) {
+      const child = blockNode.child(i);
+      if (!child) continue;
+
+      // Skip punctuation and whitespace
+      if (child.type === '{' || child.type === '}' || child.type === ';' ||
+          child.type === 'comment' || child.type === 'whitespace') {
+        continue;
+      }
+
+      // Process statement nodes
+      if (child.type === 'statement') {
+        // Find the actual content inside the statement wrapper
+        for (let j = 0; j < child.childCount; j++) {
+          const statementContent = child.child(j);
+          if (statementContent && this.isValidChildNode(statementContent)) {
+            // Delegate to composite visitor to get proper AST node
+            const astNode = this.delegateToCompositeVisitor(statementContent);
+            if (astNode) {
+              children.push(astNode);
+            }
+          }
+        }
+      } else if (this.isValidChildNode(child)) {
+        // Direct child node (not wrapped in statement)
+        const astNode = this.delegateToCompositeVisitor(child);
+        if (astNode) {
+          children.push(astNode);
+        }
+      }
+    }
+
+    logger.debug(`Parsed ${children.length} children from CSG operation`);
+    return children;
+  }
+
+  /**
+   * Check if a node is a valid child for CSG operations
+   * @param node - CST node to check
+   * @returns True if it's a valid child node
+   */
+  private isValidChildNode(node: Node): boolean {
+    const validChildTypes = [
+      'module_instantiation',  // cube(), sphere(), union(), etc.
+      'function_call',         // function calls
+      'assignment',            // variable assignments
+      'expression_statement',  // expression statements
+    ];
+    return validChildTypes.includes(node.type);
+  }
+
+  /**
+   * Delegate a node to the composite visitor for processing
+   * @param node - CST node to delegate
+   * @returns AST node or null if not handled
+   */
+  private delegateToCompositeVisitor(node: Node): ASTNode | null {
+    // For now, we'll create nodes based on the actual content
+    // This is a simplified approach until we have proper visitor delegation
+
+    const location = this.createSourceLocation(node);
+    const nodeText = this.getNodeText(node);
+
+    // Extract the function/module name from the node text
+    const match = nodeText.match(/^(\w+)\s*\(/);
+    const functionName = match ? match[1] : node.type;
+
+    // Create appropriate primitive node types based on the function name
+    switch (functionName) {
+      case 'cube': {
+        const cubeNode: CubeNode = {
+          type: 'cube',
+          size: [10, 10, 10], // Default size - should be parsed from arguments
+          center: false,
+          location,
+        };
+        logger.debug(`Created cube node for: ${nodeText.slice(0, 50)}...`);
+        return cubeNode;
+      }
+
+      case 'sphere': {
+        const sphereNode: SphereNode = {
+          type: 'sphere',
+          r: 5, // Default radius - should be parsed from arguments
+          location,
+        };
+        logger.debug(`Created sphere node for: ${nodeText.slice(0, 50)}...`);
+        return sphereNode;
+      }
+
+      case 'cylinder': {
+        const cylinderNode: CylinderNode = {
+          type: 'cylinder',
+          h: 10, // Default height - should be parsed from arguments
+          r: 5,  // Default radius - should be parsed from arguments
+          center: false,
+          location,
+        };
+        logger.debug(`Created cylinder node for: ${nodeText.slice(0, 50)}...`);
+        return cylinderNode;
+      }
+
+      default: {
+        // For other types, create a generic function call node
+        const placeholderNode: FunctionCallNode = {
+          type: 'function_call',
+          name: functionName,
+          arguments: [],
+          location,
+          isBuiltIn: true,
+        };
+        logger.debug(`Created placeholder node for ${functionName}: ${nodeText.slice(0, 50)}...`);
+        return placeholderNode;
+      }
+    }
   }
 }
