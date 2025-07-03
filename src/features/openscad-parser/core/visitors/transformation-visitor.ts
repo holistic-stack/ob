@@ -390,7 +390,7 @@ export class TransformationVisitor extends BaseASTVisitor {
           const childText = this.getNodeText(child);
           const functionMatch = childText.match(/^([a-zA-Z_][a-zA-Z0-9_]*)/);
 
-          if (functionMatch && functionMatch[1]) {
+          if (functionMatch?.[1]) {
             const functionName = functionMatch[1];
             const childNode: ASTNode = {
               type: 'function_call',

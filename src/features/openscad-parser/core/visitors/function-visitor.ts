@@ -14,7 +14,6 @@ import type {
   FunctionCallNode,
   FunctionDefinitionNode,
   LiteralNode,
-  VariableNode,
 } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
@@ -167,7 +166,7 @@ export class FunctionVisitor extends BaseASTVisitor {
     const args = this.parseFunctionArguments(node);
 
     // Convert arguments object to array of AST nodes
-    const argumentNodes: ASTNode[] = Object.entries(args).map(([key, value]) => {
+    const argumentNodes: ASTNode[] = Object.entries(args).map(([_key, value]) => {
       const argLocation = this.createSourceLocation(node); // Use node location as fallback
 
       if (typeof value === 'string') {

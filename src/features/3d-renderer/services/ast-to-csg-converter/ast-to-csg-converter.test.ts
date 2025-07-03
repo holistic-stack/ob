@@ -12,17 +12,11 @@ import type {
   ASTNode,
   CubeNode,
   CylinderNode,
-  DifferenceNode,
-  IntersectionNode,
-  RotateNode,
-  ScaleNode,
   SourceLocation,
   SphereNode,
-  TranslateNode,
-  UnionNode,
 } from '../../../openscad-parser/core/ast-types.js';
 
-import { convertASTNodesToCSGUnion, convertASTNodeToCSG } from './ast-to-csg-converter.js';
+import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterTest');
 

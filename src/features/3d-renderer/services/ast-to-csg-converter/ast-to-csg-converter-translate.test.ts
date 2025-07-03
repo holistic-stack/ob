@@ -12,6 +12,7 @@ import { UnifiedParserService } from '../../../openscad-parser/services/unified-
 import {
   clearSourceCodeForExtraction,
   convertASTNodeToCSG,
+  extractTranslateParameters,
   setSourceCodeForExtraction,
 } from './ast-to-csg-converter.js';
 
@@ -31,6 +32,47 @@ describe('AST to CSG Converter - Translate Node Handling', () => {
     });
 
     await parserService.initialize();
+  });
+
+  describe('Translate Parameter Extraction', () => {
+    it('should correctly extract translate parameters from source code', () => {
+      const testCases = [
+        { code: 'translate([10,0,0]) sphere(5);', expected: [10, 0, 0] },
+        { code: 'translate([200, 0, 0]) cube(10);', expected: [200, 0, 0] },
+        { code: 'translate([5, 10, 15]) cylinder(h=8, r=2);', expected: [5, 10, 15] },
+        { code: 'translate([-50, -100, -150]) sphere(3);', expected: [-50, -100, -150] },
+        { code: 'translate([0.1, 0.2, 0.3]) cube(1);', expected: [0.1, 0.2, 0.3] },
+      ];
+
+      testCases.forEach(({ code, expected }) => {
+        const extracted = extractTranslateParameters(code);
+        expect(extracted).not.toBeNull();
+        if (extracted) {
+          expect(extracted[0]).toBeCloseTo(expected[0], 5);
+          expect(extracted[1]).toBeCloseTo(expected[1], 5);
+          expect(extracted[2]).toBeCloseTo(expected[2], 5);
+        }
+      });
+
+      logger.debug('✅ All translate parameter extraction tests passed');
+    });
+
+    it('should return null for invalid translate syntax', () => {
+      const invalidCases = [
+        'translate() sphere(5);',
+        'translate([10]) cube(5);',
+        'translate([a,b,c]) sphere(5);',
+        'sphere(5);',
+        'translate[10,0,0] cube(5);', // Missing parentheses
+      ];
+
+      invalidCases.forEach((code) => {
+        const extracted = extractTranslateParameters(code);
+        expect(extracted).toBeNull();
+      });
+
+      logger.debug('✅ All invalid translate syntax tests passed');
+    });
   });
 
   describe('Translate with Child Nodes', () => {

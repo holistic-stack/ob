@@ -60,7 +60,7 @@ let currentSourceCode: string | null = null;
 
 /**
  * Set the source code for text extraction
- * This is a temporary solution until the parser properly extracts function arguments
+ * This enables proper parameter extraction from translate operations
  */
 export function setSourceCodeForExtraction(sourceCode: string): void {
   currentSourceCode = sourceCode;
@@ -73,6 +73,380 @@ export function setSourceCodeForExtraction(sourceCode: string): void {
 export function clearSourceCodeForExtraction(): void {
   currentSourceCode = null;
   logger.debug('Source code cleared after extraction');
+}
+
+/**
+ * Extract translate parameters from source code for testing
+ * This is a utility function for property-based testing
+ */
+export function extractTranslateParameters(sourceCode: string): [number, number, number] | null {
+  const vectorMatch = sourceCode.match(/translate\s*\(\s*\[([^\]]+)\]/);
+  if (vectorMatch?.[1]) {
+    const vectorContent = vectorMatch[1];
+    const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+    if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
+      // Ensure we have exactly 3 numbers with proper defaults
+      const x = numbers[0];
+      const y = numbers[1];
+      const z = numbers[2];
+
+      if (x !== undefined && y !== undefined && z !== undefined) {
+        return [x, y, z];
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract rotate parameters from source code for testing
+ * This is a utility function for property-based testing
+ * Supports both rotate(angle) and rotate([x,y,z]) syntax
+ */
+export function extractRotateParameters(
+  sourceCode: string
+): [number, number, number] | number | null {
+  // Try vector syntax first: rotate([x,y,z])
+  const vectorMatch = sourceCode.match(/rotate\s*\(\s*\[([^\]]+)\]/);
+  if (vectorMatch?.[1]) {
+    const vectorContent = vectorMatch[1];
+    const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+    if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
+      const x = numbers[0];
+      const y = numbers[1];
+      const z = numbers[2];
+
+      if (x !== undefined && y !== undefined && z !== undefined) {
+        return [x, y, z];
+      }
+    }
+  }
+
+  // Try single angle syntax: rotate(angle)
+  const angleMatch = sourceCode.match(/rotate\s*\(\s*([^,[\]]+)\s*\)/);
+  if (angleMatch?.[1]) {
+    const angle = parseFloat(angleMatch[1].trim());
+    if (!Number.isNaN(angle)) {
+      return angle;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract scale parameters from source code for testing
+ * This is a utility function for property-based testing
+ * Supports both scale(factor) and scale([x,y,z]) syntax
+ */
+export function extractScaleParameters(
+  sourceCode: string
+): [number, number, number] | number | null {
+  // Try vector syntax first: scale([x,y,z])
+  const vectorMatch = sourceCode.match(/scale\s*\(\s*\[([^\]]+)\]/);
+  if (vectorMatch?.[1]) {
+    const vectorContent = vectorMatch[1];
+    const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+    if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
+      const x = numbers[0];
+      const y = numbers[1];
+      const z = numbers[2];
+
+      if (x !== undefined && y !== undefined && z !== undefined) {
+        return [x, y, z];
+      }
+    }
+  }
+
+  // Try single factor syntax: scale(factor)
+  const factorMatch = sourceCode.match(/scale\s*\(\s*([^,[\]]+)\s*\)/);
+  if (factorMatch?.[1]) {
+    const factor = parseFloat(factorMatch[1].trim());
+    if (!Number.isNaN(factor)) {
+      return factor;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract boolean operation parameters from source code for testing
+ * This is a utility function for property-based testing
+ * Supports union(), intersection(), and difference() operations
+ */
+export function extractBooleanParameters(
+  sourceCode: string
+): { operation: 'union' | 'intersection' | 'difference'; childCount: number } | null {
+  // Match boolean operations
+  const booleanMatch = sourceCode.match(/(union|intersection|difference)\s*\(\s*\)\s*\{([^}]*)\}/);
+  if (booleanMatch?.[1] && booleanMatch?.[2]) {
+    const operation = booleanMatch[1] as 'union' | 'intersection' | 'difference';
+    const content = booleanMatch[2];
+
+    // Count child operations by counting semicolons (rough approximation)
+    const childCount = (content.match(/;/g) || []).length;
+
+    return { operation, childCount };
+  }
+
+  return null;
+}
+
+/**
+ * Extract linear_extrude parameters from source code for testing
+ * This is a utility function for property-based testing
+ */
+export function extractLinearExtrudeParameters(
+  sourceCode: string
+): { height: number; center?: boolean; twist?: number; scale?: number | [number, number] } | null {
+  const extrudeMatch = sourceCode.match(/linear_extrude\s*\(\s*([^)]+)\s*\)/);
+  if (extrudeMatch?.[1]) {
+    const params = extrudeMatch[1];
+    const result: {
+      height: number;
+      center?: boolean;
+      twist?: number;
+      scale?: number | [number, number];
+    } = { height: 1 };
+
+    // Extract height parameter
+    const heightMatch = params.match(/height\s*=\s*([^,)]+)/);
+    if (heightMatch?.[1]) {
+      const height = parseFloat(heightMatch[1].trim());
+      if (!Number.isNaN(height)) {
+        result.height = height;
+      }
+    }
+
+    // Extract center parameter
+    const centerMatch = params.match(/center\s*=\s*(true|false)/);
+    if (centerMatch?.[1]) {
+      result.center = centerMatch[1] === 'true';
+    }
+
+    // Extract twist parameter
+    const twistMatch = params.match(/twist\s*=\s*([^,)]+)/);
+    if (twistMatch?.[1]) {
+      const twist = parseFloat(twistMatch[1].trim());
+      if (!Number.isNaN(twist)) {
+        result.twist = twist;
+      }
+    }
+
+    // Extract scale parameter (can be number or [x,y] vector)
+    const scaleVectorMatch = params.match(/scale\s*=\s*\[([^\]]+)\]/);
+    if (scaleVectorMatch?.[1]) {
+      const scaleNumbers = scaleVectorMatch[1].split(',').map((s: string) => parseFloat(s.trim()));
+      if (scaleNumbers.length >= 2 && scaleNumbers.every((n: number) => !Number.isNaN(n))) {
+        const x = scaleNumbers[0];
+        const y = scaleNumbers[1];
+        if (x !== undefined && y !== undefined) {
+          result.scale = [x, y];
+        }
+      }
+    } else {
+      const scaleMatch = params.match(/scale\s*=\s*([^,)]+)/);
+      if (scaleMatch?.[1]) {
+        const scale = parseFloat(scaleMatch[1].trim());
+        if (!Number.isNaN(scale)) {
+          result.scale = scale;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * Extract rotate_extrude parameters from source code for testing
+ * This is a utility function for property-based testing
+ */
+export function extractRotateExtrudeParameters(
+  sourceCode: string
+): { angle?: number; convexity?: number } | null {
+  const extrudeMatch = sourceCode.match(/rotate_extrude\s*\(\s*([^)]*)\s*\)/);
+  if (extrudeMatch) {
+    const params = extrudeMatch[1] || '';
+    const result: { angle?: number; convexity?: number } = {};
+
+    // Extract angle parameter
+    const angleMatch = params.match(/angle\s*=\s*([^,)]+)/);
+    if (angleMatch?.[1]) {
+      const angle = parseFloat(angleMatch[1].trim());
+      if (!Number.isNaN(angle)) {
+        result.angle = angle;
+      }
+    }
+
+    // Extract convexity parameter
+    const convexityMatch = params.match(/convexity\s*=\s*([^,)]+)/);
+    if (convexityMatch?.[1]) {
+      const convexity = parseFloat(convexityMatch[1].trim());
+      if (!Number.isNaN(convexity)) {
+        result.convexity = convexity;
+      }
+    }
+
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * Extract circle parameters from source code for testing
+ * This is a utility function for property-based testing
+ * Supports both circle(r=X) and circle(d=X) syntax
+ */
+export function extractCircleParameters(sourceCode: string): { r?: number; d?: number } | null {
+  const circleMatch = sourceCode.match(/circle\s*\(\s*([^)]+)\s*\)/);
+  if (circleMatch?.[1]) {
+    const params = circleMatch[1];
+    const result: { r?: number; d?: number } = {};
+
+    // Extract radius parameter
+    const radiusMatch = params.match(/r\s*=\s*([^,)]+)/);
+    if (radiusMatch?.[1]) {
+      const radius = parseFloat(radiusMatch[1].trim());
+      if (!Number.isNaN(radius)) {
+        result.r = radius;
+      }
+    }
+
+    // Extract diameter parameter
+    const diameterMatch = params.match(/d\s*=\s*([^,)]+)/);
+    if (diameterMatch?.[1]) {
+      const diameter = parseFloat(diameterMatch[1].trim());
+      if (!Number.isNaN(diameter)) {
+        result.d = diameter;
+      }
+    }
+
+    // Handle single parameter (assumed to be radius)
+    if (!result.r && !result.d) {
+      const singleParam = parseFloat(params.trim());
+      if (!Number.isNaN(singleParam)) {
+        result.r = singleParam;
+      }
+    }
+
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * Extract square parameters from source code for testing
+ * This is a utility function for property-based testing
+ * Supports both square(size) and square([x,y]) syntax
+ */
+export function extractSquareParameters(
+  sourceCode: string
+): { size: number | [number, number]; center?: boolean } | null {
+  const squareMatch = sourceCode.match(/square\s*\(\s*([^)]+)\s*\)/);
+  if (squareMatch?.[1]) {
+    const params = squareMatch[1];
+    const result: { size: number | [number, number]; center?: boolean } = { size: 1 };
+
+    // Try vector syntax first: square([x,y])
+    const vectorMatch = params.match(/(?:size\s*=\s*)?\[([^\]]+)\]/);
+    if (vectorMatch?.[1]) {
+      const vectorContent = vectorMatch[1];
+      const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+      if (numbers.length >= 2 && numbers.every((n: number) => !Number.isNaN(n))) {
+        const x = numbers[0];
+        const y = numbers[1];
+        if (x !== undefined && y !== undefined) {
+          result.size = [x, y];
+        }
+      }
+    } else {
+      // Try single size parameter
+      const sizeMatch = params.match(/(?:size\s*=\s*)?([^,)]+)/);
+      if (sizeMatch?.[1]) {
+        const size = parseFloat(sizeMatch[1].trim());
+        if (!Number.isNaN(size)) {
+          result.size = size;
+        }
+      }
+    }
+
+    // Extract center parameter
+    const centerMatch = params.match(/center\s*=\s*(true|false)/);
+    if (centerMatch?.[1]) {
+      result.center = centerMatch[1] === 'true';
+    }
+
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * Extract polygon parameters from source code for testing
+ * This is a utility function for property-based testing
+ */
+export function extractPolygonParameters(
+  sourceCode: string
+): { points: Array<[number, number]>; paths?: Array<Array<number>> } | null {
+  const polygonMatch = sourceCode.match(/polygon\s*\(\s*([^)]+)\s*\)/);
+  if (polygonMatch?.[1]) {
+    const params = polygonMatch[1];
+
+    // Extract points parameter
+    const pointsMatch = params.match(
+      /(?:points\s*=\s*)?\[\s*(\[[^\]]+\](?:\s*,\s*\[[^\]]+\])*)\s*\]/
+    );
+    if (pointsMatch?.[1]) {
+      const pointsContent = pointsMatch[1];
+      const pointMatches = pointsContent.match(/\[([^\]]+)\]/g);
+
+      if (pointMatches) {
+        const points: Array<[number, number]> = [];
+
+        for (const pointMatch of pointMatches) {
+          const coords = pointMatch
+            .slice(1, -1)
+            .split(',')
+            .map((s: string) => parseFloat(s.trim()));
+          if (coords.length >= 2 && coords.every((n: number) => !Number.isNaN(n))) {
+            const x = coords[0];
+            const y = coords[1];
+            if (x !== undefined && y !== undefined) {
+              points.push([x, y]);
+            }
+          }
+        }
+
+        if (points.length >= 3) {
+          const result: { points: Array<[number, number]>; paths?: Array<Array<number>> } = {
+            points,
+          };
+
+          // Extract paths parameter if present
+          const pathsMatch = params.match(/paths\s*=\s*\[([^\]]+)\]/);
+          if (pathsMatch?.[1]) {
+            // This is a simplified extraction - full paths parsing would be more complex
+            result.paths = [];
+          }
+
+          return result;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 /**

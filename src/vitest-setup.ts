@@ -82,7 +82,7 @@ fetchMocker.enableMocks();
  * Create a minimal mock WASM file for testing purposes
  * This provides a fallback when the actual OpenSCAD grammar WASM is not available
  */
-function createMockWasmFile(): Uint8Array {
+function _createMockWasmFile(): Uint8Array {
   // Create a minimal valid WASM file structure
   // WASM magic number (0x00, 0x61, 0x73, 0x6d) + version (0x01, 0x00, 0x00, 0x00)
   const wasmHeader = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);

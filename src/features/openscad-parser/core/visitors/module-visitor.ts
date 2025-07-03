@@ -9,13 +9,7 @@
 
 import type { Node } from 'web-tree-sitter';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type {
-  ASTNode,
-  FunctionCallNode,
-  LiteralNode,
-  ModuleDefinitionNode,
-  VariableNode,
-} from '../ast-types.js';
+import type { ASTNode, FunctionCallNode, LiteralNode, ModuleDefinitionNode } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
 
