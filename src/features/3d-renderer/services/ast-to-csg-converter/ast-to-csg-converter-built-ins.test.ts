@@ -270,7 +270,9 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
             if (scenario.expectedNodeTypes[index]) {
               // Tree Sitter may parse some constructs as function_call or assignment_statement
               expect(node?.type).toMatch(
-                new RegExp(`${scenario.expectedNodeTypes[index]}|function_call|assignment_statement`)
+                new RegExp(
+                  `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement`
+                )
               );
             }
           });
@@ -303,7 +305,9 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       );
 
       expect(renderableScenarios.length).toBe(0);
-      logger.debug('Built-ins corpus correctly contains no renderable 3D content - all scenarios are utility functions');
+      logger.debug(
+        'Built-ins corpus correctly contains no renderable 3D content - all scenarios are utility functions'
+      );
     });
 
     it.each(
@@ -332,12 +336,16 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       // For advanced features, the parser may return empty AST for unsupported constructs
       // This is expected behavior for features not yet fully implemented
       if (ast.length > 0) {
-        logger.debug(`✅ ${scenario.name} parsed successfully with ${ast.length} nodes for CSG conversion`);
+        logger.debug(
+          `✅ ${scenario.name} parsed successfully with ${ast.length} nodes for CSG conversion`
+        );
       } else {
         logger.debug(
           `Parser for ${scenario.name} returned empty AST - advanced feature not yet supported, skipping CSG conversion`
         );
-        logger.end(`${scenario.name} CSG conversion test completed (skipped due to unsupported feature)`);
+        logger.end(
+          `${scenario.name} CSG conversion test completed (skipped due to unsupported feature)`
+        );
         return; // Skip CSG conversion for unsupported features
       }
 
@@ -444,7 +452,9 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
           if (ast.length > 0) {
             logger.debug(`Complex nested function parsed with ${ast.length} nodes`);
           } else {
-            logger.debug('Complex nested function returned empty AST - advanced feature not yet supported');
+            logger.debug(
+              'Complex nested function returned empty AST - advanced feature not yet supported'
+            );
           }
         }
       }
@@ -480,9 +490,13 @@ result4 = ln(exp(1)) + log(pow(10, 2));
         if (ast) {
           // For advanced features, the parser may not yet support assignment statements
           if (ast.length === 4) {
-            logger.debug('Mathematical function performance test parsed successfully with 4 assignment statements');
+            logger.debug(
+              'Mathematical function performance test parsed successfully with 4 assignment statements'
+            );
           } else {
-            logger.debug(`Mathematical function performance test returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`);
+            logger.debug(
+              `Mathematical function performance test returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
+            );
           }
         }
       }
@@ -517,9 +531,13 @@ check4 = is_list([1, 2, 3]);
               expect(node?.type).toMatch(/assignment_statement|function_call/);
               logger.debug(`Type check ${index + 1}: ${node?.type}`);
             });
-            logger.debug('Type checking functions parsed successfully with 4 assignment statements');
+            logger.debug(
+              'Type checking functions parsed successfully with 4 assignment statements'
+            );
           } else {
-            logger.debug(`Type checking functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`);
+            logger.debug(
+              `Type checking functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
+            );
           }
         }
       }
@@ -548,9 +566,13 @@ cross_result = cross([1,0,0], [0,1,0]);
         if (ast) {
           // For advanced features, the parser may not yet support assignment statements
           if (ast.length === 4) {
-            logger.debug(`String and vector functions parsed successfully with ${ast.length} nodes`);
+            logger.debug(
+              `String and vector functions parsed successfully with ${ast.length} nodes`
+            );
           } else {
-            logger.debug(`String and vector functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`);
+            logger.debug(
+              `String and vector functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
+            );
           }
         }
       }

@@ -5,8 +5,8 @@
  * and ensuring proper function name extraction.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import * as THREE from 'three';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';

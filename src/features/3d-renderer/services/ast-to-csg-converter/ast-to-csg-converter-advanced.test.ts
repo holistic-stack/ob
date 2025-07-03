@@ -265,7 +265,9 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
             if (scenario.expectedNodeTypes[index]) {
               // Tree Sitter may parse some constructs as function_call or assignment_statement
               expect(node?.type).toMatch(
-                new RegExp(`${scenario.expectedNodeTypes[index]}|function_call|assignment_statement`)
+                new RegExp(
+                  `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement`
+                )
               );
             }
           });

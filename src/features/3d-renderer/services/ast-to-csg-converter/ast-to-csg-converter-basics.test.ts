@@ -217,7 +217,9 @@ describe('AST to CSG Converter - Basics Corpus Integration', () => {
       // For advanced features, the parser may return empty AST for unsupported constructs
       // This is expected behavior for features not yet fully implemented
       if (ast.length > 0) {
-        logger.debug(`✅ ${scenario.name} parsed successfully with ${ast.length} nodes for CSG conversion`);
+        logger.debug(
+          `✅ ${scenario.name} parsed successfully with ${ast.length} nodes for CSG conversion`
+        );
       } else {
         logger.debug(
           `Parser for ${scenario.name} returned empty AST - advanced feature not yet supported, skipping CSG conversion`

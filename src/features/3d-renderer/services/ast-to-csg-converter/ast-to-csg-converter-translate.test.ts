@@ -9,7 +9,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
-import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
+import {
+  clearSourceCodeForExtraction,
+  convertASTNodeToCSG,
+  setSourceCodeForExtraction,
+} from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterTranslateTest');
 
@@ -69,8 +73,14 @@ sphere(10);
 
       logger.debug(`Translate node structure:`, JSON.stringify(translateNode, null, 2));
 
-      // Step 4: Convert the translate node to CSG
+      // Step 4: Set source code for proper parameter extraction
+      setSourceCodeForExtraction(code);
+
+      // Convert the translate node to CSG
       const translateResult = await convertASTNodeToCSG(translateNode as ASTNode, 1);
+
+      // Clear source code after conversion
+      clearSourceCodeForExtraction();
 
       // The translate node should succeed and create a translated sphere marker
       expect(translateResult.success).toBe(true);
@@ -85,7 +95,7 @@ sphere(10);
         expect(position.y).toBe(0);
         expect(position.z).toBe(0);
 
-        console.log(
+        logger.debug(
           '✅ Translate node successfully created translated mesh at position:',
           position
         );
@@ -122,7 +132,13 @@ sphere(10);
 
       logger.debug(`Simple translate node:`, JSON.stringify(translateNode, null, 2));
 
+      // Set source code for proper parameter extraction
+      setSourceCodeForExtraction(code);
+
       const result = await convertASTNodeToCSG(translateNode as ASTNode, 0);
+
+      // Clear source code after conversion
+      clearSourceCodeForExtraction();
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -131,7 +147,9 @@ sphere(10);
         expect(result.data.mesh.position.y).toBe(0);
         expect(result.data.mesh.position.z).toBe(0);
 
-        logger.debug(`Translate applied successfully: position = [${result.data.mesh.position.x}, ${result.data.mesh.position.y}, ${result.data.mesh.position.z}]`);
+        logger.debug(
+          `Translate applied successfully: position = [${result.data.mesh.position.x}, ${result.data.mesh.position.y}, ${result.data.mesh.position.z}]`
+        );
       }
 
       logger.end('Simple translate test completed');
@@ -162,39 +180,30 @@ translate([5, 10, 15]) {
         throw new Error('AST is null after successful parse');
       }
 
-      // Debug: Log all AST nodes
-      console.log(`Total AST nodes: ${ast.length}`);
-
+      // Debug: Log AST structure
+      logger.debug(`Total AST nodes: ${ast.length}`);
       for (let i = 0; i < ast.length; i++) {
-        const node = ast[i] as unknown as {
-          type?: string;
-          children?: unknown[];
-          [key: string]: unknown;
-        };
-        console.log(`\n--- NODE ${i} ---`);
-        console.log(`Type: ${node?.type}`);
-        console.log(`Keys: ${Object.keys(node || {}).join(', ')}`);
-        if (node?.children) {
-          console.log(`Children count: ${node.children.length}`);
-          console.log(
-            `Children types: ${node.children.map((c: unknown) => (c as { type?: string })?.type).join(', ')}`
-          );
-        } else {
-          console.log('No children property found');
-        }
+        const node = ast[i] as unknown as { type?: string; children?: unknown[] };
+        logger.debug(`Node ${i}: type=${node?.type}, children=${node?.children?.length || 0}`);
       }
 
       // Test conversion of the first node
       const firstNode = ast[0];
       if (firstNode) {
+        // Set source code for proper parameter extraction
+        setSourceCodeForExtraction(code);
+
         const result = await convertASTNodeToCSG(firstNode as ASTNode, 0);
+
+        // Clear source code after conversion
+        clearSourceCodeForExtraction();
 
         // Should succeed in creating some kind of mesh
         expect(result.success).toBe(true);
 
         if (result.success) {
-          console.log('✅ Complex translate conversion succeeded');
-          console.log(
+          logger.debug('✅ Complex translate conversion succeeded');
+          logger.debug(
             `Mesh position: [${result.data.mesh.position.x}, ${result.data.mesh.position.y}, ${result.data.mesh.position.z}]`
           );
         }
@@ -230,7 +239,13 @@ translate([5, 10, 15]) {
 
       const translateNode = ast[0];
       if (translateNode) {
+        // Set source code for proper parameter extraction
+        setSourceCodeForExtraction(code);
+
         const result = await convertASTNodeToCSG(translateNode as ASTNode, 0);
+
+        // Clear source code after conversion
+        clearSourceCodeForExtraction();
 
         const endTime = performance.now();
         const duration = endTime - startTime;
@@ -270,6 +285,9 @@ translate([0, 0, 10]) cylinder(h=8, r=2);
 
       expect(ast.length).toBeGreaterThan(1);
 
+      // Set source code for proper parameter extraction
+      setSourceCodeForExtraction(code);
+
       // Convert each translate operation
       for (let i = 0; i < ast.length; i++) {
         const node = ast[i];
@@ -282,6 +300,9 @@ translate([0, 0, 10]) cylinder(h=8, r=2);
           logger.debug(`Node ${i} converted successfully at position:`, result.data.mesh.position);
         }
       }
+
+      // Clear source code after all conversions
+      clearSourceCodeForExtraction();
 
       logger.end('Multiple translate operations test completed');
     });

@@ -53,16 +53,53 @@ import { createMaterial } from '../material.service.js';
 const logger = createLogger('ASTToCSGConverter');
 
 /**
- * Extract source text for a given location (placeholder implementation)
- * In a full implementation, this would access the original source code
+ * Module-level storage for source code to enable proper text extraction
+ * This is a temporary solution until the parser properly extracts function arguments
  */
-function getSourceTextForLocation(_location: {
+let currentSourceCode: string | null = null;
+
+/**
+ * Set the source code for text extraction
+ * This is a temporary solution until the parser properly extracts function arguments
+ */
+export function setSourceCodeForExtraction(sourceCode: string): void {
+  currentSourceCode = sourceCode;
+  logger.debug(`Source code set for extraction (${sourceCode.length} characters)`);
+}
+
+/**
+ * Clear the source code after conversion
+ */
+export function clearSourceCodeForExtraction(): void {
+  currentSourceCode = null;
+  logger.debug('Source code cleared after extraction');
+}
+
+/**
+ * Extract source text for a given location
+ * This is a temporary solution until the parser properly extracts function arguments
+ */
+function getSourceTextForLocation(location: {
   start: { offset: number };
   end: { offset: number };
 }): string {
-  // For now, return a placeholder that matches the expected translate syntax
-  // In a real implementation, this would extract the actual source text
-  return 'translate([200,0,0])';
+  // Use module-level source code if available
+  if (
+    currentSourceCode &&
+    location.start.offset >= 0 &&
+    location.end.offset > location.start.offset
+  ) {
+    const extractedText = currentSourceCode.slice(location.start.offset, location.end.offset);
+    logger.debug(
+      `Extracted source text from offsets ${location.start.offset}-${location.end.offset}: "${extractedText}"`
+    );
+    return extractedText;
+  }
+
+  // Fallback: return a placeholder that matches the expected translate syntax
+  // This should not be reached in normal operation
+  logger.warn('getSourceTextForLocation: No source code available, using fallback');
+  return 'translate([0,0,0])';
 }
 
 /**
