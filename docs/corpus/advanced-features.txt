@@ -1,0 +1,318 @@
+==================
+Color Operations
+==================
+
+color("red") cube(10);
+color("#ff0000") sphere(5);
+color([1, 0, 0]) cylinder(h=10, r=5);
+color([1, 0, 0, 0.5]) cube([10, 10, 10]);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (string))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (string))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                name: (identifier)
+                value: (number))
+              (argument
+                name: (identifier)
+                value: (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (vector_expression
+                  (number)
+                  (number)
+                  (number))))))))))
+
+==================
+Matrix Transformations
+==================
+
+multmatrix([[1, 0, 0, 10], [0, 1, 0, 20], [0, 0, 1, 30], [0, 0, 0, 1]]) cube(10);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (vector_expression
+                (number)
+                (number)
+                (number)
+                (number))
+              (vector_expression
+                (number)
+                (number)
+                (number)
+                (number))
+              (vector_expression
+                (number)
+                (number)
+                (number)
+                (number))
+              (vector_expression
+                (number)
+                (number)
+                (number)
+                (number))))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number)))))))))
+
+==================
+Offset Operations
+==================
+
+offset(r=2) square(10);
+offset(delta=5) circle(10);
+offset(r=-1, chamfer=true) polygon([[0,0], [10,0], [10,10], [0,10]]);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (unary_expression
+              operator: (unary_minus_operator)
+              operand: (number)))
+          (argument
+            name: (identifier)
+            value: (boolean))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (vector_expression
+                  (vector_expression
+                    (number)
+                    (number))
+                  (vector_expression
+                    (number)
+                    (number))
+                  (vector_expression
+                    (number)
+                    (number))
+                  (vector_expression
+                    (number)
+                    (number)))))))))))
+
+==================
+Render Operations
+==================
+
+render() difference() {
+    cube(10);
+    translate([5, 5, 5]) sphere(3);
+}
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list)
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list)
+          (block
+            (statement
+              (module_instantiation
+                name: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (number))))))
+            (statement
+              (module_instantiation
+                name: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (vector_expression
+                        (number)
+                        (number)
+                        (number)))))
+                (statement
+                  (module_instantiation
+                    name: (identifier)
+                    arguments: (argument_list
+                      (arguments
+                        (argument
+                          (number))))))))))))))
+
+==================
+Children Operations
+==================
+
+module my_module() {
+    children(0);
+    translate([10, 0, 0]) children(1);
+    for (i = [0:$children-1]) translate([i*5, 0, 0]) children(i);
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (vector_expression
+                    (number)
+                    (number)
+                    (number)))))
+            (statement
+              (module_instantiation
+                name: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (number))))))))
+        (statement
+          (for_statement
+            iterator: (identifier)
+            range: (range_expression
+              start: (number)
+              end: (binary_expression
+                left: (special_variable)
+                operator: (subtraction_operator)
+                right: (number)))
+            (statement
+              (module_instantiation
+                name: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (vector_expression
+                        (binary_expression
+                          left: (identifier)
+                          operator: (multiplication_operator)
+                          right: (number))
+                        (number)
+                        (number)))))
+                (statement
+                  (module_instantiation
+                    name: (identifier)
+                    arguments: (argument_list
+                      (arguments
+                        (argument
+                          (identifier))))))))))))))

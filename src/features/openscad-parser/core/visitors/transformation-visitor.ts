@@ -349,10 +349,65 @@ export class TransformationVisitor extends BaseASTVisitor {
    * @param node - Transformation function CST node
    * @returns Array of child AST nodes (to be processed by other visitors)
    */
-  private parseChildren(_node: Node): ASTNode[] {
-    // For now, return empty array - children will be processed by the composite visitor
-    // In a full implementation, this would recursively process child nodes
-    // but we need to avoid circular dependencies between visitors
-    return [];
+  private parseChildren(node: Node): ASTNode[] {
+    const children: ASTNode[] = [];
+
+    // In OpenSCAD, the syntax "translate([x,y,z]) object;" means object is a child
+    // We need to look for the next sibling node in the parent context
+    // For now, we'll look within the current node for child objects
+
+    logger.debug(`Parsing children for transformation node: ${node.type}`);
+    logger.debug(`Node has ${node.childCount} children`);
+
+    for (let i = 0; i < node.childCount; i++) {
+      const child = node.child(i);
+      if (!child) continue;
+
+      logger.debug(
+        `Child ${i}: type=${child.type}, text="${this.getNodeText(child).slice(0, 50)}..."`
+      );
+
+      // Skip parameter lists, identifiers, and punctuation
+      if (
+        child.type === 'parameter_list' ||
+        child.type === 'identifier' ||
+        child.type === '(' ||
+        child.type === ')' ||
+        child.type === ';'
+      ) {
+        continue;
+      }
+
+      // Process child nodes that represent objects to be transformed
+      if (
+        child.type === 'function_call' ||
+        child.type === 'block_statement' ||
+        child.type === 'statement'
+      ) {
+        // Use a simplified approach to create child nodes
+        // In a full implementation, we would delegate to the composite visitor
+        if (child.type === 'function_call') {
+          const childText = this.getNodeText(child);
+          const functionMatch = childText.match(/^([a-zA-Z_][a-zA-Z0-9_]*)/);
+
+          if (functionMatch && functionMatch[1]) {
+            const functionName = functionMatch[1];
+            const childNode: ASTNode = {
+              type: 'function_call',
+              name: functionName,
+              arguments: [],
+              location: this.createSourceLocation(child),
+              isBuiltIn: ['cube', 'sphere', 'cylinder'].includes(functionName),
+            } as any;
+
+            children.push(childNode);
+            logger.debug(`Added child function call: ${functionName}`);
+          }
+        }
+      }
+    }
+
+    logger.debug(`Parsed ${children.length} children for transformation node`);
+    return children;
   }
 }

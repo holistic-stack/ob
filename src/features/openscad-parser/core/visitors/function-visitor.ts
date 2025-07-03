@@ -290,11 +290,12 @@ export class FunctionVisitor extends BaseASTVisitor {
   private parseFunctionArguments(node: Node): Record<string, unknown> {
     const args: Record<string, unknown> = {};
 
-    // Find argument list
+    // Find argument list - try multiple possible node types
     const argListNode =
       this.findChildOfType(node, 'argument_list') ||
       this.findChildOfType(node, 'arguments') ||
-      this.findChildOfType(node, 'actual_parameters');
+      this.findChildOfType(node, 'actual_parameters') ||
+      this.findChildOfType(node, 'parameter_list');
 
     if (!argListNode) {
       return args;

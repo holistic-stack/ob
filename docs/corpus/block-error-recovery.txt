@@ -1,0 +1,180 @@
+=== Unclosed Block Recovery - Missing Brace at EOF
+---
+{
+  cube();
+  sphere();
+---
+(source_file
+  (block
+    (ERROR (missing "}")
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+)
+
+=== Unclosed Block Recovery - Missing Brace with Trailing Statement
+---
+{
+  cube();
+  sphere();
+module test() {}
+---
+(source_file
+  (block
+    (ERROR (missing "}")
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+  (module_definition
+    (identifier)
+    (parameter_list)
+    (block)
+  )
+)
+
+=== Unclosed Block Recovery - Missing Brace with Invalid Statement
+---
+{
+  cube();
+  sphere();
+invalid_statement;
+---
+(source_file
+  (block
+    (ERROR (missing "}")
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (ERROR
+        (identifier)
+        (error_sentinel)
+      )
+    )
+  )
+)
+
+=== Block with Missing Semicolon
+---
+module a() {
+  cube()
+  sphere();
+}
+---
+(source_file
+  (module_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (block
+      (module_instantiation
+        (identifier)
+        (argument_list)
+        (ERROR (missing ";"))
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+)
+
+=== Block with Extra Semicolon
+---
+module a() {
+  cube();;
+  sphere();
+}
+---
+(source_file
+  (module_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (block
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (ERROR (missing "statement"))
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+)
+
+=== Block with Invalid Statement Inside
+---
+module a() {
+  cube();
+  invalid_token;
+  sphere();
+}
+---
+(source_file
+  (module_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (block
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+      (ERROR
+        (identifier)
+        (error_sentinel)
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+)
+
+=== Block with Unclosed String
+---
+module a() {
+  echo("hello;
+  cube();
+}
+---
+(source_file
+  (module_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (block
+      (echo_statement
+        (argument_list
+          (arguments
+            (argument
+              (string (ERROR (missing "\""))))))
+        (ERROR (missing ")"))
+        (ERROR (missing ";"))
+      )
+      (module_instantiation
+        (identifier)
+        (argument_list)
+      )
+    )
+  )
+)

@@ -1,0 +1,374 @@
+==================
+Parametric Box Module
+==================
+
+module box(size=[10,10,10], wall=2, center=false) {
+    difference() {
+        cube(size, center);
+        translate([wall, wall, wall])
+            cube([size.x-2*wall, size.y-2*wall, size.z-wall], center);
+    }
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (vector_expression
+              (number)
+              (number)
+              (number)))
+          (parameter_declaration
+            (identifier)
+            (number))
+          (parameter_declaration
+            (identifier)
+            (boolean))))
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list)
+            (block
+              (statement
+                (module_instantiation
+                  name: (identifier)
+                  arguments: (argument_list
+                    (arguments
+                      (argument
+                        (identifier))
+                      (argument
+                        (identifier))))))
+              (statement
+                (module_instantiation
+                  name: (identifier)
+                  arguments: (argument_list
+                    (arguments
+                      (argument
+                        (vector_expression
+                          (identifier)
+                          (identifier)
+                          (identifier)))))
+                  (statement
+                    (module_instantiation
+                      name: (identifier)
+                      arguments: (argument_list
+                        (arguments
+                          (argument
+                            (vector_expression
+                              (binary_expression
+                                left: (member_expression
+                                  object: (identifier)
+                                  property: (identifier))
+                                operator: (subtraction_operator)
+                                right: (binary_expression
+                                  left: (number)
+                                  operator: (multiplication_operator)
+                                  right: (identifier)))
+                              (binary_expression
+                                left: (member_expression
+                                  object: (identifier)
+                                  property: (identifier))
+                                operator: (subtraction_operator)
+                                right: (binary_expression
+                                  left: (number)
+                                  operator: (multiplication_operator)
+                                  right: (identifier)))
+                              (binary_expression
+                                left: (member_expression
+                                  object: (identifier)
+                                  property: (identifier))
+                                operator: (subtraction_operator)
+                                right: (identifier))))
+                          (argument
+                            (identifier)))))))))))))))
+
+==================
+Recursive Function
+==================
+
+function factorial(n) = n <= 1 ? 1 : n * factorial(n-1);
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))))
+      value: (conditional_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (less_equal_operator)
+          right: (number))
+        consequence: (number)
+        alternative: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (binary_expression
+                    left: (identifier)
+                    operator: (subtraction_operator)
+                    right: (number)))))))))))
+
+==================
+Animation Example
+==================
+
+rotate([0, 0, $t * 360]) {
+    translate([10, 0, 0]) {
+        cube([2, 1, 1]);
+    }
+}
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (binary_expression
+                left: (special_variable)
+                operator: (multiplication_operator)
+                right: (number))))))
+      (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (vector_expression
+                    (number)
+                    (number)
+                    (number)))))
+            (block
+              (statement
+                (module_instantiation
+                  name: (identifier)
+                  arguments: (argument_list
+                    (arguments
+                      (argument
+                        (vector_expression
+                          (number)
+                          (number)
+                          (number))))))))))))))
+
+==================
+Complex For Loop Pattern
+==================
+
+for (i = [0:5]) {
+    for (j = [0:3]) {
+        translate([i*10, j*10, 0]) {
+            rotate([0, 0, i*j*15]) {
+                cube([5, 5, 1]);
+            }
+        }
+    }
+}
+
+---
+
+(source_file
+  (statement
+    (for_statement
+      iterator: (identifier)
+      range: (range_expression
+        start: (number)
+        end: (number))
+      (block
+        (statement
+          (for_statement
+            iterator: (identifier)
+            range: (range_expression
+              start: (number)
+              end: (number))
+            (block
+              (statement
+                (module_instantiation
+                  name: (identifier)
+                  arguments: (argument_list
+                    (arguments
+                      (argument
+                        (vector_expression
+                          (binary_expression
+                            left: (identifier)
+                            operator: (multiplication_operator)
+                            right: (number))
+                          (binary_expression
+                            left: (identifier)
+                            operator: (multiplication_operator)
+                            right: (number))
+                          (number)))))
+                  (block
+                    (statement
+                      (module_instantiation
+                        name: (identifier)
+                        arguments: (argument_list
+                          (arguments
+                            (argument
+                              (vector_expression
+                                (number)
+                                (number)
+                                (binary_expression
+                                  left: (binary_expression
+                                    left: (identifier)
+                                    operator: (multiplication_operator)
+                                    right: (identifier))
+                                  operator: (multiplication_operator)
+                                  right: (number))))))
+                        (block
+                          (statement
+                            (module_instantiation
+                              name: (identifier)
+                              arguments: (argument_list
+                                (arguments
+                                  (argument
+                                    (vector_expression
+                                      (number)
+                                      (number)
+                                      (number))))))))))))))))))))
+
+==================
+Conditional Geometry
+==================
+
+module conditional_shape(type="cube", size=10) {
+    if (type == "cube") {
+        cube(size);
+    } else if (type == "sphere") {
+        sphere(size/2);
+    } else {
+        cylinder(h=size, r=size/4);
+    }
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (string))
+          (parameter_declaration
+            (identifier)
+            (number))))
+      body: (block
+        (statement
+          (if_statement
+            condition: (binary_expression
+              left: (identifier)
+              operator: (equality_operator)
+              right: (string))
+            consequence: (block
+              (statement
+                (module_instantiation
+                  name: (identifier)
+                  arguments: (argument_list
+                    (arguments
+                      (argument
+                        (identifier)))))))
+            alternative: (if_statement
+              condition: (binary_expression
+                left: (identifier)
+                operator: (equality_operator)
+                right: (string))
+              consequence: (block
+                (statement
+                  (module_instantiation
+                    name: (identifier)
+                    arguments: (argument_list
+                      (arguments
+                        (argument
+                          (binary_expression
+                            left: (identifier)
+                            operator: (division_operator)
+                            right: (number))))))))
+              alternative: (block
+                (statement
+                  (module_instantiation
+                    name: (identifier)
+                    arguments: (argument_list
+                      (arguments
+                        (argument
+                          name: (identifier)
+                          value: (identifier))
+                        (argument
+                          name: (identifier)
+                          value: (binary_expression
+                            left: (identifier)
+                            operator: (division_operator)
+                            right: (number)))))))))))))))
+
+==================
+Library Usage Pattern
+==================
+
+use <MCAD/boxes.scad>;
+include <utils.scad>;
+
+box_width = 50;
+box_height = 30;
+wall_thickness = 2;
+
+roundedBox([box_width, box_height, 20], wall_thickness, true);
+
+---
+
+(source_file
+  (statement
+    (use_statement
+      (angle_bracket_string)))
+  (statement
+    (include_statement
+      (angle_bracket_string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (identifier)
+              (identifier)
+              (number)))
+          (argument
+            (identifier))
+          (argument
+            (boolean)))))))

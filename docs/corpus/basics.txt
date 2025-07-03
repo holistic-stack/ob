@@ -1,0 +1,229 @@
+==================
+Basic Expression Assignments
+==================
+
+result1 = 1 + 2 * 3;
+result2 = true || false;
+result3 = "hello" == "world";
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (binary_expression
+          left: (number)
+          operator: (multiplication_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (boolean)
+        operator: (logical_or_operator)
+        right: (boolean))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (string)
+        operator: (equality_operator)
+        right: (string)))))
+
+==================
+Module Definition
+==================
+
+module cube_wrap(size = 10) {
+    cube(size);
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (number))))
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument (identifier))))))))))
+
+==================
+Function Definition
+==================
+
+function add(a, b) = a + b;
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration (identifier))
+          (parameter_declaration (identifier))))
+      value: (binary_expression
+        left: (identifier)
+        operator: (addition_operator)
+        right: (identifier)))))
+
+==================
+Include and Use
+==================
+
+include <shapes.scad>;
+use <utils.scad>;
+
+---
+
+(source_file
+  (statement
+    (include_statement (angle_bracket_string)))
+  (statement
+    (use_statement (angle_bracket_string))))
+
+==================
+Variables and Assignment
+==================
+
+r = 10;
+h = 20;
+volume = 3.14 * r * r * h;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (binary_expression
+          left: (binary_expression
+            left: (number)
+            operator: (multiplication_operator)
+            right: (identifier))
+          operator: (multiplication_operator)
+          right: (identifier))
+        operator: (multiplication_operator)
+        right: (identifier)))))
+
+==================
+Module Instantiation
+==================
+
+translate([10, 0, 0]) {
+    cube(5);
+}
+
+#sphere(r=5);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))
+      (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number)))))))))
+  (statement
+    (module_instantiation
+      (modifier)
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number)))))))
+
+==================
+Conditional Expression
+==================
+
+x = 5;
+result = x > 10 ? "big" : "small";
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (conditional_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (greater_than_operator)
+          right: (number))
+        consequence: (string)
+        alternative: (string)))))
+
+==================
+Let Expression
+==================
+
+shape = let(
+    width = 10,
+    height = 20
+) cube([width, height, 1]);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (let_expression
+        (let_assignment
+          name: (identifier)
+          value: (number))
+        (let_assignment
+          name: (identifier)
+          value: (number))
+        body: (call_expression
+          function: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (vector_expression
+                  (identifier)
+                  (identifier)
+                  (number))))))))))

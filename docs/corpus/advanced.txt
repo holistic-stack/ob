@@ -1,0 +1,701 @@
+==================
+List Comprehensions
+==================
+
+values = [for (i = [1:5]) i * i];
+evens = [for (x = [1:20]) if (x % 2 == 0) x];
+matrix = [for (i = [0:2]) [for (j = [0:2]) i+j]];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          iterator: (identifier)
+          range: (vector_expression
+            (range_expression
+              start: (number)
+              end: (number))))
+        expr: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (identifier)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          iterator: (identifier)
+          range: (vector_expression
+            (range_expression
+              start: (number)
+              end: (number))))
+        condition: (binary_expression
+          left: (binary_expression
+            left: (identifier)
+            operator: (modulo_operator)
+            right: (number))
+          operator: (equality_operator)
+          right: (number))
+        expr: (identifier))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          iterator: (identifier)
+          range: (vector_expression
+            (range_expression
+              start: (number)
+              end: (number))))
+        expr: (list_comprehension
+          (list_comprehension_for
+            iterator: (identifier)
+            range: (vector_expression
+              (range_expression
+                start: (number)
+                end: (number))))
+          expr: (binary_expression
+            left: (identifier)
+            operator: (addition_operator)
+            right: (identifier)))))))
+
+==================
+Multiple Variable List Comprehensions
+==================
+
+polygon_points = [for (i=[0:n-1], a=i*360/n) [cos(a), sin(a)]];
+complex_calc = [for (i=[0:5], x=i*2, y=x+1) [x, y, x*y]];
+radial_pattern = [for (i=[0:num-1], a=i*360/num, r=radii[i]) [r*cos(a), r*sin(a)]];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (vector_expression
+              (binary_expression
+                left: (range_expression
+                  start: (number)
+                  end: (identifier))
+                operator: (subtraction_operator)
+                right: (number))))
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (binary_expression
+              left: (binary_expression
+                left: (identifier)
+                operator: (multiplication_operator)
+                right: (number))
+              operator: (division_operator)
+              right: (identifier))))
+        expr: (vector_expression
+          (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (identifier)))))
+          (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (identifier)))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (vector_expression
+              (range_expression
+                start: (number)
+                end: (number))))
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (binary_expression
+              left: (identifier)
+              operator: (multiplication_operator)
+              right: (number)))
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (binary_expression
+              left: (identifier)
+              operator: (addition_operator)
+              right: (number))))
+        expr: (vector_expression
+          (identifier)
+          (identifier)
+          (binary_expression
+            left: (identifier)
+            operator: (multiplication_operator)
+            right: (identifier))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (list_comprehension_for
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (vector_expression
+              (binary_expression
+                left: (range_expression
+                  start: (number)
+                  end: (identifier))
+                operator: (subtraction_operator)
+                right: (number))))
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (binary_expression
+              left: (binary_expression
+                left: (identifier)
+                operator: (multiplication_operator)
+                right: (number))
+              operator: (division_operator)
+              right: (identifier)))
+          (list_comprehension_assignment
+            iterator: (identifier)
+            range: (index_expression
+              array: (identifier)
+              index: (identifier))))
+        expr: (vector_expression
+          (binary_expression
+            left: (identifier)
+            operator: (multiplication_operator)
+            right: (call_expression
+              function: (identifier)
+              arguments: (argument_list
+                (arguments
+                  (argument
+                    (identifier))))))
+          (binary_expression
+            left: (identifier)
+            operator: (multiplication_operator)
+            right: (call_expression
+              function: (identifier)
+              arguments: (argument_list
+                (arguments
+                  (argument
+                    (identifier)))))))))))
+
+==================
+Range Expressions
+==================
+
+for (i = [0:5]) cube(i);
+for (j = [0:0.5:10]) sphere(j);
+for (k = [start:step:end]) cylinder(k);
+
+---
+
+(source_file
+  (statement
+    (for_statement
+      iterator: (identifier)
+      range: (range_expression
+        start: (number)
+        end: (number))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (identifier))))))))
+  (statement
+    (for_statement
+      iterator: (identifier)
+      range: (range_expression
+        start: (number)
+        step: (number)
+        end: (number))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (identifier))))))))
+  (statement
+    (for_statement
+      iterator: (identifier)
+      range: (range_expression
+        start: (identifier)
+        step: (identifier)
+        end: (identifier))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (identifier)))))))))
+
+==================
+Array Indexing
+==================
+
+points = [[1,2,3], [4,5,6], [7,8,9]];
+x = points[0][0];
+row = points[1];
+subset = points[0:1];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (vector_expression
+          (number)
+          (number)
+          (number))
+        (vector_expression
+          (number)
+          (number)
+          (number))
+        (vector_expression
+          (number)
+          (number)
+          (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (index_expression
+        array: (index_expression
+          array: (identifier)
+          index: (number))
+        index: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (index_expression
+        array: (identifier)
+        index: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (index_expression
+        array: (identifier)
+        index: (range_expression
+          start: (number)
+          end: (number))))))
+
+==================
+Special Variables
+==================
+
+$fn = 36;
+cube(10, $fn = 12);
+rotate([$t * 360, 0, 0]) sphere(5);
+move = $vpt;
+view = $vpr;
+dist = $vpd;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (special_variable)
+      value: (number)))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))
+          (argument
+            name: (special_variable)
+            value: (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (binary_expression
+                left: (special_variable)
+                operator: (multiplication_operator)
+                right: (number))
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable))))
+
+==================
+Special Variables
+==================
+
+angle = $fa;
+size = $fs;
+segments = $fn;
+time = $t;
+children_count = $children;
+
+use_specials($fa, $fs, $fn, $t, $children);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (special_variable)))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (special_variable))
+          (argument
+            (special_variable))
+          (argument
+            (special_variable))
+          (argument
+            (special_variable))
+          (argument
+            (special_variable)))))))
+
+==================
+Error Recovery
+==================
+
+a = 5
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Unclosed Block
+==================
+
+module foo() {
+  a = 1;
+// missing closing }
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block
+        (statement
+          (assignment_statement
+            name: (identifier)
+            value: (number)))
+        (comment)
+        (MISSING "}")))))
+
+==================
+Unclosed Parenthesis
+==================
+
+b = (2 + 3;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (parenthesized_expression
+        (binary_expression
+          left: (number)
+          operator: (addition_operator)
+          right: (number))))))
+
+==================
+Incomplete Expression
+==================
+
+c = 1 + ;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (MISSING identifier)))))
+
+==================
+Unclosed String
+==================
+
+d = "unterminated string;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string
+        (MISSING """)))))
+
+==================
+Complex Numeric Literals
+==================
+
+small = 1.2e-3;
+large = 1.5e6;
+negative = -42;
+precise = 3.14159265359;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (unary_minus_operator)
+        operand: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Special Variables as Module Parameters
+==================
+
+module Logo(size=50, $fn=100) {
+    sphere(d=size);
+}
+
+Logo(25, $fn=64);
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (number))
+          (parameter_declaration
+            (special_variable)
+            (number))))
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  name: (identifier)
+                  value: (identifier)))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))
+          (argument
+            name: (special_variable)
+            value: (number)))))))
+
+==================
+Exponent Operator
+==================
+
+result = 2^3;
+power = base^exponent;
+complex = (x + 1)^(y - 2);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (exponentiation_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (identifier)
+        operator: (exponentiation_operator)
+        right: (identifier))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (parenthesized_expression
+          (binary_expression
+            left: (identifier)
+            operator: (addition_operator)
+            right: (number)))
+        operator: (exponentiation_operator)
+        right: (parenthesized_expression
+          (binary_expression
+            left: (identifier)
+            operator: (subtraction_operator)
+            right: (number)))))))
+
+==================
+Function Literals
+==================
+
+func = function (x) x * x;
+echo(func(5));
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (function_literal
+        parameters: (parameter_list
+          (parameter_declarations
+            (parameter_declaration
+              (identifier))))
+        body: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (identifier)))))
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))))))
+
+==================
+List Comprehensions with Let Expressions
+==================
+
+areas = [let (num=len(vertices)) for (i=[0:num-1]) triarea(vertices[i])];
+complex = [let (a=5, b=10) for (x=[0:a]) x*b];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (let_assignment
+          name: (identifier)
+          value: (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (identifier))))))
+        (list_comprehension_for
+          iterator: (identifier)
+          range: (vector_expression
+            (binary_expression
+              left: (range_expression
+                start: (number)
+                end: (identifier))
+              operator: (subtraction_operator)
+              right: (number))))
+        expr: (call_expression
+          function: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (index_expression
+                  array: (identifier)
+                  index: (identifier)))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (list_comprehension
+        (let_assignment
+          name: (identifier)
+          value: (number))
+        (let_assignment
+          name: (identifier)
+          value: (number))
+        (list_comprehension_for
+          iterator: (identifier)
+          range: (vector_expression
+            (range_expression
+              start: (number)
+              end: (identifier))))
+        expr: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (identifier))))))

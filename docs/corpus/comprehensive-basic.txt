@@ -1,0 +1,666 @@
+==================
+Simple Numbers
+==================
+
+num1 = 42;
+num2 = 3.14;
+num3 = 1.2e-3;
+num4 = -5;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (unary_minus_operator)
+        operand: (number)))))
+
+==================
+Simple Strings
+==================
+
+str1 = "hello";
+str2 = "world with spaces";
+str3 = "";
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string))))
+
+==================
+Simple Booleans
+==================
+
+bool1 = true;
+bool2 = false;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (boolean)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (boolean))))
+
+==================
+Simple Variables
+==================
+
+echo(x);
+echo(my_var);
+echo(_private);
+
+---
+
+(source_file
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (identifier)))))
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (identifier)))))
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (identifier))))))
+
+==================
+Basic Arithmetic
+==================
+
+result1 = 1 + 2;
+result2 = 5 - 3;
+result3 = 4 * 6;
+result4 = 8 / 2;
+result5 = 7 % 3;
+result6 = 2 ^ 3;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (subtraction_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (multiplication_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (division_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (modulo_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (exponentiation_operator)
+        right: (number)))))
+
+==================
+Basic Comparisons
+==================
+
+comp1 = 5 > 3;
+comp2 = 2 < 7;
+comp3 = 4 >= 4;
+comp4 = 6 <= 8;
+comp5 = 1 == 1;
+comp6 = 2 != 3;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (greater_than_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (less_than_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (greater_equal_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (less_equal_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (equality_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (inequality_operator)
+        right: (number)))))
+
+==================
+Basic Logical Operations
+==================
+
+logic1 = true && false;
+logic2 = true || false;
+logic3 = !true;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (boolean)
+        operator: (logical_and_operator)
+        right: (boolean))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (boolean)
+        operator: (logical_or_operator)
+        right: (boolean))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (logical_not_operator)
+        operand: (boolean)))))
+
+==================
+Simple Assignment
+==================
+
+x = 5;
+name = "test";
+flag = true;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (boolean))))
+
+==================
+Vector Expressions
+==================
+
+vec1 = [1, 2, 3];
+vec2 = [x, y, z];
+vec3 = [];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (number)
+        (number)
+        (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (identifier)
+        (identifier)
+        (identifier))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression))))
+
+==================
+Basic Cube
+==================
+
+cube(10);
+cube([5, 10, 15]);
+cube(size=20);
+cube(size=[1,2,3], center=true);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (vector_expression
+              (number)
+              (number)
+              (number)))
+          (argument
+            name: (identifier)
+            value: (boolean)))))))
+
+==================
+Basic Sphere
+==================
+
+sphere(5);
+sphere(r=10);
+sphere(d=20);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number)))))))
+
+==================
+Basic Cylinder
+==================
+
+cylinder(h=10, r=5);
+cylinder(h=20, r1=5, r2=3);
+cylinder(10, 5);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))
+          (argument
+            name: (identifier)
+            value: (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))
+          (argument
+            name: (identifier)
+            value: (number))
+          (argument
+            name: (identifier)
+            value: (number))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))
+          (argument
+            (number)))))))
+
+==================
+Basic Transformations
+==================
+
+translate([10, 0, 0]) cube(5);
+rotate([0, 0, 45]) sphere(3);
+scale([2, 1, 1]) cylinder(h=5, r=2);
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (number))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (vector_expression
+              (number)
+              (number)
+              (number)))))
+      (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                name: (identifier)
+                value: (number))
+              (argument
+                name: (identifier)
+                value: (number)))))))))
+
+==================
+Basic Boolean Operations
+==================
+
+union() {
+    cube(10);
+    sphere(5);
+}
+
+difference() {
+    cube(10);
+    translate([2,2,2]) cube(6);
+}
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list)
+      (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number)))))))))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list)
+      (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (vector_expression
+                    (number)
+                    (number)
+                    (number)))))
+            (statement
+              (module_instantiation
+                name: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (number))))))))))))
+
+==================
+Simple Module Definition
+==================
+
+module simple() {
+    cube(10);
+}
+
+module with_params(size=5) {
+    sphere(size);
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number)))))))))
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (number))))
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (identifier))))))))))
+
+==================
+Simple Function Definition
+==================
+
+function double(x) = x * 2;
+function add(a, b) = a + b;
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))))
+      value: (binary_expression
+        left: (identifier)
+        operator: (multiplication_operator)
+        right: (number))))
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))
+          (parameter_declaration
+            (identifier))))
+      value: (binary_expression
+        left: (identifier)
+        operator: (addition_operator)
+        right: (identifier)))))
+
+==================
+Include and Use Statements
+==================
+
+include <shapes.scad>;
+use <utils.scad>;
+include "local.scad";
+
+---
+
+(source_file
+  (statement
+    (include_statement
+      (angle_bracket_string)))
+  (statement
+    (use_statement
+      (angle_bracket_string)))
+  (statement
+    (include_statement
+      (string))))

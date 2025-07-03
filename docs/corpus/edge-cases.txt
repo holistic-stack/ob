@@ -1,0 +1,357 @@
+==================
+Missing Semicolon Recovery
+==================
+
+x = 5
+y = 10;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Unclosed Parenthesis Recovery
+==================
+
+result = (2 + 3;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (parenthesized_expression
+        (binary_expression
+          left: (number)
+          operator: (addition_operator)
+          right: (number))))))
+
+==================
+Unclosed Block Recovery
+==================
+
+module test() {
+    cube(10);
+// missing closing brace
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))
+        (comment)
+        (MISSING "}")))))
+
+==================
+Incomplete Expression Recovery
+==================
+
+incomplete = 1 + ;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (MISSING identifier)))))
+
+==================
+Scientific Notation
+==================
+
+small = 1.2e-3;
+large = 1.5e6;
+negative_exp = 2.5e-10;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Complex Operator Precedence
+==================
+
+result = 2 + 3 * 4;
+result2 = (2 + 3) * 4;
+power = 2 ^ 3 ^ 2;
+power2 = 2 ^ (3 ^ 2);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (binary_expression
+          left: (number)
+          operator: (multiplication_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (parenthesized_expression
+          (binary_expression
+            left: (number)
+            operator: (addition_operator)
+            right: (number)))
+        operator: (multiplication_operator)
+        right: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (exponentiation_operator)
+        right: (binary_expression
+          left: (number)
+          operator: (exponentiation_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (exponentiation_operator)
+        right: (parenthesized_expression
+          (binary_expression
+            left: (number)
+            operator: (exponentiation_operator)
+            right: (number)))))))
+
+==================
+Complex Logical Expressions
+==================
+
+condition = x > 5 && y < 10 || z == 0;
+condition2 = (x > 5 && y < 10) || z == 0;
+negated = !(x > 5);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (binary_expression
+          left: (binary_expression
+            left: (identifier)
+            operator: (greater_than_operator)
+            right: (number))
+          operator: (logical_and_operator)
+          right: (binary_expression
+            left: (identifier)
+            operator: (less_than_operator)
+            right: (number)))
+        operator: (logical_or_operator)
+        right: (binary_expression
+          left: (identifier)
+          operator: (equality_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (parenthesized_expression
+          (binary_expression
+            left: (binary_expression
+              left: (identifier)
+              operator: (greater_than_operator)
+              right: (number))
+            operator: (logical_and_operator)
+            right: (binary_expression
+              left: (identifier)
+              operator: (less_than_operator)
+              right: (number))))
+        operator: (logical_or_operator)
+        right: (binary_expression
+          left: (identifier)
+          operator: (equality_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (logical_not_operator)
+        operand: (parenthesized_expression
+          (binary_expression
+            left: (identifier)
+            operator: (greater_than_operator)
+            right: (number)))))))
+
+==================
+Nested Conditional Expressions
+==================
+
+value = a > b ? (c > d ? 1 : 2) : (e > f ? 3 : 4);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (conditional_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (greater_than_operator)
+          right: (identifier))
+        consequence: (parenthesized_expression
+          (conditional_expression
+            condition: (binary_expression
+              left: (identifier)
+              operator: (greater_than_operator)
+              right: (identifier))
+            consequence: (number)
+            alternative: (number)))
+        alternative: (parenthesized_expression
+          (conditional_expression
+            condition: (binary_expression
+              left: (identifier)
+              operator: (greater_than_operator)
+              right: (identifier))
+            consequence: (number)
+            alternative: (number)))))))
+
+==================
+Empty Constructs
+==================
+
+empty_vector = [];
+module empty_module() {}
+empty_args = func();
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression)))
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list)))))
+
+==================
+String Edge Cases
+==================
+
+empty = "";
+quotes = "string with \"quotes\"";
+newlines = "line1\nline2";
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (string))))
+
+==================
+Large Numbers
+==================
+
+big_int = 999999999;
+precise = 3.141592653589793;
+tiny = 0.000000001;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Complex Nested Structures
+==================
+
+nested = [
+    [1, 2, [3, 4]],
+    [5, 6, [7, 8]]
+];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (vector_expression
+          (number)
+          (number)
+          (vector_expression
+            (number)
+            (number)))
+        (vector_expression
+          (number)
+          (number)
+          (vector_expression
+            (number)
+            (number)))))))

@@ -17,7 +17,7 @@ import type {
   PrimitiveParams,
   PrimitiveRendererFactory,
 } from '../types/renderer.types';
-import { convertASTNodeToCSG } from './ast-to-csg-converter';
+import { convertASTNodeToCSG } from './ast-to-csg-converter/ast-to-csg-converter.js';
 
 // Create logger instance for this service
 const logger = createLogger('PrimitiveRenderer');

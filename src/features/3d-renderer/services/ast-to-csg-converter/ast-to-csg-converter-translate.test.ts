@@ -1,0 +1,286 @@
+/**
+ * AST to CSG Converter - Translate Node Tests
+ *
+ * Tests for handling OpenSCAD translate operations with proper child node processing
+ * to ensure translate creates transformed spheres, not placeholder cubes.
+ */
+
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
+import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
+import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
+
+const logger = createLogger('ASTToCSGConverterTranslateTest');
+
+describe('AST to CSG Converter - Translate Node Handling', () => {
+  let parserService: UnifiedParserService;
+
+  beforeEach(async () => {
+    logger.init('Setting up translate node test environment');
+
+    parserService = new UnifiedParserService({
+      enableLogging: true,
+      enableCaching: false,
+      retryAttempts: 3,
+      timeoutMs: 10000,
+    });
+
+    await parserService.initialize();
+  });
+
+  describe('Translate with Child Nodes', () => {
+    it('should create translated sphere, not placeholder cube', async () => {
+      const code = `
+cube(15, center=true);
+translate([200,0,0])
+sphere(10);
+`;
+
+      logger.init('Testing translate with sphere child - should NOT create placeholder cube');
+
+      // Step 1: Parse the OpenSCAD code
+      const parseResult = await parserService.parseDocument(code);
+      expect(parseResult.success).toBe(true);
+
+      if (!parseResult.success) {
+        throw new Error(`Parse failed: ${parseResult.error}`);
+      }
+
+      const ast = parseResult.data.ast;
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
+
+      if (!ast) {
+        throw new Error('AST is null after successful parse');
+      }
+
+      expect(ast.length).toBe(2); // Should have cube and translate nodes
+
+      // Step 2: Check the first node (cube)
+      const cubeNode = ast[0];
+      expect(cubeNode).toBeDefined();
+      expect(cubeNode?.type).toMatch(/cube|function_call/);
+
+      // Step 3: Check the second node (translate)
+      const translateNode = ast[1];
+      expect(translateNode).toBeDefined();
+      expect(translateNode?.type).toMatch(/translate|function_call/);
+
+      logger.debug(`Translate node structure:`, JSON.stringify(translateNode, null, 2));
+
+      // Step 4: Convert the translate node to CSG
+      const translateResult = await convertASTNodeToCSG(translateNode as ASTNode, 1);
+
+      // The translate node should succeed and create a translated sphere marker
+      expect(translateResult.success).toBe(true);
+      if (translateResult.success) {
+        expect(translateResult.data).toBeDefined();
+        expect(translateResult.data.mesh).toBeDefined();
+        expect(translateResult.data.metadata.nodeType).toBe('function_call');
+
+        // The mesh should be positioned at the translated location [200,0,0]
+        const position = translateResult.data.mesh.position;
+        expect(position.x).toBe(200);
+        expect(position.y).toBe(0);
+        expect(position.z).toBe(0);
+
+        console.log(
+          '✅ Translate node successfully created translated mesh at position:',
+          position
+        );
+      }
+
+      logger.end('Translate with sphere child test completed');
+    });
+
+    it('should handle simple translate with sphere', async () => {
+      const code = 'translate([10,0,0]) sphere(5);';
+
+      logger.init('Testing simple translate with sphere');
+
+      const parseResult = await parserService.parseDocument(code);
+      expect(parseResult.success).toBe(true);
+
+      if (!parseResult.success) {
+        throw new Error(`Parse failed: ${parseResult.error}`);
+      }
+
+      const ast = parseResult.data.ast;
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
+
+      if (!ast) {
+        throw new Error('AST is null after successful parse');
+      }
+
+      expect(ast.length).toBeGreaterThan(0);
+
+      const translateNode = ast[0];
+      expect(translateNode).toBeDefined();
+      expect(translateNode?.type).toMatch(/translate|function_call/);
+
+      logger.debug(`Simple translate node:`, JSON.stringify(translateNode, null, 2));
+
+      const result = await convertASTNodeToCSG(translateNode as ASTNode, 0);
+      expect(result.success).toBe(true);
+
+      if (result.success) {
+        expect(result.data.mesh.position.x).toBe(10);
+        expect(result.data.mesh.position.y).toBe(0);
+        expect(result.data.mesh.position.z).toBe(0);
+      }
+
+      logger.end('Simple translate test completed');
+    });
+
+    it('should handle complex translate with multiple children', async () => {
+      const code = `
+translate([5, 10, 15]) {
+  cube(2);
+  sphere(1);
+}
+`;
+
+      logger.init('Testing complex translate with multiple children');
+
+      const parseResult = await parserService.parseDocument(code);
+      expect(parseResult.success).toBe(true);
+
+      if (!parseResult.success) {
+        throw new Error(`Parse failed: ${parseResult.error}`);
+      }
+
+      const ast = parseResult.data.ast;
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
+
+      if (!ast) {
+        throw new Error('AST is null after successful parse');
+      }
+
+      // Debug: Log all AST nodes
+      console.log(`Total AST nodes: ${ast.length}`);
+
+      for (let i = 0; i < ast.length; i++) {
+        const node = ast[i] as unknown as {
+          type?: string;
+          children?: unknown[];
+          [key: string]: unknown;
+        };
+        console.log(`\n--- NODE ${i} ---`);
+        console.log(`Type: ${node?.type}`);
+        console.log(`Keys: ${Object.keys(node || {}).join(', ')}`);
+        if (node?.children) {
+          console.log(`Children count: ${node.children.length}`);
+          console.log(
+            `Children types: ${node.children.map((c: unknown) => (c as { type?: string })?.type).join(', ')}`
+          );
+        } else {
+          console.log('No children property found');
+        }
+      }
+
+      // Test conversion of the first node
+      const firstNode = ast[0];
+      if (firstNode) {
+        const result = await convertASTNodeToCSG(firstNode as ASTNode, 0);
+
+        // Should succeed in creating some kind of mesh
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          console.log('✅ Complex translate conversion succeeded');
+          console.log(
+            `Mesh position: [${result.data.mesh.position.x}, ${result.data.mesh.position.y}, ${result.data.mesh.position.z}]`
+          );
+        }
+      }
+
+      logger.end('Complex translate test completed');
+    });
+
+    it('should handle translate performance requirements', async () => {
+      const code = 'translate([100, 200, 300]) cube(10);';
+
+      logger.init('Testing translate performance');
+
+      const parseResult = await parserService.parseDocument(code);
+      expect(parseResult.success).toBe(true);
+
+      if (!parseResult.success) {
+        throw new Error(`Parse failed: ${parseResult.error}`);
+      }
+
+      const ast = parseResult.data.ast;
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
+
+      if (!ast) {
+        throw new Error('AST is null after successful parse');
+      }
+
+      expect(ast.length).toBeGreaterThan(0);
+
+      // Performance test: should complete within 16ms
+      const startTime = performance.now();
+
+      const translateNode = ast[0];
+      if (translateNode) {
+        const result = await convertASTNodeToCSG(translateNode as ASTNode, 0);
+
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        logger.debug(`Translate conversion time: ${duration.toFixed(2)}ms`);
+
+        expect(result.success).toBe(true);
+        expect(duration).toBeLessThan(16); // <16ms performance target
+      }
+
+      logger.end('Translate performance test completed');
+    });
+
+    it('should handle multiple translate operations', async () => {
+      const code = `
+translate([10, 0, 0]) cube(5);
+translate([0, 10, 0]) sphere(3);
+translate([0, 0, 10]) cylinder(h=8, r=2);
+`;
+
+      logger.init('Testing multiple translate operations');
+
+      const parseResult = await parserService.parseDocument(code);
+      expect(parseResult.success).toBe(true);
+
+      if (!parseResult.success) {
+        throw new Error(`Parse failed: ${parseResult.error}`);
+      }
+
+      const ast = parseResult.data.ast;
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
+
+      if (!ast) {
+        throw new Error('AST is null after successful parse');
+      }
+
+      expect(ast.length).toBeGreaterThan(1);
+
+      // Convert each translate operation
+      for (let i = 0; i < ast.length; i++) {
+        const node = ast[i];
+        if (!node) continue;
+
+        const result = await convertASTNodeToCSG(node as ASTNode, i);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          logger.debug(`Node ${i} converted successfully at position:`, result.data.mesh.position);
+        }
+      }
+
+      logger.end('Multiple translate operations test completed');
+    });
+  });
+});

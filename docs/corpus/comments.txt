@@ -1,0 +1,339 @@
+==================
+Single Line Comments
+==================
+
+// This is a single line comment
+x = 5;
+
+---
+
+(source_file
+  (comment)
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number))))
+
+==================
+Inline Comments
+==================
+
+x = 10; // Inline comment
+y = 20; // Another inline comment
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (comment)
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (comment))
+
+==================
+Multi-line Comments
+==================
+
+/* This is a
+   multi-line comment */
+cube(10);
+
+---
+
+(source_file
+  (comment)
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number)))))))
+
+==================
+Block Comments with Asterisks
+==================
+
+/*
+ * Block comment with
+ * asterisk formatting
+ * for documentation
+ */
+sphere(5);
+
+---
+
+(source_file
+  (comment)
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number)))))))
+
+==================
+Nested Comments
+==================
+
+/* Outer comment
+   /* This should not start a nested comment */
+   Still in outer comment */
+cylinder(h=10, r=5);
+
+---
+
+(source_file
+  (comment)
+  (ERROR
+    (identifier)
+    (identifier)
+    (identifier)
+    (identifier)
+    (division_operator))
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            name: (identifier)
+            value: (number))
+          (argument
+            name: (identifier)
+            value: (number)))))))
+
+==================
+Comments in Code Blocks
+==================
+
+module test() {
+    // Comment inside module
+    cube(5);
+    /* Multi-line comment
+       inside module */
+    sphere(3);
+}
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (block
+        (comment)
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))
+        (comment)
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (number))))))))))
+
+==================
+Comments with Special Characters
+==================
+
+// Comment with special chars: !@#$%^&*()
+/* Comment with unicode: αβγδε */
+// Comment with quotes: "hello" and 'world'
+
+---
+
+(source_file
+  (comment)
+  (comment)
+  (comment))
+
+==================
+Empty Comments
+==================
+
+//
+/**/
+//
+
+---
+
+(source_file
+  (comment)
+  (comment)
+  (comment))
+
+==================
+Comments at End of File
+==================
+
+cube(10);
+// Final comment
+
+---
+
+(source_file
+  (statement
+    (module_instantiation
+      name: (identifier)
+      arguments: (argument_list
+        (arguments
+          (argument
+            (number))))))
+  (comment))
+
+==================
+Comments Between Statements
+==================
+
+x = 5;
+// Comment between statements
+y = 10;
+/* Another comment */
+z = x + y;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (comment)
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (comment)
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (identifier)
+        operator: (addition_operator)
+        right: (identifier)))))
+
+==================
+Comments in Function Definitions
+==================
+
+function factorial(n) = // Recursive factorial
+    n <= 1 ? 1 : n * factorial(n-1); // Base case and recursive case
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))))
+      (comment)
+      value: (conditional_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (less_equal_operator)
+          right: (number))
+        consequence: (number)
+        alternative: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (binary_expression
+                    left: (identifier)
+                    operator: (subtraction_operator)
+                    right: (number))))))))))
+      (comment))
+
+==================
+Comments in Complex Expressions
+==================
+
+result = (x + y) * // First part
+         (z - w);  // Second part
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (parenthesized_expression
+          (binary_expression
+            left: (identifier)
+            operator: (addition_operator)
+            right: (identifier)))
+        operator: (multiplication_operator)
+        (comment)
+        right: (parenthesized_expression
+          (binary_expression
+            left: (identifier)
+            operator: (subtraction_operator)
+            right: (identifier))))))
+    (comment))
+
+==================
+Documentation Comments
+==================
+
+/**
+ * Creates a parametric box with optional features
+ * @param size - Box dimensions [x, y, z]
+ * @param wall_thickness - Wall thickness for hollow box
+ * @param center - Whether to center the box
+ */
+module parametric_box(size=[10,10,10], wall_thickness=2, center=false) {
+    cube(size, center);
+}
+
+---
+
+(source_file
+  (comment)
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier)
+            (vector_expression
+              (number)
+              (number)
+              (number)))
+          (parameter_declaration
+            (identifier)
+            (number))
+          (parameter_declaration
+            (identifier)
+            (boolean))))
+      body: (block
+        (statement
+          (module_instantiation
+            name: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (identifier))
+                (argument
+                  (identifier))))))))))

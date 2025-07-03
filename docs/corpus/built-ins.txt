@@ -1,0 +1,886 @@
+==================
+Mathematical Functions
+==================
+
+result = sin(45);
+result = cos(radians(45));
+result = tan(30);
+result = sqrt(16);
+result = pow(2, 3);
+result = abs(-5);
+
+// Additional mathematical functions
+acos_result = acos(0.5);
+asin_result = asin(0.5);
+atan_result = atan(1);
+atan2_result = atan2(1, 1);
+sign_positive = sign(5);
+sign_negative = sign(-3);
+sign_zero = sign(0);
+natural_log = ln(2.718);
+base10_log = log(100);
+exponential = exp(1);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (call_expression
+                function: (identifier)
+                arguments: (argument_list
+                  (arguments
+                    (argument
+                      (number)))))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (unary_expression
+                operator: (unary_minus_operator)
+                operand: (number))))))))
+  (comment)
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (unary_expression
+                operator: (unary_minus_operator)
+                operand: (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))))))))
+
+==================
+Min Max Functions
+==================
+
+minimum = min(1, 2, 3);
+maximum = max([1, 2, 3]);
+minimum_list = min([5, 2, 8, 1]);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))
+            (argument
+              (number))
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number)
+                (number)))))))))
+
+==================
+String Functions
+==================
+
+text = str("Value: ", 42);
+length = len("hello");
+concatenated = concat("hello", " ", "world");
+character = chr(65);
+code = ord("A");
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string))
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string))
+            (argument
+              (string))
+            (argument
+              (string)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string))))))))
+
+==================
+Vector and List Functions
+==================
+
+vector_len = norm([3, 4]);
+cross_product = cross([1,0,0], [0,1,0]);
+list_length = len([1, 2, 3]);
+rounding = round(3.7);
+ceiling = ceil(3.2);
+flooring = floor(3.8);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number)))
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))))))))
+
+==================
+Echo Statements
+==================
+
+echo("Debug message");
+echo("Value:", x, "Result:", y);
+echo(str("Formatted: ", x));
+
+---
+
+(source_file
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (string)))))
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (string))
+        (argument
+          (identifier))
+        (argument
+          (string))
+        (argument
+          (identifier)))))
+  (statement
+    (echo_statement
+      (arguments
+        (argument
+          (call_expression
+            function: (identifier)
+            arguments: (argument_list
+              (arguments
+                (argument
+                  (string))
+                (argument
+                  (identifier))))))))))
+
+==================
+Assert Statements
+==================
+
+assert(x > 0, "x must be positive");
+assert(len(points) == 3);
+assert(is_num(value), str("Expected number, got: ", value));
+
+---
+
+(source_file
+  (statement
+    (assert_statement
+      condition: (binary_expression
+        left: (identifier)
+        operator: (greater_than_operator)
+        right: (number))
+      message: (string)))
+  (statement
+    (assert_statement
+      condition: (binary_expression
+        left: (call_expression
+          function: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (identifier)))))
+        operator: (equality_operator)
+        right: (number))))
+  (statement
+    (assert_statement
+      condition: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (identifier)))))
+      message: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string))
+            (argument
+              (identifier))))))))
+
+==================
+Type Checking Functions
+==================
+
+is_number = is_num(42);
+is_string = is_string("hello");
+is_boolean = is_bool(true);
+is_list = is_list([1, 2, 3]);
+is_undefined = is_undef(undefined_var);
+is_function_result = is_function(my_function);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (boolean)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (vector_expression
+                (number)
+                (number)
+                (number))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (identifier)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (identifier))))))))
+
+==================
+Echo Expressions
+==================
+
+function debug_calc(x) = echo("calculating", x) x * 2;
+result = echo("debug") 42;
+value = let(y = 10) echo("intermediate", y) y + 5;
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))))
+      value: (echo_expression
+        arguments: (arguments
+          (argument
+            (string))
+          (argument
+            (identifier)))
+        expression: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (echo_expression
+        arguments: (arguments
+          (argument
+            (string)))
+        expression: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (let_expression
+        (let_assignment
+          name: (identifier)
+          value: (number))
+        body: (echo_expression
+          arguments: (arguments
+            (argument
+              (string))
+            (argument
+              (identifier)))
+          expression: (binary_expression
+            left: (identifier)
+            operator: (addition_operator)
+            right: (number)))))))
+
+==================
+Assert Expressions
+==================
+
+function safe_divide(a, b) = assert(b != 0, "Division by zero") a / b;
+function positive_sqrt(x) = assert(x >= 0) sqrt(x);
+value = assert(x > 0, "x must be positive") x * 2;
+
+---
+
+(source_file
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))
+          (parameter_declaration
+            (identifier))))
+      value: (assert_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (inequality_operator)
+          right: (number))
+        message: (string)
+        expression: (binary_expression
+          left: (identifier)
+          operator: (division_operator)
+          right: (identifier)))))
+  (statement
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter_declarations
+          (parameter_declaration
+            (identifier))))
+      value: (assert_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (greater_equal_operator)
+          right: (number))
+        expression: (call_expression
+          function: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (identifier))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (assert_expression
+        condition: (binary_expression
+          left: (identifier)
+          operator: (greater_than_operator)
+          right: (number))
+        message: (string)
+        expression: (binary_expression
+          left: (identifier)
+          operator: (multiplication_operator)
+          right: (number))))))
+
+==================
+Trailing Commas in Vectors
+==================
+
+simple_trailing = [1, 2, 3,];
+nested_trailing = [[1, 2,], [3, 4,],];
+mixed_trailing = [1, [2, 3,], 4,];
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (number)
+        (number)
+        (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (vector_expression
+          (number)
+          (number))
+        (vector_expression
+          (number)
+          (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (number)
+        (vector_expression
+          (number)
+          (number))
+        (number)))))
+
+==================
+Decimal Numbers Starting with Dot
+==================
+
+fs_value = .1;
+fn_value = .01;
+mixed_vector = [.5, 1.0, .25];
+calculation = .1 + .2;
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (number)))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (number)
+        (number)
+        (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (binary_expression
+        left: (number)
+        operator: (addition_operator)
+        right: (number)))))
+
+==================
+Unary Plus Operator
+==================
+
+positive_value = +42;
+positive_vector = [+10, +20, +30];
+nested_positive = +(+5);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (unary_plus_operator)
+        operand: (number))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (vector_expression
+        (unary_expression
+          operator: (unary_plus_operator)
+          operand: (number))
+        (unary_expression
+          operator: (unary_plus_operator)
+          operand: (number))
+        (unary_expression
+          operator: (unary_plus_operator)
+          operand: (number)))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (unary_expression
+        operator: (unary_plus_operator)
+        operand: (parenthesized_expression
+          (unary_expression
+            operator: (unary_plus_operator)
+            operand: (number)))))))
+
+==================
+Single Statement Module Definitions
+==================
+
+module holeA() rotate([0,90,0]) holeObject();
+module holeB() rotate([90,0,0]) holeObject();
+module holeC() holeObject();
+
+---
+
+(source_file
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (vector_expression
+                  (number)
+                  (number)
+                  (number)))))
+          (statement
+            (module_instantiation
+              name: (identifier)
+              arguments: (argument_list)))))))
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list
+            (arguments
+              (argument
+                (vector_expression
+                  (number)
+                  (number)
+                  (number)))))
+          (statement
+            (module_instantiation
+              name: (identifier)
+              arguments: (argument_list)))))))
+  (statement
+    (module_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      body: (statement
+        (module_instantiation
+          name: (identifier)
+          arguments: (argument_list))))))
+
+==================
+Random and Search Functions
+==================
+
+random_val = rands(0, 1, 5);
+search_result = search("needle", ["hay", "needle", "stack"]);
+lookup_result = lookup(2.5, [[0,0], [1,1], [2,4], [3,9]]);
+
+---
+
+(source_file
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))
+            (argument
+              (number))
+            (argument
+              (number)))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (string))
+            (argument
+              (vector_expression
+                (string)
+                (string)
+                (string))))))))
+  (statement
+    (assignment_statement
+      name: (identifier)
+      value: (call_expression
+        function: (identifier)
+        arguments: (argument_list
+          (arguments
+            (argument
+              (number))
+            (argument
+              (vector_expression
+                (vector_expression
+                  (number)
+                  (number))
+                (vector_expression
+                  (number)
+                  (number))
+                (vector_expression
+                  (number)
+                  (number))
+                (vector_expression
+                  (number)
+                  (number))))))))))

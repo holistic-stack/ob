@@ -1,7 +1,7 @@
 
-# OpenSCAD Tree-sitter Grammar: LLM Development Guide
+# OpenSCAD Tree-sitter Grammar public/tree-sitter-openscad.wasm : LLM Development Guide
 
-This guide provides a developer-focused overview of the OpenSCAD Tree-sitter grammar project, designed to quickly onboard new contributors.
+This guide provides a developer-focused overview of the OpenSCAD Tree-sitter grammar project public/tree-sitter-openscad.wasm, designed to quickly onboard new contributors.
 
 ## 1. Project Overview
 
