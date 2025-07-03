@@ -126,9 +126,12 @@ sphere(10);
       expect(result.success).toBe(true);
 
       if (result.success) {
+        // Verify exact translation values - translate([10,0,0]) should result in position [10,0,0]
         expect(result.data.mesh.position.x).toBe(10);
         expect(result.data.mesh.position.y).toBe(0);
         expect(result.data.mesh.position.z).toBe(0);
+
+        logger.debug(`Translate applied successfully: position = [${result.data.mesh.position.x}, ${result.data.mesh.position.y}, ${result.data.mesh.position.z}]`);
       }
 
       logger.end('Simple translate test completed');
