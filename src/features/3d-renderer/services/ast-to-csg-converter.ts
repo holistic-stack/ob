@@ -86,7 +86,23 @@ const convertFunctionCallNode = async (
   logger.debug(`Converting function_call node:`, node);
 
   // Extract function name from function_call node
-  const functionName = (node as any).name || (node as any).functionName;
+  // Try multiple possible properties where the function name might be stored
+  const nodeWithProps = node as unknown as {
+    name?: string;
+    functionName?: string;
+    function?: string;
+  };
+
+  let functionName = nodeWithProps.name || nodeWithProps.functionName || nodeWithProps.function;
+
+  // If we got the full function call text, extract just the function name
+  if (functionName && typeof functionName === 'string') {
+    // Extract function name from patterns like "sphere(10)" -> "sphere"
+    const match = functionName.match(/^([a-zA-Z_][a-zA-Z0-9_]*)/);
+    if (match) {
+      functionName = match[1];
+    }
+  }
 
   if (!functionName) {
     return error(`Function call node missing function name: ${JSON.stringify(node)}`);
@@ -103,10 +119,11 @@ const convertFunctionCallNode = async (
   // For transformation operations that don't have children, create a simple placeholder mesh
   // This handles the case where the AST parsing doesn't correctly capture nested structures
   if (['translate', 'rotate', 'scale', 'mirror'].includes(functionName)) {
+    const nodeWithChildren = typedNode as unknown as { children?: ASTNode[] };
     const hasChildren =
-      'children' in typedNode &&
-      Array.isArray((typedNode as any).children) &&
-      (typedNode as any).children.length > 0;
+      nodeWithChildren.children &&
+      Array.isArray(nodeWithChildren.children) &&
+      nodeWithChildren.children.length > 0;
 
     if (!hasChildren) {
       logger.warn(`${functionName} node has no children, creating placeholder mesh`);
@@ -118,29 +135,48 @@ const convertFunctionCallNode = async (
   }
 
   // Route to the appropriate converter based on function name
+  // Use unknown type assertion to bypass strict typing for dynamic node conversion
+  const convertibleNode = typedNode as unknown;
+
   switch (functionName) {
     case 'cube':
-      return convertCubeToMesh(typedNode as any, material);
+      return convertCubeToMesh(convertibleNode as CubeNode, material);
     case 'sphere':
-      return convertSphereToMesh(typedNode as any, material);
+      return convertSphereToMesh(convertibleNode as SphereNode, material);
     case 'cylinder':
-      return convertCylinderToMesh(typedNode as any, material);
+      return convertCylinderToMesh(convertibleNode as CylinderNode, material);
     case 'translate':
-      return await convertTranslateNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertTranslateNode(
+        convertibleNode as TranslateNode,
+        material,
+        convertASTNodeToMesh
+      );
     case 'rotate':
-      return await convertRotateNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertRotateNode(convertibleNode as RotateNode, material, convertASTNodeToMesh);
     case 'scale':
-      return await convertScaleNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertScaleNode(convertibleNode as ScaleNode, material, convertASTNodeToMesh);
     case 'mirror':
-      return await convertMirrorNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertMirrorNode(convertibleNode as MirrorNode, material, convertASTNodeToMesh);
     case 'rotate_extrude':
-      return await convertRotateExtrudeNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertRotateExtrudeNode(
+        convertibleNode as RotateExtrudeNode,
+        material,
+        convertASTNodeToMesh
+      );
     case 'union':
-      return await convertUnionNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertUnionNode(convertibleNode as UnionNode, material, convertASTNodeToMesh);
     case 'intersection':
-      return await convertIntersectionNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertIntersectionNode(
+        convertibleNode as IntersectionNode,
+        material,
+        convertASTNodeToMesh
+      );
     case 'difference':
-      return await convertDifferenceNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertDifferenceNode(
+        convertibleNode as DifferenceNode,
+        material,
+        convertASTNodeToMesh
+      );
     default:
       return error(`Unsupported function in function_call node: ${functionName}`);
   }

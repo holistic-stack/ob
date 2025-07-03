@@ -19,7 +19,8 @@ graph TD
     A[User writes OpenSCAD code in Monaco Editor] --> B{Zustand Store};
     B --> C{OpenSCAD Parser};
     C --> D[Abstract Syntax Tree (AST)];
-    D --> E{AST-to-CSG Converter};
+    D --> B;
+    B --> E{AST-to-CSG Converter};
     E --> F[3D Geometry (Meshes)];
     F --> G{React Three Fiber Renderer};
     G --> H[Interactive 3D Scene];

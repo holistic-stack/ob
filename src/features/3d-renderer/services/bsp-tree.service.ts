@@ -156,14 +156,22 @@ export class BSPTreeNode implements BSPNodeData {
 
         // Swap front and back for this node (using type assertion for readonly properties)
         const temp = node.front;
-        (node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).front = node.back;
-        (node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).back = temp;
+        (
+          node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }
+        ).front = node.back;
+        (
+          node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }
+        ).back = temp;
       }
 
       // Swap front and back (using type assertion for readonly properties)
       const temp = this.front;
-      (this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).front = this.back;
-      (this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).back = temp;
+      (
+        this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }
+      ).front = this.back;
+      (
+        this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }
+      ).back = temp;
 
       return success(undefined);
     } catch (err) {

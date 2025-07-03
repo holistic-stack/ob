@@ -213,7 +213,7 @@ export const useAppStore = create<AppStore>()(
             saveDelayMs: 1000,
           },
         };
-        return {
+        const store = {
           ...createInitialState(defaultStoreOptions),
           ...createEditorSlice(set, get, {
             parserService,
@@ -224,6 +224,17 @@ export const useAppStore = create<AppStore>()(
           ...createPerformanceSlice(set, get),
           ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
         };
+
+        // Trigger initial parsing after store creation
+        setTimeout(() => {
+          const currentState = get();
+          if (currentState.editor.code.length > 0 && currentState.parsing.ast.length === 0) {
+            logger.init('Auto-triggering initial parsing of default code');
+            void currentState.parseCode(currentState.editor.code);
+          }
+        }, 100); // Small delay to ensure store is fully initialized
+
+        return store;
       }),
       {
         name: 'openscad-app-store',
