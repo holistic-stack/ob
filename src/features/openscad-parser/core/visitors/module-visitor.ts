@@ -9,7 +9,13 @@
 
 import type { Node } from 'web-tree-sitter';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode, FunctionCallNode, LiteralNode, ModuleDefinitionNode, VariableNode } from '../ast-types.js';
+import type {
+  ASTNode,
+  FunctionCallNode,
+  LiteralNode,
+  ModuleDefinitionNode,
+  VariableNode,
+} from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
 
@@ -223,18 +229,37 @@ export class ModuleVisitor extends BaseASTVisitor {
   private isBuiltInModule(moduleName: string): boolean {
     const builtInModules = [
       // Primitive shapes
-      'cube', 'sphere', 'cylinder', 'polyhedron',
+      'cube',
+      'sphere',
+      'cylinder',
+      'polyhedron',
       // 2D shapes
-      'circle', 'square', 'polygon', 'text',
+      'circle',
+      'square',
+      'polygon',
+      'text',
       // Transformations
-      'translate', 'rotate', 'scale', 'mirror', 'resize',
-      'multmatrix', 'color', 'offset',
+      'translate',
+      'rotate',
+      'scale',
+      'mirror',
+      'resize',
+      'multmatrix',
+      'color',
+      'offset',
       // Boolean operations
-      'union', 'difference', 'intersection', 'hull', 'minkowski',
+      'union',
+      'difference',
+      'intersection',
+      'hull',
+      'minkowski',
       // Extrusion
-      'linear_extrude', 'rotate_extrude',
+      'linear_extrude',
+      'rotate_extrude',
       // Special
-      'projection', 'surface', 'import'
+      'projection',
+      'surface',
+      'import',
     ];
 
     return builtInModules.includes(moduleName);

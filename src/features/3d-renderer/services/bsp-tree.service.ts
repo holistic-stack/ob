@@ -11,6 +11,15 @@ import { error, success } from '../../../shared/utils/functional/result.js';
 import type { BSPNodeData, PlaneData, PolygonData } from '../types/geometry.types.js';
 import { clonePolygon, isValidPolygon, splitPolygonByPlane } from '../utils/geometry-utils.js';
 
+/**
+ * Configuration for BSP tree operations to prevent stack overflow
+ */
+const BSP_CONFIG = {
+  MAX_RECURSION_DEPTH: 50,
+  MAX_POLYGONS_PER_NODE: 1000,
+  MAX_CLIP_ITERATIONS: 100,
+} as const;
+
 const bspNodeLogger = createLogger('BSPTreeNode');
 const bspServiceLogger = createLogger('BSPTreeService');
 
@@ -99,29 +108,62 @@ export class BSPTreeNode implements BSPNodeData {
         };
       }
 
-      // Recursively invert children
-      if (this.front) {
-        const frontResult = this.front.invert();
-        if (!frontResult.success) return frontResult;
+      // Use iterative approach for children to prevent stack overflow
+      const stack: BSPTreeNode[] = [];
+      if (this.front) stack.push(this.front);
+      if (this.back) stack.push(this.back);
+
+      while (stack.length > 0) {
+        const node = stack.pop();
+        if (!node) continue;
+
+        // Process this node's polygons
+        for (let i = 0; i < node.polygons.length; i++) {
+          const polygon = node.polygons[i];
+          if (!polygon?.vertices || !polygon?.plane) {
+            continue;
+          }
+
+          node.polygons[i] = {
+            ...polygon,
+            vertices: polygon.vertices
+              .slice()
+              .reverse()
+              .map((v) => ({
+                ...v,
+                normal: v.normal.clone().negate(),
+              })),
+            plane: {
+              ...polygon.plane,
+              normal: polygon.plane.normal.clone().negate(),
+              w: -polygon.plane.w,
+            },
+            shared: polygon.shared ?? null,
+          };
+        }
+
+        // Flip plane
+        if (node.plane) {
+          node.plane = {
+            normal: node.plane.normal.clone().negate(),
+            w: -node.plane.w,
+          };
+        }
+
+        // Add children to stack
+        if (node.front) stack.push(node.front);
+        if (node.back) stack.push(node.back);
+
+        // Swap front and back for this node (using type assertion for readonly properties)
+        const temp = node.front;
+        (node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).front = node.back;
+        (node as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).back = temp;
       }
 
-      if (this.back) {
-        const backResult = this.back.invert();
-        if (!backResult.success) return backResult;
-      }
-
-      // Swap front and back
+      // Swap front and back (using type assertion for readonly properties)
       const temp = this.front;
-      if (this.back) {
-        this.front = this.back;
-      } else {
-        (this as Record<string, unknown>).front = undefined;
-      }
-      if (temp) {
-        this.back = temp;
-      } else {
-        (this as Record<string, unknown>).back = undefined;
-      }
+      (this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).front = this.back;
+      (this as unknown as { front?: BSPTreeNode | undefined; back?: BSPTreeNode | undefined }).back = temp;
 
       return success(undefined);
     } catch (err) {
@@ -134,10 +176,24 @@ export class BSPTreeNode implements BSPNodeData {
   /**
    * Remove all polygons that are inside this BSP tree
    */
-  clipPolygons(polygons: PolygonData[]): Result<PolygonData[], string> {
-    bspNodeLogger.debug(`Clipping ${polygons.length} polygons`);
+  clipPolygons(polygons: PolygonData[], depth: number = 0): Result<PolygonData[], string> {
+    bspNodeLogger.debug(`Clipping ${polygons.length} polygons at depth ${depth}`);
 
     try {
+      // Prevent stack overflow with recursion depth limit
+      if (depth > BSP_CONFIG.MAX_RECURSION_DEPTH) {
+        bspNodeLogger.warn(
+          `Recursion depth limit reached (${BSP_CONFIG.MAX_RECURSION_DEPTH}), returning original polygons`
+        );
+        return success([...polygons]);
+      }
+
+      // Handle large polygon sets iteratively to prevent memory issues
+      if (polygons.length > BSP_CONFIG.MAX_POLYGONS_PER_NODE) {
+        bspNodeLogger.warn(`Large polygon set (${polygons.length}), processing in chunks`);
+        return this.clipPolygonsIteratively(polygons, depth);
+      }
+
       if (!this.plane) {
         return success([...polygons]);
       }
@@ -157,13 +213,13 @@ export class BSPTreeNode implements BSPNodeData {
       }
 
       if (this.front) {
-        const frontClipResult = this.front.clipPolygons(front);
+        const frontClipResult = this.front.clipPolygons(front, depth + 1);
         if (!frontClipResult.success) return frontClipResult;
         front = frontClipResult.data;
       }
 
       if (this.back) {
-        const backClipResult = this.back.clipPolygons(back);
+        const backClipResult = this.back.clipPolygons(back, depth + 1);
         if (!backClipResult.success) return backClipResult;
         back = backClipResult.data;
       } else {
@@ -172,40 +228,114 @@ export class BSPTreeNode implements BSPNodeData {
 
       return success(front.concat(back));
     } catch (err) {
-      const errorMessage = `Polygon clipping failed: ${err instanceof Error ? err.message : String(err)}`;
+      const errorMessage = `Polygon clipping failed at depth ${depth}: ${err instanceof Error ? err.message : String(err)}`;
       bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
   }
 
   /**
+   * Process large polygon sets iteratively to prevent stack overflow
+   */
+  private clipPolygonsIteratively(
+    polygons: PolygonData[],
+    depth: number
+  ): Result<PolygonData[], string> {
+    const chunkSize = Math.floor(BSP_CONFIG.MAX_POLYGONS_PER_NODE / 2);
+    const results: PolygonData[] = [];
+
+    for (let i = 0; i < polygons.length; i += chunkSize) {
+      const chunk = polygons.slice(i, i + chunkSize);
+      const chunkResult = this.clipPolygons(chunk, depth);
+
+      if (!chunkResult.success) {
+        return chunkResult;
+      }
+
+      results.push(...chunkResult.data);
+    }
+
+    return success(results);
+  }
+
+  /**
    * Remove all polygons in this BSP tree that are inside the other BSP tree
    */
-  clipTo(bsp: BSPTreeNode): Result<void, string> {
-    bspNodeLogger.debug('Clipping to another BSP tree');
+  clipTo(bsp: BSPTreeNode, depth: number = 0): Result<void, string> {
+    bspNodeLogger.debug(`Clipping to another BSP tree at depth ${depth}`);
 
     try {
+      // Prevent stack overflow with recursion depth limit
+      if (depth > BSP_CONFIG.MAX_RECURSION_DEPTH) {
+        bspNodeLogger.warn(
+          `ClipTo recursion depth limit reached (${BSP_CONFIG.MAX_RECURSION_DEPTH}), stopping recursion`
+        );
+        return success(undefined);
+      }
+
       const clipResult = bsp.clipPolygons(this.polygons);
-      if (!clipResult.success) return clipResult;
+      if (!clipResult.success) return error(`ClipPolygons failed: ${clipResult.error}`);
 
       this.polygons = clipResult.data;
 
+      // Use iterative approach for deep trees
+      if (depth > BSP_CONFIG.MAX_RECURSION_DEPTH / 2) {
+        return this.clipToIteratively(bsp, depth);
+      }
+
       if (this.front) {
-        const frontResult = this.front.clipTo(bsp);
-        if (!frontResult.success) return error(`Front clipTo failed: ${frontResult.error}`);
+        const frontResult = this.front.clipTo(bsp, depth + 1);
+        if (!frontResult.success)
+          return error(`Front clipTo failed at depth ${depth}: ${frontResult.error}`);
       }
 
       if (this.back) {
-        const backResult = this.back.clipTo(bsp);
-        if (!backResult.success) return error(`Back clipTo failed: ${backResult.error}`);
+        const backResult = this.back.clipTo(bsp, depth + 1);
+        if (!backResult.success)
+          return error(`Back clipTo failed at depth ${depth}: ${backResult.error}`);
       }
 
       return success(undefined);
     } catch (err) {
-      const errorMessage = `BSP tree clipping failed: ${err instanceof Error ? err.message : String(err)}`;
+      const errorMessage = `BSP tree clipping failed at depth ${depth}: ${err instanceof Error ? err.message : String(err)}`;
       bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
+  }
+
+  /**
+   * Iterative clipTo implementation to prevent stack overflow
+   */
+  private clipToIteratively(bsp: BSPTreeNode, startDepth: number): Result<void, string> {
+    const stack: Array<{ node: BSPTreeNode; depth: number }> = [];
+
+    if (this.front) stack.push({ node: this.front, depth: startDepth + 1 });
+    if (this.back) stack.push({ node: this.back, depth: startDepth + 1 });
+
+    let iterations = 0;
+    while (stack.length > 0 && iterations < BSP_CONFIG.MAX_CLIP_ITERATIONS) {
+      const { node, depth } = stack.pop()!;
+      iterations++;
+
+      const clipResult = bsp.clipPolygons(node.polygons);
+      if (!clipResult.success) {
+        return error(`Iterative clipTo failed at iteration ${iterations}: ${clipResult.error}`);
+      }
+
+      node.polygons = clipResult.data;
+
+      // Add children to stack if within depth limits
+      if (depth < BSP_CONFIG.MAX_RECURSION_DEPTH) {
+        if (node.front) stack.push({ node: node.front, depth: depth + 1 });
+        if (node.back) stack.push({ node: node.back, depth: depth + 1 });
+      }
+    }
+
+    if (iterations >= BSP_CONFIG.MAX_CLIP_ITERATIONS) {
+      bspNodeLogger.warn(`ClipTo iteration limit reached (${BSP_CONFIG.MAX_CLIP_ITERATIONS})`);
+    }
+
+    return success(undefined);
   }
 
   /**

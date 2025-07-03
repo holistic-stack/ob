@@ -255,7 +255,11 @@ export function resolveWasmPath(urlPath: string): string {
   ];
 
   // Try all strategies in order of preference (public directory first, then modules, then find-up)
-  const allStrategies = [...publicDirectoryStrategies, ...moduleResolutionStrategies, ...findUpStrategies];
+  const allStrategies = [
+    ...publicDirectoryStrategies,
+    ...moduleResolutionStrategies,
+    ...findUpStrategies,
+  ];
 
   for (const [index, strategy] of allStrategies.entries()) {
     const resolvedPath = strategy();
@@ -363,17 +367,26 @@ export async function initializeCSGForTests(): Promise<void> {
     const mockMatrixService = {
       ensureInitialized: () => Promise.resolve({ success: true }),
       getConversionService: () => ({
-        convertMatrix4ToMLMatrix: () => Promise.resolve({
-          success: true,
-          data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
-        }),
+        convertMatrix4ToMLMatrix: () =>
+          Promise.resolve({
+            success: true,
+            data: {
+              data: [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+              ],
+            },
+          }),
       }),
       getValidationService: () => null,
       getTelemetryService: () => null,
     };
 
-    (globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }).__MOCK_MATRIX_SERVICE__ =
-      mockMatrixService;
+    (
+      globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }
+    ).__MOCK_MATRIX_SERVICE__ = mockMatrixService;
 
     logger.debug('✅ Mock Matrix Service initialized for testing');
   } catch (error) {

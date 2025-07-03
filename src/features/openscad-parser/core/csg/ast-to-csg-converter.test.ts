@@ -32,7 +32,14 @@ vi.mock('../../../3d-renderer/services/matrix-service-container.js', () => ({
     getConversionService: vi.fn().mockReturnValue({
       convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
         success: true,
-        data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        data: {
+          data: [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+          ],
+        },
       }),
     }),
     getValidationService: vi.fn().mockReturnValue(null),
@@ -43,7 +50,14 @@ vi.mock('../../../3d-renderer/services/matrix-service-container.js', () => ({
     getConversionService: vi.fn().mockReturnValue({
       convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
         success: true,
-        data: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        data: {
+          data: [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+          ],
+        },
       }),
     }),
     getValidationService: vi.fn().mockReturnValue(null),
@@ -56,18 +70,42 @@ vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
     convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
       success: true,
       data: {
-        result: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        result: {
+          data: [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+          ],
+        },
         validation: undefined,
-        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'convert' },
+        performance: {
+          executionTime: 1,
+          memoryUsed: 100,
+          cacheHit: false,
+          operationType: 'convert',
+        },
         metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
       },
     }),
     performRobustInversion: vi.fn().mockResolvedValue({
       success: true,
       data: {
-        result: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
+        result: {
+          data: [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+          ],
+        },
         validation: undefined,
-        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'invert' },
+        performance: {
+          executionTime: 1,
+          memoryUsed: 100,
+          cacheHit: false,
+          operationType: 'invert',
+        },
         metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
       },
     }),
@@ -76,7 +114,12 @@ vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
       data: {
         result: new THREE.Matrix3(),
         validation: undefined,
-        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'normal' },
+        performance: {
+          executionTime: 1,
+          memoryUsed: 100,
+          cacheHit: false,
+          operationType: 'normal',
+        },
         metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
       },
     }),

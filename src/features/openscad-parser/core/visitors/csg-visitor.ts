@@ -367,10 +367,11 @@ export class CSGVisitor extends BaseASTVisitor {
     }
 
     // Find the block statement or body that contains the children
-    const blockNode = this.findChildOfType(node, 'block_statement') ||
-                      this.findChildOfType(node, 'body') ||
-                      this.findChildOfType(node, 'statement_list') ||
-                      this.findChildOfType(node, 'block');
+    const blockNode =
+      this.findChildOfType(node, 'block_statement') ||
+      this.findChildOfType(node, 'body') ||
+      this.findChildOfType(node, 'statement_list') ||
+      this.findChildOfType(node, 'block');
 
     if (!blockNode) {
       logger.debug('No block statement found in CSG operation');
@@ -385,8 +386,13 @@ export class CSGVisitor extends BaseASTVisitor {
       if (!child) continue;
 
       // Skip punctuation and whitespace
-      if (child.type === '{' || child.type === '}' || child.type === ';' ||
-          child.type === 'comment' || child.type === 'whitespace') {
+      if (
+        child.type === '{' ||
+        child.type === '}' ||
+        child.type === ';' ||
+        child.type === 'comment' ||
+        child.type === 'whitespace'
+      ) {
         continue;
       }
 
@@ -423,10 +429,10 @@ export class CSGVisitor extends BaseASTVisitor {
    */
   private isValidChildNode(node: Node): boolean {
     const validChildTypes = [
-      'module_instantiation',  // cube(), sphere(), union(), etc.
-      'function_call',         // function calls
-      'assignment',            // variable assignments
-      'expression_statement',  // expression statements
+      'module_instantiation', // cube(), sphere(), union(), etc.
+      'function_call', // function calls
+      'assignment', // variable assignments
+      'expression_statement', // expression statements
     ];
     return validChildTypes.includes(node.type);
   }
@@ -474,7 +480,7 @@ export class CSGVisitor extends BaseASTVisitor {
         const cylinderNode: CylinderNode = {
           type: 'cylinder',
           h: 10, // Default height - should be parsed from arguments
-          r: 5,  // Default radius - should be parsed from arguments
+          r: 5, // Default radius - should be parsed from arguments
           center: false,
           location,
         };

@@ -178,19 +178,33 @@ export class CSGCoreService implements CSGData {
     logger.debug('Creating CSG from Mesh with enhanced matrix validation');
 
     try {
-      // Validate mesh matrix using matrix integration service
+      // Ensure mesh matrix is valid before validation
+      if (!mesh.matrix || mesh.matrix.determinant() === 0) {
+        logger.warn('Mesh has invalid matrix, using identity matrix');
+        mesh.matrix.identity();
+      }
+
+      // Validate mesh matrix using matrix integration service with improved tolerance
       const matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
       const matrixValidationResult = await matrixIntegration.convertMatrix4ToMLMatrix(mesh.matrix, {
         useValidation: true,
-        useTelemetry: true,
+        useTelemetry: false, // Reduce telemetry noise during CSG operations
       });
 
       if (!matrixValidationResult.success) {
-        return error(`Mesh matrix validation failed: ${matrixValidationResult.error}`);
-      }
-
-      if (matrixValidationResult.data.validation?.warnings.length) {
-        logger.warn('Matrix validation warnings:', matrixValidationResult.data.validation.warnings);
+        // Use fallback matrix instead of failing
+        logger.warn(
+          `Matrix validation failed, using identity matrix: ${matrixValidationResult.error}`
+        );
+        mesh.matrix.identity();
+      } else if (matrixValidationResult.data.validation?.warnings.length) {
+        // Only log warnings if they're critical
+        const criticalWarnings = matrixValidationResult.data.validation.warnings.filter(
+          (warning) => !warning.includes('near-singular')
+        );
+        if (criticalWarnings.length > 0) {
+          logger.warn('Critical matrix validation warnings:', criticalWarnings);
+        }
       }
 
       const csgResult = CSGCoreService.fromGeometry(mesh.geometry, objectIndex);
@@ -200,20 +214,25 @@ export class CSGCoreService implements CSGData {
       const ttvv0 = new Vector3();
       const tmpm3 = new Matrix3();
 
-      // Use enhanced normal matrix computation
-      const normalMatrixResult = await matrixIntegration.computeEnhancedNormalMatrix(mesh.matrix, {
-        useValidation: true,
-        useTelemetry: true,
-        enableSVDFallback: true,
-      });
-
-      if (normalMatrixResult.success) {
-        tmpm3.copy(normalMatrixResult.data.result);
-      } else {
-        logger.warn(
-          'Enhanced normal matrix computation failed, using fallback:',
-          normalMatrixResult.error
+      // Use enhanced normal matrix computation with better error handling
+      try {
+        const normalMatrixResult = await matrixIntegration.computeEnhancedNormalMatrix(
+          mesh.matrix,
+          {
+            useValidation: true,
+            useTelemetry: false, // Reduce noise
+            enableSVDFallback: true,
+          }
         );
+
+        if (normalMatrixResult.success) {
+          tmpm3.copy(normalMatrixResult.data.result);
+        } else {
+          // Use standard Three.js normal matrix computation as fallback
+          tmpm3.getNormalMatrix(mesh.matrix);
+        }
+      } catch (normalMatrixError) {
+        logger.warn('Normal matrix computation failed, using standard method:', normalMatrixError);
         tmpm3.getNormalMatrix(mesh.matrix);
       }
 

@@ -28,8 +28,20 @@ vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
     convertMatrix4ToMLMatrix: vi.fn().mockResolvedValue({
       success: true,
       data: {
-        result: { data: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] },
-        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'convert' },
+        result: {
+          data: [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+          ],
+        },
+        performance: {
+          executionTime: 1,
+          memoryUsed: 100,
+          cacheHit: false,
+          operationType: 'convert',
+        },
         metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
       },
     }),
@@ -37,7 +49,12 @@ vi.mock('../../../3d-renderer/services/matrix-integration.service.js', () => ({
       success: true,
       data: {
         result: { elements: [1, 0, 0, 0, 1, 0, 0, 0, 1] },
-        performance: { executionTime: 1, memoryUsed: 100, cacheHit: false, operationType: 'normal' },
+        performance: {
+          executionTime: 1,
+          memoryUsed: 100,
+          cacheHit: false,
+          operationType: 'normal',
+        },
         metadata: { timestamp: Date.now(), operationId: 'test', warnings: [] },
       },
     }),
@@ -57,17 +74,23 @@ vi.mock('../../../3d-renderer/services/csg-operations.js', () => {
       color: { r: 1, g: 1, b: 1 },
     },
     position: {
-      x: 0, y: 0, z: 0,
+      x: 0,
+      y: 0,
+      z: 0,
       set: vi.fn(),
       copy: vi.fn(),
     },
     rotation: {
-      x: 0, y: 0, z: 0,
+      x: 0,
+      y: 0,
+      z: 0,
       set: vi.fn(),
       copy: vi.fn(),
     },
     scale: {
-      x: 1, y: 1, z: 1,
+      x: 1,
+      y: 1,
+      z: 1,
       set: vi.fn(),
       copy: vi.fn(),
     },

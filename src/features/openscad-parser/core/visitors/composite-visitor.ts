@@ -98,7 +98,9 @@ export class CompositeVisitor extends BaseASTVisitor {
       for (let i = 0; i < node.childCount; i++) {
         const child = node.child(i);
         if (child && !this.isNonSemanticNode(child)) {
-          logger.debug(`Found statement content: ${child.type} at ${child.startPosition.row}:${child.startPosition.column}`);
+          logger.debug(
+            `Found statement content: ${child.type} at ${child.startPosition.row}:${child.startPosition.column}`
+          );
 
           // Delegate the actual content to the appropriate visitor
           const result = this.visitNode(child);
@@ -228,16 +230,24 @@ export class CompositeVisitor extends BaseASTVisitor {
     const nonSemanticTypes = [
       'comment',
       'whitespace',
-      '(', ')', '{', '}', '[', ']', ';', ',',
+      '(',
+      ')',
+      '{',
+      '}',
+      '[',
+      ']',
+      ';',
+      ',',
       'line_comment',
       'block_comment',
       '\n',
       ' ',
-      '\t'
+      '\t',
     ];
 
-    return nonSemanticTypes.includes(node.type) ||
-           (node.type.length === 1 && /[^\w]/.test(node.type)); // Single non-word characters
+    return (
+      nonSemanticTypes.includes(node.type) || (node.type.length === 1 && /[^\w]/.test(node.type))
+    ); // Single non-word characters
   }
 
   /**
