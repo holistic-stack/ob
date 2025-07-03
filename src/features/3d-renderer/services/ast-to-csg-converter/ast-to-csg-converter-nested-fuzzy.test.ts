@@ -12,18 +12,18 @@
  * - Performance targets (<200ms for complex nested operations)
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import * as fc from 'fast-check';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
 import {
-  convertASTNodeToCSG,
-  setSourceCodeForExtraction,
   clearSourceCodeForExtraction,
-  extractTranslateParameters,
+  convertASTNodeToCSG,
   extractRotateParameters,
-  extractScaleParameters
+  extractScaleParameters,
+  extractTranslateParameters,
+  setSourceCodeForExtraction,
 } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterNestedFuzzyTest');
@@ -31,51 +31,50 @@ const logger = createLogger('ASTToCSGConverterNestedFuzzyTest');
 /**
  * Custom generators for parser-friendly nested operations
  */
-const parserFriendlyCoordinate = () => fc.tuple(
-  fc.integer({ min: -20, max: 20 }),
-  fc.integer({ min: -20, max: 20 }),
-  fc.integer({ min: -20, max: 20 })
-);
-
-const parserFriendlyAngle = () => fc.oneof(
-  fc.integer({ min: -180, max: 180 }), // Integer degrees
-  fc.float({ min: -180.0, max: 180.0, noNaN: true }).map(n => Math.round(n * 10) / 10) // One decimal place
-);
-
-const parserFriendlyAngleVector = () => fc.tuple(
-  parserFriendlyAngle(),
-  parserFriendlyAngle(),
-  parserFriendlyAngle()
-);
-
-const parserFriendlyScaleFactor = () => fc.oneof(
-  fc.float({ min: 0.5, max: 3.0, noNaN: true }).map(n => Math.round(n * 10) / 10), // Single scale factor
+const parserFriendlyCoordinate = () =>
   fc.tuple(
-    fc.float({ min: 0.5, max: 3.0, noNaN: true }).map(n => Math.round(n * 10) / 10),
-    fc.float({ min: 0.5, max: 3.0, noNaN: true }).map(n => Math.round(n * 10) / 10),
-    fc.float({ min: 0.5, max: 3.0, noNaN: true }).map(n => Math.round(n * 10) / 10)
-  ) // Scale vector [x, y, z]
-);
+    fc.integer({ min: -20, max: 20 }),
+    fc.integer({ min: -20, max: 20 }),
+    fc.integer({ min: -20, max: 20 })
+  );
 
-const parserFriendlyPrimitive = () => fc.oneof(
-  fc.constant('cube(5)'),
-  fc.constant('sphere(3)'),
-  fc.constant('cylinder(h=6, r=2)'),
-  fc.constant('cube([3, 4, 5])'),
-  fc.constant('sphere(r=4)')
-);
+const parserFriendlyAngle = () =>
+  fc.oneof(
+    fc.integer({ min: -180, max: 180 }), // Integer degrees
+    fc
+      .float({ min: -180.0, max: 180.0, noNaN: true })
+      .map((n) => Math.round(n * 10) / 10) // One decimal place
+  );
 
-const parserFriendlyBooleanOperation = () => fc.oneof(
-  fc.constant('union'),
-  fc.constant('intersection'),
-  fc.constant('difference')
-);
+const parserFriendlyAngleVector = () =>
+  fc.tuple(parserFriendlyAngle(), parserFriendlyAngle(), parserFriendlyAngle());
 
-const parserFriendlyTransformation = () => fc.oneof(
-  fc.constant('translate'),
-  fc.constant('rotate'),
-  fc.constant('scale')
-);
+const parserFriendlyScaleFactor = () =>
+  fc.oneof(
+    fc
+      .float({ min: 0.5, max: 3.0, noNaN: true })
+      .map((n) => Math.round(n * 10) / 10), // Single scale factor
+    fc.tuple(
+      fc.float({ min: 0.5, max: 3.0, noNaN: true }).map((n) => Math.round(n * 10) / 10),
+      fc.float({ min: 0.5, max: 3.0, noNaN: true }).map((n) => Math.round(n * 10) / 10),
+      fc.float({ min: 0.5, max: 3.0, noNaN: true }).map((n) => Math.round(n * 10) / 10)
+    ) // Scale vector [x, y, z]
+  );
+
+const parserFriendlyPrimitive = () =>
+  fc.oneof(
+    fc.constant('cube(5)'),
+    fc.constant('sphere(3)'),
+    fc.constant('cylinder(h=6, r=2)'),
+    fc.constant('cube([3, 4, 5])'),
+    fc.constant('sphere(r=4)')
+  );
+
+const parserFriendlyBooleanOperation = () =>
+  fc.oneof(fc.constant('union'), fc.constant('intersection'), fc.constant('difference'));
+
+const parserFriendlyTransformation = () =>
+  fc.oneof(fc.constant('translate'), fc.constant('rotate'), fc.constant('scale'));
 
 describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () => {
   let parserService: UnifiedParserService;
@@ -94,30 +93,32 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
           parserFriendlyAngleVector(),
           parserFriendlyScaleFactor(),
           ([tx, ty, tz], [rx, ry, rz], scale) => {
-            const scaleStr = Array.isArray(scale) ? `[${scale[0]}, ${scale[1]}, ${scale[2]}]` : scale.toString();
+            const scaleStr = Array.isArray(scale)
+              ? `[${scale[0]}, ${scale[1]}, ${scale[2]}]`
+              : scale.toString();
             const code = `translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) scale(${scaleStr}) cube(5);`;
-            
+
             // Extract each transformation parameter
             const translateParams = extractTranslateParameters(code);
             const rotateParams = extractRotateParameters(code);
             const scaleParams = extractScaleParameters(code);
-            
+
             expect(translateParams).not.toBeNull();
             expect(rotateParams).not.toBeNull();
             expect(scaleParams).not.toBeNull();
-            
+
             if (translateParams) {
               expect(translateParams[0]).toBe(tx);
               expect(translateParams[1]).toBe(ty);
               expect(translateParams[2]).toBe(tz);
             }
-            
+
             if (rotateParams && Array.isArray(rotateParams)) {
               expect(rotateParams[0]).toBeCloseTo(rx, 2);
               expect(rotateParams[1]).toBeCloseTo(ry, 2);
               expect(rotateParams[2]).toBeCloseTo(rz, 2);
             }
-            
+
             if (scaleParams) {
               if (Array.isArray(scale) && Array.isArray(scaleParams)) {
                 expect(scaleParams[0]).toBeCloseTo(scale[0], 2);
@@ -145,9 +146,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
   ${primitive1};
   ${primitive2};
 }`;
-            
+
             const translateParams = extractTranslateParameters(code);
-            
+
             expect(translateParams).not.toBeNull();
             if (translateParams) {
               expect(translateParams[0]).toBe(tx);
@@ -170,42 +171,48 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
           parserFriendlyPrimitive(),
           async ([tx, ty, tz], [rx, ry, rz], primitive) => {
             const code = `translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive};`;
-            
-            logger.debug(`Testing nested translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive} conversion`);
-            
+
+            logger.debug(
+              `Testing nested translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive} conversion`
+            );
+
             // Parse the code
             const parseResult = await parserService.parseDocument(code);
             if (!parseResult.success) {
               logger.warn(`Parse failed for nested operations: ${parseResult.error}`);
               return; // Skip this test case
             }
-            
+
             const ast = parseResult.data.ast;
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for nested operations`);
               return; // Skip this test case
             }
-            
+
             const nestedNode = ast[0];
             if (!nestedNode) return;
-            
+
             // Set source code for extraction
             setSourceCodeForExtraction(code);
-            
+
             try {
               // Convert to CSG
               const result = await convertASTNodeToCSG(nestedNode as ASTNode, 0);
-              
+
               if (result.success && result.data.mesh) {
                 const mesh = result.data.mesh;
                 expect(mesh).toBeDefined();
-                
+
                 // Verify the mesh has been transformed (should have position and rotation applied)
                 expect(mesh.matrix).toBeDefined();
-                
-                logger.debug(`✅ Nested translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive} applied correctly`);
+
+                logger.debug(
+                  `✅ Nested translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive} applied correctly`
+                );
               } else {
-                logger.warn(`Conversion failed for nested operations: ${result.success ? 'no mesh' : result.error}`);
+                logger.warn(
+                  `Conversion failed for nested operations: ${result.success ? 'no mesh' : result.error}`
+                );
               }
             } finally {
               // Always clear source code
@@ -229,40 +236,44 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
   ${primitive1};
   ${primitive2};
 }`;
-            
+
             logger.debug(`Testing nested translate([${tx}, ${ty}, ${tz}]) ${boolOp}() conversion`);
-            
+
             // Parse the code
             const parseResult = await parserService.parseDocument(code);
             if (!parseResult.success) {
               logger.warn(`Parse failed for nested ${boolOp} operations: ${parseResult.error}`);
               return; // Skip this test case
             }
-            
+
             const ast = parseResult.data.ast;
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for nested ${boolOp} operations`);
               return; // Skip this test case
             }
-            
+
             const nestedNode = ast[0];
             if (!nestedNode) return;
-            
+
             // Set source code for extraction
             setSourceCodeForExtraction(code);
-            
+
             try {
               // Convert to CSG
               const result = await convertASTNodeToCSG(nestedNode as ASTNode, 0);
-              
+
               if (result.success && result.data.mesh) {
                 const mesh = result.data.mesh;
                 expect(mesh).toBeDefined();
                 expect(mesh.geometry).toBeDefined();
-                
-                logger.debug(`✅ Nested translate([${tx}, ${ty}, ${tz}]) ${boolOp}() applied correctly`);
+
+                logger.debug(
+                  `✅ Nested translate([${tx}, ${ty}, ${tz}]) ${boolOp}() applied correctly`
+                );
               } else {
-                logger.warn(`Conversion failed for nested ${boolOp} operations: ${result.success ? 'no mesh' : result.error}`);
+                logger.warn(
+                  `Conversion failed for nested ${boolOp} operations: ${result.success ? 'no mesh' : result.error}`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();
@@ -281,7 +292,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
           parserFriendlyScaleFactor(),
           parserFriendlyPrimitive(),
           async ([tx, ty, tz], [rx, ry, rz], scale, primitive) => {
-            const scaleStr = Array.isArray(scale) ? `[${scale[0]}, ${scale[1]}, ${scale[2]}]` : scale.toString();
+            const scaleStr = Array.isArray(scale)
+              ? `[${scale[0]}, ${scale[1]}, ${scale[2]}]`
+              : scale.toString();
             const code = `translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) scale(${scaleStr}) ${primitive};`;
 
             logger.debug(`Testing deeply nested transformation chain conversion`);
@@ -289,7 +302,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
             // Parse the code
             const parseResult = await parserService.parseDocument(code);
             if (!parseResult.success) {
-              logger.warn(`Parse failed for deeply nested transformation chain: ${parseResult.error}`);
+              logger.warn(
+                `Parse failed for deeply nested transformation chain: ${parseResult.error}`
+              );
               return; // Skip this test case
             }
 
@@ -316,7 +331,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
                 logger.debug(`✅ Deeply nested transformation chain applied correctly`);
               } else {
-                logger.warn(`Conversion failed for deeply nested transformation chain: ${result.success ? 'no mesh' : result.error}`);
+                logger.warn(
+                  `Conversion failed for deeply nested transformation chain: ${result.success ? 'no mesh' : result.error}`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();
@@ -342,16 +359,18 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
           ),
           async (operations) => {
             // Generate multiple nested operations
-            const codeLines = operations.map(([transformation, [x, y, z], primitive]) => {
-              if (transformation === 'translate') {
-                return `translate([${x}, ${y}, ${z}]) ${primitive};`;
-              } else if (transformation === 'rotate') {
-                return `rotate([${x}, ${y}, ${z}]) ${primitive};`;
-              } else if (transformation === 'scale') {
-                return `scale([${x/10 + 1}, ${y/10 + 1}, ${z/10 + 1}]) ${primitive};`;
-              }
-              return '';
-            }).filter(line => line !== '');
+            const codeLines = operations
+              .map(([transformation, [x, y, z], primitive]) => {
+                if (transformation === 'translate') {
+                  return `translate([${x}, ${y}, ${z}]) ${primitive};`;
+                } else if (transformation === 'rotate') {
+                  return `rotate([${x}, ${y}, ${z}]) ${primitive};`;
+                } else if (transformation === 'scale') {
+                  return `scale([${x / 10 + 1}, ${y / 10 + 1}, ${z / 10 + 1}]) ${primitive};`;
+                }
+                return '';
+              })
+              .filter((line) => line !== '');
 
             const code = codeLines.join('\n');
 
@@ -365,7 +384,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
             const ast = parseResult.data.ast;
             if (!ast || ast.length !== operations.length) {
-              logger.warn(`AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`);
+              logger.warn(
+                `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
+              );
               return; // Skip this test case
             }
 
@@ -374,7 +395,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
             try {
               // Test each nested operation
               for (let i = 0; i < operations.length; i++) {
-                const [expectedTransformation] = operations[i]!;
+                const operation = operations[i];
+                if (!operation) continue;
+                const [expectedTransformation] = operation;
                 const node = ast[i];
 
                 if (!node) continue;
@@ -386,7 +409,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
                   expect(mesh).toBeDefined();
                   expect(mesh.matrix).toBeDefined();
 
-                  logger.debug(`✅ ${expectedTransformation}() nested operation ${i} applied correctly`);
+                  logger.debug(
+                    `✅ ${expectedTransformation}() nested operation ${i} applied correctly`
+                  );
                 }
               }
             } finally {
@@ -439,7 +464,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
                 logger.debug(`✅ Complex nested ${boolOp} with transformations applied correctly`);
               } else {
-                logger.warn(`Conversion failed for complex nested ${boolOp} operations: ${result.success ? 'no mesh' : result.error}`);
+                logger.warn(
+                  `Conversion failed for complex nested ${boolOp} operations: ${result.success ? 'no mesh' : result.error}`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();
@@ -484,7 +511,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
               if (result.success) {
                 expect(conversionTime).toBeLessThan(200); // Performance target for complex operations
-                logger.debug(`Nested transformation conversion time: ${conversionTime.toFixed(2)}ms`);
+                logger.debug(
+                  `Nested transformation conversion time: ${conversionTime.toFixed(2)}ms`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();
@@ -530,7 +559,9 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
               if (result.success) {
                 expect(conversionTime).toBeLessThan(200); // Performance target for complex operations
-                logger.debug(`Complex nested ${boolOp} conversion time: ${conversionTime.toFixed(2)}ms`);
+                logger.debug(
+                  `Complex nested ${boolOp} conversion time: ${conversionTime.toFixed(2)}ms`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();

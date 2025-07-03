@@ -10,7 +10,7 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import { convertASTNodeToCSG } from '../services/ast-to-csg-converter.js';
+import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import { MaterialService } from '../services/material.service.js';
 import { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../services/matrix-service-container.js';

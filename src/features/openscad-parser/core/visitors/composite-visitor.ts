@@ -13,6 +13,7 @@ import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../ast-types.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IErrorHandler } from '../error-handler.interface.js';
+import { ControlFlowVisitor } from './control-flow-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
 import { ExpressionVisitor } from './expression-visitor.js';
 import { FunctionVisitor } from './function-visitor.js';
@@ -33,6 +34,7 @@ export class CompositeVisitor extends BaseASTVisitor {
   private readonly csgVisitor: CSGVisitor;
   private readonly moduleVisitor: ModuleVisitor;
   private readonly functionVisitor: FunctionVisitor;
+  private readonly controlFlowVisitor: ControlFlowVisitor;
   private readonly expressionVisitor: ExpressionVisitor;
 
   constructor(source: string, errorHandler: IErrorHandler) {
@@ -44,6 +46,7 @@ export class CompositeVisitor extends BaseASTVisitor {
     this.csgVisitor = new CSGVisitor(source, errorHandler);
     this.moduleVisitor = new ModuleVisitor(source, errorHandler);
     this.functionVisitor = new FunctionVisitor(source, errorHandler);
+    this.controlFlowVisitor = new ControlFlowVisitor(source, errorHandler);
     this.expressionVisitor = new ExpressionVisitor(source, errorHandler);
 
     // Register all visitors in processing order
@@ -54,6 +57,7 @@ export class CompositeVisitor extends BaseASTVisitor {
       this.csgVisitor,
       this.moduleVisitor,
       this.functionVisitor,
+      this.controlFlowVisitor,
       this.expressionVisitor,
     ];
 
@@ -323,6 +327,9 @@ export class CompositeVisitor extends BaseASTVisitor {
       'assignment',
       'assignment_statement',
       'expression',
+      // Control Flow
+      'if_statement',
+      'for_statement',
     ];
   }
 

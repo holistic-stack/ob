@@ -492,10 +492,9 @@ export class CSGVisitor extends BaseASTVisitor {
         // For other types, create a generic function call node
         const placeholderNode: FunctionCallNode = {
           type: 'function_call',
-          name: functionName,
+          name: functionName ?? 'unknown_function',
           arguments: [],
           location,
-          isBuiltIn: true,
         };
         logger.debug(`Created placeholder node for ${functionName}: ${nodeText.slice(0, 50)}...`);
         return placeholderNode;

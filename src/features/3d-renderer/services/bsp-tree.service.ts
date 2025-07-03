@@ -322,7 +322,9 @@ export class BSPTreeNode implements BSPNodeData {
 
     let iterations = 0;
     while (stack.length > 0 && iterations < BSP_CONFIG.MAX_CLIP_ITERATIONS) {
-      const { node, depth } = stack.pop()!;
+      const stackItem = stack.pop();
+      if (!stackItem) break;
+      const { node, depth } = stackItem;
       iterations++;
 
       const clipResult = bsp.clipPolygons(node.polygons);

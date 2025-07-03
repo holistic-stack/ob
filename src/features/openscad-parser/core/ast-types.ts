@@ -279,6 +279,26 @@ export interface ErrorNode extends BaseASTNode {
 }
 
 /**
+ * If statement node for conditional execution
+ */
+export interface IfStatementNode extends BaseASTNode {
+  readonly type: 'if_statement';
+  readonly condition: ASTNode;
+  readonly consequence: ASTNode;
+  readonly alternative?: ASTNode;
+}
+
+/**
+ * For statement node for loop iteration
+ */
+export interface ForStatementNode extends BaseASTNode {
+  readonly type: 'for_statement';
+  readonly iterator: string;
+  readonly range: ASTNode;
+  readonly body: ASTNode;
+}
+
+/**
  * Rotate extrude node
  */
 export interface RotateExtrudeNode extends BaseASTNode {
@@ -316,6 +336,8 @@ export type ASTNode =
   | ModuleDefinitionNode
   | FunctionDefinitionNode
   | AssignmentNode
+  | IfStatementNode
+  | ForStatementNode
   | ErrorNode
   | RotateExtrudeNode;
 
@@ -333,6 +355,10 @@ export const isIntersectionNode = (node: ASTNode): node is IntersectionNode =>
 export const isTranslateNode = (node: ASTNode): node is TranslateNode => node.type === 'translate';
 export const isRotateNode = (node: ASTNode): node is RotateNode => node.type === 'rotate';
 export const isScaleNode = (node: ASTNode): node is ScaleNode => node.type === 'scale';
+export const isIfStatementNode = (node: ASTNode): node is IfStatementNode =>
+  node.type === 'if_statement';
+export const isForStatementNode = (node: ASTNode): node is ForStatementNode =>
+  node.type === 'for_statement';
 
 /**
  * Type guard for primitive nodes
@@ -357,3 +383,9 @@ export const isCSGNode = (
   node: ASTNode
 ): node is UnionNode | DifferenceNode | IntersectionNode | HullNode | MinkowskiNode =>
   ['union', 'difference', 'intersection', 'hull', 'minkowski'].includes(node.type);
+
+/**
+ * Type guard for control flow nodes
+ */
+export const isControlFlowNode = (node: ASTNode): node is IfStatementNode | ForStatementNode =>
+  ['if_statement', 'for_statement'].includes(node.type);

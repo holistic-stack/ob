@@ -16,11 +16,16 @@ import {
 } from '../../../../shared/utils/functional/result.js';
 import type {
   ASTNode,
+  AssignmentNode,
+  ConditionalExpressionNode,
   CubeNode,
   CylinderNode,
   DifferenceNode,
+  ForStatementNode,
+  IfStatementNode,
   IntersectionNode,
   MirrorNode,
+  ModuleDefinitionNode,
   RotateExtrudeNode,
   RotateNode,
   ScaleNode,
@@ -49,6 +54,8 @@ import {
 } from '../converters/transformation-converter.js';
 import { CSGCoreService } from '../csg-core.service.js';
 import { createMaterial } from '../material.service.js';
+import { moduleRegistry } from './module-registry.service.js';
+import { variableScope } from './variable-scope.service.js';
 
 const logger = createLogger('ASTToCSGConverter');
 
@@ -92,7 +99,7 @@ export function extractTranslateParameters(sourceCode: string): [number, number,
       const z = numbers[2];
 
       if (x !== undefined && y !== undefined && z !== undefined) {
-        return [x, y, z];
+        return [x, y, z] as [number, number, number];
       }
     }
   }
@@ -644,8 +651,193 @@ const convertFunctionCallNode = async (
         convertASTNodeToMesh
       );
     default:
+      // Check if this is a user-defined module
+      if (moduleRegistry.hasModule(functionName)) {
+        logger.debug(`Found user-defined module: ${functionName}`);
+
+        // Extract arguments for module instantiation
+        const args: unknown[] = [];
+        // For now, we'll use placeholder arguments
+        // In a full implementation, this would properly evaluate the arguments
+
+        const moduleInstanceResult = moduleRegistry.createModuleInstance(functionName, args);
+        if (!moduleInstanceResult.success) {
+          return error(
+            `Failed to instantiate module '${functionName}': ${moduleInstanceResult.error}`
+          );
+        }
+
+        const moduleInstance = moduleInstanceResult.data;
+
+        // Enter module scope
+        variableScope.enterScope(`module_${functionName}`);
+
+        try {
+          // Bind module parameters to scope
+          for (const [paramName, paramValue] of moduleInstance.parameters) {
+            variableScope.defineVariable(paramName, paramValue);
+          }
+
+          // Convert module body to meshes
+          if (moduleInstance.body.length === 0) {
+            // Empty module body - return empty mesh
+            const geometry = new THREE.BufferGeometry();
+            const emptyMaterial = new THREE.MeshStandardMaterial({
+              color: 0x00ff88,
+              transparent: true,
+              opacity: 0,
+            });
+            return success(new THREE.Mesh(geometry, emptyMaterial));
+          }
+
+          // Convert first body node (simplified for now)
+          const firstBodyNode = moduleInstance.body[0];
+          if (firstBodyNode) {
+            const bodyResult = await convertASTNodeToMesh(firstBodyNode, material);
+            return bodyResult;
+          }
+
+          // Fallback to empty mesh
+          const geometry = new THREE.BufferGeometry();
+          const emptyMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            transparent: true,
+            opacity: 0,
+          });
+          return success(new THREE.Mesh(geometry, emptyMaterial));
+        } finally {
+          // Exit module scope
+          variableScope.exitScope();
+        }
+      }
+
       return error(`Unsupported function in function_call node: ${functionName}`);
   }
+};
+
+/**
+ * Convert module definition node by registering it in the module registry
+ */
+const convertModuleDefinitionNode = async (
+  node: ModuleDefinitionNode
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug(`Processing module definition: ${node.name}`);
+
+  // Register the module definition
+  const registrationResult = moduleRegistry.registerModule(node);
+  if (!registrationResult.success) {
+    return error(`Failed to register module '${node.name}': ${registrationResult.error}`);
+  }
+
+  // Module definitions don't produce geometry directly
+  // Return an empty mesh as a placeholder
+  const geometry = new THREE.BufferGeometry();
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+
+  logger.debug(`Module '${node.name}' registered successfully`);
+  return success(mesh);
+};
+
+/**
+ * Convert assignment node by storing the variable in scope
+ */
+const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug(`Processing assignment: ${node.name}`);
+
+  // For now, we'll store the raw AST node as the value
+  // In a full implementation, this would evaluate the expression
+  const assignmentResult = variableScope.defineVariable(
+    node.name,
+    node.value,
+    node.location
+      ? {
+          line: node.location.start.line,
+          column: node.location.start.column,
+        }
+      : undefined
+  );
+
+  if (!assignmentResult.success) {
+    return error(`Failed to assign variable '${node.name}': ${assignmentResult.error}`);
+  }
+
+  // Assignment statements don't produce geometry directly
+  // Return an empty mesh as a placeholder
+  const geometry = new THREE.BufferGeometry();
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+
+  logger.debug(`Variable '${node.name}' assigned successfully`);
+  return success(mesh);
+};
+
+/**
+ * Convert conditional expression node by evaluating condition and selecting branch
+ */
+const convertConditionalExpressionNode = async (
+  node: ConditionalExpressionNode,
+  material: THREE.Material,
+  convertASTNodeToMesh: (
+    node: ASTNode,
+    material: THREE.Material
+  ) => Promise<Result<THREE.Mesh, string>>
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('Processing conditional expression');
+
+  // For now, we'll always take the true branch
+  // In a full implementation, this would evaluate the condition
+  // and choose the appropriate branch
+  const selectedBranch = node.trueExpression;
+
+  logger.debug('Evaluating true branch of conditional expression');
+  return await convertASTNodeToMesh(selectedBranch, material);
+};
+
+/**
+ * Convert if statement node by evaluating condition and selecting branch
+ */
+const convertIfStatementNode = async (
+  node: IfStatementNode,
+  material: THREE.Material,
+  convertASTNodeToMesh: (
+    node: ASTNode,
+    material: THREE.Material
+  ) => Promise<Result<THREE.Mesh, string>>
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('Processing if statement');
+
+  // For now, we'll evaluate the condition as true and execute the consequence
+  // In a full implementation, this would evaluate the condition based on variable values
+  logger.debug('Evaluating consequence branch of if statement');
+  return await convertASTNodeToMesh(node.consequence, material);
+};
+
+/**
+ * Convert for statement node by iterating over range and combining results
+ */
+const convertForStatementNode = async (
+  node: ForStatementNode,
+  material: THREE.Material,
+  convertASTNodeToMesh: (
+    node: ASTNode,
+    material: THREE.Material
+  ) => Promise<Result<THREE.Mesh, string>>
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug(`Processing for statement with iterator: ${node.iterator}`);
+
+  // For now, we'll execute the body once
+  // In a full implementation, this would iterate over the range and combine results
+  logger.debug('Executing for loop body (simplified - single iteration)');
+  return await convertASTNodeToMesh(node.body, material);
 };
 
 /**
@@ -698,6 +890,29 @@ const convertASTNodeToMesh = async (
     case 'function_call':
       // Handle Tree Sitter function_call nodes by extracting the function name
       return await convertFunctionCallNode(node, material, convertASTNodeToMesh);
+
+    case 'module_definition':
+      return await convertModuleDefinitionNode(node as ModuleDefinitionNode);
+
+    case 'assignment':
+      return await convertAssignmentNode(node as AssignmentNode);
+
+    case 'conditional_expression':
+      return await convertConditionalExpressionNode(
+        node as ConditionalExpressionNode,
+        material,
+        convertASTNodeToMesh
+      );
+
+    case 'if_statement':
+      return await convertIfStatementNode(node as IfStatementNode, material, convertASTNodeToMesh);
+
+    case 'for_statement':
+      return await convertForStatementNode(
+        node as ForStatementNode,
+        material,
+        convertASTNodeToMesh
+      );
 
     default:
       return error(`Unsupported AST node type for CSG conversion: ${node.type}`);

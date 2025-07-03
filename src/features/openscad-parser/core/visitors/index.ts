@@ -8,6 +8,7 @@
 export { BaseASTVisitor } from '../base-ast-visitor.js';
 export { VisitorASTGenerator } from '../visitor-ast-generator.js';
 export { CompositeVisitor } from './composite-visitor.js';
+export { ControlFlowVisitor } from './control-flow-visitor.js';
 export { CSGVisitor } from './csg-visitor.js';
 export { ExpressionVisitor } from './expression-visitor.js';
 export { FunctionVisitor } from './function-visitor.js';

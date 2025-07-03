@@ -12,16 +12,16 @@
  * - Template for future OpenSCAD boolean operation fuzzy testing
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import * as fc from 'fast-check';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
 import {
-  convertASTNodeToCSG,
-  setSourceCodeForExtraction,
   clearSourceCodeForExtraction,
-  extractBooleanParameters
+  convertASTNodeToCSG,
+  extractBooleanParameters,
+  setSourceCodeForExtraction,
 } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterBooleanFuzzyTest');
@@ -29,25 +29,21 @@ const logger = createLogger('ASTToCSGConverterBooleanFuzzyTest');
 /**
  * Custom generators for parser-friendly boolean operations
  */
-const parserFriendlyPrimitive = () => fc.oneof(
-  fc.constant('cube(5)'),
-  fc.constant('sphere(3)'),
-  fc.constant('cylinder(h=6, r=2)'),
-  fc.constant('cube([3, 4, 5])'),
-  fc.constant('sphere(r=4)'),
-  fc.constant('cylinder(h=8, r=3)')
-);
+const parserFriendlyPrimitive = () =>
+  fc.oneof(
+    fc.constant('cube(5)'),
+    fc.constant('sphere(3)'),
+    fc.constant('cylinder(h=6, r=2)'),
+    fc.constant('cube([3, 4, 5])'),
+    fc.constant('sphere(r=4)'),
+    fc.constant('cylinder(h=8, r=3)')
+  );
 
-const parserFriendlyBooleanOperation = () => fc.oneof(
-  fc.constant('union'),
-  fc.constant('intersection'),
-  fc.constant('difference')
-);
+const parserFriendlyBooleanOperation = () =>
+  fc.oneof(fc.constant('union'), fc.constant('intersection'), fc.constant('difference'));
 
-const parserFriendlyPrimitiveList = () => fc.array(
-  parserFriendlyPrimitive(),
-  { minLength: 2, maxLength: 5 }
-);
+const parserFriendlyPrimitiveList = () =>
+  fc.array(parserFriendlyPrimitive(), { minLength: 2, maxLength: 5 });
 
 describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
   let parserService: UnifiedParserService;
@@ -61,57 +57,48 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
   describe('Boolean Parameter Extraction Validation', () => {
     it('should extract parameters from union operations', () => {
       fc.assert(
-        fc.property(
-          parserFriendlyPrimitiveList(),
-          (primitives) => {
-            const code = `union() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            const extracted = extractBooleanParameters(code);
-            
-            expect(extracted).not.toBeNull();
-            if (extracted) {
-              expect(extracted.operation).toBe('union');
-              expect(extracted.childCount).toBe(primitives.length);
-            }
+        fc.property(parserFriendlyPrimitiveList(), (primitives) => {
+          const code = `union() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+          const extracted = extractBooleanParameters(code);
+
+          expect(extracted).not.toBeNull();
+          if (extracted) {
+            expect(extracted.operation).toBe('union');
+            expect(extracted.childCount).toBe(primitives.length);
           }
-        ),
+        }),
         { numRuns: 30 }
       );
     });
 
     it('should extract parameters from intersection operations', () => {
       fc.assert(
-        fc.property(
-          parserFriendlyPrimitiveList(),
-          (primitives) => {
-            const code = `intersection() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            const extracted = extractBooleanParameters(code);
-            
-            expect(extracted).not.toBeNull();
-            if (extracted) {
-              expect(extracted.operation).toBe('intersection');
-              expect(extracted.childCount).toBe(primitives.length);
-            }
+        fc.property(parserFriendlyPrimitiveList(), (primitives) => {
+          const code = `intersection() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+          const extracted = extractBooleanParameters(code);
+
+          expect(extracted).not.toBeNull();
+          if (extracted) {
+            expect(extracted.operation).toBe('intersection');
+            expect(extracted.childCount).toBe(primitives.length);
           }
-        ),
+        }),
         { numRuns: 30 }
       );
     });
 
     it('should extract parameters from difference operations', () => {
       fc.assert(
-        fc.property(
-          parserFriendlyPrimitiveList(),
-          (primitives) => {
-            const code = `difference() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            const extracted = extractBooleanParameters(code);
-            
-            expect(extracted).not.toBeNull();
-            if (extracted) {
-              expect(extracted.operation).toBe('difference');
-              expect(extracted.childCount).toBe(primitives.length);
-            }
+        fc.property(parserFriendlyPrimitiveList(), (primitives) => {
+          const code = `difference() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+          const extracted = extractBooleanParameters(code);
+
+          expect(extracted).not.toBeNull();
+          if (extracted) {
+            expect(extracted.operation).toBe('difference');
+            expect(extracted.childCount).toBe(primitives.length);
           }
-        ),
+        }),
         { numRuns: 30 }
       );
     });
@@ -122,9 +109,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           parserFriendlyBooleanOperation(),
           parserFriendlyPrimitiveList(),
           (operation, primitives) => {
-            const code = `${operation}() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
+            const code = `${operation}() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
             const extracted = extractBooleanParameters(code);
-            
+
             expect(extracted).not.toBeNull();
             if (extracted) {
               expect(extracted.operation).toBe(operation);
@@ -141,168 +128,179 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
   describe('Production Boolean CSG Conversion Testing', () => {
     it('should correctly apply union operations for primitive combinations', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          parserFriendlyPrimitiveList(),
-          async (primitives) => {
-            const code = `union() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            
-            logger.debug(`Testing union() with ${primitives.length} primitives conversion`);
-            
-            // Parse the code
-            const parseResult = await parserService.parseDocument(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for union with ${primitives.length} primitives: ${parseResult.error}`);
-              return; // Skip this test case
-            }
-            
-            const ast = parseResult.data.ast;
-            if (!ast || ast.length === 0) {
-              logger.warn(`No AST nodes for union with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            const unionNode = ast[0];
-            if (!unionNode) {
-              logger.warn(`No union node for union with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            // Set source code for extraction
-            setSourceCodeForExtraction(code);
-            
-            try {
-              // Convert to CSG
-              const result = await convertASTNodeToCSG(unionNode as ASTNode, 0);
-              
-              if (result.success && result.data.mesh) {
-                const mesh = result.data.mesh;
-                expect(mesh).toBeDefined();
-                
-                // Verify the mesh has been created (union should combine geometries)
-                expect(mesh.geometry).toBeDefined();
-                
-                logger.debug(`✅ Union() with ${primitives.length} primitives applied correctly to mesh`);
-              } else {
-                logger.warn(`Conversion failed for union with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`);
-              }
-            } finally {
-              // Always clear source code
-              clearSourceCodeForExtraction();
-            }
+        fc.asyncProperty(parserFriendlyPrimitiveList(), async (primitives) => {
+          const code = `union() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+
+          logger.debug(`Testing union() with ${primitives.length} primitives conversion`);
+
+          // Parse the code
+          const parseResult = await parserService.parseDocument(code);
+          if (!parseResult.success) {
+            logger.warn(
+              `Parse failed for union with ${primitives.length} primitives: ${parseResult.error}`
+            );
+            return; // Skip this test case
           }
-        ),
+
+          const ast = parseResult.data.ast;
+          if (!ast || ast.length === 0) {
+            logger.warn(`No AST nodes for union with ${primitives.length} primitives`);
+            return; // Skip this test case
+          }
+
+          const unionNode = ast[0];
+          if (!unionNode) {
+            logger.warn(`No union node for union with ${primitives.length} primitives`);
+            return; // Skip this test case
+          }
+
+          // Set source code for extraction
+          setSourceCodeForExtraction(code);
+
+          try {
+            // Convert to CSG
+            const result = await convertASTNodeToCSG(unionNode as ASTNode, 0);
+
+            if (result.success && result.data.mesh) {
+              const mesh = result.data.mesh;
+              expect(mesh).toBeDefined();
+
+              // Verify the mesh has been created (union should combine geometries)
+              expect(mesh.geometry).toBeDefined();
+
+              logger.debug(
+                `✅ Union() with ${primitives.length} primitives applied correctly to mesh`
+              );
+            } else {
+              logger.warn(
+                `Conversion failed for union with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`
+              );
+            }
+          } finally {
+            // Always clear source code
+            clearSourceCodeForExtraction();
+          }
+        }),
         { numRuns: 15, timeout: 30000 }
       );
     });
 
     it('should correctly apply intersection operations for primitive combinations', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          parserFriendlyPrimitiveList(),
-          async (primitives) => {
-            const code = `intersection() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            
-            logger.debug(`Testing intersection() with ${primitives.length} primitives conversion`);
-            
-            // Parse the code
-            const parseResult = await parserService.parseDocument(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for intersection with ${primitives.length} primitives: ${parseResult.error}`);
-              return; // Skip this test case
-            }
-            
-            const ast = parseResult.data.ast;
-            if (!ast || ast.length === 0) {
-              logger.warn(`No AST nodes for intersection with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            const intersectionNode = ast[0];
-            if (!intersectionNode) {
-              logger.warn(`No intersection node for intersection with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            // Set source code for extraction
-            setSourceCodeForExtraction(code);
-            
-            try {
-              // Convert to CSG
-              const result = await convertASTNodeToCSG(intersectionNode as ASTNode, 0);
-              
-              if (result.success && result.data.mesh) {
-                const mesh = result.data.mesh;
-                expect(mesh).toBeDefined();
-                
-                // Verify the mesh has been created (intersection should find common volume)
-                expect(mesh.geometry).toBeDefined();
-                
-                logger.debug(`✅ Intersection() with ${primitives.length} primitives applied correctly to mesh`);
-              } else {
-                logger.warn(`Conversion failed for intersection with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`);
-              }
-            } finally {
-              // Always clear source code
-              clearSourceCodeForExtraction();
-            }
+        fc.asyncProperty(parserFriendlyPrimitiveList(), async (primitives) => {
+          const code = `intersection() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+
+          logger.debug(`Testing intersection() with ${primitives.length} primitives conversion`);
+
+          // Parse the code
+          const parseResult = await parserService.parseDocument(code);
+          if (!parseResult.success) {
+            logger.warn(
+              `Parse failed for intersection with ${primitives.length} primitives: ${parseResult.error}`
+            );
+            return; // Skip this test case
           }
-        ),
+
+          const ast = parseResult.data.ast;
+          if (!ast || ast.length === 0) {
+            logger.warn(`No AST nodes for intersection with ${primitives.length} primitives`);
+            return; // Skip this test case
+          }
+
+          const intersectionNode = ast[0];
+          if (!intersectionNode) {
+            logger.warn(
+              `No intersection node for intersection with ${primitives.length} primitives`
+            );
+            return; // Skip this test case
+          }
+
+          // Set source code for extraction
+          setSourceCodeForExtraction(code);
+
+          try {
+            // Convert to CSG
+            const result = await convertASTNodeToCSG(intersectionNode as ASTNode, 0);
+
+            if (result.success && result.data.mesh) {
+              const mesh = result.data.mesh;
+              expect(mesh).toBeDefined();
+
+              // Verify the mesh has been created (intersection should find common volume)
+              expect(mesh.geometry).toBeDefined();
+
+              logger.debug(
+                `✅ Intersection() with ${primitives.length} primitives applied correctly to mesh`
+              );
+            } else {
+              logger.warn(
+                `Conversion failed for intersection with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`
+              );
+            }
+          } finally {
+            // Always clear source code
+            clearSourceCodeForExtraction();
+          }
+        }),
         { numRuns: 15, timeout: 30000 }
       );
     });
 
     it('should correctly apply difference operations for primitive combinations', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          parserFriendlyPrimitiveList(),
-          async (primitives) => {
-            const code = `difference() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
-            
-            logger.debug(`Testing difference() with ${primitives.length} primitives conversion`);
-            
-            // Parse the code
-            const parseResult = await parserService.parseDocument(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for difference with ${primitives.length} primitives: ${parseResult.error}`);
-              return; // Skip this test case
-            }
-            
-            const ast = parseResult.data.ast;
-            if (!ast || ast.length === 0) {
-              logger.warn(`No AST nodes for difference with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            const differenceNode = ast[0];
-            if (!differenceNode) {
-              logger.warn(`No difference node for difference with ${primitives.length} primitives`);
-              return; // Skip this test case
-            }
-            
-            // Set source code for extraction
-            setSourceCodeForExtraction(code);
-            
-            try {
-              // Convert to CSG
-              const result = await convertASTNodeToCSG(differenceNode as ASTNode, 0);
-              
-              if (result.success && result.data.mesh) {
-                const mesh = result.data.mesh;
-                expect(mesh).toBeDefined();
-                
-                // Verify the mesh has been created (difference should subtract volumes)
-                expect(mesh.geometry).toBeDefined();
-                
-                logger.debug(`✅ Difference() with ${primitives.length} primitives applied correctly to mesh`);
-              } else {
-                logger.warn(`Conversion failed for difference with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`);
-              }
-            } finally {
-              // Always clear source code
-              clearSourceCodeForExtraction();
-            }
+        fc.asyncProperty(parserFriendlyPrimitiveList(), async (primitives) => {
+          const code = `difference() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
+
+          logger.debug(`Testing difference() with ${primitives.length} primitives conversion`);
+
+          // Parse the code
+          const parseResult = await parserService.parseDocument(code);
+          if (!parseResult.success) {
+            logger.warn(
+              `Parse failed for difference with ${primitives.length} primitives: ${parseResult.error}`
+            );
+            return; // Skip this test case
           }
-        ),
+
+          const ast = parseResult.data.ast;
+          if (!ast || ast.length === 0) {
+            logger.warn(`No AST nodes for difference with ${primitives.length} primitives`);
+            return; // Skip this test case
+          }
+
+          const differenceNode = ast[0];
+          if (!differenceNode) {
+            logger.warn(`No difference node for difference with ${primitives.length} primitives`);
+            return; // Skip this test case
+          }
+
+          // Set source code for extraction
+          setSourceCodeForExtraction(code);
+
+          try {
+            // Convert to CSG
+            const result = await convertASTNodeToCSG(differenceNode as ASTNode, 0);
+
+            if (result.success && result.data.mesh) {
+              const mesh = result.data.mesh;
+              expect(mesh).toBeDefined();
+
+              // Verify the mesh has been created (difference should subtract volumes)
+              expect(mesh.geometry).toBeDefined();
+
+              logger.debug(
+                `✅ Difference() with ${primitives.length} primitives applied correctly to mesh`
+              );
+            } else {
+              logger.warn(
+                `Conversion failed for difference with ${primitives.length} primitives: ${result.success ? 'no mesh' : result.error}`
+              );
+            }
+          } finally {
+            // Always clear source code
+            clearSourceCodeForExtraction();
+          }
+        }),
         { numRuns: 15, timeout: 30000 }
       );
     });
@@ -312,17 +310,15 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
     it('should handle multiple boolean operations with various primitives', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.array(
-            fc.tuple(
-              parserFriendlyBooleanOperation(),
-              parserFriendlyPrimitiveList()
-            ),
-            { minLength: 2, maxLength: 3 }
-          ),
+          fc.array(fc.tuple(parserFriendlyBooleanOperation(), parserFriendlyPrimitiveList()), {
+            minLength: 2,
+            maxLength: 3,
+          }),
           async (operations) => {
             // Generate multiple boolean operations
-            const codeLines = operations.map(([operation, primitives], i) =>
-              `${operation}() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`
+            const codeLines = operations.map(
+              ([operation, primitives]) =>
+                `${operation}() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`
             );
             const code = codeLines.join('\n\n');
 
@@ -336,7 +332,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
 
             const ast = parseResult.data.ast;
             if (!ast || ast.length !== operations.length) {
-              logger.warn(`AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`);
+              logger.warn(
+                `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
+              );
               return; // Skip this test case
             }
 
@@ -345,7 +343,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
             try {
               // Test each boolean operation
               for (let i = 0; i < operations.length; i++) {
-                const [expectedOperation, expectedPrimitives] = operations[i]!;
+                const operation = operations[i];
+                if (!operation) continue;
+                const [expectedOperation, expectedPrimitives] = operation;
                 const node = ast[i];
 
                 if (!node) continue;
@@ -357,7 +357,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
                   expect(mesh).toBeDefined();
                   expect(mesh.geometry).toBeDefined();
 
-                  logger.debug(`✅ ${expectedOperation}() operation ${i} with ${expectedPrimitives.length} primitives applied correctly`);
+                  logger.debug(
+                    `✅ ${expectedOperation}() operation ${i} with ${expectedPrimitives.length} primitives applied correctly`
+                  );
                 }
               }
             } finally {
@@ -412,7 +414,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
 
                 logger.debug(`✅ Nested ${outerOp}(${innerOp}()) operations applied correctly`);
               } else {
-                logger.warn(`Conversion failed for nested ${outerOp}(${innerOp}()) operations: ${result.success ? 'no mesh' : result.error}`);
+                logger.warn(
+                  `Conversion failed for nested ${outerOp}(${innerOp}()) operations: ${result.success ? 'no mesh' : result.error}`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();
@@ -431,11 +435,13 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           parserFriendlyBooleanOperation(),
           parserFriendlyPrimitiveList(),
           async (operation, primitives) => {
-            const code = `${operation}() {\n${primitives.map(p => `  ${p};`).join('\n')}\n}`;
+            const code = `${operation}() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
 
             const parseResult = await parserService.parseDocument(code);
             if (!parseResult.success) {
-              logger.warn(`Parse failed for performance test with ${operation}(${primitives.length} primitives)`);
+              logger.warn(
+                `Parse failed for performance test with ${operation}(${primitives.length} primitives)`
+              );
               return; // Skip this test case
             }
 
@@ -456,7 +462,9 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
 
               if (result.success) {
                 expect(conversionTime).toBeLessThan(2000); // Performance target for complex boolean operations (CSG is computationally intensive)
-                logger.debug(`${operation}(${primitives.length} primitives) conversion time: ${conversionTime.toFixed(2)}ms`);
+                logger.debug(
+                  `${operation}(${primitives.length} primitives) conversion time: ${conversionTime.toFixed(2)}ms`
+                );
               }
             } finally {
               clearSourceCodeForExtraction();

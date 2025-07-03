@@ -20,25 +20,8 @@ import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterTest');
 
-/**
- * Mirror node interface for testing
- */
-interface MirrorNode {
-  type: 'mirror';
-  v: readonly [number, number, number];
-  children: readonly ASTNode[];
-  location?: SourceLocation;
-}
-
-/**
- * Rotate extrude node interface for testing
- */
-interface RotateExtrudeNode {
-  type: 'rotate_extrude';
-  angle?: number;
-  children: readonly ASTNode[];
-  location?: SourceLocation;
-}
+// Note: MirrorNode and RotateExtrudeNode interfaces removed as they were unused
+// These can be re-added when mirror and rotate_extrude functionality is implemented
 
 describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
   let scene: THREE.Scene;

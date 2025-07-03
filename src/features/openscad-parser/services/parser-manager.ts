@@ -383,10 +383,17 @@ class ParserManagerImpl implements ParserManager {
     });
 
     if (result.success) {
-      // Update the validation time after measurement
-      result.data.validationTime = duration;
+      // Create new validation result with updated validation time
+      const updatedResult: ASTValidationResult = {
+        ...result.data,
+        validationTime: duration,
+      };
+
       this.updateValidationStats(duration);
-      this.emitEvent({ type: 'validation-complete', result: result.data });
+      this.emitEvent({ type: 'validation-complete', result: updatedResult });
+
+      // Return new result with updated data
+      return success(updatedResult);
     }
 
     return result;
@@ -441,10 +448,17 @@ class ParserManagerImpl implements ParserManager {
     });
 
     if (result.success) {
-      // Update the optimization time after measurement
-      result.data.optimizationTime = duration;
+      // Create new optimization result with updated optimization time
+      const updatedResult: ASTOptimizationResult = {
+        ...result.data,
+        optimizationTime: duration,
+      };
+
       this.updateOptimizationStats(duration);
-      this.emitEvent({ type: 'optimization-complete', result: result.data });
+      this.emitEvent({ type: 'optimization-complete', result: updatedResult });
+
+      // Return new result with updated data
+      return success(updatedResult);
     }
 
     return result;

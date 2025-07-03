@@ -273,7 +273,9 @@ union() {
 `;
 
       // Measure memory before
-      const memoryBefore = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const memoryBefore = (performance as any).memory
+        ? (performance as any).memory.usedJSHeapSize
+        : 0;
 
       const parseResult = await parserService.parseDocument(largeOperationCode);
       expect(parseResult.success).toBe(true);
@@ -284,7 +286,9 @@ union() {
       }
 
       // Measure memory after
-      const memoryAfter = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const memoryAfter = (performance as any).memory
+        ? (performance as any).memory.usedJSHeapSize
+        : 0;
 
       logger.debug(`Memory usage: before=${memoryBefore}, after=${memoryAfter}`);
       logger.end('Memory cleanup test completed');

@@ -117,9 +117,8 @@ export class ModuleVisitor extends BaseASTVisitor {
     const moduleCallNode: FunctionCallNode = {
       type: 'function_call',
       name: moduleName,
-      arguments: Object.values(args),
+      arguments: Object.values(args) as ASTNode[],
       location,
-      isBuiltIn: this.isBuiltInModule(moduleName),
     };
 
     logger.debug(`Created module call: ${moduleName} with ${Object.values(args).length} arguments`);

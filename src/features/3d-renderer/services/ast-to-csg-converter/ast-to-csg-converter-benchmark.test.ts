@@ -284,7 +284,7 @@ class PerformanceBenchmark {
     const parsingTime = parseEnd - parseStart;
 
     if (!parseResult.success) {
-      throw new Error(`Parsing failed: ${parseResult.error.message}`);
+      throw new Error(`Parsing failed: ${parseResult.error}`);
     }
 
     // Measure store integration and conversion performance
@@ -294,7 +294,7 @@ class PerformanceBenchmark {
     const conversionTime = conversionEnd - conversionStart;
 
     if (!storeResult.success) {
-      throw new Error(`Store conversion failed: ${storeResult.error.message}`);
+      throw new Error(`Store conversion failed: ${storeResult.error}`);
     }
 
     const endToEndEnd = performance.now();

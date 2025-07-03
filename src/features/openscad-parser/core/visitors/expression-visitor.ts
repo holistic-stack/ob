@@ -241,29 +241,54 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an assignment node
+   * Visit an assignment node (handles both 'assignment' and 'assignment_statement')
    * @param node - Assignment CST node
    * @returns AssignmentNode AST node
    */
   private visitAssignment(node: Node): AssignmentNode | null {
-    logger.debug('Processing assignment');
+    logger.debug(`Processing ${node.type}`);
 
     const location = this.createSourceLocation(node);
 
-    // Find identifier and value
-    const identifierNode = this.findChildOfType(node, 'identifier');
-    const valueNode = this.findChildOfType(node, 'expression');
+    let identifierNode: Node | null = null;
+    let valueNode: Node | null = null;
+
+    if (node.type === 'assignment_statement') {
+      // For assignment_statement, look for named fields
+      identifierNode = node.childForFieldName('name');
+      valueNode = node.childForFieldName('value');
+    } else {
+      // For assignment, find child nodes by type
+      identifierNode = this.findChildOfType(node, 'identifier');
+      valueNode = this.findChildOfType(node, 'expression');
+    }
 
     if (!identifierNode || !valueNode) {
-      this.errorHandler.logError('Assignment missing identifier or value');
+      this.errorHandler.logError(`${node.type} missing identifier or value`);
       return null;
     }
 
     const name = this.getNodeText(identifierNode);
-    const valueASTNode = this.visitExpression(valueNode);
+
+    // Debug: Log the value node type to understand the structure
+    logger.debug(
+      `Assignment value node type: ${valueNode.type}, text: ${this.getNodeText(valueNode)}`
+    );
+
+    let valueASTNode: ASTNode | null = null;
+
+    // Try different approaches to parse the value based on its type
+    if (valueNode.type === 'expression') {
+      valueASTNode = this.visitExpression(valueNode);
+    } else {
+      // For non-expression values, try to visit directly
+      valueASTNode = this.visitNode(valueNode);
+    }
 
     if (!valueASTNode) {
-      this.errorHandler.logError('Assignment value could not be parsed');
+      this.errorHandler.logError(
+        `${node.type} value could not be parsed (type: ${valueNode.type})`
+      );
       return null;
     }
 
