@@ -2,9 +2,10 @@
  * Test to print the node types in the OpenSCAD language
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { TreeCursor } from 'web-tree-sitter';
 import { OpenscadParser } from './openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 /**
  * Collects all unique node types from a tree by traversing it depth-first.
@@ -33,13 +34,11 @@ describe('OpenSCAD Node Types', () => {
   let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should print the node types in a simple OpenSCAD program', () => {
     const code = 'cube(10); sphere(5); cylinder(h=10, r=5);';

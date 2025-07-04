@@ -2,20 +2,19 @@
  * Test to debug the structure of the accessor_expression node
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from './openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('OpenSCAD Node Types Debug', () => {
   let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should print the structure of the module_instantiation node', () => {
     const code = 'sphere(10);';

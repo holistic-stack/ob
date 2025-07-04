@@ -1,16 +1,16 @@
+import { beforeEach } from 'vitest';
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('OpenscadParser with Visitor AST Generator', () => {
   let parser: OpenscadParser;
 
-  beforeAll(async () => {
-    parser = new OpenscadParser();
+  beforeEach(async () => {
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterAll(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   describe('parseAST with visitor generator', () => {
     it('should parse a simple cube', () => {

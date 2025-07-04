@@ -2,20 +2,19 @@
  * Test to debug the structure of the argument node
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('OpenSCAD Argument Debug', () => {
   let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should print the structure of the argument node', () => {
     const code = 'sphere(d=20);';

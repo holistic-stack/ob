@@ -1,16 +1,16 @@
+import { beforeEach } from 'vitest';
 import { OpenscadParser } from './openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Debug Accessor Expression Structure', () => {
   let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should debug the accessor expression structure for translate', () => {
     const code = 'translate([1, 2, 3]) {}';
