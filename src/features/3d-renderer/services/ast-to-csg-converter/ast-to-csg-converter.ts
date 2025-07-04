@@ -24,7 +24,6 @@ import type {
   DifferenceNode,
   ExpressionNode,
   ForLoopNode,
-  FunctionLiteralNode,
   IfNode,
   IntersectionNode,
   ListComprehensionExpressionNode,
@@ -36,19 +35,12 @@ import type {
   ScaleNode,
   SpecialVariableNode,
   SphereNode,
-  StatementNode,
   TranslateNode,
   UnionNode,
 } from '../../../openscad-parser/ast/ast-types.js';
 import {
-  createDefaultValue,
   evaluateBinaryExpression,
-  evaluateListComprehension,
-  evaluateParenthesizedExpression,
-  evaluateSpecialVariable,
   isFunctionLiteral,
-  processFunctionLiteral,
-  tryEvaluateExpression,
 } from '../../../openscad-parser/ast/utils/ast-evaluator.js';
 import type { MaterialConfig, Mesh3D } from '../../types/renderer.types.js';
 import {
@@ -79,7 +71,7 @@ const logger = createLogger('ASTToCSGConverter');
  * Exhaustive compile-time checking utility for switch statements
  * This function helps catch unhandled cases in switch statements
  */
-function assertNever(value: never): never {
+function _assertNever(value: never): never {
   throw new Error(`Unexpected value: ${JSON.stringify(value)}`);
 }
 
@@ -816,7 +808,7 @@ const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE
 /**
  * Convert conditional expression node by evaluating condition and selecting branch
  */
-const convertConditionalExpressionNode = async (
+const _convertConditionalExpressionNode = async (
   node: ConditionalExpressionNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
@@ -871,7 +863,7 @@ const convertIfStatementNode = async (
 /**
  * Create an empty placeholder mesh for non-renderable constructs
  */
-const createEmptyPlaceholderMesh = (material: THREE.Material): THREE.Mesh => {
+const createEmptyPlaceholderMesh = (_material: THREE.Material): THREE.Mesh => {
   const geometry = new THREE.BufferGeometry();
   const emptyMaterial = new THREE.MeshStandardMaterial({
     color: 0x00ff88,
@@ -885,7 +877,7 @@ const createEmptyPlaceholderMesh = (material: THREE.Material): THREE.Mesh => {
  * Handle list comprehension expressions by returning empty placeholder
  */
 const convertListComprehensionExpression = async (
-  node: ListComprehensionExpressionNode,
+  _node: ListComprehensionExpressionNode,
   material: THREE.Material
 ): Promise<Result<THREE.Mesh, string>> => {
   logger.debug('Processing list comprehension expression (ignored for rendering)');
@@ -918,7 +910,7 @@ const convertSpecialVariableExpression = async (
 const convertBinaryExpression = async (
   node: BinaryExpressionNode,
   material: THREE.Material,
-  convertASTNodeToMesh: (
+  _convertASTNodeToMesh: (
     node: ASTNode,
     material: THREE.Material
   ) => Promise<Result<THREE.Mesh, string>>
@@ -963,7 +955,7 @@ const convertParenthesizedExpression = async (
  * Handle function literals by storing reference (no geometry)
  */
 const convertFunctionLiteral = async (
-  node: ASTNode,
+  _node: ASTNode,
   material: THREE.Material
 ): Promise<Result<THREE.Mesh, string>> => {
   logger.debug('Processing function literal (no geometry)');

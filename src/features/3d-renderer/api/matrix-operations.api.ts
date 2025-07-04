@@ -141,7 +141,7 @@ const DEFAULT_API_CONFIG: MatrixOperationConfig = {
  * Matrix Operations API Implementation
  */
 export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
-  private matrixIntegration: MatrixIntegrationService;
+  private matrixIntegration!: MatrixIntegrationService;
   private config: MatrixOperationConfig;
   private metrics: APIPerformanceMetrics;
 

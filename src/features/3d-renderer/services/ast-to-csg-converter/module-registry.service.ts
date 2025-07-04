@@ -88,7 +88,7 @@ export class ModuleRegistryService {
       const param = definition.parameters[i];
       const argValue = i < args.length ? args[i] : undefined;
 
-      if (param && param.name) {
+      if (param?.name) {
         parameters.set(param.name, argValue);
       }
     }

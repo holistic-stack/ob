@@ -120,7 +120,9 @@ export type MatrixOperation =
   | 'transform'
   | 'rotate'
   | 'scale'
-  | 'translate';
+  | 'translate'
+  | 'validate'
+  | 'get';
 
 /**
  * Matrix validation types

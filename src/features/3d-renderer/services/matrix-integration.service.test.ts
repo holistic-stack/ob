@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import { matrixFactory } from '../utils/matrix-adapters.js';
 import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { MatrixServiceContainer } from './matrix-service-container.js';
+import { getMatrixServiceContainer, MatrixServiceContainer } from './matrix-service-container.js';
 
 const logger = createLogger('MatrixIntegrationServiceTest');
 
@@ -19,22 +19,31 @@ describe('MatrixIntegrationService', () => {
   let service: MatrixIntegrationService;
   let serviceContainer: MatrixServiceContainer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger.init('Setting up test environment');
 
-    serviceContainer = new MatrixServiceContainer({
+    // Reset singleton instances for clean test state
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
+
+    serviceContainer = await getMatrixServiceContainer({
       enableTelemetry: true,
       enableValidation: true,
       enableConfigManager: true,
       autoStartServices: true,
     });
 
-    service = new MatrixIntegrationService(serviceContainer);
+    service = await MatrixIntegrationService.getInstance();
   });
 
   afterEach(async () => {
     logger.end('Cleaning up test environment');
-    await service.shutdown();
+    if (service) {
+      await service.shutdown();
+    }
+    // Reset singleton instances after each test
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
   });
 
   describe('Enhanced Matrix Conversion', () => {
@@ -103,13 +112,17 @@ describe('MatrixIntegrationService', () => {
         '[DEBUG][MatrixIntegrationServiceTest] Testing conversion without optional services'
       );
 
-      const minimalContainer = new MatrixServiceContainer({
+      // Reset singleton instance to get clean minimal container
+      MatrixServiceContainer.resetInstance();
+      MatrixIntegrationService.resetInstance();
+
+      const _minimalContainer = await getMatrixServiceContainer({
         enableTelemetry: false,
         enableValidation: false,
         enableConfigManager: false,
       });
 
-      const minimalService = new MatrixIntegrationService(minimalContainer);
+      const minimalService = await MatrixIntegrationService.getInstance();
 
       const matrix4 = new Matrix4().makeRotationX(Math.PI / 4);
 
@@ -317,17 +330,21 @@ describe('MatrixIntegrationService', () => {
       ).toBe('number');
     });
 
-    it('should handle missing services in performance report', () => {
+    it('should handle missing services in performance report', async () => {
       logger.debug(
         '[DEBUG][MatrixIntegrationServiceTest] Testing performance report with missing services'
       );
 
-      const minimalContainer = new MatrixServiceContainer({
+      // Reset singleton instances for clean test
+      MatrixServiceContainer.resetInstance();
+      MatrixIntegrationService.resetInstance();
+
+      const _minimalContainer = await getMatrixServiceContainer({
         enableTelemetry: false,
         enableValidation: false,
       });
 
-      const minimalService = new MatrixIntegrationService(minimalContainer);
+      const minimalService = await MatrixIntegrationService.getInstance();
       const report = minimalService.getPerformanceReport();
 
       expect(report).toBeDefined();
@@ -356,12 +373,16 @@ describe('MatrixIntegrationService', () => {
         '[DEBUG][MatrixIntegrationServiceTest] Testing optimization without required services'
       );
 
-      const minimalContainer = new MatrixServiceContainer({
+      // Reset singleton instances for clean test
+      MatrixServiceContainer.resetInstance();
+      MatrixIntegrationService.resetInstance();
+
+      const _minimalContainer = await getMatrixServiceContainer({
         enableTelemetry: false,
         enableConfigManager: false,
       });
 
-      const minimalService = new MatrixIntegrationService(minimalContainer);
+      const minimalService = await MatrixIntegrationService.getInstance();
 
       const result = await minimalService.optimizeConfiguration();
 

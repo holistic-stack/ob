@@ -21,7 +21,6 @@ import type {
   BinaryOperator,
   ExpressionNode,
   ListComprehensionExpressionNode,
-  LiteralNode,
   ParenthesizedExpressionNode,
   SpecialVariableNode,
 } from '../ast-types.js';
@@ -137,7 +136,7 @@ function evaluateBinaryOperation(
  * Evaluate a special variable reference
  * Returns 0 as a placeholder value for rendering purposes
  */
-export function evaluateSpecialVariable(node: SpecialVariableNode): EvaluationResult {
+export function evaluateSpecialVariable(_node: SpecialVariableNode): EvaluationResult {
   // For rendering purposes, treat all special variables as 0
   // In a full implementation, these would be resolved from the OpenSCAD context
   return evaluationSuccess(0);
@@ -147,7 +146,7 @@ export function evaluateSpecialVariable(node: SpecialVariableNode): EvaluationRe
  * Evaluate a parenthesized expression by delegating to the inner expression
  */
 export function evaluateParenthesizedExpression(
-  node: ParenthesizedExpressionNode
+  _node: ParenthesizedExpressionNode
 ): EvaluationResult {
   // For parenthesized expressions, we don't evaluate here but indicate
   // that the inner expression should be processed
@@ -158,7 +157,9 @@ export function evaluateParenthesizedExpression(
  * Evaluate a list comprehension expression
  * Returns empty array as placeholder since these don't produce geometry
  */
-export function evaluateListComprehension(node: ListComprehensionExpressionNode): EvaluationResult {
+export function evaluateListComprehension(
+  _node: ListComprehensionExpressionNode
+): EvaluationResult {
   // List comprehensions are complex and don't produce geometry directly
   // Return empty array as placeholder
   return evaluationSuccess(null);
@@ -180,7 +181,7 @@ export function isFunctionLiteral(node: ASTNode): boolean {
 /**
  * Process a function literal by storing reference (no geometry)
  */
-export function processFunctionLiteral(node: ASTNode): EvaluationResult {
+export function processFunctionLiteral(_node: ASTNode): EvaluationResult {
   // Function literals don't produce geometry
   // Return a reference indicator
   return evaluationSuccess(null);

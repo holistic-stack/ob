@@ -14,7 +14,6 @@ import {
   ErrorRateMonitor,
   type RetryConfig,
   retryWithBackoff,
-  withRetry,
 } from '../../../shared/utils/resilience/index.js';
 import type { MATRIX_CONFIG } from '../config/matrix-config.js';
 import { TransientFailureError } from '../errors/index.js';
@@ -215,8 +214,10 @@ export class MatrixValidationService {
         }
 
         // Check for numerical issues early
-        const hasNaN = matrix.to2DArray().some((row) => row.some((val) => isNaN(val)));
-        const hasInfinite = matrix.to2DArray().some((row) => row.some((val) => !isFinite(val)));
+        const hasNaN = matrix.to2DArray().some((row) => row.some((val) => Number.isNaN(val)));
+        const hasInfinite = matrix
+          .to2DArray()
+          .some((row) => row.some((val) => !Number.isFinite(val)));
 
         if (hasNaN || hasInfinite) {
           throw new TransientFailureError(
@@ -230,7 +231,7 @@ export class MatrixValidationService {
 
         // Check cache if enabled
         let cacheHit = false;
-        const cacheKey = options.useCache ? matrixUtils.hash(matrix) + '_validation' : null;
+        const cacheKey = options.useCache ? `${matrixUtils.hash(matrix)}_validation` : null;
 
         if (cacheKey && options.useCache !== false) {
           try {
@@ -244,7 +245,7 @@ export class MatrixValidationService {
 
               return {
                 success: true,
-                result: cachedResult.data as any, // Type assertion for cached validation result
+                result: cachedResult.data as MatrixValidationResult,
                 performance: {
                   executionTime,
                   memoryUsed: 0, // No memory used for cache hit
@@ -269,7 +270,7 @@ export class MatrixValidationService {
         // Cache the result if enabled and successful
         if (cacheKey && options.useCache !== false && validationResult.success) {
           try {
-            this.deps.cache.set(cacheKey, validationResult.result as any);
+            this.deps.cache.set(cacheKey, validationResult.result);
           } catch (cacheError) {
             // Log cache error but don't fail the operation
             logger.debug(
@@ -416,8 +417,8 @@ export class MatrixValidationService {
    */
   private async performMatrixValidation(
     matrix: Matrix,
-    options: MatrixValidationOptions,
-    operationId: string
+    _options: MatrixValidationOptions,
+    _operationId: string
   ): Promise<{ success: boolean; result: MatrixValidationResult }> {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -650,9 +651,9 @@ export class MatrixValidationService {
   }
 
   /**
-   * Validate matrix with comprehensive analysis
+   * Validate matrix with comprehensive analysis (direct validation without retry logic)
    */
-  async validateMatrix(
+  async validateMatrixDirect(
     matrix: Matrix,
     options: MatrixValidationOptions = {}
   ): Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>> {

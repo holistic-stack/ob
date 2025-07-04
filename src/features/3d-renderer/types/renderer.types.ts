@@ -8,8 +8,9 @@
 import type * as React from 'react';
 import type * as THREE from 'three';
 import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
-import type { AsyncResult, Result } from '../../../shared/types/result.types.js';
+import type { AsyncOperationResult, OperationResult, OperationMetrics, OperationError } from '../../../shared/types/operations.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { CoreNode, NodeMetadata } from '../../../shared/types/ast.types.js';
 
 /**
  * 3D Scene configuration
@@ -29,10 +30,8 @@ export interface Scene3DConfig {
 /**
  * Mesh metadata for tracking and optimization
  */
-export interface MeshMetadata {
-  readonly id: string;
-  readonly nodeType: string;
-  readonly nodeIndex: number;
+export interface MeshMetadata extends NodeMetadata {
+  readonly meshId: string;
   readonly triangleCount: number;
   readonly vertexCount: number;
   readonly boundingBox: THREE.Box3;
@@ -122,7 +121,7 @@ export interface MaterialConfig {
 /**
  * Rendering performance metrics
  */
-export interface RenderingMetrics extends PerformanceMetrics {
+export interface RenderingMetrics extends PerformanceMetrics, OperationMetrics {
   readonly meshCount: number;
   readonly triangleCount: number;
   readonly vertexCount: number;
@@ -145,57 +144,59 @@ export interface SceneState {
 }
 
 /**
- * Renderer service interface
+ * Renderer service interface using shared operation types
  */
 export interface RendererService {
-  readonly initialize: (config: Scene3DConfig) => AsyncResult<void, string>;
-  readonly renderAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<Mesh3D>, string>;
-  readonly renderPrimitive: (params: PrimitiveParams) => Result<Mesh3D, string>;
-  readonly performCSG: (config: CSGConfig) => AsyncResult<THREE.Mesh, string>;
-  readonly updateCamera: (camera: CameraConfig) => Result<void, string>;
-  readonly clearScene: () => Result<void, string>;
+  readonly initialize: (config: Scene3DConfig) => AsyncOperationResult<void, OperationError>;
+  readonly renderAST: (ast: ReadonlyArray<CoreNode>) => AsyncOperationResult<ReadonlyArray<Mesh3D>, OperationError>;
+  readonly renderPrimitive: (params: PrimitiveParams) => OperationResult<Mesh3D, OperationError>;
+  readonly performCSG: (config: CSGConfig) => AsyncOperationResult<THREE.Mesh, OperationError>;
+  readonly updateCamera: (camera: CameraConfig) => OperationResult<void, OperationError>;
+  readonly clearScene: () => OperationResult<void, OperationError>;
   readonly dispose: () => void;
   readonly getMetrics: () => RenderingMetrics;
+  readonly cancelOperation: (operationId: string) => OperationResult<void, OperationError>;
+  readonly getOperationStatus: (operationId: string) => OperationResult<OperationMetrics, OperationError>;
 }
 
 /**
- * AST node renderer interface
+ * AST node renderer interface using shared types
  */
 export interface ASTNodeRenderer {
-  readonly canRender: (node: ASTNode) => boolean;
-  readonly render: (node: ASTNode) => Result<Mesh3D, string>;
-  readonly renderAsync: (node: ASTNode) => AsyncResult<Mesh3D, string>;
+  readonly canRender: (node: CoreNode) => boolean;
+  readonly render: (node: CoreNode) => OperationResult<Mesh3D, OperationError>;
+  readonly renderAsync: (node: CoreNode) => AsyncOperationResult<Mesh3D, OperationError>;
 }
 
 /**
- * Primitive renderer factory
+ * Primitive renderer factory using shared operation types
  */
 export interface PrimitiveRendererFactory {
   readonly createCube: (
     size: number | readonly [number, number, number]
-  ) => Result<THREE.BufferGeometry, string>;
+  ) => OperationResult<THREE.BufferGeometry, OperationError>;
   readonly createSphere: (
     radius: number,
     segments?: number
-  ) => Result<THREE.BufferGeometry, string>;
+  ) => OperationResult<THREE.BufferGeometry, OperationError>;
   readonly createCylinder: (
     radius: number,
     height: number,
     segments?: number
-  ) => Result<THREE.BufferGeometry, string>;
+  ) => OperationResult<THREE.BufferGeometry, OperationError>;
   readonly createPolyhedron: (
     vertices: ReadonlyArray<readonly [number, number, number]>,
     faces: ReadonlyArray<ReadonlyArray<number>>
-  ) => Result<THREE.BufferGeometry, string>;
+  ) => OperationResult<THREE.BufferGeometry, OperationError>;
 }
 
 /**
- * Material factory
+ * Material factory using shared operation types
  */
 export interface MaterialFactory {
-  readonly createStandard: (config: MaterialConfig) => Result<THREE.Material, string>;
-  readonly createWireframe: (color: string) => Result<THREE.Material, string>;
-  readonly createTransparent: (color: string, opacity: number) => Result<THREE.Material, string>;
+  readonly createStandard: (config: MaterialConfig) => OperationResult<THREE.Material, OperationError>;
+  readonly createWireframe: (color: string) => OperationResult<THREE.Material, OperationError>;
+  readonly createTransparent: (color: string, opacity: number) => OperationResult<THREE.Material, OperationError>;
 }
 
 /**

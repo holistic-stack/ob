@@ -7,9 +7,9 @@
  * Collects latency & failure histograms and identifies hotspots causing 66-88ms validation times.
  */
 
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Matrix } from 'ml-matrix';
-import { join } from 'path';
 import { Euler, Matrix4 } from 'three';
 import { MatrixIntegrationService } from '../src/features/3d-renderer/services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../src/features/3d-renderer/services/matrix-service-container.js';
@@ -140,7 +140,7 @@ function createChallengingMatrix(size: number): Matrix {
   ];
 
   const typeIndex = Math.floor(Math.random() * matrixTypes.length);
-  return matrixTypes[typeIndex]!();
+  return matrixTypes[typeIndex]?.();
 }
 
 /**
@@ -231,8 +231,12 @@ async function runStressTest(
           ];
 
           const operationIndex = i % operations.length;
-          const operation = operations[operationIndex]!;
-          const operationName = ['conversion', 'validation', 'inversion'][operationIndex]!;
+          const operation = operations[operationIndex];
+          const operationName = ['conversion', 'validation', 'inversion'][operationIndex];
+
+          if (!operation || !operationName) {
+            throw new Error(`Invalid operation index: ${operationIndex}`);
+          }
 
           const result = await operation();
           const latency = performance.now() - operationStart;
@@ -285,7 +289,7 @@ async function runStressTest(
                 latency,
                 operation: 'concurrent_conversion',
               });
-            } catch (error) {
+            } catch (_error) {
               const latency = performance.now() - operationStart;
               results.push({
                 success: false,
@@ -437,7 +441,7 @@ function exportReport(report: DiagnosticReport, testSuite: string): void {
 
   try {
     // Create reports directory if it doesn't exist
-    const fs = require('fs');
+    const fs = require('node:fs');
     const reportsDir = join(process.cwd(), 'reports');
     if (!fs.existsSync(reportsDir)) {
       fs.mkdirSync(reportsDir, { recursive: true });

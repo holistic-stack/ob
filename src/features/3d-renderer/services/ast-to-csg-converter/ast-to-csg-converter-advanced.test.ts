@@ -336,7 +336,15 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
       }
 
       // Verify CSG conversion behavior (may succeed or fail depending on converter support)
-      const successfulConversions = conversionResults.filter((r: any) => r.result.success);
+      interface ConversionResult {
+        nodeIndex: number;
+        nodeType: string;
+        result: { success: boolean };
+        conversionTime: number;
+      }
+      const successfulConversions = conversionResults.filter(
+        (r: ConversionResult) => r.result.success
+      );
 
       // For advanced constructs, the converter may not yet support all features
       // This is expected behavior and indicates areas for future enhancement

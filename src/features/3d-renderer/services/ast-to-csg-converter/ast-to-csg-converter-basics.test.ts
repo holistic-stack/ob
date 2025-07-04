@@ -245,7 +245,15 @@ describe('AST to CSG Converter - Basics Corpus Integration', () => {
       }
 
       // Verify at least one successful conversion for renderable content
-      const successfulConversions = conversionResults.filter((r: any) => r.result.success);
+      interface ConversionResult {
+        nodeIndex: number;
+        nodeType: string;
+        result: { success: boolean };
+        conversionTime: number;
+      }
+      const successfulConversions = conversionResults.filter(
+        (r: ConversionResult) => r.result.success
+      );
       expect(successfulConversions.length).toBeGreaterThan(0);
 
       // Log conversion summary

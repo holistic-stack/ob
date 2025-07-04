@@ -386,15 +386,16 @@ describe('MatrixServiceContainer', () => {
 
       // This test would require more complex mocking to properly test initialization failures
       // For now, we'll test that the container handles missing dependencies gracefully
+      // Test that singleton initialization works properly
       expect(() => {
-        new MatrixServiceContainer();
+        MatrixServiceContainer.getInstanceSync();
       }).not.toThrow();
     });
 
     it('should maintain container integrity on service failures', async () => {
       logger.debug('[DEBUG][MatrixServiceContainerTest] Testing container integrity on failures');
 
-      container = new MatrixServiceContainer();
+      container = MatrixServiceContainer.getInstanceSync();
 
       // Simulate a service failure
       const containerAny = container as unknown as {
@@ -417,7 +418,8 @@ describe('MatrixServiceContainer', () => {
 
   describe('Configuration Integration', () => {
     beforeEach(() => {
-      container = new MatrixServiceContainer();
+      MatrixServiceContainer.resetInstance();
+      container = MatrixServiceContainer.getInstanceSync();
     });
 
     it('should integrate with configuration manager', () => {
@@ -482,8 +484,13 @@ describe('MatrixServiceContainer', () => {
       MatrixServiceContainer.resetInstance();
 
       // Mock a failure during initialization
-      const originalCreateInstance = (MatrixServiceContainer as any).createInstance;
-      (MatrixServiceContainer as any).createInstance = vi
+      interface MatrixServiceContainerWithCreateInstance {
+        createInstance: (...args: unknown[]) => Promise<unknown>;
+      }
+      const containerWithCreateInstance =
+        MatrixServiceContainer as MatrixServiceContainerWithCreateInstance;
+      const originalCreateInstance = containerWithCreateInstance.createInstance;
+      containerWithCreateInstance.createInstance = vi
         .fn()
         .mockRejectedValue(new Error('Initialization failed'));
 
@@ -492,7 +499,7 @@ describe('MatrixServiceContainer', () => {
         await expect(getMatrixServiceContainer()).rejects.toThrow('Initialization failed');
 
         // Restore the original method
-        (MatrixServiceContainer as any).createInstance = originalCreateInstance;
+        containerWithCreateInstance.createInstance = originalCreateInstance;
 
         // Second call should succeed after the failure is cleared
         const instance = await getMatrixServiceContainer();
@@ -504,7 +511,7 @@ describe('MatrixServiceContainer', () => {
         await instance.shutdown();
       } finally {
         // Ensure we restore the original method even if test fails
-        (MatrixServiceContainer as any).createInstance = originalCreateInstance;
+        containerWithCreateInstance.createInstance = originalCreateInstance;
       }
     });
   });

@@ -15,7 +15,6 @@ import {
   type EnhancedMatrixResult,
   MatrixIntegrationService,
 } from '../services/matrix-integration.service.js';
-import { matrixServiceContainer } from '../services/matrix-service-container.js';
 
 const logger = createLogger('useMatrixOperations');
 

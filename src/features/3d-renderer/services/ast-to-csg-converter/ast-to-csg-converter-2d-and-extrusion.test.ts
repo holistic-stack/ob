@@ -257,7 +257,15 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
 
       // For 2D and extrusion features, CSG conversion may not yet be fully supported
       // This is expected behavior for features not yet fully implemented
-      const successfulConversions = conversionResults.filter((r: any) => r.result.success);
+      interface ConversionResult {
+        nodeIndex: number;
+        nodeType: string;
+        result: { success: boolean };
+        conversionTime: number;
+      }
+      const successfulConversions = conversionResults.filter(
+        (r: ConversionResult) => r.result.success
+      );
       if (successfulConversions.length > 0) {
         logger.debug(
           `✅ ${scenario.name} CSG conversion successful with ${successfulConversions.length} conversions`

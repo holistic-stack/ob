@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import { matrixFactory } from '../utils/matrix-adapters.js';
 import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { MatrixServiceContainer } from './matrix-service-container.js';
+import { getMatrixServiceContainer, MatrixServiceContainer } from './matrix-service-container.js';
 
 const logger = createLogger('PerformanceRegressionTest');
 
@@ -233,17 +233,21 @@ describe('Matrix Performance Regression Testing Framework', () => {
   let integrationService: MatrixIntegrationService;
   let performanceMeasurements: PerformanceMeasurement[] = [];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger.init('Setting up performance test environment');
 
-    serviceContainer = new MatrixServiceContainer({
+    // Reset singleton instances for clean test state
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
+
+    serviceContainer = await getMatrixServiceContainer({
       enableTelemetry: true,
       enableValidation: true,
       enableConfigManager: true,
       autoStartServices: true,
     });
 
-    integrationService = new MatrixIntegrationService(serviceContainer);
+    integrationService = await MatrixIntegrationService.getInstance();
     performanceMeasurements = [];
   });
 
@@ -260,7 +264,13 @@ describe('Matrix Performance Regression Testing Framework', () => {
       expect(report.summary.averageRegression).toBeLessThan(50); // <50% average regression
     }
 
-    await integrationService.shutdown();
+    if (integrationService) {
+      await integrationService.shutdown();
+    }
+
+    // Reset singleton instances after each test
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
   });
 
   describe('Matrix Conversion Performance', () => {

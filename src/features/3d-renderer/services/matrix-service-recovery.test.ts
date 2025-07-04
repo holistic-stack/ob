@@ -11,10 +11,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error } from '../../../shared/utils/functional/result.js';
-import { CacheFailureError } from '../errors/index.js';
 import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types.js';
 import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { MatrixServiceContainer } from './matrix-service-container.js';
+import { getMatrixServiceContainer, MatrixServiceContainer } from './matrix-service-container.js';
 import type { MatrixValidationOptions } from './matrix-validation.service.js';
 
 const logger = createLogger('MatrixServiceRecoveryTest');
@@ -156,23 +155,32 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
   let integrationService: MatrixIntegrationService;
   let failureInjector: FailureInjector;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger.init('Setting up recovery test environment');
 
-    serviceContainer = new MatrixServiceContainer({
+    // Reset singleton instances for clean test state
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
+
+    serviceContainer = await getMatrixServiceContainer({
       enableTelemetry: true,
       enableValidation: true,
       enableConfigManager: true,
       autoStartServices: true,
     });
 
-    integrationService = new MatrixIntegrationService(serviceContainer);
+    integrationService = await MatrixIntegrationService.getInstance();
     failureInjector = new FailureInjector();
   });
 
   afterEach(async () => {
     logger.end('Cleaning up recovery test environment');
-    await integrationService.shutdown();
+    if (integrationService) {
+      await integrationService.shutdown();
+    }
+    // Reset singleton instances after each test
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
   });
 
   describe('Service Failure Recovery', () => {
@@ -195,7 +203,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         vi.spyOn(cacheService, 'get').mockImplementation((key: string) => {
           if (failureCount < maxFailures && Math.random() < 0.5) {
             failureCount++;
-            return error(new CacheFailureError(`Simulated cache failure ${failureCount}`));
+            return error(`Simulated cache failure ${failureCount}`);
           }
           return originalGet(key);
         });
@@ -204,7 +212,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           (key: string, value: Matrix, metadata?: Record<string, unknown>) => {
             if (failureCount < maxFailures && Math.random() < 0.3) {
               failureCount++;
-              return error(new CacheFailureError(`Simulated cache failure ${failureCount}`));
+              return error(`Simulated cache failure ${failureCount}`);
             }
             return originalSet(key, value, metadata);
           }

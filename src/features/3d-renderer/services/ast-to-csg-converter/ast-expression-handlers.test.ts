@@ -10,7 +10,6 @@ import type {
   BinaryExpressionNode,
   ExpressionNode,
   ListComprehensionExpressionNode,
-  ParenthesizedExpressionNode,
   SpecialVariableNode,
 } from '../../../openscad-parser/ast/ast-types.js';
 import {
@@ -169,8 +168,27 @@ describe('AST Expression Handlers', () => {
         variable: 'i',
         range: {
           type: 'expression',
-          expressionType: 'literal',
-          value: [1, 2, 3],
+          expressionType: 'array',
+          items: [
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 1,
+              location: createMockLocation(),
+            },
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 2,
+              location: createMockLocation(),
+            },
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 3,
+              location: createMockLocation(),
+            },
+          ],
           location: createMockLocation(),
         },
         expression: {
@@ -232,7 +250,7 @@ describe('AST Expression Handlers', () => {
     it('should handle unknown expression types', () => {
       const unknownExpr: ExpressionNode = {
         type: 'expression',
-        expressionType: 'unknown_type' as any,
+        expressionType: 'unknown_type' as string,
         location: createMockLocation(),
       };
 

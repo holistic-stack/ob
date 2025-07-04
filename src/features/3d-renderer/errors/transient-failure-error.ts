@@ -34,8 +34,12 @@ export class TransientFailureError extends Error implements MatrixError {
     this.operation = operation;
     this.matrixSize = matrixSize;
     this.details = details;
-    this.retryAfter = retryAfter;
-    this.maxRetries = maxRetries;
+    if (retryAfter !== undefined) {
+      this.retryAfter = retryAfter;
+    }
+    if (maxRetries !== undefined) {
+      this.maxRetries = maxRetries;
+    }
 
     // Maintains proper stack trace for where the error was thrown
     if (Error.captureStackTrace) {

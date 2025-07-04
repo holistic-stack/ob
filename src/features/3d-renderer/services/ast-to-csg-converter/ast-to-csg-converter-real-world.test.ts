@@ -174,7 +174,15 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
           expect(conversionResults.length).toBeGreaterThan(0);
 
           // Verify CSG conversion behavior (may succeed or fail depending on converter support)
-          const successfulConversions = conversionResults.filter((r: any) => r.result.success);
+          interface ConversionResult {
+            nodeIndex: number;
+            nodeType: string;
+            result: { success: boolean };
+            conversionTime: number;
+          }
+          const successfulConversions = conversionResults.filter(
+            (r: ConversionResult) => r.result.success
+          );
 
           // For real-world constructs, the converter may not yet support all features
           // This is expected behavior and indicates areas for future enhancement

@@ -348,8 +348,12 @@ class PerformanceBenchmark {
 
   generateReport(): string {
     const totalTests = this.results.length;
-    const passedTests = this.results.filter((r: any) => r.passed).length;
-    const regressions = this.results.filter((r: any) => r.regressionDetected).length;
+    interface TestResult {
+      passed: boolean;
+      regressionDetected: boolean;
+    }
+    const passedTests = this.results.filter((r: TestResult) => r.passed).length;
+    const regressions = this.results.filter((r: TestResult) => r.regressionDetected).length;
 
     let report = `\n=== PERFORMANCE BENCHMARK REPORT ===\n`;
     report += `Total Tests: ${totalTests}\n`;

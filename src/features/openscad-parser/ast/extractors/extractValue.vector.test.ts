@@ -23,12 +23,12 @@ import { extractValue } from './value-extractor.js';
 
 describe('extractValue - Vector Literals Regression Tests', () => {
   let parser: OpenscadParser;
-  let errorHandler: ErrorHandler;
+  let _errorHandler: ErrorHandler;
 
   beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();
-    errorHandler = new ErrorHandler();
+    _errorHandler = new ErrorHandler();
   });
 
   afterEach(() => {
@@ -88,17 +88,17 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toEqual([10, 10, 10]);
 
       // Ensure no null or undefined values
-      expect(result![0]).not.toBeNull();
-      expect(result![0]).not.toBeUndefined();
-      expect(result![1]).not.toBeNull();
-      expect(result![1]).not.toBeUndefined();
-      expect(result![2]).not.toBeNull();
-      expect(result![2]).not.toBeUndefined();
+      expect(result?.[0]).not.toBeNull();
+      expect(result?.[0]).not.toBeUndefined();
+      expect(result?.[1]).not.toBeNull();
+      expect(result?.[1]).not.toBeUndefined();
+      expect(result?.[2]).not.toBeNull();
+      expect(result?.[2]).not.toBeUndefined();
 
       // Ensure proper types
-      expect(typeof result![0]).toBe('number');
-      expect(typeof result![1]).toBe('number');
-      expect(typeof result![2]).toBe('number');
+      expect(typeof result?.[0]).toBe('number');
+      expect(typeof result?.[1]).toBe('number');
+      expect(typeof result?.[2]).toBe('number');
     });
 
     it('should extract [5, 15] as a proper Vector2D without null or truncation', () => {
@@ -111,10 +111,10 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toEqual([5, 15]);
 
       // Ensure no null or undefined values
-      expect(result![0]).not.toBeNull();
-      expect(result![0]).not.toBeUndefined();
-      expect(result![1]).not.toBeNull();
-      expect(result![1]).not.toBeUndefined();
+      expect(result?.[0]).not.toBeNull();
+      expect(result?.[0]).not.toBeUndefined();
+      expect(result?.[1]).not.toBeNull();
+      expect(result?.[1]).not.toBeUndefined();
     });
 
     it('should extract vectors with negative values', () => {
@@ -127,9 +127,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toEqual([-10, -20, -30]);
 
       // Ensure proper negative values
-      expect(result![0]).toBe(-10);
-      expect(result![1]).toBe(-20);
-      expect(result![2]).toBe(-30);
+      expect(result?.[0]).toBe(-10);
+      expect(result?.[1]).toBe(-20);
+      expect(result?.[2]).toBe(-30);
     });
 
     it('should extract vectors with decimal values', () => {
@@ -142,9 +142,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toEqual([1.5, 2.25, 3.75]);
 
       // Ensure proper decimal precision
-      expect(result![0]).toBeCloseTo(1.5);
-      expect(result![1]).toBeCloseTo(2.25);
-      expect(result![2]).toBeCloseTo(3.75);
+      expect(result?.[0]).toBeCloseTo(1.5);
+      expect(result?.[1]).toBeCloseTo(2.25);
+      expect(result?.[2]).toBeCloseTo(3.75);
     });
 
     it('should extract vectors with mixed positive and negative values', () => {
@@ -240,9 +240,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toEqual([10, 10, 10]);
 
       // Verify all values are correctly extracted despite EOF position
-      expect(result![0]).toBe(10);
-      expect(result![1]).toBe(10);
-      expect(result![2]).toBe(10);
+      expect(result?.[0]).toBe(10);
+      expect(result?.[1]).toBe(10);
+      expect(result?.[2]).toBe(10);
     });
 
     it('should extract vectors at EOF with trailing whitespace', () => {

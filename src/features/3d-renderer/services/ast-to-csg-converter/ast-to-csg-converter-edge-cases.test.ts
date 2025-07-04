@@ -250,7 +250,15 @@ describe('AST to CSG Converter - Edge Cases and Error Recovery Integration', () 
           expect(conversionResults.length).toBeGreaterThan(0);
 
           // Verify CSG conversion behavior (may succeed or fail depending on converter support)
-          const successfulConversions = conversionResults.filter((r: any) => r.result.success);
+          interface ConversionResult {
+            nodeIndex: number;
+            nodeType: string;
+            result: { success: boolean };
+            conversionTime: number;
+          }
+          const successfulConversions = conversionResults.filter(
+            (r: ConversionResult) => r.result.success
+          );
 
           // For edge cases, the converter should handle errors gracefully
           // This is expected behavior and indicates robust error handling

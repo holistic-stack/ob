@@ -90,7 +90,11 @@ function isIdempotentOperation(operation: string): boolean {
  */
 function isTransientError(error: Error): boolean {
   // Check for TransientFailureError
-  if (error.name === 'TransientFailureError' || (error as any).isTransient) {
+  interface ErrorWithTransientFlag extends Error {
+    isTransient?: boolean;
+  }
+  const errorWithFlag = error as ErrorWithTransientFlag;
+  if (error.name === 'TransientFailureError' || errorWithFlag.isTransient) {
     return true;
   }
 
@@ -138,7 +142,7 @@ function calculateDelay(
  * Check and update circuit breaker state
  */
 function checkCircuitBreaker(operationKey: string, config: RetryConfig): boolean {
-  const threshold = config.circuitBreakerThreshold ?? DEFAULT_RETRY_CONFIG.circuitBreakerThreshold;
+  const _threshold = config.circuitBreakerThreshold ?? DEFAULT_RETRY_CONFIG.circuitBreakerThreshold;
   const window = config.circuitBreakerWindow ?? DEFAULT_RETRY_CONFIG.circuitBreakerWindow;
 
   let state = circuitBreakers.get(operationKey);
@@ -303,7 +307,7 @@ export async function retryWithBackoff<T>(
 
       try {
         await sleep(delay, config.abortSignal);
-      } catch (sleepError) {
+      } catch (_sleepError) {
         // Sleep was aborted
         return error('Operation aborted during retry delay');
       }
@@ -351,7 +355,7 @@ export function getCircuitBreakerStatus(): Record<string, CircuitBreakerState> {
 /**
  * Wrapper for critical sections with automatic retry logic
  */
-export function withRetry<T extends any[], R>(
+export function withRetry<T extends unknown[], R>(
   operation: (...args: T) => Promise<R>,
   operationName: string,
   config: RetryConfig = {}

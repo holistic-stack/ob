@@ -9,11 +9,7 @@ import type { Matrix } from 'ml-matrix';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
-import {
-  ErrorRateMonitor,
-  type RetryConfig,
-  retryWithBackoff,
-} from '../../../shared/utils/resilience/index.js';
+import { ErrorRateMonitor, type RetryConfig } from '../../../shared/utils/resilience/index.js';
 import { MATRIX_CONFIG } from '../config/matrix-config.js';
 import { TransientFailureError } from '../errors/index.js';
 import type {
@@ -73,16 +69,15 @@ export class MatrixCacheService {
     });
 
     // Configure retry settings for cache operations
-    this.retryConfig = {
+    const retryConfigBase = {
       maxAttempts: 3,
       baseDelay: 500, // Start with 500ms for cache operations
       maxDelay: 5000, // Max 5 seconds for cache operations
       exponentialBase: 2,
       jitterPercent: 15,
-      abortSignal: abortSignal,
       circuitBreakerThreshold: 5,
       circuitBreakerWindow: 60000, // 1 minute
-      shouldRetry: (error, attempt) => {
+      shouldRetry: (error: Error, attempt: number) => {
         // Retry transient failures and memory pressure issues
         return (
           error instanceof TransientFailureError ||
@@ -91,12 +86,14 @@ export class MatrixCacheService {
           attempt < 2
         ); // Always retry at least once
       },
-      onRetry: (error, attempt, delay) => {
+      onRetry: (error: Error, attempt: number, delay: number) => {
         logger.debug(
           `Retrying cache operation after ${error.message}, attempt ${attempt}, delay ${delay}ms`
         );
       },
     };
+
+    this.retryConfig = abortSignal ? { ...retryConfigBase, abortSignal } : retryConfigBase;
 
     this.initializeCache();
   }
@@ -226,7 +223,7 @@ export class MatrixCacheService {
   get(key: string): Result<Matrix | null, string> {
     const operationType = 'cache-get';
 
-    const performGet = async (): Promise<Matrix | null> => {
+    const _performGet = async (): Promise<Matrix | null> => {
       logger.debug(`Cache get: ${key}`);
 
       // Check for abort signal
@@ -747,9 +744,9 @@ export class MatrixCacheService {
    * Get error monitoring statistics
    */
   getErrorStats(): {
-    errorRates: Record<string, any>;
-    healthStatus: any;
-    recentErrors: any[];
+    errorRates: Record<string, number>;
+    healthStatus: { overall: string; [key: string]: unknown };
+    recentErrors: Error[];
   } {
     return {
       errorRates: this.errorMonitor.getErrorTrends(),
@@ -777,7 +774,7 @@ export class MatrixCacheService {
   /**
    * Shutdown the cache service and cleanup resources
    */
-  async shutdown(abortSignal?: AbortSignal): Promise<void> {
+  async shutdown(_abortSignal?: AbortSignal): Promise<void> {
     logger.info('Shutting down matrix cache service...');
 
     try {

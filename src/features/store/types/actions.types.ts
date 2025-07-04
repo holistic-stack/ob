@@ -13,8 +13,9 @@ import type {
   EditorSelection,
   PerformanceMetrics,
 } from '../../../shared/types/common.types';
-import type { AsyncResult } from '../../../shared/types/result.types';
+import type { AsyncOperationResult, OperationError, OperationMetadata } from '../../../shared/types/operations.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
 
 /**
  * Editor action payload types
@@ -38,20 +39,25 @@ export interface LoadCodePayload {
 }
 
 /**
- * Parsing action payload types
+ * Parsing action payload types with operation metadata
  */
 export interface ParseCodePayload {
   readonly code: string;
   readonly options?: {
     readonly enableWarnings?: boolean;
     readonly enableOptimizations?: boolean;
+    readonly maxDepth?: number;
+    readonly timeout?: number;
+    readonly preserveComments?: boolean;
+    readonly includeMetadata?: boolean;
   };
+  readonly operationId?: string;
 }
 
 export interface AddParsingErrorPayload {
-  readonly error: string;
-  readonly line?: number;
-  readonly column?: number;
+  readonly error: OperationError;
+  readonly operationId?: string;
+  readonly context?: Record<string, unknown>;
 }
 
 /**
@@ -123,12 +129,12 @@ export interface UpdateConfigPayload {
 }
 
 /**
- * Async action result types
+ * Async action result types using shared operation types
  */
-export type SaveCodeResult = AsyncResult<void, string>;
-export type LoadCodeResult = AsyncResult<void, string>;
-export type ParseCodeResult = AsyncResult<ReadonlyArray<ASTNode>, string>;
-export type RenderFromASTResult = AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
+export type SaveCodeResult = AsyncOperationResultcvoid, OperationErrore;
+export type LoadCodeResult = AsyncOperationResultcvoid, OperationErrore;
+export type ParseCodeResult = AsyncOperationResultcReadonlyArraycCoreNodee, OperationErrore;
+export type RenderFromASTResult = AsyncOperationResultcReadonlyArraycTHREE.Meshe, OperationErrore;
 
 /**
  * Action creator types for type-safe action dispatch

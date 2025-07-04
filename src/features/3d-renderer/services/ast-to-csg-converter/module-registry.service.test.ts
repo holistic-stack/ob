@@ -7,7 +7,11 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ModuleDefinitionNode } from '../../../openscad-parser/core/ast-types.js';
+import type {
+  IdentifierNode,
+  ModuleDefinitionNode,
+  ModuleParameter,
+} from '../../../openscad-parser/ast/ast-types.js';
 import { ModuleRegistryService } from './module-registry.service.js';
 
 const logger = createLogger('ModuleRegistryServiceTest');
@@ -26,10 +30,20 @@ describe('ModuleRegistryService', () => {
 
   describe('Module Registration', () => {
     it('should register a module definition successfully', () => {
+      const name: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'test_module',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 12, offset: 11 },
+        },
+      };
+      const parameters: ModuleParameter[] = [{ name: 'size' }, { name: 'center' }];
       const moduleNode: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'test_module',
-        parameters: ['size', 'center'],
+        name,
+        parameters,
         body: [],
         location: {
           start: { line: 1, column: 1, offset: 0 },
@@ -45,9 +59,18 @@ describe('ModuleRegistryService', () => {
     });
 
     it('should prevent duplicate module registration', () => {
+      const name: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'duplicate_module',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 17, offset: 16 },
+        },
+      };
       const moduleNode: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'duplicate_module',
+        name,
         parameters: [],
         body: [],
       };
@@ -63,10 +86,20 @@ describe('ModuleRegistryService', () => {
     });
 
     it('should retrieve registered module definitions', () => {
+      const name: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'retrievable_module',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 19, offset: 18 },
+        },
+      };
+      const parameters: ModuleParameter[] = [{ name: 'param1' }, { name: 'param2' }];
       const moduleNode: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'retrievable_module',
-        parameters: ['param1', 'param2'],
+        name,
+        parameters,
         body: [],
       };
 
@@ -74,8 +107,8 @@ describe('ModuleRegistryService', () => {
       const retrieved = moduleRegistry.getModule('retrievable_module');
 
       expect(retrieved).not.toBeNull();
-      expect(retrieved?.name).toBe('retrievable_module');
-      expect(retrieved?.parameters).toEqual(['param1', 'param2']);
+      expect(retrieved?.name.name).toBe('retrievable_module');
+      expect(retrieved?.parameters).toEqual([{ name: 'param1' }, { name: 'param2' }]);
     });
 
     it('should return null for non-existent modules', () => {
@@ -86,10 +119,24 @@ describe('ModuleRegistryService', () => {
 
   describe('Module Instantiation', () => {
     beforeEach(() => {
+      const name: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'parameterized_module',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 21, offset: 20 },
+        },
+      };
+      const parameters: ModuleParameter[] = [
+        { name: 'width' },
+        { name: 'height' },
+        { name: 'depth' },
+      ];
       const moduleNode: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'parameterized_module',
-        parameters: ['width', 'height', 'depth'],
+        name,
+        parameters,
         body: [],
       };
       moduleRegistry.registerModule(moduleNode);
@@ -102,7 +149,7 @@ describe('ModuleRegistryService', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const instance = result.data;
-        expect(instance.definition.name).toBe('parameterized_module');
+        expect(instance.definition.name.name).toBe('parameterized_module');
         expect(instance.parameters.get('width')).toBe(10);
         expect(instance.parameters.get('height')).toBe(20);
         expect(instance.parameters.get('depth')).toBe(30);
@@ -134,10 +181,35 @@ describe('ModuleRegistryService', () => {
 
   describe('Module Management', () => {
     it('should list all registered module names', () => {
+      const createIdentifier = (name: string): IdentifierNode => ({
+        type: 'expression',
+        expressionType: 'identifier',
+        name,
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: name.length + 1, offset: name.length },
+        },
+      });
+
       const modules = [
-        { type: 'module_definition' as const, name: 'module1', parameters: [], body: [] },
-        { type: 'module_definition' as const, name: 'module2', parameters: [], body: [] },
-        { type: 'module_definition' as const, name: 'module3', parameters: [], body: [] },
+        {
+          type: 'module_definition' as const,
+          name: createIdentifier('module1'),
+          parameters: [],
+          body: [],
+        },
+        {
+          type: 'module_definition' as const,
+          name: createIdentifier('module2'),
+          parameters: [],
+          body: [],
+        },
+        {
+          type: 'module_definition' as const,
+          name: createIdentifier('module3'),
+          parameters: [],
+          body: [],
+        },
       ];
 
       modules.forEach((module) => moduleRegistry.registerModule(module));
@@ -150,9 +222,18 @@ describe('ModuleRegistryService', () => {
     });
 
     it('should clear all registered modules', () => {
+      const name: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'clearable_module',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 17, offset: 16 },
+        },
+      };
       const moduleNode: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'clearable_module',
+        name,
         parameters: [],
         body: [],
       };
@@ -168,16 +249,34 @@ describe('ModuleRegistryService', () => {
     it('should track module count correctly', () => {
       expect(moduleRegistry.getModuleCount()).toBe(0);
 
+      const name1: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'counted_module1',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 16, offset: 15 },
+        },
+      };
       const moduleNode1: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'counted_module1',
+        name: name1,
         parameters: [],
         body: [],
       };
 
+      const name2: IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'counted_module2',
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 16, offset: 15 },
+        },
+      };
       const moduleNode2: ModuleDefinitionNode = {
         type: 'module_definition',
-        name: 'counted_module2',
+        name: name2,
         parameters: [],
         body: [],
       };

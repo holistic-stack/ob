@@ -220,7 +220,7 @@ export class ErrorRateMonitor {
     this.operationCounts.delete(operationType);
 
     // Remove error events for this operation type
-    const now = Date.now();
+    const _now = Date.now();
     for (let i = this.errorEvents.length - 1; i >= 0; i--) {
       if (this.errorEvents[i].operationType === operationType) {
         this.errorEvents.splice(i, 1);
@@ -259,7 +259,11 @@ export class ErrorRateMonitor {
    */
   private isTransientError(error: Error): boolean {
     // Check for TransientFailureError
-    if (error.name === 'TransientFailureError' || (error as any).isTransient) {
+    interface ErrorWithTransientFlag extends Error {
+      isTransient?: boolean;
+    }
+    const errorWithFlag = error as ErrorWithTransientFlag;
+    if (error.name === 'TransientFailureError' || errorWithFlag.isTransient) {
       return true;
     }
 
@@ -287,7 +291,7 @@ export class ErrorRateMonitor {
    */
   private determineSeverity(
     operationType: string,
-    error: Error,
+    _error: Error,
     isTransient: boolean
   ): 'error' | 'warning' | 'info' {
     if (!isTransient) {

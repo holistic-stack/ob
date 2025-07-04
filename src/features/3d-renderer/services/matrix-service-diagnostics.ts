@@ -5,7 +5,7 @@
  * performance profiling and latency analysis of MatrixService operations.
  */
 
-import { PerformanceObserver, performance } from 'perf_hooks';
+import { PerformanceObserver, performance } from 'node:perf_hooks';
 import { createLogger } from '../../../shared/services/logger.service.js';
 
 const logger = createLogger('MatrixServiceDiagnostics');
@@ -136,8 +136,13 @@ export class MatrixServiceDiagnostics {
   /**
    * Process performance entry from Node.js perf_hooks
    */
-  private processPerfEntry(entry: any): void {
+  private processPerfEntry(entry: PerformanceEntry): void {
     if (!this.isEnabled) return;
+
+    interface PerformanceEntryWithDetail extends PerformanceEntry {
+      detail?: Record<string, unknown>;
+    }
+    const entryWithDetail = entry as PerformanceEntryWithDetail;
 
     const measurement: PerformanceMeasurement = {
       name: entry.name,
@@ -146,7 +151,7 @@ export class MatrixServiceDiagnostics {
       endTime: entry.startTime + entry.duration,
       duration: entry.duration,
       timestamp: Date.now(),
-      metadata: entry.detail || {},
+      metadata: entryWithDetail.detail || {},
     };
 
     this.addMeasurement(measurement);
