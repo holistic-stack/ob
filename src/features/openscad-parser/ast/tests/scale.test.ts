@@ -1,11 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Scale AST Generation', () => {
   let parser: OpenscadParser;
 
-  beforeAll(async () => {
-    parser = new OpenscadParser();
+  beforeEach(async () => {
+    parser = createTestParser();
     await parser.init();
 
     // Mock the parseAST method to return hardcoded values for tests
@@ -146,10 +147,8 @@ describe('Scale AST Generation', () => {
     });
   });
 
-  afterAll(() => {
-    parser.dispose();
-    vi.restoreAllMocks();
-  });
+  // Note: parser cleanup is now handled automatically by the test utility
+  // Mock cleanup is still handled manually
 
   describe('scale transformation', () => {
     it('should parse scale with vector parameter', () => {

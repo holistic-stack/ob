@@ -1,19 +1,18 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { Tree } from 'web-tree-sitter';
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('OpenSCAD Parser - AST Generation', () => {
   let osParser: OpenscadParser;
   let tree: Tree | null;
 
-  beforeAll(async () => {
-    osParser = new OpenscadParser();
+  beforeEach(async () => {
+    osParser = createTestParser();
     await osParser.init('/tree-sitter-openscad.wasm');
   });
 
-  afterAll(() => {
-    osParser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   function findDescendantNode(node: any | null, predicate: (n: any) => boolean): any | undefined {
     if (!node) return undefined;
