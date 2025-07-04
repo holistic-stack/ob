@@ -1,18 +1,17 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type * as ast from '../ast-types.js';
 
 describe('Minkowski Operation AST Generation', () => {
   let parser: OpenscadParser;
 
-  beforeAll(async () => {
-    parser = new OpenscadParser();
+  beforeEach(async () => {
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterAll(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should parse a basic minkowski sum of multiple children', async () => {
     const code = `

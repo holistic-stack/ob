@@ -1,21 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Transformation AST Generation', () => {
   let parser: OpenscadParser;
 
-  // FIX: Use beforeEach/afterEach for proper test isolation
-  // This prevents Tree-sitter memory corruption between tests
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterEach(() => {
-    if (parser) {
-      parser.dispose();
-    }
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   describe('Mirror Transformation', () => {
     it('should parse a mirror with vector parameter', async () => {
