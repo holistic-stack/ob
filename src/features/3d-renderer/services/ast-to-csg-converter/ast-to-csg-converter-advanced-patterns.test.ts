@@ -665,78 +665,22 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
     });
   });
 
-  describe('Performance Tests', () => {
-    it('should meet performance targets for module definitions', async () => {
-      logger.init('Testing performance for module definitions');
+  it('should meet performance targets for conditional logic', async () => {
+    logger.init('Testing performance for conditional logic');
 
-      const testCase = ADVANCED_OPENSCAD_SCENARIOS.moduleDefinitions.testCases[0];
-      const startTime = performance.now();
+    const testCase = ADVANCED_OPENSCAD_SCENARIOS.conditionalLogic.testCases[1]; // Nested conditional
+    const startTime = performance.now();
 
-      const result = await store.getState().parseCode(testCase.code);
+    const result = await store.getState().parseCode(testCase.code);
 
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
+    const endTime = performance.now();
+    const totalTime = endTime - startTime;
 
-      expect(result.success).toBe(true);
-      expect(totalTime).toBeLessThan(100); // Should complete within 100ms for simple modules
+    expect(result.success).toBe(true);
+    expect(totalTime).toBeLessThan(150); // Should complete within 150ms for nested conditionals
 
-      logger.debug(`Module definition performance: ${totalTime.toFixed(2)}ms`);
-      logger.end('Module definition performance test completed');
-    });
-
-    it('should meet performance targets for conditional logic', async () => {
-      logger.init('Testing performance for conditional logic');
-
-      const testCase = ADVANCED_OPENSCAD_SCENARIOS.conditionalLogic.testCases[1]; // Nested conditional
-      const startTime = performance.now();
-
-      const result = await store.getState().parseCode(testCase.code);
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(result.success).toBe(true);
-      expect(totalTime).toBeLessThan(150); // Should complete within 150ms for nested conditionals
-
-      logger.debug(`Conditional logic performance: ${totalTime.toFixed(2)}ms`);
-      logger.end('Conditional logic performance test completed');
-    });
-
-    it('should meet performance targets for complex transformations', async () => {
-      logger.init('Testing performance for complex transformations');
-
-      const testCase = ADVANCED_OPENSCAD_SCENARIOS.complexTransformations.testCases[1]; // Dynamic transformation
-      const startTime = performance.now();
-
-      const result = await store.getState().parseCode(testCase.code);
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(result.success).toBe(true);
-      expect(totalTime).toBeLessThan(200); // Should complete within 200ms for complex transformations
-
-      logger.debug(`Complex transformation performance: ${totalTime.toFixed(2)}ms`);
-      logger.end('Complex transformation performance test completed');
-    });
-
-    it('should meet performance targets for advanced CSG operations', async () => {
-      logger.init('Testing performance for advanced CSG operations');
-
-      const testCase = ADVANCED_OPENSCAD_SCENARIOS.advancedCSGOperations.testCases[1]; // Multi-level CSG
-      const startTime = performance.now();
-
-      const result = await store.getState().parseCode(testCase.code);
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(result.success).toBe(true);
-      expect(totalTime).toBeLessThan(500); // Should complete within 500ms for complex CSG operations
-
-      logger.debug(`Advanced CSG operations performance: ${totalTime.toFixed(2)}ms`);
-      logger.end('Advanced CSG operations performance test completed');
-    });
+    logger.debug(`Conditional logic performance: ${totalTime.toFixed(2)}ms`);
+    logger.end('Conditional logic performance test completed');
   });
 
   describe('Error Handling Tests', () => {

@@ -499,12 +499,25 @@ export class OpenscadParser {
    */
   dispose(): void {
     try {
+      // Clear previous tree first to break any references
+      if (this.previousTree) {
+        this.previousTree.delete();
+        this.previousTree = null;
+      }
+
+      // Dispose parser instance
       if (this.parser) {
         this.parser.delete();
         this.parser = null;
-        this.language = null;
-        this.previousTree = null;
-        this.isInitialized = false;
+      }
+
+      // Clear all references
+      this.language = null;
+      this.isInitialized = false;
+
+      // Clear error handler if it has cleanup methods
+      if (this.errorHandler && typeof (this.errorHandler as any).clear === 'function') {
+        (this.errorHandler as any).clear();
       }
     } catch (error) {
       this.errorHandler.handleError(`Error disposing parser: ${error}`);

@@ -143,15 +143,15 @@ describe('Simplified MatrixOperationsAPI', () => {
         // Check that A * A^-1 = I (approximately)
         const identity = matrix.mmul(result.data.result);
         const identityArray = identity.to2DArray();
-        
+
         // Check diagonal elements are close to 1
         expect(identityArray[0][0]).toBeCloseTo(1, 10);
         expect(identityArray[1][1]).toBeCloseTo(1, 10);
-        
+
         // Check off-diagonal elements are close to 0
         expect(identityArray[0][1]).toBeCloseTo(0, 10);
         expect(identityArray[1][0]).toBeCloseTo(0, 10);
-        
+
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
@@ -169,12 +169,12 @@ describe('Simplified MatrixOperationsAPI', () => {
         const mlMatrix = result.data.result;
         expect(mlMatrix.rows).toBe(4);
         expect(mlMatrix.columns).toBe(4);
-        
+
         // Check translation values
         expect(mlMatrix.get(0, 3)).toBeCloseTo(1, 10);
         expect(mlMatrix.get(1, 3)).toBeCloseTo(2, 10);
         expect(mlMatrix.get(2, 3)).toBeCloseTo(3, 10);
-        
+
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
@@ -258,14 +258,14 @@ describe('Simplified MatrixOperationsAPI', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const matrix = result.data.result;
-        
+
         // Check key elements (90 degree rotation around X)
         expect(matrix.get(0, 0)).toBeCloseTo(1, 10);
         expect(matrix.get(1, 1)).toBeCloseTo(0, 10);
         expect(matrix.get(1, 2)).toBeCloseTo(-1, 10);
         expect(matrix.get(2, 1)).toBeCloseTo(1, 10);
         expect(matrix.get(2, 2)).toBeCloseTo(0, 10);
-        
+
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });

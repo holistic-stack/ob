@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { findUpSync } from 'find-up';
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
-import { vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { createLogger } from './shared/services/logger.service.js';
 
@@ -539,3 +539,57 @@ export async function initializeMatrixServicesForTest(): Promise<{
     integrationService: mockIntegrationService,
   };
 }
+
+// ============================================================================
+// Memory Management for Tests
+// ============================================================================
+
+/**
+ * Force garbage collection to prevent memory leaks during tests
+ */
+export function forceGarbageCollection(): void {
+  if (global.gc) {
+    logger.debug('Forcing garbage collection');
+    global.gc();
+  } else {
+    logger.debug(
+      'Garbage collection not available (run with --expose-gc for better memory management)'
+    );
+  }
+}
+
+/**
+ * Clear test memory and force garbage collection
+ */
+export function clearTestMemory(): void {
+  logger.debug('Clearing test memory');
+
+  // Force garbage collection
+  forceGarbageCollection();
+}
+
+/**
+ * Monitor memory usage during tests
+ */
+export function logMemoryUsage(context: string): void {
+  if (process.memoryUsage) {
+    const usage = process.memoryUsage();
+    const heapUsedMB = Math.round(usage.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(usage.heapTotal / 1024 / 1024);
+    logger.debug(`Memory usage [${context}]: ${heapUsedMB}MB / ${heapTotalMB}MB heap`);
+
+    // Warn if memory usage is getting high
+    if (heapUsedMB > 2048) {
+      logger.warn(`High memory usage detected: ${heapUsedMB}MB heap used`);
+    }
+  }
+}
+
+// ============================================================================
+// Global Test Hooks for Memory Management
+// ============================================================================
+
+// Global memory cleanup after each test
+afterEach(() => {
+  clearTestMemory();
+});

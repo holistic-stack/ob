@@ -34,11 +34,11 @@ export class MatrixOperationsAPI {
     operationFn: () => T
   ): Promise<Result<SimpleMatrixResult<T>, string>> {
     const startTime = Date.now();
-    
+
     try {
       const result = operationFn();
       const executionTime = Date.now() - startTime;
-      
+
       return success({
         result,
         executionTime,
@@ -75,7 +75,9 @@ export class MatrixOperationsAPI {
   /**
    * Three.js integration
    */
-  async convertMatrix4ToMLMatrix(matrix4: Matrix4): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async convertMatrix4ToMLMatrix(
+    matrix4: Matrix4
+  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
     return this.executeOperation('convertMatrix4ToMLMatrix', () => {
       const elements = matrix4.elements;
       // Three.js uses column-major order, convert to row-major for ml-matrix
@@ -88,21 +90,35 @@ export class MatrixOperationsAPI {
     });
   }
 
-  async convertMLMatrixToMatrix4(matrix: Matrix): Promise<Result<SimpleMatrixResult<Matrix4>, string>> {
+  async convertMLMatrixToMatrix4(
+    matrix: Matrix
+  ): Promise<Result<SimpleMatrixResult<Matrix4>, string>> {
     return this.executeOperation('convertMLMatrixToMatrix4', () => {
       if (matrix.rows !== 4 || matrix.columns !== 4) {
         throw new Error('Matrix must be 4x4 for Three.js Matrix4 conversion');
       }
-      
+
       const matrix4 = new Matrix4();
       // Convert from row-major (ml-matrix) to column-major (Three.js)
       matrix4.set(
-        matrix.get(0, 0), matrix.get(0, 1), matrix.get(0, 2), matrix.get(0, 3),
-        matrix.get(1, 0), matrix.get(1, 1), matrix.get(1, 2), matrix.get(1, 3),
-        matrix.get(2, 0), matrix.get(2, 1), matrix.get(2, 2), matrix.get(2, 3),
-        matrix.get(3, 0), matrix.get(3, 1), matrix.get(3, 2), matrix.get(3, 3)
+        matrix.get(0, 0),
+        matrix.get(0, 1),
+        matrix.get(0, 2),
+        matrix.get(0, 3),
+        matrix.get(1, 0),
+        matrix.get(1, 1),
+        matrix.get(1, 2),
+        matrix.get(1, 3),
+        matrix.get(2, 0),
+        matrix.get(2, 1),
+        matrix.get(2, 2),
+        matrix.get(2, 3),
+        matrix.get(3, 0),
+        matrix.get(3, 1),
+        matrix.get(3, 2),
+        matrix.get(3, 3)
       );
-      
+
       return matrix4;
     });
   }
@@ -110,7 +126,11 @@ export class MatrixOperationsAPI {
   /**
    * Create transformation matrices
    */
-  async createTranslationMatrix(x: number, y: number, z: number): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async createTranslationMatrix(
+    x: number,
+    y: number,
+    z: number
+  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
     return this.executeOperation('createTranslationMatrix', () => {
       return new Matrix([
         [1, 0, 0, x],
@@ -121,7 +141,11 @@ export class MatrixOperationsAPI {
     });
   }
 
-  async createScaleMatrix(x: number, y: number, z: number): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async createScaleMatrix(
+    x: number,
+    y: number,
+    z: number
+  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
     return this.executeOperation('createScaleMatrix', () => {
       return new Matrix([
         [x, 0, 0, 0],
@@ -181,9 +205,15 @@ export class MatrixOperationsAPI {
         return matrix.get(0, 0) * matrix.get(1, 1) - matrix.get(0, 1) * matrix.get(1, 0);
       }
       if (matrix.rows === 3 && matrix.columns === 3) {
-        const a = matrix.get(0, 0), b = matrix.get(0, 1), c = matrix.get(0, 2);
-        const d = matrix.get(1, 0), e = matrix.get(1, 1), f = matrix.get(1, 2);
-        const g = matrix.get(2, 0), h = matrix.get(2, 1), i = matrix.get(2, 2);
+        const a = matrix.get(0, 0),
+          b = matrix.get(0, 1),
+          c = matrix.get(0, 2);
+        const d = matrix.get(1, 0),
+          e = matrix.get(1, 1),
+          f = matrix.get(1, 2);
+        const g = matrix.get(2, 0),
+          h = matrix.get(2, 1),
+          i = matrix.get(2, 2);
         return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
       }
       throw new Error('Determinant calculation only supported for 2x2 and 3x3 matrices');

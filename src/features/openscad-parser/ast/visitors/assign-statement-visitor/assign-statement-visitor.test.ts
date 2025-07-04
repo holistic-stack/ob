@@ -15,21 +15,32 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../index.js';
+import { OpenscadParser, SimpleErrorHandler } from '../../../index.js';
 import type { AssignStatementNode } from '../../ast-types.js';
 
 describe('AssignStatementVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   beforeEach(async () => {
     errorHandler = new SimpleErrorHandler();
-    parser = new EnhancedOpenscadParser(errorHandler);
+    parser = new OpenscadParser(errorHandler);
     await parser.init();
   });
 
   afterEach(() => {
-    parser.dispose();
+    if (parser) {
+      parser.dispose();
+      parser = null as any; // Clear reference to help GC
+    }
+    if (errorHandler) {
+      errorHandler = null as any; // Clear reference to help GC
+    }
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
   });
 
   describe('Basic Assign Statements', () => {
@@ -38,7 +49,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign');
 
       const assignNode = ast[0] as AssignStatementNode;
       expect(assignNode.assignments).toHaveLength(1);
@@ -283,8 +294,8 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(2);
-      expect(ast[0].type).toBe('assign');
-      expect(ast[1].type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign');
+      expect(ast[1]?.type).toBe('assign');
 
       const firstAssign = ast[0] as AssignStatementNode;
       const secondAssign = ast[1] as AssignStatementNode;
@@ -307,7 +318,7 @@ describe('AssignStatementVisitor', () => {
 
       // Should still parse but may have incomplete assignment
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign');
     });
 
     it('should handle assign statement with missing body', () => {
