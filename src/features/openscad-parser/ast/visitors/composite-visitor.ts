@@ -65,10 +65,10 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../ast-types.js';
 import type { ASTVisitor } from './ast-visitor.js';
-import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
 
 /**
  * A composite visitor that implements the visitor pattern and delegates to specialized visitors.
@@ -89,28 +89,28 @@ import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHand
 export class CompositeVisitor implements ASTVisitor {
   /**
    * Creates a new CompositeVisitor that delegates to specialized visitors.
-   * 
+   *
    * The CompositeVisitor combines multiple specialized visitors, allowing each to focus on
    * a specific part of the OpenSCAD syntax. When a node is encountered, the CompositeVisitor
-   * either routes it to a specific visit method based on its type, or tries each of its 
+   * either routes it to a specific visit method based on its type, or tries each of its
    * child visitors in sequence until one can process the node.
-   * 
+   *
    * @param visitors - Array of specialized visitors that implement the ASTVisitor interface
    * @param errorHandler - Error handler for reporting issues during AST generation
-   * 
+   *
    * @example
    * ```ts
    * // Create specialized visitors
    * const primitiveVisitor = new PrimitiveVisitor(source, errorHandler);
    * const transformVisitor = new TransformVisitor(source, compositeVisitor, errorHandler);
-   * 
+   *
    * // Create a composite visitor with the specialized visitors
    * const compositeVisitor = new CompositeVisitor(
    *   [primitiveVisitor, transformVisitor],
    *   errorHandler
    * );
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   constructor(
@@ -124,9 +124,7 @@ export class CompositeVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitNode(node: TSNode): ast.ASTNode | null {
-    this.errorHandler.logInfo(
-      `Processing node of type: ${node.type}`
-    );
+    this.errorHandler.logInfo(`Processing node of type: ${node.type}`);
 
     // Route to specific visitor methods based on node type
     switch (node.type) {
@@ -176,9 +174,7 @@ export class CompositeVisitor implements ASTVisitor {
             return result;
           }
         }
-        this.errorHandler.logWarning(
-          `No visitor could process node of type: ${node.type}`
-        );
+        this.errorHandler.logWarning(`No visitor could process node of type: ${node.type}`);
         return null;
     }
   }
@@ -189,9 +185,7 @@ export class CompositeVisitor implements ASTVisitor {
    * @returns An array of AST nodes
    */
   visitChildren(node: TSNode): ast.ASTNode[] {
-    this.errorHandler.logInfo(
-      `Processing children of node type: ${node.type}`
-    );
+    this.errorHandler.logInfo(`Processing children of node type: ${node.type}`);
 
     const children: ast.ASTNode[] = [];
 
@@ -205,9 +199,7 @@ export class CompositeVisitor implements ASTVisitor {
       }
     }
 
-    this.errorHandler.logInfo(
-      `Processed ${children.length} children from node type: ${node.type}`
-    );
+    this.errorHandler.logInfo(`Processed ${children.length} children from node type: ${node.type}`);
     return children;
   }
 
@@ -218,15 +210,15 @@ export class CompositeVisitor implements ASTVisitor {
 
   /**
    * Processes a statement node in the OpenSCAD syntax tree.
-   * 
+   *
    * Statements are the fundamental execution units in OpenSCAD code, including
    * module instantiations, assignments, conditionals, and loops. This method
    * examines the statement node and delegates to specialized visitors that can
    * handle the specific statement type.
-   * 
+   *
    * @param node - The statement Tree-sitter node to process
    * @returns The corresponding AST node, or null if no visitor can process the statement
-   * 
+   *
    * @example Simple Statement
    * ```ts
    * // For a statement like 'cube(10);'
@@ -234,7 +226,7 @@ export class CompositeVisitor implements ASTVisitor {
    * const astNode = visitor.visitStatement(statementNode);
    * // Returns a ModuleInstantiationNode with type 'cube'
    * ```
-   * 
+   *
    * @example Complex Statement
    * ```ts
    * // For a complex statement like 'if (x > 10) { cube(x); }'
@@ -242,13 +234,11 @@ export class CompositeVisitor implements ASTVisitor {
    * const astNode = visitor.visitStatement(ifStatementNode);
    * // Returns an IfNode with condition and consequent children
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   visitStatement(node: TSNode): ast.ASTNode | null {
-    this.errorHandler.logInfo(
-      `Processing statement node of type: ${node.type}`
-    );
+    this.errorHandler.logInfo(`Processing statement node of type: ${node.type}`);
 
     // Try each visitor in sequence
     for (const visitor of this.visitors) {
@@ -261,22 +251,20 @@ export class CompositeVisitor implements ASTVisitor {
       }
     }
 
-    this.errorHandler.logWarning(
-      `No visitor could process statement of type: ${node.type}`
-    );
+    this.errorHandler.logWarning(`No visitor could process statement of type: ${node.type}`);
     return null;
   }
 
   /**
    * Processes a block node containing multiple statements in the OpenSCAD syntax tree.
-   * 
+   *
    * Blocks in OpenSCAD are collections of statements enclosed in curly braces, commonly
    * used in module bodies, if/else bodies, and for loop bodies. This method delegates
    * to visitChildren to process each statement in the block sequentially.
-   * 
+   *
    * @param node - The block Tree-sitter node to process
    * @returns An array of AST nodes representing the statements in the block
-   * 
+   *
    * @example Module Body
    * ```ts
    * // For a module body like 'module test() { cube(10); sphere(5); }'
@@ -284,7 +272,7 @@ export class CompositeVisitor implements ASTVisitor {
    * const bodyNodes = visitor.visitBlock(blockNode);
    * // Returns an array containing the cube and sphere module instantiation nodes
    * ```
-   * 
+   *
    * @example Empty Block
    * ```ts
    * // For an empty block like 'if(x>0) { }'
@@ -292,78 +280,72 @@ export class CompositeVisitor implements ASTVisitor {
    * const nodes = visitor.visitBlock(emptyBlockNode);
    * // Returns an empty array []
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   visitBlock(node: TSNode): ast.ASTNode[] {
-    this.errorHandler.logInfo(
-      `Processing block node with ${node.namedChildCount} named children`
-    );
+    this.errorHandler.logInfo(`Processing block node with ${node.namedChildCount} named children`);
 
     // Delegate to visitChildren to process each statement in the block
     return this.visitChildren(node);
   }
 
-/**
- * Visits and processes a module instantiation node in the OpenSCAD syntax tree.
- * 
- * Module instantiations are the core building blocks of OpenSCAD code, representing
- * calls to both built-in modules (like cube, sphere) and user-defined modules.
- * This method delegates the processing to specialized visitors capable of handling
- * different types of module instantiations (primitives, transformations, etc.).
- * 
- * @param node - The module_instantiation Tree-sitter node to process
- * @returns The AST node representing the module instantiation, or null if no visitor can process it
- * 
- * @example
- * ```ts
- * // For processing a primitive instantiation like 'cube(10);'
- * const moduleNode = tree.rootNode.child(0); // Assuming first child is the module instantiation
- * const astNode = visitor.visitModuleInstantiation(moduleNode);
- * // Returns a ModuleInstantiationNode with type 'cube'
- * ```
- * 
- * @example
- * ```ts
- * // For processing a transformation like 'translate([0,0,5]) sphere(10);'
- * const transformNode = tree.rootNode.child(0);
- * const astNode = visitor.visitModuleInstantiation(transformNode);
- * // Returns a TransformNode with a child ModuleInstantiationNode
- * ```
- * 
- * @since 0.1.0
- */
-visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
-  this.errorHandler.logInfo(
-    `Processing module instantiation node: ${node.type}`
-  );
-  
-  // Try each visitor in sequence
-  for (const visitor of this.visitors) {
-    const result = visitor.visitModuleInstantiation(node);
-    if (result) {
-      this.errorHandler.logInfo(
-        `Visitor ${visitor.constructor.name} processed module instantiation`
-      );
-      return result;
-    }
-  }
-  
-  this.errorHandler.logWarning(
-    `No visitor could process module instantiation: ${node.text.substring(0, 50)}`
-  );
-  return null;
-}
+  /**
+   * Visits and processes a module instantiation node in the OpenSCAD syntax tree.
+   *
+   * Module instantiations are the core building blocks of OpenSCAD code, representing
+   * calls to both built-in modules (like cube, sphere) and user-defined modules.
+   * This method delegates the processing to specialized visitors capable of handling
+   * different types of module instantiations (primitives, transformations, etc.).
+   *
+   * @param node - The module_instantiation Tree-sitter node to process
+   * @returns The AST node representing the module instantiation, or null if no visitor can process it
+   *
+   * @example
+   * ```ts
+   * // For processing a primitive instantiation like 'cube(10);'
+   * const moduleNode = tree.rootNode.child(0); // Assuming first child is the module instantiation
+   * const astNode = visitor.visitModuleInstantiation(moduleNode);
+   * // Returns a ModuleInstantiationNode with type 'cube'
+   * ```
+   *
+   * @example
+   * ```ts
+   * // For processing a transformation like 'translate([0,0,5]) sphere(10);'
+   * const transformNode = tree.rootNode.child(0);
+   * const astNode = visitor.visitModuleInstantiation(transformNode);
+   * // Returns a TransformNode with a child ModuleInstantiationNode
+   * ```
+   *
+   * @since 0.1.0
+   */
+  visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
+    this.errorHandler.logInfo(`Processing module instantiation node: ${node.type}`);
 
-/**
- * Visit a module definition node
- * @param node The module definition node to visit
- * @returns The module definition AST node or null if the node cannot be processed
- */
-visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
-    this.errorHandler.logInfo(
-      `Processing module definition: ${node.text.substring(0, 50)}`
+    // Try each visitor in sequence
+    for (const visitor of this.visitors) {
+      const result = visitor.visitModuleInstantiation(node);
+      if (result) {
+        this.errorHandler.logInfo(
+          `Visitor ${visitor.constructor.name} processed module instantiation`
+        );
+        return result;
+      }
+    }
+
+    this.errorHandler.logWarning(
+      `No visitor could process module instantiation: ${node.text.substring(0, 50)}`
     );
+    return null;
+  }
+
+  /**
+   * Visit a module definition node
+   * @param node The module definition node to visit
+   * @returns The module definition AST node or null if the node cannot be processed
+   */
+  visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
+    this.errorHandler.logInfo(`Processing module definition: ${node.text.substring(0, 50)}`);
 
     // Try each visitor in sequence
     for (const visitor of this.visitors) {
@@ -419,10 +401,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
     console.log(
-      `[CompositeVisitor.visitIfStatement] Processing if statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[CompositeVisitor.visitIfStatement] Processing if statement: ${node.text.substring(0, 50)}`
     );
 
     // Try each visitor in sequence
@@ -436,9 +415,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitIfStatement] No visitor could process if statement`
-    );
+    console.log(`[CompositeVisitor.visitIfStatement] No visitor could process if statement`);
     return null;
   }
 
@@ -449,10 +426,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
    */
   visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
     console.log(
-      `[CompositeVisitor.visitForStatement] Processing for statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[CompositeVisitor.visitForStatement] Processing for statement: ${node.text.substring(0, 50)}`
     );
 
     // Try each visitor in sequence
@@ -466,9 +440,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitForStatement] No visitor could process for statement`
-    );
+    console.log(`[CompositeVisitor.visitForStatement] No visitor could process for statement`);
     return null;
   }
 
@@ -496,9 +468,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitLetExpression] No visitor could process let expression`
-    );
+    console.log(`[CompositeVisitor.visitLetExpression] No visitor could process let expression`);
     return null;
   }
 
@@ -616,9 +586,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitEchoStatement] No visitor could process echo statement`
-    );
+    console.log(`[CompositeVisitor.visitEchoStatement] No visitor could process echo statement`);
     return null;
   }
 
@@ -706,9 +674,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitCallExpression] No visitor could process call expression`
-    );
+    console.log(`[CompositeVisitor.visitCallExpression] No visitor could process call expression`);
     return null;
   }
 
@@ -719,10 +685,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
    */
   visitExpression(node: TSNode): ast.ASTNode | null {
     console.log(
-      `[CompositeVisitor.visitExpression] Processing expression: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[CompositeVisitor.visitExpression] Processing expression: ${node.text.substring(0, 50)}`
     );
 
     // Try each visitor in sequence
@@ -736,9 +699,7 @@ visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
       }
     }
 
-    console.log(
-      `[CompositeVisitor.visitExpression] No visitor could process expression`
-    );
+    console.log(`[CompositeVisitor.visitExpression] No visitor could process expression`);
     return null;
   }
 }

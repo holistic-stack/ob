@@ -52,8 +52,8 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode, type Point } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Point, Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 
 /**
  * Converts a Tree-sitter Point object to an AST Position object.
@@ -94,10 +94,7 @@ import * as ast from '../ast-types.js';
  * @since 0.1.0
  * @category Location Conversion
  */
-export function pointToPosition(
-  point: Point,
-  offset: number = 0
-): ast.Position {
+export function pointToPosition(point: Point, offset: number = 0): ast.Position {
   return {
     line: point.row,
     column: point.column,

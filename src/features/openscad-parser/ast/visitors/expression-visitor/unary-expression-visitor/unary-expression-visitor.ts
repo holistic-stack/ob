@@ -1,9 +1,9 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../../ast-types.js';
-import { BaseASTVisitor } from '../../base-ast-visitor.js';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type * as ast from '../../../ast-types.js';
 import { getLocation } from '../../../utils/location-utils.js';
+import { BaseASTVisitor } from '../../base-ast-visitor.js';
+import type { ExpressionVisitor } from '../../expression-visitor.js';
 
 export class UnaryExpressionVisitor extends BaseASTVisitor {
   constructor(
@@ -30,7 +30,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -54,7 +54,12 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
           // Delegate back to the parent visitor to handle this as a regular expression
           const result = this.parentVisitor.visitExpression(child);
           // Return any valid expression result, but only if it's actually a unary expression
-          if (result && result.type === 'expression' && 'expressionType' in result && result.expressionType === 'unary') {
+          if (
+            result &&
+            result.type === 'expression' &&
+            'expressionType' in result &&
+            result.expressionType === 'unary'
+          ) {
             return result as ast.UnaryExpressionNode;
           }
           // If it's not a unary expression, return null to indicate this isn't a unary expression
@@ -68,7 +73,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -87,7 +92,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(operandNode).start.line,
           column: getLocation(operandNode).start.column,
-          nodeType: operandNode.type
+          nodeType: operandNode.type,
         }
       );
       this.errorHandler.report(error);
@@ -111,7 +116,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
         'UnaryExpressionVisitor.visit',
         operandAST
       );
-      return operandAST; 
+      return operandAST;
     }
 
     // At this point, operandAST should be a valid ExpressionNode (not null and not ErrorNode)

@@ -70,17 +70,17 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import { getLocation } from '../utils/location-utils.js';
-import { defaultLocation } from '../utils/ast-error-utils.js';
-import { findDescendantOfType } from '../utils/node-utils.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../ast-types.js';
 import {
   extractModuleParameters,
   extractModuleParametersFromText,
 } from '../extractors/module-parameter-extractor.js';
-import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import { defaultLocation } from '../utils/ast-error-utils.js';
+import { getLocation } from '../utils/location-utils.js';
+import { findDescendantOfType } from '../utils/node-utils.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
  * Visitor for processing OpenSCAD function definitions and calls.
@@ -102,7 +102,10 @@ import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHand
  * @since 0.1.0
  */
 export class FunctionVisitor extends BaseASTVisitor {
-  constructor(source: string, protected override errorHandler: ErrorHandler) {
+  constructor(
+    source: string,
+    protected override errorHandler: ErrorHandler
+  ) {
     super(source, errorHandler);
   }
 
@@ -118,10 +121,7 @@ export class FunctionVisitor extends BaseASTVisitor {
   override visitStatement(node: TSNode): ast.ASTNode | null {
     // Only handle statements that contain function definitions
     // Check for function_definition
-    const functionDefinition = findDescendantOfType(
-      node,
-      'function_definition'
-    );
+    const functionDefinition = findDescendantOfType(node, 'function_definition');
     if (functionDefinition) {
       return this.visitFunctionDefinition(functionDefinition);
     }
@@ -143,9 +143,7 @@ export class FunctionVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(
-      `[FunctionVisitor.createASTNodeForFunction] Processing function: ${functionName}`
-    );
+    console.log(`[FunctionVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
 
     // Check if this is a function definition
     if (node.text.includes('function') && node.text.includes('=')) {
@@ -161,9 +159,7 @@ export class FunctionVisitor extends BaseASTVisitor {
    * @param node The function definition node to visit
    * @returns The AST node or null if the node cannot be processed
    */
-  override visitFunctionDefinition(
-    node: TSNode
-  ): ast.FunctionDefinitionNode | null {
+  override visitFunctionDefinition(node: TSNode): ast.FunctionDefinitionNode | null {
     this.errorHandler.logDebug(
       `[FunctionVisitor.visitFunctionDefinition] Processing function definition: ${node.text.substring(
         0,
@@ -260,9 +256,7 @@ export class FunctionVisitor extends BaseASTVisitor {
       const expressionEndIndex = node.text.indexOf(';', expressionStartIndex);
       if (expressionStartIndex > 3) {
         if (expressionEndIndex > expressionStartIndex) {
-          expressionValue = node.text
-            .substring(expressionStartIndex, expressionEndIndex)
-            .trim();
+          expressionValue = node.text.substring(expressionStartIndex, expressionEndIndex).trim();
         } else {
           expressionValue = node.text.substring(expressionStartIndex).trim();
         }
@@ -287,10 +281,7 @@ export class FunctionVisitor extends BaseASTVisitor {
     }
 
     // For testing purposes, hardcode some values based on the node text
-    if (
-      node.text.includes('function add(a, b)') ||
-      node.text.includes('function add(a=0, b=0)')
-    ) {
+    if (node.text.includes('function add(a, b)') || node.text.includes('function add(a=0, b=0)')) {
       expression = {
         type: 'expression',
         expressionType: 'binary',

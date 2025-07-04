@@ -5,9 +5,9 @@
  * Supports variable resolution, function calls, and memoization.
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 
 /**
  * Evaluation result with type information
@@ -71,7 +71,7 @@ export class ExpressionEvaluationContext {
       maxRecursionDepth: 100,
       strictTypes: false,
       allowUndefinedVariables: false,
-      ...options
+      ...options,
     };
 
     // Register built-in functions
@@ -212,7 +212,7 @@ export class ExpressionEvaluationContext {
         const a = args[0]!.value as number;
         const b = args[1]!.value as number;
         return { value: Math.max(a, b), type: 'number' };
-      }
+      },
     });
 
     this.registerFunction({
@@ -225,7 +225,7 @@ export class ExpressionEvaluationContext {
         const a = args[0]!.value as number;
         const b = args[1]!.value as number;
         return { value: Math.min(a, b), type: 'number' };
-      }
+      },
     });
 
     this.registerFunction({
@@ -237,7 +237,7 @@ export class ExpressionEvaluationContext {
         }
         const x = args[0]!.value as number;
         return { value: Math.abs(x), type: 'number' };
-      }
+      },
     });
 
     // Trigonometric functions (degrees)
@@ -249,8 +249,8 @@ export class ExpressionEvaluationContext {
           throw new Error('sin() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.sin(x * Math.PI / 180), type: 'number' };
-      }
+        return { value: Math.sin((x * Math.PI) / 180), type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -261,8 +261,8 @@ export class ExpressionEvaluationContext {
           throw new Error('cos() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.cos(x * Math.PI / 180), type: 'number' };
-      }
+        return { value: Math.cos((x * Math.PI) / 180), type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -273,8 +273,8 @@ export class ExpressionEvaluationContext {
           throw new Error('tan() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.tan(x * Math.PI / 180), type: 'number' };
-      }
+        return { value: Math.tan((x * Math.PI) / 180), type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -285,8 +285,8 @@ export class ExpressionEvaluationContext {
           throw new Error('asin() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.asin(x) * 180 / Math.PI, type: 'number' };
-      }
+        return { value: (Math.asin(x) * 180) / Math.PI, type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -297,8 +297,8 @@ export class ExpressionEvaluationContext {
           throw new Error('acos() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.acos(x) * 180 / Math.PI, type: 'number' };
-      }
+        return { value: (Math.acos(x) * 180) / Math.PI, type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -309,8 +309,8 @@ export class ExpressionEvaluationContext {
           throw new Error('atan() requires exactly 1 argument');
         }
         const x = args[0]!.value as number;
-        return { value: Math.atan(x) * 180 / Math.PI, type: 'number' };
-      }
+        return { value: (Math.atan(x) * 180) / Math.PI, type: 'number' };
+      },
     });
 
     this.registerFunction({
@@ -322,8 +322,8 @@ export class ExpressionEvaluationContext {
         }
         const y = args[0]!.value as number;
         const x = args[1]!.value as number;
-        return { value: Math.atan2(y, x) * 180 / Math.PI, type: 'number' };
-      }
+        return { value: (Math.atan2(y, x) * 180) / Math.PI, type: 'number' };
+      },
     });
   }
 }

@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import * as cursorUtils from './cursor-utils.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
+import * as cursorUtils from './cursor-utils.js';
 
 describe('Cursor Utils Integration', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 
@@ -31,36 +31,26 @@ describe('Cursor Utils Integration', () => {
             type: tree.rootNode.type,
             text:
               tree.rootNode.text?.substring(0, 70) +
-              (tree.rootNode.text && tree.rootNode.text.length > 70
-                ? '...'
-                : ''),
+              (tree.rootNode.text && tree.rootNode.text.length > 70 ? '...' : ''),
           }
         : null;
 
       expect(tree).not.toBeNull();
 
-      const logFilePath = path.resolve(
-        __dirname,
-        '../../../../../diagnostic_log.txt'
-      );
+      const logFilePath = path.resolve(__dirname, '../../../../../diagnostic_log.txt');
       try {
         fs.writeFileSync(logFilePath, '');
       } catch (_e) {
         /* ensure file is clear or created */
       }
-      const log = (message: string) =>
-        fs.appendFileSync(logFilePath, message + '\n');
+      const log = (message: string) => fs.appendFileSync(logFilePath, message + '\n');
 
       if (!tree) {
         log('Error: CST Tree is null. Parsing failed.');
-        throw new Error(
-          'CST Tree is null after parsing. Check grammar or input code.'
-        );
+        throw new Error('CST Tree is null after parsing. Check grammar or input code.');
       }
 
-      log(
-        "Input code for 'should handle translate transform':\n" + code + '\n'
-      );
+      log("Input code for 'should handle translate transform':\n" + code + '\n');
       log('Root node from tree.rootNode (simplified):\n');
       log(JSON.stringify(simplifiedRootNode, null, 2) + '\n');
 
@@ -82,22 +72,16 @@ describe('Cursor Utils Integration', () => {
       expect(cursor.nodeType).toBe('module_instantiation');
 
       expect(cursor.gotoFirstChild()).toBe(true);
-      log(
-        `Cursor at: ${cursor.nodeType} (expected identifier for translate)`
-      );
+      log(`Cursor at: ${cursor.nodeType} (expected identifier for translate)`);
       expect(cursor.nodeType).toBe('identifier');
       expect(cursorUtils.getNodeText(cursor, code)).toBe('translate');
-      log(
-        `Node text for translate: "${cursorUtils.getNodeText(cursor, code)}"`
-      );
+      log(`Node text for translate: "${cursorUtils.getNodeText(cursor, code)}"`);
 
       expect(cursor.gotoNextSibling()).toBe(true);
       log(`Cursor at: ${cursor.nodeType} (expected argument_list)`);
       expect(cursor.nodeType).toBe('argument_list');
       expect(cursorUtils.getNodeText(cursor, code)).toBe('([10, 20, 30])');
-      log(
-        `Node text for arguments: "${cursorUtils.getNodeText(cursor, code)}"`
-      );
+      log(`Node text for arguments: "${cursorUtils.getNodeText(cursor, code)}"`);
 
       expect(cursor.gotoFirstChild()).toBe(true);
       expect(cursor.gotoNextSibling()).toBe(true);
@@ -107,7 +91,7 @@ describe('Cursor Utils Integration', () => {
       expect(cursor.gotoFirstChild()).toBe(true);
       expect(cursor.nodeType).toBe('vector_expression'); // Current grammar uses specific types
       let foundArrayLiteral = false;
-      let currentDepth = 0;
+      const currentDepth = 0;
       const maxDescendDepth = 15;
 
       // The vector_expression already contains the array content, no need to search deeper
@@ -115,17 +99,9 @@ describe('Cursor Utils Integration', () => {
       log(`Cursor at: ${cursor.nodeType} (expected vector_expression)`);
       expect(cursor.nodeType).toBe('vector_expression');
       expect(cursorUtils.getNodeText(cursor, code)).toBe('[10, 20, 30]');
-      log(
-        `Node text for vector_expression: "${cursorUtils.getNodeText(
-          cursor,
-          code
-        )}"`
-      );
+      log(`Node text for vector_expression: "${cursorUtils.getNodeText(cursor, code)}"`);
 
-      while (
-        cursor.nodeType !== 'module_instantiation' &&
-        cursor.gotoParent()
-      ) {
+      while (cursor.nodeType !== 'module_instantiation' && cursor.gotoParent()) {
         // Continue traversing up the tree
       }
       expect(cursor.nodeType).toBe('module_instantiation');
@@ -136,11 +112,7 @@ describe('Cursor Utils Integration', () => {
       log(`Cursor at: ${cursor.nodeType} (expected statement for cube)`);
       expect(cursor.nodeType).toBe('statement');
       expect(cursorUtils.getNodeText(cursor, code).trim()).toBe('cube(10);');
-      log(
-        `Node text for cube statement: "${cursorUtils
-          .getNodeText(cursor, code)
-          .trim()}"`
-      );
+      log(`Node text for cube statement: "${cursorUtils.getNodeText(cursor, code).trim()}"`);
     });
 
     it('should extract correct text from nodes', () => {
@@ -173,8 +145,7 @@ describe('Cursor Utils Integration', () => {
         start: cursor.startPosition,
         end: cursor.endPosition,
         hasSemicolon:
-          cursor.endPosition.column < code.length &&
-          code[cursor.endPosition.column] === ';',
+          cursor.endPosition.column < code.length && code[cursor.endPosition.column] === ';',
       };
       console.log('call_expression node:', callExpressionNode);
 
@@ -194,25 +165,15 @@ describe('Cursor Utils Integration', () => {
           : 'end of line'
       );
 
-      console.log(
-        'Node type mismatch. Expected: statement, Actual:',
-        cursor.nodeType
-      );
-      console.log(
-        'Node type mismatch. Expected: expression_statement, Actual:',
-        cursor.nodeType
-      );
-      console.log(
-        'Node type mismatch. Expected: call_expression, Actual:',
-        cursor.nodeType
-      );
+      console.log('Node type mismatch. Expected: statement, Actual:', cursor.nodeType);
+      console.log('Node type mismatch. Expected: expression_statement, Actual:', cursor.nodeType);
+      console.log('Node type mismatch. Expected: call_expression, Actual:', cursor.nodeType);
       console.log('Node type checks:', {
         isStatement: cursorUtils.isNodeType(cursor, 'statement'),
         isExpression: cursorUtils.isNodeType(cursor, 'expression_statement'),
         isCall: cursorUtils.isNodeType(cursor, 'call_expression'),
         hasSemicolonAfter:
-          cursor.endPosition.column < code.length &&
-          code[cursor.endPosition.column] === ';',
+          cursor.endPosition.column < code.length && code[cursor.endPosition.column] === ';',
       });
 
       console.log('Not including semicolon in node text');

@@ -107,7 +107,7 @@
  * @since 0.1.0
  */
 
-import { ParserError, ErrorCode } from '../types/error-types.js';
+import { ErrorCode, type ParserError } from '../types/error-types.js';
 import { BaseRecoveryStrategy } from './recovery-strategy.js';
 
 /**
@@ -151,7 +151,7 @@ export class MissingSemicolonStrategy extends BaseRecoveryStrategy {
     return (
       error.code === ErrorCode.MISSING_SEMICOLON ||
       (error.code === ErrorCode.SYNTAX_ERROR &&
-       error.message.toLowerCase().includes('missing semicolon'))
+        error.message.toLowerCase().includes('missing semicolon'))
     );
   }
 

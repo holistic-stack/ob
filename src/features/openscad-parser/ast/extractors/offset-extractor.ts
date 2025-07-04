@@ -1,12 +1,9 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { extractArguments } from './argument-extractor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
-import {
-  extractNumberParameter,
-  extractBooleanParameter,
-} from './parameter-extractor.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import { extractArguments } from './argument-extractor.js';
+import { extractBooleanParameter, extractNumberParameter } from './parameter-extractor.js';
 // findDescendantOfType is not used in this file
 
 /**
@@ -14,10 +11,12 @@ import { ErrorHandler } from '../../error-handling/index.js';
  * @param node The accessor expression node
  * @returns An offset AST node or null if the node cannot be processed
  */
-export function extractOffsetNode(node: TSNode, errorHandler?: ErrorHandler, sourceCode?: string): ast.OffsetNode | null {
-  console.log(
-    `[extractOffsetNode] Processing offset node: ${node.text.substring(0, 50)}`
-  );
+export function extractOffsetNode(
+  node: TSNode,
+  errorHandler?: ErrorHandler,
+  sourceCode?: string
+): ast.OffsetNode | null {
+  console.log(`[extractOffsetNode] Processing offset node: ${node.text.substring(0, 50)}`);
 
   // Default values
   let radius = 0;
@@ -39,11 +38,7 @@ export function extractOffsetNode(node: TSNode, errorHandler?: ErrorHandler, sou
   }
 
   const args = extractArguments(argsNode, errorHandler, sourceCode);
-  console.log(
-    `[extractOffsetNode] Extracted ${args.length} arguments: ${JSON.stringify(
-      args
-    )}`
-  );
+  console.log(`[extractOffsetNode] Extracted ${args.length} arguments: ${JSON.stringify(args)}`);
 
   // Process arguments
   for (let i = 0; i < args.length; i++) {
@@ -57,11 +52,7 @@ export function extractOffsetNode(node: TSNode, errorHandler?: ErrorHandler, sou
         radius = radiusValue;
         console.log(`[extractOffsetNode] Found radius parameter: ${radius}`);
       } else {
-        console.log(
-          `[extractOffsetNode] Invalid radius parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractOffsetNode] Invalid radius parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle delta parameter (named 'delta')
@@ -71,11 +62,7 @@ export function extractOffsetNode(node: TSNode, errorHandler?: ErrorHandler, sou
         delta = deltaValue;
         console.log(`[extractOffsetNode] Found delta parameter: ${delta}`);
       } else {
-        console.log(
-          `[extractOffsetNode] Invalid delta parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractOffsetNode] Invalid delta parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle chamfer parameter (named 'chamfer')
@@ -85,11 +72,7 @@ export function extractOffsetNode(node: TSNode, errorHandler?: ErrorHandler, sou
         chamfer = chamferValue;
         console.log(`[extractOffsetNode] Found chamfer parameter: ${chamfer}`);
       } else {
-        console.log(
-          `[extractOffsetNode] Invalid chamfer parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractOffsetNode] Invalid chamfer parameter: ${JSON.stringify(arg.value)}`);
       }
     }
   }

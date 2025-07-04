@@ -117,8 +117,8 @@
  * @since 0.1.0
  */
 
-import * as ast from '../ast-types.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { evaluateBinaryExpression } from './binary-expression-evaluator/binary-expression-evaluator.js';
 
 /**
@@ -153,21 +153,21 @@ export function evaluateExpression(
         // Use the dedicated binary expression evaluator
         const binaryExpr = expr as ast.BinaryExpressionNode;
         const result = evaluateBinaryExpression(binaryExpr, errorHandler);
-        
+
         if (errorHandler) {
           errorHandler.logInfo(
             `[evaluateExpression] Binary expression evaluation result: ${result}`,
             'evaluateExpression'
           );
         }
-        
+
         return result;
       }
       case 'unary':
       case 'unary_expression': {
         const unaryNode = expr as ast.UnaryExpressionNode;
         const operandValue = evaluateExpression(unaryNode.operand, errorHandler);
-        
+
         if (operandValue === null) {
           if (errorHandler) {
             errorHandler.logWarning(
@@ -177,7 +177,7 @@ export function evaluateExpression(
           }
           return null;
         }
-        
+
         switch (unaryNode.operator) {
           case '-':
             if (typeof operandValue === 'number') {
@@ -200,7 +200,7 @@ export function evaluateExpression(
             }
             return null;
         }
-        
+
         if (errorHandler) {
           errorHandler.logWarning(
             `[evaluateExpression] Failed to evaluate unary expression with operator ${unaryNode.operator} and operand ${operandValue}`,

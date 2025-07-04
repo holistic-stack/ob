@@ -1,5 +1,5 @@
-import { OpenscadParser } from '../../openscad-parser.js';
-import { beforeEach, afterEach, describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 
 describe('Transformation AST Generation', () => {
   let parser: OpenscadParser;

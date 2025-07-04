@@ -8,7 +8,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
 import {
   clearSourceCodeForExtraction,
   convertASTNodeToCSG,

@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { Node as TSNode } from 'web-tree-sitter';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
 
 describe('Real Parser Integration Tests', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
     // Create a new parser instance for each test
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 

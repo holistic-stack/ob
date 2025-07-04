@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ParserError, ErrorCode, Severity } from '../types/error-types.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
 import { UnknownIdentifierStrategy } from './unknown-identifier-strategy.js';
 
 describe('UnknownIdentifierStrategy', () => {
@@ -12,13 +12,13 @@ describe('UnknownIdentifierStrategy', () => {
     strategy.setCurrentScope(['global']);
     strategy.addIdentifier('width', 'variable');
     strategy.addIdentifier('height', 'variable');
-    strategy.addIdentifier('length', 'variable');  // Add missing 'length' identifier
+    strategy.addIdentifier('length', 'variable'); // Add missing 'length' identifier
     strategy.addIdentifier('render', 'function');
     strategy.addIdentifier('customCube', 'module');
 
     // Add some similar identifiers
-    strategy.addIdentifier('widht', 'variable');  // Common typo
-    strategy.addIdentifier('hight', 'variable');  // Common typo
+    strategy.addIdentifier('widht', 'variable'); // Common typo
+    strategy.addIdentifier('hight', 'variable'); // Common typo
     strategy.addIdentifier('renderObject', 'function');
   });
 
@@ -53,23 +53,16 @@ describe('UnknownIdentifierStrategy', () => {
     });
 
     it('should not handle other error codes', () => {
-      const error = new ParserError(
-        'Syntax error',
-        ErrorCode.SYNTAX_ERROR,
-        Severity.ERROR
-      );
+      const error = new ParserError('Syntax error', ErrorCode.SYNTAX_ERROR, Severity.ERROR);
       expect(strategy.canHandle(error)).toBe(false);
     });
   });
 
   describe('extractIdentifier', () => {
     it('should extract identifier from context', () => {
-      const error = new ParserError(
-        'Error',
-        ErrorCode.UNDEFINED_VARIABLE,
-        Severity.ERROR,
-        { found: 'lenght' }
-      );
+      const error = new ParserError('Error', ErrorCode.UNDEFINED_VARIABLE, Severity.ERROR, {
+        found: 'lenght',
+      });
 
       const identifier = (strategy as any).extractIdentifier(error);
       expect(identifier).toBe('lenght');
@@ -91,13 +84,13 @@ describe('UnknownIdentifierStrategy', () => {
     it('should find similar variable names', () => {
       const suggestions = (strategy as any).findSimilarIdentifiers('lenght');
       expect(suggestions).toHaveLength(2);
-      expect(suggestions[0].name).toBe('height');  // 'height' comes before 'length' alphabetically with same distance
+      expect(suggestions[0].name).toBe('height'); // 'height' comes before 'length' alphabetically with same distance
       expect(suggestions[1].name).toBe('length');
     });
 
     it('should find similar function names', () => {
       const suggestions = (strategy as any).findSimilarIdentifiers('rendr');
-      expect(suggestions).toHaveLength(1);  // Only 'render' is within edit distance 2
+      expect(suggestions).toHaveLength(1); // Only 'render' is within edit distance 2
       expect(suggestions[0].name).toBe('render');
     });
 
@@ -119,8 +112,8 @@ describe('UnknownIdentifierStrategy', () => {
         Severity.ERROR,
         {
           line: 1,
-          column: 15,  // 'lenght' starts at position 15 in 'cube([10, 20, lenght]);'
-          found: 'lenght'
+          column: 15, // 'lenght' starts at position 15 in 'cube([10, 20, lenght]);'
+          found: 'lenght',
         }
       );
 
@@ -143,7 +136,7 @@ describe('UnknownIdentifierStrategy', () => {
         {
           line: 1,
           column: 1,
-          found: 'rendr'
+          found: 'rendr',
         }
       );
 
@@ -162,7 +155,7 @@ describe('UnknownIdentifierStrategy', () => {
         {
           line: 1,
           column: 1,
-          found: 'xyz123'
+          found: 'xyz123',
         }
       );
 
@@ -182,7 +175,7 @@ describe('UnknownIdentifierStrategy', () => {
         Severity.ERROR,
         {
           found: 'lenght',
-          suggestions: ['length', 'width']
+          suggestions: ['length', 'width'],
         }
       );
 

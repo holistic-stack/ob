@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Node as TSNode } from 'web-tree-sitter';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { TransformVisitor } from './transform-visitor.js';
-import { extractArguments } from '../extractors/argument-extractor.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { extractArguments } from '../extractors/argument-extractor.js';
+import { TransformVisitor } from './transform-visitor.js';
 
 describe('TransformVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let visitor: TransformVisitor;
   let errorHandler: ErrorHandler;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
     visitor = new TransformVisitor('', undefined, errorHandler);
@@ -22,18 +22,12 @@ describe('TransformVisitor', () => {
   });
 
   // Helper function to get the CST node for a transformation
-  function getTransformCstNode(
-    code: string,
-    transformName: string
-  ): TSNode | null {
+  function getTransformCstNode(code: string, transformName: string): TSNode | null {
     const tree = parser.parseCST(code);
     if (!tree?.rootNode) return null;
 
     function findNode(node: TSNode): TSNode | null {
-      if (
-        node.type === 'module_call_expression' ||
-        node.type === 'module_instantiation'
-      ) {
+      if (node.type === 'module_call_expression' || node.type === 'module_instantiation') {
         const nameNode = node.childForFieldName('name');
         if (nameNode?.text === transformName) {
           return node;
@@ -56,10 +50,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -76,10 +67,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -96,10 +84,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -126,10 +111,7 @@ describe('TransformVisitor', () => {
         console.log(`CST node text: ${transformCstNode.text}`);
       }
 
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       // Debug: Let's examine the CST structure for translate(5)
@@ -141,7 +123,9 @@ describe('TransformVisitor', () => {
       for (let i = 0; i < transformCstNode.childCount; i++) {
         const child = transformCstNode.child(i);
         if (child) {
-          console.log(`  Transform child ${i}: type=${child.type}, text="${child.text}", isNamed=${child.isNamed}`);
+          console.log(
+            `  Transform child ${i}: type=${child.type}, text="${child.text}", isNamed=${child.isNamed}`
+          );
         }
       }
 
@@ -155,7 +139,9 @@ describe('TransformVisitor', () => {
         for (let i = 0; i < argsNode.childCount; i++) {
           const child = argsNode.child(i);
           if (child) {
-            console.log(`  Child ${i}: type=${child.type}, text="${child.text}", isNamed=${child.isNamed}`);
+            console.log(
+              `  Child ${i}: type=${child.type}, text="${child.text}", isNamed=${child.isNamed}`
+            );
           }
         }
 
@@ -163,7 +149,9 @@ describe('TransformVisitor', () => {
         for (let i = 0; i < argsNode.namedChildCount; i++) {
           const namedChild = argsNode.namedChild(i);
           if (namedChild) {
-            console.log(`  Named child ${i}: type=${namedChild.type}, text="${namedChild.text}", isNamed=${namedChild.isNamed}`);
+            console.log(
+              `  Named child ${i}: type=${namedChild.type}, text="${namedChild.text}", isNamed=${namedChild.isNamed}`
+            );
           }
         }
       } else {
@@ -186,10 +174,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -207,10 +192,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -226,10 +208,7 @@ describe('TransformVisitor', () => {
     it('should parse translate() polygon(); (no arguments)', () => {
       const code = 'translate() polygon();';
       const transformCstNode = getTransformCstNode(code, 'translate');
-      expect(
-        transformCstNode,
-        `CST node for 'translate' not found in: "${code}"`
-      ).not.toBeNull();
+      expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       const resultNode = visitor.visitModuleInstantiation(
@@ -301,11 +280,9 @@ describe('TransformVisitor', () => {
         } as ast.LiteralNode,
       };
       // Access protected method for testing
-      const result = (visitor as any).createASTNodeForFunction(
-        mockRotateCstNode,
-        'rotate',
-        [mockAngleParam]
-      ) as ast.RotateNode | null;
+      const result = (visitor as any).createASTNodeForFunction(mockRotateCstNode, 'rotate', [
+        mockAngleParam,
+      ]) as ast.RotateNode | null;
       expect(result?.type).toBe('rotate');
       // expect(result?.angle).toBe(90); // or result.a depending on ast-types
       // expect(result?.v).toBeUndefined(); // or some default if applicable

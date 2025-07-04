@@ -1,152 +1,149 @@
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
-
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { OpenscadParser } from '../../openscad-parser';
 
 describe('Scale AST Generation', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
 
     // Mock the parseAST method to return hardcoded values for tests
-    vi.spyOn(parser, 'parseAST').mockImplementation(
-      (code: string, _generator?: string) => {
-        if (code === 'scale([2, 1, 0.5]) cube(10);') {
-          return [
-            {
-              type: 'scale',
-              vector: [2, 1, 0.5],
-              v: [2, 1, 0.5], // For backward compatibility
-              children: [
-                {
-                  type: 'cube',
-                  size: 10,
-                  center: false,
-                  location: {
-                    start: { line: 0, column: 0, offset: 0 },
-                    end: { line: 0, column: 10, offset: 10 },
-                  },
+    vi.spyOn(parser, 'parseAST').mockImplementation((code: string, _generator?: string) => {
+      if (code === 'scale([2, 1, 0.5]) cube(10);') {
+        return [
+          {
+            type: 'scale',
+            vector: [2, 1, 0.5],
+            v: [2, 1, 0.5], // For backward compatibility
+            children: [
+              {
+                type: 'cube',
+                size: 10,
+                center: false,
+                location: {
+                  start: { line: 0, column: 0, offset: 0 },
+                  end: { line: 0, column: 10, offset: 10 },
                 },
-              ],
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 28, offset: 28 },
               },
+            ],
+            location: {
+              start: { line: 0, column: 0, offset: 0 },
+              end: { line: 0, column: 28, offset: 28 },
             },
-          ];
-        } else if (code === 'scale(2) cube(10);') {
-          return [
-            {
-              type: 'scale',
-              vector: [2, 2, 2],
-              v: [2, 2, 2], // For backward compatibility
-              children: [
-                {
-                  type: 'cube',
-                  size: 10,
-                  center: false,
-                  location: {
-                    start: { line: 0, column: 0, offset: 0 },
-                    end: { line: 0, column: 10, offset: 10 },
-                  },
+          },
+        ];
+      } else if (code === 'scale(2) cube(10);') {
+        return [
+          {
+            type: 'scale',
+            vector: [2, 2, 2],
+            v: [2, 2, 2], // For backward compatibility
+            children: [
+              {
+                type: 'cube',
+                size: 10,
+                center: false,
+                location: {
+                  start: { line: 0, column: 0, offset: 0 },
+                  end: { line: 0, column: 10, offset: 10 },
                 },
-              ],
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 18, offset: 18 },
               },
+            ],
+            location: {
+              start: { line: 0, column: 0, offset: 0 },
+              end: { line: 0, column: 18, offset: 18 },
             },
-          ];
-        } else if (code === 'scale(v=[2, 1, 0.5]) cube(10);') {
-          return [
-            {
-              type: 'scale',
-              vector: [2, 1, 0.5],
-              v: [2, 1, 0.5], // For backward compatibility
-              children: [
-                {
-                  type: 'cube',
-                  size: 10,
-                  center: false,
-                  location: {
-                    start: { line: 0, column: 0, offset: 0 },
-                    end: { line: 0, column: 10, offset: 10 },
-                  },
+          },
+        ];
+      } else if (code === 'scale(v=[2, 1, 0.5]) cube(10);') {
+        return [
+          {
+            type: 'scale',
+            vector: [2, 1, 0.5],
+            v: [2, 1, 0.5], // For backward compatibility
+            children: [
+              {
+                type: 'cube',
+                size: 10,
+                center: false,
+                location: {
+                  start: { line: 0, column: 0, offset: 0 },
+                  end: { line: 0, column: 10, offset: 10 },
                 },
-              ],
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 30, offset: 30 },
               },
+            ],
+            location: {
+              start: { line: 0, column: 0, offset: 0 },
+              end: { line: 0, column: 30, offset: 30 },
             },
-          ];
-        } else if (code === 'scale([2, 1]) cube(10);') {
-          return [
-            {
-              type: 'scale',
-              vector: [2, 1, 1], // Z should default to 1
-              v: [2, 1, 1], // For backward compatibility
-              children: [
-                {
-                  type: 'cube',
-                  size: 10,
-                  center: false,
-                  location: {
-                    start: { line: 0, column: 0, offset: 0 },
-                    end: { line: 0, column: 10, offset: 10 },
-                  },
+          },
+        ];
+      } else if (code === 'scale([2, 1]) cube(10);') {
+        return [
+          {
+            type: 'scale',
+            vector: [2, 1, 1], // Z should default to 1
+            v: [2, 1, 1], // For backward compatibility
+            children: [
+              {
+                type: 'cube',
+                size: 10,
+                center: false,
+                location: {
+                  start: { line: 0, column: 0, offset: 0 },
+                  end: { line: 0, column: 10, offset: 10 },
                 },
-              ],
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 24, offset: 24 },
               },
+            ],
+            location: {
+              start: { line: 0, column: 0, offset: 0 },
+              end: { line: 0, column: 24, offset: 24 },
             },
-          ];
-        } else if (
-          code ===
-          `scale([2, 1, 0.5]) {
+          },
+        ];
+      } else if (
+        code ===
+        `scale([2, 1, 0.5]) {
         cube(10);
         sphere(5);
       }`
-        ) {
-          return [
-            {
-              type: 'scale',
-              vector: [2, 1, 0.5],
-              v: [2, 1, 0.5], // For backward compatibility
-              children: [
-                {
-                  type: 'cube',
-                  size: 10,
-                  center: false,
-                  location: {
-                    start: { line: 1, column: 8, offset: 28 },
-                    end: { line: 1, column: 16, offset: 36 },
-                  },
+      ) {
+        return [
+          {
+            type: 'scale',
+            vector: [2, 1, 0.5],
+            v: [2, 1, 0.5], // For backward compatibility
+            children: [
+              {
+                type: 'cube',
+                size: 10,
+                center: false,
+                location: {
+                  start: { line: 1, column: 8, offset: 28 },
+                  end: { line: 1, column: 16, offset: 36 },
                 },
-                {
-                  type: 'sphere',
-                  radius: 5,
-                  r: 5, // For backward compatibility
-                  location: {
-                    start: { line: 2, column: 8, offset: 45 },
-                    end: { line: 2, column: 16, offset: 53 },
-                  },
-                },
-              ],
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 3, column: 7, offset: 61 },
               },
+              {
+                type: 'sphere',
+                radius: 5,
+                r: 5, // For backward compatibility
+                location: {
+                  start: { line: 2, column: 8, offset: 45 },
+                  end: { line: 2, column: 16, offset: 53 },
+                },
+              },
+            ],
+            location: {
+              start: { line: 0, column: 0, offset: 0 },
+              end: { line: 3, column: 7, offset: 61 },
             },
-          ];
-        } else {
-          return [];
-        }
+          },
+        ];
+      } else {
+        return [];
       }
-    );
+    });
   });
 
   afterAll(() => {

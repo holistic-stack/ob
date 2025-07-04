@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { OpenscadParser } from '../../openscad-parser';
 import { extractModuleParametersFromText } from './module-parameter-extractor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
 
 describe('Module Parameter Extractor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 

@@ -15,14 +15,10 @@
  */
 
 import * as TreeSitter from 'web-tree-sitter';
-import { SimpleErrorHandler, type IErrorHandler } from './error-handling/simple-error-handler.js';
 import type { ASTNode } from './ast/ast-types.js';
 import { VisitorASTGenerator } from './ast/index.js';
 import { ErrorHandler } from './error-handling/index.js';
-
-
-
-
+import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-error-handler.js';
 
 /**
  * OpenSCAD parser with AST generation capabilities and error handling.
@@ -172,12 +168,15 @@ export class OpenscadParser {
    * ```
    * @since 0.1.0
    */
-  async init(wasmPath = './tree-sitter-openscad.wasm', treeSitterWasmPath = './tree-sitter.wasm'): Promise<void> {
+  async init(
+    wasmPath = './tree-sitter-openscad.wasm',
+    treeSitterWasmPath = './tree-sitter.wasm'
+  ): Promise<void> {
     try {
       this.errorHandler.logInfo('Initializing OpenSCAD parser...');
 
       // Use the provided wasmPath directly
-      const arrayBuffer = await fetch(wasmPath).then(response => {
+      const arrayBuffer = await fetch(wasmPath).then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -277,17 +276,14 @@ export class OpenscadParser {
 
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
-      const astGenerator = new VisitorASTGenerator(
-        cst,
-        code,
-        this.language,
-        errorHandlerAdapter
-      );
+      const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
 
-      this.errorHandler.logInfo(`AST generation completed. Generated ${ast.length} top-level nodes.`);
+      this.errorHandler.logInfo(
+        `AST generation completed. Generated ${ast.length} top-level nodes.`
+      );
       return ast;
     } catch (error) {
       this.errorHandler.handleError(`Failed to generate AST: ${error}`);
@@ -313,23 +309,23 @@ export class OpenscadParser {
 
   /**
    * Updates the parse tree incrementally for better performance when making small edits to code.
-   * 
+   *
    * Instead of reparsing the entire file, this method updates only the changed portion
    * of the syntax tree, significantly improving performance for large files.
-   * 
+   *
    * @param newCode - The updated OpenSCAD code string
    * @param startIndex - The byte index where the edit starts in the original code
    * @param oldEndIndex - The byte index where the edit ends in the original code
    * @param newEndIndex - The byte index where the edit ends in the new code
    * @returns Updated Tree-sitter CST or null if incremental update fails
-   * 
+   *
    * @example Simple Edit
    * ```ts
    * // Original: "cube(10);"
    * // Change to: "cube(20);"
    * const tree = parser.update("cube(20);", 5, 7, 7);
    * ```
-   * 
+   *
    * @example Complex Edit
    * ```ts
    * // For more complex edits with position calculations:
@@ -341,7 +337,7 @@ export class OpenscadParser {
    * const newEndIndex = startIndex + 2; // "20" is also 2 chars
    * const tree = parser.update(newCode, startIndex, oldEndIndex, newEndIndex);
    * ```
-   * 
+   *
    * @since 0.2.0
    */
   update(
@@ -390,7 +386,7 @@ export class OpenscadParser {
    * @param newEndIndex - The byte index where the edit ends in the new code
    * @returns Array of updated AST nodes representing the OpenSCAD program
    * @throws Error if the AST update process fails
-   * 
+   *
    * @example Simple Parameter Change
    * ```ts
    * // Original: "cube(10);"
@@ -398,7 +394,7 @@ export class OpenscadParser {
    * const ast = parser.updateAST("cube(20);", 5, 7, 7);
    * // ast will contain the updated node structure
    * ```
-   * 
+   *
    * @example Adding New Element
    * ```ts
    * const oldCode = "cube(10);";
@@ -407,11 +403,11 @@ export class OpenscadParser {
    * const startIndex = oldCode.length;
    * const oldEndIndex = oldCode.length;
    * const newEndIndex = newCode.length;
-   * 
+   *
    * const ast = parser.updateAST(newCode, startIndex, oldEndIndex, newEndIndex);
    * // ast now contains both the cube and sphere nodes
    * ```
-   * 
+   *
    * @since 0.2.0
    */
   updateAST(
@@ -452,24 +448,24 @@ export class OpenscadParser {
 
   /**
    * Releases all resources used by the parser instance.
-   * 
+   *
    * This method should be called when the parser is no longer needed to prevent memory leaks.
    * After calling dispose(), the parser cannot be used until init() is called again.
-   * 
+   *
    * @returns void
-   * 
+   *
    * @example
    * ```ts
    * // Clean up parser resources when done
    * const parser = new EnhancedOpenscadParser();
    * await parser.init();
-   * 
+   *
    * // Use parser...
-   * 
+   *
    * // When finished:
    * parser.dispose();
    * ```
-   * 
+   *
    * @example Editor Integration
    * ```ts
    * // In a code editor component's cleanup method:
@@ -480,7 +476,7 @@ export class OpenscadParser {
    *   }
    * }
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   dispose(): void {
@@ -500,28 +496,28 @@ export class OpenscadParser {
 
   /**
    * Returns the error handler instance used by this parser.
-   * 
+   *
    * This can be useful for accessing parser errors or configuring error handling behavior.
    * The returned error handler follows the IErrorHandler interface and can be used to
    * retrieve error logs or redirect error output.
-   * 
+   *
    * @returns The error handler instance
-   * 
+   *
    * @example Access Error Logs
    * ```ts
    * const parser = new EnhancedOpenscadParser();
    * await parser.init();
-   * 
+   *
    * // After parsing:
    * const errorHandler = parser.getErrorHandler();
    * const errors = errorHandler.getErrors(); // If implemented by the error handler
    * ```
-   * 
+   *
    * @example Custom Error Processing
    * ```ts
    * const parser = new EnhancedOpenscadParser();
    * await parser.init();
-   * 
+   *
    * // Get errors for display in UI
    * try {
    *   parser.parseCST(code);
@@ -530,7 +526,7 @@ export class OpenscadParser {
    *   this.displayErrors(errorHandler.getErrors());
    * }
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   getErrorHandler(): IErrorHandler {
@@ -539,11 +535,11 @@ export class OpenscadParser {
 
   /**
    * Recursively checks if a node or any of its children has an ERROR node type.
-   * 
+   *
    * This is a helper method used internally by the parser to detect syntax errors
    * in the parsed OpenSCAD code. It traverses the CST to find any nodes marked as errors
    * by the Tree-sitter parser.
-   * 
+   *
    * @param node - The Tree-sitter node to check for errors
    * @returns true if the node or any of its children is an error node, false otherwise
    * @private
@@ -582,11 +578,11 @@ export class OpenscadParser {
 
   /**
    * Formats a detailed syntax error message with line, column, and visual pointer to the error.
-   * 
+   *
    * This method creates a user-friendly error message that pinpoints exactly where
    * in the code the syntax error occurred, making it easier for developers to identify
    * and fix parsing issues in their OpenSCAD code.
-   * 
+   *
    * @param code - The OpenSCAD code string that contains the error
    * @param rootNode - The root node of the parse tree containing error nodes
    * @returns A formatted error message with line, column and visual pointer to the error location
@@ -617,11 +613,11 @@ export class OpenscadParser {
 
   /**
    * Recursively searches for the first ERROR node in the parse tree.
-   * 
+   *
    * This method traverses the Tree-sitter CST depth-first to find the first
    * node with a type of 'ERROR', which indicates a syntax error in the parsed code.
    * The first error node is used to generate precise error messages with location information.
-   * 
+   *
    * @param node - The Tree-sitter node to begin the search from (typically the root node)
    * @returns The first ERROR node found, or null if no error nodes exist
    * @private
@@ -678,11 +674,11 @@ export class OpenscadParser {
 
   /**
    * Converts a byte index in the source text to a line/column position.
-   * 
+   *
    * This utility method is used during incremental parsing to convert a character
    * index to the corresponding line and column position. This is necessary because
    * Tree-sitter's edit API requires position objects with row and column properties.
-   * 
+   *
    * @param text - The source text string
    * @param index - The byte index to convert to a position
    * @returns An object containing row (line) and column numbers (0-based)
@@ -712,7 +708,7 @@ export class OpenscadParser {
   private createErrorHandlerAdapter(): ErrorHandler {
     const adapter = new ErrorHandler({
       throwErrors: false,
-      attemptRecovery: false
+      attemptRecovery: false,
     });
 
     // Override the logging methods to delegate to our IErrorHandler

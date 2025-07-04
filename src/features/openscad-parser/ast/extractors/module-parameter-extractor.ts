@@ -1,5 +1,5 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
 
 /**
@@ -18,14 +18,10 @@ import { getLocation } from '../utils/location-utils.js';
  * @param paramListNode The parameter list node
  * @returns An array of module parameters
  */
-export function extractModuleParameters(
-  paramListNode: TSNode | null
-): ast.ModuleParameter[] {
+export function extractModuleParameters(paramListNode: TSNode | null): ast.ModuleParameter[] {
   if (!paramListNode) return [];
 
-  console.log(
-    `[extractModuleParameters] Processing parameter list node: ${paramListNode.text}`
-  );
+  console.log(`[extractModuleParameters] Processing parameter list node: ${paramListNode.text}`);
   const moduleParameters: ast.ModuleParameter[] = [];
 
   // Process each parameter in the list
@@ -53,9 +49,7 @@ export function extractModuleParameters(
     }
   }
 
-  console.log(
-    `[extractModuleParameters] Extracted ${moduleParameters.length} parameters`
-  );
+  console.log(`[extractModuleParameters] Extracted ${moduleParameters.length} parameters`);
   return moduleParameters;
 }
 
@@ -64,14 +58,10 @@ export function extractModuleParameters(
  * @param paramsText The parameters text
  * @returns An array of module parameters
  */
-export function extractModuleParametersFromText(
-  paramsText: string
-): ast.ModuleParameter[] {
+export function extractModuleParametersFromText(paramsText: string): ast.ModuleParameter[] {
   if (!paramsText || paramsText.trim() === '') return [];
 
-  console.log(
-    `[extractModuleParametersFromText] Processing parameters text: ${paramsText}`
-  );
+  console.log(`[extractModuleParametersFromText] Processing parameters text: ${paramsText}`);
   const moduleParameters: ast.ModuleParameter[] = [];
 
   // Handle vector parameters specially
@@ -126,9 +116,7 @@ export function extractModuleParametersFromText(
     }
   }
 
-  console.log(
-    `[extractModuleParametersFromText] Extracted ${moduleParameters.length} parameters`
-  );
+  console.log(`[extractModuleParametersFromText] Extracted ${moduleParameters.length} parameters`);
   return moduleParameters;
 }
 
@@ -138,9 +126,7 @@ export function extractModuleParametersFromText(
  * @returns The default value
  */
 function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
-  console.log(
-    `[extractDefaultValue] Processing default value node: ${defaultValueNode.text}`
-  );
+  console.log(`[extractDefaultValue] Processing default value node: ${defaultValueNode.text}`);
 
   // Handle different types of default values
   switch (defaultValueNode.type) {
@@ -180,9 +166,7 @@ function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
  * @returns The array values as a Vector2D or Vector3D
  */
 function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
-  console.log(
-    `[extractArrayLiteral] Processing array literal node: ${arrayNode.text}`
-  );
+  console.log(`[extractArrayLiteral] Processing array literal node: ${arrayNode.text}`);
 
   const values: number[] = [];
 
@@ -193,10 +177,7 @@ function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
 
     if (elementNode.type === 'number') {
       values.push(parseFloat(elementNode.text));
-    } else if (
-      elementNode.type === 'expression' &&
-      elementNode.text.match(/^-?\d+(\.\d+)?$/)
-    ) {
+    } else if (elementNode.type === 'expression' && elementNode.text.match(/^-?\d+(\.\d+)?$/)) {
       // Handle expressions that are just numbers
       values.push(parseFloat(elementNode.text));
     }
@@ -222,9 +203,7 @@ function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
  * @returns The parsed default value
  */
 function parseDefaultValueText(defaultValueText: string): ast.ParameterValue {
-  console.log(
-    `[parseDefaultValueText] Parsing default value text: ${defaultValueText}`
-  );
+  console.log(`[parseDefaultValueText] Parsing default value text: ${defaultValueText}`);
 
   // Try to parse as number
   if (!isNaN(Number(defaultValueText))) {
@@ -248,15 +227,12 @@ function parseDefaultValueText(defaultValueText: string): ast.ParameterValue {
 
   // Check for array/vector values
   if (defaultValueText.startsWith('[') && defaultValueText.endsWith(']')) {
-    const vectorText = defaultValueText.substring(
-      1,
-      defaultValueText.length - 1
-    );
+    const vectorText = defaultValueText.substring(1, defaultValueText.length - 1);
     const vectorParts = vectorText.split(',');
-    const vectorValues = vectorParts.map(v => parseFloat(v.trim()));
+    const vectorValues = vectorParts.map((v) => parseFloat(v.trim()));
 
     // Filter out NaN values
-    const validValues = vectorValues.filter(v => !isNaN(v));
+    const validValues = vectorValues.filter((v) => !isNaN(v));
 
     if (validValues.length === 2) {
       return validValues as ast.Vector2D;

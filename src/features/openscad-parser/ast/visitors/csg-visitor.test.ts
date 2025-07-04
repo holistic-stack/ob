@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { CSGVisitor } from './csg-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import { findDescendantOfType } from '../utils/node-utils.js';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { findDescendantOfType } from '../utils/node-utils.js';
+import { CSGVisitor } from './csg-visitor.js';
 
 describe('CSGVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let visitor: CSGVisitor;
   let errorHandler: ErrorHandler;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 
@@ -170,12 +170,8 @@ describe('CSGVisitor', () => {
       if (!tree) throw new Error('Failed to parse CST');
 
       // Find the module_instantiation node
-      const moduleInstantiation = findNodeOfType(
-        tree.rootNode,
-        'module_instantiation'
-      );
-      if (!moduleInstantiation)
-        throw new Error('Failed to find module_instantiation node');
+      const moduleInstantiation = findNodeOfType(tree.rootNode, 'module_instantiation');
+      if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -196,12 +192,8 @@ describe('CSGVisitor', () => {
       if (!tree) throw new Error('Failed to parse CST');
 
       // Find the module_instantiation node (this is what the grammar actually produces)
-      const moduleInstantiation = findDescendantOfType(
-        tree.rootNode,
-        'module_instantiation'
-      );
-      if (!moduleInstantiation)
-        throw new Error('Failed to find module_instantiation node');
+      const moduleInstantiation = findDescendantOfType(tree.rootNode, 'module_instantiation');
+      if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(moduleInstantiation);
@@ -331,12 +323,8 @@ describe('CSGVisitor', () => {
       if (!tree) throw new Error('Failed to parse CST');
 
       // Find the module_instantiation node
-      const moduleInstantiation = findNodeOfType(
-        tree.rootNode,
-        'module_instantiation'
-      );
-      if (!moduleInstantiation)
-        throw new Error('Failed to find module_instantiation node');
+      const moduleInstantiation = findNodeOfType(tree.rootNode, 'module_instantiation');
+      if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(moduleInstantiation);
@@ -477,12 +465,8 @@ describe('CSGVisitor', () => {
       if (!tree) throw new Error('Failed to parse CST');
 
       // Find the module_instantiation node
-      const moduleInstantiation = findNodeOfType(
-        tree.rootNode,
-        'module_instantiation'
-      );
-      if (!moduleInstantiation)
-        throw new Error('Failed to find module_instantiation node');
+      const moduleInstantiation = findNodeOfType(tree.rootNode, 'module_instantiation');
+      if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(moduleInstantiation);
@@ -573,10 +557,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
   if (node.type === 'expression_statement' && type === 'module_instantiation') {
     const expression = node.firstChild;
     if (expression) {
-      const accessorExpression = findDescendantOfType(
-        expression,
-        'accessor_expression'
-      );
+      const accessorExpression = findDescendantOfType(expression, 'accessor_expression');
       if (accessorExpression) {
         return accessorExpression;
       }

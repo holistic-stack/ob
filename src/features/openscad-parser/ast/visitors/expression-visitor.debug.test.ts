@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { ExpressionVisitor } from './expression-visitor.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { ExpressionVisitor } from './expression-visitor.js';
 
 describe('ExpressionVisitor Debug', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
   let _visitor: ExpressionVisitor;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
     _visitor = new ExpressionVisitor('', errorHandler);
@@ -83,18 +83,9 @@ describe('ExpressionVisitor Debug', () => {
           const greatGrandchild = grandchild.child(k);
           if (!greatGrandchild) continue;
 
-          console.log(
-            `Great-grandchild ${i}.${j}.${k} type:`,
-            greatGrandchild.type
-          );
-          console.log(
-            `Great-grandchild ${i}.${j}.${k} text:`,
-            greatGrandchild.text
-          );
-          console.log(
-            `Great-grandchild ${i}.${j}.${k} child count:`,
-            greatGrandchild.childCount
-          );
+          console.log(`Great-grandchild ${i}.${j}.${k} type:`, greatGrandchild.type);
+          console.log(`Great-grandchild ${i}.${j}.${k} text:`, greatGrandchild.text);
+          console.log(`Great-grandchild ${i}.${j}.${k} child count:`, greatGrandchild.childCount);
         }
       }
     }

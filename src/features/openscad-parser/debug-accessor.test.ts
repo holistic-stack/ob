@@ -1,10 +1,10 @@
-import { EnhancedOpenscadParser } from './enhanced-parser.js';
+import type { OpenscadParser } from './openscad-parser';
 
 describe('Debug Accessor Expression Structure', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
@@ -63,15 +63,11 @@ function walkTree(node: any, targetType: string, depth = 0) {
 
         // If this is a call_expression, print its children too
         if (child.type === 'call_expression') {
-          console.log(
-            `${indent}    Call expression children count: ${child.childCount}`
-          );
+          console.log(`${indent}    Call expression children count: ${child.childCount}`);
           for (let j = 0; j < child.childCount; j++) {
             const callChild = child.child(j);
             if (callChild) {
-              console.log(
-                `${indent}      Child ${j}: ${callChild.type} - ${callChild.text}`
-              );
+              console.log(`${indent}      Child ${j}: ${callChild.type} - ${callChild.text}`);
             }
           }
         }
@@ -89,9 +85,7 @@ function walkTree(node: any, targetType: string, depth = 0) {
 
     const argsField = node.childForFieldName('arguments');
     if (argsField) {
-      console.log(
-        `${indent}  arguments: ${argsField.type} - ${argsField.text}`
-      );
+      console.log(`${indent}  arguments: ${argsField.type} - ${argsField.text}`);
     } else {
       console.log(`${indent}  arguments: not found`);
     }

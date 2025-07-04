@@ -2,14 +2,14 @@
  * Tests for the QueryVisitor class
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { QueryVisitor } from './query-visitor.js';
-import { CompositeVisitor } from './composite-visitor.js';
-import { PrimitiveVisitor } from './primitive-visitor.js';
-import { TransformVisitor } from './transform-visitor.js';
-import { CSGVisitor } from './csg-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { CompositeVisitor } from './composite-visitor.js';
+import { CSGVisitor } from './csg-visitor.js';
+import { PrimitiveVisitor } from './primitive-visitor.js';
+import { QueryVisitor } from './query-visitor.js';
+import { TransformVisitor } from './transform-visitor.js';
 
 // Create a mock language object for testing
 const mockLanguage = {
@@ -45,12 +45,12 @@ const mockLanguage = {
 };
 
 describe('QueryVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let queryVisitor: QueryVisitor;
   let errorHandler: ErrorHandler;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
   });
@@ -65,28 +65,29 @@ describe('QueryVisitor', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Create a composite visitor
-    const compositeVisitor = new CompositeVisitor([
-      new PrimitiveVisitor(code, errorHandler),
-      new TransformVisitor(code, undefined, errorHandler),
-      new CSGVisitor(code, errorHandler),
-    ], errorHandler);
+    const compositeVisitor = new CompositeVisitor(
+      [
+        new PrimitiveVisitor(code, errorHandler),
+        new TransformVisitor(code, undefined, errorHandler),
+        new CSGVisitor(code, errorHandler),
+      ],
+      errorHandler
+    );
 
     // Create a query visitor
     queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
 
     // Find all accessor_expression nodes
-    const accessorExpressions = queryVisitor.findNodesByType(
-      'accessor_expression'
-    );
+    const accessorExpressions = queryVisitor.findNodesByType('accessor_expression');
 
     // There should be at least 3 accessor expressions (cube, sphere, cylinder)
     expect(accessorExpressions.length).toBeGreaterThanOrEqual(3);
 
     // Check that we have cube, sphere, and cylinder
-    const functionNames = accessorExpressions.map(node => node.text);
-    expect(functionNames.some(name => name.includes('cube'))).toBe(true);
-    expect(functionNames.some(name => name.includes('sphere'))).toBe(true);
-    expect(functionNames.some(name => name.includes('cylinder'))).toBe(true);
+    const functionNames = accessorExpressions.map((node) => node.text);
+    expect(functionNames.some((name) => name.includes('cube'))).toBe(true);
+    expect(functionNames.some((name) => name.includes('sphere'))).toBe(true);
+    expect(functionNames.some((name) => name.includes('cylinder'))).toBe(true);
   });
 
   it('should find nodes by multiple types', () => {
@@ -95,29 +96,27 @@ describe('QueryVisitor', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Create a composite visitor
-    const compositeVisitor = new CompositeVisitor([
-      new PrimitiveVisitor(code, errorHandler),
-      new TransformVisitor(code, undefined, errorHandler),
-      new CSGVisitor(code, errorHandler),
-    ], errorHandler);
+    const compositeVisitor = new CompositeVisitor(
+      [
+        new PrimitiveVisitor(code, errorHandler),
+        new TransformVisitor(code, undefined, errorHandler),
+        new CSGVisitor(code, errorHandler),
+      ],
+      errorHandler
+    );
 
     // Create a query visitor
     queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
 
     // Find all accessor_expression and arguments nodes
-    const nodes = queryVisitor.findNodesByTypes([
-      'accessor_expression',
-      'arguments',
-    ]);
+    const nodes = queryVisitor.findNodesByTypes(['accessor_expression', 'arguments']);
 
     // There should be at least 3 nodes total
     expect(nodes.length).toBeGreaterThanOrEqual(3);
 
     // Check that we have both accessor_expression and arguments nodes
-    const accessorExpressions = nodes.filter(
-      node => node.type === 'accessor_expression'
-    );
-    const _arguments = nodes.filter(node => node.type === 'arguments');
+    const accessorExpressions = nodes.filter((node) => node.type === 'accessor_expression');
+    const _arguments = nodes.filter((node) => node.type === 'arguments');
 
     // We should have at least one accessor_expression
     expect(accessorExpressions.length).toBeGreaterThanOrEqual(1);
@@ -131,11 +130,14 @@ describe('QueryVisitor', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Create a composite visitor
-    const compositeVisitor = new CompositeVisitor([
-      new PrimitiveVisitor(code, errorHandler),
-      new TransformVisitor(code, undefined, errorHandler),
-      new CSGVisitor(code, errorHandler),
-    ], errorHandler);
+    const compositeVisitor = new CompositeVisitor(
+      [
+        new PrimitiveVisitor(code, errorHandler),
+        new TransformVisitor(code, undefined, errorHandler),
+        new CSGVisitor(code, errorHandler),
+      ],
+      errorHandler
+    );
 
     // Create a query visitor
     queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
@@ -166,11 +168,14 @@ describe('QueryVisitor', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Create a composite visitor
-    const compositeVisitor = new CompositeVisitor([
-      new PrimitiveVisitor(code, errorHandler),
-      new TransformVisitor(code, undefined, errorHandler),
-      new CSGVisitor(code, errorHandler),
-    ], errorHandler);
+    const compositeVisitor = new CompositeVisitor(
+      [
+        new PrimitiveVisitor(code, errorHandler),
+        new TransformVisitor(code, undefined, errorHandler),
+        new CSGVisitor(code, errorHandler),
+      ],
+      errorHandler
+    );
 
     // Create a query visitor
     queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);

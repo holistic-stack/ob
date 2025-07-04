@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import * as path from 'path';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Parser } from 'web-tree-sitter';
 import { QueryManager } from './query-utils.js';
-import * as path from 'path';
 
 describe('QueryManager', () => {
   let parser: Parser;
@@ -63,7 +63,7 @@ describe('QueryManager', () => {
             // Add other required properties
           },
           // Add other required properties
-        } as any);
+        }) as any;
 
       // Set the tree property directly
       const tree = parser.parse(source);
@@ -100,7 +100,7 @@ describe('QueryManager', () => {
             startIndex: 0,
             endIndex: source.length,
           },
-        } as any);
+        }) as any;
 
       const tree = parser.parse(source);
       if (tree) {
@@ -127,14 +127,10 @@ describe('QueryManager', () => {
       } as any;
 
       // Test with an existing ancestor type
-      expect(queryManager.hasAncestorOfType(childNode, 'call_expression')).toBe(
-        true
-      );
+      expect(queryManager.hasAncestorOfType(childNode, 'call_expression')).toBe(true);
 
       // Test with a non-existing ancestor type
-      expect(
-        queryManager.hasAncestorOfType(childNode, 'nonexistent_type')
-      ).toBe(false);
+      expect(queryManager.hasAncestorOfType(childNode, 'nonexistent_type')).toBe(false);
     });
   });
 

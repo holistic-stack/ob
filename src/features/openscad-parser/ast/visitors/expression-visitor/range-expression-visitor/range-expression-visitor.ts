@@ -1,29 +1,29 @@
 /**
  * @file Range Expression Visitor for OpenSCAD AST generation
- * 
+ *
  * This visitor handles the conversion of Tree-sitter range expression nodes
  * into structured AST nodes. It supports both simple and stepped range expressions
  * commonly used in OpenSCAD for loops and list comprehensions.
- * 
+ *
  * Supported syntax patterns:
  * - Simple range: [start:end]
  * - Range with step: [start:step:end]
  * - Expression ranges: [expr1:expr2], [expr1:expr2:expr3]
- * 
+ *
  * @example Simple range expressions
  * ```openscad
  * [0:5]        // Simple range from 0 to 5
  * [1:10]       // Simple range from 1 to 10
  * [-5:5]       // Range from -5 to 5
  * ```
- * 
+ *
  * @example Range expressions with step
  * ```openscad
  * [0:2:10]     // Range from 0 to 10 with step 2
  * [1:0.5:5]    // Range from 1 to 5 with step 0.5
  * [10:-1:0]    // Reverse range from 10 to 0 with step -1
  * ```
- * 
+ *
  * @example Expression ranges
  * ```openscad
  * [x:y]        // Range using variables
@@ -32,20 +32,20 @@
  * ```
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../../ast-types.js';
-import { BaseASTVisitor } from '../../base-ast-visitor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type * as ast from '../../../ast-types.js';
 import { getLocation } from '../../../utils/location-utils.js';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ExpressionVisitor } from '../../expression-visitor.js'; // Added import
+import { BaseASTVisitor } from '../../base-ast-visitor.js';
+import type { ExpressionVisitor } from '../../expression-visitor.js'; // Added import
 
 /**
  * Visitor for converting Tree-sitter range expression nodes to AST nodes.
- * 
+ *
  * This visitor follows the Single Responsibility Principle by focusing exclusively
  * on range expression parsing. It integrates with the ExpressionVisitor for
  * processing nested expressions within range bounds.
- * 
+ *
  * @example Usage in ExpressionVisitor
  * ```typescript
  * const rangeVisitor = new RangeExpressionVisitor(expressionVisitor, errorHandler);
@@ -53,7 +53,6 @@ import { ExpressionVisitor } from '../../expression-visitor.js'; // Added import
  * ```
  */
 export class RangeExpressionVisitor extends BaseASTVisitor {
-
   /**
    * Main entry point for visiting a node with this visitor.
    * It specifically handles 'range_expression' CST nodes by dispatching
@@ -115,18 +114,18 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
 
   /**
    * Visit a range expression node and convert it to an AST node.
-   * 
+   *
    * This method handles both simple and stepped range expressions:
    * - Simple: [start:end]
    * - Stepped: [start:step:end]
-   * 
+   *
    * It uses the parent ExpressionVisitor to process the start, step (optional),
    * and end expressions, ensuring that complex expressions within the range
    * are correctly parsed. Returns an ErrorNode if parsing fails at any critical step.
-   * 
+   *
    * @param node - The Tree-sitter node to visit (must be a range_expression)
    * @returns The range expression AST node or an ErrorNode if parsing fails
-   * 
+   *
    * @example Input CST for `[var_start : func_step() : 10 + x]`
    * ```
    * (range_expression
@@ -247,7 +246,17 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
     const startExpression = startExpressionResult as ast.ExpressionNode;
 
     // Check for forbidden CST node types in end expression
-    const forbiddenEndNodeTypes = ['if_statement', 'for_statement', 'while_statement', 'do_statement', 'module_declaration', 'function_declaration', 'include_statement', 'import_statement', 'use_statement']; // Add other reserved/invalid types as needed
+    const forbiddenEndNodeTypes = [
+      'if_statement',
+      'for_statement',
+      'while_statement',
+      'do_statement',
+      'module_declaration',
+      'function_declaration',
+      'include_statement',
+      'import_statement',
+      'use_statement',
+    ]; // Add other reserved/invalid types as needed
     if (forbiddenEndNodeTypes.includes(endNode.type)) {
       this.errorHandler?.logError(
         `[RangeExpressionVisitor.visitRangeExpression] Forbidden CST node type '${endNode.type}' used as end expression. CST: ${endNode.text}`,
@@ -313,7 +322,7 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
     const endExpression = endExpressionResult as ast.ExpressionNode;
 
     // Parse step expression (if present and valid)
-    let stepExpression: ast.ExpressionNode | undefined = undefined;
+    let stepExpression: ast.ExpressionNode | undefined;
     if (stepNode) {
       if (stepNode.isMissing || stepNode.type === 'ERROR') {
         this.errorHandler?.logError(
@@ -331,7 +340,17 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
       }
 
       // Check for forbidden CST node types in step expression
-      const forbiddenStepNodeTypes = ['if_statement', 'for_statement', 'while_statement', 'do_statement', 'module_declaration', 'function_declaration', 'include_statement', 'import_statement', 'use_statement']; // Add other reserved/invalid types as needed
+      const forbiddenStepNodeTypes = [
+        'if_statement',
+        'for_statement',
+        'while_statement',
+        'do_statement',
+        'module_declaration',
+        'function_declaration',
+        'include_statement',
+        'import_statement',
+        'use_statement',
+      ]; // Add other reserved/invalid types as needed
       if (forbiddenStepNodeTypes.includes(stepNode.type)) {
         this.errorHandler?.logError(
           `[RangeExpressionVisitor.visitRangeExpression] Forbidden CST node type '${stepNode.type}' used as step expression. CST: ${stepNode.text}`,
@@ -401,7 +420,7 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
       expressionType: 'range_expression',
       start: startExpression,
       end: endExpression,
-      location: getLocation(node)
+      location: getLocation(node),
     };
 
     if (stepExpression !== undefined) {

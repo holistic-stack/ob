@@ -1,16 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TreeCursor } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
 import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { TreeCursor } from 'web-tree-sitter';
-
 
 describe('cstTreeCursorWalkLog', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let consoleSpy: any;
 
   beforeEach(async () => {
     consoleSpy = vi.spyOn(console, 'log');
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     console.log('Parser initialized successfully');
   });

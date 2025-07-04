@@ -9,12 +9,12 @@
  * @module lib/openscad-parser/ast/visitors/control-structure-visitor/if-else-visitor
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
-import { ErrorHandler } from '../../../error-handling/index.js'; // Added ErrorHandler import
 
 /**
  * Visitor for if-else statements
@@ -27,7 +27,10 @@ export class IfElseVisitor {
    * @param source The source code (optional, defaults to empty string)
    * @param errorHandler The error handler instance
    */
-  constructor(source: string = '', protected errorHandler: ErrorHandler) {
+  constructor(
+    source: string = '',
+    protected errorHandler: ErrorHandler
+  ) {
     this.expressionVisitor = new ExpressionVisitor(source, errorHandler);
   }
 
@@ -38,10 +41,7 @@ export class IfElseVisitor {
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
     console.log(
-      `[IfElseVisitor.visitIfStatement] Processing if statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[IfElseVisitor.visitIfStatement] Processing if statement: ${node.text.substring(0, 50)}`
     );
 
     // Extract condition
@@ -64,10 +64,7 @@ export class IfElseVisitor {
       if (node.childCount >= 3) {
         // In OpenSCAD grammar, the condition is typically the third child (index 2)
         const possibleConditionNode = node.child(2);
-        if (
-          possibleConditionNode &&
-          possibleConditionNode.type === 'expression'
-        ) {
+        if (possibleConditionNode && possibleConditionNode.type === 'expression') {
           return this.processIfStatement(node, possibleConditionNode);
         }
       }
@@ -84,14 +81,10 @@ export class IfElseVisitor {
    * @param conditionNode The condition node
    * @returns The if AST node or null if the node cannot be processed
    */
-  private processIfStatement(
-    node: TSNode,
-    conditionNode: TSNode
-  ): ast.IfNode | null {
+  private processIfStatement(node: TSNode, conditionNode: TSNode): ast.IfNode | null {
     // Use the expression visitor to evaluate the condition
     let condition: ast.ExpressionNode;
-    const expressionResult =
-      this.expressionVisitor.visitExpression(conditionNode);
+    const expressionResult = this.expressionVisitor.visitExpression(conditionNode);
 
     if (expressionResult && expressionResult.type === 'expression') {
       condition = expressionResult;
@@ -142,7 +135,7 @@ export class IfElseVisitor {
       }
     }
 
-    let elseBranch: ast.ASTNode[] | undefined = undefined;
+    let elseBranch: ast.ASTNode[] | undefined;
 
     if (elseNode) {
       // Check if this is an else-if or a simple else
@@ -174,12 +167,7 @@ export class IfElseVisitor {
    * @returns An array of AST nodes representing the block's children
    */
   private visitBlock(node: TSNode): ast.ASTNode[] {
-    console.log(
-      `[IfElseVisitor.visitBlock] Processing block: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
+    console.log(`[IfElseVisitor.visitBlock] Processing block: ${node.text.substring(0, 50)}`);
 
     const result: ast.ASTNode[] = [];
 
@@ -193,7 +181,7 @@ export class IfElseVisitor {
       if (child) {
         const _childType =
           child.type === 'module_instantiation' && child.namedChildren[0]
-            ? child.namedChildren[0].text ?? 'expression'
+            ? (child.namedChildren[0].text ?? 'expression')
             : 'expression';
 
         const childNode: ast.ASTNode = {
@@ -217,9 +205,7 @@ export class IfElseVisitor {
    * @returns The if AST node or null if the arguments are invalid
    */
   createIfNode(node: TSNode, args: ast.Parameter[]): ast.IfNode | null {
-    console.log(
-      `[IfElseVisitor.createIfNode] Creating if node with ${args.length} arguments`
-    );
+    console.log(`[IfElseVisitor.createIfNode] Creating if node with ${args.length} arguments`);
 
     // Create condition expression
     let condition: ast.ExpressionNode;

@@ -2,9 +2,8 @@
  * Tests for the enhanced error handling in the OpenscadParser class
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { OpenscadParser } from './openscad-parser.js';
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { OpenscadParser } from './openscad-parser';
 
 describe('OpenscadParser Error Handling', () => {
   let parser: OpenscadParser;
@@ -47,8 +46,6 @@ describe('OpenscadParser Error Handling', () => {
       // The tree should contain MISSING tokens (tree-sitter error recovery)
       const rootNodeString = result?.rootNode.toString();
       expect(rootNodeString).toContain('MISSING');
-
-
 
       // Should have called console.error with a formatted error message
       expect(mockConsoleError).toHaveBeenCalled();

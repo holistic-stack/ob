@@ -1,5 +1,5 @@
+import type { NodeLocation } from '../../../node-location.js';
 import { AstNode } from './ast-node.js';
-import { NodeLocation } from '../../../node-location.js';
 
 export abstract class Expression extends AstNode {
   constructor(location: NodeLocation) {

@@ -1,9 +1,9 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../../ast-types.js';
-import { BaseASTVisitor } from '../../base-ast-visitor.js'; // Assuming this is the correct path
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ExpressionVisitor } from '../../expression-visitor.js'; // Parent visitor
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type * as ast from '../../../ast-types.js';
 import { getLocation } from '../../../utils/location-utils.js';
+import { BaseASTVisitor } from '../../base-ast-visitor.js'; // Assuming this is the correct path
+import type { ExpressionVisitor } from '../../expression-visitor.js'; // Parent visitor
 
 export class BinaryExpressionVisitor extends BaseASTVisitor {
   constructor(
@@ -33,7 +33,7 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
       'relational_expression',
       'additive_expression',
       'multiplicative_expression',
-      'exponentiation_expression'
+      'exponentiation_expression',
     ];
 
     if (!validBinaryTypes.includes(node.type)) {
@@ -42,7 +42,7 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -78,7 +78,12 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
           // Delegate back to the parent visitor to handle this as a regular expression
           const result = this.parentVisitor.visitExpression(child);
           // If the result is a binary expression, return it as such
-          if (result && result.type === 'expression' && 'expressionType' in result && result.expressionType === 'binary') {
+          if (
+            result &&
+            result.type === 'expression' &&
+            'expressionType' in result &&
+            result.expressionType === 'binary'
+          ) {
             return result as ast.BinaryExpressionNode;
           }
           // If it's not a binary expression, this node is not actually a binary expression
@@ -93,7 +98,7 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -122,13 +127,13 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
     );
 
     if (leftAST && leftAST.type === 'error') {
-    return leftAST;
-  }
-  if (rightAST && rightAST.type === 'error') {
-    return rightAST;
-  }
+      return leftAST;
+    }
+    if (rightAST && rightAST.type === 'error') {
+      return rightAST;
+    }
 
-  if (!leftAST || !rightAST) {
+    if (!leftAST || !rightAST) {
       // Errors in sub-expressions should have been handled by the parentVisitor
       // or its delegates. If they return null, it means a parsing error occurred.
       const error = this.errorHandler.createParserError(
@@ -138,7 +143,7 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
           column: getLocation(node).start.column,
           nodeType: node.type,
           leftType: leftNode.type,
-          rightType: rightNode.type
+          rightType: rightNode.type,
         }
       );
       this.errorHandler.report(error);

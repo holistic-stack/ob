@@ -5,9 +5,12 @@
  * Supports arithmetic, comparison, and logical operations.
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type {
+  EvaluationResult,
+  ExpressionEvaluationContext,
+} from './expression-evaluation-context.js';
 import { BaseExpressionEvaluator } from './expression-evaluator.js';
-import type { ExpressionEvaluationContext, EvaluationResult } from './expression-evaluation-context.js';
 
 /**
  * Binary expression evaluator with comprehensive operator support
@@ -26,7 +29,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
       'unary_expression',
       'accessor_expression',
       'primary_expression',
-      'conditional_expression'
+      'conditional_expression',
     ]);
   }
 
@@ -39,7 +42,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     if (this.supportedTypes.has(node.type)) {
       return true;
     }
-    
+
     // Also check for expression nodes that might have binary expressionType
     if (node.type === 'expression') {
       // Look for binary_expression descendants
@@ -50,7 +53,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
         }
       }
     }
-    
+
     return false;
   }
 
@@ -71,7 +74,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     try {
       // Handle both direct binary expressions and expressions with binary expressionType
       let leftNode, operatorNode, rightNode;
-      
+
       if (node.type === 'expression') {
         // For expression nodes created by the ExpressionVisitor, find the binary expression child
         for (let i = 0; i < node.namedChildCount; i++) {
@@ -90,7 +93,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
         operatorNode = this.getChildByField(node, 'operator');
         rightNode = this.getChildByField(node, 'right');
       }
-      
+
       // If we couldn't find the nodes using fields, try by index
       if (!leftNode) leftNode = node.namedChild(0);
       if (!operatorNode && node.childCount > 1) operatorNode = node.child(1);
@@ -112,7 +115,10 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     }
   }
 
-  private evaluateBinaryExpression(node: TSNode, context: ExpressionEvaluationContext): EvaluationResult {
+  private evaluateBinaryExpression(
+    node: TSNode,
+    context: ExpressionEvaluationContext
+  ): EvaluationResult {
     // Get operands using field names as defined in the grammar
     const leftNode = this.getChildByField(node, 'left');
     const operatorNode = this.getChildByField(node, 'operator');
@@ -149,29 +155,34 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
       const value = parseFloat(node.text);
       return {
         value: isNaN(value) ? 0 : value,
-        type: 'number'
+        type: 'number',
       };
     }
 
     if (node.type === 'identifier') {
-      return context.getVariable(node.text) ?? {
-        value: null,
-        type: 'undef'
-      };
+      return (
+        context.getVariable(node.text) ?? {
+          value: null,
+          type: 'undef',
+        }
+      );
     }
 
     // For complex expressions, return a default result
     // This should not be reached when the registry patches this method
     return {
       value: null,
-      type: 'undef'
+      type: 'undef',
     };
   }
 
   /**
    * Evaluate single-value expression by delegating to its child
    */
-  private evaluateSingleValueExpression(node: TSNode, context: ExpressionEvaluationContext): EvaluationResult {
+  private evaluateSingleValueExpression(
+    node: TSNode,
+    context: ExpressionEvaluationContext
+  ): EvaluationResult {
     // For single-value expressions, delegate to the first child
     if (node.childCount === 1) {
       const child = node.child(0);
@@ -183,7 +194,10 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     }
 
     // If no child or multiple children, return error
-    return this.createErrorResult(`Single-value expression has unexpected structure: ${node.childCount} children`, context);
+    return this.createErrorResult(
+      `Single-value expression has unexpected structure: ${node.childCount} children`,
+      context
+    );
   }
 
   private performOperation(
@@ -192,7 +206,6 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     right: EvaluationResult,
     context: ExpressionEvaluationContext
   ): EvaluationResult {
-
     switch (operator) {
       // Arithmetic operators
       case '+':
@@ -238,7 +251,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     if (this.validateNumericOperands(left, right)) {
       return {
         value: (left.value as number) + (right.value as number),
-        type: 'number'
+        type: 'number',
       };
     }
 
@@ -246,7 +259,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     if (left.type === 'string' || right.type === 'string') {
       return {
         value: String(left.value) + String(right.value),
-        type: 'string'
+        type: 'string',
       };
     }
 
@@ -256,14 +269,14 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
   private performSubtraction(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toNumber(left) - this.toNumber(right),
-      type: 'number'
+      type: 'number',
     };
   }
 
   private performMultiplication(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toNumber(left) * this.toNumber(right),
-      type: 'number'
+      type: 'number',
     };
   }
 
@@ -274,7 +287,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     }
     return {
       value: this.toNumber(left) / rightNum,
-      type: 'number'
+      type: 'number',
     };
   }
 
@@ -285,14 +298,14 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     }
     return {
       value: this.toNumber(left) % rightNum,
-      type: 'number'
+      type: 'number',
     };
   }
 
   private performExponentiation(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
-      value: Math.pow(this.toNumber(left), this.toNumber(right)),
-      type: 'number'
+      value: this.toNumber(left) ** this.toNumber(right),
+      type: 'number',
     };
   }
 
@@ -300,42 +313,48 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
   private performEquality(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: left.value === right.value,
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
   private performInequality(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: left.value !== right.value,
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
   private performLessThan(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toNumber(left) < this.toNumber(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
-  private performLessThanOrEqual(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
+  private performLessThanOrEqual(
+    left: EvaluationResult,
+    right: EvaluationResult
+  ): EvaluationResult {
     return {
       value: this.toNumber(left) <= this.toNumber(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
   private performGreaterThan(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toNumber(left) > this.toNumber(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
-  private performGreaterThanOrEqual(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
+  private performGreaterThanOrEqual(
+    left: EvaluationResult,
+    right: EvaluationResult
+  ): EvaluationResult {
     return {
       value: this.toNumber(left) >= this.toNumber(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
@@ -343,14 +362,14 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
   private performLogicalAnd(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toBoolean(left) && this.toBoolean(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 
   private performLogicalOr(left: EvaluationResult, right: EvaluationResult): EvaluationResult {
     return {
       value: this.toBoolean(left) || this.toBoolean(right),
-      type: 'boolean'
+      type: 'boolean',
     };
   }
 }

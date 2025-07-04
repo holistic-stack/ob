@@ -1,6 +1,12 @@
-import { Parser, Query, Tree, Node as TSNode, type QueryMatch } from 'web-tree-sitter';
-import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import {
+  type Parser,
+  Query,
+  type QueryMatch,
+  type Tree,
+  type Node as TSNode,
+} from 'web-tree-sitter';
 
 // Type definitions for OpenSCAD specific nodes
 // Type alias for tree-sitter Node
@@ -65,9 +71,7 @@ export class QueryManager {
       return query;
     } catch (error) {
       throw new Error(
-        `Failed to load query '${name}': ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        `Failed to load query '${name}': ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -88,13 +92,11 @@ export class QueryManager {
   public queryNode(queryName: string, node: TSNode): QueryResult[] {
     const query = this.queryCache.get(queryName);
     if (!query) {
-      throw new Error(
-        `Query '${queryName}' not loaded. Call loadQuery() first.`
-      );
+      throw new Error(`Query '${queryName}' not loaded. Call loadQuery() first.`);
     }
 
     const matches = query.matches(node);
-    return matches.map(match => this.processQueryMatch(match, query));
+    return matches.map((match) => this.processQueryMatch(match, query));
   }
 
   /**
@@ -104,10 +106,8 @@ export class QueryManager {
     await this.loadQuery('highlights');
     const results = this.queryTree('highlights');
     return results
-      .filter(result =>
-        result.captures.some(c => c.name === 'module_definition')
-      )
-      .map(result => result.captures.find(c => c.name === 'module_name')?.node)
+      .filter((result) => result.captures.some((c) => c.name === 'module_definition'))
+      .map((result) => result.captures.find((c) => c.name === 'module_name')?.node)
       .filter((node): node is OpenSCADNode => node !== undefined);
   }
 
@@ -118,30 +118,24 @@ export class QueryManager {
     await this.loadQuery('highlights');
     const results = this.queryTree('highlights');
     return results
-      .filter(result =>
-        result.captures.some(c => c.name === 'function_definition')
-      )
-      .map(
-        result => result.captures.find(c => c.name === 'function_name')?.node
-      )
+      .filter((result) => result.captures.some((c) => c.name === 'function_definition'))
+      .map((result) => result.captures.find((c) => c.name === 'function_name')?.node)
       .filter((node): node is OpenSCADNode => node !== undefined);
   }
 
   /**
    * Find all include and use statements in the current tree
    */
-  public async findDependencies(): Promise<
-    { file: string; type: 'include' | 'use' }[]
-  > {
+  public async findDependencies(): Promise<{ file: string; type: 'include' | 'use' }[]> {
     await this.loadQuery('dependencies');
     const results = this.queryTree('dependencies');
 
     const dependencies: { file: string; type: 'include' | 'use' }[] = [];
 
     for (const result of results) {
-      const includeMatch = result.captures.find(c => c.name === 'include');
-      const useMatch = result.captures.find(c => c.name === 'use');
-      const fileMatch = result.captures.find(c => c.name === 'file_path');
+      const includeMatch = result.captures.find((c) => c.name === 'include');
+      const useMatch = result.captures.find((c) => c.name === 'use');
+      const fileMatch = result.captures.find((c) => c.name === 'file_path');
 
       if (includeMatch && fileMatch?.node.text) {
         dependencies.push({
@@ -219,10 +213,7 @@ export class QueryManager {
   /**
    * Check if a node has an ancestor of a specific type
    */
-  public hasAncestorOfType(
-    node: TSNode,
-    ancestorType: string | string[]
-  ): boolean {
+  public hasAncestorOfType(node: TSNode, ancestorType: string | string[]): boolean {
     const types = Array.isArray(ancestorType) ? ancestorType : [ancestorType];
     let current = node.parent;
 

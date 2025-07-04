@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { OpenscadParser } from '../../openscad-parser.js';
-import { type Node as SyntaxNode } from 'web-tree-sitter';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { Node as SyntaxNode } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
 import { extractCylinderNode } from '../extractors/cylinder-extractor.js';
 
 let parser: OpenscadParser;
@@ -13,10 +13,7 @@ describe('Cylinder Extractor', () => {
     try {
       await parser.init();
     } catch (error) {
-      console.error(
-        'Failed to initialize parser in cylinder-extractor.test.ts:',
-        error
-      );
+      console.error('Failed to initialize parser in cylinder-extractor.test.ts:', error);
       // This will cause tests to be skipped if the parser fails to initialize
       throw error;
     }
@@ -50,10 +47,7 @@ describe('Cylinder Extractor', () => {
       if (statementNode?.childCount && statementNode.childCount > 0) {
         const expressionStatementNode = statementNode.child(0);
         // console.log('ExpressionStatement node:', expressionStatementNode?.type, expressionStatementNode?.text);
-        if (
-          expressionStatementNode?.childCount &&
-          expressionStatementNode.childCount > 0
-        ) {
+        if (expressionStatementNode?.childCount && expressionStatementNode.childCount > 0) {
           const callExpressionNode = expressionStatementNode.child(0);
           // console.log('CallExpression node:', callExpressionNode?.type, callExpressionNode?.text);
           if (

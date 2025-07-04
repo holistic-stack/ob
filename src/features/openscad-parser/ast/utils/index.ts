@@ -66,8 +66,8 @@
  * @since 0.1.0
  */
 
+export * from './debug-utils';
 export * from './location-utils';
 export * from './node-utils';
-export * from './vector-utils';
 export * from './variable-utils';
-export * from './debug-utils';
+export * from './vector-utils';

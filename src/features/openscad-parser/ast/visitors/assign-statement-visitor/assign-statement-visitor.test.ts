@@ -14,12 +14,12 @@
  * @since 1.0.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../../index.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../../openscad-parser';
 import type { AssignStatementNode } from '../../ast-types.js';
 
 describe('AssignStatementVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   beforeEach(async () => {

@@ -19,18 +19,15 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { type ErrorHandlerOptions, ErrorHandler } from '../../error-handling/error-handler.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { ErrorHandler, type ErrorHandlerOptions } from '../../error-handling/error-handler.js';
 import { Severity } from '../../error-handling/types/error-types.js';
-import type { ASTVisitor } from './ast-visitor.js';
-import { findDescendantOfType } from '../utils/node-utils.js';
-import {
-  extractArguments,
-  type ExtractedParameter,
-} from '../extractors/argument-extractor.js';
-import { defaultLocation, createErrorNodeInternal } from '../utils/ast-error-utils.js';
+import type * as ast from '../ast-types.js';
+import { type ExtractedParameter, extractArguments } from '../extractors/argument-extractor.js';
+import { createErrorNodeInternal, defaultLocation } from '../utils/ast-error-utils.js';
 import { getLocation } from '../utils/location-utils.js';
+import { findDescendantOfType } from '../utils/node-utils.js';
+import type { ASTVisitor } from './ast-visitor.js';
 
 /**
  * Converts an ExtractedParameter to a ParameterValue for AST node creation.
@@ -113,7 +110,7 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   } else if (value.type === 'identifier') {
     return value.value as string;
   } else if (value.type === 'vector') {
-    const vectorValues = (value.value as ast.Value[]).map(v => {
+    const vectorValues = (value.value as ast.Value[]).map((v) => {
       if (v.type === 'number') {
         return parseFloat(v.value as string);
       }
@@ -123,11 +120,7 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
     if (vectorValues.length === 2) {
       return vectorValues as ast.Vector2D;
     } else if (vectorValues.length >= 3) {
-      return [
-        vectorValues[0],
-        vectorValues[1],
-        vectorValues[2],
-      ] as ast.Vector3D;
+      return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
     }
     return 0; // Default fallback
   } else if (value.type === 'range') {
@@ -228,7 +221,10 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * const visitor = new MyCustomVisitor(sourceCode, errorHandler);
    * ```
    */
-  constructor(protected source: string, providedErrorHandler?: ErrorHandler) {
+  constructor(
+    protected source: string,
+    providedErrorHandler?: ErrorHandler
+  ) {
     if (providedErrorHandler) {
       this.errorHandler = providedErrorHandler;
     } else {
@@ -331,44 +327,34 @@ export abstract class BaseASTVisitor implements ASTVisitor {
 
     const functionName = nameFieldNode.text;
     if (!functionName) {
-      console.log(
-        `[BaseASTVisitor.visitModuleInstantiation] Empty function name`
-      );
+      console.log(`[BaseASTVisitor.visitModuleInstantiation] Empty function name`);
       return null;
     }
 
-    console.log(
-      `[BaseASTVisitor.visitModuleInstantiation] Function name: ${functionName}`
-    );
+    console.log(`[BaseASTVisitor.visitModuleInstantiation] Function name: ${functionName}`);
 
     // Extract arguments
     const argsNode = node.childForFieldName('arguments');
     const extractedArgs = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
 
     // Convert ExtractedParameter[] to Parameter[]
-    const args: ast.Parameter[] = extractedArgs.map(arg => {
+    const args: ast.Parameter[] = extractedArgs.map((arg) => {
       if ('name' in arg) {
         // Named argument
         return {
           name: arg.name,
-          value: convertExtractedValueToParameterValue(
-            arg.value as unknown as ExtractedParameter
-          ),
+          value: convertExtractedValueToParameterValue(arg.value as unknown as ExtractedParameter),
         };
       } else {
         // Positional argument
         return {
           name: '', // Positional arguments have an empty name
-          value: convertExtractedValueToParameterValue(
-            arg as ExtractedParameter
-          ),
+          value: convertExtractedValueToParameterValue(arg as ExtractedParameter),
         };
       }
     });
 
-    console.log(
-      `[BaseASTVisitor.visitModuleInstantiation] Extracted ${args.length} arguments`
-    );
+    console.log(`[BaseASTVisitor.visitModuleInstantiation] Extracted ${args.length} arguments`);
 
     // Process based on function name
     let astNode = this.createASTNodeForFunction(node, functionName, args);
@@ -443,31 +429,18 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitStatement(node: TSNode): ast.ASTNode | null {
     console.log(
-      `[BaseASTVisitor.visitStatement] Processing statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitStatement] Processing statement: ${node.text.substring(0, 50)}`
     );
 
     // Check for function_definition
-    if (
-      node.type === 'function_definition' ||
-      node.text.trim().startsWith('function ')
-    ) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found function_definition in statement`
-      );
+    if (node.type === 'function_definition' || node.text.trim().startsWith('function ')) {
+      console.log(`[BaseASTVisitor.visitStatement] Found function_definition in statement`);
       return this.visitFunctionDefinition(node);
     }
 
     // Check for module_definition
-    if (
-      node.type === 'module_definition' ||
-      node.text.trim().startsWith('module ')
-    ) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found module_definition in statement`
-      );
+    if (node.type === 'module_definition' || node.text.trim().startsWith('module ')) {
+      console.log(`[BaseASTVisitor.visitStatement] Found module_definition in statement`);
       return this.visitModuleDefinition(node);
     }
 
@@ -478,9 +451,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
       if (!child) continue;
 
       if (child.type === 'expression_statement') {
-        console.log(
-          `[BaseASTVisitor.visitStatement] Found expression_statement as direct child`
-        );
+        console.log(`[BaseASTVisitor.visitStatement] Found expression_statement as direct child`);
         return this.visitExpressionStatement(child);
       }
     }
@@ -488,51 +459,35 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     // Look for assert_statement in the statement
     const assertStatement = findDescendantOfType(node, 'assert_statement');
     if (assertStatement) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found assert_statement in statement`
-      );
+      console.log(`[BaseASTVisitor.visitStatement] Found assert_statement in statement`);
       return this.visitAssertStatement(assertStatement);
     }
 
     // Look for echo_statement in the statement
     const echoStatement = findDescendantOfType(node, 'echo_statement');
     if (echoStatement) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found echo_statement in statement`
-      );
+      console.log(`[BaseASTVisitor.visitStatement] Found echo_statement in statement`);
       return this.visitEchoStatement(echoStatement);
     }
 
     // Look for assign_statement in the statement
     const assignStatement = findDescendantOfType(node, 'assign_statement');
     if (assignStatement) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found assign_statement in statement`
-      );
+      console.log(`[BaseASTVisitor.visitStatement] Found assign_statement in statement`);
       return this.visitAssignStatement(assignStatement);
     }
 
     // Look for module_instantiation in the statement (legacy support)
-    const moduleInstantiation = findDescendantOfType(
-      node,
-      'module_instantiation'
-    );
+    const moduleInstantiation = findDescendantOfType(node, 'module_instantiation');
     if (moduleInstantiation) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found module_instantiation in statement`
-      );
+      console.log(`[BaseASTVisitor.visitStatement] Found module_instantiation in statement`);
       return this.visitModuleInstantiation(moduleInstantiation);
     }
 
     // Look for accessor_expression in the statement (new tree-sitter structure)
-    const accessorExpression = findDescendantOfType(
-      node,
-      'accessor_expression'
-    );
+    const accessorExpression = findDescendantOfType(node, 'accessor_expression');
     if (accessorExpression) {
-      console.log(
-        `[BaseASTVisitor.visitStatement] Found accessor_expression in statement`
-      );
+      console.log(`[BaseASTVisitor.visitStatement] Found accessor_expression in statement`);
       return this.visitAccessorExpression(accessorExpression);
     }
 
@@ -548,12 +503,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns An array of AST nodes
    */
   visitBlock(node: TSNode): ast.ASTNode[] {
-    console.log(
-      `[BaseASTVisitor.visitBlock] Processing block: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
+    console.log(`[BaseASTVisitor.visitBlock] Processing block: ${node.text.substring(0, 50)}`);
 
     const children: ast.ASTNode[] = [];
 
@@ -568,16 +518,12 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         const childNode = node.namedChild(i);
         if (!childNode) continue;
 
-        console.log(
-          `[BaseASTVisitor.visitBlock] Processing child ${i}: ${childNode.type}`
-        );
+        console.log(`[BaseASTVisitor.visitBlock] Processing child ${i}: ${childNode.type}`);
 
         // Visit the child node
         const childAst = this.visitNode(childNode);
         if (childAst) {
-          console.log(
-            `[BaseASTVisitor.visitBlock] Added child: ${childAst.type}`
-          );
+          console.log(`[BaseASTVisitor.visitBlock] Added child: ${childAst.type}`);
           children.push(childAst);
         }
       }
@@ -626,10 +572,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
     console.log(
-      `[BaseASTVisitor.visitIfStatement] Processing if statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitIfStatement] Processing if statement: ${node.text.substring(0, 50)}`
     );
     return null; // Default implementation
   }
@@ -641,10 +584,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
     console.log(
-      `[BaseASTVisitor.visitForStatement] Processing for statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitForStatement] Processing for statement: ${node.text.substring(0, 50)}`
     );
     return null; // Default implementation
   }
@@ -656,10 +596,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitLetExpression(node: TSNode): ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null {
     console.log(
-      `[BaseASTVisitor.visitLetExpression] Processing let expression: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitLetExpression] Processing let expression: ${node.text.substring(0, 50)}`
     );
     return null; // Default implementation
   }
@@ -696,9 +633,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     const valueNode = node.childForFieldName('value');
 
     if (!nameNode || !valueNode) {
-      console.log(
-        `[BaseASTVisitor.visitAssignmentStatement] Missing name or value node`
-      );
+      console.log(`[BaseASTVisitor.visitAssignmentStatement] Missing name or value node`);
       return null;
     }
 
@@ -730,10 +665,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitEchoStatement(node: TSNode): ast.EchoStatementNode | null {
     console.log(
-      `[BaseASTVisitor.visitEchoStatement] Processing echo statement: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitEchoStatement] Processing echo statement: ${node.text.substring(0, 50)}`
     );
 
     // Default implementation - subclasses should override this method
@@ -785,9 +717,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     }
 
     if (!expression) {
-      console.log(
-        `[BaseASTVisitor.visitExpressionStatement] No expression found`
-      );
+      console.log(`[BaseASTVisitor.visitExpressionStatement] No expression found`);
       return null;
     }
 
@@ -812,10 +742,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     // This method is added for completeness, but we'll delegate to visitAccessorExpression
 
     // Look for accessor_expression in the call_expression
-    const accessorExpression = findDescendantOfType(
-      node,
-      'accessor_expression'
-    );
+    const accessorExpression = findDescendantOfType(node, 'accessor_expression');
     if (accessorExpression) {
       return this.visitAccessorExpression(accessorExpression);
     }
@@ -837,11 +764,15 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     );
 
     // DEBUG: Log detailed node structure
-    console.log(`[BaseASTVisitor.visitAccessorExpression] Node details: type=${node.type}, childCount=${node.childCount}, text="${node.text}"`);
+    console.log(
+      `[BaseASTVisitor.visitAccessorExpression] Node details: type=${node.type}, childCount=${node.childCount}, text="${node.text}"`
+    );
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
       if (child) {
-        console.log(`[BaseASTVisitor.visitAccessorExpression] Child[${i}]: type=${child.type}, text="${child.text}"`);
+        console.log(
+          `[BaseASTVisitor.visitAccessorExpression] Child[${i}]: type=${child.type}, text="${child.text}"`
+        );
       }
     }
 
@@ -889,7 +820,9 @@ export abstract class BaseASTVisitor implements ASTVisitor {
 
     // WORKAROUND: If function name is still empty, try to extract from the parent node text
     if (!functionName || functionName.trim() === '') {
-      console.log(`[BaseASTVisitor.visitAccessorExpression] Function name is empty, trying text extraction from node: "${node.text}"`);
+      console.log(
+        `[BaseASTVisitor.visitAccessorExpression] Function name is empty, trying text extraction from node: "${node.text}"`
+      );
 
       // Try to extract function name from the node text directly
       const nodeText = node.text.trim();
@@ -897,32 +830,32 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         const potentialName = nodeText.substring(0, nodeText.indexOf('(')).trim();
         if (potentialName) {
           functionName = potentialName;
-          console.log(`[BaseASTVisitor.visitAccessorExpression] Extracted function name from text: ${functionName}`);
+          console.log(
+            `[BaseASTVisitor.visitAccessorExpression] Extracted function name from text: ${functionName}`
+          );
         }
       }
     }
 
     if (!functionName || functionName.trim() === '') {
-      console.log(
-        `[BaseASTVisitor.visitAccessorExpression] No function name found`
-      );
+      console.log(`[BaseASTVisitor.visitAccessorExpression] No function name found`);
       return null;
     }
 
     // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
     const truncatedNameMap: { [key: string]: string } = {
-      'sphe': 'sphere',
-      'cyli': 'cylinder',
-      'tran': 'translate',
-      'transl': 'translate', // Added for the specific truncation seen in tests
-      'unio': 'union',
-      'diff': 'difference',
-      'inte': 'intersection',
-      'rota': 'rotate',
-      'scal': 'scale',
-      'mirr': 'mirror',
-      'colo': 'color',
-      'mult': 'multmatrix'
+      sphe: 'sphere',
+      cyli: 'cylinder',
+      tran: 'translate',
+      transl: 'translate', // Added for the specific truncation seen in tests
+      unio: 'union',
+      diff: 'difference',
+      inte: 'intersection',
+      rota: 'rotate',
+      scal: 'scale',
+      mirr: 'mirror',
+      colo: 'color',
+      mult: 'multmatrix',
     };
 
     if (functionName && truncatedNameMap[functionName]) {
@@ -933,15 +866,11 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     }
 
     if (!functionName) {
-      console.log(
-        `[BaseASTVisitor.visitAccessorExpression] Empty function name`
-      );
+      console.log(`[BaseASTVisitor.visitAccessorExpression] Empty function name`);
       return null;
     }
 
-    console.log(
-      `[BaseASTVisitor.visitAccessorExpression] Function name: ${functionName}`
-    );
+    console.log(`[BaseASTVisitor.visitAccessorExpression] Function name: ${functionName}`);
 
     // For test cases, extract arguments from the text
     const args: ExtractedParameter[] = [];
@@ -953,11 +882,11 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         const argsText = node.text.substring(startIndex + 1, endIndex).trim();
         if (argsText) {
           // Simple parsing for testing purposes
-          const argValues = argsText.split(',').map(arg => arg.trim());
+          const argValues = argsText.split(',').map((arg) => arg.trim());
           for (const argValue of argValues) {
             if (argValue.includes('=')) {
               // Named argument
-              const [_name, value] = argValue.split('=').map(p => p.trim());
+              const [_name, value] = argValue.split('=').map((p) => p.trim());
               if (!isNaN(Number(value))) {
                 args.push({
                   type: 'number',
@@ -993,7 +922,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     }
 
     // Convert ExtractedParameter[] to Parameter[]
-    const convertedArgs: ast.Parameter[] = args.map(arg => {
+    const convertedArgs: ast.Parameter[] = args.map((arg) => {
       if ('name' in arg) {
         // Named argument
         return {
@@ -1020,17 +949,11 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    */
   visitExpression(node: TSNode): ast.ASTNode | null {
     console.log(
-      `[BaseASTVisitor.visitExpression] Processing expression: ${node.text.substring(
-        0,
-        50
-      )}`
+      `[BaseASTVisitor.visitExpression] Processing expression: ${node.text.substring(0, 50)}`
     );
 
     // Check for accessor_expression (function calls like cube(10))
-    const accessorExpression = findDescendantOfType(
-      node,
-      'accessor_expression'
-    );
+    const accessorExpression = findDescendantOfType(node, 'accessor_expression');
     if (accessorExpression) {
       console.log(
         `[BaseASTVisitor.visitExpression] Found accessor_expression: ${accessorExpression.text}`
@@ -1043,19 +966,16 @@ export abstract class BaseASTVisitor implements ASTVisitor {
       const functionName = node.text.substring(0, node.text.indexOf('('));
 
       // Extract arguments from the text
-      const argsText = node.text.substring(
-        node.text.indexOf('(') + 1,
-        node.text.lastIndexOf(')')
-      );
+      const argsText = node.text.substring(node.text.indexOf('(') + 1, node.text.lastIndexOf(')'));
       const tempArgs: ExtractedParameter[] = [];
 
       if (argsText.trim()) {
         // Simple parsing for testing purposes
-        const argValues = argsText.split(',').map(arg => arg.trim());
+        const argValues = argsText.split(',').map((arg) => arg.trim());
         for (const argValue of argValues) {
           if (argValue.includes('=')) {
             // Named argument
-            const [_name, value] = argValue.split('=').map(p => p.trim());
+            const [_name, value] = argValue.split('=').map((p) => p.trim());
             if (!isNaN(Number(value))) {
               tempArgs.push({
                 type: 'number',
@@ -1088,7 +1008,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         }
       }
       // Convert ExtractedParameter[] to Parameter[]
-      const convertedArgs: ast.Parameter[] = tempArgs.map(arg => {
+      const convertedArgs: ast.Parameter[] = tempArgs.map((arg) => {
         if ('name' in arg) {
           // Named argument
           return {

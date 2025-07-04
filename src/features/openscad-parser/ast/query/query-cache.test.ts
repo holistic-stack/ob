@@ -2,13 +2,16 @@
  * Tests for the QueryCache interface
  */
 
-import { describe, it, expect } from 'vitest';
-import { QueryCache } from './query-cache.js';
+import { describe, expect, it } from 'vitest';
 import { LRUQueryCache } from './lru-query-cache.js';
+import type { QueryCache } from './query-cache.js';
 
 // Mock the TSNode type
 class MockNode {
-  constructor(public text: string, public type: string) {}
+  constructor(
+    public text: string,
+    public type: string
+  ) {}
 }
 
 describe('QueryCache', () => {

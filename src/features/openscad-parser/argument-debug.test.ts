@@ -2,14 +2,14 @@
  * Test to debug the structure of the argument node
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from './enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from './openscad-parser';
 
 describe('OpenSCAD Argument Debug', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 

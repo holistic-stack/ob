@@ -6,8 +6,8 @@
  * @module lib/openscad-parser/ast/utils/ast-error-utils
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 import { getLocation } from './location-utils.js';
 
 /**
@@ -41,7 +41,7 @@ export function createErrorNodeInternal(
 ): ast.ErrorNode {
   return {
     type: 'error',
-    location: (cstNode ? getLocation(cstNode) : defaultLocation),
+    location: cstNode ? getLocation(cstNode) : defaultLocation,
     message,
     errorCode,
     originalNodeType: originalNodeType || cstNode?.type || 'unknown_node_type',

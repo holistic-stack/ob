@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ModuleVisitor } from './module-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import * as ast from '../ast-types.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import * as ast from '../ast-types.js';
+import { ModuleVisitor } from './module-visitor.js';
 
 describe('ModuleVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
 
   // FIX: Use beforeEach/afterEach for proper test isolation
   // This prevents Tree-sitter memory corruption between tests
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
   });
@@ -41,18 +41,13 @@ describe('ModuleVisitor', () => {
       for (let i = 0; i < rootNode.namedChildCount; i++) {
         const child = rootNode.namedChild(i);
         if (child) {
-          console.log(
-            `Child ${i}: type=${child.type}, text=${child.text.substring(
-              0,
-              30
-            )}`
-          );
+          console.log(`Child ${i}: type=${child.type}, text=${child.text.substring(0, 30)}`);
         }
       }
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -96,7 +91,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -140,7 +135,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -187,7 +182,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -236,18 +231,13 @@ describe('ModuleVisitor', () => {
       for (let i = 0; i < rootNode.namedChildCount; i++) {
         const child = rootNode.namedChild(i);
         if (child) {
-          console.log(
-            `Child ${i}: type=${child.type}, text=${child.text.substring(
-              0,
-              30
-            )}`
-          );
+          console.log(`Child ${i}: type=${child.type}, text=${child.text.substring(0, 30)}`);
         }
       }
 
       // Find the module instantiation node - use the correct node type
       const moduleInstNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_instantiation' ||
             child.type === 'expression_statement' ||
@@ -285,7 +275,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module instantiation node - use the correct node type
       const moduleInstNode = rootNode.namedChildren.find(
-        child =>
+        (child) =>
           child &&
           (child.type === 'module_instantiation' ||
             child.type === 'expression_statement' ||

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ParserError, ErrorCode, Severity } from '../types/error-types.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
 import { TypeMismatchStrategy } from './type-mismatch-strategy.js';
 
 describe('TypeMismatchStrategy', () => {
@@ -23,16 +23,11 @@ describe('TypeMismatchStrategy', () => {
 
   describe('canHandle', () => {
     it('should handle TYPE_MISMATCH error code', () => {
-      const error = new ParserError(
-        'Type mismatch',
-        ErrorCode.TYPE_MISMATCH,
-        Severity.ERROR,
-        {
-          expected: ['number'],
-          found: 'string',
-          location: { line: 1, column: 10 }
-        }
-      );
+      const error = new ParserError('Type mismatch', ErrorCode.TYPE_MISMATCH, Severity.ERROR, {
+        expected: ['number'],
+        found: 'string',
+        location: { line: 1, column: 10 },
+      });
       expect(strategy.canHandle(error)).toBe(true);
     });
 
@@ -45,35 +40,26 @@ describe('TypeMismatchStrategy', () => {
           operation: '+',
           leftType: 'string',
           rightType: 'number',
-          location: { line: 1, column: 10 }
+          location: { line: 1, column: 10 },
         }
       );
       expect(strategy.canHandle(error)).toBe(true);
     });
 
     it('should not handle other error codes', () => {
-      const error = new ParserError(
-        'Syntax error',
-        ErrorCode.SYNTAX_ERROR,
-        Severity.ERROR
-      );
+      const error = new ParserError('Syntax error', ErrorCode.SYNTAX_ERROR, Severity.ERROR);
       expect(strategy.canHandle(error)).toBe(false);
     });
   });
 
   describe('recover - Simple type conversion', () => {
     it('should convert string to number when expected', () => {
-      const error = new ParserError(
-        'Type mismatch',
-        ErrorCode.TYPE_MISMATCH,
-        Severity.ERROR,
-        {
-          expected: ['number'],
-          found: 'string',
-          value: '"42"',
-          location: { line: 1, column: 5 }
-        }
-      );
+      const error = new ParserError('Type mismatch', ErrorCode.TYPE_MISMATCH, Severity.ERROR, {
+        expected: ['number'],
+        found: 'string',
+        value: '"42"',
+        location: { line: 1, column: 5 },
+      });
 
       const code = 'x = "42"; y = x + 10;';
       const result = strategy.recover(error, code);
@@ -83,17 +69,12 @@ describe('TypeMismatchStrategy', () => {
     });
 
     it('should convert number to string when expected', () => {
-      const error = new ParserError(
-        'Type mismatch',
-        ErrorCode.TYPE_MISMATCH,
-        Severity.ERROR,
-        {
-          expected: ['string'],
-          found: 'number',
-          value: '42',
-          location: { line: 1, column: 5 }
-        }
-      );
+      const error = new ParserError('Type mismatch', ErrorCode.TYPE_MISMATCH, Severity.ERROR, {
+        expected: ['string'],
+        found: 'number',
+        value: '42',
+        location: { line: 1, column: 5 },
+      });
 
       const code = 'x = 42; y = "Value: " + x;';
       const result = strategy.recover(error, code);
@@ -114,7 +95,7 @@ describe('TypeMismatchStrategy', () => {
           rightType: 'string',
           leftValue: '10',
           rightValue: '"20"',
-          location: { line: 1, column: 5 }
+          location: { line: 1, column: 5 },
         }
       );
 
@@ -140,13 +121,13 @@ describe('TypeMismatchStrategy', () => {
           rightType: 'string',
           leftValue: '10',
           rightValue: '"10"',
-          location: { line: 1, column: 10 }
+          location: { line: 1, column: 10 },
         }
       );
 
-      mockTypeChecker.isAssignable.mockImplementation((from, to) =>
-        (from === 'number' && to === 'string') ||
-        (from === 'string' && to === 'number')
+      mockTypeChecker.isAssignable.mockImplementation(
+        (from, to) =>
+          (from === 'number' && to === 'string') || (from === 'string' && to === 'number')
       );
       mockTypeChecker.findCommonType.mockReturnValue('string');
 
@@ -170,12 +151,12 @@ describe('TypeMismatchStrategy', () => {
           expected: ['number'],
           found: 'string',
           value: '"16"',
-          location: { line: 1, column: 10 }
+          location: { line: 1, column: 10 },
         }
       );
 
-      mockTypeChecker.isAssignable.mockImplementation((from, to) =>
-        from === 'string' && to === 'number'
+      mockTypeChecker.isAssignable.mockImplementation(
+        (from, to) => from === 'string' && to === 'number'
       );
 
       const code = 'x = sqrt("16");';
@@ -188,17 +169,12 @@ describe('TypeMismatchStrategy', () => {
 
   describe('getRecoverySuggestion', () => {
     it('should provide a suggestion for type conversion', () => {
-      const error = new ParserError(
-        'Type mismatch',
-        ErrorCode.TYPE_MISMATCH,
-        Severity.ERROR,
-        {
-          expected: ['number'],
-          found: 'string',
-          value: '"42"',
-          location: { line: 1, column: 10 }
-        }
-      );
+      const error = new ParserError('Type mismatch', ErrorCode.TYPE_MISMATCH, Severity.ERROR, {
+        expected: ['number'],
+        found: 'string',
+        value: '"42"',
+        location: { line: 1, column: 10 },
+      });
 
       const suggestion = strategy.getRecoverySuggestion(error);
       expect(suggestion).toContain('Convert string to number');
@@ -213,7 +189,7 @@ describe('TypeMismatchStrategy', () => {
           operation: '+',
           leftType: 'number',
           rightType: 'string',
-          location: { line: 1, column: 10 }
+          location: { line: 1, column: 10 },
         }
       );
 

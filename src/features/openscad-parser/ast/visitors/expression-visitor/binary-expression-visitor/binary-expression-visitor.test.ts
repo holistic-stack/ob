@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Node as TSNode } from 'web-tree-sitter';
-
-import { BinaryExpressionVisitor } from './binary-expression-visitor.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../../../error-handling/index.js';
-import { OpenscadParser } from '../../../../openscad-parser.js';
+import { OpenscadParser } from '../../../../openscad-parser';
+import { ExpressionVisitor } from '../../expression-visitor.js';
+import { BinaryExpressionVisitor } from './binary-expression-visitor.js';
 
 // Helper function to get a Tree-sitter node for an expression
 function _getExpressionNode(parser: OpenscadParser, code: string): TSNode | null {
@@ -17,8 +16,12 @@ function _getExpressionNode(parser: OpenscadParser, code: string): TSNode | null
   // Find any expression-related node in the tree
   let exprNode: TSNode | null = null;
   function findNode(node: TSNode) {
-    if (node.type.includes('expression') || node.type === 'additive_expression' ||
-        node.type === 'multiplicative_expression' || node.type === 'binary_expression') {
+    if (
+      node.type.includes('expression') ||
+      node.type === 'additive_expression' ||
+      node.type === 'multiplicative_expression' ||
+      node.type === 'binary_expression'
+    ) {
       console.log(`Found expression node: ${node.type} with text: "${node.text}"`);
       exprNode = node;
       return;

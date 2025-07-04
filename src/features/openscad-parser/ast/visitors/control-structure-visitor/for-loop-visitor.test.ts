@@ -4,20 +4,20 @@
  * @module lib/openscad-parser/ast/visitors/control-structure-visitor/for-loop-visitor.test
  */
 
-import { EnhancedOpenscadParser } from '../../../enhanced-parser.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ControlStructureVisitor } from '../control-structure-visitor.js';
-import { printNodeStructure } from '../../utils/debug-utils.js';
+import { OpenscadParser } from '../../../openscad-parser';
 import { ErrorHandler } from '../../../error-handling/index.js';
-import * as ast from '../../ast-types.js';
+import type * as ast from '../../ast-types.js';
+import { printNodeStructure } from '../../utils/debug-utils.js';
+import { ControlStructureVisitor } from '../control-structure-visitor.js';
 
 describe('ForLoopVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
   let visitor: ControlStructureVisitor;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
     visitor = new ControlStructureVisitor('', errorHandler);
@@ -128,7 +128,9 @@ describe('ForLoopVisitor', () => {
       expect(actualForNode?.type).toBe('for_statement');
 
       // Log the structure of the actual for_statement node for debugging
-      console.log('\n[TEST DEBUG] Actual For Node (for_statement) Structure for "multiple variables" test:');
+      console.log(
+        '\n[TEST DEBUG] Actual For Node (for_statement) Structure for "multiple variables" test:'
+      );
       if (actualForNode) {
         printNodeStructure(actualForNode, 0, 10, 50); // Print with depth 10, max line length 50
       } else {

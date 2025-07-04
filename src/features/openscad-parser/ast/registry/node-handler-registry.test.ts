@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DefaultNodeHandlerRegistry } from './default-node-handler-registry.js';
+import type { NodeHandler } from './node-handler-registry.js';
 import { NodeHandlerRegistryFactory } from './node-handler-registry-factory.js';
-import { NodeHandler } from './node-handler-registry.js';
 
 describe('NodeHandlerRegistry', () => {
   describe('DefaultNodeHandlerRegistry', () => {
@@ -51,16 +51,14 @@ describe('NodeHandlerRegistry', () => {
 
     test('should throw an error when registering with an empty node type', () => {
       // Attempt to register with an empty node type
-      expect(() => registry.register('', mockHandler)).toThrow(
-        'Node type cannot be empty'
-      );
+      expect(() => registry.register('', mockHandler)).toThrow('Node type cannot be empty');
     });
 
     test('should throw an error when registering with a null error-handling', () => {
       // Attempt to register with a null error-handling
-      expect(() =>
-        registry.register('cube', null as unknown as NodeHandler)
-      ).toThrow('Handler cannot be null or undefined');
+      expect(() => registry.register('cube', null as unknown as NodeHandler)).toThrow(
+        'Handler cannot be null or undefined'
+      );
     });
   });
 

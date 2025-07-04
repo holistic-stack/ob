@@ -133,7 +133,7 @@
  * @since 0.1.0
  */
 
-import { ParserError, ErrorCode } from '../types/error-types.js';
+import { ErrorCode, type ParserError } from '../types/error-types.js';
 import { BaseRecoveryStrategy } from './recovery-strategy.js';
 
 interface IdentifierSuggestion {
@@ -216,10 +216,10 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
       error.code === ErrorCode.UNDEFINED_FUNCTION ||
       error.code === ErrorCode.UNDEFINED_MODULE ||
       (error.code === ErrorCode.REFERENCE_ERROR &&
-       (error.message.includes('is not defined') ||
-        error.message.includes('undefined variable') ||
-        error.message.includes('undefined function') ||
-        error.message.includes('undefined module')))
+        (error.message.includes('is not defined') ||
+          error.message.includes('undefined variable') ||
+          error.message.includes('undefined function') ||
+          error.message.includes('undefined module')))
     );
   }
 
@@ -243,7 +243,7 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
     if (suggestions.length === 0) return null;
 
     // Update error context with suggestions
-    (error.context.suggestions = suggestions.map(s => s.name));
+    error.context.suggestions = suggestions.map((s) => s.name);
 
     // Return the most likely correction
     const firstSuggestion = suggestions[0];
@@ -304,7 +304,7 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
           suggestions.push({
             name: idName,
             distance,
-            type: type as 'variable' | 'function' | 'module'
+            type: type as 'variable' | 'function' | 'module',
           });
         }
       }
@@ -353,8 +353,8 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
 
           if (deletion !== undefined && insertion !== undefined && substitution !== undefined) {
             currentRow[j] = Math.min(
-              deletion + 1,     // Deletion
-              insertion + 1,     // Insertion
+              deletion + 1, // Deletion
+              insertion + 1, // Insertion
               substitution + cost // Substitution
             );
           }
@@ -423,6 +423,6 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
       return 'Check for typos or missing variable/function declarations';
     }
 
-    return `Did you mean ${suggestions.map(s => `'${s}'`).join(' or ')}?`;
+    return `Did you mean ${suggestions.map((s) => `'${s}'`).join(' or ')}?`;
   }
 }

@@ -1,15 +1,15 @@
 /**
  * Binary Expression Evaluator Tests
- * 
+ *
  * This file contains tests for the binary expression evaluator.
  * Following the SRP principle, these tests focus solely on the binary expression
  * evaluation functionality.
  */
 
-import { describe, it, expect } from 'vitest';
-import { evaluateBinaryExpression } from './binary-expression-evaluator.js';
-import * as ast from '../../ast-types.js';
+import { describe, expect, it } from 'vitest';
 import { ErrorHandler } from '../../../error-handling/index.js';
+import type * as ast from '../../ast-types.js';
+import { evaluateBinaryExpression } from './binary-expression-evaluator.js';
 
 describe('BinaryExpressionEvaluator', () => {
   let errorHandler: ErrorHandler;
@@ -25,7 +25,7 @@ describe('BinaryExpressionEvaluator', () => {
       expressionType: 'literal',
       literalType: typeof value === 'number' ? 'number' : 'boolean',
       value,
-      location: undefined
+      location: undefined,
     };
   }
 
@@ -41,7 +41,7 @@ describe('BinaryExpressionEvaluator', () => {
       operator,
       left,
       right,
-      location: undefined
+      location: undefined,
     };
   }
 
@@ -95,7 +95,7 @@ describe('BinaryExpressionEvaluator', () => {
     const innerLeftNode = createLiteralNode(1);
     const innerRightNode = createLiteralNode(2);
     const innerBinaryNode = createBinaryExpressionNode('+', innerLeftNode, innerRightNode);
-    
+
     const outerRightNode = createLiteralNode(3);
     const outerBinaryNode = createBinaryExpressionNode('*', innerBinaryNode, outerRightNode);
 
@@ -105,35 +105,19 @@ describe('BinaryExpressionEvaluator', () => {
 
   it('should handle comparison operators correctly', () => {
     // Test equal operator
-    let binaryNode = createBinaryExpressionNode(
-      '==',
-      createLiteralNode(5),
-      createLiteralNode(5)
-    );
+    let binaryNode = createBinaryExpressionNode('==', createLiteralNode(5), createLiteralNode(5));
     expect(evaluateBinaryExpression(binaryNode, errorHandler)).toBe(true);
 
     // Test not equal operator
-    binaryNode = createBinaryExpressionNode(
-      '!=',
-      createLiteralNode(5),
-      createLiteralNode(3)
-    );
+    binaryNode = createBinaryExpressionNode('!=', createLiteralNode(5), createLiteralNode(3));
     expect(evaluateBinaryExpression(binaryNode, errorHandler)).toBe(true);
 
     // Test less than operator
-    binaryNode = createBinaryExpressionNode(
-      '<',
-      createLiteralNode(3),
-      createLiteralNode(5)
-    );
+    binaryNode = createBinaryExpressionNode('<', createLiteralNode(3), createLiteralNode(5));
     expect(evaluateBinaryExpression(binaryNode, errorHandler)).toBe(true);
 
     // Test greater than operator
-    binaryNode = createBinaryExpressionNode(
-      '>',
-      createLiteralNode(5),
-      createLiteralNode(3)
-    );
+    binaryNode = createBinaryExpressionNode('>', createLiteralNode(5), createLiteralNode(3));
     expect(evaluateBinaryExpression(binaryNode, errorHandler)).toBe(true);
   });
 

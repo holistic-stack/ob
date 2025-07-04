@@ -1,33 +1,33 @@
 /**
  * @file Tests for ListComprehensionVisitor
- * 
+ *
  * This test suite validates the ListComprehensionVisitor's ability to parse
  * OpenSCAD list comprehension expressions into AST nodes following the Real Parser Pattern.
- * 
+ *
  * Test coverage includes:
  * - Traditional syntax: [expr for (var = range)]
  * - OpenSCAD syntax: [for (var = range) expr]
  * - Conditional comprehensions with if clauses
  * - Complex expressions and nested structures
  * - Error handling and edge cases
- * 
+ *
  * @example Test patterns
  * ```typescript
  * // Traditional syntax
  * const result = visitor.visitListComprehension(parseNode('[x*x for (x = [1:5])]'));
- * 
+ *
  * // OpenSCAD syntax with condition
  * const result = visitor.visitListComprehension(parseNode('[for (x = [1:10]) if (x % 2 == 0) x]'));
  * ```
  */
 
-import { describe, it, expect, beforeEach, afterEach, fail } from 'vitest';
-import { OpenscadParser } from '../../../../openscad-parser.js';
+import { afterEach, beforeEach, describe, expect, fail, it } from 'vitest';
 import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ListComprehensionVisitor } from './list-comprehension-visitor.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
-import { IdentifierExpressionNode, ErrorNode } from '../../../ast-types.js';
+import { OpenscadParser } from '../../../../openscad-parser';
+import type { ErrorNode, IdentifierExpressionNode } from '../../../ast-types.js';
 import { findDescendantOfType } from '../../../utils/index.js';
+import { ExpressionVisitor } from '../../expression-visitor.js';
+import { ListComprehensionVisitor } from './list-comprehension-visitor.js';
 
 describe('ListComprehensionVisitor', () => {
   let parser: OpenscadParser;
@@ -57,11 +57,11 @@ describe('ListComprehensionVisitor', () => {
       const code = '[x for (x = [1:5])]';
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
-      
+
       // Find the list comprehension node
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
@@ -73,9 +73,12 @@ describe('ListComprehensionVisitor', () => {
     ErrorCode: ${errorNode.errorCode}
     CST Node Text: ${errorNode.cstNodeText}
     Location: ${JSON.stringify(errorNode.location)}
-    Cause: ${errorNode.cause ? `ErrorCode: ${(errorNode.cause).errorCode}, Message: ${(errorNode.cause).message}` : 'No cause'}
+    Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (result?.type === 'expression' && result.expressionType === 'list_comprehension_expression') {
+        } else if (
+          result?.type === 'expression' &&
+          result.expressionType === 'list_comprehension_expression'
+        ) {
           expect(result.variable).toBe('x');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('range_expression');
@@ -93,10 +96,10 @@ describe('ListComprehensionVisitor', () => {
       const code = '[x*x for (x = [1:5])]';
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
-      
+
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
@@ -119,10 +122,10 @@ describe('ListComprehensionVisitor', () => {
       const code = '[x for (x = [1:10]) if (x % 2 == 0)]';
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
-      
+
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
@@ -159,7 +162,7 @@ describe('ListComprehensionVisitor', () => {
       // Find the list comprehension node within the assignment
       const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy(); // Ensure result is not null
@@ -171,9 +174,12 @@ describe('ListComprehensionVisitor', () => {
     ErrorCode: ${errorNode.errorCode}
     CST Node Text: ${errorNode.cstNodeText}
     Location: ${JSON.stringify(errorNode.location)}
-    Cause: ${errorNode.cause ? `ErrorCode: ${(errorNode.cause).errorCode}, Message: ${(errorNode.cause).message}` : 'No cause'}
+    Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (result?.type === 'expression' && result.expressionType === 'list_comprehension_expression') {
+        } else if (
+          result?.type === 'expression' &&
+          result.expressionType === 'list_comprehension_expression'
+        ) {
           // Original success assertions (with slight adjustment for clarity):
           expect(result.expressionType).toBe('list_comprehension_expression');
           expect(result.variable).toBe('x');
@@ -197,7 +203,7 @@ describe('ListComprehensionVisitor', () => {
 
       const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
@@ -233,7 +239,7 @@ describe('ListComprehensionVisitor', () => {
 
       const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
-      
+
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
@@ -323,13 +329,16 @@ describe('ListComprehensionVisitor', () => {
         expect(result).toBeTruthy();
         if (result?.type === 'error') {
           expect(result.errorCode).toBe('LC_OPENSCAD_STYLE_MISSING_FOR_CLAUSE_NODE');
-          expect(result.message).toContain("Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension.");
+          expect(result.message).toContain(
+            "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
+          );
         } else {
           const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
-          if (typeof fail === 'function') { // Check if fail is defined to avoid Vitest crash
+          if (typeof fail === 'function') {
+            // Check if fail is defined to avoid Vitest crash
             fail(message);
           } else {
-            console.error("[TEST ERROR] " + message); // Log error if fail is not available
+            console.error('[TEST ERROR] ' + message); // Log error if fail is not available
             throw new Error(message); // Ensure test actually fails
           }
         }
@@ -351,13 +360,16 @@ describe('ListComprehensionVisitor', () => {
         expect(result).toBeTruthy();
         if (result?.type === 'error') {
           expect(result.errorCode).toBe('LC_OPENSCAD_STYLE_MISSING_FOR_CLAUSE_NODE');
-          expect(result.message).toContain("Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension.");
+          expect(result.message).toContain(
+            "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
+          );
         } else {
           const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
-          if (typeof fail === 'function') { // Check if fail is defined to avoid Vitest crash
+          if (typeof fail === 'function') {
+            // Check if fail is defined to avoid Vitest crash
             fail(message);
           } else {
-            console.error("[TEST ERROR] " + message); // Log error if fail is not available
+            console.error('[TEST ERROR] ' + message); // Log error if fail is not available
             throw new Error(message); // Ensure test actually fails
           }
         }
@@ -380,7 +392,9 @@ describe('ListComprehensionVisitor', () => {
         if (result?.type === 'error') {
           // This specific error code arises because extractForClause fails on the malformed forClauseNode
           expect(result.errorCode).toBe('LC_OPENSCAD_STYLE_MISSING_FOR_CLAUSE_NODE');
-          expect(result.message).toContain("Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension.");
+          expect(result.message).toContain(
+            "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
+          );
         } else {
           fail(`Expected error, got expression: ${JSON.stringify(result)}`);
         }
@@ -393,17 +407,25 @@ describe('ListComprehensionVisitor', () => {
       const code = '[for (x = [1:5]'; // Missing closing bracket and expression
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
-      
+
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         // For malformed input, we expect an ErrorNode or potentially null if parsing fails very early
-        expect(result === null || result?.type === 'error' || result?.type === 'expression').toBe(true);
-        if (result && result.type === 'expression' && result.expressionType !== 'list_comprehension_expression') {
+        expect(result === null || result?.type === 'error' || result?.type === 'expression').toBe(
+          true
+        );
+        if (
+          result &&
+          result.type === 'expression' &&
+          result.expressionType !== 'list_comprehension_expression'
+        ) {
           // If it's an expression but not a list comprehension, it might be a partially parsed node or an error wrapped as expression.
           // This test is primarily about not crashing and returning *something* sensible or an error.
         } else if (result && result.type !== 'error' && result.type !== 'expression') {
-          fail('Expected ErrorNode, null, or partial ListComprehensionExpressionNode for malformed input');
+          fail(
+            'Expected ErrorNode, null, or partial ListComprehensionExpressionNode for malformed input'
+          );
         }
       }
     });
@@ -412,17 +434,19 @@ describe('ListComprehensionVisitor', () => {
       const code = 'cube(10)';
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
-      
+
       const cubeNode = tree?.rootNode.descendantForIndex(0, code.length);
       if (cubeNode) {
         const result = visitor.visitListComprehension(cubeNode);
         expect(result).toBeTruthy(); // Check it's not null
         expect(result?.type).toBe('error');
-         
+
         const errorNode = result as ErrorNode;
         expect(errorNode.errorCode).toBe('NODE_NOT_LIST_COMPREHENSION');
         expect(errorNode.originalNodeType).toBe('module_instantiation');
-        expect(errorNode.message).toBe('The provided CST node (type: module_instantiation) is not a recognized list comprehension.'); 
+        expect(errorNode.message).toBe(
+          'The provided CST node (type: module_instantiation) is not a recognized list comprehension.'
+        );
       }
     });
   });

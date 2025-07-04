@@ -2,7 +2,7 @@
  * Tests for the ParserError class
  */
 
-import { ParserError, ErrorPosition, ErrorSuggestion } from './parser-error.js';
+import { type ErrorPosition, type ErrorSuggestion, ParserError } from './parser-error.js';
 
 describe('ParserError', () => {
   // Test data
@@ -10,9 +10,7 @@ describe('ParserError', () => {
   const code = 'TEST_ERROR';
   const source = 'cube([10, 10, 10]);';
   const position: ErrorPosition = { line: 0, column: 5, offset: 5 };
-  const suggestions: ErrorSuggestion[] = [
-    { message: 'Test suggestion', replacement: 'cube(10);' },
-  ];
+  const suggestions: ErrorSuggestion[] = [{ message: 'Test suggestion', replacement: 'cube(10);' }];
 
   it('should create a ParserError with the correct properties', () => {
     const error = new ParserError(message, code, source, position, suggestions);
@@ -56,13 +54,7 @@ describe('ParserError', () => {
 
   it('should create a ParserError from a tree-sitter node', () => {
     const node = { startPosition: { row: 0, column: 5 } };
-    const error = ParserError.fromNode(
-      message,
-      code,
-      source,
-      node,
-      suggestions
-    );
+    const error = ParserError.fromNode(message, code, source, node, suggestions);
 
     expect(error).toBeInstanceOf(ParserError);
     expect(error.message).toContain(message);

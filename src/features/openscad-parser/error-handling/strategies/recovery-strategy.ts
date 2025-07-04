@@ -108,44 +108,44 @@
  * @since 0.1.0
  */
 
-import { ParserError } from '../types/error-types.js';
+import type { ParserError } from '../types/error-types.js';
 
 /**
  * Interface that all error recovery strategies must implement.
- * 
+ *
  * Recovery strategies follow the Strategy design pattern and are responsible for
  * analyzing specific types of parsing errors and providing corrections or suggestions
  * to help users fix their OpenSCAD code. Each strategy specializes in a particular
  * error type, such as missing semicolons, unclosed brackets, or unknown identifiers.
- * 
+ *
  * Recovery strategies are registered with the RecoveryStrategyRegistry and are tried
  * in sequence when an error occurs, with each strategy determining if it can handle
  * the specific error type.
- * 
+ *
  * @example Implementing a Custom Strategy
  * ```typescript
  * class MissingOperatorStrategy implements RecoveryStrategy {
  *   canHandle(error: ParserError): boolean {
  *     // Check if this is an operator-related syntax error
- *     return error instanceof SyntaxError && 
+ *     return error instanceof SyntaxError &&
  *            error.message.includes('expected operator');
  *   }
- * 
+ *
  *   recover(error: ParserError, code: string): string | null {
  *     // Implementation to insert the missing operator
  *     const position = this.getErrorPosition(error);
  *     if (!position) return null;
- *     
+ *
  *     // Insert a '+' operator at the error position
  *     return this.insertAtPosition(code, position.line, position.column, '+');
  *   }
- * 
+ *
  *   getRecoverySuggestion(error: ParserError): string {
  *     return 'Add a missing operator (such as +, -, *, or /) between values';
  *   }
  * }
  * ```
- * 
+ *
  * @since 0.1.0
  */
 export interface RecoveryStrategy {
@@ -175,41 +175,41 @@ export interface RecoveryStrategy {
 /**
  * Base class for recovery strategies that provides common utility methods and implements
  * the RecoveryStrategy interface.
- * 
+ *
  * This class serves as a foundation for specific recovery strategies, providing helper
  * methods for common operations such as:
  * - Extracting error position information
  * - Manipulating source code lines
  * - Inserting and replacing text at specific positions
- * 
+ *
  * Concrete recovery strategies should extend this class and implement the abstract
  * methods according to their specific error handling logic.
- * 
+ *
  * @example Extending BaseRecoveryStrategy
  * ```typescript
  * class MissingSemicolonStrategy extends BaseRecoveryStrategy {
  *   canHandle(error: ParserError): boolean {
- *     return error instanceof SyntaxError && 
+ *     return error instanceof SyntaxError &&
  *            error.message.includes('Expected ";"');
  *   }
- * 
+ *
  *   recover(error: ParserError, code: string): string | null {
  *     const position = this.getErrorPosition(error);
  *     if (!position) return null;
- *     
+ *
  *     // Insert a semicolon at the error position
  *     return this.insertAtPosition(code, position.line, position.column, ';');
  *   }
- * 
+ *
  *   getRecoverySuggestion(error: ParserError): string {
  *     const position = this.getErrorPosition(error);
  *     if (!position) return 'Add a missing semicolon';
- *     
+ *
  *     return `Add a semicolon (;) at line ${position.line}, column ${position.column}`;
  *   }
  * }
  * ```
- * 
+ *
  * @since 0.1.0
  */
 export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
@@ -242,15 +242,15 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
 
   /**
    * Extracts the line and column position information from an error's context.
-   * 
+   *
    * This utility method simplifies accessing position information from parser errors,
    * which is essential for locating where in the source code the error occurred.
    * The position information is used by recovery strategies to insert or replace
    * text at the correct location.
-   * 
+   *
    * @param error - The parser error to extract position information from
    * @returns An object with line and column numbers (both 1-based), or null if position information is not available
-   * 
+   *
    * @example
    * ```typescript
    * // Extract position from an error
@@ -261,14 +261,12 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
    *   return this.insertAtPosition(code, position.line, position.column, ';');
    * }
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   protected getErrorPosition(error: ParserError): { line: number; column: number } | null {
     const { line, column } = error.context;
-    return line !== undefined && column !== undefined
-      ? { line, column }
-      : null;
+    return line !== undefined && column !== undefined ? { line, column } : null;
   }
 
   /**
@@ -279,9 +277,7 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
    */
   protected getLine(code: string, lineNumber: number): string | null {
     const lines = code.split('\n');
-    return lineNumber > 0 && lineNumber <= lines.length
-      ? lines[lineNumber - 1] ?? null
-      : null;
+    return lineNumber > 0 && lineNumber <= lines.length ? (lines[lineNumber - 1] ?? null) : null;
   }
 
   /**
@@ -301,20 +297,20 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
 
   /**
    * Inserts text at a specific position in the source code.
-   * 
+   *
    * This is one of the primary methods used by recovery strategies to correct errors.
    * It allows precise insertion of missing elements (semicolons, brackets, operators, etc.)
    * at the exact position where they are needed.
-   * 
+   *
    * The method splits the code into lines, identifies the target line, and then
    * inserts the text at the specified column position within that line.
-   * 
+   *
    * @param code - The original source code as a string
    * @param line - The 1-based line number where text should be inserted
    * @param column - The 1-based column number where text should be inserted
    * @param text - The text to insert at the specified position
    * @returns The modified source code with the text inserted
-   * 
+   *
    * @example Missing Semicolon
    * ```typescript
    * // Original code: 'cube(10) sphere(5);'
@@ -322,7 +318,7 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
    * const fixedCode = this.insertAtPosition(code, 1, 9, ';');
    * // Result: 'cube(10); sphere(5);'
    * ```
-   * 
+   *
    * @example Missing Closing Bracket
    * ```typescript
    * // Original code: 'translate([1,2,3) cube(5);'
@@ -330,7 +326,7 @@ export abstract class BaseRecoveryStrategy implements RecoveryStrategy {
    * const fixedCode = this.insertAtPosition(code, 1, 17, ']');
    * // Result: 'translate([1,2,3]) cube(5);'
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   protected insertAtPosition(code: string, line: number, column: number, text: string): string {

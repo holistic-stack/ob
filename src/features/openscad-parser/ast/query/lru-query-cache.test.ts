@@ -2,12 +2,15 @@
  * Tests for the LRUQueryCache class
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { LRUQueryCache } from './lru-query-cache.js';
 
 // Mock the TSNode type
 class MockNode {
-  constructor(public text: string, public type: string) {}
+  constructor(
+    public text: string,
+    public type: string
+  ) {}
 }
 
 describe('LRUQueryCache', () => {

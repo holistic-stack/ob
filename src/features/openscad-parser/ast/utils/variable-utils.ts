@@ -61,7 +61,7 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 
 /**
  * Determines if a Tree-sitter node represents a special OpenSCAD variable.
@@ -140,13 +140,13 @@ export function isValidVariableName(name: string): boolean {
  */
 export function getSpecialVariables(): string[] {
   return [
-    '$fn',    // Number of fragments for circles
-    '$fa',    // Minimum angle for fragments
-    '$fs',    // Minimum size for fragments
-    '$t',     // Animation time variable
-    '$vpr',   // Viewport rotation
-    '$vpt',   // Viewport translation
-    '$vpd',   // Viewport distance
+    '$fn', // Number of fragments for circles
+    '$fa', // Minimum angle for fragments
+    '$fs', // Minimum size for fragments
+    '$t', // Animation time variable
+    '$vpr', // Viewport rotation
+    '$vpt', // Viewport translation
+    '$vpd', // Viewport distance
     '$children', // Number of child modules
   ];
 }

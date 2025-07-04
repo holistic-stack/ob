@@ -1,5 +1,5 @@
-import { OpenscadParser } from '../openscad-parser.js';
-import { afterAll, beforeAll, describe, it, expect } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../openscad-parser';
 
 describe('AST Generator Integration Tests', () => {
   let parser: OpenscadParser;
@@ -29,9 +29,7 @@ describe('AST Generator Integration Tests', () => {
         console.log(
           `${indent}${node.type} [${node.startPosition.row},${
             node.startPosition.column
-          } → ${node.endPosition.row},${
-            node.endPosition.column
-          }]: '${node.text.substring(0, 30)}${
+          } → ${node.endPosition.row},${node.endPosition.column}]: '${node.text.substring(0, 30)}${
             node.text.length > 30 ? '...' : ''
           }'`
         );
@@ -58,8 +56,8 @@ describe('AST Generator Integration Tests', () => {
       expect(children).toHaveLength(1); // Should have 1 child (the cube)
       const cubeNode = children[0];
       expect(cubeNode?.type).toBe('cube');
-      expect((cubeNode).size).toEqual([1, 2, 3]);
-      expect((cubeNode).center).toBe(true);
+      expect(cubeNode.size).toEqual([1, 2, 3]);
+      expect(cubeNode.center).toBe(true);
     });
 
     it('should parse translate with cube using curly braces and named parameters', () => {

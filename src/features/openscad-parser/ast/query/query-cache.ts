@@ -6,7 +6,7 @@
  * @module lib/openscad-parser/ast/query/query-cache
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 
 /**
  * Interface for a cache of query results

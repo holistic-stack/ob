@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 
 // Mock implementation of BaseASTVisitor for testing
 class TestVisitor extends BaseASTVisitor {
@@ -29,11 +29,11 @@ class TestVisitor extends BaseASTVisitor {
 }
 
 describe('BaseASTVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let _visitor: TestVisitor;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 
@@ -164,10 +164,7 @@ describe('BaseASTVisitor', () => {
                 const grandchild = child.child(j);
                 if (!grandchild) continue;
 
-                if (
-                  grandchild.type === 'expression' &&
-                  grandchild.text.startsWith('cube(')
-                ) {
+                if (grandchild.type === 'expression' && grandchild.text.startsWith('cube(')) {
                   return {
                     type: 'cube',
                     size: 10,
@@ -202,9 +199,7 @@ describe('BaseASTVisitor', () => {
       };
 
       // Mock the visitStatement method to return our mock result
-      const visitStatementSpy = vi
-        .spyOn(testVisitor, 'visitStatement')
-        .mockReturnValue(mockResult);
+      const visitStatementSpy = vi.spyOn(testVisitor, 'visitStatement').mockReturnValue(mockResult);
 
       // Visit the node
       const result = testVisitor.visitNode(mockStatementNode);
@@ -349,10 +344,7 @@ describe('BaseASTVisitor', () => {
                 const grandchild = child.child(j);
                 if (!grandchild) continue;
 
-                if (
-                  grandchild.type === 'expression' &&
-                  grandchild.text.startsWith('cube(')
-                ) {
+                if (grandchild.type === 'expression' && grandchild.text.startsWith('cube(')) {
                   return {
                     type: 'cube',
                     size: 10,
@@ -387,14 +379,12 @@ describe('BaseASTVisitor', () => {
       };
 
       // Mock the visitNode method to return our mock result for the first statement
-      const visitNodeSpy = vi
-        .spyOn(testVisitor, 'visitNode')
-        .mockImplementation((node: TSNode) => {
-          if (node === mockStatementNode1) {
-            return mockResult;
-          }
-          return null;
-        });
+      const visitNodeSpy = vi.spyOn(testVisitor, 'visitNode').mockImplementation((node: TSNode) => {
+        if (node === mockStatementNode1) {
+          return mockResult;
+        }
+        return null;
+      });
 
       // Visit the children of the root node
       const results = testVisitor.visitChildren(mockRootNode);
@@ -467,9 +457,7 @@ describe('BaseASTVisitor', () => {
       const result = testVisitor.visitModuleInstantiation(mockExpressionNode);
 
       // Verify the method was called
-      expect(visitModuleInstantiationSpy).toHaveBeenCalledWith(
-        mockExpressionNode
-      );
+      expect(visitModuleInstantiationSpy).toHaveBeenCalledWith(mockExpressionNode);
 
       // Verify the result
       expect(result).not.toBeNull();

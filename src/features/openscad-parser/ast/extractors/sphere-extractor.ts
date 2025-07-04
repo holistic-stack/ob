@@ -1,26 +1,28 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { extractArguments } from './argument-extractor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
+import { extractArguments } from './argument-extractor.js';
 import { extractNumberParameter } from './parameter-extractor.js';
-import { ErrorHandler } from '../../error-handling/index.js';
 
 /**
  * Extract a sphere node from an accessor expression node
  * @param node The accessor expression node
  * @returns A sphere AST node or null if the node cannot be processed
  */
-export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sourceCode?: string): ast.SphereNode | null {
-  console.log(
-    `[extractSphereNode] Processing sphere node: ${node.text.substring(0, 50)}`
-  );
+export function extractSphereNode(
+  node: TSNode,
+  errorHandler?: ErrorHandler,
+  sourceCode?: string
+): ast.SphereNode | null {
+  console.log(`[extractSphereNode] Processing sphere node: ${node.text.substring(0, 50)}`);
 
   // Default values
   let radius: number = 1;
-  let diameter: number | undefined = undefined;
-  let fn: number | undefined = undefined;
-  let fa: number | undefined = undefined;
-  let fs: number | undefined = undefined;
+  let diameter: number | undefined;
+  let fn: number | undefined;
+  let fa: number | undefined;
+  let fs: number | undefined;
 
   // Extract arguments from the argument_list
   const argsNode = node.childForFieldName('arguments');
@@ -34,11 +36,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
   }
 
   const args = extractArguments(argsNode, errorHandler, sourceCode);
-  console.log(
-    `[extractSphereNode] Extracted ${args.length} arguments: ${JSON.stringify(
-      args
-    )}`
-  );
+  console.log(`[extractSphereNode] Extracted ${args.length} arguments: ${JSON.stringify(args)}`);
 
   // First, check for positional parameters
   if (args.length > 0 && args[0] && !args[0].name) {
@@ -46,9 +44,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
     const radiusValue = extractNumberParameter(args[0]);
     if (radiusValue !== null) {
       radius = radiusValue;
-      console.log(
-        `[extractSphereNode] Found positional radius parameter: ${radius}`
-      );
+      console.log(`[extractSphereNode] Found positional radius parameter: ${radius}`);
     }
   }
 
@@ -64,11 +60,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
         radius = radiusValue;
         console.log(`[extractSphereNode] Found radius parameter: ${radius}`);
       } else {
-        console.log(
-          `[extractSphereNode] Invalid radius parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractSphereNode] Invalid radius parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle diameter parameter (named 'd')
@@ -81,11 +73,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
           `[extractSphereNode] Found diameter parameter: ${diameter}, calculated radius: ${radius}`
         );
       } else {
-        console.log(
-          `[extractSphereNode] Invalid diameter parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractSphereNode] Invalid diameter parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle $fn parameter
@@ -95,11 +83,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
         fn = fnValue;
         console.log(`[extractSphereNode] Found $fn parameter: ${fn}`);
       } else {
-        console.log(
-          `[extractSphereNode] Invalid $fn parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractSphereNode] Invalid $fn parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle $fa parameter
@@ -109,11 +93,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
         fa = faValue;
         console.log(`[extractSphereNode] Found $fa parameter: ${fa}`);
       } else {
-        console.log(
-          `[extractSphereNode] Invalid $fa parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractSphereNode] Invalid $fa parameter: ${JSON.stringify(arg.value)}`);
       }
     }
     // Handle $fs parameter
@@ -123,11 +103,7 @@ export function extractSphereNode(node: TSNode, errorHandler?: ErrorHandler, sou
         fs = fsValue;
         console.log(`[extractSphereNode] Found $fs parameter: ${fs}`);
       } else {
-        console.log(
-          `[extractSphereNode] Invalid $fs parameter: ${JSON.stringify(
-            arg.value
-          )}`
-        );
+        console.log(`[extractSphereNode] Invalid $fs parameter: ${JSON.stringify(arg.value)}`);
       }
     }
   }

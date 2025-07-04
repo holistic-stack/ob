@@ -2,9 +2,9 @@
  * Test to print the node types in the OpenSCAD language
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from './enhanced-parser.js';
-import { TreeCursor } from 'web-tree-sitter';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { TreeCursor } from 'web-tree-sitter';
+import type { OpenscadParser } from './openscad-parser';
 
 /**
  * Collects all unique node types from a tree by traversing it depth-first.
@@ -30,10 +30,10 @@ function collectNodeTypes(cursor: TreeCursor): Set<string> {
 }
 
 describe('OpenSCAD Node Types', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 

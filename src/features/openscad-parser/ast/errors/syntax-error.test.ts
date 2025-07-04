@@ -2,8 +2,8 @@
  * Tests for the SyntaxError class
  */
 
+import type { ErrorPosition } from './parser-error.js';
 import { SyntaxError } from './syntax-error.js';
-import { ErrorPosition } from './parser-error.js';
 
 describe('SyntaxError', () => {
   // Test data
@@ -30,21 +30,14 @@ describe('SyntaxError', () => {
     expect(error).toBeInstanceOf(SyntaxError);
     expect(error.message).toContain(`Missing ${tokenName}`);
     expect(error.suggestions).toHaveLength(1);
-    expect(error.suggestions[0].message).toContain(
-      `Add the missing ${tokenName}`
-    );
+    expect(error.suggestions[0].message).toContain(`Add the missing ${tokenName}`);
     expect(error.suggestions[0].replacement).toBe(tokenName);
   });
 
   it('should create an unexpected token error', () => {
     const foundToken = ')';
     const expectedToken = ']';
-    const error = SyntaxError.unexpectedToken(
-      foundToken,
-      expectedToken,
-      source,
-      position
-    );
+    const error = SyntaxError.unexpectedToken(foundToken, expectedToken, source, position);
 
     expect(error).toBeInstanceOf(SyntaxError);
     expect(error.message).toContain(`Unexpected token '${foundToken}'`);
@@ -59,20 +52,13 @@ describe('SyntaxError', () => {
   it('should create an unmatched token error', () => {
     const openToken = '[';
     const closeToken = ']';
-    const error = SyntaxError.unmatchedToken(
-      openToken,
-      closeToken,
-      source,
-      position
-    );
+    const error = SyntaxError.unmatchedToken(openToken, closeToken, source, position);
 
     expect(error).toBeInstanceOf(SyntaxError);
     expect(error.message).toContain(`Unmatched '${openToken}'`);
     expect(error.message).toContain(`missing '${closeToken}'`);
     expect(error.suggestions).toHaveLength(1);
-    expect(error.suggestions[0].message).toContain(
-      `Add the missing '${closeToken}'`
-    );
+    expect(error.suggestions[0].message).toContain(`Add the missing '${closeToken}'`);
     expect(error.suggestions[0].replacement).toBe(closeToken);
   });
 

@@ -1,13 +1,13 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import * as cursorUtils from './cursor-utils.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
 import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
+import * as cursorUtils from './cursor-utils.js';
 
 describe('cursor-utils', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     console.log('Parser initialized successfully');
   });
@@ -32,13 +32,10 @@ describe('cursor-utils', () => {
       console.log('Created cursor, node type:', cursor.nodeType);
 
       // Mock the cursor.nodeText property if it doesn't exist
-      if (!Object.prototype.hasOwnProperty.call(cursor, 'nodeText')) {
+      if (!Object.hasOwn(cursor, 'nodeText')) {
         Object.defineProperty(cursor, 'nodeText', {
           get: function () {
-            return code.substring(
-              this.startPosition.index,
-              this.endPosition.index
-            );
+            return code.substring(this.startPosition.index, this.endPosition.index);
           },
         });
       }
@@ -141,9 +138,7 @@ describe('cursor-utils', () => {
             console.log('Found cube function call');
           }
         } else {
-          console.log(
-            'Not a call expression or could not navigate to first child'
-          );
+          console.log('Not a call expression or could not navigate to first child');
         }
       } else {
         console.log('Could not navigate to first child');

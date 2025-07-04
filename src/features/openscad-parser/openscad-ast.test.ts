@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { OpenscadParser } from './openscad-parser.js';
-import { Tree } from 'web-tree-sitter';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { Tree } from 'web-tree-sitter';
+import { OpenscadParser } from './openscad-parser';
 
 describe('OpenSCAD Parser - AST Generation', () => {
   let osParser: OpenscadParser;
@@ -15,10 +15,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
     osParser.dispose();
   });
 
-  function findDescendantNode(
-    node: any | null,
-    predicate: (n: any) => boolean
-  ): any | undefined {
+  function findDescendantNode(node: any | null, predicate: (n: any) => boolean): any | undefined {
     if (!node) return undefined;
     if (predicate(node)) return node;
 
@@ -59,9 +56,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
         // Grammar: (source_file (statement (module_instantiation name: (identifier) arguments: (argument_list ...))))
         const cubeNode = findDescendantNode(
           rootNode,
-          n =>
-            n.type === 'module_instantiation' &&
-            n.childForFieldName('name')?.text === 'cube'
+          (n) => n.type === 'module_instantiation' && n.childForFieldName('name')?.text === 'cube'
         );
 
         expect(cubeNode).toBeDefined();
@@ -78,9 +73,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
         // Find the cube node using the current grammar structure
         const cubeNode = findDescendantNode(
           rootNode,
-          n =>
-            n.type === 'module_instantiation' &&
-            n.childForFieldName('name')?.text === 'cube'
+          (n) => n.type === 'module_instantiation' && n.childForFieldName('name')?.text === 'cube'
         );
         expect(cubeNode).toBeDefined();
 
@@ -98,9 +91,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
         // Find the cube node using the current grammar structure
         const cubeNode = findDescendantNode(
           rootNode,
-          n =>
-            n.type === 'module_instantiation' &&
-            n.childForFieldName('name')?.text === 'cube'
+          (n) => n.type === 'module_instantiation' && n.childForFieldName('name')?.text === 'cube'
         );
         expect(cubeNode).toBeDefined();
 

@@ -74,10 +74,9 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import type { ASTVisitor } from './ast-visitor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
 import {
   extractNumberParameter,
@@ -85,7 +84,8 @@ import {
 } from '../extractors/parameter-extractor.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
-import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type { ASTVisitor } from './ast-visitor.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
  * Visitor for transform operations (translate, rotate, scale, mirror)
@@ -140,7 +140,9 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns True if the function is a transform operation
    */
   private isSupportedTransformFunction(functionName: string): boolean {
-    return ['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(functionName);
+    return ['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(
+      functionName
+    );
   }
 
   /**
@@ -154,35 +156,35 @@ export class TransformVisitor extends BaseASTVisitor {
 
     // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
     const truncatedNameMap: { [key: string]: string } = {
-      'sphe': 'sphere',
-      'cyli': 'cylinder',
-      'tran': 'translate',
-      'trans': 'translate',
-      'transl': 'translate',
-      'transla': 'translate',
-      'translat': 'translate',
-      'unio': 'union',
-      'diff': 'difference',
-      'diffe': 'difference',
-      'differen': 'difference',
-      'inte': 'intersection',
-      'intersec': 'intersection',
-      'intersecti': 'intersection',
-      'rota': 'rotate',
-      'rotat': 'rotate',
-      'scal': 'scale',
-      'mirr': 'mirror',
-      'mirro': 'mirror',
-      'colo': 'color',
-      'mult': 'multmatrix',
-      'multm': 'multmatrix',
-      'multma': 'multmatrix',
-      'multmat': 'multmatrix',
-      'multmatr': 'multmatrix',
-      'multmatri': 'multmatrix',
-      'multmatrix': 'multmatrix',
-      'offs': 'offset',
-      'offse': 'offset'
+      sphe: 'sphere',
+      cyli: 'cylinder',
+      tran: 'translate',
+      trans: 'translate',
+      transl: 'translate',
+      transla: 'translate',
+      translat: 'translate',
+      unio: 'union',
+      diff: 'difference',
+      diffe: 'difference',
+      differen: 'difference',
+      inte: 'intersection',
+      intersec: 'intersection',
+      intersecti: 'intersection',
+      rota: 'rotate',
+      rotat: 'rotate',
+      scal: 'scale',
+      mirr: 'mirror',
+      mirro: 'mirror',
+      colo: 'color',
+      mult: 'multmatrix',
+      multm: 'multmatrix',
+      multma: 'multmatrix',
+      multmat: 'multmatrix',
+      multmatr: 'multmatrix',
+      multmatri: 'multmatrix',
+      multmatrix: 'multmatrix',
+      offs: 'offset',
+      offse: 'offset',
     };
 
     if (functionName && truncatedNameMap[functionName]) {
@@ -245,17 +247,17 @@ export class TransformVisitor extends BaseASTVisitor {
 
         // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
         const truncatedNameMap: { [key: string]: string } = {
-          'sphe': 'sphere',
-          'cyli': 'cylinder',
-          'tran': 'translate',
-          'unio': 'union',
-          'diff': 'difference',
-          'inte': 'intersection',
-          'rota': 'rotate',
-          'scal': 'scale',
-          'mirr': 'mirror',
-          'colo': 'color',
-          'mult': 'multmatrix'
+          sphe: 'sphere',
+          cyli: 'cylinder',
+          tran: 'translate',
+          unio: 'union',
+          diff: 'difference',
+          inte: 'intersection',
+          rota: 'rotate',
+          scal: 'scale',
+          mirr: 'mirror',
+          colo: 'color',
+          mult: 'multmatrix',
         };
 
         if (functionName && truncatedNameMap[functionName]) {
@@ -283,15 +285,9 @@ export class TransformVisitor extends BaseASTVisitor {
 
     // Check if this is a transform function
     if (
-      ![
-        'translate',
-        'rotate',
-        'scale',
-        'mirror',
-        'color',
-        'multmatrix',
-        'offset',
-      ].includes(functionName)
+      !['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(
+        functionName
+      )
     ) {
       console.log(
         `[TransformVisitor.visitAccessorExpression] Not a transform function: ${functionName}, delegating to parent`
@@ -302,7 +298,7 @@ export class TransformVisitor extends BaseASTVisitor {
     // Extract arguments using the working argument extraction system
     let args: ast.Parameter[] = [];
     const argumentsNode = argsNode.namedChildren.find(
-      child => child && child.type === 'arguments'
+      (child) => child && child.type === 'arguments'
     );
     if (argumentsNode) {
       console.log(
@@ -340,9 +336,7 @@ export class TransformVisitor extends BaseASTVisitor {
     // Get function name using the truncation workaround
     const functionName = this.extractFunctionName(node);
     if (!functionName) {
-      console.log(
-        '[TransformVisitor.visitModuleInstantiation] Function name not found'
-      );
+      console.log('[TransformVisitor.visitModuleInstantiation] Function name not found');
       return null;
     }
 
@@ -496,27 +490,29 @@ export class TransformVisitor extends BaseASTVisitor {
     // Return the node with the specific transform type to match test expectations
     // This ensures that the node type matches the transform operation name
     switch (functionName) {
-      case 'translate':
+      case 'translate': {
         const translateNode = this.createTranslateNode(node, args);
         translateNode.type = 'translate'; // Override type to match test expectations
         return translateNode;
-      case 'rotate':
+      }
+      case 'rotate': {
         const rotateNode = this.createRotateNode(node, args);
         rotateNode.type = 'rotate'; // Override type to match test expectations
         return rotateNode;
-      case 'scale':
+      }
+      case 'scale': {
         const scaleNode = this.createScaleNode(node, args);
         scaleNode.type = 'scale'; // Override type to match test expectations
         return scaleNode;
-      case 'mirror':
+      }
+      case 'mirror': {
         const mirrorNode = this.createMirrorNode(node, args);
         mirrorNode.type = 'mirror'; // Override type to match test expectations
         return mirrorNode;
-      case 'color':
+      }
+      case 'color': {
         // Handle color transform
         let colorValue: string | ast.Vector4D = 'black'; // Default color
-
-
 
         if (args.length > 0 && args[0]!.value !== null) {
           const argValue = args[0]!.value;
@@ -568,14 +564,15 @@ export class TransformVisitor extends BaseASTVisitor {
           children: [],
           location: getLocation(node),
         };
-      case 'multmatrix':
+      }
+      case 'multmatrix': {
         // Handle multmatrix transform
         // Default identity matrix
         const identityMatrix: number[][] = [
           [1, 0, 0, 0],
           [0, 1, 0, 0],
           [0, 0, 1, 0],
-          [0, 0, 0, 1]
+          [0, 0, 0, 1],
         ];
 
         // Create a safe matrix conversion function
@@ -583,21 +580,25 @@ export class TransformVisitor extends BaseASTVisitor {
           if (!value) return identityMatrix;
 
           // If it's already a 2D array with the right structure, use it
-          if (Array.isArray(value) &&
-              value.length === 4 &&
-              value.every(row => Array.isArray(row) && row.length === 4)) {
+          if (
+            Array.isArray(value) &&
+            value.length === 4 &&
+            value.every((row) => Array.isArray(row) && row.length === 4)
+          ) {
             return value as number[][];
           }
 
           // If it's a 1D array of numbers, try to convert it to a 4x4 matrix
-          if (Array.isArray(value) &&
-              value.length === 16 &&
-              value.every(item => typeof item === 'number')) {
+          if (
+            Array.isArray(value) &&
+            value.length === 16 &&
+            value.every((item) => typeof item === 'number')
+          ) {
             return [
               [value[0]!, value[1]!, value[2]!, value[3]!],
               [value[4]!, value[5]!, value[6]!, value[7]!],
               [value[8]!, value[9]!, value[10]!, value[11]!],
-              [value[12]!, value[13]!, value[14]!, value[15]!]
+              [value[12]!, value[13]!, value[14]!, value[15]!],
             ];
           }
 
@@ -611,7 +612,8 @@ export class TransformVisitor extends BaseASTVisitor {
         };
 
         // Get the matrix value from arguments
-        const matrixValue = args.length > 0 ? createMatrixFromValue(args[0]!.value) : identityMatrix;
+        const matrixValue =
+          args.length > 0 ? createMatrixFromValue(args[0]!.value) : identityMatrix;
 
         return {
           type: 'multmatrix',
@@ -619,12 +621,14 @@ export class TransformVisitor extends BaseASTVisitor {
           children: [],
           location: getLocation(node),
         };
-      case 'offset':
+      }
+      case 'offset': {
         // Handle offset transform
         let chamferValue = false; // Default to false for chamfer
         if (args.length > 2 && args[2]!.value !== null) {
           // Convert to boolean if it's not already
-          chamferValue = args[2]!.value === true || args[2]!.value === 1 || args[2]!.value === 'true';
+          chamferValue =
+            args[2]!.value === true || args[2]!.value === 1 || args[2]!.value === 'true';
         }
 
         return {
@@ -635,6 +639,7 @@ export class TransformVisitor extends BaseASTVisitor {
           children: [],
           location: getLocation(node),
         };
+      }
       case 'hull':
         // Handle hull transform
         return {
@@ -665,10 +670,7 @@ export class TransformVisitor extends BaseASTVisitor {
    * @param args The extracted arguments
    * @returns The translate AST node
    */
-  private createTranslateNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.TranslateNode {
+  private createTranslateNode(node: TSNode, args: ast.Parameter[]): ast.TranslateNode {
     console.log(
       `[TransformVisitor.createTranslateNode] Creating translate node with ${args.length} arguments`
     );
@@ -689,9 +691,7 @@ export class TransformVisitor extends BaseASTVisitor {
             v = [vector[0], vector[1], vector[2]] as ast.Vector3D;
           }
           console.log(
-            `[TransformVisitor.createTranslateNode] Extracted vector: ${JSON.stringify(
-              v
-            )}`
+            `[TransformVisitor.createTranslateNode] Extracted vector: ${JSON.stringify(v)}`
           );
           break;
         }
@@ -725,17 +725,14 @@ export class TransformVisitor extends BaseASTVisitor {
    * @param args The extracted arguments
    * @returns The rotate AST node
    */
-  private createRotateNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.RotateNode {
+  private createRotateNode(node: TSNode, args: ast.Parameter[]): ast.RotateNode {
     console.log(
       `[TransformVisitor.createRotateNode] Creating rotate node with ${args.length} arguments`
     );
 
     // Default values
     let a: number | ast.Vector3D = 0;
-    let v: ast.Vector3D | undefined = undefined;
+    let v: ast.Vector3D | undefined;
 
     // Extract angle parameter (first positional or named 'a')
     for (const arg of args) {
@@ -745,9 +742,7 @@ export class TransformVisitor extends BaseASTVisitor {
         if (vector && vector.length >= 3) {
           a = [vector[0]!, vector[1]!, vector[2]!];
           console.log(
-            `[TransformVisitor.createRotateNode] Extracted angle vector: ${JSON.stringify(
-              a
-            )}`
+            `[TransformVisitor.createRotateNode] Extracted angle vector: ${JSON.stringify(a)}`
           );
           break;
         }
@@ -774,9 +769,7 @@ export class TransformVisitor extends BaseASTVisitor {
         if (vector && vector.length >= 3) {
           v = [vector[0]!, vector[1]!, vector[2]!];
           console.log(
-            `[TransformVisitor.createRotateNode] Extracted rotation axis: ${JSON.stringify(
-              v
-            )}`
+            `[TransformVisitor.createRotateNode] Extracted rotation axis: ${JSON.stringify(v)}`
           );
           break;
         }
@@ -823,9 +816,7 @@ export class TransformVisitor extends BaseASTVisitor {
             v = [vector[0]!, vector[1]!, vector[2]!];
           }
           console.log(
-            `[TransformVisitor.createScaleNode] Extracted scale vector: ${JSON.stringify(
-              v
-            )}`
+            `[TransformVisitor.createScaleNode] Extracted scale vector: ${JSON.stringify(v)}`
           );
           break;
         }
@@ -858,10 +849,7 @@ export class TransformVisitor extends BaseASTVisitor {
    * @param args The extracted arguments
    * @returns The mirror AST node
    */
-  private createMirrorNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.MirrorNode {
+  private createMirrorNode(node: TSNode, args: ast.Parameter[]): ast.MirrorNode {
     console.log(
       `[TransformVisitor.createMirrorNode] Creating mirror node with ${args.length} arguments`
     );
@@ -880,9 +868,7 @@ export class TransformVisitor extends BaseASTVisitor {
             v = [vector[0]!, vector[1]!, vector[2]!];
           }
           console.log(
-            `[TransformVisitor.createMirrorNode] Extracted mirror plane: ${JSON.stringify(
-              v
-            )}`
+            `[TransformVisitor.createMirrorNode] Extracted mirror plane: ${JSON.stringify(v)}`
           );
           break;
         }
@@ -893,10 +879,14 @@ export class TransformVisitor extends BaseASTVisitor {
     // This addresses Tree-sitter memory management issues causing argument extraction failures
     if (node.text.includes('v=[0, 1, 0]')) {
       v = [0, 1, 0];
-      console.log(`[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [0, 1, 0]`);
+      console.log(
+        `[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [0, 1, 0]`
+      );
     } else if (node.text.includes('[1, 1]')) {
       v = [1, 1, 0]; // 2D vector converted to 3D
-      console.log(`[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [1, 1, 0]`);
+      console.log(
+        `[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [1, 1, 0]`
+      );
     }
 
     return {
@@ -919,21 +909,13 @@ export class TransformVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(
-      `[TransformVisitor.createASTNodeForFunction] Processing function: ${functionName}`
-    );
+    console.log(`[TransformVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
 
     // Only handle transform functions
     if (
-      [
-        'translate',
-        'rotate',
-        'scale',
-        'mirror',
-        'color',
-        'multmatrix',
-        'offset',
-      ].includes(functionName)
+      ['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(
+        functionName
+      )
     ) {
       return this.createTransformNode(node, functionName, args);
     }

@@ -64,8 +64,8 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 
 /**
  * Interface defining the visitor pattern contract for transforming a Tree-sitter CST into an OpenSCAD AST.
@@ -84,15 +84,15 @@ export interface ASTVisitor {
   // Core visit methods
   /**
    * Visits a Tree-sitter node and transforms it into an appropriate AST node.
-   * 
+   *
    * This is the primary entry point for the visitor pattern. When a node is visited,
    * the visitor examines the node type and delegates to the appropriate specialized
    * visit method based on the node's syntax type. If the node's type is not recognized
    * or cannot be processed, the method returns null.
-   * 
+   *
    * @param node - The Tree-sitter syntax node to transform
    * @returns The corresponding AST node, or null if the node cannot be processed
-   * 
+   *
    * @example
    * ```ts
    * // Visiting a module instantiation node (e.g., 'cube(10);')
@@ -100,7 +100,7 @@ export interface ASTVisitor {
    * const astNode = visitor.visitNode(tsNode);
    * // Returns a ModuleInstantiationNode with type 'cube'
    * ```
-   * 
+   *
    * @example
    * ```ts
    * // Handling unknown or unsupported nodes
@@ -108,22 +108,22 @@ export interface ASTVisitor {
    * const result = visitor.visitNode(unknownNode);
    * // Returns null since the node type is not supported
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   visitNode(node: TSNode): ast.ASTNode | null;
 
   /**
    * Visits all children of a node and returns an array of the resulting AST nodes.
-   * 
+   *
    * This method is commonly used when processing block-level constructs like module bodies,
    * if/else blocks, or for loops where multiple statements need to be processed. It iterates
    * through each child of the provided node, calls visitNode() on each one, and collects
    * the non-null results into an array.
-   * 
+   *
    * @param node - The Tree-sitter node whose children should be visited
    * @returns An array of AST nodes created from the children (empty if no valid children)
-   * 
+   *
    * @example Block Processing
    * ```ts
    * // Processing a block node containing multiple statements
@@ -131,7 +131,7 @@ export interface ASTVisitor {
    * const bodyStatements = visitor.visitChildren(blockNode);
    * // Returns an array of AST nodes for each statement in the block
    * ```
-   * 
+   *
    * @example Empty Node
    * ```ts
    * // Processing a node with no children or only unsupported children
@@ -139,7 +139,7 @@ export interface ASTVisitor {
    * const results = visitor.visitChildren(emptyNode);
    * // Returns an empty array []
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   visitChildren(node: TSNode): ast.ASTNode[];

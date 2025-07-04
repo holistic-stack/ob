@@ -42,23 +42,23 @@
  * @since 0.1.0
  */
 
-import { Tree } from 'web-tree-sitter'; // TSNode is not used in this file after removing findChildOfType
-import * as ast from './ast-types.js';
+import type { Tree } from 'web-tree-sitter'; // TSNode is not used in this file after removing findChildOfType
+import type { ErrorHandler } from '../error-handling/index.js';
+import type * as ast from './ast-types.js';
+import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';
+import { AssignStatementVisitor } from './visitors/assign-statement-visitor/assign-statement-visitor.js';
 import type { ASTVisitor } from './visitors/ast-visitor.js';
 import { CompositeVisitor } from './visitors/composite-visitor.js';
-import { PrimitiveVisitor } from './visitors/primitive-visitor.js';
-import { TransformVisitor } from './visitors/transform-visitor.js';
-import { CSGVisitor } from './visitors/csg-visitor.js';
-import { ModuleVisitor } from './visitors/module-visitor.js';
-import { FunctionVisitor } from './visitors/function-visitor.js';
 import { ControlStructureVisitor } from './visitors/control-structure-visitor.js';
-import { ExpressionVisitor } from './visitors/expression-visitor.js';
-import { VariableVisitor } from './visitors/variable-visitor.js';
-import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';
+import { CSGVisitor } from './visitors/csg-visitor.js';
 import { EchoStatementVisitor } from './visitors/echo-statement-visitor/echo-statement-visitor.js';
-import { AssignStatementVisitor } from './visitors/assign-statement-visitor/assign-statement-visitor.js';
+import { ExpressionVisitor } from './visitors/expression-visitor.js';
+import { FunctionVisitor } from './visitors/function-visitor.js';
+import { ModuleVisitor } from './visitors/module-visitor.js';
+import { PrimitiveVisitor } from './visitors/primitive-visitor.js';
 import { QueryVisitor } from './visitors/query-visitor.js';
-import { ErrorHandler } from '../error-handling/index.js';
+import { TransformVisitor } from './visitors/transform-visitor.js';
+import { VariableVisitor } from './visitors/variable-visitor.js';
 
 // This function is not used in this file
 // /**
@@ -80,35 +80,35 @@ import { ErrorHandler } from '../error-handling/index.js';
 /**
  * Converts a Tree-sitter Concrete Syntax Tree (CST) to an OpenSCAD Abstract Syntax Tree (AST)
  * using the visitor pattern.
- * 
+ *
  * The VisitorASTGenerator is the central orchestrator in the AST generation process, serving as
- * the bridge between Tree-sitter's low-level parse tree and the high-level semantic AST. It 
+ * the bridge between Tree-sitter's low-level parse tree and the high-level semantic AST. It
  * implements a layered visitor architecture where:
- * 
+ *
  * 1. A QueryVisitor provides the entry point for CST traversal
  * 2. A CompositeVisitor delegates to specialized visitors based on node types
  * 3. Type-specific visitors (PrimitiveVisitor, TransformVisitor, etc.) handle particular OpenSCAD constructs
- * 
+ *
  * This design provides several benefits:
  * - Separation of concerns: Each visitor focuses on a specific aspect of the language
  * - Extensibility: New language features can be supported by adding new visitors
  * - Maintainability: Changes to one syntax element don't affect the handling of others
- * 
+ *
  * The AST generation follows this workflow:
  * ```
  * Tree-sitter CST → QueryVisitor → CompositeVisitor → Specialized Visitors → AST Nodes
  * ```
- * 
+ *
  * @example Parsing and AST Generation Flow
  * ```typescript
  * // 1. Parse OpenSCAD code with Tree-sitter
  * const parser = new Parser();
  * parser.setLanguage(openscadLanguage);
  * const tree = parser.parse('cube(10);');
- * 
+ *
  * // 2. Create error handler for reporting issues
  * const errorHandler = new ErrorHandler();
- * 
+ *
  * // 3. Create the AST generator
  * const generator = new VisitorASTGenerator(
  *   tree,                // Tree-sitter parse tree
@@ -116,14 +116,14 @@ import { ErrorHandler } from '../error-handling/index.js';
  *   openscadLanguage,    // Language definition
  *   errorHandler         // Error reporting
  * );
- * 
+ *
  * // 4. Generate the AST
  * const ast = generator.generate();
- * 
+ *
  * // 5. Use the AST for analysis, transformation, etc.
  * console.log(JSON.stringify(ast, null, 2));
  * ```
- * 
+ *
  * @file Defines the VisitorASTGenerator class that serves as the entry point for AST generation
  * @since 0.1.0
  */
@@ -134,7 +134,7 @@ export class VisitorASTGenerator {
 
   /**
    * Creates a new VisitorASTGenerator instance and initializes the visitor hierarchy.
-   * 
+   *
    * This constructor sets up a complex visitor structure where specialized visitors
    * are combined into a composite visitor. The QueryVisitor is used as the main entry point
    * which delegates to the appropriate specialized visitor based on node types.
@@ -143,18 +143,18 @@ export class VisitorASTGenerator {
    * @param source - The original OpenSCAD source code string
    * @param language - The Tree-sitter language object for OpenSCAD
    * @param errorHandler - Error handler for reporting issues during AST generation
-   * 
+   *
    * @example
    * ```ts
    * // Create a generator with a parsed Tree-sitter tree
    * const parser = new Parser();
    * parser.setLanguage(openscadLanguage);
    * const tree = parser.parse('cube(10);');
-   * 
+   *
    * const errorHandler = new ConsoleErrorHandler();
    * const generator = new VisitorASTGenerator(tree, 'cube(10);', openscadLanguage, errorHandler);
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   constructor(
@@ -207,7 +207,7 @@ export class VisitorASTGenerator {
 
   /**
    * Generates an Abstract Syntax Tree (AST) from the Tree-sitter Concrete Syntax Tree (CST).
-   * 
+   *
    * This method traverses the CST starting from the root node and delegates the processing
    * of each node to the appropriate visitor. The result is a structured AST that represents
    * the semantic meaning of the OpenSCAD code in a format that's easier to analyze and transform
@@ -215,14 +215,14 @@ export class VisitorASTGenerator {
    *
    * @returns An array of top-level AST nodes representing the OpenSCAD program
    * @throws Error if visitor processing fails during AST generation
-   * 
+   *
    * @example Simple Program
    * ```ts
    * // For source code: 'cube(10);'
    * const ast = generator.generate();
    * // Returns an array with a single ModuleInstantiationNode for 'cube'
    * ```
-   * 
+   *
    * @example Complex Program
    * ```ts
    * // For a program with multiple statements
@@ -236,7 +236,7 @@ export class VisitorASTGenerator {
    * const ast = generator.generate();
    * // Returns an array with multiple AST nodes representing the program structure
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   public generate(): ast.ASTNode[] {
@@ -265,7 +265,9 @@ export class VisitorASTGenerator {
       }
     }
 
-    this.errorHandler.logInfo(`AST generation complete. Created ${statements.length} top-level nodes.`);
+    this.errorHandler.logInfo(
+      `AST generation complete. Created ${statements.length} top-level nodes.`
+    );
     return statements;
   }
 }

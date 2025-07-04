@@ -1,12 +1,11 @@
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
-
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { OpenscadParser } from '../../openscad-parser';
 
 describe('Rotate AST Generation', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
 
     // Mock the parseAST method to return hardcoded values for tests

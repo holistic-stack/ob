@@ -46,16 +46,16 @@
  * @since 1.0.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import { BaseASTVisitor } from '../base-ast-visitor.js';
-import { ErrorHandler } from '../../../error-handling/index.js';
-import * as ast from '../../ast-types.js';
-import { getLocation } from '../../utils/location-utils.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../error-handling/index.js';
+import type * as ast from '../../ast-types.js';
 import {
-  extractArguments,
-  type ExtractedParameter,
   type ExtractedNamedArgument,
+  type ExtractedParameter,
+  extractArguments,
 } from '../../extractors/argument-extractor.js';
+import { getLocation } from '../../utils/location-utils.js';
+import { BaseASTVisitor } from '../base-ast-visitor.js';
 
 /**
  * Visitor class for processing OpenSCAD assign statements.
@@ -326,19 +326,13 @@ export class AssignStatementVisitor extends BaseASTVisitor {
   override visitStatement(node: TSNode): ast.AssignStatementNode | null {
     this.safeLog(
       'info',
-      `[AssignStatementVisitor.visitStatement] Processing statement: ${node.text.substring(
-        0,
-        50
-      )}`,
+      `[AssignStatementVisitor.visitStatement] Processing statement: ${node.text.substring(0, 50)}`,
       'AssignStatementVisitor.visitStatement',
       node
     );
 
     // Look for module_instantiation in the statement
-    const moduleInstantiation = this.findDescendantOfType(
-      node,
-      'module_instantiation'
-    );
+    const moduleInstantiation = this.findDescendantOfType(node, 'module_instantiation');
     if (moduleInstantiation) {
       // Check if it's an assign module instantiation
       const nameFieldNode = moduleInstantiation.childForFieldName('name');
@@ -354,10 +348,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     }
 
     // Look for assignment_statement in the statement (modern OpenSCAD syntax)
-    const assignmentStatement = this.findDescendantOfType(
-      node,
-      'assignment_statement'
-    );
+    const assignmentStatement = this.findDescendantOfType(node, 'assignment_statement');
     if (assignmentStatement) {
       this.safeLog(
         'info',
@@ -441,9 +432,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    *
    * @since 1.0.0
    */
-  override visitModuleInstantiation(
-    node: TSNode
-  ): ast.AssignStatementNode | null {
+  override visitModuleInstantiation(node: TSNode): ast.AssignStatementNode | null {
     this.safeLog(
       'info',
       `[AssignStatementVisitor.visitModuleInstantiation] Processing module instantiation: ${node.text.substring(
@@ -486,9 +475,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
 
     // Extract arguments using the same approach as BaseASTVisitor
     const argsNode = node.childForFieldName('arguments');
-    let extractedArgs = argsNode
-      ? extractArguments(argsNode, undefined, this.source)
-      : [];
+    let extractedArgs = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
 
     // If the argument extractor failed to extract arguments (e.g., due to complex expressions),
     // fall back to manual extraction
@@ -496,10 +483,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       const manualArgs = this.manuallyExtractArguments(argsNode);
       // Convert ExtractedParameter[] to Parameter[] by converting the values
       extractedArgs = manualArgs
-        .filter(
-          (arg): arg is ExtractedNamedArgument =>
-            'name' in arg && arg.name !== undefined
-        )
+        .filter((arg): arg is ExtractedNamedArgument => 'name' in arg && arg.name !== undefined)
         .map(
           (arg): ast.Parameter => ({
             name: arg.name,
@@ -538,13 +522,9 @@ export class AssignStatementVisitor extends BaseASTVisitor {
             const childNode = argsNode.child(i);
 
             if (childNode && childNode.type === 'named_argument') {
-              const currentArgNameFieldNode =
-                childNode.childForFieldName('name');
+              const currentArgNameFieldNode = childNode.childForFieldName('name');
 
-              if (
-                currentArgNameFieldNode &&
-                currentArgNameFieldNode.text === arg.name
-              ) {
+              if (currentArgNameFieldNode && currentArgNameFieldNode.text === arg.name) {
                 nameNodeForLocation = currentArgNameFieldNode; // This is the identifier node for the name
                 break;
               }
@@ -626,10 +606,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           } as ast.ExpressionNode;
         } else if (bodyNode.type === 'statement') {
           // For statement bodies, look for module_instantiation within the statement
-          const moduleInstantiation = this.findDescendantOfType(
-            bodyNode,
-            'module_instantiation'
-          );
+          const moduleInstantiation = this.findDescendantOfType(bodyNode, 'module_instantiation');
           if (moduleInstantiation) {
             this.safeLog(
               'info',
@@ -1153,10 +1130,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private extractRawExpressionFromArgument(
-    argsNode: TSNode,
-    variableName: string
-  ): string | null {
+  private extractRawExpressionFromArgument(argsNode: TSNode, variableName: string): string | null {
     // Find the argument with the matching variable name
     for (let i = 0; i < argsNode.childCount; i++) {
       const child = argsNode.child(i);
@@ -1167,19 +1141,11 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           if (argChild && argChild.type === 'argument') {
             // Check if this argument has the matching variable name
             const nameNode = argChild.child(0);
-            if (
-              nameNode &&
-              nameNode.type === 'identifier' &&
-              nameNode.text === variableName
-            ) {
+            if (nameNode && nameNode.type === 'identifier' && nameNode.text === variableName) {
               // Find the expression after the '=' sign
               for (let k = 2; k < argChild.childCount; k++) {
                 const exprNode = argChild.child(k);
-                if (
-                  exprNode &&
-                  exprNode.type !== '=' &&
-                  exprNode.text.trim() !== ''
-                ) {
+                if (exprNode && exprNode.type !== '=' && exprNode.text.trim() !== '') {
                   return exprNode.text;
                 }
               }
@@ -1199,9 +1165,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private convertExtractedValueToExpression(
-    extractedValue: any
-  ): ast.ExpressionNode | null {
+  private convertExtractedValueToExpression(extractedValue: any): ast.ExpressionNode | null {
     if (!extractedValue || typeof extractedValue !== 'object') {
       return null;
     }
@@ -1287,7 +1251,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
         },
       } as ast.VariableNode;
     } else if (value.type === 'vector') {
-      const vectorValues = (value.value as ast.Value[]).map(v => {
+      const vectorValues = (value.value as ast.Value[]).map((v) => {
         if (v.type === 'number') {
           return parseFloat(v.value as string);
         }
@@ -1297,11 +1261,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       if (vectorValues.length === 2) {
         return vectorValues as ast.Vector2D;
       } else if (vectorValues.length >= 3) {
-        return [
-          vectorValues[0],
-          vectorValues[1],
-          vectorValues[2],
-        ] as ast.Vector3D;
+        return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
       }
       return [0, 0, 0] as ast.Vector3D; // Default fallback
     }
@@ -1354,7 +1314,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           name: node.text,
           location: getLocation(node),
         };
-      default:
+      default: {
         // For other expression types, use the base visitor's expression handling
         const result = this.visitExpression(node);
         if (result && result.type === 'expression') {
@@ -1374,6 +1334,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           value: node.text,
           location: getLocation(node),
         };
+      }
     }
   }
 

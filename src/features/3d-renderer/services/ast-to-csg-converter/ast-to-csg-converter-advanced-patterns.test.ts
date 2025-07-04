@@ -12,7 +12,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import { UnifiedParserService } from '../../../openscad-parser/services/unified-parser-service.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
 import { createAppStore } from '../../../store/app-store.js';
 
 const logger = createLogger('ASTToCSGConverterAdvancedPatternsTest');

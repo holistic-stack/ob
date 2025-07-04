@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from '../../openscad-parser';
 import * as ast from '../ast-types.js';
 
 describe('Cube Primitive', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 

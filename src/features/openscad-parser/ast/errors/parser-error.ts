@@ -146,10 +146,7 @@ export class ParserError extends Error {
    * @param position - The tree-sitter position
    * @returns An ErrorPosition
    */
-  public static fromTreeSitterPosition(position: {
-    row: number;
-    column: number;
-  }): ErrorPosition {
+  public static fromTreeSitterPosition(position: { row: number; column: number }): ErrorPosition {
     return {
       line: position.row,
       column: position.column,

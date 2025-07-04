@@ -10,7 +10,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
-import { UnifiedParserService } from '../openscad-parser/services/unified-parser-service.js';
+import { OpenscadParser } from '../openscad-parser/openscad-parser.ts';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
@@ -60,11 +60,7 @@ export const DEFAULT_OPENSCAD_CODE = 'cube([10,10,10]);';
 /**
  * Shared parser service instance
  */
-const parserService = new UnifiedParserService({
-  enableLogging: true,
-  retryAttempts: 3,
-  timeoutMs: 10000,
-});
+const parserService = new OpenscadParser();
 
 /**
  * Initial application state

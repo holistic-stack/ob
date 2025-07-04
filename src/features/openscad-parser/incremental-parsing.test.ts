@@ -7,15 +7,14 @@
 
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from './enhanced-parser.js';
-
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from './openscad-parser';
 
 describe('Incremental Parsing', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
@@ -38,12 +37,7 @@ describe('Incremental Parsing', () => {
     const newEndIndex = startIndex + 2; // '20' is also 2 characters
 
     // Update the tree incrementally
-    const updatedTree = parser.update(
-      modifiedCode,
-      startIndex,
-      oldEndIndex,
-      newEndIndex
-    );
+    const updatedTree = parser.update(modifiedCode, startIndex, oldEndIndex, newEndIndex);
 
     // Verify the update was successful
     expect(updatedTree).not.toBeNull();
@@ -68,12 +62,7 @@ describe('Incremental Parsing', () => {
     const newEndIndex = startIndex + 2; // '20' is also 2 characters
 
     // Update the AST incrementally
-    const updatedAST = parser.updateAST(
-      modifiedCode,
-      startIndex,
-      oldEndIndex,
-      newEndIndex
-    );
+    const updatedAST = parser.updateAST(modifiedCode, startIndex, oldEndIndex, newEndIndex);
 
     // Verify the update was successful
     expect(updatedAST.length).toBe(1);
@@ -150,20 +139,13 @@ describe('Incremental Parsing', () => {
     const newEndIndex = modifiedCode.length;
 
     // Update the tree incrementally
-    const updatedTree = parser.update(
-      modifiedCode,
-      startIndex,
-      oldEndIndex,
-      newEndIndex
-    );
+    const updatedTree = parser.update(modifiedCode, startIndex, oldEndIndex, newEndIndex);
 
     // Verify the update was successful
     expect(updatedTree).not.toBeNull();
 
     // Normalize whitespace for comparison
-    const normalizedTreeText = updatedTree?.rootNode.text
-      .replace(/\s+/g, ' ')
-      .trim();
+    const normalizedTreeText = updatedTree?.rootNode.text.replace(/\s+/g, ' ').trim();
     const normalizedModifiedCode = modifiedCode.replace(/\s+/g, ' ').trim();
     expect(normalizedTreeText).toBe(normalizedModifiedCode);
 
@@ -172,7 +154,7 @@ describe('Incremental Parsing', () => {
     expect(updatedAST.length).toBeGreaterThan(2); // Should have at least 3 nodes (cube, translate, cylinder)
 
     // Find the cylinder node
-    const cylinderNode = updatedAST.find(node => node.type === 'cylinder');
+    const cylinderNode = updatedAST.find((node) => node.type === 'cylinder');
     expect(cylinderNode).toBeDefined();
     expect((cylinderNode as any).h).toBe(1);
 

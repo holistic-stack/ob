@@ -73,15 +73,15 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import { getLocation } from '../utils/location-utils.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
-import { IfElseVisitor } from './control-structure-visitor/if-else-visitor.js';
+import { getLocation } from '../utils/location-utils.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 import { ForLoopVisitor } from './control-structure-visitor/for-loop-visitor.js';
+import { IfElseVisitor } from './control-structure-visitor/if-else-visitor.js';
 import { ExpressionVisitor } from './expression-visitor.js';
-import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
 
 /**
  * Visitor for processing OpenSCAD control structures with specialized sub-visitors.
@@ -117,7 +117,10 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @param source The source code (optional, defaults to empty string)
    * @param errorHandler The error handler instance
    */
-  constructor(source: string = '', protected override errorHandler: ErrorHandler) {
+  constructor(
+    source: string = '',
+    protected override errorHandler: ErrorHandler
+  ) {
     super(source);
     // These sub-visitors will also need ErrorHandler in their constructors eventually
     this.ifElseVisitor = new IfElseVisitor(source, errorHandler);
@@ -211,9 +214,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     // Extract assignments
     const argumentsNode = node.childForFieldName('arguments');
     if (!argumentsNode) {
-      console.log(
-        `[ControlStructureVisitor.visitLetExpression] No arguments found`
-      );
+      console.log(`[ControlStructureVisitor.visitLetExpression] No arguments found`);
       return null;
     }
 
@@ -263,9 +264,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     // Extract expression
     const expressionNode = node.childForFieldName('expression');
     if (!expressionNode) {
-      console.log(
-        `[ControlStructureVisitor.visitEachStatement] No expression found`
-      );
+      console.log(`[ControlStructureVisitor.visitEachStatement] No expression found`);
       return null;
     }
 
@@ -325,10 +324,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @param args The arguments to the let expression
    * @returns The let AST node or null if the arguments are invalid
    */
-  private createLetNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.LetNode | null {
+  private createLetNode(node: TSNode, args: ast.Parameter[]): ast.LetNode | null {
     console.log(
       `[ControlStructureVisitor.createLetNode] Creating let node with ${args.length} arguments`
     );
@@ -357,10 +353,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @param args The arguments to the each statement
    * @returns The each AST node or null if the arguments are invalid
    */
-  private createEachNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.EachNode | null {
+  private createEachNode(node: TSNode, args: ast.Parameter[]): ast.EachNode | null {
     console.log(
       `[ControlStructureVisitor.createEachNode] Creating each node with ${args.length} arguments`
     );
@@ -376,9 +369,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     // Create a simple expression node
     const firstArg = args[0];
     if (!firstArg) {
-      console.log(
-        `[ControlStructureVisitor.createEachNode] First argument is undefined`
-      );
+      console.log(`[ControlStructureVisitor.createEachNode] First argument is undefined`);
       return null;
     }
 

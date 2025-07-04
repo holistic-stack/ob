@@ -7,14 +7,14 @@
  *
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import { BaseASTVisitor } from '../base-ast-visitor.js';
-import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
-import type * as ast from '../../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../../error-handling/error-handler.js';
-import { findDescendantOfType } from '../../utils/node-utils.js';
 import { Logger } from '../../../error-handling/logger.js';
 import { Severity } from '../../../error-handling/types/error-types.js';
+import type * as ast from '../../ast-types.js';
+import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
+import { findDescendantOfType } from '../../utils/node-utils.js';
+import { BaseASTVisitor } from '../base-ast-visitor.js';
 
 /**
  * Visitor class for parsing OpenSCAD echo statements
@@ -214,7 +214,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
 
       // Handle basic node types directly (from new grammar structure)
       switch (actualNode.type) {
-        case 'string':
+        case 'string': {
           // Remove quotes from string literals
           const stringValue = actualNode.text.slice(1, -1);
           return {
@@ -223,8 +223,9 @@ export class EchoStatementVisitor extends BaseASTVisitor {
             value: stringValue,
             dataType: 'string',
           } as ExpressionNode;
+        }
 
-        case 'number':
+        case 'number': {
           const numberValue = parseFloat(actualNode.text);
           return {
             type: 'expression',
@@ -232,8 +233,9 @@ export class EchoStatementVisitor extends BaseASTVisitor {
             value: numberValue,
             dataType: 'number',
           } as ExpressionNode;
+        }
 
-        case 'boolean':
+        case 'boolean': {
           const booleanValue = actualNode.text === 'true';
           return {
             type: 'expression',
@@ -241,6 +243,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
             value: booleanValue,
             dataType: 'boolean',
           } as ExpressionNode;
+        }
 
         case 'identifier':
           return {
@@ -261,10 +264,9 @@ export class EchoStatementVisitor extends BaseASTVisitor {
       // Handle different expression types directly
       if (actualNode.type === 'accessor_expression') {
         // Check if this contains an array_literal child
-        const arrayLiteralChild = Array.from(
-          { length: actualNode.childCount },
-          (_, i) => actualNode.child(i)
-        ).find(child => child?.type === 'array_literal');
+        const arrayLiteralChild = Array.from({ length: actualNode.childCount }, (_, i) =>
+          actualNode.child(i)
+        ).find((child) => child?.type === 'array_literal');
 
         if (arrayLiteralChild) {
           // This is an array literal wrapped in accessor_expression, process it directly
@@ -272,10 +274,9 @@ export class EchoStatementVisitor extends BaseASTVisitor {
         }
 
         // Check if this is a function call (has argument_list child)
-        const hasArgumentList = Array.from(
-          { length: actualNode.childCount },
-          (_, i) => actualNode.child(i)
-        ).some(child => child?.type === 'argument_list');
+        const hasArgumentList = Array.from({ length: actualNode.childCount }, (_, i) =>
+          actualNode.child(i)
+        ).some((child) => child?.type === 'argument_list');
 
         if (hasArgumentList) {
           // This is a function call, process it as such
@@ -531,9 +532,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private processAccessorExpressionAsFunction(
-    node: TSNode
-  ): ExpressionNode | null {
+  private processAccessorExpressionAsFunction(node: TSNode): ExpressionNode | null {
     // Extract function name from the first child (before argument_list)
     let functionName = 'unknown';
     let argumentList: TSNode | null = null;
@@ -556,12 +555,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
       // Process arguments within the argument_list
       for (let i = 0; i < argumentList.childCount; i++) {
         const argChild = argumentList.child(i);
-        if (
-          argChild &&
-          argChild.type !== '(' &&
-          argChild.type !== ')' &&
-          argChild.type !== ','
-        ) {
+        if (argChild && argChild.type !== '(' && argChild.type !== ')' && argChild.type !== ',') {
           const processedArg = this.processExpression(argChild);
           if (processedArg) {
             args.push(processedArg);
@@ -594,12 +588,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
     // Process all children, skipping brackets and commas
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
-      if (
-        child &&
-        child.type !== '[' &&
-        child.type !== ']' &&
-        child.type !== ','
-      ) {
+      if (child && child.type !== '[' && child.type !== ']' && child.type !== ',') {
         const processedElement = this.processExpression(child);
         if (processedElement) {
           elements.push(processedElement);
@@ -681,12 +670,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
     if (node.type === 'expression' && node.childCount > 1) {
       for (let i = 0; i < node.childCount; i++) {
         const child = node.child(i);
-        if (
-          child &&
-          child.type !== '(' &&
-          child.type !== ')' &&
-          child.type !== ','
-        ) {
+        if (child && child.type !== '(' && child.type !== ')' && child.type !== ',') {
           return this.drillDownToActualExpression(child);
         }
       }
@@ -750,8 +734,6 @@ export class EchoStatementVisitor extends BaseASTVisitor {
     return null;
   }
 
-
-
   /**
    * Placeholder method for function call processing
    * This method is required by the base class but not used in echo statement processing
@@ -763,11 +745,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  protected processFunctionCall(
-    node: TSNode,
-    functionName: string,
-    args: any[]
-  ): any {
+  protected processFunctionCall(node: TSNode, functionName: string, args: any[]): any {
     // Echo statements don't need special function call processing
     // This is handled by the expression visitor system
     return null;
@@ -851,12 +829,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
     // Process all children, skipping brackets and commas
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
-      if (
-        child &&
-        child.type !== '[' &&
-        child.type !== ']' &&
-        child.type !== ','
-      ) {
+      if (child && child.type !== '[' && child.type !== ']' && child.type !== ',') {
         const processedElement = this.processExpression(child);
         if (processedElement) {
           elements.push(processedElement);

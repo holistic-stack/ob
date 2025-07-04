@@ -124,7 +124,7 @@
  * @since 0.1.0
  */
 
-import { ParserError, ErrorCode } from '../types/error-types.js';
+import { ErrorCode, type ParserError } from '../types/error-types.js';
 import { BaseRecoveryStrategy } from './recovery-strategy.js';
 
 /**
@@ -183,8 +183,8 @@ interface TypeChecker {
  */
 export class TypeMismatchStrategy extends BaseRecoveryStrategy {
   private readonly typeConverters: Record<string, Record<string, (value: string) => string>> = {
-    'string': {
-      'number': (v) => {
+    string: {
+      number: (v) => {
         // If it's a quoted string containing only a number, just remove quotes
         if (v.startsWith('"') && v.endsWith('"')) {
           const inner = v.slice(1, -1);
@@ -194,15 +194,15 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
         }
         return `parseFloat(${v})`;
       },
-      'boolean': (v) => `(${v} != "" && ${v}.toLowerCase() !== "false")`,
+      boolean: (v) => `(${v} != "" && ${v}.toLowerCase() !== "false")`,
     },
-    'number': {
-      'string': (v) => `str(${v})`,
-      'boolean': (v) => `(${v} != 0)`,
+    number: {
+      string: (v) => `str(${v})`,
+      boolean: (v) => `(${v} != 0)`,
     },
-    'boolean': {
-      'string': (v) => `(${v} ? "true" : "false")`,
-      'number': (v) => `(${v} ? 1 : 0)`,
+    boolean: {
+      string: (v) => `(${v} ? "true" : "false")`,
+      number: (v) => `(${v} ? 1 : 0)`,
     },
   };
 
@@ -277,14 +277,7 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
    * Handles invalid operation errors (e.g., number + string)
    */
   private handleInvalidOperation(error: ParserError, code: string): string | null {
-    const {
-      operation,
-      leftType,
-      rightType,
-      leftValue,
-      rightValue,
-      location
-    } = error.context;
+    const { operation, leftType, rightType, leftValue, rightValue, location } = error.context;
 
     if (!operation || !leftType || !rightType || !location) return null;
 
@@ -297,9 +290,7 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
     const convertRight = this.canConvert(rightType, commonType) && rightValue;
 
     if (convertLeft || convertRight) {
-      const left = convertLeft
-        ? this.convertValue(leftValue, leftType, commonType)
-        : leftValue;
+      const left = convertLeft ? this.convertValue(leftValue, leftType, commonType) : leftValue;
       const right = convertRight
         ? this.convertValue(rightValue, rightType, commonType)
         : rightValue;
@@ -309,13 +300,7 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
         const original = `${leftValue} ${operation} ${rightValue}`;
         const converted = `${left} ${operation} ${right}`;
 
-        return this.replaceAtPosition(
-          code,
-          location.line,
-          location.column,
-          original,
-          converted
-        );
+        return this.replaceAtPosition(code, location.line, location.column, original, converted);
       }
     }
 
@@ -326,14 +311,7 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
    * Handles function argument type mismatches
    */
   private handleInvalidArguments(error: ParserError, code: string): string | null {
-    const {
-      functionName,
-      paramIndex,
-      expected,
-      found,
-      value,
-      location
-    } = error.context;
+    const { functionName, paramIndex, expected, found, value, location } = error.context;
 
     if (expected === undefined || found === undefined || !location || value === undefined) {
       return null;
@@ -365,9 +343,9 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
    */
   private canConvert(from: string, to: string): boolean {
     // Check if types are the same or if an explicit converter exists
-    return from === to ||
-           this.typeChecker.isAssignable(from, to) ||
-           Boolean(this.getConverter(from, to));
+    return (
+      from === to || this.typeChecker.isAssignable(from, to) || Boolean(this.getConverter(from, to))
+    );
   }
 
   /**
@@ -453,7 +431,8 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
 
     if (targetLine.substring(startIndex, endIndex) === oldText) {
       // Replace the text
-      const newLine = targetLine.substring(0, startIndex) + newText + targetLine.substring(endIndex);
+      const newLine =
+        targetLine.substring(0, startIndex) + newText + targetLine.substring(endIndex);
       lines[line - 1] = newLine;
       return lines.join('\n');
     }

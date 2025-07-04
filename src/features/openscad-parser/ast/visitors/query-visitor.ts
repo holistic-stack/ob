@@ -86,12 +86,12 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode, Tree } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Tree, Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
+import { QueryManager } from '../query/query-manager.js';
 import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
-import { QueryManager } from '../query/query-manager.js';
-import { ErrorHandler } from '../../error-handling/index.js';
 
 /**
  * Query-based visitor that combines tree-sitter queries with visitor pattern delegation.
@@ -224,11 +224,7 @@ export class QueryVisitor extends BaseASTVisitor {
   ): ast.ASTNode | null {
     // Delegate to the delegate visitor
     if (this.delegate instanceof BaseASTVisitor) {
-      return (this.delegate as any).createASTNodeForFunction(
-        node,
-        functionName,
-        args
-      );
+      return (this.delegate as any).createASTNodeForFunction(node, functionName, args);
     }
     return null;
   }

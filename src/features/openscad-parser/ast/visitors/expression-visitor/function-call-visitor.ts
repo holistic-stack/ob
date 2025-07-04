@@ -7,14 +7,14 @@
  * @module lib/openscad-parser/ast/visitors/expression-visitor/function-call-visitor
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../error-handling/index.js';
 import { ErrorCode, type ErrorContext } from '../../../error-handling/types/error-types.js';
-import * as ast from '../../ast-types.js';
-import { BaseASTVisitor } from '../base-ast-visitor.js';
-import { getLocation } from '../../utils/location-utils.js';
-import { ErrorHandler } from '../../../error-handling/index.js';
-import type { IParentExpressionVisitor } from './i-parent-expression-visitor.js';
+import type * as ast from '../../ast-types.js';
 import { extractArguments } from '../../extractors/argument-extractor.js';
+import { getLocation } from '../../utils/location-utils.js';
+import { BaseASTVisitor } from '../base-ast-visitor.js';
+import type { IParentExpressionVisitor } from './i-parent-expression-visitor.js';
 
 /**
  * Visitor for function calls in expressions
@@ -81,11 +81,13 @@ export class FunctionCallVisitor extends BaseASTVisitor {
       }
     } else {
       const errorMsg = 'Unexpected node type for function call/module instantiation.';
-      this.errorHandler.handleError(this.errorHandler.createSyntaxError(
-        `${errorMsg} Expected 'module_instantiation' or 'call_expression', got '${node.type}'.`,
-        { cstNode: node, code: ErrorCode.SYNTAX_ERROR, nodeType: node.type }
-      ));
-      return { 
+      this.errorHandler.handleError(
+        this.errorHandler.createSyntaxError(
+          `${errorMsg} Expected 'module_instantiation' or 'call_expression', got '${node.type}'.`,
+          { cstNode: node, code: ErrorCode.SYNTAX_ERROR, nodeType: node.type }
+        )
+      );
+      return {
         type: 'error',
         errorCode: ErrorCode.UNEXPECTED_NODE_TYPE_FOR_FUNCTION_CALL,
         message: `${errorMsg} Expected 'module_instantiation' or 'call_expression', got '${node.type}'. CST node text: ${node.text}`,
@@ -95,16 +97,19 @@ export class FunctionCallVisitor extends BaseASTVisitor {
       } as ast.ErrorNode;
     }
 
-    if (!functionNameNode) { // Should be unreachable if above logic is correct
-        this.errorHandler.logError(`[FunctionCallVisitor] functionNameNode is unexpectedly null after initial checks. Node type: ${node.type}, Node text: ${node.text}`);
-        return {
-            type: 'error',
-            errorCode: ErrorCode.INTERNAL_ERROR,
-            message: `Internal error: functionNameNode is null for node type ${node.type}. CST node text: ${node.text}`,
-            originalNodeType: node.type,
-            cstNodeText: node.text,
-            location: getLocation(node),
-        } as ast.ErrorNode;
+    if (!functionNameNode) {
+      // Should be unreachable if above logic is correct
+      this.errorHandler.logError(
+        `[FunctionCallVisitor] functionNameNode is unexpectedly null after initial checks. Node type: ${node.type}, Node text: ${node.text}`
+      );
+      return {
+        type: 'error',
+        errorCode: ErrorCode.INTERNAL_ERROR,
+        message: `Internal error: functionNameNode is null for node type ${node.type}. CST node text: ${node.text}`,
+        originalNodeType: node.type,
+        cstNodeText: node.text,
+        location: getLocation(node),
+      } as ast.ErrorNode;
     }
 
     const functionName = functionNameNode.text;
@@ -128,11 +133,13 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     const argumentsNode = node.childForFieldName('arguments');
 
     if (!functionNode) {
-      this.errorHandler.handleError(this.errorHandler.createSyntaxError(
-        'Function call node missing function.',
-        { cstNode: node, code: ErrorCode.SYNTAX_ERROR }
-      ));
-      return { 
+      this.errorHandler.handleError(
+        this.errorHandler.createSyntaxError('Function call node missing function.', {
+          cstNode: node,
+          code: ErrorCode.SYNTAX_ERROR,
+        })
+      );
+      return {
         type: 'error',
         errorCode: ErrorCode.SYNTAX_ERROR,
         message: 'Function call node missing function.',
@@ -143,14 +150,17 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     }
 
     // In some older/alternative CST structures, the function itself might be the identifier
-    const functionNameNode = functionNode.type === 'identifier' ? functionNode : functionNode.childForFieldName('name');
+    const functionNameNode =
+      functionNode.type === 'identifier' ? functionNode : functionNode.childForFieldName('name');
 
     if (!functionNameNode) {
-      this.errorHandler.handleError(this.errorHandler.createSyntaxError(
-        'Function call name not found.',
-        { cstNode: node, code: ErrorCode.MISSING_FUNCTION_NAME }
-      ));
-      return { 
+      this.errorHandler.handleError(
+        this.errorHandler.createSyntaxError('Function call name not found.', {
+          cstNode: node,
+          code: ErrorCode.MISSING_FUNCTION_NAME,
+        })
+      );
+      return {
         type: 'error',
         errorCode: ErrorCode.MISSING_FUNCTION_NAME,
         message: 'Function call name not found.',
@@ -182,7 +192,8 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     node: TSNode, // The original CST node for location info
     functionName: string,
     args: ast.Parameter[]
-  ): ast.FunctionCallNode { // Note: No longer returns ErrorNode directly, caller should handle
+  ): ast.FunctionCallNode {
+    // Note: No longer returns ErrorNode directly, caller should handle
     this.errorHandler.logInfo(
       `[FunctionCallVisitor.createASTNodeForFunction] Processing function: ${functionName}`
     );

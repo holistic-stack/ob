@@ -162,7 +162,7 @@ export enum ErrorCode {
   NOT_IMPLEMENTED = 'E901',
 }
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 
 /** Context information about where an error occurred */
 export interface ErrorContext {
@@ -242,9 +242,7 @@ export class ParserError extends Error {
    */
   getFormattedMessage(): string {
     const { line, column } = this.context;
-    const location = line !== undefined && column !== undefined
-      ? `[${line}:${column}]`
-      : '';
+    const location = line !== undefined && column !== undefined ? `[${line}:${column}]` : '';
 
     return `${this.severity} ${location} [${this.code}]: ${this.message}`;
   }
@@ -301,10 +299,7 @@ export class InternalError extends ParserError {
 
 /** Type guard to check if an error is a ParserError */
 export function isParserError(error: unknown): error is ParserError {
-  return error instanceof Error &&
-         'code' in error &&
-         'severity' in error &&
-         'context' in error;
+  return error instanceof Error && 'code' in error && 'severity' in error && 'context' in error;
 }
 
 /** Type guard to check if an error is recoverable */

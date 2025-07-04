@@ -1,47 +1,45 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ControlStructureVisitor } from './control-structure-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { Node as TSNode } from 'web-tree-sitter';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
+import { ErrorHandler } from '../../error-handling/index.js';
 import * as extractorModule from '../extractors/index.js';
 import { getLocation } from '../utils/location-utils.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import { ControlStructureVisitor } from './control-structure-visitor.js';
 
 describe('ControlStructureVisitor', () => {
   let visitor: ControlStructureVisitor;
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
     // Mock the extractArguments function
-    vi.spyOn(extractorModule, 'extractArguments').mockImplementation(
-      (node: TSNode) => {
-        if (node.text.includes('true')) {
-          return [
-            {
-              name: undefined,
-              value: {
-                type: 'expression',
-                expressionType: 'literal',
-                value: 'true',
-                location: getLocation(node),
-              },
+    vi.spyOn(extractorModule, 'extractArguments').mockImplementation((node: TSNode) => {
+      if (node.text.includes('true')) {
+        return [
+          {
+            name: undefined,
+            value: {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 'true',
+              location: getLocation(node),
             },
-          ];
-        } else if (node.text.includes('i = [0:10]')) {
-          return [
-            {
-              name: 'i',
-              value: {
-                type: 'expression',
-                expressionType: 'literal',
-                value: '[0:10]',
-                location: getLocation(node),
-              },
+          },
+        ];
+      } else if (node.text.includes('i = [0:10]')) {
+        return [
+          {
+            name: 'i',
+            value: {
+              type: 'expression',
+              expressionType: 'literal',
+              value: '[0:10]',
+              location: getLocation(node),
             },
-          ];
-        }
-        return [];
+          },
+        ];
       }
-    );
+      return [];
+    });
 
     const errorHandler = new ErrorHandler();
     visitor = new ControlStructureVisitor('', errorHandler);

@@ -1,6 +1,6 @@
-import { OpenscadParser } from '../../openscad-parser.js';
-import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import * as ast from '../ast-types.js';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../openscad-parser';
+import type * as ast from '../ast-types.js';
 
 describe('Sphere AST Generation', () => {
   let parser: OpenscadParser;

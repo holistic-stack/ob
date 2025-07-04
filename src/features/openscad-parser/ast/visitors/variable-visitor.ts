@@ -77,12 +77,12 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
  * Visitor for processing OpenSCAD variable references and identifiers.
@@ -109,7 +109,10 @@ export class VariableVisitor extends BaseASTVisitor {
    * @param source The source code
    * @param errorHandler The error handler
    */
-  constructor(source: string, protected override errorHandler: ErrorHandler) {
+  constructor(
+    source: string,
+    protected override errorHandler: ErrorHandler
+  ) {
     super(source, errorHandler);
   }
 
@@ -215,7 +218,7 @@ export class VariableVisitor extends BaseASTVisitor {
       'VariableVisitor.visitIdentifier',
       node
     );
-    
+
     // Create a variable node directly from the identifier
     return {
       type: 'expression',
@@ -224,11 +227,16 @@ export class VariableVisitor extends BaseASTVisitor {
       location: getLocation(node),
     };
   }
-  
+
   /**
    * Safe logging helper that checks if errorHandler exists
    */
-  private safeLog(level: 'info' | 'debug' | 'warning' | 'error', message: string, context?: string, node?: unknown): void {
+  private safeLog(
+    level: 'info' | 'debug' | 'warning' | 'error',
+    message: string,
+    context?: string,
+    node?: unknown
+  ): void {
     if (this.errorHandler) {
       switch (level) {
         case 'info':
@@ -246,7 +254,7 @@ export class VariableVisitor extends BaseASTVisitor {
       }
     }
   }
-  
+
   /**
    * Create an AST node for a function (required by BaseASTVisitor)
    * @param node The function node
@@ -254,7 +262,11 @@ export class VariableVisitor extends BaseASTVisitor {
    * @param args The function arguments
    * @returns The function call AST node or null if not handled
    */
-  createASTNodeForFunction(node: TSNode, _functionName?: string, _args?: ast.Parameter[]): ast.ASTNode | null {
+  createASTNodeForFunction(
+    node: TSNode,
+    _functionName?: string,
+    _args?: ast.Parameter[]
+  ): ast.ASTNode | null {
     // VariableVisitor doesn't handle function definitions or calls
     return null;
   }

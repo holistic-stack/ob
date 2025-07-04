@@ -7,8 +7,8 @@
  * @module lib/openscad-parser/ast/errors/recovery-strategy
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import { ParserError } from './parser-error.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ParserError } from './parser-error.js';
 import { SyntaxError } from './syntax-error.js';
 
 /**

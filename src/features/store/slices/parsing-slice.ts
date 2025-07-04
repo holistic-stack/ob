@@ -12,14 +12,14 @@ import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import type { UnifiedParserService } from '../../openscad-parser/services/unified-parser-service.js';
+import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 import type { AppStore } from '../app-store.js';
 import type { ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
 
 interface ParsingSliceConfig {
-  parserService: UnifiedParserService;
+  parserService: OpenscadParser;
 }
 
 export const createParsingSlice = (

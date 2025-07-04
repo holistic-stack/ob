@@ -40,19 +40,19 @@
  * @since 0.1.0
  */
 
+import { Logger, type LoggerOptions } from './logger.js';
+import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 import {
+  ErrorCode,
+  type ErrorContext,
+  InternalError,
   ParserError,
+  ReferenceError,
+  Severity,
   SyntaxError,
   TypeError,
   ValidationError,
-  ReferenceError,
-  InternalError,
-  Severity,
-  ErrorCode,
-  type ErrorContext
 } from './types/error-types.js';
-import { Logger, type LoggerOptions } from './logger.js';
-import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 
 /** Configuration options for the ErrorHandler */
 export interface ErrorHandlerOptions {
@@ -236,7 +236,7 @@ export class ErrorHandler {
    */
   getErrorsBySeverity(minSeverity: Severity): ParserError[] {
     const minLevel = this.getSeverityLevel(minSeverity);
-    return this.errors.filter(error => this.getSeverityLevel(error.severity) >= minLevel);
+    return this.errors.filter((error) => this.getSeverityLevel(error.severity) >= minLevel);
   }
 
   /**
@@ -259,7 +259,7 @@ export class ErrorHandler {
    * @returns True if there are critical errors
    */
   hasCriticalErrors(): boolean {
-    return this.errors.some(error => this.isCriticalError(error));
+    return this.errors.some((error) => this.isCriticalError(error));
   }
 
   /**
@@ -300,31 +300,31 @@ export class ErrorHandler {
 
   /**
    * Logs a warning message with optional context information.
-   * 
+   *
    * Warning messages indicate potential issues that might not prevent parsing but
    * could lead to unexpected behavior or AST structure. These warnings are useful for
    * diagnostic purposes and can help identify problematic code patterns.
-   * 
+   *
    * @param message - The warning message to log
    * @param context - Optional context information (e.g., method name, phase)
    * @param node - Optional tree-sitter node for additional context such as location
-   * 
+   *
    * @example
    * ```typescript
    * // Log a simple warning
    * errorHandler.logWarning('Deprecated syntax detected');
-   * 
+   *
    * // Log a warning with context
    * errorHandler.logWarning('Missing parentheses in expression', 'visitExpression');
-   * 
+   *
    * // Log a warning with both context and node information
    * errorHandler.logWarning(
-   *   'Ambiguous operator precedence', 
+   *   'Ambiguous operator precedence',
    *   'ExpressionVisitor.visitBinaryExpression',
    *   node
    * );
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   logWarning(message: string, _context?: string, _node?: any): void {
@@ -333,34 +333,34 @@ export class ErrorHandler {
 
   /**
    * Logs an error message with optional context information.
-   * 
+   *
    * Error messages indicate significant issues that may prevent successful parsing or
    * result in an incomplete/incorrect AST. These errors are critical for understanding
    * parsing failures and should provide clear information about what went wrong and where.
-   * 
+   *
    * This method should be used instead of console.log/error throughout the parser codebase
    * to ensure consistent error handling and logging.
-   * 
+   *
    * @param message - The error message to log
    * @param context - Optional context information (e.g., method name, component)
    * @param node - Optional tree-sitter node for additional context such as location
-   * 
+   *
    * @example
    * ```typescript
    * // Log a simple error
    * errorHandler.logError('Failed to parse expression');
-   * 
+   *
    * // Log an error with context
    * errorHandler.logError('Invalid parameter type', 'ModuleVisitor.processCube');
-   * 
+   *
    * // Log an error with both context and node information for location tracking
    * errorHandler.logError(
-   *   'Unexpected token in module instantiation', 
+   *   'Unexpected token in module instantiation',
    *   'CompositeVisitor.visitModuleInstantiation',
    *   node
    * );
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   logError(message: string, _context?: string, _node?: any): void {
@@ -369,19 +369,19 @@ export class ErrorHandler {
 
   /**
    * Handles an error by logging it and optionally reporting it to the error collection system.
-   * 
+   *
    * This method serves as the central error handling mechanism in the parser, providing
    * consistent error processing for both standard JavaScript errors and specialized
    * parser errors. It can optionally convert generic errors to parser-specific errors
    * and adds them to the error collection if appropriate.
-   * 
+   *
    * The context parameter allows providing information about where the error occurred,
    * which is particularly useful for debugging complex parsing scenarios.
-   * 
+   *
    * @param error - The error to handle (can be a standard Error or a ParserError)
    * @param context - Optional context information (e.g., class and method where error occurred)
    * @param node - Optional tree-sitter node for additional context such as location information
-   * 
+   *
    * @example Standard Error
    * ```typescript
    * try {
@@ -392,7 +392,7 @@ export class ErrorHandler {
    *   errorHandler.handleError(err, 'VisitorASTGenerator.generate', node);
    * }
    * ```
-   * 
+   *
    * @example With Parser Error
    * ```typescript
    * // Creating and handling a specific parser error
@@ -402,7 +402,7 @@ export class ErrorHandler {
    * );
    * errorHandler.handleError(syntaxError, 'BlockVisitor.processBlock');
    * ```
-   * 
+   *
    * @since 0.1.0
    */
   handleError(error: Error, context?: string, node?: any): void {

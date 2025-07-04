@@ -2,15 +2,15 @@
  * Tests for the recovery strategies
  */
 
+import { type ErrorPosition, ParserError } from './parser-error.js';
 import {
-  SkipToNextStatementStrategy,
-  InsertMissingTokenStrategy,
   DeleteExtraTokenStrategy,
+  InsertMissingTokenStrategy,
   RecoveryStrategyFactory,
+  SkipToNextStatementStrategy,
 } from './recovery-strategy.js';
-import { ParserError, ErrorPosition } from './parser-error.js';
-import { SyntaxError } from './syntax-error.js';
 import { SemanticError } from './semantic-error.js';
+import { SyntaxError } from './syntax-error.js';
 
 // Mock the TreeSitter Node type
 class MockNode {
@@ -98,12 +98,7 @@ describe('RecoveryStrategies', () => {
 
     it('should return null for non-syntax errors', () => {
       const errorNode = new MockNode('ERROR');
-      const error = new ParserError(
-        'Test error',
-        'TEST_ERROR',
-        source,
-        position
-      );
+      const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new InsertMissingTokenStrategy();
 
       const result = strategy.recover(errorNode as any, error);
@@ -130,12 +125,7 @@ describe('RecoveryStrategies', () => {
 
     it('should return null for non-syntax errors', () => {
       const errorNode = new MockNode('ERROR');
-      const error = new ParserError(
-        'Test error',
-        'TEST_ERROR',
-        source,
-        position
-      );
+      const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new DeleteExtraTokenStrategy();
 
       const result = strategy.recover(errorNode as any, error);

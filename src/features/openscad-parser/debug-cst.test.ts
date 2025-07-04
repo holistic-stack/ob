@@ -1,4 +1,4 @@
-import { OpenscadParser } from './openscad-parser.js';
+import { OpenscadParser } from './openscad-parser';
 
 describe('Debug CST Structure', () => {
   let parser: OpenscadParser;
@@ -91,9 +91,7 @@ function walkTree(node: any, targetType: string, depth = 0) {
 
     const argsField = node.childForFieldName('arguments');
     if (argsField) {
-      console.log(
-        `${indent}  arguments: ${argsField.type} - ${argsField.text}`
-      );
+      console.log(`${indent}  arguments: ${argsField.type} - ${argsField.text}`);
     } else {
       console.log(`${indent}  arguments: not found`);
     }

@@ -83,7 +83,7 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 
 /**
  * Print the structure of a tree-sitter node for debugging purposes.
@@ -154,10 +154,10 @@ export function printNodeStructure(
     node.type === 'ERROR'
       ? []
       : node.childCount > 0
-      ? node.children
-          .map(child => node.fieldNameForChild(node.children.indexOf(child)))
-          .filter(Boolean)
-      : [];
+        ? node.children
+            .map((child) => node.fieldNameForChild(node.children.indexOf(child)))
+            .filter(Boolean)
+        : [];
 
   if (fieldNames.length > 0) {
     console.log(`${indent}Fields: ${fieldNames.join(', ')}`);
@@ -202,9 +202,7 @@ export function printNodeStructure(
     }
 
     if (namedChildCount > maxChildren) {
-      console.log(
-        `${indent}  ... (${namedChildCount - maxChildren} more named children)`
-      );
+      console.log(`${indent}  ... (${namedChildCount - maxChildren} more named children)`);
     }
   }
 }

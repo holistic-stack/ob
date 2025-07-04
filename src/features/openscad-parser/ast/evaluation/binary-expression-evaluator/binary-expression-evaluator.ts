@@ -1,15 +1,15 @@
 /**
  * Binary Expression Evaluator
- * 
+ *
  * This module provides a dedicated evaluator for binary expressions in OpenSCAD.
  * It follows the Single Responsibility Principle by focusing only on evaluating
  * binary expressions with different operators.
- * 
+ *
  * @module lib/openscad-parser/ast/evaluation/binary-expression-evaluator
  */
 
-import * as ast from '../../ast-types.js';
-import { ErrorHandler } from '../../../error-handling/index.js';
+import type { ErrorHandler } from '../../../error-handling/index.js';
+import type * as ast from '../../ast-types.js';
 
 /**
  * Evaluates a binary expression node and returns the result
@@ -160,11 +160,16 @@ function evaluateOperator(
       }
 
       switch (operator) {
-        case '+': return left + right;
-        case '-': return left - right;
-        case '*': return left * right;
-        case '/': return left / right;
-        case '%': return left % right;
+        case '+':
+          return left + right;
+        case '-':
+          return left - right;
+        case '*':
+          return left * right;
+        case '/':
+          return left / right;
+        case '%':
+          return left % right;
       }
     }
 
@@ -181,12 +186,18 @@ function evaluateOperator(
       }
 
       switch (operator) {
-        case '==': return left === right;
-        case '!=': return left !== right;
-        case '<': return left < right;
-        case '<=': return left <= right;
-        case '>': return left > right;
-        case '>=': return left >= right;
+        case '==':
+          return left === right;
+        case '!=':
+          return left !== right;
+        case '<':
+          return left < right;
+        case '<=':
+          return left <= right;
+        case '>':
+          return left > right;
+        case '>=':
+          return left >= right;
       }
     }
 
@@ -203,8 +214,10 @@ function evaluateOperator(
       }
 
       switch (operator) {
-        case '&&': return left && right;
-        case '||': return left || right;
+        case '&&':
+          return left && right;
+        case '||':
+          return left || right;
       }
     }
 

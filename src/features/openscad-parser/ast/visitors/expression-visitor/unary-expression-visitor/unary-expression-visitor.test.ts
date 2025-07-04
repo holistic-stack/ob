@@ -1,12 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Node as TSNode } from 'web-tree-sitter';
-
-import { UnaryExpressionVisitor } from './unary-expression-visitor.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../../../error-handling/index.js';
-import { OpenscadParser } from '../../../../openscad-parser.js';
+import { OpenscadParser } from '../../../../openscad-parser';
+import { ExpressionVisitor } from '../../expression-visitor.js';
+import { UnaryExpressionVisitor } from './unary-expression-visitor.js';
 
-async function getExpressionNode(parser: EnhancedOpenscadParser, code: string): Promise<TSNode | null> {
+async function getExpressionNode(
+  parser: EnhancedOpenscadParser,
+  code: string
+): Promise<TSNode | null> {
   const tree = parser.parse(code);
   if (!tree) return null;
 
@@ -121,13 +123,13 @@ describe('UnaryExpressionVisitor', () => {
             value: {
               type: 'expression',
               expressionType: 'literal',
-              value: 90
+              value: 90,
               // Location is optional on LiteralNode and seems to be missing here
-            }
+            },
             // No location directly on the Parameter object itself
           },
         ],
-        location: expect.anything(), 
+        location: expect.anything(),
       },
       prefix: true,
       location: expect.anything(),

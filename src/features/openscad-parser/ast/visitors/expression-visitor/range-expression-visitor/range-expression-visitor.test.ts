@@ -20,12 +20,12 @@
  * ```
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { OpenscadParser } from '../../../../openscad-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ErrorHandler } from '../../../../error-handling/index.js';
-import { RangeExpressionVisitor } from './range-expression-visitor.js';
+import { OpenscadParser } from '../../../../openscad-parser';
+import type * as ast from '../../../ast-types.js';
 import { ExpressionVisitor } from '../../expression-visitor.js';
-import * as ast from '../../../ast-types.js';
+import { RangeExpressionVisitor } from './range-expression-visitor.js';
 
 /**
  * Type guard to check if a node is a RangeExpressionNode.
@@ -115,14 +115,14 @@ describe('RangeExpressionVisitor', () => {
           // step is also safely accessible (and will be undefined for RangeExpressionNode if not present).
           expect(result.expressionType).toBe('range_expression');
           expect(result.start).toBeTruthy(); // Asserts start node exists and is an ExpressionNode
-          expect(result.end).toBeTruthy();   // Asserts end node exists and is an ExpressionNode
+          expect(result.end).toBeTruthy(); // Asserts end node exists and is an ExpressionNode
           expect(result.step).toBeUndefined(); // Asserts step node does NOT exist for this simple range test case
         } else {
           // If result is not null/undefined (checked by expect(result).toBeTruthy()) and not a RangeExpressionNode,
           // it must be an ErrorNode given RangeExpressionVisitor's return signature.
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -155,7 +155,9 @@ describe('RangeExpressionVisitor', () => {
           expect(result.step).toBeUndefined();
         } else {
           // Fail the test if an ErrorNode is returned instead of a RangeExpressionNode
-          fail(`Expected RangeExpressionNode, got ErrorNode: ${result?.errorCode ?? 'unknown error'}`);
+          fail(
+            `Expected RangeExpressionNode, got ErrorNode: ${result?.errorCode ?? 'unknown error'}`
+          );
         }
       }
     });
@@ -190,7 +192,7 @@ describe('RangeExpressionVisitor', () => {
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -215,13 +217,13 @@ describe('RangeExpressionVisitor', () => {
         if (isRangeExpressionNode(result)) {
           expect(result.expressionType).toBe('range_expression');
           expect(result.start).toBeTruthy(); // Asserts start node exists and is an ExpressionNode
-          expect(result.end).toBeTruthy();   // Asserts end node exists and is an ExpressionNode
+          expect(result.end).toBeTruthy(); // Asserts end node exists and is an ExpressionNode
           expect(result.step).toBeTruthy(); // Asserts step node exists and is an ExpressionNode for stepped ranges
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -246,13 +248,13 @@ describe('RangeExpressionVisitor', () => {
         if (isRangeExpressionNode(result)) {
           expect(result.expressionType).toBe('range_expression');
           expect(result.start).toBeTruthy(); // Asserts start node exists and is an ExpressionNode
-          expect(result.end).toBeTruthy();   // Asserts end node exists and is an ExpressionNode
+          expect(result.end).toBeTruthy(); // Asserts end node exists and is an ExpressionNode
           expect(result.step).toBeTruthy(); // Asserts step node exists and is an ExpressionNode for stepped ranges
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -277,13 +279,13 @@ describe('RangeExpressionVisitor', () => {
         if (isRangeExpressionNode(result)) {
           expect(result.expressionType).toBe('range_expression');
           expect(result.start).toBeTruthy(); // Asserts start node exists and is an ExpressionNode
-          expect(result.end).toBeTruthy();   // Asserts end node exists and is an ExpressionNode
+          expect(result.end).toBeTruthy(); // Asserts end node exists and is an ExpressionNode
           expect(result.step).toBeTruthy(); // Asserts step node exists and is an ExpressionNode for stepped ranges
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -308,7 +310,7 @@ describe('RangeExpressionVisitor', () => {
         if (isRangeExpressionNode(result)) {
           expect(result.expressionType).toBe('range_expression');
           expect(result.start).toBeTruthy(); // Asserts start node exists and is an ExpressionNode
-          expect(result.end).toBeTruthy();   // Asserts end node exists and is an ExpressionNode
+          expect(result.end).toBeTruthy(); // Asserts end node exists and is an ExpressionNode
           // TODO: Fix tree-sitter grammar parsing of negative steps in ranges
           // Currently [10:-1:0] is parsed incorrectly as [10, (-1:0)] instead of [10, -1, 0]
           expect(result.step).toBeUndefined(); // Should be truthy when grammar is fixed
@@ -316,7 +318,7 @@ describe('RangeExpressionVisitor', () => {
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
           fail(
-            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`,
+            `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
       }
@@ -350,7 +352,7 @@ describe('RangeExpressionVisitor', () => {
           fail(
             `Expected a RangeExpressionNode. Got: ${
               result?.type === 'error' ? result.message : JSON.stringify(result)
-            }`,
+            }`
           );
         }
       }
@@ -382,7 +384,7 @@ describe('RangeExpressionVisitor', () => {
           fail(
             `Expected a RangeExpressionNode. Got: ${
               result?.type === 'error' ? result.message : JSON.stringify(result)
-            }`,
+            }`
           );
         }
       }
@@ -426,7 +428,7 @@ describe('RangeExpressionVisitor', () => {
       if (!tree) throw new Error('Parser returned null tree'); // Type guard for subsequent lines
       const assignmentExpr = tree.rootNode.child(0)?.child(0);
       const cubeCallNode = assignmentExpr?.childForFieldName('value'); // This will be a call_expression
-      
+
       expect(cubeCallNode).toBeTruthy();
       expect(cubeCallNode?.type).not.toBe('range_expression');
 
@@ -483,7 +485,7 @@ describe('RangeExpressionVisitor', () => {
       },
     ];
 
-    testCases.forEach(tc => {
+    testCases.forEach((tc) => {
       it(`should return ErrorNode for ${tc.code} with errorCode ${tc.errorCode} when valueNode is ${tc.expectedValueNodeType}`, () => {
         const tree = parser.parseCST(tc.code);
         expect(tree).toBeTruthy();
@@ -508,7 +510,6 @@ describe('RangeExpressionVisitor', () => {
     });
   });
 
-
   describe('Visit Method Dispatch', () => {
     it('should correctly parse valid range_expression nodes', () => {
       const code = 'f = [1:5];';
@@ -517,7 +518,7 @@ describe('RangeExpressionVisitor', () => {
       if (!tree) throw new Error('Parser returned null tree'); // Type guard
       const assignmentNode = tree.rootNode.child(0);
       const valueNode = assignmentNode?.child(0)?.childForFieldName('value');
-      
+
       expect(valueNode).toBeTruthy();
       expect(valueNode?.type).toBe('range_expression');
 
@@ -526,8 +527,8 @@ describe('RangeExpressionVisitor', () => {
         expect(result).toBeTruthy();
         expect(result?.type).toBe('expression');
         if (result?.type === 'expression') {
-            expect(result.expressionType).toBe('range_expression');
-            // Further checks can be done on (result as ast.RangeExpressionNode)
+          expect(result.expressionType).toBe('range_expression');
+          // Further checks can be done on (result as ast.RangeExpressionNode)
         }
       }
     });
@@ -549,7 +550,9 @@ describe('RangeExpressionVisitor', () => {
         expect(result?.type).toBe('error');
         const errorNode = result as ast.ErrorNode;
         expect(errorNode.errorCode).toBe('UNEXPECTED_NODE_TYPE_FOR_RANGE_VISITOR');
-        expect(errorNode.message).toContain("Expected 'range_expression', but received 'call_expression'");
+        expect(errorNode.message).toContain(
+          "Expected 'range_expression', but received 'call_expression'"
+        );
       }
     });
   });

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { OpenscadParser } from '../../openscad-parser.js';
-import { ExpressionVisitor } from './expression-visitor.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { OpenscadParser } from '../../openscad-parser';
+import type * as ast from '../ast-types.js';
+import { ExpressionVisitor } from './expression-visitor.js';
 
 describe('ExpressionVisitor Simple Tests', () => {
   let parser: OpenscadParser;
@@ -33,16 +33,14 @@ describe('ExpressionVisitor Simple Tests', () => {
     console.log('Root node child count:', tree!.rootNode.childCount);
 
     // Find the function call node (cube) - it's a module_instantiation in OpenSCAD
-    const functionCallNode = findNodeOfType(
-      tree!.rootNode,
-      'module_instantiation'
-    );
+    const functionCallNode = findNodeOfType(tree!.rootNode, 'module_instantiation');
     expect(functionCallNode).not.toBeNull();
 
     if (functionCallNode) {
       // Find the binary expression node within the function arguments
-      const binaryExpressionNode = findNodeOfType(functionCallNode, 'additive_expression') ||
-                                   findNodeOfType(functionCallNode, 'binary_expression');
+      const binaryExpressionNode =
+        findNodeOfType(functionCallNode, 'additive_expression') ||
+        findNodeOfType(functionCallNode, 'binary_expression');
       expect(binaryExpressionNode).not.toBeNull();
 
       if (binaryExpressionNode) {

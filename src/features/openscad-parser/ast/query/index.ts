@@ -6,6 +6,6 @@
  * @module lib/openscad-parser/ast/query
  */
 
-export * from './query-cache';
 export * from './lru-query-cache';
+export * from './query-cache';
 export * from './query-manager';

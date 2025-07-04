@@ -2,9 +2,9 @@
  * Tests for the QueryManager class
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { QueryCache } from './query-cache.js';
 import { QueryManager } from './query-manager.js';
-import { QueryCache } from './query-cache.js';
 
 // Mock the Tree-sitter types
 class MockTree {
@@ -12,7 +12,10 @@ class MockTree {
 }
 
 class MockNode {
-  constructor(public text: string, public type: string) {}
+  constructor(
+    public text: string,
+    public type: string
+  ) {}
 }
 
 class MockMatch {
@@ -149,9 +152,7 @@ describe('QueryManager', () => {
     // Create a mock language
     const mockLanguage = {
       query: vi.fn().mockImplementation((_queryString) => {
-        return new MockQuery([
-          new MockMatch([new MockCapture(new MockNode('node1', 'type1'))]),
-        ]);
+        return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
       }),
     };
 
@@ -181,9 +182,7 @@ describe('QueryManager', () => {
     // Create a mock language
     const mockLanguage = {
       query: vi.fn().mockImplementation((_queryString) => {
-        return new MockQuery([
-          new MockMatch([new MockCapture(new MockNode('node1', 'type1'))]),
-        ]);
+        return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
       }),
     };
 

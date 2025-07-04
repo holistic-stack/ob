@@ -1,12 +1,9 @@
-import { type Node as SyntaxNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { extractArguments } from './argument-extractor.js';
-import {
-  extractNumberParameter,
-  extractBooleanParameter,
-} from './parameter-extractor.js';
+import type { Node as SyntaxNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import { extractArguments } from './argument-extractor.js';
+import { extractBooleanParameter, extractNumberParameter } from './parameter-extractor.js';
 
 /**
  * Extracts parameters for a cylinder node from a CST node.
@@ -21,7 +18,11 @@ import { ErrorHandler } from '../../error-handling/index.js';
  * @param node The CST node representing the cylinder call.
  * @returns An AST CylinderNode or null if extraction fails.
  */
-export function extractCylinderNode(node: SyntaxNode, errorHandler?: ErrorHandler, sourceCode?: string): ast.CylinderNode | null {
+export function extractCylinderNode(
+  node: SyntaxNode,
+  errorHandler?: ErrorHandler,
+  sourceCode?: string
+): ast.CylinderNode | null {
   if (node.type !== 'call_expression' && node.type !== 'module_call') {
     return null;
   }
@@ -89,7 +90,7 @@ export function extractCylinderNode(node: SyntaxNode, errorHandler?: ErrorHandle
   }
 
   // Implement positional argument handling
-  const positionalArgs = params.filter(p => !p.name);
+  const positionalArgs = params.filter((p) => !p.name);
   let currentPositionalIndex = 0;
 
   // 1. Positional 'h'

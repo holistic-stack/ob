@@ -2,14 +2,14 @@
  * Test to debug the structure of the accessor_expression node
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from './enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from './openscad-parser';
 
 describe('OpenSCAD Node Types Debug', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
@@ -27,12 +27,8 @@ describe('OpenSCAD Node Types Debug', () => {
     console.log(tree.rootNode.toString());
 
     // Find the module_instantiation node (current grammar uses this instead of accessor_expression)
-    const moduleInstantiation = findNodeOfType(
-      tree.rootNode,
-      'module_instantiation'
-    );
-    if (!moduleInstantiation)
-      throw new Error('Failed to find module_instantiation node');
+    const moduleInstantiation = findNodeOfType(tree.rootNode, 'module_instantiation');
+    if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
     // Print the module_instantiation node structure
     console.log('Module instantiation node:');

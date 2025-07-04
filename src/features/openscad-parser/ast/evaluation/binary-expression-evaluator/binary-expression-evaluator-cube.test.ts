@@ -6,18 +6,18 @@
  * evaluation within cube arguments.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../../enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../../openscad-parser';
 import { ErrorHandler } from '../../../error-handling/index.js';
 import { extractCubeNode } from '../../extractors/cube-extractor.js';
-import { Node as TSNode } from 'web-tree-sitter';
 
 describe('Binary Expression Evaluation in Cube Arguments', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
   });
@@ -37,7 +37,9 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     for (let i = 0; i < node.namedChildCount; i++) {
       const namedChild = node.namedChild(i);
       if (namedChild) {
-        console.log(`${indent}  Named child ${i}: ${namedChild.type}, Text: "${namedChild.text.replace(/\n/g, '\\n')}"`);
+        console.log(
+          `${indent}  Named child ${i}: ${namedChild.type}, Text: "${namedChild.text.replace(/\n/g, '\\n')}"`
+        );
       }
     }
 
@@ -55,8 +57,10 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
    */
   function findCubeNode(node: TSNode): TSNode | null {
     console.log(`Checking node for cube: ${node.type} - "${node.text.substring(0, 30)}"`);
-    if ((node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
-        node.text.includes('cube')) {
+    if (
+      (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
+      node.text.includes('cube')
+    ) {
       console.log(`Found potential cube node: ${node.type}`);
       return node;
     }
@@ -74,9 +78,11 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
    * Helper function to find a binary expression node in the tree
    */
   function findBinaryExpressionNode(node: TSNode): TSNode | null {
-    if (node.type === 'binary_expression' ||
-        node.type === 'additive_expression' ||
-        node.type === 'multiplicative_expression') {
+    if (
+      node.type === 'binary_expression' ||
+      node.type === 'additive_expression' ||
+      node.type === 'multiplicative_expression'
+    ) {
       console.log(`Found binary expression node: ${node.type}`);
       return node;
     }

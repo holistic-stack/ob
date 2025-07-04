@@ -93,8 +93,149 @@ export class MatrixServiceContainer {
       ...config,
     };
 
-    // Don't auto-start services in constructor to avoid async issues
-    // Services will be initialized on first access
+    // Auto-start services synchronously if configured
+    if (this.config.autoStartServices) {
+      this.initializeServicesSync();
+    }
+  }
+
+  /**
+   * Initialize services synchronously for auto-start mode
+   */
+  private initializeServicesSync(): void {
+    try {
+      logger.debug('Starting synchronous service initialization');
+
+      // Initialize core services first (no dependencies)
+      this.initializeCoreServicesSync();
+
+      // Initialize dependent services
+      this.initializeDependentServicesSync();
+
+      this.isInitialized = true;
+      logger.debug('Synchronous service initialization completed successfully');
+    } catch (err) {
+      logger.error('Synchronous service initialization failed:', err);
+      throw new Error(
+        `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  /**
+   * Initialize core services synchronously (no dependencies)
+   */
+  private initializeCoreServicesSync(): void {
+    logger.debug('Initializing core services synchronously');
+
+    // Initialize cache service
+    this.setServiceState('cache', 'initializing');
+    try {
+      const cacheService = new MatrixCacheService();
+      this.registerService('cache', cacheService);
+      this.setServiceState('cache', 'running');
+      logger.debug('Cache service initialized');
+    } catch (err) {
+      this.setServiceState('cache', 'error');
+      this.incrementErrorCount('cache');
+      throw new Error(`Failed to initialize cache service: ${err}`);
+    }
+
+    // Initialize configuration manager if enabled
+    if (this.config.enableConfigManager) {
+      this.setServiceState('configManager', 'initializing');
+      try {
+        const configManager = new MatrixConfigManagerService();
+        this.registerService('configManager', configManager);
+        this.setServiceState('configManager', 'running');
+        logger.debug('Configuration manager initialized');
+      } catch (err) {
+        this.setServiceState('configManager', 'error');
+        this.incrementErrorCount('configManager');
+        throw new Error(`Failed to initialize configuration manager: ${err}`);
+      }
+    }
+
+    // Initialize telemetry service if enabled
+    if (this.config.enableTelemetry) {
+      this.setServiceState('telemetry', 'initializing');
+      try {
+        const telemetryDeps: MatrixTelemetryDependencies = {
+          config: this.getConfigManager()?.getCurrentConfig() ?? MATRIX_CONFIG,
+        };
+        const telemetryService = new MatrixTelemetryService(telemetryDeps);
+        this.registerService('telemetry', telemetryService);
+        this.setServiceState('telemetry', 'running');
+        logger.debug('Telemetry service initialized');
+      } catch (err) {
+        this.setServiceState('telemetry', 'error');
+        this.incrementErrorCount('telemetry');
+        throw new Error(`Failed to initialize telemetry service: ${err}`);
+      }
+    }
+  }
+
+  /**
+   * Initialize dependent services synchronously
+   */
+  private initializeDependentServicesSync(): void {
+    logger.debug('Initializing dependent services synchronously');
+
+    const cacheService = this.getService<MatrixCacheService>('cache');
+    const telemetryService = this.getService<MatrixTelemetryService>('telemetry');
+    const configManager = this.getService<MatrixConfigManagerService>('configManager');
+    const currentConfig = configManager?.getCurrentConfig() ?? MATRIX_CONFIG;
+
+    // Initialize conversion service
+    this.setServiceState('conversion', 'initializing');
+    try {
+      const conversionDeps: MatrixConversionDependencies = {
+        cache: cacheService,
+        config: currentConfig,
+        telemetry: telemetryService,
+      };
+      const conversionService = new MatrixConversionService(conversionDeps);
+      this.registerService('conversion', conversionService);
+      this.setServiceState('conversion', 'running');
+      logger.debug('Conversion service initialized');
+    } catch (err) {
+      this.setServiceState('conversion', 'error');
+      this.incrementErrorCount('conversion');
+      throw new Error(`Failed to initialize conversion service: ${err}`);
+    }
+
+    // Initialize validation service if enabled
+    if (this.config.enableValidation) {
+      this.setServiceState('validation', 'initializing');
+      try {
+        const validationDeps: MatrixValidationDependencies = {
+          cache: cacheService,
+          config: currentConfig,
+          telemetry: telemetryService,
+        };
+        const validationService = new MatrixValidationService(validationDeps);
+        this.registerService('validation', validationService);
+        this.setServiceState('validation', 'running');
+        logger.debug('Validation service initialized');
+      } catch (err) {
+        this.setServiceState('validation', 'error');
+        this.incrementErrorCount('validation');
+        throw new Error(`Failed to initialize validation service: ${err}`);
+      }
+    }
+
+    // Initialize operations API (depends on all other services)
+    this.setServiceState('operations', 'initializing');
+    try {
+      const operationsAPI = new MatrixOperationsAPI();
+      this.registerService('operations', operationsAPI);
+      this.setServiceState('operations', 'running');
+      logger.debug('Operations API initialized');
+    } catch (err) {
+      this.setServiceState('operations', 'error');
+      this.incrementErrorCount('operations');
+      throw new Error(`Failed to initialize operations API: ${err}`);
+    }
   }
 
   /**

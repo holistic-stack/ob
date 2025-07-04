@@ -1,4 +1,5 @@
-import Parser, { TreeCursor } from 'web-tree-sitter';
+import type Parser from 'web-tree-sitter';
+import type { TreeCursor } from 'web-tree-sitter';
 
 /**
  * Walks a Tree-sitter CST (concrete syntax tree) using a TreeCursor and logs its structure.
@@ -24,10 +25,7 @@ export function cstTreeCursorWalkLog(
   let cursor: TreeCursor;
 
   // Check if initialTreeOrCursor is a Tree or a TreeCursor
-  if (
-    'walk' in initialTreeOrCursor &&
-    typeof initialTreeOrCursor.walk === 'function'
-  ) {
+  if ('walk' in initialTreeOrCursor && typeof initialTreeOrCursor.walk === 'function') {
     // It's a Tree
     cursor = initialTreeOrCursor.walk();
   } else if ('nodeType' in initialTreeOrCursor) {
@@ -44,12 +42,7 @@ export function cstTreeCursorWalkLog(
       return;
     }
 
-    const {
-      nodeType,
-      startPosition: start,
-      endPosition: end,
-      nodeIsNamed,
-    } = currentCursor;
+    const { nodeType, startPosition: start, endPosition: end, nodeIsNamed } = currentCursor;
     const fieldName = currentCursor.currentFieldName || 'child';
 
     // Get the node text and truncate it if it's too long
@@ -85,7 +78,7 @@ export function cstTreeCursorWalkLog(
   walkRecursive(cursor, depth);
 
   // Log the output to the console
-  output.forEach(line => console.log(line));
+  output.forEach((line) => console.log(line));
 
   if (depth === 0) {
     return output;

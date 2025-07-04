@@ -1,8 +1,8 @@
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ExpressionNode, IdentifierNode } from '../ast-types.js';
 import { DefaultNodeHandlerRegistry } from './default-node-handler-registry.js';
 // NodeHandler is not used directly in this file
 import type { NodeHandlerRegistry } from './node-handler-registry.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import type { ExpressionNode, IdentifierNode } from '../ast-types.js';
 
 /**
  * Factory for creating and configuring NodeHandlerRegistry instances.
@@ -16,16 +16,16 @@ export class NodeHandlerRegistryFactory {
     const registry = new DefaultNodeHandlerRegistry();
 
     // Register primitive handlers
-    this.registerPrimitiveHandlers(registry);
+    NodeHandlerRegistryFactory.registerPrimitiveHandlers(registry);
 
     // Register transformation handlers
-    this.registerTransformationHandlers(registry);
+    NodeHandlerRegistryFactory.registerTransformationHandlers(registry);
 
     // Register CSG operation handlers
-    this.registerCSGOperationHandlers(registry);
+    NodeHandlerRegistryFactory.registerCSGOperationHandlers(registry);
 
     // Register module and function handlers
-    this.registerModuleAndFunctionHandlers(registry);
+    NodeHandlerRegistryFactory.registerModuleAndFunctionHandlers(registry);
 
     return registry;
   }
@@ -34,9 +34,7 @@ export class NodeHandlerRegistryFactory {
    * Registers handlers for primitive shapes.
    * @param registry The registry to register handlers with.
    */
-  private static registerPrimitiveHandlers(
-    registry: NodeHandlerRegistry
-  ): void {
+  private static registerPrimitiveHandlers(registry: NodeHandlerRegistry): void {
     // 3D primitives
     registry.register('cube', (_node: TSNode) => {
       return { type: 'cube', size: 1, center: false };
@@ -85,9 +83,7 @@ export class NodeHandlerRegistryFactory {
    * Registers handlers for transformations.
    * @param registry The registry to register handlers with.
    */
-  private static registerTransformationHandlers(
-    registry: NodeHandlerRegistry
-  ): void {
+  private static registerTransformationHandlers(registry: NodeHandlerRegistry): void {
     registry.register('translate', (_node: TSNode) => {
       return { type: 'translate', v: [0, 0, 0], children: [] };
     });
@@ -130,9 +126,7 @@ export class NodeHandlerRegistryFactory {
    * Registers handlers for CSG operations.
    * @param registry The registry to register handlers with.
    */
-  private static registerCSGOperationHandlers(
-    registry: NodeHandlerRegistry
-  ): void {
+  private static registerCSGOperationHandlers(registry: NodeHandlerRegistry): void {
     registry.register('union', (_node: TSNode) => {
       return { type: 'union', children: [] };
     });
@@ -158,9 +152,7 @@ export class NodeHandlerRegistryFactory {
    * Registers handlers for modules and functions.
    * @param registry The registry to register handlers with.
    */
-  private static registerModuleAndFunctionHandlers(
-    registry: NodeHandlerRegistry
-  ): void {
+  private static registerModuleAndFunctionHandlers(registry: NodeHandlerRegistry): void {
     registry.register('module', (_node: TSNode) => {
       const dummyName: IdentifierNode = {
         type: 'expression',

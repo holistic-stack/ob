@@ -33,9 +33,9 @@
  * @since 0.1.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../../index.js';
-import { AssertStatementNode } from '../../ast-types.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../../openscad-parser';
+import type { AssertStatementNode } from '../../ast-types.js';
 
 /**
  * Test suite for AssertStatementVisitor functionality.
@@ -47,7 +47,7 @@ import { AssertStatementNode } from '../../ast-types.js';
  * @since 0.1.0
  */
 describe('AssertStatementVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   /**
@@ -300,7 +300,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast.length).toBeGreaterThanOrEqual(3);
 
       // Check that we have assert statements (they may be mixed with other nodes)
-      const assertNodes = ast.filter(child => child.type === 'assert');
+      const assertNodes = ast.filter((child) => child.type === 'assert');
       expect(assertNodes.length).toBeGreaterThanOrEqual(1);
     });
   });

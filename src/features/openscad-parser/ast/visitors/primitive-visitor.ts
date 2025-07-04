@@ -72,20 +72,20 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { BaseASTVisitor } from './base-ast-visitor.js';
-import { getLocation } from '../utils/location-utils.js';
-import {
-  extractNumberParameter,
-  extractBooleanParameter,
-  extractVectorParameter,
-} from '../extractors/parameter-extractor.js';
-import { findDescendantOfType } from '../utils/node-utils.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
 import { extractCubeNode } from '../extractors/cube-extractor.js';
+import {
+  extractBooleanParameter,
+  extractNumberParameter,
+  extractVectorParameter,
+} from '../extractors/parameter-extractor.js';
 import { extractSphereNode } from '../extractors/sphere-extractor.js';
-import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
+import { getLocation } from '../utils/location-utils.js';
+import { findDescendantOfType } from '../utils/node-utils.js';
+import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
  * Visitor for primitive shapes (cube, sphere, cylinder, etc.)
@@ -95,7 +95,10 @@ import { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHand
  * @since 0.1.0
  */
 export class PrimitiveVisitor extends BaseASTVisitor {
-  constructor(source: string, protected override errorHandler: ErrorHandler) {
+  constructor(
+    source: string,
+    protected override errorHandler: ErrorHandler
+  ) {
     super(source); // Assuming BaseASTVisitor constructor takes source
   }
 
@@ -130,7 +133,16 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @returns True if the function is a primitive operation
    */
   private isSupportedPrimitiveFunction(functionName: string): boolean {
-    return ['cube', 'sphere', 'cylinder', 'polyhedron', 'square', 'circle', 'polygon', 'text'].includes(functionName);
+    return [
+      'cube',
+      'sphere',
+      'cylinder',
+      'polyhedron',
+      'square',
+      'circle',
+      'polygon',
+      'text',
+    ].includes(functionName);
   }
 
   /**
@@ -144,29 +156,29 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
     // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
     const truncatedNameMap: { [key: string]: string } = {
-      'sphe': 'sphere',
-      'spher': 'sphere',
-      'cyli': 'cylinder',
-      'cylin': 'cylinder',
-      'cylind': 'cylinder',
-      'cylinde': 'cylinder',
-      'cub': 'cube',
-      'cube': 'cube',
-      'poly': 'polyhedron',
-      'polyh': 'polyhedron',
-      'polyhe': 'polyhedron',
-      'polyhed': 'polyhedron',
-      'polyhedr': 'polyhedron',
-      'polyhedro': 'polyhedron',
-      'squa': 'square',
-      'squar': 'square',
-      'circ': 'circle',
-      'circl': 'circle',
-      'polyg': 'polygon',
-      'polygo': 'polygon',
-      'polygon': 'polygon',
-      'tex': 'text',
-      'text': 'text'
+      sphe: 'sphere',
+      spher: 'sphere',
+      cyli: 'cylinder',
+      cylin: 'cylinder',
+      cylind: 'cylinder',
+      cylinde: 'cylinder',
+      cub: 'cube',
+      cube: 'cube',
+      poly: 'polyhedron',
+      polyh: 'polyhedron',
+      polyhe: 'polyhedron',
+      polyhed: 'polyhedron',
+      polyhedr: 'polyhedron',
+      polyhedro: 'polyhedron',
+      squa: 'square',
+      squar: 'square',
+      circ: 'circle',
+      circl: 'circle',
+      polyg: 'polygon',
+      polygo: 'polygon',
+      polygon: 'polygon',
+      tex: 'text',
+      text: 'text',
     };
 
     if (functionName && truncatedNameMap[functionName]) {
@@ -191,14 +203,14 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(
-      `[PrimitiveVisitor.createASTNodeForFunction] Processing function: ${functionName}`
-    );
+    console.log(`[PrimitiveVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
 
     switch (functionName) {
       case 'cube':
         // Use the specialized cube extractor first, fall back to the old method if it fails
-        return extractCubeNode(node, this.errorHandler, this.source) || this.createCubeNode(node, args);
+        return (
+          extractCubeNode(node, this.errorHandler, this.source) || this.createCubeNode(node, args)
+        );
       case 'sphere': {
         // Use the specialized sphere extractor first, fall back to the old method if it fails
         const sphereNode = extractSphereNode(node, this.errorHandler, this.source);
@@ -211,33 +223,23 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         return this.createCylinderNode(node, args);
       case 'polyhedron':
         // Placeholder for future implementation
-        console.log(
-          `[PrimitiveVisitor.createASTNodeForFunction] Polyhedron not yet implemented`
-        );
+        console.log(`[PrimitiveVisitor.createASTNodeForFunction] Polyhedron not yet implemented`);
         return null;
       case 'square':
         // Placeholder for future implementation
-        console.log(
-          `[PrimitiveVisitor.createASTNodeForFunction] Square not yet implemented`
-        );
+        console.log(`[PrimitiveVisitor.createASTNodeForFunction] Square not yet implemented`);
         return null;
       case 'circle':
         // Placeholder for future implementation
-        console.log(
-          `[PrimitiveVisitor.createASTNodeForFunction] Circle not yet implemented`
-        );
+        console.log(`[PrimitiveVisitor.createASTNodeForFunction] Circle not yet implemented`);
         return null;
       case 'polygon':
         // Placeholder for future implementation
-        console.log(
-          `[PrimitiveVisitor.createASTNodeForFunction] Polygon not yet implemented`
-        );
+        console.log(`[PrimitiveVisitor.createASTNodeForFunction] Polygon not yet implemented`);
         return null;
       case 'text':
         // Placeholder for future implementation
-        console.log(
-          `[PrimitiveVisitor.createASTNodeForFunction] Text not yet implemented`
-        );
+        console.log(`[PrimitiveVisitor.createASTNodeForFunction] Text not yet implemented`);
         return null;
       default:
         console.log(
@@ -270,7 +272,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     const extractedArgs = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
 
     // Convert ExtractedParameter[] to Parameter[]
-    const args: ast.Parameter[] = extractedArgs.map(arg => {
+    const args: ast.Parameter[] = extractedArgs.map((arg) => {
       if ('name' in arg && arg.name) {
         // Named argument
         return {
@@ -310,9 +312,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         );
       }
     } catch (error) {
-      console.log(
-        `[PrimitiveVisitor.visitAccessorExpression] Error logging node text: ${error}`
-      );
+      console.log(`[PrimitiveVisitor.visitAccessorExpression] Error logging node text: ${error}`);
     }
 
     // Based on CST structure analysis:
@@ -343,17 +343,17 @@ export class PrimitiveVisitor extends BaseASTVisitor {
             // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
             // This is a temporary fix until the root cause is resolved
             const truncatedNameMap: { [key: string]: string } = {
-              'sphe': 'sphere',
-              'cyli': 'cylinder',
-              'tran': 'translate',
-              'unio': 'union',
-              'diff': 'difference',
-              'inte': 'intersection',
-              'rota': 'rotate',
-              'scal': 'scale',
-              'mirr': 'mirror',
-              'colo': 'color',
-              'mult': 'multmatrix'
+              sphe: 'sphere',
+              cyli: 'cylinder',
+              tran: 'translate',
+              unio: 'union',
+              diff: 'difference',
+              inte: 'intersection',
+              rota: 'rotate',
+              scal: 'scale',
+              mirr: 'mirror',
+              colo: 'color',
+              mult: 'multmatrix',
             };
 
             if (functionName && truncatedNameMap[functionName]) {
@@ -393,28 +393,17 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     }
 
     if (!functionName) {
-      console.log(
-        `[PrimitiveVisitor.visitAccessorExpression] No function name found`
-      );
+      console.log(`[PrimitiveVisitor.visitAccessorExpression] No function name found`);
       return null;
     }
 
-    console.log(
-      `[PrimitiveVisitor.visitAccessorExpression] Function name: ${functionName}`
-    );
+    console.log(`[PrimitiveVisitor.visitAccessorExpression] Function name: ${functionName}`);
 
     // Check if this is a primitive shape function
     if (
-      ![
-        'cube',
-        'sphere',
-        'cylinder',
-        'polyhedron',
-        'square',
-        'circle',
-        'polygon',
-        'text',
-      ].includes(functionName)
+      !['cube', 'sphere', 'cylinder', 'polyhedron', 'square', 'circle', 'polygon', 'text'].includes(
+        functionName
+      )
     ) {
       console.log(
         `[PrimitiveVisitor.visitAccessorExpression] Not a primitive shape function: ${functionName}`
@@ -431,7 +420,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
       // Based on CST structure: argument_list contains 'arguments' node which contains the actual arguments
       const argumentsNode = argsNode.namedChildren.find(
-        child => child && child.type === 'arguments'
+        (child) => child && child.type === 'arguments'
       );
 
       if (argumentsNode) {
@@ -453,9 +442,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         );
       }
     } else {
-      console.log(
-        `[PrimitiveVisitor.visitAccessorExpression] No argument_list found`
-      );
+      console.log(`[PrimitiveVisitor.visitAccessorExpression] No argument_list found`);
     }
 
     // Process based on function name
@@ -496,10 +483,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @param args The arguments to the function
    * @returns The cube AST node or null if the arguments are invalid
    */
-  private createCubeNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.CubeNode | null {
+  private createCubeNode(node: TSNode, args: ast.Parameter[]): ast.CubeNode | null {
     console.log(
       `[PrimitiveVisitor.createCubeNode] Creating cube node with ${args.length} arguments`
     );
@@ -611,20 +595,17 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @param args The arguments to the function
    * @returns The sphere AST node or null if the arguments are invalid
    */
-  private createSphereNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.SphereNode | null {
+  private createSphereNode(node: TSNode, args: ast.Parameter[]): ast.SphereNode | null {
     console.log(
       `[PrimitiveVisitor.createSphereNode] Creating sphere node with ${args.length} arguments`
     );
 
     // Default values
     let radius = 1;
-    let diameter: number | undefined = undefined;
-    let fa: number | undefined = undefined;
-    let fs: number | undefined = undefined;
-    let fn: number | undefined = undefined;
+    let diameter: number | undefined;
+    let fa: number | undefined;
+    let fs: number | undefined;
+    let fn: number | undefined;
 
     // Process all parameters
     for (let i = 0; i < args.length; i++) {
@@ -636,9 +617,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         const radiusValue = extractNumberParameter(arg);
         if (radiusValue !== null) {
           radius = radiusValue;
-          console.log(
-            `[PrimitiveVisitor.createSphereNode] Found radius parameter: ${radius}`
-          );
+          console.log(`[PrimitiveVisitor.createSphereNode] Found radius parameter: ${radius}`);
         } else {
           console.log(
             `[PrimitiveVisitor.createSphereNode] Invalid radius parameter: ${JSON.stringify(
@@ -669,9 +648,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         const fnValue = extractNumberParameter(arg);
         if (fnValue !== null) {
           fn = fnValue;
-          console.log(
-            `[PrimitiveVisitor.createSphereNode] Found $fn parameter: ${fn}`
-          );
+          console.log(`[PrimitiveVisitor.createSphereNode] Found $fn parameter: ${fn}`);
         } else {
           console.log(
             `[PrimitiveVisitor.createSphereNode] Invalid $fn parameter: ${JSON.stringify(
@@ -685,9 +662,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         const faValue = extractNumberParameter(arg);
         if (faValue !== null) {
           fa = faValue;
-          console.log(
-            `[PrimitiveVisitor.createSphereNode] Found $fa parameter: ${fa}`
-          );
+          console.log(`[PrimitiveVisitor.createSphereNode] Found $fa parameter: ${fa}`);
         } else {
           console.log(
             `[PrimitiveVisitor.createSphereNode] Invalid $fa parameter: ${JSON.stringify(
@@ -701,9 +676,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         const fsValue = extractNumberParameter(arg);
         if (fsValue !== null) {
           fs = fsValue;
-          console.log(
-            `[PrimitiveVisitor.createSphereNode] Found $fs parameter: ${fs}`
-          );
+          console.log(`[PrimitiveVisitor.createSphereNode] Found $fs parameter: ${fs}`);
         } else {
           console.log(
             `[PrimitiveVisitor.createSphereNode] Invalid $fs parameter: ${JSON.stringify(
@@ -749,10 +722,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @param args The arguments to the function
    * @returns The cylinder AST node or null if the arguments are invalid
    */
-  private createCylinderNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.CylinderNode | null {
+  private createCylinderNode(node: TSNode, args: ast.Parameter[]): ast.CylinderNode | null {
     console.log(
       `[PrimitiveVisitor.createCylinderNode] Creating cylinder node with ${args.length} arguments`
     );
@@ -762,14 +732,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     let radius1 = 1;
     let radius2 = 1;
     let center = false;
-    let fa: number | undefined = undefined;
-    let fs: number | undefined = undefined;
-    let fn: number | undefined = undefined;
+    let fa: number | undefined;
+    let fs: number | undefined;
+    let fn: number | undefined;
 
     // Extract height parameter
-    const heightParam = args.find(
-      arg => arg.name === undefined || arg.name === 'h'
-    );
+    const heightParam = args.find((arg) => arg.name === undefined || arg.name === 'h');
     if (heightParam) {
       const heightValue = extractNumberParameter(heightParam);
       if (heightValue !== null) {
@@ -784,7 +752,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     }
 
     // Handle diameter parameters first (they take precedence over radius)
-    const diameterParam = args.find(arg => arg.name === 'd');
+    const diameterParam = args.find((arg) => arg.name === 'd');
     if (diameterParam) {
       const diameterValue = extractNumberParameter(diameterParam);
       if (diameterValue !== null) {
@@ -793,7 +761,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       }
     }
 
-    const diameter1Param = args.find(arg => arg.name === 'd1');
+    const diameter1Param = args.find((arg) => arg.name === 'd1');
     if (diameter1Param) {
       const diameter1Value = extractNumberParameter(diameter1Param);
       if (diameter1Value !== null) {
@@ -801,7 +769,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       }
     }
 
-    const diameter2Param = args.find(arg => arg.name === 'd2');
+    const diameter2Param = args.find((arg) => arg.name === 'd2');
     if (diameter2Param) {
       const diameter2Value = extractNumberParameter(diameter2Param);
       if (diameter2Value !== null) {
@@ -811,7 +779,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
     // If no diameter parameters, check for radius parameters
     if (!diameterParam && !diameter1Param && !diameter2Param) {
-      const radiusParam = args.find(arg => arg.name === 'r');
+      const radiusParam = args.find((arg) => arg.name === 'r');
       if (radiusParam) {
         const radiusValue = extractNumberParameter(radiusParam);
         if (radiusValue !== null) {
@@ -828,7 +796,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       }
 
       // Check for specific radius1 and radius2 parameters (override general radius)
-      const radius1Param = args.find(arg => arg.name === 'r1');
+      const radius1Param = args.find((arg) => arg.name === 'r1');
       if (radius1Param) {
         const radius1Value = extractNumberParameter(radius1Param);
         if (radius1Value !== null) {
@@ -836,7 +804,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         }
       }
 
-      const radius2Param = args.find(arg => arg.name === 'r2');
+      const radius2Param = args.find((arg) => arg.name === 'r2');
       if (radius2Param) {
         const radius2Value = extractNumberParameter(radius2Param);
         if (radius2Value !== null) {
@@ -846,7 +814,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     }
 
     // Extract center parameter
-    const centerParam = args.find(arg => arg.name === 'center');
+    const centerParam = args.find((arg) => arg.name === 'center');
     if (centerParam) {
       const centerValue = extractBooleanParameter(centerParam);
       if (centerValue !== null) {
@@ -855,7 +823,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     }
 
     // Extract $fa, $fs, $fn parameters
-    const faParam = args.find(arg => arg.name === '$fa');
+    const faParam = args.find((arg) => arg.name === '$fa');
     if (faParam) {
       const faValue = extractNumberParameter(faParam);
       if (faValue !== null) {
@@ -863,7 +831,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       }
     }
 
-    const fsParam = args.find(arg => arg.name === '$fs');
+    const fsParam = args.find((arg) => arg.name === '$fs');
     if (fsParam) {
       const fsValue = extractNumberParameter(fsParam);
       if (fsValue !== null) {
@@ -871,7 +839,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       }
     }
 
-    const fnParam = args.find(arg => arg.name === '$fn');
+    const fnParam = args.find((arg) => arg.name === '$fn');
     if (fnParam) {
       const fnValue = extractNumberParameter(fnParam);
       if (fnValue !== null) {

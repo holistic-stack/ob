@@ -76,8 +76,8 @@
  * @since 0.1.0
  */
 
-import * as ast from '../ast-types.js';
-import { ErrorHandler } from '../../error-handling/index.js';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { evaluateBinaryExpression } from '../evaluation/binary-expression-evaluator/binary-expression-evaluator.js';
 import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
 
@@ -103,14 +103,9 @@ import { evaluateExpression } from '../evaluation/expression-evaluator-registry.
  * }
  * ```
  */
-export function isExpressionNode(
-  value: ast.ParameterValue
-): value is ast.ExpressionNode {
+export function isExpressionNode(value: ast.ParameterValue): value is ast.ExpressionNode {
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    'type' in value &&
-    value.type === 'expression'
+    typeof value === 'object' && value !== null && 'type' in value && value.type === 'expression'
   );
 }
 
@@ -182,7 +177,10 @@ export function isExpressionNode(
  * }
  * ```
  */
-export function extractNumberParameter(param: ast.Parameter, errorHandler?: ErrorHandler): number | null {
+export function extractNumberParameter(
+  param: ast.Parameter,
+  errorHandler?: ErrorHandler
+): number | null {
   if (!param?.value) return null;
 
   // Handle number as raw value
@@ -212,35 +210,62 @@ export function extractNumberParameter(param: ast.Parameter, errorHandler?: Erro
 
     // Handle binary expressions directly
     if (param.value.expressionType === 'binary' && errorHandler) {
-      console.log(`[extractNumberParameter] Attempting to evaluate binary expression:`, JSON.stringify(param.value, null, 2));
+      console.log(
+        `[extractNumberParameter] Attempting to evaluate binary expression:`,
+        JSON.stringify(param.value, null, 2)
+      );
       try {
         // Direct evaluation of binary expression
         const binaryExpr = param.value as ast.BinaryExpressionNode;
-        
+
         // Get the left and right operand values
-        const leftValue = extractNumberParameter({ name: '', value: binaryExpr.left }, errorHandler);
-        const rightValue = extractNumberParameter({ name: '', value: binaryExpr.right }, errorHandler);
-        
-        console.log(`[extractNumberParameter] Binary expression operands: left=${leftValue}, right=${rightValue}, op=${binaryExpr.operator}`);
-        
+        const leftValue = extractNumberParameter(
+          { name: '', value: binaryExpr.left },
+          errorHandler
+        );
+        const rightValue = extractNumberParameter(
+          { name: '', value: binaryExpr.right },
+          errorHandler
+        );
+
+        console.log(
+          `[extractNumberParameter] Binary expression operands: left=${leftValue}, right=${rightValue}, op=${binaryExpr.operator}`
+        );
+
         if (leftValue !== null && rightValue !== null) {
           // Evaluate based on operator
           let result: number;
           switch (binaryExpr.operator) {
-            case '+': result = leftValue + rightValue; break;
-            case '-': result = leftValue - rightValue; break;
-            case '*': result = leftValue * rightValue; break;
-            case '/': result = leftValue / rightValue; break;
-            case '%': result = leftValue % rightValue; break;
+            case '+':
+              result = leftValue + rightValue;
+              break;
+            case '-':
+              result = leftValue - rightValue;
+              break;
+            case '*':
+              result = leftValue * rightValue;
+              break;
+            case '/':
+              result = leftValue / rightValue;
+              break;
+            case '%':
+              result = leftValue % rightValue;
+              break;
             default:
-              console.warn(`[extractNumberParameter] Unsupported binary operator: ${binaryExpr.operator}`);
+              console.warn(
+                `[extractNumberParameter] Unsupported binary operator: ${binaryExpr.operator}`
+              );
               return null;
           }
-          
-          console.log(`[extractNumberParameter] Evaluated ${leftValue} ${binaryExpr.operator} ${rightValue} = ${result}`);
+
+          console.log(
+            `[extractNumberParameter] Evaluated ${leftValue} ${binaryExpr.operator} ${rightValue} = ${result}`
+          );
           return result;
         } else {
-          console.warn(`[extractNumberParameter] Could not extract numeric values from binary expression operands`);
+          console.warn(
+            `[extractNumberParameter] Could not extract numeric values from binary expression operands`
+          );
           return null;
         }
       } catch (error) {
@@ -248,16 +273,19 @@ export function extractNumberParameter(param: ast.Parameter, errorHandler?: Erro
         return null;
       }
     }
-    
+
     // Handle other expression types
     if (errorHandler) {
-      console.log(`[extractNumberParameter] Attempting to evaluate expression:`, JSON.stringify(param.value, null, 2));
+      console.log(
+        `[extractNumberParameter] Attempting to evaluate expression:`,
+        JSON.stringify(param.value, null, 2)
+      );
       try {
         // Use the expression evaluator registry for non-binary expressions
         const result = evaluateExpression(param.value, errorHandler);
-        
+
         console.log(`[extractNumberParameter] Expression evaluation result:`, result);
-        
+
         // Check if the result is a number
         if (result !== null && typeof result === 'number') {
           return result;
@@ -289,7 +317,10 @@ export function extractNumberParameter(param: ast.Parameter, errorHandler?: Erro
  * @param errorHandler Optional error handler for enhanced expression evaluation
  * @returns The boolean value or null if the parameter is not a boolean
  */
-export function extractBooleanParameter(param: ast.Parameter, _errorHandler?: ErrorHandler): boolean | null {
+export function extractBooleanParameter(
+  param: ast.Parameter,
+  _errorHandler?: ErrorHandler
+): boolean | null {
   if (!param?.value) return null;
 
   // Handle boolean as raw value
@@ -351,10 +382,7 @@ export function extractVectorParameter(param: ast.Parameter): number[] | null {
   if (!param?.value) return null;
 
   // Handle Vector2D or Vector3D as raw value
-  if (
-    Array.isArray(param.value) &&
-    param.value.every(v => typeof v === 'number')
-  ) {
+  if (Array.isArray(param.value) && param.value.every((v) => typeof v === 'number')) {
     return param.value as number[];
   }
 
@@ -381,20 +409,12 @@ export function extractVectorParameter(param: ast.Parameter): number[] | null {
 
   // Try to parse the value as a vector if it's a string
   if (typeof param.value === 'string') {
-    const matches = param.value.match(
-      /\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/
-    );
+    const matches = param.value.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
     if (matches && matches.length === 4 && matches[1] && matches[2] && matches[3]) {
-      return [
-        parseFloat(matches[1]),
-        parseFloat(matches[2]),
-        parseFloat(matches[3]),
-      ];
+      return [parseFloat(matches[1]), parseFloat(matches[2]), parseFloat(matches[3])];
     }
 
-    const matches2D = param.value.match(
-      /\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/
-    );
+    const matches2D = param.value.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
     if (matches2D && matches2D.length === 3 && matches2D[1] && matches2D[2]) {
       return [parseFloat(matches2D[1]), parseFloat(matches2D[2])];
     }
@@ -408,16 +428,14 @@ export function extractVectorParameter(param: ast.Parameter): number[] | null {
  * @param param The parameter object
  * @returns The range values as an array of numbers or null if the parameter is not a range
  */
-export function extractRangeParameter(
-  param: ast.Parameter
-): [number, number, number] | null {
+export function extractRangeParameter(param: ast.Parameter): [number, number, number] | null {
   if (!param?.value) return null;
 
   // Handle array as raw value with 2 or 3 elements
   if (
     Array.isArray(param.value) &&
     param.value.length >= 2 &&
-    param.value.every(v => typeof v === 'number')
+    param.value.every((v) => typeof v === 'number')
   ) {
     if (param.value.length === 2) {
       return [param.value[0], param.value[1], 1];
@@ -435,15 +453,9 @@ export function extractRangeParameter(
 
   // Try to parse the value as a range if it's a string
   if (typeof param.value === 'string') {
-    const matches = param.value.match(
-      /\[\s*([\d.+-]+)\s*:\s*([\d.+-]+)\s*:\s*([\d.+-]+)\s*\]/
-    );
+    const matches = param.value.match(/\[\s*([\d.+-]+)\s*:\s*([\d.+-]+)\s*:\s*([\d.+-]+)\s*\]/);
     if (matches && matches.length === 4 && matches[1] && matches[2] && matches[3]) {
-      return [
-        parseFloat(matches[1]),
-        parseFloat(matches[3]),
-        parseFloat(matches[2]),
-      ];
+      return [parseFloat(matches[1]), parseFloat(matches[3]), parseFloat(matches[2])];
     }
 
     const matches2 = param.value.match(/\[\s*([\d.+-]+)\s*:\s*([\d.+-]+)\s*\]/);
@@ -460,24 +472,16 @@ export function extractRangeParameter(
  * @param param The parameter object
  * @returns The identifier value or null if the parameter is not an identifier
  */
-export function extractIdentifierParameter(
-  param: ast.Parameter
-): string | null {
+export function extractIdentifierParameter(param: ast.Parameter): string | null {
   if (!param?.value) return null;
 
   // Handle string as identifier
-  if (
-    typeof param.value === 'string' &&
-    /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(param.value)
-  ) {
+  if (typeof param.value === 'string' && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(param.value)) {
     return param.value;
   }
 
   // Handle expression node
-  if (
-    isExpressionNode(param.value) &&
-    param.value.expressionType === 'variable'
-  ) {
+  if (isExpressionNode(param.value) && param.value.expressionType === 'variable') {
     return (param.value as ast.VariableNode).name;
   }
 

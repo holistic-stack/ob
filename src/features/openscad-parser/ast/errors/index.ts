@@ -8,6 +8,6 @@
  */
 
 export * from './parser-error';
-export * from './syntax-error';
-export * from './semantic-error';
 export * from './recovery-strategy';
+export * from './semantic-error';
+export * from './syntax-error';

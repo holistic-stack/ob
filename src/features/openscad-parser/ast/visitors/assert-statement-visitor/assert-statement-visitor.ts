@@ -37,12 +37,12 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import { BaseASTVisitor } from '../base-ast-visitor.js';
-import { ErrorHandler } from '../../../error-handling/index.js';
-import * as ast from '../../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../error-handling/index.js';
+import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
+import { BaseASTVisitor } from '../base-ast-visitor.js';
 
 /**
  * Visitor class for processing OpenSCAD assert statements.
@@ -87,7 +87,10 @@ export class AssertStatementVisitor extends BaseASTVisitor {
    * const visitor = new AssertStatementVisitor(sourceCode, errorHandler);
    * ```
    */
-  constructor(sourceCode: string, protected override errorHandler: ErrorHandler) {
+  constructor(
+    sourceCode: string,
+    protected override errorHandler: ErrorHandler
+  ) {
     super(sourceCode, errorHandler);
   }
 
@@ -120,7 +123,12 @@ export class AssertStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private safeLog(level: 'info' | 'debug' | 'warning' | 'error', message: string, context?: string, node?: unknown): void {
+  private safeLog(
+    level: 'info' | 'debug' | 'warning' | 'error',
+    message: string,
+    context?: string,
+    node?: unknown
+  ): void {
     if (this.errorHandler) {
       switch (level) {
         case 'info':
@@ -356,9 +364,15 @@ export class AssertStatementVisitor extends BaseASTVisitor {
 
     // Fallback: look for common expression types as direct children
     const expressionTypes = [
-      'boolean', 'number', 'string', 'identifier',
-      'binary_expression', 'unary_expression', 'function_call',
-      'parenthesized_expression', 'expression'
+      'boolean',
+      'number',
+      'string',
+      'identifier',
+      'binary_expression',
+      'unary_expression',
+      'function_call',
+      'parenthesized_expression',
+      'expression',
     ];
 
     for (const expressionType of expressionTypes) {
@@ -427,7 +441,10 @@ export class AssertStatementVisitor extends BaseASTVisitor {
       }
 
       // If we found a comma and this is an expression, it's the message
-      if (foundComma && (child.type === 'string' || child.type === 'identifier' || child.type === 'expression')) {
+      if (
+        foundComma &&
+        (child.type === 'string' || child.type === 'identifier' || child.type === 'expression')
+      ) {
         this.safeLog(
           'info',
           `[AssertStatementVisitor.findMessageExpression] Found message via fallback: ${child.type}`,

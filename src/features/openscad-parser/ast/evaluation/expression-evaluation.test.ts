@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
 import { extractCubeNode } from '../extractors/cube-extractor.js';
 
 describe('Enhanced Expression Evaluation', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
   });
@@ -16,21 +16,23 @@ describe('Enhanced Expression Evaluation', () => {
   afterEach(() => {
     parser.dispose();
   });
-  
+
   // Add a simple test to verify binary expression node creation
   it('should create a binary expression node', () => {
     const code = 'x = 1 + 2;';
     console.log('Testing simple binary expression:', code);
-    
+
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
-    
+
     // Find the binary expression node
     function findBinaryExpressionNode(node: any): any {
       console.log(`Checking node: ${node.type} - "${node.text}"`);
-      if (node.type === 'binary_expression' || 
-          node.type === 'additive_expression' || 
-          node.type === 'multiplicative_expression') {
+      if (
+        node.type === 'binary_expression' ||
+        node.type === 'additive_expression' ||
+        node.type === 'multiplicative_expression'
+      ) {
         console.log(`Found binary expression node: ${node.type}`);
         return node;
       }
@@ -43,28 +45,28 @@ describe('Enhanced Expression Evaluation', () => {
       }
       return null;
     }
-    
+
     const binaryExprNode = findBinaryExpressionNode(tree.rootNode);
     console.log('Binary expression node search result:', binaryExprNode);
     expect(binaryExprNode).not.toBeNull();
-    
+
     if (binaryExprNode) {
       console.log('Binary expression node type:', binaryExprNode.type);
       console.log('Binary expression node text:', binaryExprNode.text);
-      
+
       // Check the left and right operands and operator
       const leftNode = binaryExprNode.childForFieldName('left') || binaryExprNode.child(0);
       const operatorNode = binaryExprNode.childForFieldName('operator') || binaryExprNode.child(1);
       const rightNode = binaryExprNode.childForFieldName('right') || binaryExprNode.child(2);
-      
+
       console.log('Left node:', leftNode?.type, leftNode?.text);
       console.log('Operator node:', operatorNode?.type, operatorNode?.text);
       console.log('Right node:', rightNode?.type, rightNode?.text);
-      
+
       expect(leftNode).not.toBeNull();
       expect(operatorNode).not.toBeNull();
       expect(rightNode).not.toBeNull();
-      
+
       expect(leftNode?.text).toBe('1');
       expect(operatorNode?.text).toBe('+');
       expect(rightNode?.text).toBe('2');
@@ -80,7 +82,7 @@ describe('Enhanced Expression Evaluation', () => {
     expect(tree).toBeDefined();
     console.log('Tree root node type:', tree.rootNode.type);
     console.log('Tree root node text:', tree.rootNode.text);
-    
+
     // Let's print the entire tree structure for debugging
     function printNodeRecursive(node: any, depth = 0) {
       const indent = '  '.repeat(depth);
@@ -92,15 +94,17 @@ describe('Enhanced Expression Evaluation', () => {
         }
       }
     }
-    
+
     console.log('Full tree structure:');
     printNodeRecursive(tree.rootNode);
 
     // Find the cube function call
     function findCubeNode(node: any): any {
       console.log(`Checking node: ${node.type} - "${node.text}"`);
-      if ((node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
-          node.text.includes('cube')) {
+      if (
+        (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
+        node.text.includes('cube')
+      ) {
         console.log(`Found potential cube node: ${node.type}`);
         return node;
       }
@@ -139,8 +143,10 @@ describe('Enhanced Expression Evaluation', () => {
 
     // Find the cube function call
     function findCubeNode(node: any): any {
-      if ((node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
-          node.text.includes('cube')) {
+      if (
+        (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
+        node.text.includes('cube')
+      ) {
         return node;
       }
       for (let i = 0; i < node.childCount; i++) {
@@ -177,8 +183,10 @@ describe('Enhanced Expression Evaluation', () => {
 
     // Find the cube function call
     function findCubeNode(node: any): any {
-      if ((node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
-          node.text.includes('cube')) {
+      if (
+        (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
+        node.text.includes('cube')
+      ) {
         return node;
       }
       for (let i = 0; i < node.childCount; i++) {

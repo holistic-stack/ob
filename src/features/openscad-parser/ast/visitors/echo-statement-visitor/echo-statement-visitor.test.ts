@@ -8,12 +8,12 @@
  * @since 0.1.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../../index.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from '../../../openscad-parser';
 import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
 
 describe('EchoStatementVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   beforeEach(async () => {
@@ -140,7 +140,7 @@ describe('EchoStatementVisitor', () => {
       const expectedNames = ['a', 'b', 'c', 'd', 'e'];
       echoNode.arguments.forEach((arg, index) => {
         expect(['variable', 'identifier']).toContain(arg.expressionType);
-        expect((arg).name).toBe(expectedNames[index]);
+        expect(arg.name).toBe(expectedNames[index]);
       });
     });
   });
@@ -189,7 +189,9 @@ describe('EchoStatementVisitor', () => {
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
-      expect(['array', 'vector', 'vector_expression']).toContain(echoNode.arguments[0].expressionType);
+      expect(['array', 'vector', 'vector_expression']).toContain(
+        echoNode.arguments[0].expressionType
+      );
 
       const arrayExpr = echoNode.arguments[0] as any;
       const items = arrayExpr.items || arrayExpr.elements;

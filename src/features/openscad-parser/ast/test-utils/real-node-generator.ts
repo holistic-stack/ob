@@ -16,8 +16,8 @@
  * ```
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import { OpenscadParser } from '../../openscad-parser.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser';
 
 /**
  * Utility class for generating real Tree-sitter nodes for testing
@@ -99,9 +99,7 @@ export class RealNodeGenerator {
     }
 
     // Look for binary expression type (unified in current grammar)
-    const binaryTypes = [
-      'binary_expression'
-    ];
+    const binaryTypes = ['binary_expression'];
 
     for (const type of binaryTypes) {
       const node = this.findNodeByType(tree.rootNode, type);

@@ -114,7 +114,7 @@
  * @since 0.1.0
  */
 
-import { ParserError, ErrorCode } from '../types/error-types.js';
+import { ErrorCode, type ParserError } from '../types/error-types.js';
 import { BaseRecoveryStrategy } from './recovery-strategy.js';
 
 type BracketType = 'PAREN' | 'BRACKET' | 'BRACE';
@@ -177,10 +177,8 @@ export class UnclosedBracketStrategy extends BaseRecoveryStrategy {
       error.code === ErrorCode.UNCLOSED_BRACKET ||
       error.code === ErrorCode.UNCLOSED_BRACE ||
       (error.code === ErrorCode.SYNTAX_ERROR &&
-       (error.message.includes('missing') &&
-        (error.message.includes(')') ||
-         error.message.includes(']') ||
-         error.message.includes('}'))))
+        error.message.includes('missing') &&
+        (error.message.includes(')') || error.message.includes(']') || error.message.includes('}')))
     );
   }
 
@@ -193,10 +191,10 @@ export class UnclosedBracketStrategy extends BaseRecoveryStrategy {
     if (unclosedBrackets.length === 0) return null;
 
     // For braces, add on a new line
-    if (unclosedBrackets.some(bracket => bracket.close === '}')) {
+    if (unclosedBrackets.some((bracket) => bracket.close === '}')) {
       // If there are braces, handle them specially
-      const nonBraces = unclosedBrackets.filter(bracket => bracket.close !== '}');
-      const braces = unclosedBrackets.filter(bracket => bracket.close === '}');
+      const nonBraces = unclosedBrackets.filter((bracket) => bracket.close !== '}');
+      const braces = unclosedBrackets.filter((bracket) => bracket.close === '}');
 
       let result = code;
       // Add non-brace brackets at the end in reverse order
@@ -228,10 +226,7 @@ export class UnclosedBracketStrategy extends BaseRecoveryStrategy {
   /**
    * Finds the last unclosed bracket in the given line
    */
-  private findLastUnclosedBracket(
-    line: string,
-    errorPosition: number
-  ): BracketInfo | null {
+  private findLastUnclosedBracket(line: string, errorPosition: number): BracketInfo | null {
     const stack: BracketInfo[] = [];
 
     // Scan the line up to the error position
@@ -336,15 +331,20 @@ export class UnclosedBracketStrategy extends BaseRecoveryStrategy {
    * Gets a human-readable description of the recovery action
    */
   getRecoverySuggestion(error: ParserError): string {
-    if (error.code === ErrorCode.UNCLOSED_PAREN ||
-        (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes(')'))
+    if (
+      error.code === ErrorCode.UNCLOSED_PAREN ||
+      (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes(')'))
     ) {
       return 'Insert missing closing parenthesis';
-    } else if (error.code === ErrorCode.UNCLOSED_BRACKET ||
-               (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes(']'))) {
+    } else if (
+      error.code === ErrorCode.UNCLOSED_BRACKET ||
+      (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes(']'))
+    ) {
       return 'Insert missing closing bracket';
-    } else if (error.code === ErrorCode.UNCLOSED_BRACE ||
-               (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes('}'))) {
+    } else if (
+      error.code === ErrorCode.UNCLOSED_BRACE ||
+      (error.code === ErrorCode.SYNTAX_ERROR && error.message.includes('}'))
+    ) {
       return 'Insert missing closing brace';
     }
     return 'Insert missing closing bracket/brace/parenthesis';

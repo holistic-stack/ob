@@ -7,7 +7,7 @@
  * @module lib/openscad-parser/ast/errors/syntax-error
  */
 
-import { ParserError, type ErrorPosition, type ErrorSuggestion } from './parser-error.js';
+import { type ErrorPosition, type ErrorSuggestion, ParserError } from './parser-error.js';
 
 /**
  * SyntaxError class for syntax errors in the parser
@@ -111,10 +111,7 @@ export class SyntaxError extends ParserError {
    * @param position - The position in the source code
    * @returns A SyntaxError for a missing semicolon
    */
-  public static missingSemicolon(
-    source: string,
-    position: ErrorPosition
-  ): SyntaxError {
+  public static missingSemicolon(source: string, position: ErrorPosition): SyntaxError {
     const message = `Missing semicolon`;
     const suggestions: ErrorSuggestion[] = [
       {

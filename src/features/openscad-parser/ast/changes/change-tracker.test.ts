@@ -7,7 +7,7 @@
 
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ChangeTracker } from './change-tracker.js';
 
 describe('ChangeTracker', () => {

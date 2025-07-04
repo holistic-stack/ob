@@ -1,9 +1,9 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../../ast-types.js';
-import { BaseASTVisitor } from '../../base-ast-visitor.js';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type * as ast from '../../../ast-types.js';
 import { getLocation } from '../../../utils/location-utils.js';
+import { BaseASTVisitor } from '../../base-ast-visitor.js';
+import type { ExpressionVisitor } from '../../expression-visitor.js';
 
 export class ParenthesizedExpressionVisitor extends BaseASTVisitor {
   constructor(
@@ -23,14 +23,15 @@ export class ParenthesizedExpressionVisitor extends BaseASTVisitor {
     return null;
   }
 
-  visit(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null { // Returns the inner expression's AST node
+  visit(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
+    // Returns the inner expression's AST node
     if (node.type !== 'parenthesized_expression') {
       const error = this.errorHandler.createParserError(
         `Expected 'parenthesized_expression' but got '${node.type}'`,
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -47,7 +48,7 @@ export class ParenthesizedExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);

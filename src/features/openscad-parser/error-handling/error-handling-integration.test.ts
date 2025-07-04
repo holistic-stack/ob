@@ -3,11 +3,11 @@
  * @module openscad-parser/error-handling/error-handling-integration.test
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ErrorHandler } from './error-handler.js';
 import { Logger } from './logger.js';
 import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
-import { Severity, ErrorCode, ParserError } from './types/error-types.js';
+import { ErrorCode, ParserError, Severity } from './types/error-types.js';
 
 describe('Error Handling Integration', () => {
   let errorHandler: ErrorHandler;
@@ -55,8 +55,18 @@ describe('Error Handling Integration', () => {
 
     it('should filter errors by severity', () => {
       // Create errors with specific severities using the ParserError constructor directly
-      const debugError = new ParserError('Debug message', ErrorCode.INTERNAL_ERROR, Severity.DEBUG, {});
-      const warningError = new ParserError('Warning message', ErrorCode.VALIDATION_ERROR, Severity.WARNING, {});
+      const debugError = new ParserError(
+        'Debug message',
+        ErrorCode.INTERNAL_ERROR,
+        Severity.DEBUG,
+        {}
+      );
+      const warningError = new ParserError(
+        'Warning message',
+        ErrorCode.VALIDATION_ERROR,
+        Severity.WARNING,
+        {}
+      );
       const errorError = errorHandler.createSyntaxError('Error message', {});
 
       errorHandler.report(debugError);
@@ -94,9 +104,9 @@ describe('Error Handling Integration', () => {
       });
 
       logger.debug('Debug message'); // Should not be logged
-      logger.info('Info message');   // Should not be logged
+      logger.info('Info message'); // Should not be logged
       logger.warn('Warning message'); // Should be logged
-      logger.error('Error message');  // Should be logged
+      logger.error('Error message'); // Should be logged
 
       expect(messages).toHaveLength(2);
       expect(messages[0]).toContain('Warning message');

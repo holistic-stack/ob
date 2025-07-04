@@ -5,8 +5,11 @@
  * Uses the Strategy pattern to allow different evaluation approaches.
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import type { ExpressionEvaluationContext, EvaluationResult } from './expression-evaluation-context.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type {
+  EvaluationResult,
+  ExpressionEvaluationContext,
+} from './expression-evaluation-context.js';
 
 /**
  * Base interface for expression evaluators
@@ -70,11 +73,14 @@ export abstract class BaseExpressionEvaluator implements IExpressionEvaluator {
   /**
    * Helper to create error result
    */
-  protected createErrorResult(message: string, context: ExpressionEvaluationContext): EvaluationResult {
+  protected createErrorResult(
+    message: string,
+    context: ExpressionEvaluationContext
+  ): EvaluationResult {
     context.getOptions(); // Access context for error handling
     return {
       value: null,
-      type: 'undef'
+      type: 'undef',
     };
   }
 
@@ -82,8 +88,12 @@ export abstract class BaseExpressionEvaluator implements IExpressionEvaluator {
    * Helper to validate numeric operands
    */
   protected validateNumericOperands(left: EvaluationResult, right: EvaluationResult): boolean {
-    return left.type === 'number' && right.type === 'number' &&
-           typeof left.value === 'number' && typeof right.value === 'number';
+    return (
+      left.type === 'number' &&
+      right.type === 'number' &&
+      typeof left.value === 'number' &&
+      typeof right.value === 'number'
+    );
   }
 
   /**
@@ -154,7 +164,7 @@ export class LiteralEvaluator extends BaseExpressionEvaluator {
         const numValue = parseFloat(node.text);
         result = {
           value: isNaN(numValue) ? 0 : numValue,
-          type: 'number'
+          type: 'number',
         };
         break;
       }
@@ -167,7 +177,7 @@ export class LiteralEvaluator extends BaseExpressionEvaluator {
         }
         result = {
           value: stringValue,
-          type: 'string'
+          type: 'string',
         };
         break;
       }
@@ -176,21 +186,21 @@ export class LiteralEvaluator extends BaseExpressionEvaluator {
       case 'true':
         result = {
           value: true,
-          type: 'boolean'
+          type: 'boolean',
         };
         break;
 
       case 'false':
         result = {
           value: false,
-          type: 'boolean'
+          type: 'boolean',
         };
         break;
 
       case 'undef':
         result = {
           value: null,
-          type: 'undef'
+          type: 'undef',
         };
         break;
 
@@ -226,7 +236,7 @@ export class IdentifierEvaluator extends BaseExpressionEvaluator {
     // Return undef for undefined variables
     return {
       value: null,
-      type: 'undef'
+      type: 'undef',
     };
   }
 }

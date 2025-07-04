@@ -1,25 +1,17 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from 'vitest';
-import { PrimitiveVisitor } from './primitive-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import { findDescendantOfType } from '../utils/node-utils.js';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { findDescendantOfType } from '../utils/node-utils.js';
+import { PrimitiveVisitor } from './primitive-visitor.js';
 
 describe('PrimitiveVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let visitor: PrimitiveVisitor;
   let errorHandler: ErrorHandler;
 
   beforeAll(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
   });
 
@@ -101,9 +93,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -201,9 +191,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -403,9 +391,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -626,9 +612,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -715,9 +699,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -813,9 +795,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -976,9 +956,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -1067,9 +1045,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -1336,9 +1312,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -1698,9 +1672,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -1967,9 +1939,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -2329,9 +2299,7 @@ describe('PrimitiveVisitor', () => {
         });
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the method was called
       expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
@@ -2408,9 +2376,7 @@ describe('PrimitiveVisitor', () => {
       } as unknown as TSNode;
 
       // Visit the node
-      const result = visitor.visitAccessorExpression(
-        mockAccessorExpressionNode
-      );
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
       // Verify the result
       expect(result).toBeNull();
@@ -2433,10 +2399,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
   if (node.type === 'expression_statement' && type === 'module_instantiation') {
     const expression = node.firstChild;
     if (expression) {
-      const accessorExpression = findDescendantOfType(
-        expression,
-        'accessor_expression'
-      );
+      const accessorExpression = findDescendantOfType(expression, 'accessor_expression');
       if (accessorExpression) {
         return accessorExpression;
       }

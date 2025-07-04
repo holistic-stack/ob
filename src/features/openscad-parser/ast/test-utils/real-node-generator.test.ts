@@ -5,8 +5,8 @@
  * instead of using mocks.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { RealNodeGenerator, createRealNodeGenerator } from './real-node-generator.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createRealNodeGenerator, RealNodeGenerator } from './real-node-generator.js';
 
 describe('RealNodeGenerator', () => {
   let generator: RealNodeGenerator;
@@ -166,9 +166,9 @@ describe('RealNodeGenerator', () => {
     it('should throw error when not initialized', async () => {
       const uninitializedGenerator = new RealNodeGenerator();
 
-      await expect(
-        uninitializedGenerator.getCallExpressionNode('cube(10);')
-      ).rejects.toThrow('Parser not initialized');
+      await expect(uninitializedGenerator.getCallExpressionNode('cube(10);')).rejects.toThrow(
+        'Parser not initialized'
+      );
     });
   });
 

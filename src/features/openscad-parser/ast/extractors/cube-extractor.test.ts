@@ -5,18 +5,18 @@
  * Following the SRP principle, these tests focus solely on cube extraction.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
 import { extractCubeNode } from './cube-extractor.js';
-import { Node as TSNode } from 'web-tree-sitter';
 
 describe('Cube Extractor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
 
   beforeEach(async () => {
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
   });
@@ -29,8 +29,10 @@ describe('Cube Extractor', () => {
    * Helper function to find a cube node in the tree
    */
   function findCubeNode(node: TSNode): TSNode | null {
-    if ((node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
-        node.text.includes('cube')) {
+    if (
+      (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
+      node.text.includes('cube')
+    ) {
       return node;
     }
     for (let i = 0; i < node.childCount; i++) {
@@ -93,9 +95,12 @@ describe('Cube Extractor', () => {
       // Look for binary expression
       for (let i = 0; i < argsNode.childCount; i++) {
         const child = argsNode.child(i);
-        if (child && (child.type === 'binary_expression' ||
-                     child.type === 'additive_expression' ||
-                     child.type === 'multiplicative_expression')) {
+        if (
+          child &&
+          (child.type === 'binary_expression' ||
+            child.type === 'additive_expression' ||
+            child.type === 'multiplicative_expression')
+        ) {
           console.log(`Found binary expression at index ${i}: ${child.type}`);
 
           const leftNode = child.childForFieldName('left') || child.child(0);

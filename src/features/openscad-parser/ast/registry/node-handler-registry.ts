@@ -1,13 +1,10 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 
 /**
  * Type definition for a node error-handling function
  */
-export type NodeHandler = (
-  node: TSNode,
-  args: ast.Parameter[]
-) => ast.ASTNode | null;
+export type NodeHandler = (node: TSNode, args: ast.Parameter[]) => ast.ASTNode | null;
 
 /**
  * Interface for a registry of node handlers

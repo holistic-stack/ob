@@ -2,13 +2,13 @@
  * Tests for the function call visitor
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FunctionCallVisitor } from './function-call-visitor.js';
-import { OpenscadParser } from '../../../openscad-parser.js';
-import * as ast from '../../ast-types.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import { findDescendantOfType } from '../../utils/node-utils.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../../error-handling/index.js';
+import { OpenscadParser } from '../../../openscad-parser';
+import type * as ast from '../../ast-types.js';
+import { findDescendantOfType } from '../../utils/node-utils.js';
+import { FunctionCallVisitor } from './function-call-visitor.js';
 
 describe('FunctionCallVisitor', () => {
   let parser: OpenscadParser;
@@ -36,10 +36,7 @@ describe('FunctionCallVisitor', () => {
 
       // Find the module_instantiation node (function call in new grammar)
       // Note: Standalone function calls like foo(); are parsed as module_instantiation
-      const moduleInstNode = findDescendantOfType(
-        tree!.rootNode,
-        'module_instantiation'
-      );
+      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -65,10 +62,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(
-        tree!.rootNode,
-        'module_instantiation'
-      );
+      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -107,10 +101,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(
-        tree!.rootNode,
-        'module_instantiation'
-      );
+      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -145,10 +136,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(
-        tree!.rootNode,
-        'module_instantiation'
-      );
+      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -174,9 +162,7 @@ describe('FunctionCallVisitor', () => {
 
       expect(functionCallResult.args[2]?.name).toBeUndefined();
       expect((functionCallResult.args[2]?.value as ast.ExpressionNode)?.type).toBe('expression');
-      expect((functionCallResult.args[2]?.value as ast.LiteralNode)?.value).toBe(
-        'hello'
-      );
+      expect((functionCallResult.args[2]?.value as ast.LiteralNode)?.value).toBe('hello');
     });
 
     it.skip('should handle nested function calls', async () => {
@@ -189,10 +175,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(
-        tree!.rootNode,
-        'module_instantiation'
-      );
+      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -200,8 +183,9 @@ describe('FunctionCallVisitor', () => {
 
       // Mock the createExpressionNode method to handle the nested function call
       const originalMethod = (visitor as any).createExpressionNode;
-      (visitor as any).createExpressionNode = vi.fn().mockImplementation(
-        (node: TSNode): ast.ExpressionNode | null => {
+      (visitor as any).createExpressionNode = vi
+        .fn()
+        .mockImplementation((node: TSNode): ast.ExpressionNode | null => {
           if (node.text.includes('inner')) {
             return {
               type: 'expression',
@@ -220,8 +204,7 @@ describe('FunctionCallVisitor', () => {
             } as ast.ExpressionNode;
           }
           return originalMethod?.call(visitor, node) ?? null;
-        }
-      );
+        });
 
       const result = visitor.visit(moduleInstNode!);
 

@@ -44,13 +44,13 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
+import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
+import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { extractVector } from '../utils/vector-utils.js';
-import { getLocation } from '../utils/location-utils.js';
-import { ErrorHandler } from '../../error-handling/index.js';
-import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
 
 /**
  * Determines if a Tree-sitter node represents a complex expression requiring evaluation.
@@ -114,9 +114,7 @@ function isComplexExpression(node: TSNode): boolean {
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
       if (child && isComplexExpression(child)) {
-        console.log(
-          `[isComplexExpression] Found complex child in ${node.type}: ${child.type}`
-        );
+        console.log(`[isComplexExpression] Found complex child in ${node.type}: ${child.type}`);
         return true;
       }
     }
@@ -190,9 +188,7 @@ export function extractValueEnhanced(
 
   // Check if this is a complex expression that needs evaluation
   if (isComplexExpression(node) && errorHandler) {
-    console.log(
-      `[extractValueEnhanced] Detected complex expression: ${node.type}`
-    );
+    console.log(`[extractValueEnhanced] Detected complex expression: ${node.type}`);
 
     try {
       // Simplified direct evaluation approach for binary expressions
@@ -227,16 +223,14 @@ export function extractValueEnhanced(
           leftValue = evaluateBinaryExpression(leftNode);
         } else {
           const extractedLeft = extractValueEnhanced(leftNode, errorHandler);
-          leftValue =
-            typeof extractedLeft === 'number' ? extractedLeft : undefined;
+          leftValue = typeof extractedLeft === 'number' ? extractedLeft : undefined;
         }
 
         if (isComplexExpression(rightNode)) {
           rightValue = evaluateBinaryExpression(rightNode);
         } else {
           const extractedRight = extractValueEnhanced(rightNode, errorHandler);
-          rightValue =
-            typeof extractedRight === 'number' ? extractedRight : undefined;
+          rightValue = typeof extractedRight === 'number' ? extractedRight : undefined;
         }
 
         console.log(
@@ -244,9 +238,7 @@ export function extractValueEnhanced(
         );
 
         if (leftValue === undefined || rightValue === undefined) {
-          console.warn(
-            `[evaluateBinaryExpression] Could not evaluate operands`
-          );
+          console.warn(`[evaluateBinaryExpression] Could not evaluate operands`);
           return undefined;
         }
 
@@ -269,9 +261,7 @@ export function extractValueEnhanced(
             result = leftValue % rightValue;
             break;
           default:
-            console.warn(
-              `[evaluateBinaryExpression] Unsupported operator: ${operatorNode.text}`
-            );
+            console.warn(`[evaluateBinaryExpression] Unsupported operator: ${operatorNode.text}`);
             return undefined;
         }
 
@@ -293,14 +283,10 @@ export function extractValueEnhanced(
         }
       }
 
-      console.warn(
-        `[extractValueEnhanced] Could not evaluate expression directly`
-      );
+      console.warn(`[extractValueEnhanced] Could not evaluate expression directly`);
       // Fall back to simple extraction
     } catch (error) {
-      console.warn(
-        `[extractValueEnhanced] Expression evaluation failed: ${error}`
-      );
+      console.warn(`[extractValueEnhanced] Expression evaluation failed: ${error}`);
       // Fall back to simple extraction
     }
   }
@@ -383,9 +369,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       );
       // Unwrap the expression and extract from its first child
       const firstChild = node.child(0);
-      return node.childCount > 0 && firstChild
-        ? extractValue(firstChild)
-        : undefined;
+      return node.childCount > 0 && firstChild ? extractValue(firstChild) : undefined;
     }
     case 'number': {
       const numValue = parseFloat(node.text);
@@ -396,9 +380,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
     case 'string': {
       // Remove quotes from string literals
       const stringValue = node.text.substring(1, node.text.length - 1);
-      console.log(
-        `[extractValue] Extracted string from ${node.type}: "${stringValue}"`
-      );
+      console.log(`[extractValue] Extracted string from ${node.type}: "${stringValue}"`);
       return stringValue;
     }
     case 'boolean':
@@ -410,26 +392,17 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       return false;
     case 'array_literal':
       console.log(
-        `[extractValue] Calling extractVector for array_literal: ${node.text.substring(
-          0,
-          20
-        )}`
+        `[extractValue] Calling extractVector for array_literal: ${node.text.substring(0, 20)}`
       ); // DEBUG
       return extractVector(node);
     case 'array_expression':
       console.log(
-        `[extractValue] Calling extractVector for array_expression: ${node.text.substring(
-          0,
-          20
-        )}`
+        `[extractValue] Calling extractVector for array_expression: ${node.text.substring(0, 20)}`
       ); // DEBUG
       return extractVector(node);
     case 'vector_expression':
       console.log(
-        `[extractValue] Calling extractVector for vector_expression: ${node.text.substring(
-          0,
-          20
-        )}`
+        `[extractValue] Calling extractVector for vector_expression: ${node.text.substring(0, 20)}`
       ); // DEBUG
       return extractVector(node);
     case 'unary_expression': {
@@ -472,41 +445,28 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       // Check for numbers
       const num = parseFloat(text);
       if (!isNaN(num)) {
-        console.log(
-          `[extractValue] Parsed unary_expression text '${text}' as number: ${num}`
-        );
+        console.log(`[extractValue] Parsed unary_expression text '${text}' as number: ${num}`);
         return num;
       }
 
       // Check for strings
       if (text.startsWith('"') && text.endsWith('"')) {
         const stringValue = text.substring(1, text.length - 1);
-        console.log(
-          `[extractValue] Extracted string from unary_expression: "${stringValue}"`
-        );
+        console.log(`[extractValue] Extracted string from unary_expression: "${stringValue}"`);
         return stringValue;
       }
 
       // Check for booleans
       if (text === 'true') {
-        console.log(
-          `[extractValue] Extracted boolean from unary_expression: true`
-        );
+        console.log(`[extractValue] Extracted boolean from unary_expression: true`);
         return true;
       }
       if (text === 'false') {
-        console.log(
-          `[extractValue] Extracted boolean from unary_expression: false`
-        );
+        console.log(`[extractValue] Extracted boolean from unary_expression: false`);
         return false;
       }
 
-      console.warn(
-        `[extractValue] Unhandled unary_expression: ${node.text.substring(
-          0,
-          30
-        )}`
-      );
+      console.warn(`[extractValue] Unhandled unary_expression: ${node.text.substring(0, 30)}`);
       return undefined;
     }
     case 'logical_or_expression':
@@ -516,9 +476,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
     case 'additive_expression':
     case 'multiplicative_expression':
     case 'exponentiation_expression': {
-      console.log(
-        `[extractValue] Processing ${node.type} with ${node.childCount} children`
-      );
+      console.log(`[extractValue] Processing ${node.type} with ${node.childCount} children`);
 
       // These expression types often wrap simpler values, so try to extract from children
       if (node.childCount === 1) {
@@ -540,17 +498,13 @@ export function extractValue(node: TSNode): ast.ParameterValue {
 
         // Try to use enhanced extraction if this is a complex expression
         if (isComplexExpression(node)) {
-          console.log(
-            `[extractValue] Using enhanced extraction for complex ${node.type}`
-          );
+          console.log(`[extractValue] Using enhanced extraction for complex ${node.type}`);
           // Create a minimal error handler for this extraction
           const tempErrorHandler = new ErrorHandler();
 
           const enhancedResult = extractValueEnhanced(node, tempErrorHandler);
           if (enhancedResult !== undefined) {
-            console.log(
-              `[extractValue] Enhanced extraction succeeded: ${enhancedResult}`
-            );
+            console.log(`[extractValue] Enhanced extraction succeeded: ${enhancedResult}`);
             return enhancedResult;
           }
         }
@@ -568,13 +522,8 @@ export function extractValue(node: TSNode): ast.ParameterValue {
 
       // Check for string literals in the text
       if (potentialNumText.startsWith('"') && potentialNumText.endsWith('"')) {
-        const stringValue = potentialNumText.substring(
-          1,
-          potentialNumText.length - 1
-        );
-        console.log(
-          `[extractValue] Extracted string from ${node.type}: "${stringValue}"`
-        );
+        const stringValue = potentialNumText.substring(1, potentialNumText.length - 1);
+        console.log(`[extractValue] Extracted string from ${node.type}: "${stringValue}"`);
         return stringValue;
       }
 
@@ -584,9 +533,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
         return true;
       }
       if (potentialNumText === 'false') {
-        console.log(
-          `[extractValue] Extracted boolean from ${node.type}: false`
-        );
+        console.log(`[extractValue] Extracted boolean from ${node.type}: false`);
         return false;
       }
 
@@ -610,10 +557,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
     }
     case 'conditional_expression': {
       console.log(
-        `[extractValue] Processing conditional_expression: '${node.text.substring(
-          0,
-          30
-        )}'`
+        `[extractValue] Processing conditional_expression: '${node.text.substring(0, 30)}'`
       );
       // Check if this is a wrapper for an array_literal
       if (node.text.startsWith('[') && node.text.endsWith(']')) {
@@ -681,18 +625,14 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       // Check for numbers
       const num = parseFloat(text);
       if (!isNaN(num)) {
-        console.log(
-          `[extractValue] Parsed ${node.type} text '${text}' as number: ${num}`
-        );
+        console.log(`[extractValue] Parsed ${node.type} text '${text}' as number: ${num}`);
         return num;
       }
 
       // Check for strings
       if (text.startsWith('"') && text.endsWith('"')) {
         const stringValue = text.substring(1, text.length - 1);
-        console.log(
-          `[extractValue] Extracted string from ${node.type}: "${stringValue}"`
-        );
+        console.log(`[extractValue] Extracted string from ${node.type}: "${stringValue}"`);
         return stringValue;
       }
 
@@ -702,21 +642,15 @@ export function extractValue(node: TSNode): ast.ParameterValue {
         return true;
       }
       if (text === 'false') {
-        console.log(
-          `[extractValue] Extracted boolean from ${node.type}: false`
-        );
+        console.log(`[extractValue] Extracted boolean from ${node.type}: false`);
         return false;
       }
 
-      console.warn(
-        `[extractValue] Unhandled ${node.type}: ${node.text.substring(0, 30)}`
-      );
+      console.warn(`[extractValue] Unhandled ${node.type}: ${node.text.substring(0, 30)}`);
       return undefined;
     }
     case 'argument': {
-      console.log(
-        `[extractValue] Processing argument node with ${node.childCount} children`
-      );
+      console.log(`[extractValue] Processing argument node with ${node.childCount} children`);
 
       // Check if this is a named argument (contains '=')
       if (node.text.includes('=')) {
@@ -743,25 +677,16 @@ export function extractValue(node: TSNode): ast.ParameterValue {
         }
       }
 
-      console.warn(
-        `[extractValue] No expression found in argument node: '${node.text}'`
-      );
+      console.warn(`[extractValue] No expression found in argument node: '${node.text}'`);
       return undefined;
     }
     case 'arguments': {
-      console.log(
-        `[extractValue] Processing arguments node with ${node.childCount} children`
-      );
+      console.log(`[extractValue] Processing arguments node with ${node.childCount} children`);
 
       // Arguments node is a container - look for the actual expression inside
       for (let i = 0; i < node.childCount; i++) {
         const child = node.child(i);
-        if (
-          child &&
-          child.type !== ',' &&
-          child.type !== '(' &&
-          child.type !== ')'
-        ) {
+        if (child && child.type !== ',' && child.type !== '(' && child.type !== ')') {
           console.log(
             `[extractValue] Found expression child in arguments: type='${child.type}', text='${child.text}'`
           );
@@ -769,16 +694,12 @@ export function extractValue(node: TSNode): ast.ParameterValue {
         }
       }
 
-      console.warn(
-        `[extractValue] No expression found in arguments node: '${node.text}'`
-      );
+      console.warn(`[extractValue] No expression found in arguments node: '${node.text}'`);
       return undefined;
     }
     default:
       console.warn(
-        `[extractValue] Unhandled node type: '${
-          node.type
-        }', text: '${node.text.substring(0, 30)}'`
+        `[extractValue] Unhandled node type: '${node.type}', text: '${node.text.substring(0, 30)}'`
       );
       return undefined;
   }

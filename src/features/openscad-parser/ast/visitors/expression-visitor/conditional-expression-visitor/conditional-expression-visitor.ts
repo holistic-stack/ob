@@ -1,9 +1,9 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../../ast-types.js';
-import { BaseASTVisitor } from '../../base-ast-visitor.js';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { ExpressionVisitor } from '../../expression-visitor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type * as ast from '../../../ast-types.js';
 import { getLocation } from '../../../utils/location-utils.js';
+import { BaseASTVisitor } from '../../base-ast-visitor.js';
+import type { ExpressionVisitor } from '../../expression-visitor.js';
 
 export class ConditionalExpressionVisitor extends BaseASTVisitor {
   constructor(
@@ -30,7 +30,7 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -67,7 +67,7 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
         {
           line: getLocation(node).start.line,
           column: getLocation(node).start.column,
-          nodeType: node.type
+          nodeType: node.type,
         }
       );
       this.errorHandler.report(error);
@@ -76,15 +76,15 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
 
     const conditionAST = this.parentVisitor.dispatchSpecificExpression(conditionNode);
     if (conditionAST && conditionAST.type === 'error') {
-    return conditionAST;
-  }
-  if (!conditionAST) {
+      return conditionAST;
+    }
+    if (!conditionAST) {
       const error = this.errorHandler.createParserError(
         `Failed to parse condition in conditional expression.`,
         {
           line: getLocation(conditionNode).start.line,
           column: getLocation(conditionNode).start.column,
-          nodeType: conditionNode.type
+          nodeType: conditionNode.type,
         }
       );
       this.errorHandler.report(error);
@@ -93,15 +93,15 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
 
     const consequenceAST = this.parentVisitor.dispatchSpecificExpression(consequenceNode);
     if (consequenceAST && consequenceAST.type === 'error') {
-    return consequenceAST;
-  }
-  if (!consequenceAST) {
+      return consequenceAST;
+    }
+    if (!consequenceAST) {
       const error = this.errorHandler.createParserError(
         `Failed to parse consequence in conditional expression.`,
         {
           line: getLocation(consequenceNode).start.line,
           column: getLocation(consequenceNode).start.column,
-          nodeType: consequenceNode.type
+          nodeType: consequenceNode.type,
         }
       );
       this.errorHandler.report(error);
@@ -110,15 +110,15 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
 
     const alternativeAST = this.parentVisitor.dispatchSpecificExpression(alternativeNode);
     if (alternativeAST && alternativeAST.type === 'error') {
-    return alternativeAST;
-  }
-  if (!alternativeAST) {
+      return alternativeAST;
+    }
+    if (!alternativeAST) {
       const error = this.errorHandler.createParserError(
         `Failed to parse alternative in conditional expression.`,
         {
           line: getLocation(alternativeNode).start.line,
           column: getLocation(alternativeNode).start.column,
-          nodeType: alternativeNode.type
+          nodeType: alternativeNode.type,
         }
       );
       this.errorHandler.report(error);
@@ -127,10 +127,10 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
 
     return {
       type: 'expression',
-      expressionType: 'conditional_expression', 
-      condition: conditionAST, 
-      thenBranch: consequenceAST, 
-      elseBranch: alternativeAST, 
+      expressionType: 'conditional_expression',
+      condition: conditionAST,
+      thenBranch: consequenceAST,
+      elseBranch: alternativeAST,
       location: getLocation(node),
     };
   }

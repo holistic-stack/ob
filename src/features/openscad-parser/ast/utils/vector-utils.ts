@@ -51,8 +51,8 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../ast-types.js';
 import { extractValue } from '../extractors/value-extractor.js';
 import { findDescendantOfType } from './node-utils.js';
 
@@ -98,9 +98,7 @@ import { findDescendantOfType } from './node-utils.js';
  * @since 0.1.0
  * @category Vector Extraction
  */
-export function extractVector(
-  node: TSNode
-): ast.Vector2D | ast.Vector3D | undefined {
+export function extractVector(node: TSNode): ast.Vector2D | ast.Vector3D | undefined {
   // const numbers: number[] = []; // Unused variable
 
   // Handle different node types
@@ -166,9 +164,7 @@ export function extractVector(
  * @category Vector Processing
  * @internal
  */
-function extractVectorFromArrayLiteral(
-  node: TSNode
-): ast.Vector2D | ast.Vector3D | undefined {
+function extractVectorFromArrayLiteral(node: TSNode): ast.Vector2D | ast.Vector3D | undefined {
   const numbers: number[] = [];
   const elementsToProcess = node.children || [];
 
@@ -273,28 +269,14 @@ function extractVectorFromArrayLiteral(
  * @category Vector Processing
  * @internal
  */
-function extractVectorFromText(
-  text: string
-): ast.Vector2D | ast.Vector3D | undefined {
-  console.log(
-    `[extractVectorFromText] Trying to extract vector from text: ${text}`
-  );
+function extractVectorFromText(text: string): ast.Vector2D | ast.Vector3D | undefined {
+  console.log(`[extractVectorFromText] Trying to extract vector from text: ${text}`);
 
   // Try to extract 3D vector
-  const matches = text.match(
-    /\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/
-  );
+  const matches = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
   if (matches && matches.length === 4 && matches[1] && matches[2] && matches[3]) {
-    const vector = [
-      parseFloat(matches[1]),
-      parseFloat(matches[2]),
-      parseFloat(matches[3]),
-    ];
-    console.log(
-      `[extractVectorFromText] Extracted 3D vector from text: ${JSON.stringify(
-        vector
-      )}`
-    );
+    const vector = [parseFloat(matches[1]), parseFloat(matches[2]), parseFloat(matches[3])];
+    console.log(`[extractVectorFromText] Extracted 3D vector from text: ${JSON.stringify(vector)}`);
     return vector as ast.Vector3D;
   }
 
@@ -302,11 +284,7 @@ function extractVectorFromText(
   const matches2D = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
   if (matches2D && matches2D.length === 3 && matches2D[1] && matches2D[2]) {
     const vector = [parseFloat(matches2D[1]), parseFloat(matches2D[2])];
-    console.log(
-      `[extractVectorFromText] Extracted 2D vector from text: ${JSON.stringify(
-        vector
-      )}`
-    );
+    console.log(`[extractVectorFromText] Extracted 2D vector from text: ${JSON.stringify(vector)}`);
     return vector as ast.Vector2D;
   }
 
@@ -366,7 +344,7 @@ function createVectorFromNumbers(
   originalText: string
 ): ast.Vector2D | ast.Vector3D | undefined {
   // Filter out null, undefined, and NaN values
-  const validNumbers = numbers.filter(n => n !== null && n !== undefined && !isNaN(n));
+  const validNumbers = numbers.filter((n) => n !== null && n !== undefined && !isNaN(n));
 
   if (validNumbers.length === 2) {
     console.log(

@@ -1,17 +1,11 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
+import type * as ast from '../ast-types.js';
 import { CompositeVisitor } from './composite-visitor.js';
+import { CSGVisitor } from './csg-visitor.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
 import { TransformVisitor } from './transform-visitor.js';
-import { CSGVisitor } from './csg-visitor.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
 
 // import { ErrorHandler } from '../../error-handling/index.js'; // Temporarily commented out due to build issues
 
@@ -53,7 +47,7 @@ class MockErrorHandler {
 }
 
 describe('CompositeVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
   let visitor: CompositeVisitor;
   let errorHandler: MockErrorHandler;
 
@@ -90,7 +84,7 @@ describe('CompositeVisitor', () => {
 
   beforeEach(async () => {
     // Create a new parser instance for each test
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
     await parser.init();
 
     // Create a mock ErrorHandler for testing
@@ -101,11 +95,10 @@ describe('CompositeVisitor', () => {
     const transformVisitor = new TransformVisitor('', undefined, errorHandler as any);
     const csgVisitor = new CSGVisitor('', errorHandler as any);
 
-    visitor = new CompositeVisitor([
-      primitiveVisitor,
-      transformVisitor,
-      csgVisitor,
-    ], errorHandler as any);
+    visitor = new CompositeVisitor(
+      [primitiveVisitor, transformVisitor, csgVisitor],
+      errorHandler as any
+    );
   });
 
   afterEach(() => {
@@ -179,8 +172,8 @@ describe('CompositeVisitor', () => {
       expect(results.length).toBeGreaterThan(0);
 
       // Check that we have at least one cube or sphere result
-      const hasExpectedTypes = results.some(result =>
-        result.type === 'cube' || result.type === 'sphere'
+      const hasExpectedTypes = results.some(
+        (result) => result.type === 'cube' || result.type === 'sphere'
       );
       expect(hasExpectedTypes).toBe(true);
     });

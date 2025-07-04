@@ -727,8 +727,6 @@ export interface AssignStatementNode extends BaseNode {
   body: ASTNode;
 }
 
-
-
 /**
  * Represents an array expression
  */
@@ -1064,5 +1062,3 @@ export type ASTNode =
   | UnaryExpressionNode
   | ConditionalExpressionNode
   | ErrorNode; // Added ErrorNode here
-
-

@@ -1,16 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PrimitiveVisitor } from '../visitors/primitive-visitor.js';
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
-import { EnhancedOpenscadParser } from '../../enhanced-parser.js';
+import type * as ast from '../ast-types.js';
+import { PrimitiveVisitor } from '../visitors/primitive-visitor.js';
 
 // Create a test class that extends PrimitiveVisitor to expose the private methods
 class TestPrimitiveVisitor extends PrimitiveVisitor {
-  public testCreateCubeNode(
-    node: TSNode,
-    args: ast.Parameter[]
-  ): ast.CubeNode | null {
+  public testCreateCubeNode(node: TSNode, args: ast.Parameter[]): ast.CubeNode | null {
     // @ts-expect-error - Accessing private method for testing
     return this.createCubeNode(node, args);
   }
@@ -34,11 +31,11 @@ const createMockNode = (text: string): TSNode => {
 const mockErrorHandler = new ErrorHandler();
 
 describe('PrimitiveVisitor', () => {
-  let parser: EnhancedOpenscadParser;
+  let parser: OpenscadParser;
 
   beforeEach(async () => {
     // Create a new parser instance before each test
-    parser = new EnhancedOpenscadParser();
+    parser = new OpenscadParser();
 
     // Initialize the parser
     await parser.init();

@@ -1,10 +1,20 @@
+import type { NodeLocation } from '../../../../node-location.js';
 import { Expression } from '../expression.js';
-import { NodeLocation } from '../../../../node-location.js';
 
 type BinaryOperator =
-  | '+' | '-' | '*' | '/' | '%'     // Arithmetic
-  | '==' | '!=' | '<' | '<=' | '>' | '>='  // Comparison
-  | '&&' | '||';                           // Logical
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '%' // Arithmetic
+  | '=='
+  | '!='
+  | '<'
+  | '<='
+  | '>'
+  | '>=' // Comparison
+  | '&&'
+  | '||'; // Logical
 
 export class BinaryExpression extends Expression {
   constructor(

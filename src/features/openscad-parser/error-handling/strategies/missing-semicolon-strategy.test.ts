@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ParserError, ErrorCode, Severity } from '../types/error-types.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
 import { MissingSemicolonStrategy } from './missing-semicolon-strategy.js';
 
 describe('MissingSemicolonStrategy', () => {
@@ -55,9 +55,9 @@ describe('MissingSemicolonStrategy', () => {
 
       const code = [
         'module test() {',
-        '  cube([10, 20, 30])',  // Missing semicolon
+        '  cube([10, 20, 30])', // Missing semicolon
         '  sphere(5);',
-        '}'
+        '}',
       ].join('\n');
 
       const result = strategy.recover(error, code);
@@ -76,9 +76,9 @@ describe('MissingSemicolonStrategy', () => {
 
       const code = [
         'module test() {',
-        '  cube([10, 20, 30]);',  // Already has semicolon
+        '  cube([10, 20, 30]);', // Already has semicolon
         '  sphere(5);',
-        '}'
+        '}',
       ].join('\n');
 
       const result = strategy.recover(error, code);
@@ -98,9 +98,9 @@ describe('MissingSemicolonStrategy', () => {
       const code = [
         'module test() {',
         '  cube([10, 20, 30]);',
-        '  // Comment',  // Line with just a comment
+        '  // Comment', // Line with just a comment
         '  sphere(5);',
-        '}'
+        '}',
       ].join('\n');
 
       const result = strategy.recover(error, code);

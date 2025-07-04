@@ -12,8 +12,8 @@
  * - tree-sitter-openscad.wasm: WebAssembly module containing the OpenSCAD grammar
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { OpenscadParser } from './openscad-parser.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OpenscadParser } from './openscad-parser';
 
 // Sample OpenSCAD code for testing
 const SAMPLE_OPENSCAD_CODE = `
@@ -73,9 +73,6 @@ describe('OpenSCADParser', () => {
   });
 
   it('should initialize automatically in the constructor', async () => {
-    // Wait for initialization to complete
-    await parser.init();
-
     // Check that the parser is initialized
     expect(parser.isInitialized).toBe(true);
   });
@@ -98,8 +95,6 @@ describe('OpenSCADParser', () => {
   });
 
   it('should parse complex OpenSCAD code correctly', async () => {
-    // Wait for initialization to complete
-    await parser.init();
 
     // Parse the complex code
     const result = parser.parse(COMPLEX_OPENSCAD_CODE);
@@ -120,8 +115,6 @@ describe('OpenSCADParser', () => {
   });
 
   it('should handle invalid OpenSCAD code gracefully', async () => {
-    // Wait for initialization to complete
-    await parser.init();
 
     // Parse the invalid code
     const result = parser.parseCST(INVALID_OPENSCAD_CODE);

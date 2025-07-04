@@ -1,13 +1,13 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../ast-types.js';
-import { extractArguments } from './argument-extractor.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { ErrorHandler } from '../../error-handling/index.js';
+import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
+import { extractArguments } from './argument-extractor.js';
 import {
-  extractNumberParameter,
   extractBooleanParameter,
+  extractNumberParameter,
   extractVectorParameter,
 } from './parameter-extractor.js';
-import { ErrorHandler } from '../../error-handling/index.js';
 // findDescendantOfType is not used in this file
 
 /**
@@ -16,13 +16,13 @@ import { ErrorHandler } from '../../error-handling/index.js';
  * @param errorHandler Optional error handler for enhanced expression evaluation
  * @returns A cube AST node or null if the node cannot be processed
  */
-export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourceCode?: string): ast.CubeNode | null {
-  console.log(
-    `[extractCubeNode] Processing cube node: ${node.text.substring(0, 50)}`
-  );
-  console.log(
-    `[extractCubeNode] Node type: ${node.type}, childCount: ${node.childCount}`
-  );
+export function extractCubeNode(
+  node: TSNode,
+  errorHandler?: ErrorHandler,
+  sourceCode?: string
+): ast.CubeNode | null {
+  console.log(`[extractCubeNode] Processing cube node: ${node.text.substring(0, 50)}`);
+  console.log(`[extractCubeNode] Node type: ${node.type}, childCount: ${node.childCount}`);
 
   // Initialize parameters with default values
   let size: number | ast.Vector3D = 1; // Default size to 1
@@ -61,11 +61,7 @@ export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourc
   );
 
   const args = extractArguments(argsNode, errorHandler, sourceCode);
-  console.log(
-    `[extractCubeNode] Extracted ${args.length} arguments: ${JSON.stringify(
-      args
-    )}`
-  );
+  console.log(`[extractCubeNode] Extracted ${args.length} arguments: ${JSON.stringify(args)}`);
 
   // Process arguments
   for (let i = 0; i < args.length; i++) {
@@ -82,10 +78,14 @@ export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourc
           const firstElement = vectorValue[0];
           if (typeof firstElement === 'number') {
             size = firstElement;
-            console.warn(`[extractCubeNode] Cube size given as 2D vector ${JSON.stringify(vectorValue)}, using first element ${firstElement} as scalar size.`);
+            console.warn(
+              `[extractCubeNode] Cube size given as 2D vector ${JSON.stringify(vectorValue)}, using first element ${firstElement} as scalar size.`
+            );
           } else {
             size = 1; // Default fallback
-            console.warn(`[extractCubeNode] Invalid first element in 2D vector ${JSON.stringify(vectorValue)}, using default size.`);
+            console.warn(
+              `[extractCubeNode] Invalid first element in 2D vector ${JSON.stringify(vectorValue)}, using default size.`
+            );
           }
         } else if (vectorValue.length === 1) {
           const firstElement = vectorValue[0];
@@ -93,12 +93,16 @@ export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourc
             size = firstElement;
           } else {
             size = 1; // Default fallback
-            console.warn(`[extractCubeNode] Invalid element in 1D vector ${JSON.stringify(vectorValue)}, using default size.`);
+            console.warn(
+              `[extractCubeNode] Invalid element in 1D vector ${JSON.stringify(vectorValue)}, using default size.`
+            );
           }
         } else {
           // vectorValue.length is 0 or > 3, or other invalid cases.
           size = 1; // Explicitly re-assign default
-          console.warn(`[extractCubeNode] Invalid vector size parameter: ${JSON.stringify(vectorValue)}, using default size.`);
+          console.warn(
+            `[extractCubeNode] Invalid vector size parameter: ${JSON.stringify(vectorValue)}, using default size.`
+          );
         }
         console.log(`[extractCubeNode] Found vector size: ${JSON.stringify(size)}`);
       } else {
@@ -108,7 +112,9 @@ export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourc
           size = numberValue;
         } else {
           size = 1; // Explicitly re-assign default
-          console.warn(`[extractCubeNode] Could not extract number for size parameter, using default size.`);
+          console.warn(
+            `[extractCubeNode] Could not extract number for size parameter, using default size.`
+          );
         }
       }
     }
@@ -119,20 +125,12 @@ export function extractCubeNode(node: TSNode, errorHandler?: ErrorHandler, sourc
         center = centerValue;
         console.log(`[extractCubeNode] Found center parameter: ${center}`);
       } else {
-        console.log(
-          `[extractCubeNode] Invalid center parameter: ${JSON.stringify(
-            arg!.value
-          )}`
-        );
+        console.log(`[extractCubeNode] Invalid center parameter: ${JSON.stringify(arg!.value)}`);
       }
     }
   }
 
-  console.log(
-    `[extractCubeNode] Final parameters: size=${JSON.stringify(
-      size
-    )}, center=${center}`
-  );
+  console.log(`[extractCubeNode] Final parameters: size=${JSON.stringify(size)}, center=${center}`);
 
   return {
     type: 'cube',

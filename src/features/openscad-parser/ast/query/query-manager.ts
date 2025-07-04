@@ -6,9 +6,9 @@
  * @module lib/openscad-parser/ast/query/query-manager
  */
 
-import { Tree, Query, Node as TSNode, Language } from 'web-tree-sitter';
-import type { QueryCache } from './query-cache.js';
+import { type Language, Query, type Tree, type Node as TSNode } from 'web-tree-sitter';
 import { LRUQueryCache } from './lru-query-cache.js';
+import type { QueryCache } from './query-cache.js';
 
 /**
  * Manager for executing and caching tree-sitter queries
@@ -29,7 +29,10 @@ export class QueryManager {
    * @param language The tree-sitter language
    * @param cache The query cache to use (default: new LRUQueryCache())
    */
-  constructor(private language: Language, cache?: QueryCache) {
+  constructor(
+    private language: Language,
+    cache?: QueryCache
+  ) {
     this.cache = cache ?? new LRUQueryCache();
   }
 
@@ -64,11 +67,7 @@ export class QueryManager {
    * @param sourceText The source text (for caching)
    * @returns The query results
    */
-  executeQueryOnNode(
-    queryString: string,
-    node: TSNode,
-    sourceText: string
-  ): TSNode[] {
+  executeQueryOnNode(queryString: string, node: TSNode, sourceText: string): TSNode[] {
     // Create a cache key for the node
     const nodeText = node.text;
     const nodeCacheKey = `${queryString}:${nodeText}`;
@@ -99,11 +98,7 @@ export class QueryManager {
           // Handle different API formats
           if (Array.isArray(capture)) {
             results.push(capture[1]); // New API format: [pattern, node]
-          } else if (
-            capture &&
-            typeof capture === 'object' &&
-            'node' in capture
-          ) {
+          } else if (capture && typeof capture === 'object' && 'node' in capture) {
             results.push(capture.node); // Old API format: { node, ... }
           }
         }
@@ -117,9 +112,7 @@ export class QueryManager {
             }
           }
         } catch (_error) {
-          console.error(
-            `[QueryManager.executeQueryOnNode] Error executing query: ${_error}`
-          );
+          console.error(`[QueryManager.executeQueryOnNode] Error executing query: ${_error}`);
         }
       }
     }
@@ -148,7 +141,7 @@ export class QueryManager {
    * @returns The nodes of the specified types
    */
   findNodesByTypes(nodeTypes: string[], tree: Tree): TSNode[] {
-    const queryString = nodeTypes.map(type => `(${type}) @node`).join('\n');
+    const queryString = nodeTypes.map((type) => `(${type}) @node`).join('\n');
     return this.executeQuery(queryString, tree);
   }
 
@@ -194,11 +187,7 @@ export class QueryManager {
           // Handle different API formats
           if (Array.isArray(capture)) {
             results.push(capture[1]); // New API format: [pattern, node]
-          } else if (
-            capture &&
-            typeof capture === 'object' &&
-            'node' in capture
-          ) {
+          } else if (capture && typeof capture === 'object' && 'node' in capture) {
             results.push(capture.node); // Old API format: { node, ... }
           }
         }
@@ -212,9 +201,7 @@ export class QueryManager {
             }
           }
         } catch (_error) {
-          console.error(
-            `[QueryManager.executeQueryInternal] Error executing query: ${_error}`
-          );
+          console.error(`[QueryManager.executeQueryInternal] Error executing query: ${_error}`);
         }
       }
     }

@@ -1,4 +1,4 @@
-import { TreeCursor } from 'web-tree-sitter';
+import type { TreeCursor } from 'web-tree-sitter';
 
 /**
  * Represents a position in the source code.
@@ -34,9 +34,7 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.nodeType;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
-        console.log(
-          `Node type mismatch. Expected: ${type}, Actual: ${nodeType}`
-        );
+        console.log(`Node type mismatch. Expected: ${type}, Actual: ${nodeType}`);
       }
       return result;
     }
@@ -46,9 +44,7 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.type;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
-        console.log(
-          `Node type mismatch. Expected: ${type}, Actual: ${nodeType}`
-        );
+        console.log(`Node type mismatch. Expected: ${type}, Actual: ${nodeType}`);
       }
       return result;
     }
@@ -148,8 +144,7 @@ export function getNodeText(cursor: TreeCursor, source: string): string {
 
   // If this is a statement node, include the semicolon if it's present in the source
   if (
-    (isNodeType(cursor, 'statement') ||
-      isNodeType(cursor, 'expression_statement')) &&
+    (isNodeType(cursor, 'statement') || isNodeType(cursor, 'expression_statement')) &&
     lastLine[range.end.column] === ';'
   ) {
     lastLineText += ';';
@@ -200,10 +195,7 @@ export function getNodeName(cursor: TreeCursor, source: string): string {
  * @param type - The node type to find
  * @returns True if a matching child was found
  */
-export function findFirstChildOfType(
-  cursor: TreeCursor,
-  type: string
-): boolean {
+export function findFirstChildOfType(cursor: TreeCursor, type: string): boolean {
   if (!cursor.gotoFirstChild()) return false;
 
   do {

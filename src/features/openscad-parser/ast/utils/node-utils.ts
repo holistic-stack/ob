@@ -41,7 +41,7 @@
  * @since 0.1.0
  */
 
-import { Node as TSNode } from 'web-tree-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 
 /**
  * Finds the first descendant node of a specific type using depth-first search.
@@ -84,10 +84,7 @@ import { Node as TSNode } from 'web-tree-sitter';
  * @since 0.1.0
  * @category Tree Traversal
  */
-export function findDescendantOfType(
-  node: TSNode,
-  type: string
-): TSNode | null {
+export function findDescendantOfType(node: TSNode, type: string): TSNode | null {
   if (node.type === type) {
     return node;
   }

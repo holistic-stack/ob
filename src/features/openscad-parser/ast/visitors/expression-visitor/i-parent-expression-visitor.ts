@@ -1,5 +1,5 @@
-import { Node as TSNode } from 'web-tree-sitter';
-import * as ast from '../../ast-types.js';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type * as ast from '../../ast-types.js';
 
 /**
  * Interface for a parent visitor that can dispatch to specific expression parsing methods.
