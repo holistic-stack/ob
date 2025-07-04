@@ -215,16 +215,12 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
 module broken_box(size=[10,10,10] {  // Missing closing parenthesis
     cube(size);
 `;
-      const parseResult = parserService.parseAST(invalidCode);
+      const ast = parserService.parseAST(invalidCode);
 
       // Parsing completed
-      if (parseResult.success) {
-        expect(parseResult.data.ast).toBeDefined();
-        // Parser should handle syntax errors gracefully
-        logger.debug(
-          `Syntax error handled gracefully, AST length: ${parseResult.data.ast?.length}`
-        );
-      }
+      expect(ast).toBeDefined();
+      // Parser should handle syntax errors gracefully
+      logger.debug(`Syntax error handled gracefully, AST length: ${ast?.length}`);
 
       logger.end('Syntax error test completed');
     });
@@ -248,14 +244,13 @@ module complex_shape(width=10, height=20, depth=5, holes=true) {
 }
 `;
       const ast = parserService.parseAST(complexModuleCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(1); // One module definition
-          expect(ast[0]?.type).toBe('module_definition');
-          logger.debug(`Complex module parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBe(1); // One module definition
+        expect(ast[0]?.type).toBe('module_definition');
+        logger.debug(`Complex module parsed with ${ast.length} nodes`);
       }
 
       logger.end('Complex module test completed');
@@ -275,12 +270,13 @@ for (i = [0:10]) {
 `;
 
       const startTime = performance.now();
-      const parseResult = parserService.parseAST(performanceTestCode);
+      const ast = parserService.parseAST(performanceTestCode);
       const endTime = performance.now();
       const parseTime = endTime - startTime;
 
       // Parsing completed
       expect(parseTime).toBeLessThan(16); // <16ms performance target
+      expect(ast).toBeDefined(); // Ensure parsing succeeded
 
       logger.debug(`Performance test completed in ${parseTime.toFixed(2)}ms`);
       logger.end('Performance test completed');
@@ -294,13 +290,12 @@ size = [10, 20, 30];
 cube([size.x, size.y, size.z]);
 `;
       const ast = parserService.parseAST(memberAccessCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBeGreaterThanOrEqual(1);
-          logger.debug(`Member access parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBeGreaterThanOrEqual(1);
+        logger.debug(`Member access parsed with ${ast.length} nodes`);
       }
 
       logger.end('Member access test completed');
@@ -314,13 +309,12 @@ use <MCAD/boxes.scad>;
 include <utils.scad>;
 `;
       const ast = parserService.parseAST(importCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for import statements (non-3D constructs)
-          logger.debug(`Import statements parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for import statements (non-3D constructs)
+        logger.debug(`Import statements parsed with ${ast.length} nodes`);
       }
 
       logger.end('Library import test completed');

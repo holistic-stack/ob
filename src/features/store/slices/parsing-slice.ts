@@ -9,6 +9,7 @@ import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
+import { isSuccess } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
@@ -44,13 +45,26 @@ export const createParsingSlice = (
           await parserService.init();
 
           // Use unified parser service
-          const rawAST = parserService.parseAST(code);
+          const parseResult = parserService.parseASTWithResult(code);
 
-          if (rawAST && rawAST.length > 0) {
+          if (!isSuccess(parseResult)) {
+            const errorMessage = `Parse failed: ${parseResult.error}`;
+            const parseTime = performance.now() - startTime;
 
+            set((state: WritableDraft<AppStore>) => {
+              state.parsing.isLoading = false;
+              state.parsing.errors = [errorMessage];
+              state.parsing.parseTime = parseTime;
+            });
+
+            logger.error(errorMessage);
+            return errorMessage;
+          }
+
+          if (parseResult.data.length > 0) {
             // Apply AST restructuring to fix hierarchical relationships
-            logger.debug(`Restructuring AST with ${rawAST.length} nodes`);
-            const restructureResult = restructureAST(rawAST, {
+            logger.debug(`Restructuring AST with ${parseResult.data.length} nodes`);
+            const restructureResult = restructureAST(parseResult.data, {
               enableLogging: true,
               enableSourceLocationAnalysis: true,
             });
@@ -61,7 +75,7 @@ export const createParsingSlice = (
               );
             }
 
-            const ast = restructureResult.success ? restructureResult.data : rawAST;
+            const ast = restructureResult.success ? restructureResult.data : parseResult.data;
             const endTime = performance.now();
             const parseTime = endTime - startTime;
 
@@ -76,7 +90,7 @@ export const createParsingSlice = (
             get().recordParseTime(parseTime);
 
             logger.debug(
-              `Parsed ${rawAST.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
+              `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
             );
             return ast;
           } else {

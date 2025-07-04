@@ -16,7 +16,7 @@ export function extractVectorFromString(text: string): number[] | null {
       const vectorValues = vectorStr.split(',').map((v) => parseFloat(v.trim()));
 
       // Check if all values are numbers
-      if (vectorValues.every((v) => !isNaN(v))) {
+      if (vectorValues.every((v) => !Number.isNaN(v))) {
         console.log(`[extractVectorFromString] Extracted vector: ${JSON.stringify(vectorValues)}`);
         return vectorValues;
       }

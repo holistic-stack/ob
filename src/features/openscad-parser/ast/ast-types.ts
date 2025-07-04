@@ -287,6 +287,16 @@ export interface ExpressionNode extends BaseNode {
     | 'index_expression'
     | 'range_expression'
     | 'let_expression'
+    | 'special_variable'
+    | 'parenthesized_expression'
+    | 'list_comprehension_expression'
+    | 'accessor'
+    | 'binary_expression'
+    | 'unary_expression'
+    | 'conditional_expression'
+    | 'vector'
+    | 'vector2d'
+    | 'vector3d'
     | string;
 
   // Optional properties used in various expression types
@@ -775,6 +785,22 @@ export interface SpecialVariableAssignment extends BaseNode {
 }
 
 /**
+ * Represents a special variable expression
+ */
+export interface SpecialVariableNode extends ExpressionNode {
+  expressionType: 'special_variable';
+  variable: SpecialVariable;
+}
+
+/**
+ * Represents a parenthesized expression
+ */
+export interface ParenthesizedExpressionNode extends ExpressionNode {
+  expressionType: 'parenthesized_expression';
+  expression: ExpressionNode;
+}
+
+/**
  * Binary operators in OpenSCAD
  */
 export type BinaryOperator =
@@ -802,7 +828,7 @@ export type UnaryOperator = '-' | '!';
  */
 export interface ModuleDefinitionNode extends BaseNode {
   type: 'module_definition';
-  name: IdentifierNode; // Changed from string to IdentifierNode
+  name: IdentifierNode;
   parameters: ModuleParameter[];
   body: ASTNode[];
 }
@@ -820,7 +846,7 @@ export interface ModuleParameter {
  */
 export interface ModuleInstantiationNode extends BaseNode {
   type: 'module_instantiation';
-  name: string;
+  name: IdentifierNode;
   args: Parameter[];
   children: ASTNode[];
 }
@@ -830,7 +856,7 @@ export interface ModuleInstantiationNode extends BaseNode {
  */
 export interface FunctionDefinitionNode extends BaseNode {
   type: 'function_definition';
-  name: IdentifierNode; // Changed from string to IdentifierNode
+  name: IdentifierNode;
   parameters: ModuleParameter[];
   expression: ExpressionNode;
 }
@@ -840,7 +866,7 @@ export interface FunctionDefinitionNode extends BaseNode {
  */
 export interface AssignmentNode extends BaseNode {
   type: 'assignment';
-  variable: IdentifierNode; // Changed from string to IdentifierNode
+  variable: IdentifierNode;
   value: ExpressionNode | ParameterValue;
 }
 
@@ -945,6 +971,8 @@ export interface ConditionalExpressionNode extends ExpressionNode {
   condition: ExpressionNode;
   thenBranch: ExpressionNode;
   elseBranch: ExpressionNode;
+  // Legacy alias for backwards compatibility
+  trueExpression?: ExpressionNode;
 }
 
 /**
@@ -1061,4 +1089,15 @@ export type ASTNode =
   | BinaryExpressionNode
   | UnaryExpressionNode
   | ConditionalExpressionNode
-  | ErrorNode; // Added ErrorNode here
+  | SpecialVariableNode
+  | ParenthesizedExpressionNode
+  | ArrayExpressionNode
+  | EachExpressionNode
+  | LiteralExpressionNode
+  | IdentifierExpressionNode
+  | AccessorExpressionNode
+  | ErrorNode;
+
+// Legacy type aliases for backward compatibility
+export type ForStatementNode = ForLoopNode;
+export type IfStatementNode = IfNode;

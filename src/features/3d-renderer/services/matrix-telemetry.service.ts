@@ -8,6 +8,7 @@
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { MATRIX_CONFIG } from '../config/matrix-config.js';
 import type { MatrixPerformanceMetrics } from '../types/matrix.types.js';
+import { matrixServiceDiagnostics } from './matrix-service-diagnostics.js';
 
 const _logger = createLogger('MatrixTelemetryService');
 
@@ -143,6 +144,15 @@ export class MatrixTelemetryService {
       additionalData?: Record<string, unknown>;
     }
   ): void {
+    // Instrument counter mutation with diagnostics
+    const counterMutationOperation = `telemetry_trackOperation_${operation}`;
+    matrixServiceDiagnostics.startTiming(counterMutationOperation, {
+      operation,
+      duration,
+      success,
+      historySize: this.operationHistory.length
+    });
+    
     const entry: OperationEntry = {
       operation,
       duration,
@@ -159,10 +169,10 @@ export class MatrixTelemetryService {
       }),
     };
 
-    // Add to history
+    // Add to history (counter mutation)
     this.operationHistory.push(entry);
 
-    // Maintain history size limit
+    // Maintain history size limit (counter mutation)
     if (this.operationHistory.length > this.maxHistorySize) {
       this.operationHistory.shift();
     }
@@ -180,6 +190,12 @@ export class MatrixTelemetryService {
 
     // Generate periodic reports
     this.checkReportingInterval();
+    
+    // End counter mutation timing
+    matrixServiceDiagnostics.endTiming(counterMutationOperation, {
+      newHistorySize: this.operationHistory.length,
+      success: true
+    });
   }
 
   /**

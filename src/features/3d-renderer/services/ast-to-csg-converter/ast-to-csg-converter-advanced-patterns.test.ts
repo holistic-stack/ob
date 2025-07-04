@@ -12,9 +12,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
-import { createLogger } from '../../../../shared/services/logger.service.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
@@ -432,18 +429,17 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = parserService.parseAST(testCase.code);
+          const ast = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
-          expect(parseResult).toBeDefined();
+          expect(ast).toBeDefined();
 
-          if (parseResult.success) {
-            expect(parseResult.data.ast).toBeDefined();
+          if (ast && ast.length > 0) {
+            expect(ast).toBeDefined();
             logger.debug(`Successfully parsed ${testCase.name} - advanced feature working!`);
           } else {
-            expect(parseResult.error).toBeDefined();
             logger.debug(
-              `Advanced feature ${testCase.name} not yet fully supported: ${parseResult.error}`
+              `Advanced feature ${testCase.name} not yet fully supported: parser returned empty AST`
             );
           }
 
@@ -460,18 +456,17 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = parserService.parseAST(testCase.code);
+          const ast = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
-          expect(parseResult).toBeDefined();
+          expect(ast).toBeDefined();
 
-          if (parseResult.success) {
-            expect(parseResult.data.ast).toBeDefined();
+          if (ast && ast.length > 0) {
+            expect(ast).toBeDefined();
             logger.debug(`Successfully parsed ${testCase.name} - advanced feature working!`);
           } else {
-            expect(parseResult.error).toBeDefined();
             logger.debug(
-              `Advanced feature ${testCase.name} not yet fully supported: ${parseResult.error}`
+              `Advanced feature ${testCase.name} not yet fully supported: parser returned empty AST`
             );
           }
 
@@ -488,18 +483,17 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = parserService.parseAST(testCase.code);
+          const ast = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
-          expect(parseResult).toBeDefined();
+          expect(ast).toBeDefined();
 
-          if (parseResult.success) {
-            expect(parseResult.data.ast).toBeDefined();
+          if (ast && ast.length > 0) {
+            expect(ast).toBeDefined();
             logger.debug(`Successfully parsed ${testCase.name} - advanced feature working!`);
           } else {
-            expect(parseResult.error).toBeDefined();
             logger.debug(
-              `Advanced feature ${testCase.name} not yet fully supported: ${parseResult.error}`
+              `Advanced feature ${testCase.name} not yet fully supported: parser returned empty AST`
             );
           }
 

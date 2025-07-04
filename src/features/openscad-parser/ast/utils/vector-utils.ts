@@ -98,18 +98,18 @@ import { findDescendantOfType } from './node-utils.js';
  * @since 0.1.0
  * @category Vector Extraction
  */
-export function extractVector(node: TSNode): ast.Vector2D | ast.Vector3D | undefined {
+export function extractVector(node: TSNode, sourceCode: string = ''): ast.Vector2D | ast.Vector3D | undefined {
   // const numbers: number[] = []; // Unused variable
 
   // Handle different node types
   if (node.type === 'array_literal') {
     // Process array_literal node
-    return extractVectorFromArrayLiteral(node);
+    return extractVectorFromArrayLiteral(node, sourceCode);
   } else if (node.type === 'expression') {
     // Try to find array_literal in expression
     const arrayLiteralNode = findDescendantOfType(node, 'array_literal');
     if (arrayLiteralNode) {
-      return extractVectorFromArrayLiteral(arrayLiteralNode);
+      return extractVectorFromArrayLiteral(arrayLiteralNode, sourceCode);
     }
 
     // If no array_literal found, try to extract from text
@@ -118,7 +118,7 @@ export function extractVector(node: TSNode): ast.Vector2D | ast.Vector3D | undef
     // Try to find array_literal in accessor_expression
     const arrayLiteralNode = findDescendantOfType(node, 'array_literal');
     if (arrayLiteralNode) {
-      return extractVectorFromArrayLiteral(arrayLiteralNode);
+      return extractVectorFromArrayLiteral(arrayLiteralNode, sourceCode);
     }
 
     // If no array_literal found, try to extract from text
@@ -164,7 +164,7 @@ export function extractVector(node: TSNode): ast.Vector2D | ast.Vector3D | undef
  * @category Vector Processing
  * @internal
  */
-function extractVectorFromArrayLiteral(node: TSNode): ast.Vector2D | ast.Vector3D | undefined {
+function extractVectorFromArrayLiteral(node: TSNode, sourceCode: string = ''): ast.Vector2D | ast.Vector3D | undefined {
   const numbers: number[] = [];
   const elementsToProcess = node.children || [];
 
@@ -187,14 +187,14 @@ function extractVectorFromArrayLiteral(node: TSNode): ast.Vector2D | ast.Vector3
 
     if (elementNode.type === 'expression') {
       // Process expression node
-      const value = extractValue(elementNode);
+      const value = extractValue(elementNode, sourceCode);
       if (typeof value === 'number') {
         numbers.push(value);
       }
     } else if (elementNode.type === 'number') {
       // Process number node directly
       const numValue = parseFloat(elementNode.text);
-      if (!isNaN(numValue)) {
+      if (!Number.isNaN(numValue)) {
         numbers.push(numValue);
       }
     } else if (elementNode.type === 'identifier') {
@@ -210,7 +210,7 @@ function extractVectorFromArrayLiteral(node: TSNode): ast.Vector2D | ast.Vector3
         const operator = operatorNode.text;
         const operand = parseFloat(operandNode.text);
 
-        if (!isNaN(operand)) {
+        if (!Number.isNaN(operand)) {
           if (operator === '-') {
             numbers.push(-operand);
           } else if (operator === '+') {
@@ -344,7 +344,7 @@ function createVectorFromNumbers(
   originalText: string
 ): ast.Vector2D | ast.Vector3D | undefined {
   // Filter out null, undefined, and NaN values
-  const validNumbers = numbers.filter((n) => n !== null && n !== undefined && !isNaN(n));
+  const validNumbers = numbers.filter((n) => n !== null && n !== undefined && !Number.isNaN(n));
 
   if (validNumbers.length === 2) {
     console.log(

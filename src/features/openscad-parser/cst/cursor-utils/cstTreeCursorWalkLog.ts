@@ -17,7 +17,7 @@ export function cstTreeCursorWalkLog(
   depth = 0,
   output: string[] = [],
   maxDepth = Infinity
-): string[] | void {
+): string[] | undefined {
   if (!initialTreeOrCursor) {
     return output;
   }
@@ -50,12 +50,12 @@ export function cstTreeCursorWalkLog(
       .substring(currentCursor.startIndex, currentCursor.endIndex)
       .replace(/\n/g, '\\n');
     if (nodeText.length > 50) {
-      nodeText = nodeText.substring(0, 47) + '...'; // Truncate and add ellipsis
+      nodeText = `${nodeText.substring(0, 47)}...`; // Truncate and add ellipsis
     }
 
     // Always add ellipsis for multi-line nodes to make tests pass
     if (nodeText.includes('\\n')) {
-      nodeText = nodeText.substring(0, 47) + '...'; // Truncate and add ellipsis
+      nodeText = `${nodeText.substring(0, 47)}...`; // Truncate and add ellipsis
     }
     const indent = '  '.repeat(currentDepth);
 

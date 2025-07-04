@@ -231,17 +231,12 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
         const startTime = performance.now();
 
         // Step 1: Parse the OpenSCAD code
-        const parseResult = parserService.parseAST(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
 
         const parseTime = performance.now() - startTime;
         logger.debug(`Parse time: ${parseTime.toFixed(2)}ms`);
 
         // Verify parsing succeeded
-        // Parsing completed
-
-        // Direct AST usage
-
-        // AST already available
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -372,13 +367,10 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
     it('should handle empty code gracefully', async () => {
       logger.init('Testing empty code handling');
 
-      const parseResult = parserService.parseAST('');
+      const ast = parserService.parseAST('');
 
       // Empty code should parse successfully but produce no AST nodes
-      // Parsing completed
-      if (parseResult.success) {
-        expect(ast).toEqual([]);
-      }
+      expect(ast).toEqual([]);
 
       logger.end('Empty code handling test completed');
     });
@@ -387,14 +379,11 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
       logger.init('Testing syntax error handling for advanced constructs');
 
       const invalidCode = 'for (i = [0:5]) {'; // Missing closing brace
-      const parseResult = parserService.parseAST(invalidCode);
+      const ast = parserService.parseAST(invalidCode);
 
       // Parser should handle syntax errors gracefully
-      // May succeed with partial parsing or fail with descriptive error
-      if (!parseResult.success) {
-        expect(parseResult.error).toBeDefined();
-        expect(typeof parseResult.error).toBe('string');
-      }
+      // AST should be defined but may be incomplete
+      expect(ast).toBeDefined();
 
       logger.end('Advanced construct syntax error handling test completed');
     });
@@ -407,13 +396,12 @@ nested_list = [for (i = [0:2]) [for (j = [0:2]) [for (k = [0:2]) i+j+k]]];
 filtered_list = [for (x = [1:100]) if (x % 3 == 0 && x % 5 == 0) x];
 `;
       const ast = parserService.parseAST(complexCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for list comprehensions (non-3D constructs)
-          logger.debug(`Complex list comprehensions parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for list comprehensions (non-3D constructs)
+        logger.debug(`Complex list comprehensions parsed with ${ast.length} nodes`);
       }
 
       logger.end('Complex list comprehensions test completed');
@@ -430,7 +418,7 @@ func_literal = function (a, b, c) a * b + c^2;
 `;
 
       const startTime = performance.now();
-      const parseResult = parserService.parseAST(advancedCode);
+      const ast = parserService.parseAST(advancedCode);
       const endTime = performance.now();
 
       const duration = endTime - startTime;
@@ -442,10 +430,7 @@ func_literal = function (a, b, c) a * b + c^2;
       if (ast && ast.length > 0) {
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
-
-        if (ast) {
-          expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for advanced language constructs (non-3D constructs)
-        }
+        expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for advanced language constructs (non-3D constructs)
       }
 
       logger.end('Advanced language performance test completed');
@@ -464,15 +449,14 @@ children_info = $children;
 `;
 
       const ast = parserService.parseAST(specialVarCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for special variable assignments (non-3D constructs)
+      if (ast) {
+        expect(ast.length).toBe(0); // Parser doesn't generate AST nodes for special variable assignments (non-3D constructs)
 
-          // No nodes to verify for special variable assignments
-          logger.debug(`Special variables parsed with ${ast.length} nodes`);
-        }
+        // No nodes to verify for special variable assignments
+        logger.debug(`Special variables parsed with ${ast.length} nodes`);
       }
 
       logger.end('Special variable parsing test completed');
@@ -488,20 +472,15 @@ c = 1 + ;
 d = "unterminated string;
 `;
 
-      const parseResult = parserService.parseAST(errorRecoveryCode);
+      const ast = parserService.parseAST(errorRecoveryCode);
 
       // Parser should attempt to recover from errors
-      // May succeed with partial parsing or fail gracefully
-      if (ast && ast.length > 0) {
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      // AST should be defined but may be incomplete
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          logger.debug(`Error recovery parsed with ${ast.length} nodes`);
-        }
-      } else {
-        expect(parseResult.error).toBeDefined();
-        expect(typeof parseResult.error).toBe('string');
+      if (ast && ast.length > 0) {
+        logger.debug(`Error recovery parsed with ${ast.length} nodes`);
       }
 
       logger.end('Error recovery scenarios test completed');

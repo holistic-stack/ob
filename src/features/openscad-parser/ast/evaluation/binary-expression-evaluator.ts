@@ -154,7 +154,7 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
     if (node.type === 'number') {
       const value = parseFloat(node.text);
       return {
-        value: isNaN(value) ? 0 : value,
+        value: Number.isNaN(value) ? 0 : value,
         type: 'number',
       };
     }

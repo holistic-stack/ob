@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import {
-  EnhancedOpenscadParser,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { OpenscadParser } from '../../index.js';
 
 describe('Real Parser Integration Tests', () => {
   let parser: OpenscadParser;
@@ -28,7 +23,7 @@ describe('Real Parser Integration Tests', () => {
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();
 
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
       expect(rootNode.type).toBe('source_file');
       expect(rootNode.childCount).toBeGreaterThan(0);
     });
@@ -40,7 +35,7 @@ describe('Real Parser Integration Tests', () => {
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();
 
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
       expect(rootNode.type).toBe('source_file');
 
       // Find statement nodes
@@ -73,7 +68,7 @@ describe('Real Parser Integration Tests', () => {
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();
 
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
       expect(rootNode.type).toBe('source_file');
 
       // Count statement nodes

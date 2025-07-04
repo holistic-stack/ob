@@ -24,6 +24,7 @@ import {
   type MatrixValidationDependencies,
   MatrixValidationService,
 } from './matrix-validation.service.js';
+import { matrixServiceDiagnostics } from './matrix-service-diagnostics.js';
 
 const logger = createLogger('MatrixServiceContainer');
 
@@ -84,6 +85,10 @@ export class MatrixServiceContainer {
 
   constructor(config: ServiceContainerConfig = {}) {
     logger.init('Initializing service container');
+    
+    // Enable diagnostics for bootstrap monitoring
+    matrixServiceDiagnostics.enable();
+    matrixServiceDiagnostics.startTiming('container_bootstrap', { autoStart: config.autoStartServices });
 
     this.config = {
       enableTelemetry: true,
@@ -97,12 +102,16 @@ export class MatrixServiceContainer {
     if (this.config.autoStartServices) {
       this.initializeServicesSync();
     }
+    
+    matrixServiceDiagnostics.endTiming('container_bootstrap');
   }
 
   /**
    * Initialize services synchronously for auto-start mode
    */
   private initializeServicesSync(): void {
+    matrixServiceDiagnostics.startTiming('services_initialization_sync');
+    
     try {
       logger.debug('Starting synchronous service initialization');
 
@@ -114,7 +123,14 @@ export class MatrixServiceContainer {
 
       this.isInitialized = true;
       logger.debug('Synchronous service initialization completed successfully');
+      
+      matrixServiceDiagnostics.endTiming('services_initialization_sync', { success: true });
     } catch (err) {
+      matrixServiceDiagnostics.endTiming('services_initialization_sync', { 
+        success: false, 
+        error: err instanceof Error ? err.message : String(err) 
+      });
+      
       logger.error('Synchronous service initialization failed:', err);
       throw new Error(
         `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`

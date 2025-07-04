@@ -206,7 +206,7 @@ function parseDefaultValueText(defaultValueText: string): ast.ParameterValue {
   console.log(`[parseDefaultValueText] Parsing default value text: ${defaultValueText}`);
 
   // Try to parse as number
-  if (!isNaN(Number(defaultValueText))) {
+  if (!Number.isNaN(Number(defaultValueText))) {
     return Number(defaultValueText);
   }
 
@@ -232,7 +232,7 @@ function parseDefaultValueText(defaultValueText: string): ast.ParameterValue {
     const vectorValues = vectorParts.map((v) => parseFloat(v.trim()));
 
     // Filter out NaN values
-    const validValues = vectorValues.filter((v) => !isNaN(v));
+    const validValues = vectorValues.filter((v) => !Number.isNaN(v));
 
     if (validValues.length === 2) {
       return validValues as ast.Vector2D;

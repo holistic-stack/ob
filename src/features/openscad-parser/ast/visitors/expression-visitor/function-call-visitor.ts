@@ -9,7 +9,7 @@
 
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../../error-handling/index.js';
-import { ErrorCode, type ErrorContext } from '../../../error-handling/types/error-types.js';
+import { ErrorCode } from '../../../error-handling/types/error-types.js';
 import type * as ast from '../../ast-types.js';
 import { extractArguments } from '../../extractors/argument-extractor.js';
 import { getLocation } from '../../utils/location-utils.js';

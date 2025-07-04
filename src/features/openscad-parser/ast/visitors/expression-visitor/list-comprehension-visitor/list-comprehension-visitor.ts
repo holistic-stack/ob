@@ -342,7 +342,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     // forClauseCstNode is guaranteed non-null here due to the check above.
     const forClause = this.extractForClause(forClauseCstNode!);
     this.errorHandler.logInfo(
-      `[ListComprehensionVisitor.parseOpenScadStyle] Extracted forClause. Variable: ${forClause.variable}, Range CST: ${forClauseCstNode!.childForFieldName('range')?.text?.substring(0, 50)}, Range AST type: ${forClause.range.type}, Range AST expressionType: ${'expressionType' in forClause.range ? (forClause.range as any).expressionType : 'N/A'}, Range AST errorCode: ${'errorCode' in forClause.range ? (forClause.range as any).errorCode : 'N/A'}`,
+      `[ListComprehensionVisitor.parseOpenScadStyle] Extracted forClause. Variable: ${forClause.variable}, Range CST: ${forClauseCstNode?.childForFieldName('range')?.text?.substring(0, 50)}, Range AST type: ${forClause.range.type}, Range AST expressionType: ${'expressionType' in forClause.range ? (forClause.range as any).expressionType : 'N/A'}, Range AST errorCode: ${'errorCode' in forClause.range ? (forClause.range as any).errorCode : 'N/A'}`,
       'parseOpenScadStyle.forClauseResult',
       forClause.range
     );
@@ -350,7 +350,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     // Validate forClause.range (Error propagation)
     if (forClause.range.type === 'error') {
       this.errorHandler.logWarning(
-        `[ListComprehensionVisitor.parseOpenScadStyle] Error extracting for_clause range. Propagating error. CST: ${forClauseCstNode!.text.substring(0, 50)}`,
+        `[ListComprehensionVisitor.parseOpenScadStyle] Error extracting for_clause range. Propagating error. CST: ${forClauseCstNode?.text.substring(0, 50)}`,
         'parseOpenScadStyle.extractForClauseErrorPropagation'
       );
       return forClause.range; // Propagate error from extractForClause
@@ -359,7 +359,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     // After this point, forClause.range is guaranteed to be a valid ExpressionNode
     if (!forClause.variable) {
       this.errorHandler.logError(
-        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to extract variable from for clause. CST: ${forClauseCstNode!.text.substring(0, 80)}. ErrorCode: LC_FOR_CLAUSE_NO_VARIABLE_PROP`,
+        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to extract variable from for clause. CST: ${forClauseCstNode?.text.substring(0, 80)}. ErrorCode: LC_FOR_CLAUSE_NO_VARIABLE_PROP`,
         'LC_FOR_CLAUSE_NO_VARIABLE_PROP'
       );
       return {
@@ -367,8 +367,8 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
         errorCode: 'LC_FOR_CLAUSE_NO_VARIABLE_PROP',
         message: 'Failed to extract variable name from for clause.',
         location: getLocation(forClauseCstNode!),
-        originalNodeType: forClauseCstNode!.type,
-        cstNodeText: forClauseCstNode!.text,
+        originalNodeType: forClauseCstNode?.type,
+        cstNodeText: forClauseCstNode?.text,
       };
     }
 
@@ -400,7 +400,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     // Validate body expression result (Error propagation)
     if (!bodyExpressionAstNode) {
       this.errorHandler.logError(
-        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to parse body expression (visitor returned null). CST: ${bodyExpressionCstNode!.text.substring(0, 80)}. ErrorCode: LC_BODY_EXPRESSION_UNPARSABLE_NULL`,
+        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to parse body expression (visitor returned null). CST: ${bodyExpressionCstNode?.text.substring(0, 80)}. ErrorCode: LC_BODY_EXPRESSION_UNPARSABLE_NULL`,
         'LC_BODY_EXPRESSION_UNPARSABLE_NULL'
       );
       return {
@@ -408,8 +408,8 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
         errorCode: 'LC_BODY_EXPRESSION_UNPARSABLE_NULL',
         message: 'Failed to parse body expression (visitor returned null).',
         location: getLocation(bodyExpressionCstNode!),
-        originalNodeType: bodyExpressionCstNode!.type,
-        cstNodeText: bodyExpressionCstNode!.text,
+        originalNodeType: bodyExpressionCstNode?.type,
+        cstNodeText: bodyExpressionCstNode?.text,
       };
     }
     // The `if (bodyExpressionAstNode.type === 'error')` check that follows this block

@@ -512,7 +512,7 @@ export class ModuleVisitor extends BaseASTVisitor {
       }
     }
 
-    if (vParam && vParam.value && Array.isArray(vParam.value) && vParam.value.length === 3) {
+    if (vParam?.value && Array.isArray(vParam.value) && vParam.value.length === 3) {
       v = [vParam.value[0], vParam.value[1], vParam.value[2]];
     }
 
@@ -786,7 +786,7 @@ export class ModuleVisitor extends BaseASTVisitor {
       }
     }
 
-    if (alphaParam && alphaParam.value && typeof alphaParam.value === 'number') {
+    if (alphaParam?.value && typeof alphaParam.value === 'number') {
       alpha = alphaParam.value;
     }
 
@@ -876,15 +876,15 @@ export class ModuleVisitor extends BaseASTVisitor {
     const deltaParam = args.find((arg) => arg.name === 'delta');
     const chamferParam = args.find((arg) => arg.name === 'chamfer');
 
-    if (radiusParam && radiusParam.value && typeof radiusParam.value === 'number') {
+    if (radiusParam?.value && typeof radiusParam.value === 'number') {
       radius = radiusParam.value;
     }
 
-    if (deltaParam && deltaParam.value && typeof deltaParam.value === 'number') {
+    if (deltaParam?.value && typeof deltaParam.value === 'number') {
       delta = deltaParam.value;
     }
 
-    if (chamferParam && chamferParam.value && typeof chamferParam.value === 'boolean') {
+    if (chamferParam?.value && typeof chamferParam.value === 'boolean') {
       chamfer = chamferParam.value === true;
     }
 
@@ -942,7 +942,7 @@ export class ModuleVisitor extends BaseASTVisitor {
         if (indexNode) {
           const indexText = indexNode.text;
           const indexValue = parseInt(indexText);
-          if (!isNaN(indexValue)) {
+          if (!Number.isNaN(indexValue)) {
             index = indexValue;
           }
         }

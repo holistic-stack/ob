@@ -120,13 +120,7 @@ describe('AST to CSG Converter - Rotate Fuzzy Testing', () => {
           logger.debug(`Testing rotate(${angle}) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for rotate(${angle}): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for rotate(${angle})`);
             return; // Skip this test case
@@ -176,13 +170,7 @@ describe('AST to CSG Converter - Rotate Fuzzy Testing', () => {
           logger.debug(`Testing rotate([${x}, ${y}, ${z}]) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for rotate([${x}, ${y}, ${z}]): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for rotate([${x}, ${y}, ${z}])`);
             return; // Skip this test case
@@ -239,12 +227,7 @@ describe('AST to CSG Converter - Rotate Fuzzy Testing', () => {
       for (const angle of edgeCases) {
         const code = `rotate(${angle}) cube(5);`;
 
-        const parseResult = parserService.parseAST(code);
-        // Parsing completed
-
-        if (!parseResult.success) continue;
-
-        // AST already available
+        const ast = parserService.parseAST(code);
         if (!ast || ast.length === 0) continue;
 
         const rotateNode = ast[0];
@@ -281,13 +264,7 @@ describe('AST to CSG Converter - Rotate Fuzzy Testing', () => {
 
             logger.debug(`Testing ${angles.length} rotate operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple rotate operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== angles.length) {
               logger.warn(
                 `AST length mismatch: expected ${angles.length}, got ${ast?.length || 0}`
@@ -331,14 +308,11 @@ describe('AST to CSG Converter - Rotate Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyAngle(), async (angle) => {
           const code = `rotate(${angle}) cylinder(h=10, r=5);`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for performance test with rotate(${angle})`);
+          const ast = parserService.parseAST(code);
+          if (!ast || ast.length === 0) {
+            logger.warn(`No AST nodes for performance test with rotate(${angle})`);
             return; // Skip this test case
           }
-
-          // AST already available
-          if (!ast || ast.length === 0) return;
 
           const rotateNode = ast[0];
           if (!rotateNode) return;

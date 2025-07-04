@@ -175,7 +175,7 @@ export class VisitorASTGenerator {
 
     // Add all visitors to the composite visitor
     // Order matters: definition visitors must come before instantiation visitors
-    compositeVisitor['visitors'] = [
+    compositeVisitor.visitors = [
       new AssignStatementVisitor(this.source, this.errorHandler), // Handle assign statements first
       new AssertStatementVisitor(this.source, this.errorHandler),
       // Module and function definitions must be processed before instantiations

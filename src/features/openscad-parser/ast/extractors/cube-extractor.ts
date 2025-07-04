@@ -68,7 +68,7 @@ export function extractCubeNode(
     const arg = args[i];
 
     // Handle size parameter (first positional parameter or named 'size')
-    if ((i === 0 && !arg!.name) || arg!.name === 'size') {
+    if ((i === 0 && !arg?.name) || arg?.name === 'size') {
       // Check if it's a vector parameter
       const vectorValue = extractVectorParameter(arg!);
       if (vectorValue && vectorValue.length >= 1) {
@@ -119,13 +119,13 @@ export function extractCubeNode(
       }
     }
     // Handle center parameter (second positional parameter or named 'center')
-    else if ((i === 1 && !arg!.name) || arg!.name === 'center') {
+    else if ((i === 1 && !arg?.name) || arg?.name === 'center') {
       const centerValue = extractBooleanParameter(arg!, errorHandler);
       if (centerValue !== null) {
         center = centerValue;
         console.log(`[extractCubeNode] Found center parameter: ${center}`);
       } else {
-        console.log(`[extractCubeNode] Invalid center parameter: ${JSON.stringify(arg!.value)}`);
+        console.log(`[extractCubeNode] Invalid center parameter: ${JSON.stringify(arg?.value)}`);
       }
     }
   }

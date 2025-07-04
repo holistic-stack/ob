@@ -122,13 +122,7 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
           logger.debug(`Testing scale(${factor}) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for scale(${factor}): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for scale(${factor})`);
             return; // Skip this test case
@@ -178,13 +172,7 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
           logger.debug(`Testing scale([${x}, ${y}, ${z}]) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for scale([${x}, ${y}, ${z}]): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for scale([${x}, ${y}, ${z}])`);
             return; // Skip this test case
@@ -241,12 +229,7 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
       for (const factor of edgeCases) {
         const code = `scale(${factor}) cube(5);`;
 
-        const parseResult = parserService.parseAST(code);
-        // Parsing completed
-
-        if (!parseResult.success) continue;
-
-        // AST already available
+        const ast = parserService.parseAST(code);
         if (!ast || ast.length === 0) continue;
 
         const scaleNode = ast[0];
@@ -283,13 +266,7 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
 
             logger.debug(`Testing ${factors.length} scale operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple scale operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== factors.length) {
               logger.warn(
                 `AST length mismatch: expected ${factors.length}, got ${ast?.length || 0}`
@@ -333,14 +310,11 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyScaleFactor(), async (factor) => {
           const code = `scale(${factor}) cylinder(h=10, r=5);`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for performance test with scale(${factor})`);
+          const ast = parserService.parseAST(code);
+          if (!ast || ast.length === 0) {
+            logger.warn(`No AST nodes for performance test with scale(${factor})`);
             return; // Skip this test case
           }
-
-          // AST already available
-          if (!ast || ast.length === 0) return;
 
           const scaleNode = ast[0];
           if (!scaleNode) return;

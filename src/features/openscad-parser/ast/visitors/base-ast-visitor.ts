@@ -24,7 +24,6 @@ import { ErrorHandler, type ErrorHandlerOptions } from '../../error-handling/err
 import { Severity } from '../../error-handling/types/error-types.js';
 import type * as ast from '../ast-types.js';
 import { type ExtractedParameter, extractArguments } from '../extractors/argument-extractor.js';
-import { createErrorNodeInternal, defaultLocation } from '../utils/ast-error-utils.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import type { ASTVisitor } from './ast-visitor.js';
@@ -887,7 +886,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
             if (argValue.includes('=')) {
               // Named argument
               const [_name, value] = argValue.split('=').map((p) => p.trim());
-              if (!isNaN(Number(value))) {
+              if (!Number.isNaN(Number(value))) {
                 args.push({
                   type: 'number',
                   value: String(Number(value)),
@@ -903,7 +902,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
                   value: value ?? '',
                 });
               }
-            } else if (!isNaN(Number(argValue))) {
+            } else if (!Number.isNaN(Number(argValue))) {
               // Positional number argument
               args.push({
                 type: 'number',
@@ -976,7 +975,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
           if (argValue.includes('=')) {
             // Named argument
             const [_name, value] = argValue.split('=').map((p) => p.trim());
-            if (!isNaN(Number(value))) {
+            if (!Number.isNaN(Number(value))) {
               tempArgs.push({
                 type: 'number',
                 value: String(Number(value)),
@@ -992,7 +991,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
                 value: value ?? '',
               });
             }
-          } else if (!isNaN(Number(argValue))) {
+          } else if (!Number.isNaN(Number(argValue))) {
             // Positional number argument
             tempArgs.push({
               type: 'number',

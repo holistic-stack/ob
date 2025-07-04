@@ -263,7 +263,7 @@ export class VariableVisitor extends BaseASTVisitor {
    * @returns The function call AST node or null if not handled
    */
   createASTNodeForFunction(
-    node: TSNode,
+    _node: TSNode,
     _functionName?: string,
     _args?: ast.Parameter[]
   ): ast.ASTNode | null {

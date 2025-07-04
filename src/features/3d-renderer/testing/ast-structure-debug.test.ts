@@ -8,7 +8,6 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 
 const logger = createLogger('ASTStructureDebugTest');
 

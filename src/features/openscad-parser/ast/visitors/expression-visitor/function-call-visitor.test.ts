@@ -36,7 +36,7 @@ describe('FunctionCallVisitor', () => {
 
       // Find the module_instantiation node (function call in new grammar)
       // Note: Standalone function calls like foo(); are parsed as module_instantiation
-      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
+      const moduleInstNode = findDescendantOfType(tree?.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -62,7 +62,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
+      const moduleInstNode = findDescendantOfType(tree?.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -101,7 +101,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
+      const moduleInstNode = findDescendantOfType(tree?.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -136,7 +136,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
+      const moduleInstNode = findDescendantOfType(tree?.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node
@@ -175,7 +175,7 @@ describe('FunctionCallVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
-      const moduleInstNode = findDescendantOfType(tree!.rootNode, 'module_instantiation');
+      const moduleInstNode = findDescendantOfType(tree?.rootNode, 'module_instantiation');
       expect(moduleInstNode).not.toBeNull();
 
       // Create visitor and process the node

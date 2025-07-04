@@ -1,12 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { ErrorHandler, OpenscadParser } from '../../index.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { CSGVisitor } from './csg-visitor.js';
 

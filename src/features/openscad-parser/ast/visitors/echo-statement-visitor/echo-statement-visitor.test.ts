@@ -9,13 +9,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  EnhancedOpenscadParser,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../../index.js';
-import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../index.js';
+import type { EchoStatementNode } from '../../ast-types.js';
 
 describe('EchoStatementVisitor', () => {
   let parser: EnhancedOpenscadParser;

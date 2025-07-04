@@ -285,13 +285,10 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
     it('should handle empty code gracefully', async () => {
       logger.init('Testing empty code handling');
 
-      const parseResult = parserService.parseAST('');
+      const ast = parserService.parseAST('');
 
       // Empty code should parse successfully but produce no AST nodes
-      // Parsing completed
-      if (parseResult.success) {
-        expect(ast).toEqual([]);
-      }
+      expect(ast).toEqual([]);
 
       logger.end('Empty code handling test completed');
     });
@@ -300,14 +297,11 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
       logger.init('Testing syntax error handling for 2D shapes');
 
       const invalidCode = 'circle(r='; // Missing closing parenthesis
-      const parseResult = parserService.parseAST(invalidCode);
+      const ast = parserService.parseAST(invalidCode);
 
       // Parser should handle syntax errors gracefully
-      // May succeed with partial parsing or fail with descriptive error
-      if (!parseResult.success) {
-        expect(parseResult.error).toBeDefined();
-        expect(typeof parseResult.error).toBe('string');
-      }
+      // AST should be defined but may be incomplete
+      expect(ast).toBeDefined();
 
       logger.end('2D shape syntax error handling test completed');
     });
@@ -323,13 +317,12 @@ linear_extrude(height=10, twist=90) {
   }
 }`;
       const ast = parserService.parseAST(complexCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBeGreaterThan(0);
-          logger.debug(`Complex nested extrusion parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBeGreaterThan(0);
+        logger.debug(`Complex nested extrusion parsed with ${ast.length} nodes`);
       }
 
       logger.end('Complex nested extrusion operations test completed');
@@ -352,7 +345,7 @@ rotate_extrude(angle=360, $fn=100) {
 }`;
 
       const startTime = performance.now();
-      const parseResult = parserService.parseAST(extrusionCode);
+      const ast = parserService.parseAST(extrusionCode);
       const endTime = performance.now();
 
       const duration = endTime - startTime;
@@ -364,10 +357,7 @@ rotate_extrude(angle=360, $fn=100) {
       if (ast && ast.length > 0) {
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
-
-        if (ast) {
-          expect(ast.length).toBeGreaterThan(0);
-        }
+        expect(ast.length).toBeGreaterThan(0);
       }
 
       logger.end('2D and extrusion performance test completed');
@@ -387,19 +377,18 @@ text("Test", size=12, font="Arial");
 `;
 
       const ast = parserService.parseAST(primitiveCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(7);
+      if (ast) {
+        expect(ast.length).toBe(7);
 
-          // Verify each node is a module instantiation or function call
-          ast.forEach((node: ASTNode, index: number) => {
-            expect(node).toBeDefined();
-            expect(node?.type).toMatch(/module_instantiation|function_call/);
-            logger.debug(`2D primitive ${index + 1}: ${node?.type}`);
-          });
-        }
+        // Verify each node is a module instantiation or function call
+        ast.forEach((node: ASTNode, index: number) => {
+          expect(node).toBeDefined();
+          expect(node?.type).toMatch(/module_instantiation|function_call/);
+          logger.debug(`2D primitive ${index + 1}: ${node?.type}`);
+        });
       }
 
       logger.end('2D primitive parameter parsing test completed');
@@ -418,13 +407,12 @@ rotate_extrude(angle=180, convexity=3, $fn=50) translate([15, 0, 0]) circle(3);
 `;
 
       const ast = parserService.parseAST(extrusionVariationsCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          expect(ast.length).toBe(6);
-          logger.debug(`Extrusion variations parsed with ${ast.length} nodes`);
-        }
+      if (ast) {
+        expect(ast.length).toBe(6);
+        logger.debug(`Extrusion variations parsed with ${ast.length} nodes`);
       }
 
       logger.end('Extrusion parameter variations test completed');

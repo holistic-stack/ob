@@ -47,10 +47,35 @@
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { extractVector } from '../utils/vector-utils.js';
+
+/**
+ * Extract text from source code using node position information.
+ * This is a workaround for Tree-sitter memory management issues that can cause
+ * node.text to be truncated.
+ *
+ * @param node - The Tree-sitter node
+ * @param sourceCode - The original source code
+ * @returns The correct text for the node, or node.text as fallback
+ */
+export function getNodeText(node: TSNode, sourceCode?: string): string {
+  if (sourceCode && node.startIndex !== undefined && node.endIndex !== undefined) {
+    try {
+      const extractedText = sourceCode.slice(node.startIndex, node.endIndex);
+      // Only use extracted text if it's not empty and seems reasonable
+      if (extractedText.length > 0 && extractedText.length <= 1000) {
+        return extractedText;
+      }
+    } catch (error) {
+      console.warn(`[getNodeText] Failed to extract text from source: ${error}`);
+    }
+  }
+
+  // Fallback to node.text
+  return node.text || '';
+}
 
 /**
  * Determines if a Tree-sitter node represents a complex expression requiring evaluation.
@@ -178,7 +203,8 @@ function isComplexExpression(node: TSNode): boolean {
  */
 export function extractValueEnhanced(
   node: TSNode,
-  errorHandler?: ErrorHandler
+  errorHandler?: ErrorHandler,
+  sourceCode: string = ''
 ): ast.ParameterValue {
   console.log(
     `[extractValueEnhanced] Attempting to extract from node: type='${
@@ -222,14 +248,14 @@ export function extractValueEnhanced(
         if (isComplexExpression(leftNode)) {
           leftValue = evaluateBinaryExpression(leftNode);
         } else {
-          const extractedLeft = extractValueEnhanced(leftNode, errorHandler);
+          const extractedLeft = extractValueEnhanced(leftNode, errorHandler, sourceCode);
           leftValue = typeof extractedLeft === 'number' ? extractedLeft : undefined;
         }
 
         if (isComplexExpression(rightNode)) {
           rightValue = evaluateBinaryExpression(rightNode);
         } else {
-          const extractedRight = extractValueEnhanced(rightNode, errorHandler);
+          const extractedRight = extractValueEnhanced(rightNode, errorHandler, sourceCode);
           rightValue = typeof extractedRight === 'number' ? extractedRight : undefined;
         }
 
@@ -292,7 +318,7 @@ export function extractValueEnhanced(
   }
 
   // Fall back to the original simple extraction logic
-  return extractValue(node);
+  return extractValue(node, sourceCode);
 }
 
 /**
@@ -353,7 +379,7 @@ export function extractValueEnhanced(
  * @since 0.1.0
  * @category Value Extraction
  */
-export function extractValue(node: TSNode): ast.ParameterValue {
+export function extractValue(node: TSNode, sourceCode: string = ''): ast.ParameterValue {
   console.log(
     `[extractValue] Attempting to extract from node: type='${
       node.type
@@ -369,7 +395,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       );
       // Unwrap the expression and extract from its first child
       const firstChild = node.child(0);
-      return node.childCount > 0 && firstChild ? extractValue(firstChild) : undefined;
+      return node.childCount > 0 && firstChild ? extractValue(firstChild, sourceCode) : undefined;
     }
     case 'number': {
       const numValue = parseFloat(node.text);
@@ -394,17 +420,17 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       console.log(
         `[extractValue] Calling extractVector for array_literal: ${node.text.substring(0, 20)}`
       ); // DEBUG
-      return extractVector(node);
+      return extractVector(node, sourceCode);
     case 'array_expression':
       console.log(
         `[extractValue] Calling extractVector for array_expression: ${node.text.substring(0, 20)}`
       ); // DEBUG
-      return extractVector(node);
+      return extractVector(node, sourceCode);
     case 'vector_expression':
       console.log(
         `[extractValue] Calling extractVector for vector_expression: ${node.text.substring(0, 20)}`
       ); // DEBUG
-      return extractVector(node);
+      return extractVector(node, sourceCode);
     case 'unary_expression': {
       console.log(
         `[extractValue] Processing unary_expression with ${node.childCount} children: '${node.text}'`
@@ -416,7 +442,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
         const operandNode = node.child(1);
         if (operatorNode && operandNode) {
           const operator = operatorNode.text;
-          const operandValue = extractValue(operandNode);
+          const operandValue = extractValue(operandNode, sourceCode);
           if (operator === '-' && typeof operandValue === 'number') {
             console.log(`[extractValue] Applied unary minus: -${operandValue}`);
             return -operandValue;
@@ -435,7 +461,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Single child in unary_expression: type='${child.type}', text='${child.text}'`
           );
-          return extractValue(child);
+          return extractValue(child, sourceCode);
         }
       }
 
@@ -444,7 +470,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
 
       // Check for numbers
       const num = parseFloat(text);
-      if (!isNaN(num)) {
+      if (!Number.isNaN(num)) {
         console.log(`[extractValue] Parsed unary_expression text '${text}' as number: ${num}`);
         return num;
       }
@@ -485,7 +511,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Single child in ${node.type}: type='${child.type}', text='${child.text}'`
           );
-          return extractValue(child);
+          return extractValue(child, sourceCode);
         }
       }
 
@@ -502,7 +528,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           // Create a minimal error handler for this extraction
           const tempErrorHandler = new ErrorHandler();
 
-          const enhancedResult = extractValueEnhanced(node, tempErrorHandler);
+          const enhancedResult = extractValueEnhanced(node, tempErrorHandler, sourceCode);
           if (enhancedResult !== undefined) {
             console.log(`[extractValue] Enhanced extraction succeeded: ${enhancedResult}`);
             return enhancedResult;
@@ -513,7 +539,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
       // For simple cases, try to parse as number first
       const potentialNumText = node.text.trim();
       const num = parseFloat(potentialNumText);
-      if (!isNaN(num)) {
+      if (!Number.isNaN(num)) {
         console.log(
           `[extractValue] Parsed ${node.type} text '${potentialNumText}' as number: ${num}`
         );
@@ -570,7 +596,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
               30
             )}'`
           );
-          return extractVector(arrayLiteralNode);
+          return extractVector(arrayLiteralNode, sourceCode);
         }
       }
 
@@ -581,14 +607,14 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Trying to extract from first child of conditional_expression: '${firstChild.type}'`
           );
-          return extractValue(firstChild);
+          return extractValue(firstChild, sourceCode);
         }
       }
 
       // Fallback to parsing as number or returning text
       const potentialCondExprText = node.text.trim();
       const condExprNum = parseFloat(potentialCondExprText);
-      if (!isNaN(condExprNum)) {
+      if (!Number.isNaN(condExprNum)) {
         console.log(
           `[extractValue] Parsed conditional_expression text '${potentialCondExprText}' as number: ${condExprNum}`
         );
@@ -615,7 +641,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Single child in ${node.type}: type='${child.type}', text='${child.text}'`
           );
-          return extractValue(child);
+          return extractValue(child, sourceCode);
         }
       }
 
@@ -624,7 +650,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
 
       // Check for numbers
       const num = parseFloat(text);
-      if (!isNaN(num)) {
+      if (!Number.isNaN(num)) {
         console.log(`[extractValue] Parsed ${node.type} text '${text}' as number: ${num}`);
         return num;
       }
@@ -673,7 +699,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Found expression child in argument: type='${child.type}', text='${child.text}'`
           );
-          return extractValue(child);
+          return extractValue(child, sourceCode);
         }
       }
 
@@ -690,7 +716,7 @@ export function extractValue(node: TSNode): ast.ParameterValue {
           console.log(
             `[extractValue] Found expression child in arguments: type='${child.type}', text='${child.text}'`
           );
-          return extractValue(child);
+          return extractValue(child, sourceCode);
         }
       }
 

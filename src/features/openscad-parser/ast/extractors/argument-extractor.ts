@@ -173,19 +173,21 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
  * Convert a node to a ParameterValue
  * @param node The node to convert
  * @param errorHandler Optional error handler for enhanced expression evaluation
+ * @param sourceCode Optional source code string for extracting correct text when node.text is truncated
  * @returns A ParameterValue object or undefined if the conversion fails
  */
 function convertNodeToParameterValue(
   node: TSNode,
-  errorHandler?: ErrorHandler
+  errorHandler?: ErrorHandler,
+  sourceCode: string = ''
 ): ast.ParameterValue | undefined {
   // Use enhanced value extraction if error handler is available
   if (errorHandler) {
-    return extractValueEnhanced(node, errorHandler);
+    return extractValueEnhanced(node, errorHandler, sourceCode);
   }
 
   // Fall back to the original value-extractor function
-  return extractParameterValue(node);
+  return extractParameterValue(node, sourceCode);
 }
 
 /**
@@ -390,7 +392,7 @@ export function extractArguments(
         console.log(
           `[extractArguments] Processing direct value: type=${child.type}, text=${childText}`
         );
-        const value = convertNodeToParameterValue(child, errorHandler);
+        const value = convertNodeToParameterValue(child, errorHandler, sourceCode);
         if (value !== undefined) {
           args.push({ name: undefined, value }); // Positional argument
           console.log(
@@ -458,7 +460,7 @@ export function extractArguments(
         console.log(
           `[extractArguments] No argument children found and no arguments extracted, treating arguments node as direct expression`
         );
-        const value = convertNodeToParameterValue(argNode, errorHandler);
+        const value = convertNodeToParameterValue(argNode, errorHandler, sourceCode);
         if (value !== undefined) {
           args.push({ name: undefined, value }); // Positional argument
           console.log(
@@ -484,7 +486,7 @@ export function extractArguments(
       console.log(
         `[extractArguments] Child is not of type 'argument', attempting to process as direct value: type=${argNode.type}`
       );
-      const value = convertNodeToParameterValue(argNode, errorHandler);
+      const value = convertNodeToParameterValue(argNode, errorHandler, sourceCode);
       if (value !== undefined) {
         args.push({ name: undefined, value }); // Positional argument
         console.log(
@@ -596,7 +598,7 @@ function extractArgument(
 
     if (identifierNode && valueNode) {
       const name = getNodeText(identifierNode, sourceCode);
-      const value = convertNodeToParameterValue(valueNode, errorHandler);
+      const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode);
       if (value !== undefined) {
         console.log(
           `[extractArgument] Extracted named parameter: ${name} = ${JSON.stringify(value)}`
@@ -623,7 +625,7 @@ function extractArgument(
     console.log(`[extractArgument] Processing named argument: ${name} = ${valueFieldText}`);
 
     // Extract the value from the expression
-    const value = extractValue(valueField);
+    const value = extractValue(valueField, sourceCode);
     if (!value) {
       console.log(`[extractArgument] Failed to extract value from expression: ${valueFieldText}`);
       return null;
@@ -675,7 +677,7 @@ function extractArgument(
     );
 
     // Extract the value from the expression
-    const value = extractValue(expressionNode);
+    const value = extractValue(expressionNode, sourceCode);
     if (!value) {
       console.log(`[extractArgument] Failed to extract value from expression: ${expressionText}`);
       return null;
@@ -693,7 +695,7 @@ function extractArgument(
       console.log(`[extractArgument] Found positional argument: ${valueNodeText}`);
 
       // Extract the value
-      const value = extractValue(valueNode);
+      const value = extractValue(valueNode, sourceCode);
       if (!value) {
         console.log(`[extractArgument] Failed to extract value from node: ${valueNodeText}`);
         return null;
@@ -715,7 +717,7 @@ function extractArgument(
  * @param valueNode The value node
  * @returns A value object or null if the value is invalid
  */
-export function extractValue(valueNode: TSNode): ast.Value | null {
+export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Value | null {
   // --- BEGIN DIAGNOSTIC LOGGING ---
   // console.log(`[extractValue ENTRY] Node Type: '${valueNode.type}', Text: '${valueNode.text.replace(/\n/g, '\\n')}', isNamed: ${valueNode.isNamed}`);
   // --- END DIAGNOSTIC LOGGING ---
@@ -730,7 +732,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
         console.log(
           `[extractValue] Expression child: type=${expressionChild.type}, text='${expressionChild.text}'`
         );
-        return extractValue(expressionChild);
+        return extractValue(expressionChild, sourceCode);
       }
       console.log('[extractValue] Expression node has no processable child.');
       return null;
@@ -780,7 +782,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
     case 'vector_literal': // Fallthrough
     case 'array_literal':
     case 'vector_expression': // Add support for vector_expression
-      return extractVectorLiteral(valueNode);
+      return extractVectorLiteral(valueNode, sourceCode);
 
     case 'range_literal':
       return extractRangeLiteral(valueNode);
@@ -796,7 +798,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
 
         if (operatorNode && operandNode) {
           const operator = operatorNode.text;
-          const operandValue = extractValue(operandNode);
+          const operandValue = extractValue(operandNode, sourceCode);
 
           console.log(
             `[extractValue] Unary operator: '${operator}', operand: ${JSON.stringify(operandValue)}`
@@ -813,13 +815,21 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
                   ? actualValue
                   : NaN;
 
-            if (operator === '-' && typeof numericValue === 'number' && !isNaN(numericValue)) {
+            if (
+              operator === '-' &&
+              typeof numericValue === 'number' &&
+              !Number.isNaN(numericValue)
+            ) {
               console.log(
                 `[extractValue] Applied unary minus to structured value: -${numericValue}`
               );
               return { type: 'number', value: -numericValue };
             }
-            if (operator === '+' && typeof numericValue === 'number' && !isNaN(numericValue)) {
+            if (
+              operator === '+' &&
+              typeof numericValue === 'number' &&
+              !Number.isNaN(numericValue)
+            ) {
               console.log(
                 `[extractValue] Applied unary plus to structured value: +${numericValue}`
               );
@@ -863,7 +873,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
         const child = valueNode.namedChild(i);
         if (child) {
           console.log(`[extractValue] Trying child ${i}: type=${child.type}, text='${child.text}'`);
-          const result = extractValue(child);
+          const result = extractValue(child, sourceCode);
           if (result) {
             console.log(
               `[extractValue] Successfully extracted from ${valueNode.type} via child ${i}`
@@ -880,7 +890,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
           console.log(
             `[extractValue] Trying unnamed child ${i}: type=${child.type}, text='${child.text}'`
           );
-          const result = extractValue(child);
+          const result = extractValue(child, sourceCode);
           if (result) {
             console.log(
               `[extractValue] Successfully extracted from ${valueNode.type} via unnamed child ${i}`
@@ -908,8 +918,8 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
         const rightNode = valueNode.child(2);
 
         if (leftNode && operatorNode && rightNode) {
-          const leftValue = extractValue(leftNode);
-          const rightValue = extractValue(rightNode);
+          const leftValue = extractValue(leftNode, sourceCode);
+          const rightValue = extractValue(rightNode, sourceCode);
           const operator = operatorNode.text;
 
           console.log(
@@ -931,7 +941,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
                   ? rightValue.value
                   : NaN;
 
-            if (!isNaN(leftNum) && !isNaN(rightNum)) {
+            if (!Number.isNaN(leftNum) && !Number.isNaN(rightNum)) {
               let result: number;
               switch (operator) {
                 case '+':
@@ -988,7 +998,7 @@ export function extractValue(valueNode: TSNode): ast.Value | null {
  * @param vectorNode The vector_literal node
  * @returns A vector value object or null if the vector is invalid
  */
-function extractVectorLiteral(vectorNode: TSNode): ast.VectorValue | null {
+function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.VectorValue | null {
   console.log(
     `[extractVectorLiteral] Processing vector/array node: type=${vectorNode.type}, text='${vectorNode.text}'`
   );
@@ -1007,7 +1017,7 @@ function extractVectorLiteral(vectorNode: TSNode): ast.VectorValue | null {
         }', Text='${elementNode.text.replace(/\n/g, '\\n')}', isNamed=${elementNode.isNamed}`
       );
       // --- END DIAGNOSTIC LOGGING ---
-      const value = extractValue(elementNode);
+      const value = extractValue(elementNode, sourceCode);
       if (value) {
         console.log(
           '[extractVectorLiteral] Successfully extracted value for child:',

@@ -177,13 +177,7 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
             );
 
             // Parse the code
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for nested operations: ${parseResult.error}`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for nested operations`);
               return; // Skip this test case
@@ -240,13 +234,7 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
             logger.debug(`Testing nested translate([${tx}, ${ty}, ${tz}]) ${boolOp}() conversion`);
 
             // Parse the code
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for nested ${boolOp} operations: ${parseResult.error}`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for nested ${boolOp} operations`);
               return; // Skip this test case
@@ -300,15 +288,7 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
             logger.debug(`Testing deeply nested transformation chain conversion`);
 
             // Parse the code
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(
-                `Parse failed for deeply nested transformation chain: ${parseResult.error}`
-              );
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for deeply nested transformation chain`);
               return; // Skip this test case
@@ -376,13 +356,7 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
             logger.debug(`Testing ${operations.length} nested operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple nested operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== operations.length) {
               logger.warn(
                 `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
@@ -437,13 +411,7 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
 
             logger.debug(`Testing complex nested ${boolOp} with transformations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for complex nested ${boolOp} operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for complex nested ${boolOp} operations`);
               return; // Skip this test case
@@ -488,14 +456,11 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
           async ([tx, ty, tz], [rx, ry, rz], primitive) => {
             const code = `translate([${tx}, ${ty}, ${tz}]) rotate([${rx}, ${ry}, ${rz}]) ${primitive};`;
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for performance test with nested transformations`);
+            const ast = parserService.parseAST(code);
+            if (!ast || ast.length === 0) {
+              logger.warn(`No AST nodes for performance test with nested transformations`);
               return; // Skip this test case
             }
-
-            // AST already available
-            if (!ast || ast.length === 0) return;
 
             const nestedNode = ast[0];
             if (!nestedNode) return;
@@ -536,14 +501,11 @@ describe('AST to CSG Converter - Complex Nested Operations Fuzzy Testing', () =>
   cylinder(h=6, r=2);
 }`;
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for performance test with complex nested ${boolOp}`);
+            const ast = parserService.parseAST(code);
+            if (!ast || ast.length === 0) {
+              logger.warn(`No AST nodes for performance test with complex nested ${boolOp}`);
               return; // Skip this test case
             }
-
-            // AST already available
-            if (!ast || ast.length === 0) return;
 
             const nestedNode = ast[0];
             if (!nestedNode) return;

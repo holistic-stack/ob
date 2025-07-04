@@ -243,13 +243,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing circle(r=${radius}) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for circle(r=${radius}): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for circle(r=${radius})`);
             return; // Skip this test case
@@ -278,7 +272,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
               logger.debug(`✅ Circle(r=${radius}) applied correctly to mesh`);
             } else {
               logger.warn(
-                `Conversion failed for circle(r=${radius}): ${result.success ? 'no mesh' : result.error}`
+                `Conversion failed for circle(r=${radius}): ${!result.success ? result.error : 'no mesh'}`
               );
             }
           } finally {
@@ -298,13 +292,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing square(${size}) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for square(${size}): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for square(${size})`);
             return; // Skip this test case
@@ -328,7 +316,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
               logger.debug(`✅ Square(${size}) applied correctly to mesh`);
             } else {
               logger.warn(
-                `Conversion failed for square(${size}): ${result.success ? 'no mesh' : result.error}`
+                `Conversion failed for square(${size}): ${!result.success ? result.error : 'no mesh'}`
               );
             }
           } finally {
@@ -348,13 +336,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing polygon([${pointsStr}]) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for polygon([${pointsStr}]): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for polygon([${pointsStr}])`);
             return; // Skip this test case
@@ -378,7 +360,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
               logger.debug(`✅ Polygon([${pointsStr}]) applied correctly to mesh`);
             } else {
               logger.warn(
-                `Conversion failed for polygon([${pointsStr}]): ${result.success ? 'no mesh' : result.error}`
+                `Conversion failed for polygon([${pointsStr}]): ${!result.success ? result.error : 'no mesh'}`
               );
             }
           } finally {
@@ -424,13 +406,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
 
             logger.debug(`Testing ${operations.length} 2D operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple 2D operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== operations.length) {
               logger.warn(
                 `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
@@ -476,13 +452,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyRadius(), async (radius) => {
           const code = `circle(r=${radius});`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for performance test with circle(r=${radius})`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) return;
 
           const circleNode = ast[0];
@@ -514,13 +484,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlySize(), async (size) => {
           const code = `square(${size});`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for performance test with square(${size})`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) return;
 
           const squareNode = ast[0];
@@ -553,13 +517,7 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           const pointsStr = points.map(([x, y]) => `[${x}, ${y}]`).join(', ');
           const code = `polygon([${pointsStr}]);`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for performance test with polygon([${pointsStr}])`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) return;
 
           const polygonNode = ast[0];

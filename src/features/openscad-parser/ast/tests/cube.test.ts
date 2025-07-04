@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser.js';
-import * as ast from '../ast-types.js';
 
 describe('Cube Primitive', () => {
   let parser: OpenscadParser;

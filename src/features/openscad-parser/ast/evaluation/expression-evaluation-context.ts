@@ -209,8 +209,8 @@ export class ExpressionEvaluationContext {
         if (args.length !== 2) {
           throw new Error('max() requires exactly 2 arguments');
         }
-        const a = args[0]!.value as number;
-        const b = args[1]!.value as number;
+        const a = args[0]?.value as number;
+        const b = args[1]?.value as number;
         return { value: Math.max(a, b), type: 'number' };
       },
     });
@@ -222,8 +222,8 @@ export class ExpressionEvaluationContext {
         if (args.length !== 2) {
           throw new Error('min() requires exactly 2 arguments');
         }
-        const a = args[0]!.value as number;
-        const b = args[1]!.value as number;
+        const a = args[0]?.value as number;
+        const b = args[1]?.value as number;
         return { value: Math.min(a, b), type: 'number' };
       },
     });
@@ -235,7 +235,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('abs() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: Math.abs(x), type: 'number' };
       },
     });
@@ -248,7 +248,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('sin() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: Math.sin((x * Math.PI) / 180), type: 'number' };
       },
     });
@@ -260,7 +260,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('cos() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: Math.cos((x * Math.PI) / 180), type: 'number' };
       },
     });
@@ -272,7 +272,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('tan() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: Math.tan((x * Math.PI) / 180), type: 'number' };
       },
     });
@@ -284,7 +284,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('asin() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: (Math.asin(x) * 180) / Math.PI, type: 'number' };
       },
     });
@@ -296,7 +296,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('acos() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: (Math.acos(x) * 180) / Math.PI, type: 'number' };
       },
     });
@@ -308,7 +308,7 @@ export class ExpressionEvaluationContext {
         if (args.length !== 1) {
           throw new Error('atan() requires exactly 1 argument');
         }
-        const x = args[0]!.value as number;
+        const x = args[0]?.value as number;
         return { value: (Math.atan(x) * 180) / Math.PI, type: 'number' };
       },
     });
@@ -320,8 +320,8 @@ export class ExpressionEvaluationContext {
         if (args.length !== 2) {
           throw new Error('atan2() requires exactly 2 arguments');
         }
-        const y = args[0]!.value as number;
-        const x = args[1]!.value as number;
+        const y = args[0]?.value as number;
+        const x = args[1]?.value as number;
         return { value: (Math.atan2(y, x) * 180) / Math.PI, type: 'number' };
       },
     });

@@ -28,12 +28,12 @@ describe('ExpressionVisitor Simple Tests', () => {
     expect(tree).not.toBeNull();
 
     // Log the structure of the tree
-    console.log('Root node type:', tree!.rootNode.type);
-    console.log('Root node text:', tree!.rootNode.text);
-    console.log('Root node child count:', tree!.rootNode.childCount);
+    console.log('Root node type:', tree?.rootNode.type);
+    console.log('Root node text:', tree?.rootNode.text);
+    console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Find the function call node (cube) - it's a module_instantiation in OpenSCAD
-    const functionCallNode = findNodeOfType(tree!.rootNode, 'module_instantiation');
+    const functionCallNode = findNodeOfType(tree?.rootNode, 'module_instantiation');
     expect(functionCallNode).not.toBeNull();
 
     if (functionCallNode) {
@@ -81,13 +81,13 @@ describe('ExpressionVisitor Simple Tests', () => {
   }
 
   // Helper function to print node structure for debugging
-  function printNodeStructure(node: TSNode, depth: number): void {
+  function _printNodeStructure(node: TSNode, depth: number): void {
     const indent = '  '.repeat(depth);
     console.log(`${indent}${node.type}: "${node.text}"`);
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
       if (child) {
-        printNodeStructure(child, depth + 1);
+        _printNodeStructure(child, depth + 1);
       }
     }
   }

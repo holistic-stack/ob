@@ -34,12 +34,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  EnhancedOpenscadParser,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../../index.js';
+import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../index.js';
 import type { AssertStatementNode } from '../../ast-types.js';
 
 /**

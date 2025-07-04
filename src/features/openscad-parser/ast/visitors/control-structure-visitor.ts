@@ -118,7 +118,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @param errorHandler The error handler instance
    */
   constructor(
-    source: string = '',
+    source: string,
     protected override errorHandler: ErrorHandler
   ) {
     super(source);

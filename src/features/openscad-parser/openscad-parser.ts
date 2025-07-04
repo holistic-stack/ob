@@ -15,6 +15,7 @@
  */
 
 import * as TreeSitter from 'web-tree-sitter';
+import type { Result } from '../../shared/types/result.types.js';
 import type { ASTNode } from './ast/ast-types.js';
 import { VisitorASTGenerator } from './ast/index.js';
 import { ErrorHandler } from './error-handling/index.js';
@@ -286,8 +287,40 @@ export class OpenscadParser {
       );
       return ast;
     } catch (error) {
-      this.errorHandler.handleError(`Failed to generate AST: ${error}`);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.errorHandler.handleError(`Failed to generate AST: ${errorMessage}`);
+      return [];
+    }
+  }
+
+  /**
+   * Parse OpenSCAD code and return a Result type for better error handling
+   */
+  parseASTWithResult(code: string): Result<ASTNode[], string> {
+    try {
+      this.errorHandler.logInfo('Generating AST from OpenSCAD code...');
+
+      const cst = this.parseCST(code);
+      if (!cst) {
+        this.errorHandler.logWarning('Failed to generate CST, returning error');
+        return { success: false, error: 'Failed to generate CST' };
+      }
+
+      // Create visitor-based AST generator with adapter
+      const errorHandlerAdapter = this.createErrorHandlerAdapter();
+      const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
+
+      // Generate AST using visitor pattern
+      const ast = astGenerator.generate();
+
+      this.errorHandler.logInfo(
+        `AST generation completed. Generated ${ast.length} top-level nodes.`
+      );
+      return { success: true, data: ast };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.errorHandler.handleError(`Failed to generate AST: ${errorMessage}`);
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -614,7 +647,7 @@ export class OpenscadParser {
     if (errorLine < lines.length) {
       errorMessage += `${lines[errorLine]}\n`;
       // Add pointer to error position
-      errorMessage += ' '.repeat(errorColumn) + '^';
+      errorMessage += `${' '.repeat(errorColumn)}^`;
     }
 
     return errorMessage;

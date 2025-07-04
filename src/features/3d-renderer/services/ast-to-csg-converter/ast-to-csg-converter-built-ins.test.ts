@@ -236,7 +236,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
         const startTime = performance.now();
 
         // Step 1: Parse the OpenSCAD code
-        const parseResult = parserService.parseAST(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
 
         const parseTime = performance.now() - startTime;
         logger.debug(`Parse time: ${parseTime.toFixed(2)}ms`);
@@ -394,13 +394,11 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
     it('should handle empty code gracefully', async () => {
       logger.init('Testing empty code handling');
 
-      const parseResult = parserService.parseAST('');
+      const ast = parserService.parseAST('');
 
       // Empty code should parse successfully but produce no AST nodes
       // Parsing completed
-      if (parseResult.success) {
-        expect(ast).toEqual([]);
-      }
+      expect(ast).toEqual([]);
 
       logger.end('Empty code handling test completed');
     });
@@ -409,14 +407,13 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       logger.init('Testing syntax error handling for mathematical functions');
 
       const invalidCode = 'result = sin('; // Missing closing parenthesis
-      const parseResult = parserService.parseAST(invalidCode);
+      const ast = parserService.parseAST(invalidCode);
 
       // Parser should handle syntax errors gracefully
-      // May succeed with partial parsing or fail with descriptive error
-      if (!parseResult.success) {
-        expect(parseResult.error).toBeDefined();
-        expect(typeof parseResult.error).toBe('string');
-      }
+      // May succeed with partial parsing or return empty AST
+      expect(ast).toBeDefined();
+      // For invalid syntax, parser may return empty AST or partial results
+      logger.debug(`Invalid syntax handling: returned ${ast.length} nodes`);
 
       logger.end('Mathematical function syntax error handling test completed');
     });
@@ -426,18 +423,17 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
 
       const complexCode = 'result = sqrt(pow(sin(45), 2) + pow(cos(45), 2));';
       const ast = parserService.parseAST(complexCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          // For advanced features, the parser may return empty AST for unsupported constructs
-          if (ast.length > 0) {
-            logger.debug(`Complex nested function parsed with ${ast.length} nodes`);
-          } else {
-            logger.debug(
-              'Complex nested function returned empty AST - advanced feature not yet supported'
-            );
-          }
+      if (ast) {
+        // For advanced features, the parser may return empty AST for unsupported constructs
+        if (ast.length > 0) {
+          logger.debug(`Complex nested function parsed with ${ast.length} nodes`);
+        } else {
+          logger.debug(
+            'Complex nested function returned empty AST - advanced feature not yet supported'
+          );
         }
       }
 
@@ -455,7 +451,7 @@ result4 = ln(exp(1)) + log(pow(10, 2));
 `;
 
       const startTime = performance.now();
-      const parseResult = parserService.parseAST(mathCode);
+      const ast = parserService.parseAST(mathCode);
       const endTime = performance.now();
 
       const duration = endTime - startTime;
@@ -496,26 +492,23 @@ check4 = is_list([1, 2, 3]);
 `;
 
       const ast = parserService.parseAST(typeCheckCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          // For advanced features, the parser may not yet support assignment statements
-          if (ast.length === 4) {
-            // Verify each node is an assignment statement when parsing is complete
-            ast.forEach((node: ASTNode, index: number) => {
-              expect(node).toBeDefined();
-              expect(node?.type).toMatch(/assignment_statement|function_call/);
-              logger.debug(`Type check ${index + 1}: ${node?.type}`);
-            });
-            logger.debug(
-              'Type checking functions parsed successfully with 4 assignment statements'
-            );
-          } else {
-            logger.debug(
-              `Type checking functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
-            );
-          }
+      if (ast) {
+        // For advanced features, the parser may not yet support assignment statements
+        if (ast.length === 4) {
+          // Verify each node is an assignment statement when parsing is complete
+          ast.forEach((node: ASTNode, index: number) => {
+            expect(node).toBeDefined();
+            expect(node?.type).toMatch(/assignment_statement|function_call/);
+            logger.debug(`Type check ${index + 1}: ${node?.type}`);
+          });
+          logger.debug('Type checking functions parsed successfully with 4 assignment statements');
+        } else {
+          logger.debug(
+            `Type checking functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
+          );
         }
       }
 
@@ -533,20 +526,17 @@ cross_result = cross([1,0,0], [0,1,0]);
 `;
 
       const ast = parserService.parseAST(stringVectorCode);
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
+      expect(ast).toBeDefined();
+      expect(ast).not.toBeNull();
 
-        if (ast) {
-          // For advanced features, the parser may not yet support assignment statements
-          if (ast.length === 4) {
-            logger.debug(
-              `String and vector functions parsed successfully with ${ast.length} nodes`
-            );
-          } else {
-            logger.debug(
-              `String and vector functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
-            );
-          }
+      if (ast) {
+        // For advanced features, the parser may not yet support assignment statements
+        if (ast.length === 4) {
+          logger.debug(`String and vector functions parsed successfully with ${ast.length} nodes`);
+        } else {
+          logger.debug(
+            `String and vector functions returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
+          );
         }
       }
 

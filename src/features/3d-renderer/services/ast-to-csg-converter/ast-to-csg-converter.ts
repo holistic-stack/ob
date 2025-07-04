@@ -721,12 +721,13 @@ const convertFunctionCallNode = async (
 const convertModuleDefinitionNode = async (
   node: ModuleDefinitionNode
 ): Promise<Result<THREE.Mesh, string>> => {
-  logger.debug(`Processing module definition: ${node.name}`);
+  const moduleName = node.name.name;
+  logger.debug(`Processing module definition: ${moduleName}`);
 
   // Register the module definition
   const registrationResult = moduleRegistry.registerModule(node);
   if (!registrationResult.success) {
-    return error(`Failed to register module '${node.name}': ${registrationResult.error}`);
+    return error(`Failed to register module '${moduleName}': ${registrationResult.error}`);
   }
 
   // Module definitions don't produce geometry directly
@@ -739,7 +740,7 @@ const convertModuleDefinitionNode = async (
   });
   const mesh = new THREE.Mesh(geometry, material);
 
-  logger.debug(`Module '${node.name}' registered successfully`);
+  logger.debug(`Module '${moduleName}' registered successfully`);
   return success(mesh);
 };
 
@@ -747,12 +748,12 @@ const convertModuleDefinitionNode = async (
  * Convert assignment node by storing the variable in scope
  */
 const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE.Mesh, string>> => {
-  logger.debug(`Processing assignment: ${node.name}`);
+  logger.debug(`Processing assignment: ${node.variable.name}`);
 
   // For now, we'll store the raw AST node as the value
   // In a full implementation, this would evaluate the expression
   const assignmentResult = variableScope.defineVariable(
-    node.name,
+    node.variable.name,
     node.value,
     node.location
       ? {
@@ -763,7 +764,7 @@ const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE
   );
 
   if (!assignmentResult.success) {
-    return error(`Failed to assign variable '${node.name}': ${assignmentResult.error}`);
+    return error(`Failed to assign variable '${node.variable.name}': ${assignmentResult.error}`);
   }
 
   // Assignment statements don't produce geometry directly
@@ -776,7 +777,7 @@ const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE
   });
   const mesh = new THREE.Mesh(geometry, material);
 
-  logger.debug(`Variable '${node.name}' assigned successfully`);
+  logger.debug(`Variable '${node.variable.name}' assigned successfully`);
   return success(mesh);
 };
 
@@ -796,7 +797,7 @@ const convertConditionalExpressionNode = async (
   // For now, we'll always take the true branch
   // In a full implementation, this would evaluate the condition
   // and choose the appropriate branch
-  const selectedBranch = node.trueExpression;
+  const selectedBranch = node.thenBranch;
 
   logger.debug('Evaluating true branch of conditional expression');
   return await convertASTNodeToMesh(selectedBranch, material);
@@ -815,10 +816,20 @@ const convertIfStatementNode = async (
 ): Promise<Result<THREE.Mesh, string>> => {
   logger.debug('Processing if statement');
 
-  // For now, we'll evaluate the condition as true and execute the consequence
+  // For now, we'll evaluate the condition as true and execute the thenBranch
   // In a full implementation, this would evaluate the condition based on variable values
-  logger.debug('Evaluating consequence branch of if statement');
-  return await convertASTNodeToMesh(node.consequence, material);
+  logger.debug('Evaluating thenBranch of if statement');
+  if (node.thenBranch.length > 0) {
+    const firstStatement = node.thenBranch[0];
+    if (firstStatement) {
+      return await convertASTNodeToMesh(firstStatement, material);
+    }
+  }
+  
+  // Return empty mesh if no statements in then branch
+  const geometry = new THREE.BufferGeometry();
+  const emptyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff88, transparent: true, opacity: 0 });
+  return success(new THREE.Mesh(geometry, emptyMaterial));
 };
 
 /**
@@ -832,12 +843,22 @@ const convertForStatementNode = async (
     material: THREE.Material
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
-  logger.debug(`Processing for statement with iterator: ${node.iterator}`);
+  logger.debug(`Processing for statement with variables: ${node.variables.map(v => v.variable).join(', ')}`);
 
   // For now, we'll execute the body once
   // In a full implementation, this would iterate over the range and combine results
   logger.debug('Executing for loop body (simplified - single iteration)');
-  return await convertASTNodeToMesh(node.body, material);
+  if (node.body.length > 0) {
+    const firstStatement = node.body[0];
+    if (firstStatement) {
+      return await convertASTNodeToMesh(firstStatement, material);
+    }
+  }
+  
+  // Return empty mesh if no statements in body
+  const geometry = new THREE.BufferGeometry();
+  const emptyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff88, transparent: true, opacity: 0 });
+  return success(new THREE.Mesh(geometry, emptyMaterial));
 };
 
 /**
@@ -887,8 +908,8 @@ const convertASTNodeToMesh = async (
     case 'difference':
       return await convertDifferenceNode(node, material, convertASTNodeToMesh);
 
-    case 'function_call':
-      // Handle Tree Sitter function_call nodes by extracting the function name
+    case 'expression':
+      // Handle expression nodes that might be function calls
       return await convertFunctionCallNode(node, material, convertASTNodeToMesh);
 
     case 'module_definition':
@@ -897,17 +918,10 @@ const convertASTNodeToMesh = async (
     case 'assignment':
       return await convertAssignmentNode(node as AssignmentNode);
 
-    case 'conditional_expression':
-      return await convertConditionalExpressionNode(
-        node as ConditionalExpressionNode,
-        material,
-        convertASTNodeToMesh
-      );
-
-    case 'if_statement':
+    case 'if':
       return await convertIfStatementNode(node as IfStatementNode, material, convertASTNodeToMesh);
 
-    case 'for_statement':
+    case 'for_loop':
       return await convertForStatementNode(
         node as ForStatementNode,
         material,

@@ -182,7 +182,7 @@ describe('AST to CSG Converter - Performance and Stress Testing Integration', ()
         logger.init(`Testing performance for ${scenario.name}`);
 
         const startTime = performance.now();
-        const parseResult = parserService.parseAST(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
         const endTime = performance.now();
         const parseTime = endTime - startTime;
 
@@ -223,10 +223,10 @@ describe('AST to CSG Converter - Performance and Stress Testing Integration', ()
       it(`should convert ${scenarioKey} to CSG within performance targets`, async () => {
         logger.init(`Testing CSG conversion performance for ${scenario.name}`);
 
-        const parseResult = parserService.parseAST(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
         // Parsing completed
 
-        if (parseResult.success && parseResult.data.ast) {
+        if (ast && ast.length > 0) {
           // AST already available
 
           const startTime = performance.now();
@@ -271,7 +271,7 @@ union() {
         ? (performance as any).memory.usedJSHeapSize
         : 0;
 
-      const parseResult = parserService.parseAST(largeOperationCode);
+      const _parseResult = parserService.parseAST(largeOperationCode);
       // Parsing completed
 
       // Force garbage collection if available
@@ -308,9 +308,10 @@ cylinder(h=15, r=3);
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
-      // All operations should succeed
-      results.forEach((result) => {
-        expect(result.success).toBe(true);
+      // All operations should return valid AST arrays
+      results.forEach((ast) => {
+        expect(ast).toBeDefined();
+        expect(Array.isArray(ast)).toBe(true);
       });
 
       expect(totalTime).toBeLessThan(160); // 10 operations * 16ms target
@@ -330,7 +331,7 @@ translate([1, 2, 3]) cube([5, 5, 5]);
       // Perform the same operation multiple times
       for (let i = 0; i < 20; i++) {
         const startTime = performance.now();
-        const parseResult = parserService.parseAST(repeatedCode);
+        const _parseResult = parserService.parseAST(repeatedCode);
         const endTime = performance.now();
         const parseTime = endTime - startTime;
 

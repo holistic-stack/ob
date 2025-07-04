@@ -204,21 +204,20 @@ describe('AST to CSG Converter - Edge Cases and Error Recovery Integration', () 
         logger.init(`Testing ${scenario.name}`);
 
         const ast = parserService.parseAST(scenario.code);
-          expect(ast).toBeDefined();
-          expect(ast).not.toBeNull();
+        expect(ast).toBeDefined();
+        expect(ast).not.toBeNull();
 
-          if (ast) {
-            expect(ast.length).toBe(scenario.expectedNodeCount);
-            logger.debug(`${scenario.name} parsed with ${ast.length} nodes`);
+        if (ast) {
+          expect(ast.length).toBe(scenario.expectedNodeCount);
+          logger.debug(`${scenario.name} parsed with ${ast.length} nodes`);
 
-            // Verify node types if nodes exist
-            if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
-              ast.forEach((node: ASTNode, index: number) => {
-                expect(node).toBeDefined();
-                expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
-                logger.debug(`Node ${index + 1}: ${node?.type}`);
-              });
-            }
+          // Verify node types if nodes exist
+          if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
+            ast.forEach((node: ASTNode, index: number) => {
+              expect(node).toBeDefined();
+              expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
+              logger.debug(`Node ${index + 1}: ${node?.type}`);
+            });
           }
         }
 
@@ -236,10 +235,10 @@ describe('AST to CSG Converter - Edge Cases and Error Recovery Integration', () 
       it(`should convert ${scenarioKey} to CSG meshes with error handling`, async () => {
         logger.init(`Testing CSG conversion for ${scenario.name}`);
 
-        const parseResult = parserService.parseAST(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
         // Parsing completed
 
-        if (parseResult.success && parseResult.data.ast) {
+        if (ast && ast.length > 0) {
           // AST already available
           const conversionResults = await Promise.all(
             ast.map(async (node: ASTNode, index: number) => ({
@@ -282,16 +281,12 @@ describe('AST to CSG Converter - Edge Cases and Error Recovery Integration', () 
 {{{[[[
 invalid syntax everywhere
 `;
-      const parseResult = parserService.parseAST(invalidCode);
+      const ast = parserService.parseAST(invalidCode);
 
       // Parsing completed
-      if (parseResult.success) {
-        expect(parseResult.data.ast).toBeDefined();
-        // Parser should handle complete syntax errors gracefully
-        logger.debug(
-          `Invalid syntax handled gracefully, AST length: ${parseResult.data.ast?.length}`
-        );
-      }
+      expect(ast).toBeDefined();
+      // Parser should handle complete syntax errors gracefully
+      logger.debug(`Invalid syntax handled gracefully, AST length: ${ast?.length}`);
 
       logger.end('Invalid syntax test completed');
     });
@@ -307,7 +302,7 @@ translate([1e6, 1e6, 1e6]) cube(1e5);
 `;
 
       const startTime = performance.now();
-      const parseResult = parserService.parseAST(stressTestCode);
+      const _parseResult = parserService.parseAST(stressTestCode);
       const endTime = performance.now();
       const parseTime = endTime - startTime;
 

@@ -82,9 +82,9 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    * @protected
    */
   protected createASTNodeForFunction(
-    node: TSNode,
-    functionName: string,
-    args: ast.Parameter[]
+    _node: TSNode,
+    _functionName: string,
+    _args: ast.Parameter[]
   ): ast.ASTNode | null {
     // EchoStatementVisitor doesn't handle function calls
     return null;
@@ -745,7 +745,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  protected processFunctionCall(node: TSNode, functionName: string, args: any[]): any {
+  protected processFunctionCall(_node: TSNode, _functionName: string, _args: any[]): any {
     // Echo statements don't need special function call processing
     // This is handled by the expression visitor system
     return null;

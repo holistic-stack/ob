@@ -67,7 +67,7 @@ const parserService = new OpenscadParser();
  */
 const createInitialState = (options?: StoreOptions): AppState => ({
   editor: {
-    code: options?.initialState?.editor?.code ?? DEFAULT_OPENSCAD_CODE,
+    code: options?.initialState?.editor?.code ?? '',
     cursorPosition: { line: 1, column: 1 },
     selection: null,
     isDirty: false,

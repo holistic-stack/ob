@@ -5,86 +5,90 @@
  * Following the established architectural patterns and quality standards
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
 import { glob } from 'glob';
 
 const replacements = [
   // Remove duplicate imports first
   {
-    pattern: /import { createLogger } from '\.\.\/\.\.\/\.\.\/\.\.\/shared\/services\/logger\.service\.js';\s*import type { ASTNode } from '\.\.\/\.\.\/\.\.\/openscad-parser\/core\/ast-types\.js';\s*import { OpenscadParser } from '\.\.\/\.\.\/\.\.\/openscad-parser\/openscad-parser\.js';\s*import { createLogger } from '\.\.\/\.\.\/\.\.\/\.\.\/shared\/services\/logger\.service\.js';\s*import type { ASTNode } from '\.\.\/\.\.\/\.\.\/openscad-parser\/core\/ast-types\.js';\s*import { OpenscadParser } from '\.\.\/\.\.\/\.\.\/openscad-parser\/openscad-parser\.js';/g,
-    replacement: "import { createLogger } from '../../../../shared/services/logger.service.js';\nimport type { ASTNode } from '../../../openscad-parser/core/ast-types.js';\nimport { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';"
+    pattern:
+      /import { createLogger } from '\.\.\/\.\.\/\.\.\/\.\.\/shared\/services\/logger\.service\.js';\s*import type { ASTNode } from '\.\.\/\.\.\/\.\.\/openscad-parser\/core\/ast-types\.js';\s*import { OpenscadParser } from '\.\.\/\.\.\/\.\.\/openscad-parser\/openscad-parser\.js';\s*import { createLogger } from '\.\.\/\.\.\/\.\.\/\.\.\/shared\/services\/logger\.service\.js';\s*import type { ASTNode } from '\.\.\/\.\.\/\.\.\/openscad-parser\/core\/ast-types\.js';\s*import { OpenscadParser } from '\.\.\/\.\.\/\.\.\/openscad-parser\/openscad-parser\.js';/g,
+    replacement:
+      "import { createLogger } from '../../../../shared/services/logger.service.js';\nimport type { ASTNode } from '../../../openscad-parser/core/ast-types.js';\nimport { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';",
   },
   // Type declarations
   {
     pattern: /let parserService: UnifiedParserService;/g,
-    replacement: 'let parserService: OpenscadParser;'
+    replacement: 'let parserService: OpenscadParser;',
   },
   // Constructor calls
   {
     pattern: /new UnifiedParserService\(\{[^}]*\}\)/g,
-    replacement: 'new OpenscadParser()'
+    replacement: 'new OpenscadParser()',
   },
   {
     pattern: /new UnifiedParserService\(\)/g,
-    replacement: 'new OpenscadParser()'
+    replacement: 'new OpenscadParser()',
   },
   // Method calls
   {
     pattern: /parserService\.initialize\(\)/g,
-    replacement: 'parserService.init()'
+    replacement: 'parserService.init()',
   },
   {
     pattern: /await parserService\.parseDocument\(([^)]+)\)/g,
-    replacement: 'parserService.parseAST($1)'
+    replacement: 'parserService.parseAST($1)',
   },
   {
     pattern: /parserService\.parseDocument\(([^)]+)\)/g,
-    replacement: 'parserService.parseAST($1)'
+    replacement: 'parserService.parseAST($1)',
   },
   // Result handling patterns - comprehensive
   {
-    pattern: /const parseResult = parserService\.parseAST\(([^)]+)\);\s*expect\(parseResult\.success\)\.toBe\(true\);\s*if \(!parseResult\.success\) \{\s*throw new Error\(`Parse failed: \$\{parseResult\.error\}`\);\s*\}\s*const ast = parseResult\.data\.ast;/g,
-    replacement: 'const ast = parserService.parseAST($1);'
+    pattern:
+      /const parseResult = parserService\.parseAST\(([^)]+)\);\s*expect\(parseResult\.success\)\.toBe\(true\);\s*if \(!parseResult\.success\) \{\s*throw new Error\(`Parse failed: \$\{parseResult\.error\}`\);\s*\}\s*const ast = parseResult\.data\.ast;/g,
+    replacement: 'const ast = parserService.parseAST($1);',
   },
   {
-    pattern: /const parseResult = parserService\.parseAST\(([^)]+)\);\s*expect\(parseResult\.success\)\.toBe\(true\);\s*if \(parseResult\.success\) \{\s*const ast = parseResult\.data\.ast;/g,
-    replacement: 'const ast = parserService.parseAST($1);'
+    pattern:
+      /const parseResult = parserService\.parseAST\(([^)]+)\);\s*expect\(parseResult\.success\)\.toBe\(true\);\s*if \(parseResult\.success\) \{\s*const ast = parseResult\.data\.ast;/g,
+    replacement: 'const ast = parserService.parseAST($1);',
   },
   {
     pattern: /expect\(parseResult\.success\)\.toBe\(true\);/g,
-    replacement: '// Parsing completed'
+    replacement: '// Parsing completed',
   },
   {
-    pattern: /if \(!parseResult\.success\) \{\s*throw new Error\(`Parse failed: \$\{parseResult\.error\}`\);\s*\}/g,
-    replacement: '// Direct AST usage'
+    pattern:
+      /if \(!parseResult\.success\) \{\s*throw new Error\(`Parse failed: \$\{parseResult\.error\}`\);\s*\}/g,
+    replacement: '// Direct AST usage',
   },
   {
     pattern: /if \(parseResult\.success\) \{\s*const ast = parseResult\.data\.ast;/g,
-    replacement: 'if (ast && ast.length > 0) {'
+    replacement: 'if (ast && ast.length > 0) {',
   },
   {
     pattern: /const ast = parseResult\.data\.ast;/g,
-    replacement: '// AST already available'
+    replacement: '// AST already available',
   },
   {
     pattern: /expect\(parseResult\.data\.ast\)\.toEqual\(\[\]\);/g,
-    replacement: 'expect(ast).toEqual([]);'
+    replacement: 'expect(ast).toEqual([]);',
   },
   // Type annotations for forEach callbacks
   {
     pattern: /\.forEach\(\(node, index\) =>/g,
-    replacement: '.forEach((node: ASTNode, index: number) =>'
+    replacement: '.forEach((node: ASTNode, index: number) =>',
   },
   {
     pattern: /\.filter\(\(r\) =>/g,
-    replacement: '.filter((r: any) =>'
+    replacement: '.filter((r: any) =>',
   },
   // Fix import extensions
   {
     pattern: /from '\.\.\/\.\.\/\.\.\/openscad-parser\/openscad-parser\.ts'/g,
-    replacement: "from '../../../openscad-parser/openscad-parser.js'"
-  }
+    replacement: "from '../../../openscad-parser/openscad-parser.js'",
+  },
 ];
 
 async function processFile(filePath) {
@@ -104,7 +108,7 @@ async function processFile(filePath) {
       console.log(`✅ Updated: ${filePath}`);
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.error(`❌ Error processing ${filePath}:`, error.message);
@@ -119,7 +123,7 @@ async function main() {
   const testFiles = await glob('src/features/3d-renderer/services/ast-to-csg-converter/*.test.ts');
   const parserFiles = await glob('src/features/openscad-parser/**/*.test.ts');
   const allFiles = [...testFiles, ...parserFiles];
-  
+
   let totalFiles = 0;
   let modifiedFiles = 0;
 

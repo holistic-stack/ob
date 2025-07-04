@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { EnhancedOpenscadParser, ErrorHandler } from '../../index.js';
 import * as extractorModule from '../extractors/index.js';
 import { getLocation } from '../utils/location-utils.js';
 import { ControlStructureVisitor } from './control-structure-visitor.js';

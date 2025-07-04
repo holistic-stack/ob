@@ -84,7 +84,6 @@ import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import { ErrorCode } from '../../error-handling/types/error-types.js';
 import type * as ast from '../ast-types.js';
-import { evaluateBinaryExpression } from '../evaluation/binary-expression-evaluator/binary-expression-evaluator.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
@@ -1852,8 +1851,8 @@ export class ExpressionVisitor extends BaseASTVisitor {
    */
   createASTNodeForFunction(
     node: TSNode,
-    functionName: string,
-    args: ast.Parameter[]
+    _functionName: string,
+    _args: ast.Parameter[]
   ): ast.ASTNode | null {
     this.errorHandler.logWarning(
       `[ExpressionVisitor.createASTNodeForFunction] This method should not be directly called on ExpressionVisitor. Function definitions are not expressions. Offending node: ${

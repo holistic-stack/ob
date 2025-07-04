@@ -46,7 +46,7 @@ export function extractColorNode(
     const arg = args[i];
 
     // Handle color parameter (first positional parameter or named 'c')
-    if ((i === 0 && !arg!.name) || arg!.name === 'c') {
+    if ((i === 0 && !arg?.name) || arg?.name === 'c') {
       // Check if it's a vector parameter (RGB or RGBA)
       const vectorValue = extractVectorParameter(arg!);
       if (vectorValue) {
@@ -70,18 +70,18 @@ export function extractColorNode(
           color = stringValue;
           console.log(`[extractColorNode] Found color name: ${color}`);
         } else {
-          console.log(`[extractColorNode] Invalid color parameter: ${JSON.stringify(arg!.value)}`);
+          console.log(`[extractColorNode] Invalid color parameter: ${JSON.stringify(arg?.value)}`);
         }
       }
     }
     // Handle alpha parameter (second positional parameter or named 'alpha')
-    else if ((i === 1 && !arg!.name) || arg!.name === 'alpha') {
+    else if ((i === 1 && !arg?.name) || arg?.name === 'alpha') {
       const alphaValue = extractNumberParameter(arg!);
       if (alphaValue !== null) {
         alpha = alphaValue;
         console.log(`[extractColorNode] Found alpha parameter: ${alpha}`);
       } else {
-        console.log(`[extractColorNode] Invalid alpha parameter: ${JSON.stringify(arg!.value)}`);
+        console.log(`[extractColorNode] Invalid alpha parameter: ${JSON.stringify(arg?.value)}`);
       }
     }
   }

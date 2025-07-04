@@ -1,11 +1,5 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../index.js';
+import { describe, expect, it } from 'vitest';
+import { EnhancedOpenscadParser, ErrorHandler } from '../index.js';
 import { VisitorASTGenerator } from './visitor-ast-generator.js';
 
 // Create a mock language object for testing

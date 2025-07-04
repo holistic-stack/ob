@@ -495,7 +495,7 @@ describe('RangeExpressionVisitor', () => {
         const valueNode = assignmentExpr?.childForFieldName('value'); // This is the actual expression node
 
         expect(valueNode).toBeTruthy(); // Ensure valueNode is found
-        expect(valueNode!.type).toBe(tc.expectedValueNodeType);
+        expect(valueNode?.type).toBe(tc.expectedValueNodeType);
 
         const result = visitor.visitNode(valueNode!);
         expect(result?.type).toBe('error');

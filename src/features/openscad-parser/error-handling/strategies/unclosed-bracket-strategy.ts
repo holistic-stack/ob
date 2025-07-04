@@ -185,7 +185,7 @@ export class UnclosedBracketStrategy extends BaseRecoveryStrategy {
   /**
    * Attempts to recover from an unclosed bracket error
    */
-  recover(error: ParserError, code: string): string | null {
+  recover(_error: ParserError, code: string): string | null {
     // Find all unclosed brackets in the code
     const unclosedBrackets = this.findAllUnclosedBrackets(code);
     if (unclosedBrackets.length === 0) return null;

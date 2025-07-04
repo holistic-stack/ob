@@ -32,18 +32,18 @@ describe('ForLoopVisitor', () => {
     it('should parse a basic for loop', () => {
       const code = `for (i = [0:5]) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the for statement node
       const forNode = rootNode.namedChildren[0];
-      expect(forNode!.type).toBe('statement');
+      expect(forNode?.type).toBe('statement');
 
       // Log the node structure
       console.log('For Node Structure:');
       printNodeStructure(forNode!, 0, 5, 10);
 
       // Get the actual for_statement node
-      const actualForNode = forNode!.namedChild(0);
+      const actualForNode = forNode?.namedChild(0);
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node
@@ -73,14 +73,14 @@ describe('ForLoopVisitor', () => {
     it('should parse a for loop with step', () => {
       const code = `for (i = [0:0.5:5]) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the for statement node
       const forNode = rootNode.namedChildren[0];
-      expect(forNode!.type).toBe('statement');
+      expect(forNode?.type).toBe('statement');
 
       // Get the actual for_statement node
-      const actualForNode = forNode!.namedChild(0);
+      const actualForNode = forNode?.namedChild(0);
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node
@@ -117,14 +117,14 @@ describe('ForLoopVisitor', () => {
     it('should parse a for loop with multiple variables', () => {
       const code = `for (i = [0:5], j = [0:5]) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the for statement node
       const forNode = rootNode.namedChildren[0];
-      expect(forNode!.type).toBe('statement');
+      expect(forNode?.type).toBe('statement');
 
       // Get the actual for_statement node
-      const actualForNode = forNode!.namedChild(0);
+      const actualForNode = forNode?.namedChild(0);
       expect(actualForNode?.type).toBe('for_statement');
 
       // Log the structure of the actual for_statement node for debugging
@@ -175,14 +175,14 @@ describe('ForLoopVisitor', () => {
     it('should handle complex expressions in for loops', () => {
       const code = `for (i = [0:len(v)-1]) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the for statement node
       const forNode = rootNode.namedChildren[0];
-      expect(forNode!.type).toBe('statement');
+      expect(forNode?.type).toBe('statement');
 
       // Get the actual for_statement node
-      const actualForNode = forNode!.namedChild(0);
+      const actualForNode = forNode?.namedChild(0);
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node

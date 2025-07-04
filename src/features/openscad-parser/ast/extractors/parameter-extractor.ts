@@ -78,7 +78,6 @@
 
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-import { evaluateBinaryExpression } from '../evaluation/binary-expression-evaluator/binary-expression-evaluator.js';
 import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
 
 /**
@@ -303,7 +302,7 @@ export function extractNumberParameter(
   // Try to parse the value as a number if it's a string
   if (typeof param.value === 'string') {
     const num = parseFloat(param.value);
-    if (!isNaN(num)) {
+    if (!Number.isNaN(num)) {
       return num;
     }
   }

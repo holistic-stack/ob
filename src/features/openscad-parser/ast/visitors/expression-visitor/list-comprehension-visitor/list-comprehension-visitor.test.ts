@@ -160,7 +160,7 @@ describe('ListComprehensionVisitor', () => {
       expect(tree).toBeTruthy();
 
       // Find the list comprehension node within the assignment
-      const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
+      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -201,7 +201,7 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
+      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -237,7 +237,7 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
+      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -269,7 +269,7 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
+      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -295,7 +295,7 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree!.rootNode, 'list_comprehension');
+      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -338,7 +338,7 @@ describe('ListComprehensionVisitor', () => {
             // Check if fail is defined to avoid Vitest crash
             fail(message);
           } else {
-            console.error('[TEST ERROR] ' + message); // Log error if fail is not available
+            console.error(`[TEST ERROR] ${message}`); // Log error if fail is not available
             throw new Error(message); // Ensure test actually fails
           }
         }
@@ -369,7 +369,7 @@ describe('ListComprehensionVisitor', () => {
             // Check if fail is defined to avoid Vitest crash
             fail(message);
           } else {
-            console.error('[TEST ERROR] ' + message); // Log error if fail is not available
+            console.error(`[TEST ERROR] ${message}`); // Log error if fail is not available
             throw new Error(message); // Ensure test actually fails
           }
         }

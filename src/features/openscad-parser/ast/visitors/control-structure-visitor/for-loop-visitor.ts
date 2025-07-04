@@ -12,8 +12,7 @@
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../../error-handling/index.js';
 import type * as ast from '../../ast-types.js';
-import { isExpressionNode as isParameterExpressionNode } from '../../extractors/parameter-extractor.js';
-import { createErrorNodeInternal, defaultLocation } from '../../utils/ast-error-utils.js';
+import { createErrorNodeInternal } from '../../utils/ast-error-utils.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
@@ -601,7 +600,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
   override createASTNodeForFunction(
     node: TSNode,
     functionName: string,
-    args: ast.Parameter[]
+    _args: ast.Parameter[]
   ): ast.ASTNode | null {
     this.errorHandler.logError(
       `[ForLoopVisitor.createASTNodeForFunction] This method should not be called directly on ForLoopVisitor. Function: ${functionName}`,

@@ -100,7 +100,7 @@ describe('TypeMismatchStrategy', () => {
       );
 
       // Mock type checker to allow string conversion
-      mockTypeChecker.isAssignable.mockImplementation((from, to) => to === 'string');
+      mockTypeChecker.isAssignable.mockImplementation((_from, to) => to === 'string');
       mockTypeChecker.findCommonType.mockReturnValue('string');
 
       const code = 'x = 10 + "20";';

@@ -13,9 +13,11 @@ import type {
   Result,
   ValidationResult,
 } from '../../types/result.types';
+import { isError, isSuccess } from '../../types/result.types';
 
 // Re-export types
 export type { Result, AsyncResult, Option, ValidationResult, NetworkResult, NetworkError };
+export { isSuccess, isError };
 
 /**
  * Creates a successful Result
@@ -43,7 +45,7 @@ export const none = <T>(): Option<T> => Object.freeze({ some: false });
  * Maps over a successful Result, leaving errors unchanged
  */
 export const map = <T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> => {
-  if (result.success) {
+  if (isSuccess(result)) {
     return success(fn(result.data));
   }
   return error(result.error);
@@ -53,7 +55,7 @@ export const map = <T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<
  * Maps over an error Result, leaving success unchanged
  */
 export const mapError = <T, E, F>(result: Result<T, E>, fn: (error: E) => F): Result<T, F> => {
-  if (!result.success) {
+  if (isError(result)) {
     return error(fn(result.error));
   }
   return success(result.data);
@@ -66,7 +68,7 @@ export const chain = <T, U, E>(
   result: Result<T, E>,
   fn: (value: T) => Result<U, E>
 ): Result<U, E> => {
-  if (result.success) {
+  if (isSuccess(result)) {
     return fn(result.data);
   }
   return error(result.error);
@@ -78,9 +80,9 @@ export const chain = <T, U, E>(
 export const mapAsync = async <T, U, E>(
   result: AsyncResult<T, E>,
   fn: (value: T) => U | Promise<U>
-): AsyncResult<U, E> => {
+): Promise<Result<U, E>> => {
   const resolvedResult = await result;
-  if (resolvedResult.success) {
+  if (isSuccess(resolvedResult)) {
     const mappedValue = await fn(resolvedResult.data);
     return success(mappedValue);
   }
@@ -93,9 +95,9 @@ export const mapAsync = async <T, U, E>(
 export const chainAsync = async <T, U, E>(
   result: AsyncResult<T, E>,
   fn: (value: T) => AsyncResult<U, E>
-): AsyncResult<U, E> => {
+): Promise<Result<U, E>> => {
   const resolvedResult = await result;
-  if (resolvedResult.success) {
+  if (isSuccess(resolvedResult)) {
     return fn(resolvedResult.data);
   }
   return resolvedResult;
@@ -105,14 +107,14 @@ export const chainAsync = async <T, U, E>(
  * Unwraps a Result, providing a default value for errors
  */
 export const unwrapOr = <T, E>(result: Result<T, E>, defaultValue: T): T => {
-  return result.success ? result.data : defaultValue;
+  return isSuccess(result) ? result.data : defaultValue;
 };
 
 /**
  * Unwraps a Result, throwing an error if it's an error Result
  */
 export const unwrap = <T, E>(result: Result<T, E>): T => {
-  if (result.success) {
+  if (isSuccess(result)) {
     return result.data;
   }
   throw new Error(`Attempted to unwrap error Result: ${String(result.error)}`);
@@ -127,7 +129,7 @@ export const combine = <T, E>(
   const values: T[] = [];
 
   for (const result of results) {
-    if (!result.success) {
+    if (isError(result)) {
       return result;
     }
     values.push(result.data);
@@ -146,7 +148,7 @@ export const combineAll = <T, E>(
   const errors: E[] = [];
 
   for (const result of results) {
-    if (result.success) {
+    if (isSuccess(result)) {
       values.push(result.data);
     } else {
       errors.push(result.error);
@@ -182,7 +184,7 @@ export const tryCatch = <T, E = Error>(
 export const tryCatchAsync = async <T, E = Error>(
   fn: () => Promise<T>,
   errorMapper?: (error: unknown) => E
-): AsyncResult<T, E> => {
+): Promise<Result<T, E>> => {
   try {
     const result = await fn();
     return success(result);
@@ -200,10 +202,10 @@ export const filter = <T, E>(
   predicate: (value: T) => boolean,
   errorOnFalse: E
 ): Result<T, E> => {
-  if (result.success && predicate(result.data)) {
+  if (isSuccess(result) && predicate(result.data)) {
     return result;
   }
-  if (result.success) {
+  if (isSuccess(result)) {
     return error(errorOnFalse);
   }
   return result;
@@ -220,7 +222,7 @@ export const optionToResult = <T, E>(option: Option<T>, errorValue: E): Result<T
  * Converts a Result to an Option
  */
 export const resultToOption = <T, E>(result: Result<T, E>): Option<T> => {
-  return result.success ? some(result.data) : none();
+  return isSuccess(result) ? some(result.data) : none();
 };
 
 /**
@@ -229,7 +231,7 @@ export const resultToOption = <T, E>(result: Result<T, E>): Option<T> => {
 export const fromFetchResponse = async <T>(
   response: Response,
   parser: (response: Response) => Promise<T>
-): AsyncResult<T, NetworkError> => {
+): Promise<Result<T, NetworkError>> => {
   if (!response.ok) {
     const networkError: NetworkError = {
       status: response.status,

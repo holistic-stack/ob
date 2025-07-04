@@ -282,15 +282,20 @@ describe('App Store', () => {
     });
 
     it('should update camera', () => {
-      const camera = {
+      const cameraUpdate = {
         position: [5, 5, 5] as const,
         target: [1, 1, 1] as const,
         zoom: 1.5,
       };
-      store.getState().updateCamera(camera);
+      store.getState().updateCamera(cameraUpdate);
 
       const state = store.getState();
-      expect(state.rendering?.camera).toEqual(camera);
+      expect(state.rendering?.camera?.position).toEqual([5, 5, 5]);
+      expect(state.rendering?.camera?.target).toEqual([1, 1, 1]);
+      expect(state.rendering?.camera?.zoom).toBe(1.5);
+      // Other camera properties should remain unchanged
+      expect(state.rendering?.camera?.fov).toBe(75);
+      expect(state.rendering?.camera?.enableControls).toBe(true);
     });
 
     it('should reset camera to default', () => {

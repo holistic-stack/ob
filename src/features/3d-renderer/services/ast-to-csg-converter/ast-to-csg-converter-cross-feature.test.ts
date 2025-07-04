@@ -119,21 +119,20 @@ describe('AST to CSG Converter - Cross-Feature Integration', () => {
 
         // Test direct parser integration
         const ast = parserService.parseAST(scenario.code);
-          expect(ast).toBeDefined();
-          expect(ast).not.toBeNull();
+        expect(ast).toBeDefined();
+        expect(ast).not.toBeNull();
 
-          if (ast) {
-            expect(ast.length).toBe(scenario.expectedNodeCount);
-            logger.debug(`${scenario.name} parsed ${ast.length} nodes directly`);
+        if (ast) {
+          expect(ast.length).toBe(scenario.expectedNodeCount);
+          logger.debug(`${scenario.name} parsed ${ast.length} nodes directly`);
 
-            // Verify node types if nodes exist
-            if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
-              ast.forEach((node: ASTNode, index: number) => {
-                expect(node).toBeDefined();
-                expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
-                logger.debug(`Node ${index + 1}: ${node?.type}`);
-              });
-            }
+          // Verify node types if nodes exist
+          if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
+            ast.forEach((node: ASTNode, index: number) => {
+              expect(node).toBeDefined();
+              expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
+              logger.debug(`Node ${index + 1}: ${node?.type}`);
+            });
           }
         }
 
@@ -294,7 +293,7 @@ describe('AST to CSG Converter - Cross-Feature Integration', () => {
         const startTime = performance.now();
 
         store.getState().updateCode(testCode);
-        const parseResult = await store.getState().parseCode(testCode);
+        const _parseResult = await store.getState().parseCode(testCode);
 
         const endTime = performance.now();
         const operationTime = endTime - startTime;

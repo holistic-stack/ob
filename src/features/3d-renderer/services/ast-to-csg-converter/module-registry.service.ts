@@ -35,14 +35,15 @@ export class ModuleRegistryService {
    * Register a module definition
    */
   registerModule(moduleNode: ModuleDefinitionNode): Result<void, string> {
-    logger.debug(`Registering module: ${moduleNode.name}`);
+    const moduleName = moduleNode.name.name;
+    logger.debug(`Registering module: ${moduleName}`);
 
-    if (this.modules.has(moduleNode.name)) {
-      return error(`Module '${moduleNode.name}' is already defined`);
+    if (this.modules.has(moduleName)) {
+      return error(`Module '${moduleName}' is already defined`);
     }
 
-    this.modules.set(moduleNode.name, moduleNode);
-    logger.debug(`Module '${moduleNode.name}' registered successfully`);
+    this.modules.set(moduleName, moduleNode);
+    logger.debug(`Module '${moduleName}' registered successfully`);
     return success(undefined);
   }
 
@@ -84,11 +85,11 @@ export class ModuleRegistryService {
     // Bind parameters to arguments
     const parameters = new Map<string, unknown>();
     for (let i = 0; i < definition.parameters.length; i++) {
-      const paramName = definition.parameters[i];
+      const param = definition.parameters[i];
       const argValue = i < args.length ? args[i] : undefined;
 
-      if (paramName) {
-        parameters.set(paramName, argValue);
+      if (param && param.name) {
+        parameters.set(param.name, argValue);
       }
     }
 

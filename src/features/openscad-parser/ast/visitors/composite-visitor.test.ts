@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { OpenscadParser } from '../../index.js';
 import type * as ast from '../ast-types.js';
 import { CompositeVisitor } from './composite-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
@@ -82,7 +76,7 @@ describe('CompositeVisitor', () => {
     const tree = parser.parse(code);
     expect(tree).not.toBeNull();
 
-    const testableNode = findTestableNode(tree!.rootNode);
+    const testableNode = findTestableNode(tree?.rootNode);
     expect(testableNode).not.toBeNull();
 
     return testableNode!;
@@ -168,7 +162,7 @@ describe('CompositeVisitor', () => {
       expect(tree).not.toBeNull();
 
       // Use the root node which should have multiple children
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
       expect(rootNode.childCount).toBeGreaterThan(0);
 
       // Visit the children

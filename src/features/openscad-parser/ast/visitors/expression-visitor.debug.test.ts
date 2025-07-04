@@ -25,13 +25,13 @@ describe('ExpressionVisitor Debug', () => {
     expect(tree).not.toBeNull();
 
     // Log the structure of the tree
-    console.log('Root node type:', tree!.rootNode.type);
-    console.log('Root node text:', tree!.rootNode.text);
-    console.log('Root node child count:', tree!.rootNode.childCount);
+    console.log('Root node type:', tree?.rootNode.type);
+    console.log('Root node text:', tree?.rootNode.text);
+    console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Log the structure of each child
-    for (let i = 0; i < tree!.rootNode.childCount; i++) {
-      const child = tree!.rootNode.child(i);
+    for (let i = 0; i < tree?.rootNode.childCount; i++) {
+      const child = tree?.rootNode.child(i);
       if (!child) continue;
 
       console.log(`Child ${i} type:`, child.type);
@@ -56,13 +56,13 @@ describe('ExpressionVisitor Debug', () => {
     expect(tree).not.toBeNull();
 
     // Log the structure of the tree
-    console.log('Root node type:', tree!.rootNode.type);
-    console.log('Root node text:', tree!.rootNode.text);
-    console.log('Root node child count:', tree!.rootNode.childCount);
+    console.log('Root node type:', tree?.rootNode.type);
+    console.log('Root node text:', tree?.rootNode.text);
+    console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Log the structure of each child
-    for (let i = 0; i < tree!.rootNode.childCount; i++) {
-      const child = tree!.rootNode.child(i);
+    for (let i = 0; i < tree?.rootNode.childCount; i++) {
+      const child = tree?.rootNode.child(i);
       if (!child) continue;
 
       console.log(`Child ${i} type:`, child.type);

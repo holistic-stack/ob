@@ -18,6 +18,7 @@ import type {
 } from '../types/matrix.types.js';
 import { matrixUtils } from '../utils/matrix-adapters.js';
 import type { MatrixCacheService } from './matrix-cache.service.js';
+import { matrixServiceDiagnostics } from './matrix-service-diagnostics.js';
 
 const logger = createLogger('MatrixValidationService');
 
@@ -229,8 +230,18 @@ export class MatrixValidationService {
     matrix: Matrix,
     options: MatrixValidationOptions = {}
   ): Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>> {
+    const operation = 'validateMatrix';
+    const metadata = {
+      matrixSize: [matrix.rows, matrix.columns],
+      useCache: options.useCache,
+      tolerance: options.tolerance,
+      enableDetailedAnalysis: options.enableDetailedAnalysis
+    };
+    
+    // Start diagnostic timing
+    matrixServiceDiagnostics.startTiming(operation, metadata);
+    
     const startTime = Date.now();
-    const operation = 'matrixValidation';
 
     logger.debug(`Validating matrix ${matrix.rows}x${matrix.columns}`);
 
@@ -380,8 +391,24 @@ export class MatrixValidationService {
       logger.debug(
         `Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`
       );
+      
+      // End diagnostic timing on success
+      matrixServiceDiagnostics.endTiming(operation, { 
+        ...metadata, 
+        success: true, 
+        numericalStability,
+        executionTime 
+      });
+      
       return success(operationResult);
     } catch (err) {
+      // End diagnostic timing on failure
+      matrixServiceDiagnostics.endTiming(operation, { 
+        ...metadata, 
+        success: false, 
+        error: err instanceof Error ? err.message : String(err) 
+      });
+      
       this.recordFailure(operation, err as Error);
       return error(`Matrix validation failed: ${err instanceof Error ? err.message : String(err)}`);
     }

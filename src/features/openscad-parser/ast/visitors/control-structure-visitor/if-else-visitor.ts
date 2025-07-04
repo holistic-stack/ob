@@ -28,7 +28,7 @@ export class IfElseVisitor {
    * @param errorHandler The error handler instance
    */
   constructor(
-    source: string = '',
+    source: string,
     protected errorHandler: ErrorHandler
   ) {
     this.expressionVisitor = new ExpressionVisitor(source, errorHandler);

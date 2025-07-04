@@ -550,11 +550,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
 
         // The location for the AssignmentNode itself should be the span of "name = value"
         let assignmentLocationNode: TSNode | null = null;
-        if (
-          nameNodeForLocation &&
-          nameNodeForLocation.parent &&
-          nameNodeForLocation.parent.type === 'named_argument'
-        ) {
+        if (nameNodeForLocation?.parent && nameNodeForLocation.parent.type === 'named_argument') {
           assignmentLocationNode = nameNodeForLocation.parent;
         }
 

@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser';
 import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
@@ -43,16 +43,16 @@ describe('Cursor Utils Integration', () => {
       } catch (_e) {
         /* ensure file is clear or created */
       }
-      const log = (message: string) => fs.appendFileSync(logFilePath, message + '\n');
+      const log = (message: string) => fs.appendFileSync(logFilePath, `${message}\n`);
 
       if (!tree) {
         log('Error: CST Tree is null. Parsing failed.');
         throw new Error('CST Tree is null after parsing. Check grammar or input code.');
       }
 
-      log("Input code for 'should handle translate transform':\n" + code + '\n');
+      log(`Input code for 'should handle translate transform':\n${code}\n`);
       log('Root node from tree.rootNode (simplified):\n');
-      log(JSON.stringify(simplifiedRootNode, null, 2) + '\n');
+      log(`${JSON.stringify(simplifiedRootNode, null, 2)}\n`);
 
       log('=== Full CST Tree Walk (translate test) ===\n');
       const treeWalkLines = cstTreeCursorWalkLog(tree, code);
@@ -90,12 +90,12 @@ describe('Cursor Utils Integration', () => {
       expect(cursor.nodeType).toBe('argument');
       expect(cursor.gotoFirstChild()).toBe(true);
       expect(cursor.nodeType).toBe('vector_expression'); // Current grammar uses specific types
-      let foundArrayLiteral = false;
-      const currentDepth = 0;
-      const maxDescendDepth = 15;
+      let _foundArrayLiteral = false;
+      const _currentDepth = 0;
+      const _maxDescendDepth = 15;
 
       // The vector_expression already contains the array content, no need to search deeper
-      foundArrayLiteral = true; // We're already at the vector_expression which contains the array
+      _foundArrayLiteral = true; // We're already at the vector_expression which contains the array
       log(`Cursor at: ${cursor.nodeType} (expected vector_expression)`);
       expect(cursor.nodeType).toBe('vector_expression');
       expect(cursorUtils.getNodeText(cursor, code)).toBe('[10, 20, 30]');
@@ -128,7 +128,7 @@ describe('Cursor Utils Integration', () => {
 
       expect(tree).not.toBeNull();
 
-      const cursor = tree!.walk();
+      const cursor = tree?.walk();
       cursor.gotoFirstChild();
       const sourceFileNode = {
         type: cursor.nodeType,

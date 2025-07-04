@@ -110,7 +110,7 @@ export const createRenderingSlice = (
     updateCamera: (cameraUpdate: Partial<CameraConfig>) => {
       set((state) => {
         if (state.rendering) {
-          Object.assign(state.rendering.camera, cameraUpdate);
+          state.rendering.camera = { ...state.rendering.camera, ...cameraUpdate };
         }
       });
     },
@@ -119,8 +119,8 @@ export const createRenderingSlice = (
       set((state) => {
         if (state.rendering) {
           Object.assign(state.rendering.camera, {
-            position: [10, 10, 10],
-            target: [0, 0, 0],
+            position: [10, 10, 10] as const,
+            target: [0, 0, 0] as const,
             zoom: 1,
             fov: 75,
             near: 0.1,
@@ -136,7 +136,9 @@ export const createRenderingSlice = (
     addRenderError: (error: RenderingError) => {
       set((state) => {
         if (state.rendering) {
-          state.rendering.renderErrors = [...state.rendering.renderErrors, error];
+          // Ensure renderErrors array exists before spreading
+          const currentErrors = state.rendering.renderErrors || [];
+          state.rendering.renderErrors = [...currentErrors, error];
         }
       });
     },

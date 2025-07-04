@@ -514,8 +514,8 @@ export class TransformVisitor extends BaseASTVisitor {
         // Handle color transform
         let colorValue: string | ast.Vector4D = 'black'; // Default color
 
-        if (args.length > 0 && args[0]!.value !== null) {
-          const argValue = args[0]!.value;
+        if (args.length > 0 && args[0]?.value !== null) {
+          const argValue = args[0]?.value;
 
           // Handle expression objects that wrap the actual value
           let actualValue = argValue;
@@ -613,7 +613,7 @@ export class TransformVisitor extends BaseASTVisitor {
 
         // Get the matrix value from arguments
         const matrixValue =
-          args.length > 0 ? createMatrixFromValue(args[0]!.value) : identityMatrix;
+          args.length > 0 ? createMatrixFromValue(args[0]?.value) : identityMatrix;
 
         return {
           type: 'multmatrix',
@@ -625,16 +625,16 @@ export class TransformVisitor extends BaseASTVisitor {
       case 'offset': {
         // Handle offset transform
         let chamferValue = false; // Default to false for chamfer
-        if (args.length > 2 && args[2]!.value !== null) {
+        if (args.length > 2 && args[2]?.value !== null) {
           // Convert to boolean if it's not already
           chamferValue =
-            args[2]!.value === true || args[2]!.value === 1 || args[2]!.value === 'true';
+            args[2]?.value === true || args[2]?.value === 1 || args[2]?.value === 'true';
         }
 
         return {
           type: 'offset',
-          r: args.length > 0 ? (typeof args[0]!.value === 'number' ? args[0]!.value : 0) : 0,
-          delta: args.length > 1 ? (typeof args[1]!.value === 'number' ? args[1]!.value : 0) : 0,
+          r: args.length > 0 ? (typeof args[0]?.value === 'number' ? args[0]?.value : 0) : 0,
+          delta: args.length > 1 ? (typeof args[1]?.value === 'number' ? args[1]?.value : 0) : 0,
           chamfer: chamferValue,
           children: [],
           location: getLocation(node),

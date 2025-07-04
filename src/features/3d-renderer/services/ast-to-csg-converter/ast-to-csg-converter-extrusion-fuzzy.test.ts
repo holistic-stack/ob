@@ -187,15 +187,7 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
           logger.debug(`Testing linear_extrude(height=${height}) ${shape} conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(
-              `Parse failed for linear_extrude(height=${height}) ${shape}: ${parseResult.error}`
-            );
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for linear_extrude(height=${height}) ${shape}`);
             return; // Skip this test case
@@ -252,15 +244,7 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
             );
 
             // Parse the code
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(
-                `Parse failed for linear_extrude(height=${height}, twist=${twist}) ${shape}: ${parseResult.error}`
-              );
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(
                 `No AST nodes for linear_extrude(height=${height}, twist=${twist}) ${shape}`
@@ -310,15 +294,7 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
           logger.debug(`Testing rotate_extrude(angle=${angle}) ${shape} conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(
-              `Parse failed for rotate_extrude(angle=${angle}) ${shape}: ${parseResult.error}`
-            );
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for rotate_extrude(angle=${angle}) ${shape}`);
             return; // Skip this test case
@@ -363,13 +339,7 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
           logger.debug(`Testing rotate_extrude() (full revolution) ${shape} conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for rotate_extrude() ${shape}: ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for rotate_extrude() ${shape}`);
             return; // Skip this test case
@@ -424,13 +394,7 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
 
             logger.debug(`Testing ${operations.length} extrusion operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple extrusion operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== operations.length) {
               logger.warn(
                 `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
@@ -478,16 +442,13 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyHeight(), parserFriendly2DShape(), async (height, shape) => {
           const code = `linear_extrude(height=${height}) ${shape};`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
+          const ast = parserService.parseAST(code);
+          if (!ast || ast.length === 0) {
             logger.warn(
-              `Parse failed for performance test with linear_extrude(height=${height}) ${shape}`
+              `No AST nodes for performance test with linear_extrude(height=${height}) ${shape}`
             );
             return; // Skip this test case
           }
-
-          // AST already available
-          if (!ast || ast.length === 0) return;
 
           const extrudeNode = ast[0];
           if (!extrudeNode) return;
@@ -520,16 +481,13 @@ describe('AST to CSG Converter - Extrusion Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyAngle(), parserFriendly2DShape(), async (angle, shape) => {
           const code = `rotate_extrude(angle=${angle}) translate([8, 0, 0]) ${shape};`;
 
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
+          const ast = parserService.parseAST(code);
+          if (!ast || ast.length === 0) {
             logger.warn(
-              `Parse failed for performance test with rotate_extrude(angle=${angle}) ${shape}`
+              `No AST nodes for performance test with rotate_extrude(angle=${angle}) ${shape}`
             );
             return; // Skip this test case
           }
-
-          // AST already available
-          if (!ast || ast.length === 0) return;
 
           const extrudeNode = ast[0];
           if (!extrudeNode) return;

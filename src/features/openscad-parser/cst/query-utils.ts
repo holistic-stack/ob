@@ -1,5 +1,5 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import {
   type Parser,
   Query,
@@ -339,6 +339,6 @@ export class QueryManager {
    */
   public dispose(): void {
     this.queryCache.clear();
-    delete (this as any).tree;
+    (this as any).tree = undefined;
   }
 }

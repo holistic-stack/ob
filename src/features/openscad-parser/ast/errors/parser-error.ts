@@ -121,7 +121,7 @@ export class ParserError extends Error {
    */
   public getFormattedMessage(): string {
     const sourceLine = this.getSourceLine();
-    const pointer = ' '.repeat(this.position?.column ?? 0) + '^';
+    const pointer = `${' '.repeat(this.position?.column ?? 0)}^`;
 
     let message = `${this.message}\n\n`;
     message += `${sourceLine}\n`;

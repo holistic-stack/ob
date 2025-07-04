@@ -74,7 +74,7 @@ export abstract class BaseExpressionEvaluator implements IExpressionEvaluator {
    * Helper to create error result
    */
   protected createErrorResult(
-    message: string,
+    _message: string,
     context: ExpressionEvaluationContext
   ): EvaluationResult {
     context.getOptions(); // Access context for error handling
@@ -105,7 +105,7 @@ export abstract class BaseExpressionEvaluator implements IExpressionEvaluator {
     }
     if (result.type === 'string' && typeof result.value === 'string') {
       const num = parseFloat(result.value);
-      return isNaN(num) ? 0 : num;
+      return Number.isNaN(num) ? 0 : num;
     }
     if (result.type === 'boolean') {
       return result.value ? 1 : 0;
@@ -163,7 +163,7 @@ export class LiteralEvaluator extends BaseExpressionEvaluator {
       case 'number': {
         const numValue = parseFloat(node.text);
         result = {
-          value: isNaN(numValue) ? 0 : numValue,
+          value: Number.isNaN(numValue) ? 0 : numValue,
           type: 'number',
         };
         break;

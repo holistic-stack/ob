@@ -32,18 +32,18 @@ describe('IfElseVisitor', () => {
     it('should parse a basic if statement', () => {
       const code = `if (true) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the if statement node
       const ifNode = rootNode.namedChildren[0];
-      expect(ifNode!.type).toBe('statement');
+      expect(ifNode?.type).toBe('statement');
 
       // Log the node structure
       console.log('If Node Structure:');
       printNodeStructure(ifNode!, 0, 5, 10);
 
       // Get the actual if_statement node
-      const actualIfNode = ifNode!.namedChild(0);
+      const actualIfNode = ifNode?.namedChild(0);
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
@@ -62,14 +62,14 @@ describe('IfElseVisitor', () => {
     it('should parse an if-else statement', () => {
       const code = `if (true) { cube(10); } else { sphere(5); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the if statement node
       const ifNode = rootNode.namedChildren[0];
-      expect(ifNode!.type).toBe('statement');
+      expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
-      const actualIfNode = ifNode!.namedChild(0);
+      const actualIfNode = ifNode?.namedChild(0);
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
@@ -88,14 +88,14 @@ describe('IfElseVisitor', () => {
     it('should parse an if-else-if-else statement', () => {
       const code = `if (true) { cube(10); } else if (false) { sphere(5); } else { cylinder(h=10, r=2); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the if statement node
       const ifNode = rootNode.namedChildren[0];
-      expect(ifNode!.type).toBe('statement');
+      expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
-      const actualIfNode = ifNode!.namedChild(0);
+      const actualIfNode = ifNode?.namedChild(0);
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
@@ -123,14 +123,14 @@ describe('IfElseVisitor', () => {
     it('should handle complex conditions in if statements', () => {
       const code = `if (x > 5 && y < 10 || z == 0) { cube(10); }`;
       const tree = parser.parse(code);
-      const rootNode = tree!.rootNode;
+      const rootNode = tree?.rootNode;
 
       // Find the if statement node
       const ifNode = rootNode.namedChildren[0];
-      expect(ifNode!.type).toBe('statement');
+      expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
-      const actualIfNode = ifNode!.namedChild(0);
+      const actualIfNode = ifNode?.namedChild(0);
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node

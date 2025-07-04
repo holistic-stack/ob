@@ -12,9 +12,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
-import { createLogger } from '../../../../shared/services/logger.service.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
@@ -146,14 +143,12 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
         logger.debug(`Generated code with ${code.split('\n').length} lines`);
 
         // Test parser integration
-        const parseResult = parserService.parseAST(code);
+        const ast = parserService.parseAST(code);
         // Parsing completed
 
-        if (parseResult.success) {
-          expect(parseResult.data.ast).toBeDefined();
-          if (parseResult.data.ast) {
-            expect(parseResult.data.ast.length).toBeGreaterThan(0);
-          }
+        if (ast && ast.length > 0) {
+          expect(ast).toBeDefined();
+          expect(ast.length).toBeGreaterThan(0);
 
           // Test store integration
           const storeResult = await store.getState().parseCode(code);
@@ -194,11 +189,11 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
         logger.debug(`Generated deeply nested code with ${depth} levels`);
 
         // Test parser resilience
-        const parseResult = parserService.parseAST(code);
+        const ast = parserService.parseAST(code);
         // Parsing completed
 
-        if (parseResult.success) {
-          expect(parseResult.data.ast).toBeDefined();
+        if (ast && ast.length > 0) {
+          expect(ast).toBeDefined();
 
           // Test store processing
           const storeResult = await store.getState().parseCode(code);
@@ -285,11 +280,11 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
             ?.usedJSHeapSize || 0;
 
         // Test parser with complex nested operations
-        const parseResult = parserService.parseAST(code);
+        const ast = parserService.parseAST(code);
         // Parsing completed
 
-        if (parseResult.success) {
-          expect(parseResult.data.ast).toBeDefined();
+        if (ast && ast.length > 0) {
+          expect(ast).toBeDefined();
 
           // Test store processing
           const storeResult = await store.getState().parseCode(code);

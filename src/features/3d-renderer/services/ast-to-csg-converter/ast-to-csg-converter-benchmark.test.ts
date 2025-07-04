@@ -12,9 +12,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
-import { createLogger } from '../../../../shared/services/logger.service.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
@@ -270,7 +267,7 @@ class PerformanceBenchmark {
 
   async measurePerformance(
     code: string,
-    parserService: UnifiedParserService,
+    parserService: OpenscadParser,
     store: ReturnType<typeof createAppStore>
   ): Promise<PerformanceMetrics> {
     const initialMemory =
@@ -282,12 +279,12 @@ class PerformanceBenchmark {
 
     // Measure parsing performance
     const parseStart = performance.now();
-    const parseResult = parserService.parseAST(code);
+    const ast = parserService.parseAST(code);
     const parseEnd = performance.now();
     const parsingTime = parseEnd - parseStart;
 
-    if (!parseResult.success) {
-      throw new Error(`Parsing failed: ${parseResult.error}`);
+    if (!ast || ast.length === 0) {
+      throw new Error('Parsing failed: No AST nodes returned');
     }
 
     // Measure store integration and conversion performance

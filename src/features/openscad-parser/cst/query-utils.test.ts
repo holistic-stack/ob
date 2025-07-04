@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Parser } from 'web-tree-sitter';
 import { QueryManager } from './query-utils.js';
@@ -20,14 +20,14 @@ describe('QueryManager', () => {
     queryManager = new QueryManager(parser, language, queryDir);
 
     // Mock the loadQuery method
-    queryManager['loadQuery'] = async (_name: string) => {
+    queryManager.loadQuery = async (_name: string) => {
       // Mock implementation that returns a fake Query object
       return { matches: () => [] } as any;
     };
 
     // Mock the query cache
-    queryManager['queryCache'] = new Map();
-    queryManager['queryCache'].set('find-function-calls', {
+    queryManager.queryCache = new Map();
+    queryManager.queryCache.set('find-function-calls', {
       matches: () => [],
     } as any);
   });
@@ -68,7 +68,7 @@ describe('QueryManager', () => {
       // Set the tree property directly
       const tree = parser.parse(source);
       if (tree) {
-        queryManager['tree'] = tree;
+        queryManager.tree = tree;
       }
 
       // In a real test, we would mock the query execution
@@ -104,7 +104,7 @@ describe('QueryManager', () => {
 
       const tree = parser.parse(source);
       if (tree) {
-        queryManager['tree'] = tree;
+        queryManager.tree = tree;
       }
 
       const nodes = queryManager.findAllNodesOfType('function_call');

@@ -405,7 +405,7 @@ export class ErrorHandler {
    *
    * @since 0.1.0
    */
-  handleError(error: Error, context?: string, node?: any): void {
+  handleError(error: Error, context?: string, _node?: any): void {
     const message = context ? `${context}: ${error.message}` : error.message;
     this.logger.error(message);
   }

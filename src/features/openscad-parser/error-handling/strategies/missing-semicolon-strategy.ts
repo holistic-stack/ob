@@ -182,7 +182,7 @@ export class MissingSemicolonStrategy extends BaseRecoveryStrategy {
 
     // Add semicolon at the end of the line
     const trimmedEnd = lineContent.trimEnd();
-    const modifiedLine = trimmedEnd + ';';
+    const modifiedLine = `${trimmedEnd};`;
 
     return this.replaceLine(code, lineNumber, modifiedLine);
   }

@@ -31,13 +31,13 @@ describe('OpenSCAD Parser - AST Generation', () => {
   }
 
   // Debug function to print the tree structure
-  function printTree(node: any, depth = 0) {
+  function _printTree(node: any, depth = 0) {
     if (!node) return;
     const indent = '  '.repeat(depth);
     console.log(`${indent}${node.type}: ${node.text.substring(0, 30)}`);
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
-        if (child) printTree(child, depth + 1);
+        if (child) _printTree(child, depth + 1);
       }
     }
   }

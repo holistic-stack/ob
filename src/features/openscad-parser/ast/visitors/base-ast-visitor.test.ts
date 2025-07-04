@@ -1,12 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { OpenscadParser } from '../../index.js';
 import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';

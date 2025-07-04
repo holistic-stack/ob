@@ -3,13 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  EnhancedOpenscadParser,
-  ErrorHandler,
-  type IErrorHandler,
-  OpenscadParser,
-  SimpleErrorHandler,
-} from '../../index.js';
+import { ErrorHandler, OpenscadParser } from '../../index.js';
 import { CompositeVisitor } from './composite-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';

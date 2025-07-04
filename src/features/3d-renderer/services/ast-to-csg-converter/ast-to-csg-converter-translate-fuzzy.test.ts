@@ -104,13 +104,7 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
           logger.debug(`Testing translate([${x}, ${y}, ${z}]) conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(`Parse failed for translate([${x}, ${y}, ${z}]): ${parseResult.error}`);
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for translate([${x}, ${y}, ${z}])`);
             return; // Skip this test case
@@ -141,7 +135,7 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
               );
             } else {
               logger.warn(
-                `Conversion failed for translate([${x}, ${y}, ${z}]): ${result.success ? 'no mesh/position' : result.error}`
+                `Conversion failed for translate([${x}, ${y}, ${z}]): ${!result.success ? result.error : 'no mesh/position'}`
               );
             }
           } finally {
@@ -168,10 +162,10 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
       for (const [x, y, z] of edgeCases) {
         const code = `translate([${x},${y},${z}]) cube(5);`;
 
-        const parseResult = parserService.parseAST(code);
+        const ast = parserService.parseAST(code);
         // Parsing completed
 
-        if (!parseResult.success) continue;
+        if (!ast || ast.length === 0) continue;
 
         // AST already available
         if (!ast || ast.length === 0) continue;
@@ -223,13 +217,7 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
 
             logger.debug(`Testing ${coordinates.length} translate operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple translate operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== coordinates.length) {
               logger.warn(
                 `AST length mismatch: expected ${coordinates.length}, got ${ast?.length || 0}`
@@ -281,13 +269,7 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
           async ([x, y, z]) => {
             const code = `translate([${x},${y},${z}]) sphere(10);`;
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for performance test with translate([${x}, ${y}, ${z}])`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) return;
 
             const translateNode = ast[0];

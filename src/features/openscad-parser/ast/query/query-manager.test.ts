@@ -6,6 +6,15 @@ import { describe, expect, it, vi } from 'vitest';
 import type { QueryCache } from './query-cache.js';
 import { QueryManager } from './query-manager.js';
 
+// Mock the Query constructor from web-tree-sitter
+vi.mock('web-tree-sitter', async () => {
+  const actual = await vi.importActual('web-tree-sitter');
+  return {
+    ...actual,
+    Query: vi.fn(),
+  };
+});
+
 // Mock the Tree-sitter types
 class MockTree {
   constructor(public rootNode: MockNode) {}
@@ -82,20 +91,25 @@ class MockQueryCache implements QueryCache {
 }
 
 describe('QueryManager', () => {
-  it('should execute a query and cache the results', () => {
+  it('should execute a query and cache the results', async () => {
+    // Import the mocked Query constructor
+    const { Query } = await import('web-tree-sitter');
+    const mockQueryConstructor = Query as any;
+
     // Create a mock language
     const mockLanguage = {
       lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-      query: vi.fn().mockImplementation((_queryString) => {
-        const mockQuery = new MockQuery([
-          new MockMatch([
-            new MockCapture(new MockNode('node1', 'type1')),
-            new MockCapture(new MockNode('node2', 'type2')),
-          ]),
-        ]);
-        return mockQuery;
-      }),
     };
+
+    // Setup the mock Query constructor
+    mockQueryConstructor.mockImplementation((_language: any, _queryString: string) => {
+      return new MockQuery([
+        new MockMatch([
+          new MockCapture(new MockNode('node1', 'type1')),
+          new MockCapture(new MockNode('node2', 'type2')),
+        ]),
+      ]);
+    });
 
     // Create a mock cache
     const mockCache = new MockQueryCache();
@@ -110,7 +124,7 @@ describe('QueryManager', () => {
     const results = queryManager.executeQuery('(type1) @node', mockTree as any);
 
     // The query should be executed and the results cached
-    expect(mockLanguage.query).toHaveBeenCalledWith('(type1) @node');
+    expect(mockQueryConstructor).toHaveBeenCalledWith(mockLanguage, '(type1) @node');
     expect(results).toHaveLength(2);
     expect(mockCache.size()).toBe(1);
 
@@ -118,23 +132,29 @@ describe('QueryManager', () => {
     queryManager.executeQuery('(type1) @node', mockTree as any);
 
     // The query should be retrieved from the cache
-    expect(mockLanguage.query).toHaveBeenCalledTimes(1);
+    expect(mockQueryConstructor).toHaveBeenCalledTimes(1);
     expect(mockCache.getStats().hits).toBe(1);
   });
 
-  it('should find nodes by type', () => {
+  it('should find nodes by type', async () => {
+    // Import the mocked Query constructor
+    const { Query } = await import('web-tree-sitter');
+    const mockQueryConstructor = Query as any;
+
     // Create a mock language
     const mockLanguage = {
       lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-      query: vi.fn().mockImplementation((_queryString) => {
-        return new MockQuery([
-          new MockMatch([
-            new MockCapture(new MockNode('node1', 'type1')),
-            new MockCapture(new MockNode('node2', 'type1')),
-          ]),
-        ]);
-      }),
     };
+
+    // Setup the mock Query constructor
+    mockQueryConstructor.mockImplementation((_language: any, _queryString: string) => {
+      return new MockQuery([
+        new MockMatch([
+          new MockCapture(new MockNode('node1', 'type1')),
+          new MockCapture(new MockNode('node2', 'type1')),
+        ]),
+      ]);
+    });
 
     // Create a query manager
     const queryManager = new QueryManager(mockLanguage);
@@ -146,7 +166,7 @@ describe('QueryManager', () => {
     const results = queryManager.findNodesByType('type1', mockTree as any);
 
     // The query should be executed with the correct query string
-    expect(mockLanguage.query).toHaveBeenCalledWith('(type1) @node');
+    expect(mockQueryConstructor).toHaveBeenCalledWith(mockLanguage, '(type1) @node');
     expect(results).toHaveLength(2);
   });
 

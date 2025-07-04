@@ -12,7 +12,6 @@ import type {
   ASTNode,
   CubeNode,
   CylinderNode,
-  SourceLocation,
   SphereNode,
 } from '../../../openscad-parser/core/ast-types.js';
 
@@ -91,7 +90,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
       const sphereNode: SphereNode = {
         type: 'sphere',
-        r: 5,
+        radius: 5,
         location: {
           start: { line: 1, column: 1, offset: 0 },
           end: { line: 1, column: 15, offset: 14 },

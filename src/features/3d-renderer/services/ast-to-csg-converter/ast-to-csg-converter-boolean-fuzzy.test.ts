@@ -134,15 +134,7 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           logger.debug(`Testing union() with ${primitives.length} primitives conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(
-              `Parse failed for union with ${primitives.length} primitives: ${parseResult.error}`
-            );
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for union with ${primitives.length} primitives`);
             return; // Skip this test case
@@ -193,15 +185,7 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           logger.debug(`Testing intersection() with ${primitives.length} primitives conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(
-              `Parse failed for intersection with ${primitives.length} primitives: ${parseResult.error}`
-            );
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for intersection with ${primitives.length} primitives`);
             return; // Skip this test case
@@ -254,15 +238,7 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           logger.debug(`Testing difference() with ${primitives.length} primitives conversion`);
 
           // Parse the code
-          const parseResult = parserService.parseAST(code);
-          if (!parseResult.success) {
-            logger.warn(
-              `Parse failed for difference with ${primitives.length} primitives: ${parseResult.error}`
-            );
-            return; // Skip this test case
-          }
-
-          // AST already available
+          const ast = parserService.parseAST(code);
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for difference with ${primitives.length} primitives`);
             return; // Skip this test case
@@ -324,13 +300,7 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
 
             logger.debug(`Testing ${operations.length} boolean operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for multiple boolean operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length !== operations.length) {
               logger.warn(
                 `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
@@ -387,13 +357,7 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
 
             logger.debug(`Testing nested ${outerOp}(${innerOp}()) operations`);
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
-              logger.warn(`Parse failed for nested ${outerOp}(${innerOp}()) operations`);
-              return; // Skip this test case
-            }
-
-            // AST already available
+            const ast = parserService.parseAST(code);
             if (!ast || ast.length === 0) {
               logger.warn(`No AST nodes for nested ${outerOp}(${innerOp}()) operations`);
               return; // Skip this test case
@@ -437,16 +401,13 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
           async (operation, primitives) => {
             const code = `${operation}() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
 
-            const parseResult = parserService.parseAST(code);
-            if (!parseResult.success) {
+            const ast = parserService.parseAST(code);
+            if (!ast || ast.length === 0) {
               logger.warn(
-                `Parse failed for performance test with ${operation}(${primitives.length} primitives)`
+                `No AST nodes for performance test with ${operation}(${primitives.length} primitives)`
               );
               return; // Skip this test case
             }
-
-            // AST already available
-            if (!ast || ast.length === 0) return;
 
             const booleanNode = ast[0];
             if (!booleanNode) return;
