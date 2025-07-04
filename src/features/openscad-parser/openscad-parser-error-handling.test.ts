@@ -2,8 +2,9 @@
  * Tests for the enhanced error handling in the OpenscadParser class
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('OpenscadParser Error Handling', () => {
   let parser: OpenscadParser;
@@ -14,13 +15,11 @@ describe('OpenscadParser Error Handling', () => {
 
   beforeEach(async () => {
     // Configure parser for graceful error handling
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should parse valid OpenSCAD code without errors', () => {
     const result = parser.parseCST(VALID_OPENSCAD_CODE);
@@ -64,7 +63,7 @@ describe('OpenscadParser Error Handling', () => {
   });
 
   it('should throw a ParserError for initialization errors', async () => {
-    const uninitializedParser = new OpenscadParser();
+    const uninitializedParser = createTestParser();
 
     // Should throw an error when trying to parse without initializing
     await expect(async () => {

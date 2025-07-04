@@ -1,17 +1,16 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Union AST Generation', () => {
   let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterAll(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   describe('union operation', () => {
     it('should parse basic union of multiple children', () => {

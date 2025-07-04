@@ -1,17 +1,16 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Cube Primitive', () => {
   let parser: OpenscadParser;
 
   beforeAll(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init();
   });
 
-  afterAll(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   describe('cube primitive', () => {
     it('should parse basic cube with size parameter', () => {
