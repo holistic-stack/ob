@@ -290,6 +290,7 @@ export interface ExpressionNode extends BaseNode {
     | 'special_variable'
     | 'parenthesized_expression'
     | 'list_comprehension_expression'
+    | 'function_literal'
     | 'accessor'
     | 'binary_expression'
     | 'unary_expression'
@@ -798,6 +799,15 @@ export interface SpecialVariableNode extends ExpressionNode {
 export interface ParenthesizedExpressionNode extends ExpressionNode {
   expressionType: 'parenthesized_expression';
   expression: ExpressionNode;
+}
+
+/**
+ * Represents a function literal (anonymous function)
+ */
+export interface FunctionLiteralNode extends ExpressionNode {
+  expressionType: 'function_literal';
+  parameters: ModuleParameter[];
+  body: ExpressionNode;
 }
 
 /**

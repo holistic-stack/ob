@@ -10,6 +10,8 @@ import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
+import { error } from '../../../shared/utils/functional/result.js';
+import { CacheFailureError } from '../errors/index.js';
 import type { MatrixOperationResult, MatrixValidationResult } from '../types/matrix.types.js';
 import { MatrixIntegrationService } from './matrix-integration.service.js';
 import { MatrixServiceContainer } from './matrix-service-container.js';
@@ -193,7 +195,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
         vi.spyOn(cacheService, 'get').mockImplementation((key: string) => {
           if (failureCount < maxFailures && Math.random() < 0.5) {
             failureCount++;
-            throw new Error(`Simulated cache failure ${failureCount}`);
+            return error(new CacheFailureError(`Simulated cache failure ${failureCount}`));
           }
           return originalGet(key);
         });
@@ -202,7 +204,7 @@ describe('Matrix Service Recovery and Resilience Testing', () => {
           (key: string, value: Matrix, metadata?: Record<string, unknown>) => {
             if (failureCount < maxFailures && Math.random() < 0.3) {
               failureCount++;
-              throw new Error(`Simulated cache failure ${failureCount}`);
+              return error(new CacheFailureError(`Simulated cache failure ${failureCount}`));
             }
             return originalSet(key, value, metadata);
           }

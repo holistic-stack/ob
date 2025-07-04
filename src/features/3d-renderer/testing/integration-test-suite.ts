@@ -69,8 +69,9 @@ export class IntegrationTestSuite {
 
     this.performanceAssertion = matrixOperationTester.getPerformanceAssertion();
     this.materialService = new MaterialService();
-    this.matrixServiceContainer = new MatrixServiceContainer();
-    this.matrixIntegrationService = new MatrixIntegrationService(this.matrixServiceContainer);
+    // Use thread-safe singletons
+    this.matrixServiceContainer = MatrixServiceContainer.getInstanceSync();
+    this.matrixIntegrationService = MatrixIntegrationService.getInstanceSync();
   }
 
   /**

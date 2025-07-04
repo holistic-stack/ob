@@ -209,7 +209,7 @@ export function extractValueEnhanced(
   console.log(
     `[extractValueEnhanced] Attempting to extract from node: type='${
       node.type
-    }', text='${node.text.substring(0, 50)}'`
+    }', text='${getNodeText(node, sourceCode).substring(0, 50)}'`
   );
 
   // Check if this is a complex expression that needs evaluation
@@ -220,7 +220,7 @@ export function extractValueEnhanced(
       // Simplified direct evaluation approach for binary expressions
       const evaluateBinaryExpression = (node: TSNode): number | undefined => {
         console.log(
-          `[evaluateBinaryExpression] Evaluating binary expression: ${node.type} - "${node.text}"`
+          `[evaluateBinaryExpression] Evaluating binary expression: ${node.type} - "${getNodeText(node, sourceCode)}"`
         );
 
         // Get left, operator, and right nodes - using a simplified approach
@@ -230,7 +230,7 @@ export function extractValueEnhanced(
         const rightNode = node.child(2);
 
         console.log(
-          `[evaluateBinaryExpression] Found nodes: left=${leftNode?.text}, op=${operatorNode?.text}, right=${rightNode?.text}`
+          `[evaluateBinaryExpression] Found nodes: left=${leftNode ? getNodeText(leftNode, sourceCode) : 'null'}, op=${operatorNode ? getNodeText(operatorNode, sourceCode) : 'null'}, right=${rightNode ? getNodeText(rightNode, sourceCode) : 'null'}`
         );
 
         if (!leftNode || !operatorNode || !rightNode) {
@@ -270,7 +270,7 @@ export function extractValueEnhanced(
 
         // Perform the operation
         let result: number;
-        switch (operatorNode.text) {
+        switch (getNodeText(operatorNode, sourceCode)) {
           case '+':
             result = leftValue + rightValue;
             break;
@@ -287,12 +287,14 @@ export function extractValueEnhanced(
             result = leftValue % rightValue;
             break;
           default:
-            console.warn(`[evaluateBinaryExpression] Unsupported operator: ${operatorNode.text}`);
+            console.warn(
+              `[evaluateBinaryExpression] Unsupported operator: ${getNodeText(operatorNode, sourceCode)}`
+            );
             return undefined;
         }
 
         console.log(
-          `[evaluateBinaryExpression] Result: ${leftValue} ${operatorNode.text} ${rightValue} = ${result}`
+          `[evaluateBinaryExpression] Result: ${leftValue} ${getNodeText(operatorNode, sourceCode)} ${rightValue} = ${result}`
         );
         return result;
       };
@@ -383,7 +385,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
   console.log(
     `[extractValue] Attempting to extract from node: type='${
       node.type
-    }', text='${node.text.substring(0, 50)}'`
+    }', text='${getNodeText(node, sourceCode).substring(0, 50)}'`
   );
 
   switch (node.type) {
@@ -391,21 +393,22 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       console.log(
         `[extractValue] Unwrapping 'expression', calling extractValue on child: type='${
           node.child(0)?.type
-        }', text='${node.child(0)?.text.substring(0, 50)}'`
+        }', text='${node.child(0) ? getNodeText(node.child(0), sourceCode).substring(0, 50) : 'null'}'`
       );
       // Unwrap the expression and extract from its first child
       const firstChild = node.child(0);
       return node.childCount > 0 && firstChild ? extractValue(firstChild, sourceCode) : undefined;
     }
     case 'number': {
-      const numValue = parseFloat(node.text);
+      const numValue = parseFloat(sourceCode ? getNodeText(node, sourceCode) : node.text);
       console.log(`[extractValue] Extracted number: ${numValue}`);
       return numValue;
     }
     case 'string_literal':
     case 'string': {
       // Remove quotes from string literals
-      const stringValue = node.text.substring(1, node.text.length - 1);
+      const nodeText = sourceCode ? getNodeText(node, sourceCode) : node.text;
+      const stringValue = nodeText.substring(1, nodeText.length - 1);
       console.log(`[extractValue] Extracted string from ${node.type}: "${stringValue}"`);
       return stringValue;
     }
@@ -418,22 +421,22 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       return false;
     case 'array_literal':
       console.log(
-        `[extractValue] Calling extractVector for array_literal: ${node.text.substring(0, 20)}`
+        `[extractValue] Calling extractVector for array_literal: ${getNodeText(node, sourceCode).substring(0, 20)}`
       ); // DEBUG
       return extractVector(node, sourceCode);
     case 'array_expression':
       console.log(
-        `[extractValue] Calling extractVector for array_expression: ${node.text.substring(0, 20)}`
+        `[extractValue] Calling extractVector for array_expression: ${getNodeText(node, sourceCode).substring(0, 20)}`
       ); // DEBUG
       return extractVector(node, sourceCode);
     case 'vector_expression':
       console.log(
-        `[extractValue] Calling extractVector for vector_expression: ${node.text.substring(0, 20)}`
+        `[extractValue] Calling extractVector for vector_expression: ${getNodeText(node, sourceCode).substring(0, 20)}`
       ); // DEBUG
       return extractVector(node, sourceCode);
     case 'unary_expression': {
       console.log(
-        `[extractValue] Processing unary_expression with ${node.childCount} children: '${node.text}'`
+        `[extractValue] Processing unary_expression with ${node.childCount} children: '${getNodeText(node, sourceCode)}'`
       );
 
       // Handle actual unary operators (-, +)
@@ -441,7 +444,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         const operatorNode = node.child(0);
         const operandNode = node.child(1);
         if (operatorNode && operandNode) {
-          const operator = operatorNode.text;
+          const operator = getNodeText(operatorNode, sourceCode);
           const operandValue = extractValue(operandNode, sourceCode);
           if (operator === '-' && typeof operandValue === 'number') {
             console.log(`[extractValue] Applied unary minus: -${operandValue}`);
@@ -459,14 +462,14 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         const child = node.child(0);
         if (child) {
           console.log(
-            `[extractValue] Single child in unary_expression: type='${child.type}', text='${child.text}'`
+            `[extractValue] Single child in unary_expression: type='${child.type}', text='${getNodeText(child, sourceCode)}'`
           );
           return extractValue(child, sourceCode);
         }
       }
 
       // Try to parse the text directly for simple values
-      const text = node.text.trim();
+      const text = (sourceCode ? getNodeText(node, sourceCode) : node.text).trim();
 
       // Check for numbers
       const num = parseFloat(text);
@@ -492,7 +495,9 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         return false;
       }
 
-      console.warn(`[extractValue] Unhandled unary_expression: ${node.text.substring(0, 30)}`);
+      console.warn(
+        `[extractValue] Unhandled unary_expression: ${getNodeText(node, sourceCode).substring(0, 30)}`
+      );
       return undefined;
     }
     case 'logical_or_expression':
@@ -509,7 +514,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         const child = node.child(0);
         if (child) {
           console.log(
-            `[extractValue] Single child in ${node.type}: type='${child.type}', text='${child.text}'`
+            `[extractValue] Single child in ${node.type}: type='${child.type}', text='${getNodeText(child, sourceCode)}'`
           );
           return extractValue(child, sourceCode);
         }
@@ -537,7 +542,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       }
 
       // For simple cases, try to parse as number first
-      const potentialNumText = node.text.trim();
+      const potentialNumText = (sourceCode ? getNodeText(node, sourceCode) : node.text).trim();
       const num = parseFloat(potentialNumText);
       if (!Number.isNaN(num)) {
         console.log(
@@ -564,7 +569,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       }
 
       console.warn(
-        `[extractValue] Unhandled ${node.type}: '${node.text.substring(
+        `[extractValue] Unhandled ${node.type}: '${getNodeText(node, sourceCode).substring(
           0,
           30
         )}' - consider using extractValueEnhanced`
@@ -572,29 +577,31 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       return undefined;
     }
     case 'identifier': {
-      if (node.text === 'true') return true;
-      if (node.text === 'false') return false;
+      const identifierText = sourceCode ? getNodeText(node, sourceCode) : node.text;
+      if (identifierText === 'true') return true;
+      if (identifierText === 'false') return false;
       return {
         type: 'expression',
         expressionType: 'variable',
-        name: node.text,
+        name: identifierText,
         location: getLocation(node),
       } as ast.VariableNode;
     }
     case 'conditional_expression': {
       console.log(
-        `[extractValue] Processing conditional_expression: '${node.text.substring(0, 30)}'`
+        `[extractValue] Processing conditional_expression: '${getNodeText(node, sourceCode).substring(0, 30)}'`
       );
       // Check if this is a wrapper for an array_literal
-      if (node.text.startsWith('[') && node.text.endsWith(']')) {
+      const condExprText = sourceCode ? getNodeText(node, sourceCode) : node.text;
+      if (condExprText.startsWith('[') && condExprText.endsWith(']')) {
         // Try to find an array_literal in the descendants
         const arrayLiteralNode = findDescendantOfType(node, 'array_literal');
         if (arrayLiteralNode) {
           console.log(
-            `[extractValue] Found array_literal in conditional_expression: '${arrayLiteralNode.text.substring(
-              0,
-              30
-            )}'`
+            `[extractValue] Found array_literal in conditional_expression: '${getNodeText(
+              arrayLiteralNode,
+              sourceCode
+            ).substring(0, 30)}'`
           );
           return extractVector(arrayLiteralNode, sourceCode);
         }
@@ -612,7 +619,7 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       }
 
       // Fallback to parsing as number or returning text
-      const potentialCondExprText = node.text.trim();
+      const potentialCondExprText = condExprText.trim();
       const condExprNum = parseFloat(potentialCondExprText);
       if (!Number.isNaN(condExprNum)) {
         console.log(
@@ -621,17 +628,17 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         return condExprNum;
       }
       console.warn(
-        `[extractValue] Returning raw text for conditional_expression: '${node.text.substring(
+        `[extractValue] Returning raw text for conditional_expression: '${condExprText.substring(
           0,
           30
         )}'`
       );
-      return node.text;
+      return condExprText;
     }
     case 'accessor_expression':
     case 'primary_expression': {
       console.log(
-        `[extractValue] Processing ${node.type} with ${node.childCount} children: '${node.text}'`
+        `[extractValue] Processing ${node.type} with ${node.childCount} children: '${getNodeText(node, sourceCode)}'`
       );
 
       // Handle single child (wrapped value)
@@ -639,14 +646,14 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         const child = node.child(0);
         if (child) {
           console.log(
-            `[extractValue] Single child in ${node.type}: type='${child.type}', text='${child.text}'`
+            `[extractValue] Single child in ${node.type}: type='${child.type}', text='${getNodeText(child, sourceCode)}'`
           );
           return extractValue(child, sourceCode);
         }
       }
 
       // Try to parse the text directly for simple values
-      const text = node.text.trim();
+      const text = (sourceCode ? getNodeText(node, sourceCode) : node.text).trim();
 
       // Check for numbers
       const num = parseFloat(text);
@@ -672,14 +679,17 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         return false;
       }
 
-      console.warn(`[extractValue] Unhandled ${node.type}: ${node.text.substring(0, 30)}`);
+      console.warn(
+        `[extractValue] Unhandled ${node.type}: ${getNodeText(node, sourceCode).substring(0, 30)}`
+      );
       return undefined;
     }
     case 'argument': {
       console.log(`[extractValue] Processing argument node with ${node.childCount} children`);
 
       // Check if this is a named argument (contains '=')
-      if (node.text.includes('=')) {
+      const argText = sourceCode ? getNodeText(node, sourceCode) : node.text;
+      if (argText.includes('=')) {
         console.log(
           `[extractValue] Detected named argument in value-extractor, should be handled by extractArgument. Returning undefined.`
         );
@@ -697,13 +707,13 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
           child.type !== '='
         ) {
           console.log(
-            `[extractValue] Found expression child in argument: type='${child.type}', text='${child.text}'`
+            `[extractValue] Found expression child in argument: type='${child.type}', text='${getNodeText(child, sourceCode)}'`
           );
           return extractValue(child, sourceCode);
         }
       }
 
-      console.warn(`[extractValue] No expression found in argument node: '${node.text}'`);
+      console.warn(`[extractValue] No expression found in argument node: '${argText}'`);
       return undefined;
     }
     case 'arguments': {
@@ -714,18 +724,20 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
         const child = node.child(i);
         if (child && child.type !== ',' && child.type !== '(' && child.type !== ')') {
           console.log(
-            `[extractValue] Found expression child in arguments: type='${child.type}', text='${child.text}'`
+            `[extractValue] Found expression child in arguments: type='${child.type}', text='${getNodeText(child, sourceCode)}'`
           );
           return extractValue(child, sourceCode);
         }
       }
 
-      console.warn(`[extractValue] No expression found in arguments node: '${node.text}'`);
+      console.warn(
+        `[extractValue] No expression found in arguments node: '${getNodeText(node, sourceCode)}'`
+      );
       return undefined;
     }
     default:
       console.warn(
-        `[extractValue] Unhandled node type: '${node.type}', text: '${node.text.substring(0, 30)}'`
+        `[extractValue] Unhandled node type: '${node.type}', text: '${getNodeText(node, sourceCode).substring(0, 30)}'`
       );
       return undefined;
   }

@@ -16,6 +16,7 @@ import {
   MatrixConversionService,
 } from './matrix-conversion.service.js';
 import { MatrixOperationsAPI } from './matrix-operations.api.js';
+import { matrixServiceDiagnostics } from './matrix-service-diagnostics.js';
 import {
   type MatrixTelemetryDependencies,
   MatrixTelemetryService,
@@ -24,7 +25,6 @@ import {
   type MatrixValidationDependencies,
   MatrixValidationService,
 } from './matrix-validation.service.js';
-import { matrixServiceDiagnostics } from './matrix-service-diagnostics.js';
 
 const logger = createLogger('MatrixServiceContainer');
 
@@ -82,13 +82,17 @@ export class MatrixServiceContainer {
   private readonly config: ServiceContainerConfig;
   private isInitialized = false;
   private initializationPromise: Promise<Result<void, string>> | null = null;
+  private static instance: MatrixServiceContainer | null = null;
+  private static instancePromise: Promise<MatrixServiceContainer> | null = null;
 
-  constructor(config: ServiceContainerConfig = {}) {
+  private constructor(config: ServiceContainerConfig = {}) {
     logger.init('Initializing service container');
-    
+
     // Enable diagnostics for bootstrap monitoring
     matrixServiceDiagnostics.enable();
-    matrixServiceDiagnostics.startTiming('container_bootstrap', { autoStart: config.autoStartServices });
+    matrixServiceDiagnostics.startTiming('container_bootstrap', {
+      autoStart: config.autoStartServices,
+    });
 
     this.config = {
       enableTelemetry: true,
@@ -102,8 +106,81 @@ export class MatrixServiceContainer {
     if (this.config.autoStartServices) {
       this.initializeServicesSync();
     }
-    
+
     matrixServiceDiagnostics.endTiming('container_bootstrap');
+  }
+
+  /**
+   * Get singleton instance with thread-safe async initialization barrier
+   */
+  static async getInstance(config?: ServiceContainerConfig): Promise<MatrixServiceContainer> {
+    // If instance already exists, return it
+    if (MatrixServiceContainer.instance) {
+      return MatrixServiceContainer.instance;
+    }
+
+    // If initialization is already in progress, wait for it
+    if (MatrixServiceContainer.instancePromise) {
+      return MatrixServiceContainer.instancePromise;
+    }
+
+    // Start initialization
+    MatrixServiceContainer.instancePromise = MatrixServiceContainer.createInstance(config);
+
+    try {
+      const instance = await MatrixServiceContainer.instancePromise;
+      MatrixServiceContainer.instance = instance;
+      return instance;
+    } catch (error) {
+      // Reset the promise on failure so initialization can be retried
+      MatrixServiceContainer.instancePromise = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Create and initialize new instance
+   */
+  private static async createInstance(
+    config?: ServiceContainerConfig
+  ): Promise<MatrixServiceContainer> {
+    logger.debug('Creating new MatrixServiceContainer instance');
+
+    const instance = new MatrixServiceContainer(config);
+
+    // Ensure the instance is fully initialized
+    const initResult = await instance.ensureInitialized();
+    if (!initResult.success) {
+      throw new Error(`Failed to initialize MatrixServiceContainer: ${initResult.error}`);
+    }
+
+    logger.debug('MatrixServiceContainer instance created and initialized');
+    return instance;
+  }
+
+  /**
+   * Get singleton instance synchronously (for backwards compatibility)
+   * Warning: This may return an uninitialized instance
+   */
+  static getInstanceSync(config?: ServiceContainerConfig): MatrixServiceContainer {
+    if (!MatrixServiceContainer.instance) {
+      MatrixServiceContainer.instance = new MatrixServiceContainer(config);
+    }
+    return MatrixServiceContainer.instance;
+  }
+
+  /**
+   * Reset singleton instance (mainly for testing)
+   */
+  static resetInstance(): void {
+    if (MatrixServiceContainer.instance) {
+      // Don't await shutdown to avoid blocking
+      MatrixServiceContainer.instance.shutdown().catch((err) => {
+        logger.error('Error during instance reset shutdown:', err);
+      });
+    }
+    MatrixServiceContainer.instance = null;
+    MatrixServiceContainer.instancePromise = null;
   }
 
   /**
@@ -111,7 +188,7 @@ export class MatrixServiceContainer {
    */
   private initializeServicesSync(): void {
     matrixServiceDiagnostics.startTiming('services_initialization_sync');
-    
+
     try {
       logger.debug('Starting synchronous service initialization');
 
@@ -123,14 +200,14 @@ export class MatrixServiceContainer {
 
       this.isInitialized = true;
       logger.debug('Synchronous service initialization completed successfully');
-      
+
       matrixServiceDiagnostics.endTiming('services_initialization_sync', { success: true });
     } catch (err) {
-      matrixServiceDiagnostics.endTiming('services_initialization_sync', { 
-        success: false, 
-        error: err instanceof Error ? err.message : String(err) 
+      matrixServiceDiagnostics.endTiming('services_initialization_sync', {
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
       });
-      
+
       logger.error('Synchronous service initialization failed:', err);
       throw new Error(
         `Service initialization failed: ${err instanceof Error ? err.message : String(err)}`
@@ -711,5 +788,8 @@ export class MatrixServiceContainer {
   }
 }
 
-// Export singleton instance
-export const matrixServiceContainer = new MatrixServiceContainer();
+// Export singleton instance getter - use this for thread-safe initialization
+export const getMatrixServiceContainer = MatrixServiceContainer.getInstance;
+
+// Legacy synchronous export (for backwards compatibility - prefer async version)
+export const matrixServiceContainer = MatrixServiceContainer.getInstanceSync();

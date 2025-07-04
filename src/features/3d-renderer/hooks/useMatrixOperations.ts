@@ -185,32 +185,36 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   useEffect(() => {
     logger.init('Initializing matrix operations hook');
 
-    try {
-      matrixIntegrationRef.current = new MatrixIntegrationService(matrixServiceContainer);
+    const initializeService = async () => {
+      try {
+        // Use async initialization for thread-safe singleton
+        const integrationService = await MatrixIntegrationService.getInstance();
+        matrixIntegrationRef.current = integrationService;
 
-      // Check initial health status
-      matrixIntegrationRef.current
-        .getHealthStatus()
-        .then((status) => {
-          setIsServiceHealthy(status.overall === 'healthy');
-          setServiceStatus({
-            initialized: true,
-            errors: status.recommendations || [],
-            lastOperation: Date.now(),
-            overall: status.overall,
-            services: status.services,
-            timestamp: status.timestamp,
-            recommendations: status.recommendations,
-          });
-        })
-        .catch((err) => {
-          logger.error('Failed to get initial health status:', err);
-          setIsServiceHealthy(false);
+        // Check initial health status
+        const status = await matrixIntegrationRef.current.getHealthStatus();
+        setIsServiceHealthy(status.overall === 'healthy');
+        setServiceStatus({
+          initialized: true,
+          errors: status.recommendations || [],
+          lastOperation: Date.now(),
+          overall: status.overall,
+          services: status.services,
+          timestamp: status.timestamp,
+          recommendations: status.recommendations,
         });
-    } catch (err) {
-      logger.error('Failed to initialize matrix integration service:', err);
-      setIsServiceHealthy(false);
-    }
+      } catch (err) {
+        logger.error('Failed to initialize matrix integration service:', err);
+        setIsServiceHealthy(false);
+        setServiceStatus({
+          initialized: false,
+          errors: [err instanceof Error ? err.message : String(err)],
+          lastOperation: Date.now(),
+        });
+      }
+    };
+
+    initializeService();
 
     return () => {
       logger.end('Cleaning up matrix operations hook');
@@ -476,7 +480,9 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         await matrixIntegrationRef.current.shutdown();
       }
 
-      matrixIntegrationRef.current = new MatrixIntegrationService(matrixServiceContainer);
+      // Use async initialization for thread-safe singleton
+      const integrationService = await MatrixIntegrationService.getInstance();
+      matrixIntegrationRef.current = integrationService;
 
       // Check health after reset
       const status = await matrixIntegrationRef.current.getHealthStatus();

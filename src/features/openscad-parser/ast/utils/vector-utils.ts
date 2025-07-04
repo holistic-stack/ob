@@ -98,7 +98,10 @@ import { findDescendantOfType } from './node-utils.js';
  * @since 0.1.0
  * @category Vector Extraction
  */
-export function extractVector(node: TSNode, sourceCode: string = ''): ast.Vector2D | ast.Vector3D | undefined {
+export function extractVector(
+  node: TSNode,
+  sourceCode: string = ''
+): ast.Vector2D | ast.Vector3D | undefined {
   // const numbers: number[] = []; // Unused variable
 
   // Handle different node types
@@ -164,23 +167,26 @@ export function extractVector(node: TSNode, sourceCode: string = ''): ast.Vector
  * @category Vector Processing
  * @internal
  */
-function extractVectorFromArrayLiteral(node: TSNode, sourceCode: string = ''): ast.Vector2D | ast.Vector3D | undefined {
+function extractVectorFromArrayLiteral(
+  node: TSNode,
+  sourceCode: string = ''
+): ast.Vector2D | ast.Vector3D | undefined {
   const numbers: number[] = [];
-  const elementsToProcess = node.children || [];
 
   console.log(
     `[extractVectorFromArrayLiteral] Processing array_literal node: ${node.text.substring(
       0,
       30
-    )}, children count: ${elementsToProcess.length}`
+    )}, named children count: ${node.namedChildCount}`
   );
 
-  // Process each element
-  for (const elementNode of elementsToProcess) {
+  // Process only named children to skip syntax tokens like '[', ']', ','
+  for (let i = 0; i < node.namedChildCount; i++) {
+    const elementNode = node.namedChild(i);
     if (!elementNode) continue;
 
     console.log(
-      `[extractVectorFromArrayLiteral] Iterating child: type='${
+      `[extractVectorFromArrayLiteral] Iterating named child: type='${
         elementNode.type
       }', text='${elementNode.text.substring(0, 20)}'`
     );
@@ -220,7 +226,7 @@ function extractVectorFromArrayLiteral(node: TSNode, sourceCode: string = ''): a
       }
     } else {
       console.log(
-        `[extractVectorFromArrayLiteral] Skipping child of array_literal: type='${elementNode.type}'`
+        `[extractVectorFromArrayLiteral] Skipping named child of array_literal: type='${elementNode.type}'`
       );
     }
   }

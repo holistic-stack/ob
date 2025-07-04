@@ -40,8 +40,7 @@ export class CSGCoreService implements CSGData {
   constructor(matrixIntegration?: MatrixIntegrationService) {
     logger.init('Initializing enhanced CSG core service');
     this.bspService = new BSPTreeService();
-    this.matrixIntegration =
-      matrixIntegration ?? new MatrixIntegrationService(matrixServiceContainer);
+    this.matrixIntegration = matrixIntegration ?? MatrixIntegrationService.getInstanceSync();
   }
 
   /**
@@ -185,7 +184,7 @@ export class CSGCoreService implements CSGData {
       }
 
       // Validate mesh matrix using matrix integration service with improved tolerance
-      const matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      const matrixIntegration = MatrixIntegrationService.getInstanceSync();
       const matrixValidationResult = await matrixIntegration.convertMatrix4ToMLMatrix(mesh.matrix, {
         useValidation: true,
         useTelemetry: false, // Reduce telemetry noise during CSG operations
@@ -382,7 +381,7 @@ export class CSGCoreService implements CSGData {
       }
 
       // Use enhanced matrix operations for robust inversion
-      const matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      const matrixIntegration = MatrixIntegrationService.getInstanceSync();
       const inversionResult = await matrixIntegration.convertMatrix4ToMLMatrix(toMatrix, {
         useValidation: true,
         useTelemetry: true,

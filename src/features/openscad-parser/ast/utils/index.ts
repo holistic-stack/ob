@@ -66,6 +66,7 @@
  * @since 0.1.0
  */
 
+export * from './ast-evaluator';
 export * from './debug-utils';
 export * from './location-utils';
 export * from './node-utils';

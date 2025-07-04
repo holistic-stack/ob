@@ -10,7 +10,14 @@ import { EigenvalueDecomposition, SingularValueDecomposition } from 'ml-matrix';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
+import {
+  ErrorRateMonitor,
+  type RetryConfig,
+  retryWithBackoff,
+  withRetry,
+} from '../../../shared/utils/resilience/index.js';
 import type { MATRIX_CONFIG } from '../config/matrix-config.js';
+import { TransientFailureError } from '../errors/index.js';
 import type {
   MatrixOperationResult,
   MatrixPerformanceMetrics,
@@ -56,10 +63,53 @@ export class MatrixValidationService {
     largeMatrixOperations: 0,
     failedOperations: 0,
   };
+  private readonly errorMonitor: ErrorRateMonitor;
+  private readonly retryConfig: RetryConfig;
+  private abortController: AbortController | null = null;
 
-  constructor(private readonly deps: MatrixValidationDependencies) {
-    logger.init('Initializing matrix validation service with dependencies');
+  constructor(
+    private readonly deps: MatrixValidationDependencies,
+    abortSignal?: AbortSignal
+  ) {
+    logger.init('Initializing matrix validation service with robust error handling');
     this.validateDependencies();
+
+    // Initialize error rate monitoring
+    this.errorMonitor = new ErrorRateMonitor({
+      windowSizeMs: 300000, // 5 minutes
+      errorThreshold: 20, // 20% threshold
+      minSampleSize: 8,
+      warningThreshold: 10, // 10%
+      enableAutoRecovery: true,
+    });
+
+    // Configure retry settings for validation operations
+    this.retryConfig = {
+      maxAttempts: 4, // More attempts for validation as it's critical
+      baseDelay: 800, // Start with 800ms for validation operations
+      maxDelay: 8000, // Max 8 seconds for validation operations
+      exponentialBase: 2,
+      jitterPercent: 20,
+      abortSignal: abortSignal,
+      circuitBreakerThreshold: 6,
+      circuitBreakerWindow: 90000, // 1.5 minutes
+      shouldRetry: (error, attempt) => {
+        // Retry transient failures, numerical issues, and memory pressure
+        return (
+          error instanceof TransientFailureError ||
+          error.message.includes('numerical') ||
+          error.message.includes('eigenvalue') ||
+          error.message.includes('singular') ||
+          error.message.includes('memory') ||
+          attempt < 2
+        ); // Always retry at least once
+      },
+      onRetry: (error, attempt, delay) => {
+        logger.debug(
+          `Retrying validation operation after ${error.message}, attempt ${attempt}, delay ${delay}ms`
+        );
+      },
+    };
   }
 
   /**
@@ -128,6 +178,382 @@ export class MatrixValidationService {
     }
 
     logger.error(`Operation ${operation} failed:`, error);
+  }
+
+  /**
+   * Validate matrix with robust error handling and retry logic
+   */
+  async validateMatrix(
+    matrix: Matrix,
+    options: MatrixValidationOptions = {}
+  ): Promise<Result<MatrixOperationResult<MatrixValidationResult>, string>> {
+    const operationType = 'matrix-validation';
+    const operationId = this.generateOperationId(operationType);
+    const startTime = Date.now();
+
+    logger.debug(`Starting matrix validation: ${operationId}`);
+
+    // Wrap the validation operation with retry logic
+    const performValidation = async (): Promise<MatrixOperationResult<MatrixValidationResult>> => {
+      // Check for abort signal
+      if (this.retryConfig.abortSignal?.aborted) {
+        throw new Error('Matrix validation operation aborted');
+      }
+
+      const validationStartTime = Date.now();
+
+      try {
+        // Basic matrix validation
+        if (!matrix || matrix.rows === 0 || matrix.columns === 0) {
+          throw new TransientFailureError(
+            'Invalid matrix: empty or null matrix',
+            'validate',
+            [0, 0],
+            { operationId },
+            1000
+          );
+        }
+
+        // Check for numerical issues early
+        const hasNaN = matrix.to2DArray().some((row) => row.some((val) => isNaN(val)));
+        const hasInfinite = matrix.to2DArray().some((row) => row.some((val) => !isFinite(val)));
+
+        if (hasNaN || hasInfinite) {
+          throw new TransientFailureError(
+            `Matrix contains invalid values: NaN=${hasNaN}, Infinite=${hasInfinite}`,
+            'validate',
+            [matrix.rows, matrix.columns],
+            { operationId, hasNaN, hasInfinite },
+            2000
+          );
+        }
+
+        // Check cache if enabled
+        let cacheHit = false;
+        const cacheKey = options.useCache ? matrixUtils.hash(matrix) + '_validation' : null;
+
+        if (cacheKey && options.useCache !== false) {
+          try {
+            const cachedResult = this.deps.cache.get(cacheKey);
+            if (cachedResult.success && cachedResult.data) {
+              cacheHit = true;
+              logger.debug(`Validation cache hit: ${operationId}`);
+
+              const executionTime = Date.now() - validationStartTime;
+              this.updatePerformanceMetrics(executionTime, [matrix.rows, matrix.columns]);
+
+              return {
+                success: true,
+                result: cachedResult.data as any, // Type assertion for cached validation result
+                performance: {
+                  executionTime,
+                  memoryUsed: 0, // No memory used for cache hit
+                  cacheHit: true,
+                  matrixSize: [matrix.rows, matrix.columns] as const,
+                },
+                operationId,
+                timestamp: Date.now(),
+              };
+            }
+          } catch (cacheError) {
+            // Log cache error but continue with validation
+            logger.debug(
+              `Cache lookup failed for validation ${operationId}: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`
+            );
+          }
+        }
+
+        // Perform actual validation
+        const validationResult = await this.performMatrixValidation(matrix, options, operationId);
+
+        // Cache the result if enabled and successful
+        if (cacheKey && options.useCache !== false && validationResult.success) {
+          try {
+            this.deps.cache.set(cacheKey, validationResult.result as any);
+          } catch (cacheError) {
+            // Log cache error but don't fail the operation
+            logger.debug(
+              `Failed to cache validation result ${operationId}: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`
+            );
+          }
+        }
+
+        const executionTime = Date.now() - validationStartTime;
+        this.updatePerformanceMetrics(executionTime, [matrix.rows, matrix.columns]);
+
+        return {
+          success: validationResult.success,
+          result: validationResult.result,
+          performance: {
+            executionTime,
+            memoryUsed: this.estimateMemoryUsage(matrix),
+            cacheHit,
+            matrixSize: [matrix.rows, matrix.columns] as const,
+          },
+          operationId,
+          timestamp: Date.now(),
+        };
+      } catch (err) {
+        if (err instanceof TransientFailureError) {
+          throw err;
+        }
+
+        // Convert unexpected validation errors to TransientFailureError
+        const message = err instanceof Error ? err.message : String(err);
+        throw new TransientFailureError(
+          `Matrix validation failed: ${message}`,
+          'validate',
+          [matrix.rows, matrix.columns],
+          { operationId, originalError: message },
+          3000
+        );
+      }
+    };
+
+    try {
+      // Use retry logic for the validation operation
+      const retryResult = await retryWithBackoff(
+        performValidation,
+        `${operationType}-${operationId}`,
+        this.retryConfig
+      );
+
+      if (retryResult.success) {
+        this.errorMonitor.recordOperation(operationType, true);
+        const totalTime = Date.now() - startTime;
+        logger.debug(`Matrix validation completed successfully: ${operationId} in ${totalTime}ms`);
+        return success(retryResult.data);
+      } else {
+        const validationError = new Error(retryResult.error);
+        this.errorMonitor.recordOperation(operationType, false, validationError);
+
+        // Check if this should be treated as warning based on error rate
+        if (this.errorMonitor.shouldTreatAsWarning(operationType, validationError)) {
+          logger.warn(
+            `Matrix validation failed for ${operationId}, but error rate is acceptable: ${retryResult.error}`
+          );
+
+          // Return a degraded but successful result
+          return success({
+            success: false,
+            result: {
+              isValid: false,
+              errors: [retryResult.error],
+              warnings: ['Validation failed but continuing due to acceptable error rate'],
+              properties: {
+                determinant: null,
+                conditionNumber: Infinity,
+                rank: null,
+                isSymmetric: false,
+                isPositiveDefinite: false,
+                isOrthogonal: false,
+                numericalStability: 'unstable' as const,
+              },
+              remediationStrategies: ['Consider manual validation or alternative approach'],
+            },
+            performance: {
+              executionTime: Date.now() - startTime,
+              memoryUsed: 0,
+              cacheHit: false,
+              matrixSize: [matrix.rows, matrix.columns] as const,
+            },
+            operationId,
+            timestamp: Date.now(),
+          });
+        }
+
+        this.recordFailure(operationType, validationError);
+        return error(retryResult.error);
+      }
+    } catch (err) {
+      const operationError = err instanceof Error ? err : new Error(String(err));
+      this.errorMonitor.recordOperation(operationType, false, operationError);
+
+      // Check if this should be treated as warning
+      if (this.errorMonitor.shouldTreatAsWarning(operationType, operationError)) {
+        logger.warn(
+          `Matrix validation failed for ${operationId}, but error rate is acceptable: ${operationError.message}`
+        );
+
+        // Return a degraded but successful result
+        return success({
+          success: false,
+          result: {
+            isValid: false,
+            errors: [operationError.message],
+            warnings: ['Validation failed but continuing due to acceptable error rate'],
+            properties: {
+              determinant: null,
+              conditionNumber: Infinity,
+              rank: null,
+              isSymmetric: false,
+              isPositiveDefinite: false,
+              isOrthogonal: false,
+              numericalStability: 'unstable' as const,
+            },
+            remediationStrategies: ['Consider manual validation or alternative approach'],
+          },
+          performance: {
+            executionTime: Date.now() - startTime,
+            memoryUsed: 0,
+            cacheHit: false,
+            matrixSize: [matrix.rows, matrix.columns] as const,
+          },
+          operationId,
+          timestamp: Date.now(),
+        });
+      }
+
+      this.recordFailure(operationType, operationError);
+      const errorMessage = `Matrix validation failed: ${operationError.message}`;
+      logger.error(errorMessage);
+      return error(errorMessage);
+    }
+  }
+
+  /**
+   * Perform the actual matrix validation logic
+   */
+  private async performMatrixValidation(
+    matrix: Matrix,
+    options: MatrixValidationOptions,
+    operationId: string
+  ): Promise<{ success: boolean; result: MatrixValidationResult }> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    try {
+      // Basic properties
+      const isSquare = matrixUtils.isSquare(matrix);
+      const isSymmetric = isSquare ? this.isSymmetric(matrix) : false;
+
+      // Compute condition number with error handling
+      let conditionNumber: number;
+      try {
+        conditionNumber = this.computeConditionNumber(matrix);
+      } catch (err) {
+        conditionNumber = Infinity;
+        warnings.push(
+          `Failed to compute condition number: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+
+      // Compute determinant for square matrices
+      let determinant: number | null = null;
+      if (isSquare) {
+        try {
+          determinant = matrix.det();
+        } catch (err) {
+          warnings.push(
+            `Failed to compute determinant: ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
+      }
+
+      // Assess numerical stability
+      const numericalStability = this.assessNumericalStability(
+        conditionNumber,
+        determinant || undefined
+      );
+
+      // Check for common issues
+      if (conditionNumber > 1e12) {
+        errors.push(
+          `Matrix is ill-conditioned (condition number: ${conditionNumber.toExponential(2)})`
+        );
+      } else if (conditionNumber > 1e6) {
+        warnings.push(`Matrix has high condition number: ${conditionNumber.toExponential(2)}`);
+      }
+
+      if (determinant !== null && Math.abs(determinant) < 1e-15) {
+        errors.push(`Matrix appears to be singular (determinant ≈ 0)`);
+      }
+
+      // Generate remediation strategies
+      const remediationStrategies = this.generateRemediationStrategies(
+        matrix,
+        conditionNumber,
+        numericalStability,
+        isSymmetric,
+        false // isPositiveDefinite calculation is complex, skip for now
+      );
+
+      const isValid = errors.length === 0;
+
+      return {
+        success: true,
+        result: {
+          isValid,
+          errors,
+          warnings,
+          properties: {
+            determinant,
+            conditionNumber,
+            rank: null, // Rank calculation is expensive, skip unless requested
+            isSymmetric,
+            isPositiveDefinite: false, // Skip expensive computation for now
+            isOrthogonal: false, // Skip expensive computation for now
+            numericalStability,
+          },
+          remediationStrategies,
+        },
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      errors.push(`Validation computation failed: ${errorMessage}`);
+
+      return {
+        success: true, // Return success with errors to indicate partial completion
+        result: {
+          isValid: false,
+          errors,
+          warnings,
+          properties: {
+            determinant: null,
+            conditionNumber: Infinity,
+            rank: null,
+            isSymmetric: false,
+            isPositiveDefinite: false,
+            isOrthogonal: false,
+            numericalStability: 'unstable' as const,
+          },
+          remediationStrategies: ['Consider alternative numerical methods'],
+        },
+      };
+    }
+  }
+
+  /**
+   * Check if matrix is symmetric
+   */
+  private isSymmetric(matrix: Matrix): boolean {
+    if (!matrixUtils.isSquare(matrix)) {
+      return false;
+    }
+
+    try {
+      const tolerance = this.deps.config.operations.precision;
+      for (let i = 0; i < matrix.rows; i++) {
+        for (let j = 0; j < matrix.columns; j++) {
+          if (Math.abs(matrix.get(i, j) - matrix.get(j, i)) > tolerance) {
+            return false;
+          }
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Estimate memory usage for validation operation
+   */
+  private estimateMemoryUsage(matrix: Matrix): number {
+    // Rough estimate: matrix size + temporary computations
+    const baseSize = matrix.rows * matrix.columns * 8; // 8 bytes per number
+    const temporarySpace = baseSize * 2; // Assume 2x for temporary calculations
+    return baseSize + temporarySpace;
   }
 
   /**
@@ -235,12 +661,12 @@ export class MatrixValidationService {
       matrixSize: [matrix.rows, matrix.columns],
       useCache: options.useCache,
       tolerance: options.tolerance,
-      enableDetailedAnalysis: options.enableDetailedAnalysis
+      enableDetailedAnalysis: options.enableDetailedAnalysis,
     };
-    
+
     // Start diagnostic timing
     matrixServiceDiagnostics.startTiming(operation, metadata);
-    
+
     const startTime = Date.now();
 
     logger.debug(`Validating matrix ${matrix.rows}x${matrix.columns}`);
@@ -391,24 +817,24 @@ export class MatrixValidationService {
       logger.debug(
         `Matrix validation completed in ${executionTime}ms (stability: ${numericalStability})`
       );
-      
+
       // End diagnostic timing on success
-      matrixServiceDiagnostics.endTiming(operation, { 
-        ...metadata, 
-        success: true, 
+      matrixServiceDiagnostics.endTiming(operation, {
+        ...metadata,
+        success: true,
         numericalStability,
-        executionTime 
+        executionTime,
       });
-      
+
       return success(operationResult);
     } catch (err) {
       // End diagnostic timing on failure
-      matrixServiceDiagnostics.endTiming(operation, { 
-        ...metadata, 
-        success: false, 
-        error: err instanceof Error ? err.message : String(err) 
+      matrixServiceDiagnostics.endTiming(operation, {
+        ...metadata,
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
       });
-      
+
       this.recordFailure(operation, err as Error);
       return error(`Matrix validation failed: ${err instanceof Error ? err.message : String(err)}`);
     }

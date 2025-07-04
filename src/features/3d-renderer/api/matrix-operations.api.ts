@@ -149,7 +149,14 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     logger.init('Initializing matrix operations API');
 
     this.config = { ...DEFAULT_API_CONFIG, ...config };
-    this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+    // Use async initialization for thread-safe singleton
+    MatrixIntegrationService.getInstance()
+      .then((service) => {
+        this.matrixIntegration = service;
+      })
+      .catch((error) => {
+        logger.error('Failed to initialize MatrixIntegrationService:', error);
+      });
     this.metrics = {
       totalOperations: 0,
       successfulOperations: 0,
@@ -494,7 +501,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       logger.debug('Restarting matrix operations API');
 
       await this.shutdown();
-      this.matrixIntegration = new MatrixIntegrationService(matrixServiceContainer);
+      // Use async initialization for thread-safe singleton
+      this.matrixIntegration = await MatrixIntegrationService.getInstance();
       this.resetMetrics();
 
       return success(undefined);

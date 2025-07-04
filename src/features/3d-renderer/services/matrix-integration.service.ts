@@ -12,7 +12,7 @@ import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import type { MatrixValidationResult } from '../types/matrix.types.js';
 import type { MatrixConversionOptions } from './matrix-conversion.service.js';
-import { MatrixServiceContainer } from './matrix-service-container.js';
+import { getMatrixServiceContainer, MatrixServiceContainer } from './matrix-service-container.js';
 import type { MatrixValidationOptions } from './matrix-validation.service.js';
 
 const logger = createLogger('MatrixIntegrationService');
@@ -54,11 +54,80 @@ export interface EnhancedMatrixResult<T> {
 export class MatrixIntegrationService {
   private readonly serviceContainer: MatrixServiceContainer;
   private readonly operationCounter = new Map<string, number>();
+  private static instance: MatrixIntegrationService | null = null;
+  private static instancePromise: Promise<MatrixIntegrationService> | null = null;
 
-  constructor(serviceContainer?: MatrixServiceContainer) {
+  private constructor(serviceContainer?: MatrixServiceContainer) {
     logger.init('Initializing matrix integration service');
 
-    this.serviceContainer = serviceContainer ?? new MatrixServiceContainer();
+    this.serviceContainer = serviceContainer ?? MatrixServiceContainer.getInstanceSync();
+  }
+
+  /**
+   * Get singleton instance with thread-safe async initialization barrier
+   */
+  static async getInstance(): Promise<MatrixIntegrationService> {
+    // If instance already exists, return it
+    if (MatrixIntegrationService.instance) {
+      return MatrixIntegrationService.instance;
+    }
+
+    // If initialization is already in progress, wait for it
+    if (MatrixIntegrationService.instancePromise) {
+      return MatrixIntegrationService.instancePromise;
+    }
+
+    // Start initialization
+    MatrixIntegrationService.instancePromise = MatrixIntegrationService.createInstance();
+
+    try {
+      const instance = await MatrixIntegrationService.instancePromise;
+      MatrixIntegrationService.instance = instance;
+      return instance;
+    } catch (error) {
+      // Reset the promise on failure so initialization can be retried
+      MatrixIntegrationService.instancePromise = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Create and initialize new instance
+   */
+  private static async createInstance(): Promise<MatrixIntegrationService> {
+    logger.debug('Creating new MatrixIntegrationService instance');
+
+    // Get the thread-safe service container instance
+    const serviceContainer = await getMatrixServiceContainer();
+    const instance = new MatrixIntegrationService(serviceContainer);
+
+    logger.debug('MatrixIntegrationService instance created and initialized');
+    return instance;
+  }
+
+  /**
+   * Get singleton instance synchronously (for backwards compatibility)
+   * Warning: This may return an instance with an uninitialized service container
+   */
+  static getInstanceSync(): MatrixIntegrationService {
+    if (!MatrixIntegrationService.instance) {
+      MatrixIntegrationService.instance = new MatrixIntegrationService();
+    }
+    return MatrixIntegrationService.instance;
+  }
+
+  /**
+   * Reset singleton instance (mainly for testing)
+   */
+  static resetInstance(): void {
+    if (MatrixIntegrationService.instance) {
+      // Don't await shutdown to avoid blocking
+      MatrixIntegrationService.instance.shutdown().catch((err) => {
+        logger.error('Error during instance reset shutdown:', err);
+      });
+    }
+    MatrixIntegrationService.instance = null;
+    MatrixIntegrationService.instancePromise = null;
   }
 
   /**
@@ -544,5 +613,8 @@ export class MatrixIntegrationService {
   }
 }
 
-// Export singleton instance
-export const matrixIntegrationService = new MatrixIntegrationService();
+// Export singleton instance getter - use this for thread-safe initialization
+export const getMatrixIntegrationService = MatrixIntegrationService.getInstance;
+
+// Legacy synchronous export (for backwards compatibility - prefer async version)
+export const matrixIntegrationService = MatrixIntegrationService.getInstanceSync();

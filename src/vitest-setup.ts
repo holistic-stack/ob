@@ -371,17 +371,70 @@ export async function initializeCSGForTests(): Promise<void> {
           Promise.resolve({
             success: true,
             data: {
-              data: [
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1],
-              ],
+              result: {
+                data: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+              },
+              performance: {
+                memoryUsed: 1024,
+                cacheHit: false,
+              },
             },
           }),
+        performRobustInversion: () =>
+          Promise.resolve({
+            success: true,
+            data: {
+              result: {
+                data: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+              },
+              performance: {
+                memoryUsed: 1024,
+                cacheHit: false,
+              },
+            },
+          }),
+        computeRobustNormalMatrix: () =>
+          Promise.resolve({
+            success: true,
+            data: {
+              result: {
+                elements: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+              },
+              performance: {
+                memoryUsed: 1024,
+                cacheHit: false,
+              },
+            },
+          }),
+        getPerformanceMetrics: () => ({
+          operationCount: 0,
+          averageExecutionTime: 0,
+          totalMemoryUsed: 0,
+          cacheHitRate: 0,
+        }),
       }),
       getValidationService: () => null,
       getTelemetryService: () => null,
+      getCacheService: () => ({
+        getStats: () => ({
+          cacheHitRate: 0.8,
+          size: 0,
+          maxSize: 100,
+        }),
+      }),
+      getConfigManager: () => null,
+      getOperationsAPI: () => ({}),
+      shutdown: () => Promise.resolve(),
     };
 
     (
@@ -440,5 +493,77 @@ export function disposeTestScene(scene: unknown, _camera: unknown, renderer: unk
   const rendererObj = renderer as { dispose?: () => void };
   if (rendererObj?.dispose) {
     rendererObj.dispose();
+  }
+}
+
+/**
+ * Reset singleton instances for clean test isolation
+ * Call this in beforeEach or afterEach hooks to prevent test contamination
+ */
+export async function resetMatrixServiceSingletons(): Promise<void> {
+  logger.debug('Resetting matrix service singletons for test isolation');
+
+  try {
+    // Dynamically import to avoid circular dependencies
+    const { MatrixServiceContainer } = await import(
+      './features/3d-renderer/services/matrix-service-container.js'
+    );
+    const { MatrixIntegrationService } = await import(
+      './features/3d-renderer/services/matrix-integration.service.js'
+    );
+
+    // Reset singleton instances
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
+
+    logger.debug('✅ Matrix service singletons reset successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn('Failed to reset matrix service singletons:', errorMessage);
+  }
+}
+
+/**
+ * Initialize matrix services with thread-safe async initialization
+ * Use this in test setup to ensure services are properly initialized
+ */
+export async function initializeMatrixServicesForTest(): Promise<{
+  serviceContainer: unknown;
+  integrationService: unknown;
+}> {
+  logger.debug('Initializing matrix services for test');
+
+  try {
+    // Reset first to ensure clean state
+    await resetMatrixServiceSingletons();
+
+    // Dynamically import to avoid circular dependencies
+    const { getMatrixServiceContainer } = await import(
+      './features/3d-renderer/services/matrix-service-container.js'
+    );
+    const { getMatrixIntegrationService } = await import(
+      './features/3d-renderer/services/matrix-integration.service.js'
+    );
+
+    // Initialize with thread-safe async barriers
+    const serviceContainer = await getMatrixServiceContainer({
+      enableTelemetry: true,
+      enableValidation: true,
+      enableConfigManager: true,
+      autoStartServices: true,
+    });
+
+    const integrationService = await getMatrixIntegrationService();
+
+    logger.debug('✅ Matrix services initialized for test');
+
+    return {
+      serviceContainer,
+      integrationService,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Failed to initialize matrix services for test:', errorMessage);
+    throw error;
   }
 }

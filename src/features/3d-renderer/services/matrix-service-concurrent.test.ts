@@ -9,8 +9,11 @@ import { Matrix } from 'ml-matrix';
 import { Euler, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { MatrixServiceContainer } from './matrix-service-container.js';
+import {
+  getMatrixIntegrationService,
+  MatrixIntegrationService,
+} from './matrix-integration.service.js';
+import { getMatrixServiceContainer, MatrixServiceContainer } from './matrix-service-container.js';
 import type { MatrixTelemetryService } from './matrix-telemetry.service.js';
 
 const logger = createLogger('MatrixServiceConcurrentTest');
@@ -186,17 +189,22 @@ describe('Matrix Service Concurrent Operations Testing', () => {
   let serviceContainer: MatrixServiceContainer;
   let integrationService: MatrixIntegrationService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger.init('Setting up concurrent test environment');
 
-    serviceContainer = new MatrixServiceContainer({
+    // Reset instances to ensure clean state for each test
+    MatrixServiceContainer.resetInstance();
+    MatrixIntegrationService.resetInstance();
+
+    // Use thread-safe initialization
+    serviceContainer = await getMatrixServiceContainer({
       enableTelemetry: true,
       enableValidation: true,
       enableConfigManager: true,
       autoStartServices: true,
     });
 
-    integrationService = new MatrixIntegrationService(serviceContainer);
+    integrationService = await getMatrixIntegrationService();
   });
 
   afterEach(async () => {

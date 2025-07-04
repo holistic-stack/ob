@@ -1004,10 +1004,9 @@ function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.
   );
   const values: ast.Value[] = [];
 
-  // Iterate over all children, including syntax tokens like ',', '[', ']'
-  // extractValue should filter out non-value tokens by returning null.
-  for (let i = 0; i < vectorNode.childCount; i++) {
-    const elementNode = vectorNode.child(i);
+  // Iterate over named children to skip syntax tokens like '[', ']', ','
+  for (let i = 0; i < vectorNode.namedChildCount; i++) {
+    const elementNode = vectorNode.namedChild(i);
     if (elementNode) {
       // Ensure child exists
       // --- BEGIN DIAGNOSTIC LOGGING ---

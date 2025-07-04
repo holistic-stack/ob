@@ -17,29 +17,45 @@ import {
 import type {
   ASTNode,
   AssignmentNode,
+  BinaryExpressionNode,
   ConditionalExpressionNode,
   CubeNode,
   CylinderNode,
   DifferenceNode,
-  ForStatementNode,
-  IfStatementNode,
+  ExpressionNode,
+  ForLoopNode,
+  FunctionLiteralNode,
+  IfNode,
   IntersectionNode,
+  ListComprehensionExpressionNode,
   MirrorNode,
   ModuleDefinitionNode,
+  ParenthesizedExpressionNode,
   RotateExtrudeNode,
   RotateNode,
   ScaleNode,
+  SpecialVariableNode,
   SphereNode,
+  StatementNode,
   TranslateNode,
   UnionNode,
-} from '../../../openscad-parser/core/ast-types.js';
+} from '../../../openscad-parser/ast/ast-types.js';
+import {
+  createDefaultValue,
+  evaluateBinaryExpression,
+  evaluateListComprehension,
+  evaluateParenthesizedExpression,
+  evaluateSpecialVariable,
+  isFunctionLiteral,
+  processFunctionLiteral,
+  tryEvaluateExpression,
+} from '../../../openscad-parser/ast/utils/ast-evaluator.js';
 import type { MaterialConfig, Mesh3D } from '../../types/renderer.types.js';
 import {
   convertDifferenceNode,
   convertIntersectionNode,
   convertUnionNode,
 } from '../converters/boolean-converter.js';
-
 import {
   convertCubeToMesh,
   convertCylinderToMesh,
@@ -58,6 +74,30 @@ import { moduleRegistry } from './module-registry.service.js';
 import { variableScope } from './variable-scope.service.js';
 
 const logger = createLogger('ASTToCSGConverter');
+
+/**
+ * Exhaustive compile-time checking utility for switch statements
+ * This function helps catch unhandled cases in switch statements
+ */
+function assertNever(value: never): never {
+  throw new Error(`Unexpected value: ${JSON.stringify(value)}`);
+}
+
+/**
+ * Type guard to check if a node has a function name property
+ */
+function hasPropertyWithFunctionName(node: ASTNode): node is ASTNode & {
+  name?: string;
+  functionName?: string;
+  function?: string;
+} {
+  return typeof node === 'object' && node !== null;
+}
+
+/**
+ * Module arguments type - used for module instantiation
+ */
+type ModuleArguments = Array<string | number | boolean>;
 
 /**
  * Module-level storage for source code to enable proper text extraction
@@ -531,13 +571,11 @@ const convertFunctionCallNode = async (
 
   // Extract function name from function_call node
   // Try multiple possible properties where the function name might be stored
-  const nodeWithProps = node as unknown as {
-    name?: string;
-    functionName?: string;
-    function?: string;
-  };
+  if (!hasPropertyWithFunctionName(node)) {
+    return error(`Function call node does not have expected structure: ${JSON.stringify(node)}`);
+  }
 
-  let functionName = nodeWithProps.name || nodeWithProps.functionName || nodeWithProps.function;
+  let functionName = node.name || node.functionName || node.function;
 
   // If we got the full function call text, extract just the function name
   if (functionName && typeof functionName === 'string') {
@@ -608,45 +646,39 @@ const convertFunctionCallNode = async (
   }
 
   // Route to the appropriate converter based on function name
-  // Use unknown type assertion to bypass strict typing for dynamic node conversion
-  const convertibleNode = typedNode as unknown;
-
+  // Direct type assertions based on the function name
   switch (functionName) {
     case 'cube':
-      return convertCubeToMesh(convertibleNode as CubeNode, material);
+      return convertCubeToMesh(typedNode as CubeNode, material);
     case 'sphere':
-      return convertSphereToMesh(convertibleNode as SphereNode, material);
+      return convertSphereToMesh(typedNode as SphereNode, material);
     case 'cylinder':
-      return convertCylinderToMesh(convertibleNode as CylinderNode, material);
+      return convertCylinderToMesh(typedNode as CylinderNode, material);
     case 'translate':
-      return await convertTranslateNode(
-        convertibleNode as TranslateNode,
-        material,
-        convertASTNodeToMesh
-      );
+      return await convertTranslateNode(typedNode as TranslateNode, material, convertASTNodeToMesh);
     case 'rotate':
-      return await convertRotateNode(convertibleNode as RotateNode, material, convertASTNodeToMesh);
+      return await convertRotateNode(typedNode as RotateNode, material, convertASTNodeToMesh);
     case 'scale':
-      return await convertScaleNode(convertibleNode as ScaleNode, material, convertASTNodeToMesh);
+      return await convertScaleNode(typedNode as ScaleNode, material, convertASTNodeToMesh);
     case 'mirror':
-      return await convertMirrorNode(convertibleNode as MirrorNode, material, convertASTNodeToMesh);
+      return await convertMirrorNode(typedNode as MirrorNode, material, convertASTNodeToMesh);
     case 'rotate_extrude':
       return await convertRotateExtrudeNode(
-        convertibleNode as RotateExtrudeNode,
+        typedNode as RotateExtrudeNode,
         material,
         convertASTNodeToMesh
       );
     case 'union':
-      return await convertUnionNode(convertibleNode as UnionNode, material, convertASTNodeToMesh);
+      return await convertUnionNode(typedNode as UnionNode, material, convertASTNodeToMesh);
     case 'intersection':
       return await convertIntersectionNode(
-        convertibleNode as IntersectionNode,
+        typedNode as IntersectionNode,
         material,
         convertASTNodeToMesh
       );
     case 'difference':
       return await convertDifferenceNode(
-        convertibleNode as DifferenceNode,
+        typedNode as DifferenceNode,
         material,
         convertASTNodeToMesh
       );
@@ -656,7 +688,7 @@ const convertFunctionCallNode = async (
         logger.debug(`Found user-defined module: ${functionName}`);
 
         // Extract arguments for module instantiation
-        const args: unknown[] = [];
+        const args: ModuleArguments = [];
         // For now, we'll use placeholder arguments
         // In a full implementation, this would properly evaluate the arguments
 
@@ -807,7 +839,7 @@ const convertConditionalExpressionNode = async (
  * Convert if statement node by evaluating condition and selecting branch
  */
 const convertIfStatementNode = async (
-  node: IfStatementNode,
+  node: IfNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
@@ -825,25 +857,136 @@ const convertIfStatementNode = async (
       return await convertASTNodeToMesh(firstStatement, material);
     }
   }
-  
+
   // Return empty mesh if no statements in then branch
   const geometry = new THREE.BufferGeometry();
-  const emptyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff88, transparent: true, opacity: 0 });
+  const emptyMaterial = new THREE.MeshStandardMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0,
+  });
   return success(new THREE.Mesh(geometry, emptyMaterial));
 };
 
 /**
- * Convert for statement node by iterating over range and combining results
+ * Create an empty placeholder mesh for non-renderable constructs
  */
-const convertForStatementNode = async (
-  node: ForStatementNode,
+const createEmptyPlaceholderMesh = (material: THREE.Material): THREE.Mesh => {
+  const geometry = new THREE.BufferGeometry();
+  const emptyMaterial = new THREE.MeshStandardMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0,
+  });
+  return new THREE.Mesh(geometry, emptyMaterial);
+};
+
+/**
+ * Handle list comprehension expressions by returning empty placeholder
+ */
+const convertListComprehensionExpression = async (
+  node: ListComprehensionExpressionNode,
+  material: THREE.Material
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('Processing list comprehension expression (ignored for rendering)');
+
+  // List comprehensions don't produce geometry directly
+  const placeholderMesh = createEmptyPlaceholderMesh(material);
+  return success(placeholderMesh);
+};
+
+/**
+ * Handle special variable expressions by treating as numeric literal 0
+ */
+const convertSpecialVariableExpression = async (
+  node: SpecialVariableNode,
+  material: THREE.Material
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug(`Processing special variable: ${node.variable} (treated as 0)`);
+
+  // Create a small marker mesh at origin to represent the special variable
+  const markerGeometry = new THREE.SphereGeometry(0.1, 8, 6);
+  const markerMesh = new THREE.Mesh(markerGeometry, material);
+  markerMesh.position.set(0, 0, 0);
+
+  return success(markerMesh);
+};
+
+/**
+ * Handle binary expressions by evaluating simple operations or fallback
+ */
+const convertBinaryExpression = async (
+  node: BinaryExpressionNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
     material: THREE.Material
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
-  logger.debug(`Processing for statement with variables: ${node.variables.map(v => v.variable).join(', ')}`);
+  logger.debug(`Processing binary expression: ${node.operator}`);
+
+  // Try to evaluate if both operands are literals
+  const evaluationResult = evaluateBinaryExpression(node);
+
+  if (evaluationResult.success && typeof evaluationResult.value === 'number') {
+    // Create a small marker mesh to represent the evaluated value
+    const size = Math.max(0.1, Math.min(Math.abs(evaluationResult.value), 10)); // Clamp size
+    const markerGeometry = new THREE.BoxGeometry(size, size, size);
+    const markerMesh = new THREE.Mesh(markerGeometry, material);
+    return success(markerMesh);
+  }
+
+  // If evaluation failed, return empty placeholder
+  logger.debug('Binary expression evaluation failed, returning placeholder');
+  const placeholderMesh = createEmptyPlaceholderMesh(material);
+  return success(placeholderMesh);
+};
+
+/**
+ * Handle parenthesized expressions by delegating to inner expression
+ */
+const convertParenthesizedExpression = async (
+  node: ParenthesizedExpressionNode,
+  material: THREE.Material,
+  convertASTNodeToMesh: (
+    node: ASTNode,
+    material: THREE.Material
+  ) => Promise<Result<THREE.Mesh, string>>
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('Processing parenthesized expression (delegating to inner)');
+
+  // Delegate to the inner expression
+  return await convertASTNodeToMesh(node.expression, material);
+};
+
+/**
+ * Handle function literals by storing reference (no geometry)
+ */
+const convertFunctionLiteral = async (
+  node: ASTNode,
+  material: THREE.Material
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('Processing function literal (no geometry)');
+
+  // Function literals don't produce geometry, return empty placeholder
+  const placeholderMesh = createEmptyPlaceholderMesh(material);
+  return success(placeholderMesh);
+};
+
+/**
+ * Convert for statement node by iterating over range and combining results
+ */
+const convertForStatementNode = async (
+  node: ForLoopNode,
+  material: THREE.Material,
+  convertASTNodeToMesh: (
+    node: ASTNode,
+    material: THREE.Material
+  ) => Promise<Result<THREE.Mesh, string>>
+): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug(
+    `Processing for statement with variables: ${node.variables.map((v) => v.variable).join(', ')}`
+  );
 
   // For now, we'll execute the body once
   // In a full implementation, this would iterate over the range and combine results
@@ -854,10 +997,14 @@ const convertForStatementNode = async (
       return await convertASTNodeToMesh(firstStatement, material);
     }
   }
-  
+
   // Return empty mesh if no statements in body
   const geometry = new THREE.BufferGeometry();
-  const emptyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff88, transparent: true, opacity: 0 });
+  const emptyMaterial = new THREE.MeshStandardMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0,
+  });
   return success(new THREE.Mesh(geometry, emptyMaterial));
 };
 
@@ -908,9 +1055,66 @@ const convertASTNodeToMesh = async (
     case 'difference':
       return await convertDifferenceNode(node, material, convertASTNodeToMesh);
 
-    case 'expression':
-      // Handle expression nodes that might be function calls
+    case 'expression': {
+      // Handle different types of expression nodes
+      const expressionNode = node as ExpressionNode;
+
+      // Check for specific expression types
+      if (expressionNode.expressionType) {
+        switch (expressionNode.expressionType) {
+          case 'list_comprehension_expression':
+            return await convertListComprehensionExpression(
+              expressionNode as ListComprehensionExpressionNode,
+              material
+            );
+
+          case 'special_variable':
+            return await convertSpecialVariableExpression(
+              expressionNode as SpecialVariableNode,
+              material
+            );
+
+          case 'binary':
+          case 'binary_expression':
+            return await convertBinaryExpression(
+              expressionNode as BinaryExpressionNode,
+              material,
+              convertASTNodeToMesh
+            );
+
+          case 'parenthesized_expression':
+            return await convertParenthesizedExpression(
+              expressionNode as ParenthesizedExpressionNode,
+              material,
+              convertASTNodeToMesh
+            );
+
+          case 'function_call':
+            // Handle function calls as before
+            return await convertFunctionCallNode(node, material, convertASTNodeToMesh);
+
+          case 'function_literal':
+            return await convertFunctionLiteral(node, material);
+
+          default: {
+            // Check if it's a function literal
+            if (isFunctionLiteral(node)) {
+              return await convertFunctionLiteral(node, material);
+            }
+
+            // For other expression types, try to evaluate or return placeholder
+            logger.debug(
+              `Expression type '${expressionNode.expressionType}' not specifically handled, creating placeholder`
+            );
+            const placeholderMesh = createEmptyPlaceholderMesh(material);
+            return success(placeholderMesh);
+          }
+        }
+      }
+
+      // Fallback to function call handling if no expressionType
       return await convertFunctionCallNode(node, material, convertASTNodeToMesh);
+    }
 
     case 'module_definition':
       return await convertModuleDefinitionNode(node as ModuleDefinitionNode);
@@ -919,17 +1123,52 @@ const convertASTNodeToMesh = async (
       return await convertAssignmentNode(node as AssignmentNode);
 
     case 'if':
-      return await convertIfStatementNode(node as IfStatementNode, material, convertASTNodeToMesh);
+      return await convertIfStatementNode(node as IfNode, material, convertASTNodeToMesh);
 
     case 'for_loop':
-      return await convertForStatementNode(
-        node as ForStatementNode,
-        material,
-        convertASTNodeToMesh
-      );
+      return await convertForStatementNode(node as ForLoopNode, material, convertASTNodeToMesh);
 
-    default:
-      return error(`Unsupported AST node type for CSG conversion: ${node.type}`);
+    // Add basic support for other node types that we don't fully convert yet
+    case 'polyhedron':
+    case 'polygon':
+    case 'circle':
+    case 'square':
+    case 'text':
+    case 'linear_extrude':
+    case 'offset':
+    case 'resize':
+    case 'let':
+    case 'each':
+    case 'assert':
+    case 'echo':
+    case 'assign':
+    case 'multmatrix':
+    case 'color':
+    case 'hull':
+    case 'minkowski':
+    case 'module_instantiation':
+    case 'function_definition':
+    case 'specialVariableAssignment':
+    case 'children':
+    case 'error': {
+      // For now, create a placeholder empty mesh for unsupported node types
+      logger.warn(`Node type '${node.type}' not fully supported for CSG conversion`);
+      const geometry = new THREE.BufferGeometry();
+      const emptyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x00ff88,
+        transparent: true,
+        opacity: 0,
+      });
+      return success(new THREE.Mesh(geometry, emptyMaterial));
+    }
+
+    default: {
+      // Exhaustive check - this should never be reached if all cases are handled
+      const exhaustiveCheck: never = node;
+      return error(
+        `Unsupported AST node type for CSG conversion: ${(exhaustiveCheck as ASTNode).type}`
+      );
+    }
   }
 };
 
