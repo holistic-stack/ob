@@ -261,4 +261,17 @@ export class VisitorASTGenerator {
     }
     return statements;
   }
+
+  /**
+   * Dispose of all resources and clean up memory
+   */
+  public dispose(): void {
+    // Dispose the query visitor which will clean up Query objects
+    if (this.queryVisitor && typeof this.queryVisitor.dispose === 'function') {
+      this.queryVisitor.dispose();
+    }
+
+    // Clear references
+    this.previousAST = null;
+  }
 }

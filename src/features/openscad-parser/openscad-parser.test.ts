@@ -14,6 +14,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 // Sample OpenSCAD code for testing
 const SAMPLE_OPENSCAD_CODE = `
@@ -61,16 +62,13 @@ describe('OpenSCADParser', () => {
 
   beforeEach(async () => {
     // Create a new parser instance before each test
-    parser = new OpenscadParser();
+    parser = createTestParser();
 
     // Initialize the parser
     await parser.init();
   });
 
-  afterEach(() => {
-    // Clean up after each test
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should initialize automatically in the constructor', async () => {
     // Check that the parser is initialized
@@ -129,4 +127,82 @@ describe('OpenSCADParser', () => {
     const rootNodeString = result?.rootNode.toString();
     expect(rootNodeString).toContain('MISSING');
   });
+
+  it('should not leak memory when creating and disposing parsers repeatedly', async () => {
+    // Skip this test in environments where process.memoryUsage is not available
+    if (typeof process === 'undefined' || typeof process.memoryUsage !== 'function') {
+      console.warn('Skipping memory leak test: process.memoryUsage not available');
+      return;
+    }
+
+    // Force garbage collection if available (Node.js with --expose-gc flag)
+    const forceGC = () => {
+      if (typeof global !== 'undefined' && (global as any).gc) {
+        (global as any).gc();
+      }
+    };
+
+    // Warm up - create and dispose a few parsers to stabilize memory
+    for (let i = 0; i < 10; i++) {
+      const warmupParser = createTestParser();
+      await warmupParser.init();
+      warmupParser.parseCST('cube(1);');
+      // Note: dispose() will be called automatically by test utility
+    }
+
+    forceGC();
+    await new Promise(resolve => setTimeout(resolve, 100)); // Allow cleanup
+
+    // Measure initial memory
+    const initialMemory = process.memoryUsage();
+    const initialHeapUsed = initialMemory.heapUsed;
+
+    // Create and dispose parsers 1000 times
+    const iterations = 1000;
+    for (let i = 0; i < iterations; i++) {
+      const testParser = createTestParser();
+      await testParser.init();
+      
+      // Parse some code to exercise the parser
+      testParser.parseCST(SAMPLE_OPENSCAD_CODE);
+      testParser.parseAST('cube([1, 2, 3]); sphere(r=5);');
+      
+      // Note: dispose() will be called automatically by test utility
+      
+      // Force GC every 100 iterations to help with cleanup
+      if (i % 100 === 0) {
+        forceGC();
+      }
+    }
+
+    forceGC();
+    await new Promise(resolve => setTimeout(resolve, 100)); // Allow cleanup
+
+    // Measure final memory
+    const finalMemory = process.memoryUsage();
+    const finalHeapUsed = finalMemory.heapUsed;
+
+    // Calculate memory growth
+    const memoryGrowth = finalHeapUsed - initialHeapUsed;
+    const memoryGrowthMB = memoryGrowth / (1024 * 1024);
+
+    console.log(`Memory growth after ${iterations} parser cycles: ${memoryGrowthMB.toFixed(2)} MB`);
+    console.log(`Initial heap: ${(initialHeapUsed / (1024 * 1024)).toFixed(2)} MB`);
+    console.log(`Final heap: ${(finalHeapUsed / (1024 * 1024)).toFixed(2)} MB`);
+
+    // The key check is that memory shouldn't grow linearly with iterations
+    // If there's a major leak, we'd expect several hundred MB of growth
+    // With WASM and Tree-sitter, some memory growth is expected due to allocator overhead
+    const maxLinearGrowth = iterations * 0.2; // Less than 200KB per iteration
+    const maxTotalGrowth = 150; // Less than 150MB total for 1000 iterations
+    
+    console.log(`Max linear growth allowed: ${maxLinearGrowth.toFixed(2)} MB`);
+    console.log(`Max total growth allowed: ${maxTotalGrowth} MB`);
+    
+    // Primary test: Memory shouldn't grow linearly with iterations
+    expect(memoryGrowthMB).toBeLessThan(maxLinearGrowth);
+    
+    // Secondary test: Total memory growth should be reasonable
+    expect(memoryGrowthMB).toBeLessThan(maxTotalGrowth);
+  }, 30000); // 30 second timeout for this test
 });

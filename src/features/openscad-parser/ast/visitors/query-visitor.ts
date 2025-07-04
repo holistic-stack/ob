@@ -211,6 +211,13 @@ export class QueryVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Dispose of all resources and clean up memory
+   */
+  dispose(): void {
+    this.queryManager.dispose();
+  }
+
+  /**
    * Create an AST node for a specific function
    * @param node The node to process
    * @param functionName The name of the function

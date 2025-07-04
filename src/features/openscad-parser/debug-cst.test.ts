@@ -1,16 +1,15 @@
 import { OpenscadParser } from './openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
 describe('Debug CST Structure', () => {
   let parser: OpenscadParser;
 
   beforeEach(async () => {
-    parser = new OpenscadParser();
+    parser = createTestParser();
     await parser.init('./tree-sitter-openscad.wasm');
   });
 
-  afterEach(() => {
-    parser.dispose();
-  });
+  // Note: cleanup is now handled automatically by the test utility
 
   it('should debug the CST structure for cube', () => {
     const code = 'cube(10);';

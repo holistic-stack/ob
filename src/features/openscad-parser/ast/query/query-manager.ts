@@ -166,6 +166,22 @@ export class QueryManager {
   }
 
   /**
+   * Dispose of all resources and clean up memory
+   */
+  dispose(): void {
+    // Delete all cached Query objects
+    for (const query of this.queryMap.values()) {
+      if (query && typeof (query as any).delete === 'function') {
+        (query as any).delete();
+      }
+    }
+    this.queryMap.clear();
+    
+    // Clear the cache
+    this.cache.clear();
+  }
+
+  /**
    * Execute a query on a tree without using the cache
    * @param queryString The query string
    * @param tree The tree to query

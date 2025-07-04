@@ -95,6 +95,7 @@ export class OpenscadParser {
   private language: TreeSitter.Language | null = null;
   private previousTree: TreeSitter.Tree | null = null;
   private errorHandler: IErrorHandler;
+  private astGenerators: Set<import('./ast/visitor-ast-generator.js').VisitorASTGenerator> = new Set();
   public isInitialized = false;
 
   /**
@@ -271,6 +272,9 @@ export class OpenscadParser {
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
+      
+      // Track the AST generator for proper cleanup
+      this.astGenerators.add(astGenerator);
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
@@ -295,6 +299,9 @@ export class OpenscadParser {
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
+      
+      // Track the AST generator for proper cleanup
+      this.astGenerators.add(astGenerator);
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
@@ -446,6 +453,9 @@ export class OpenscadParser {
         this.language,
         errorHandlerAdapter
       );
+      
+      // Track the AST generator for proper cleanup
+      this.astGenerators.add(astGenerator);
 
       const ast = astGenerator.generate();
       return ast;
@@ -505,14 +515,27 @@ export class OpenscadParser {
         this.previousTree = null;
       }
 
+      // Dispose all AST generators and their Query objects
+      for (const astGenerator of this.astGenerators) {
+        if (astGenerator && typeof astGenerator.dispose === 'function') {
+          astGenerator.dispose();
+        }
+      }
+      this.astGenerators.clear();
+
       // Dispose parser instance
       if (this.parser) {
         this.parser.delete();
         this.parser = null;
       }
 
-      // Clear all references
+      // Dispose language instance if it has a delete method (WASM builds)
+      if (this.language && typeof (this.language as any).delete === 'function') {
+        (this.language as any).delete();
+      }
       this.language = null;
+
+      // Clear initialization flag
       this.isInitialized = false;
 
       // Clear error handler if it has cleanup methods

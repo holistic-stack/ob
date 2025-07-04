@@ -6,6 +6,10 @@
  * is in the TypeScript file.
  */
 
-// This file is intentionally minimal - it just ensures the TypeScript
-// module is loaded and the global hooks are registered.
+// Import and re-export the TypeScript implementation
+import * as testUtils from './openscad-parser-test-utils.ts';
+
+// Re-export for consistency
+export const createTestParser = testUtils.createTestParser;
+
 console.log('OpenSCAD Parser test utilities loaded');

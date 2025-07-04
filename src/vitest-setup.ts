@@ -7,6 +7,8 @@ import resolve from 'resolve';
 import { afterEach, beforeEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { createLogger } from './shared/services/logger.service.js';
+// Import OpenSCAD parser test utility to register cleanup hooks
+import './vitest-helpers/openscad-parser-test-utils.js';
 
 // Enable Zustand mocking for proper store testing
 vi.mock('zustand');
