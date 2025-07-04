@@ -9,11 +9,16 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../../openscad-parser';
+import {
+  EnhancedOpenscadParser,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../../../index.js';
 import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
 
 describe('EchoStatementVisitor', () => {
-  let parser: OpenscadParser;
+  let parser: EnhancedOpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   beforeEach(async () => {

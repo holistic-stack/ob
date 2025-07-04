@@ -445,6 +445,15 @@ export class OpenscadParser {
       throw error;
     }
   }
+  /**
+   * Gets the Tree Sitter language object.
+   *
+   * @returns The Tree Sitter language object or null if not initialized
+   * @since 0.1.0
+   */
+  getLanguage(): TreeSitter.Language | null {
+    return this.language;
+  }
 
   /**
    * Releases all resources used by the parser instance.

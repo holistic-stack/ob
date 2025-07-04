@@ -12,7 +12,10 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
 const logger = createLogger('ASTToCSGConverterBenchmarkTest');
@@ -279,7 +282,7 @@ class PerformanceBenchmark {
 
     // Measure parsing performance
     const parseStart = performance.now();
-    const parseResult = await parserService.parseDocument(code);
+    const parseResult = parserService.parseAST(code);
     const parseEnd = performance.now();
     const parsingTime = parseEnd - parseStart;
 
@@ -348,8 +351,8 @@ class PerformanceBenchmark {
 
   generateReport(): string {
     const totalTests = this.results.length;
-    const passedTests = this.results.filter((r) => r.passed).length;
-    const regressions = this.results.filter((r) => r.regressionDetected).length;
+    const passedTests = this.results.filter((r: any) => r.passed).length;
+    const regressions = this.results.filter((r: any) => r.regressionDetected).length;
 
     let report = `\n=== PERFORMANCE BENCHMARK REPORT ===\n`;
     report += `Total Tests: ${totalTests}\n`;
@@ -376,21 +379,16 @@ class PerformanceBenchmark {
 
 describe('AST to CSG Converter - Integration Performance Benchmarking', () => {
   let store: ReturnType<typeof createAppStore>;
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
   let benchmark: PerformanceBenchmark;
 
   beforeEach(async () => {
     logger.init('Setting up performance benchmark environment');
 
     // Initialize parser service with optimized configuration
-    parserService = new UnifiedParserService({
-      enableLogging: false, // Disable logging for accurate performance measurement
-      enableCaching: true, // Enable caching for realistic performance
-      retryAttempts: 1, // Reduce retries for consistent timing
-      timeoutMs: 5000,
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
 
     // Initialize store with optimized configuration
     store = createAppStore({

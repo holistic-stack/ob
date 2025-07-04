@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { OpenscadParser } from '../../openscad-parser';
 import { ExpressionVisitor } from './expression-visitor.js';
 
 describe('ExpressionVisitor Debug', () => {

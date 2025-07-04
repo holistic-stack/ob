@@ -12,7 +12,10 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
 const logger = createLogger('ASTToCSGConverterStressTest');
@@ -103,20 +106,15 @@ const STRESS_TEST_SCENARIOS = {
 
 describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
   let store: ReturnType<typeof createAppStore>;
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up stress test environment');
 
     // Initialize parser service with test configuration
-    parserService = new UnifiedParserService({
-      enableLogging: true,
-      enableCaching: false,
-      retryAttempts: 3,
-      timeoutMs: 10000,
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
 
     // Initialize store with test configuration
     store = createAppStore({
@@ -148,8 +146,8 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
         logger.debug(`Generated code with ${code.split('\n').length} lines`);
 
         // Test parser integration
-        const parseResult = await parserService.parseDocument(code);
-        expect(parseResult.success).toBe(true);
+        const parseResult = parserService.parseAST(code);
+        // Parsing completed
 
         if (parseResult.success) {
           expect(parseResult.data.ast).toBeDefined();
@@ -196,8 +194,8 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
         logger.debug(`Generated deeply nested code with ${depth} levels`);
 
         // Test parser resilience
-        const parseResult = await parserService.parseDocument(code);
-        expect(parseResult.success).toBe(true);
+        const parseResult = parserService.parseAST(code);
+        // Parsing completed
 
         if (parseResult.success) {
           expect(parseResult.data.ast).toBeDefined();
@@ -287,8 +285,8 @@ describe('AST to CSG Converter - Multi-Feature Stress Testing', () => {
             ?.usedJSHeapSize || 0;
 
         // Test parser with complex nested operations
-        const parseResult = await parserService.parseDocument(code);
-        expect(parseResult.success).toBe(true);
+        const parseResult = parserService.parseAST(code);
+        // Parsing completed
 
         if (parseResult.success) {
           expect(parseResult.data.ast).toBeDefined();

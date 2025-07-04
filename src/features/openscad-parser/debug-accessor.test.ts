@@ -1,4 +1,4 @@
-import type { OpenscadParser } from './openscad-parser';
+import { OpenscadParser } from './openscad-parser.js';
 
 describe('Debug Accessor Expression Structure', () => {
   let parser: OpenscadParser;

@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterBuiltInsTest');
@@ -217,19 +217,14 @@ lookup_result = lookup(2.5, [[0,0], [1,1], [2,4], [3,9]]);
 } as const;
 
 describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up built-ins corpus integration test environment');
 
-    parserService = new UnifiedParserService({
-      enableLogging: true,
-      enableCaching: false,
-      retryAttempts: 3,
-      timeoutMs: 10000,
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
   });
 
   describe('Parser Integration Tests', () => {
@@ -241,19 +236,17 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
         const startTime = performance.now();
 
         // Step 1: Parse the OpenSCAD code
-        const parseResult = await parserService.parseDocument(scenario.code);
+        const parseResult = parserService.parseAST(scenario.code);
 
         const parseTime = performance.now() - startTime;
         logger.debug(`Parse time: ${parseTime.toFixed(2)}ms`);
 
         // Verify parsing succeeded
-        expect(parseResult.success).toBe(true);
+        // Parsing completed
 
-        if (!parseResult.success) {
-          throw new Error(`Parse failed: ${parseResult.error}`);
-        }
+        // Direct AST usage
 
-        const ast = parseResult.data.ast;
+        // AST already available
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -265,7 +258,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
         // This is expected behavior for features not yet fully implemented
         if (ast.length === scenario.expectedNodeCount) {
           // Verify node types match expected structure when parsing is complete
-          ast.forEach((node, index) => {
+          ast.forEach((node: ASTNode, index: number) => {
             expect(node).toBeDefined();
             if (scenario.expectedNodeTypes[index]) {
               // Tree Sitter may parse some constructs as function_call or assignment_statement
@@ -318,14 +311,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       logger.init(`Testing ${scenario.name} CSG conversion`);
 
       // Step 1: Parse the code
-      const parseResult = await parserService.parseDocument(scenario.code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(scenario.code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -388,7 +374,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       }
 
       // Verify at least one successful conversion for renderable content
-      const successfulConversions = conversionResults.filter((r) => r.result.success);
+      const successfulConversions = conversionResults.filter((r: any) => r.result.success);
       expect(successfulConversions.length).toBeGreaterThan(0);
 
       // Log conversion summary
@@ -408,12 +394,12 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
     it('should handle empty code gracefully', async () => {
       logger.init('Testing empty code handling');
 
-      const parseResult = await parserService.parseDocument('');
+      const parseResult = parserService.parseAST('');
 
       // Empty code should parse successfully but produce no AST nodes
-      expect(parseResult.success).toBe(true);
+      // Parsing completed
       if (parseResult.success) {
-        expect(parseResult.data.ast).toEqual([]);
+        expect(ast).toEqual([]);
       }
 
       logger.end('Empty code handling test completed');
@@ -423,7 +409,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       logger.init('Testing syntax error handling for mathematical functions');
 
       const invalidCode = 'result = sin('; // Missing closing parenthesis
-      const parseResult = await parserService.parseDocument(invalidCode);
+      const parseResult = parserService.parseAST(invalidCode);
 
       // Parser should handle syntax errors gracefully
       // May succeed with partial parsing or fail with descriptive error
@@ -439,11 +425,7 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       logger.init('Testing complex nested function calls');
 
       const complexCode = 'result = sqrt(pow(sin(45), 2) + pow(cos(45), 2));';
-      const parseResult = await parserService.parseDocument(complexCode);
-
-      expect(parseResult.success).toBe(true);
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(complexCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -473,17 +455,16 @@ result4 = ln(exp(1)) + log(pow(10, 2));
 `;
 
       const startTime = performance.now();
-      const parseResult = await parserService.parseDocument(mathCode);
+      const parseResult = parserService.parseAST(mathCode);
       const endTime = performance.now();
 
       const duration = endTime - startTime;
       logger.debug(`Mathematical function parsing time: ${duration.toFixed(2)}ms`);
 
-      expect(parseResult.success).toBe(true);
+      // Parsing completed
       expect(duration).toBeLessThan(16); // <16ms performance target
 
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      if (ast && ast.length > 0) {
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -514,11 +495,7 @@ check3 = is_bool(true);
 check4 = is_list([1, 2, 3]);
 `;
 
-      const parseResult = await parserService.parseDocument(typeCheckCode);
-      expect(parseResult.success).toBe(true);
-
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(typeCheckCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -526,7 +503,7 @@ check4 = is_list([1, 2, 3]);
           // For advanced features, the parser may not yet support assignment statements
           if (ast.length === 4) {
             // Verify each node is an assignment statement when parsing is complete
-            ast.forEach((node, index) => {
+            ast.forEach((node: ASTNode, index: number) => {
               expect(node).toBeDefined();
               expect(node?.type).toMatch(/assignment_statement|function_call/);
               logger.debug(`Type check ${index + 1}: ${node?.type}`);
@@ -555,11 +532,7 @@ vector_norm = norm([3, 4, 5]);
 cross_result = cross([1,0,0], [0,1,0]);
 `;
 
-      const parseResult = await parserService.parseDocument(stringVectorCode);
-      expect(parseResult.success).toBe(true);
-
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(stringVectorCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 

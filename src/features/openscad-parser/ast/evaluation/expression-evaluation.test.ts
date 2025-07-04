@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { OpenscadParser } from '../../openscad-parser';
 import { ErrorHandler } from '../../error-handling/index.js';
+import { OpenscadParser } from '../../openscad-parser.js';
 import { extractCubeNode } from '../extractors/cube-extractor.js';
 
 describe('Enhanced Expression Evaluation', () => {

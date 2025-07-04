@@ -10,7 +10,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
-import { OpenscadParser } from '../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../openscad-parser/openscad-parser.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';

@@ -1,14 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import { OpenscadParser } from '../../openscad-parser';
-import { ErrorHandler } from '../../error-handling/index.js';
+import {
+  EnhancedOpenscadParser,
+  ErrorHandler,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../../index.js';
 import * as extractorModule from '../extractors/index.js';
 import { getLocation } from '../utils/location-utils.js';
 import { ControlStructureVisitor } from './control-structure-visitor.js';
 
 describe('ControlStructureVisitor', () => {
   let visitor: ControlStructureVisitor;
-  let parser: OpenscadParser;
+  let parser: EnhancedOpenscadParser;
 
   beforeEach(async () => {
     // Mock the extractArguments function

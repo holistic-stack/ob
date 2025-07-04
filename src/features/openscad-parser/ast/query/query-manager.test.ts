@@ -85,6 +85,7 @@ describe('QueryManager', () => {
   it('should execute a query and cache the results', () => {
     // Create a mock language
     const mockLanguage = {
+      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
       query: vi.fn().mockImplementation((_queryString) => {
         const mockQuery = new MockQuery([
           new MockMatch([
@@ -124,6 +125,7 @@ describe('QueryManager', () => {
   it('should find nodes by type', () => {
     // Create a mock language
     const mockLanguage = {
+      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
       query: vi.fn().mockImplementation((_queryString) => {
         return new MockQuery([
           new MockMatch([
@@ -151,6 +153,7 @@ describe('QueryManager', () => {
   it('should clear the cache', () => {
     // Create a mock language
     const mockLanguage = {
+      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
       query: vi.fn().mockImplementation((_queryString) => {
         return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
       }),
@@ -181,6 +184,7 @@ describe('QueryManager', () => {
   it('should get cache statistics', () => {
     // Create a mock language
     const mockLanguage = {
+      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
       query: vi.fn().mockImplementation((_queryString) => {
         return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
       }),

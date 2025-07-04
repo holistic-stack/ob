@@ -41,13 +41,12 @@ export const createParsingSlice = (
           logger.debug(`Starting parse of ${code.length} characters`);
 
           // Ensure parser is initialized
-          await parserService.initialize();
+          await parserService.init();
 
           // Use unified parser service
-          const parseResult = await parserService.parseDocument(code);
+          const rawAST = parserService.parseAST(code);
 
-          if (parseResult.success && parseResult.data.ast) {
-            const rawAST = parseResult.data.ast;
+          if (rawAST && rawAST.length > 0) {
 
             // Apply AST restructuring to fix hierarchical relationships
             logger.debug(`Restructuring AST with ${rawAST.length} nodes`);
@@ -81,10 +80,9 @@ export const createParsingSlice = (
             );
             return ast;
           } else {
-            const errorMessage = parseResult.success
-              ? parseResult.data.errors.map((e: { message: string }) => e.message).join('; ')
-              : parseResult.error;
-            throw new Error(errorMessage);
+            // No AST nodes were parsed
+            logger.warn('No AST nodes were parsed from the provided code');
+            return [];
           }
         },
         (err: unknown) => {

@@ -68,3 +68,243 @@ Follow the Conventional Commits specification. Example: `feat(renderer): add sup
     1. Ensure existing tests cover the code to be refactored.
     2. Perform the refactoring.
     3. Verify that all tests still pass.
+
+SRC\FEATURES\OPENSCAD-PARSER
+│   argument-debug.test.ts
+│   debug-accessor.test.ts
+│   debug-cst.test.ts
+│   GEMINI.md
+│   incremental-parsing.test.ts
+│   index.ts
+│   node-types-debug.test.ts
+│   node-types.test.ts
+│   openscad-ast.test.ts
+│   openscad-parser-error-handling.test.ts
+│   openscad-parser-visitor.test.ts
+│   openscad-parser.test.ts
+│   openscad-parser.ts
+│
+├───ast
+│   │   ast-generator.integration.test.ts
+│   │   ast-types.ts
+│   │   index.ts
+│   │   visitor-ast-generator.test.ts
+│   │   visitor-ast-generator.ts
+│   │
+│   ├───changes
+│   │       change-tracker.test.ts
+│   │       change-tracker.ts
+│   │
+│   ├───errors
+│   │       index.ts
+│   │       parser-error.test.ts
+│   │       parser-error.ts
+│   │       recovery-strategy.test.ts
+│   │       recovery-strategy.ts
+│   │       semantic-error.ts
+│   │       syntax-error.test.ts
+│   │       syntax-error.ts
+│   │
+│   ├───evaluation
+│   │   │   binary-expression-evaluator.ts
+│   │   │   expression-evaluation-context.ts
+│   │   │   expression-evaluation.test.ts
+│   │   │   expression-evaluator-registry.ts
+│   │   │   expression-evaluator.ts
+│   │   │
+│   │   └───binary-expression-evaluator
+│   │           binary-expression-evaluator-cube.test.ts
+│   │           binary-expression-evaluator.test.ts
+│   │           binary-expression-evaluator.ts
+│   │
+│   ├───extractors
+│   │       argument-extractor.ts
+│   │       color-extractor.ts
+│   │       cube-extractor.test.ts
+│   │       cube-extractor.ts
+│   │       cylinder-extractor.ts
+│   │       direct-binary-expression-test.ts
+│   │       index.ts
+│   │       minimal-cube-test.ts
+│   │       module-parameter-extractor.test.ts
+│   │       module-parameter-extractor.ts
+│   │       offset-extractor.ts
+│   │       parameter-extractor.ts
+│   │       sphere-extractor.ts
+│   │       value-extractor.ts
+│   │       vector-extractor.ts
+│   │
+│   ├───nodes
+│   │   │   ast-node.ts
+│   │   │   expression.ts
+│   │   │
+│   │   └───expressions
+│   │           binary-expression.ts
+│   │
+│   ├───query
+│   │       index.ts
+│   │       lru-query-cache.test.ts
+│   │       lru-query-cache.ts
+│   │       query-cache.test.ts
+│   │       query-cache.ts
+│   │       query-manager.test.ts
+│   │       query-manager.ts
+│   │
+│   ├───registry
+│   │       default-node-handler-registry.ts
+│   │       index.ts
+│   │       node-handler-registry-factory.ts
+│   │       node-handler-registry.test.ts
+│   │       node-handler-registry.ts
+│   │
+│   ├───test-utils
+│   │       real-node-generator.test.ts
+│   │       real-node-generator.ts
+│   │
+│   ├───tests
+│   │       control-structures.test.ts
+│   │       cube-extractor.test.ts
+│   │       cube.test.ts
+│   │       cylinder-extractor.test.ts
+│   │       difference.test.ts
+│   │       intersection.test.ts
+│   │       minkowski.test.ts
+│   │       module-function.test.ts
+│   │       primitive-visitor.test.ts
+│   │       rotate.test.ts
+│   │       scale.test.ts
+│   │       sphere-extractor.test.ts
+│   │       sphere.test.ts
+│   │       transformations.test.ts
+│   │       union.test.ts
+│   │
+│   ├───utils
+│   │       ast-error-utils.ts
+│   │       debug-utils.ts
+│   │       index.ts
+│   │       location-utils.ts
+│   │       node-utils.ts
+│   │       variable-utils.ts
+│   │       vector-utils.ts
+│   │
+│   └───visitors
+│       │   ast-visitor.ts
+│       │   base-ast-visitor.test.ts
+│       │   base-ast-visitor.ts
+│       │   composite-visitor-real.test.ts
+│       │   composite-visitor.test.ts
+│       │   composite-visitor.ts
+│       │   control-structure-visitor.test.ts
+│       │   control-structure-visitor.ts
+│       │   csg-visitor.test.ts
+│       │   csg-visitor.ts
+│       │   expression-visitor.debug.test.ts
+│       │   expression-visitor.integration.test.ts
+│       │   expression-visitor.simple.test.ts
+│       │   expression-visitor.test.ts
+│       │   expression-visitor.ts
+│       │   function-visitor.test.ts
+│       │   function-visitor.ts
+│       │   index.ts
+│       │   module-visitor.test.ts
+│       │   module-visitor.ts
+│       │   primitive-visitor.test.ts
+│       │   primitive-visitor.ts
+│       │   query-visitor.test.ts
+│       │   query-visitor.ts
+│       │   transform-visitor.test.ts
+│       │   transform-visitor.ts
+│       │   variable-visitor.ts
+│       │
+│       ├───assert-statement-visitor
+│       │       assert-statement-visitor.test.ts
+│       │       assert-statement-visitor.ts
+│       │
+│       ├───assign-statement-visitor
+│       │       assign-statement-visitor.test.ts
+│       │       assign-statement-visitor.ts
+│       │
+│       ├───binary-expression-visitor
+│       │       binary-expression-visitor.test.ts
+│       │
+│       ├───control-structure-visitor
+│       │       for-loop-visitor.test.ts
+│       │       for-loop-visitor.ts
+│       │       if-else-visitor.test.ts
+│       │       if-else-visitor.ts
+│       │
+│       ├───echo-statement-visitor
+│       │       echo-statement-visitor.test.ts
+│       │       echo-statement-visitor.ts
+│       │
+│       └───expression-visitor
+│           │   function-call-visitor.test.ts
+│           │   function-call-visitor.ts
+│           │   i-parent-expression-visitor.ts
+│           │   index.ts
+│           │
+│           ├───binary-expression-visitor
+│           │       binary-expression-visitor.test.ts
+│           │       binary-expression-visitor.ts
+│           │       simple-binary.test.ts
+│           │
+│           ├───conditional-expression-visitor
+│           │       conditional-expression-visitor.test.ts
+│           │       conditional-expression-visitor.ts
+│           │
+│           ├───list-comprehension-visitor
+│           │       list-comprehension-visitor.test.ts
+│           │       list-comprehension-visitor.ts
+│           │
+│           ├───parenthesized-expression-visitor
+│           │       parenthesized-expression-visitor.test.ts
+│           │       parenthesized-expression-visitor.ts
+│           │
+│           ├───range-expression-visitor
+│           │       range-expression-visitor.test.ts
+│           │       range-expression-visitor.ts
+│           │
+│           └───unary-expression-visitor
+│                   unary-expression-visitor.test.ts
+│                   unary-expression-visitor.ts
+│
+├───cst
+│   │   query-utils.test.ts
+│   │   query-utils.ts
+│   │
+│   ├───cursor-utils
+│   │       cstTreeCursorWalkLog.test.ts
+│   │       cstTreeCursorWalkLog.ts
+│   │       cursor-utils.integration.test.ts
+│   │       cursor-utils.test.ts
+│   │       cursor-utils.ts
+│   │       README.md
+│   │
+│   └───queries
+│           dependencies.scm
+│           find-function-calls.scm
+│           highlights.scm
+│
+└───error-handling
+    │   error-handler.ts
+    │   error-handling-integration.test.ts
+    │   index.ts
+    │   logger.ts
+    │   recovery-strategy-registry.ts
+    │   simple-error-handler.ts
+    │
+    ├───strategies
+    │       missing-semicolon-strategy.test.ts
+    │       missing-semicolon-strategy.ts
+    │       recovery-strategy.ts
+    │       type-mismatch-strategy.test.ts
+    │       type-mismatch-strategy.ts
+    │       unclosed-bracket-strategy.test.ts
+    │       unclosed-bracket-strategy.ts
+    │       unknown-identifier-strategy.test.ts
+    │       unknown-identifier-strategy.ts
+    │
+    ├───types
+    │       error-types.ts
+    │
+    └───utils

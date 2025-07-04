@@ -81,10 +81,15 @@ export class QueryManager {
     // Get or create the query
     let query = this.queryMap.get(queryString);
     if (!query) {
-      // Use new Query constructor instead of deprecated language.query()
-      query = new Query(this.language, queryString);
-      if (query) {
-        this.queryMap.set(queryString, query);
+      try {
+        // Use new Query constructor instead of deprecated language.query()
+        query = new Query(this.language, queryString);
+        if (query) {
+          this.queryMap.set(queryString, query);
+        }
+      } catch (error) {
+        console.error(`[QueryManager.executeQueryOnNode] Error creating query: ${error}`);
+        return [];
       }
     }
 
@@ -170,10 +175,15 @@ export class QueryManager {
     // Get or create the query
     let query = this.queryMap.get(queryString);
     if (!query) {
-      // Use new Query constructor instead of deprecated language.query()
-      query = new Query(this.language, queryString);
-      if (query) {
-        this.queryMap.set(queryString, query);
+      try {
+        // Use new Query constructor instead of deprecated language.query()
+        query = new Query(this.language, queryString);
+        if (query) {
+          this.queryMap.set(queryString, query);
+        }
+      } catch (error) {
+        console.error(`[QueryManager.executeQueryInternal] Error creating query: ${error}`);
+        return [];
       }
     }
 

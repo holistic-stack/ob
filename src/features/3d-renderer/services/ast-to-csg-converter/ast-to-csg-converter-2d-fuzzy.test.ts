@@ -16,7 +16,7 @@ import * as fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import {
   clearSourceCodeForExtraction,
   convertASTNodeToCSG,
@@ -69,12 +69,12 @@ const parserFriendlyPolygonPoints = () =>
   );
 
 describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up production-ready 2D operations fuzzy test environment');
-    parserService = new UnifiedParserService();
-    await parserService.initialize();
+    parserService = new OpenscadParser();
+    await parserService.init();
   });
 
   describe('Circle Parameter Extraction Validation', () => {
@@ -243,13 +243,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing circle(r=${radius}) conversion`);
 
           // Parse the code
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for circle(r=${radius}): ${parseResult.error}`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for circle(r=${radius})`);
             return; // Skip this test case
@@ -298,13 +298,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing square(${size}) conversion`);
 
           // Parse the code
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for square(${size}): ${parseResult.error}`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for square(${size})`);
             return; // Skip this test case
@@ -348,13 +348,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           logger.debug(`Testing polygon([${pointsStr}]) conversion`);
 
           // Parse the code
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for polygon([${pointsStr}]): ${parseResult.error}`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for polygon([${pointsStr}])`);
             return; // Skip this test case
@@ -424,13 +424,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
 
             logger.debug(`Testing ${operations.length} 2D operations`);
 
-            const parseResult = await parserService.parseDocument(code);
+            const parseResult = parserService.parseAST(code);
             if (!parseResult.success) {
               logger.warn(`Parse failed for multiple 2D operations`);
               return; // Skip this test case
             }
 
-            const ast = parseResult.data.ast;
+            // AST already available
             if (!ast || ast.length !== operations.length) {
               logger.warn(
                 `AST length mismatch: expected ${operations.length}, got ${ast?.length || 0}`
@@ -476,13 +476,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlyRadius(), async (radius) => {
           const code = `circle(r=${radius});`;
 
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for performance test with circle(r=${radius})`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) return;
 
           const circleNode = ast[0];
@@ -514,13 +514,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
         fc.asyncProperty(parserFriendlySize(), async (size) => {
           const code = `square(${size});`;
 
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for performance test with square(${size})`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) return;
 
           const squareNode = ast[0];
@@ -553,13 +553,13 @@ describe('AST to CSG Converter - 2D Operations Fuzzy Testing', () => {
           const pointsStr = points.map(([x, y]) => `[${x}, ${y}]`).join(', ');
           const code = `polygon([${pointsStr}]);`;
 
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for performance test with polygon([${pointsStr}])`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) return;
 
           const polygonNode = ast[0];

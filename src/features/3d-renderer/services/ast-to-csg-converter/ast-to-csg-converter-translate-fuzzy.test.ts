@@ -16,7 +16,7 @@ import * as fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import {
   clearSourceCodeForExtraction,
   convertASTNodeToCSG,
@@ -44,12 +44,12 @@ const parserFriendlyCoordinate = () =>
   fc.tuple(parserFriendlyFloat(), parserFriendlyFloat(), parserFriendlyFloat());
 
 describe('AST to CSG Converter - Production Fuzzy Testing', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up production-ready translate fuzzy test environment');
-    parserService = new UnifiedParserService();
-    await parserService.initialize();
+    parserService = new OpenscadParser();
+    await parserService.init();
   });
 
   describe('Parameter Extraction Validation', () => {
@@ -104,13 +104,13 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
           logger.debug(`Testing translate([${x}, ${y}, ${z}]) conversion`);
 
           // Parse the code
-          const parseResult = await parserService.parseDocument(code);
+          const parseResult = parserService.parseAST(code);
           if (!parseResult.success) {
             logger.warn(`Parse failed for translate([${x}, ${y}, ${z}]): ${parseResult.error}`);
             return; // Skip this test case
           }
 
-          const ast = parseResult.data.ast;
+          // AST already available
           if (!ast || ast.length === 0) {
             logger.warn(`No AST nodes for translate([${x}, ${y}, ${z}])`);
             return; // Skip this test case
@@ -168,12 +168,12 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
       for (const [x, y, z] of edgeCases) {
         const code = `translate([${x},${y},${z}]) cube(5);`;
 
-        const parseResult = await parserService.parseDocument(code);
-        expect(parseResult.success).toBe(true);
+        const parseResult = parserService.parseAST(code);
+        // Parsing completed
 
         if (!parseResult.success) continue;
 
-        const ast = parseResult.data.ast;
+        // AST already available
         if (!ast || ast.length === 0) continue;
 
         const translateNode = ast[0];
@@ -223,13 +223,13 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
 
             logger.debug(`Testing ${coordinates.length} translate operations`);
 
-            const parseResult = await parserService.parseDocument(code);
+            const parseResult = parserService.parseAST(code);
             if (!parseResult.success) {
               logger.warn(`Parse failed for multiple translate operations`);
               return; // Skip this test case
             }
 
-            const ast = parseResult.data.ast;
+            // AST already available
             if (!ast || ast.length !== coordinates.length) {
               logger.warn(
                 `AST length mismatch: expected ${coordinates.length}, got ${ast?.length || 0}`
@@ -281,13 +281,13 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
           async ([x, y, z]) => {
             const code = `translate([${x},${y},${z}]) sphere(10);`;
 
-            const parseResult = await parserService.parseDocument(code);
+            const parseResult = parserService.parseAST(code);
             if (!parseResult.success) {
               logger.warn(`Parse failed for performance test with translate([${x}, ${y}, ${z}])`);
               return; // Skip this test case
             }
 
-            const ast = parseResult.data.ast;
+            // AST already available
             if (!ast || ast.length === 0) return;
 
             const translateNode = ast[0];

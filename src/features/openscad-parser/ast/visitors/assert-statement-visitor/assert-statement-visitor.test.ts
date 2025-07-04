@@ -34,7 +34,12 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../../openscad-parser';
+import {
+  EnhancedOpenscadParser,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../../../index.js';
 import type { AssertStatementNode } from '../../ast-types.js';
 
 /**
@@ -47,7 +52,7 @@ import type { AssertStatementNode } from '../../ast-types.js';
  * @since 0.1.0
  */
 describe('AssertStatementVisitor', () => {
-  let parser: OpenscadParser;
+  let parser: EnhancedOpenscadParser;
   let errorHandler: SimpleErrorHandler;
 
   /**

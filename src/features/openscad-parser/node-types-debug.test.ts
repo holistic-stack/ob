@@ -3,7 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { OpenscadParser } from './openscad-parser';
+import { OpenscadParser } from './openscad-parser.js';
 
 describe('OpenSCAD Node Types Debug', () => {
   let parser: OpenscadParser;

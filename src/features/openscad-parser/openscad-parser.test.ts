@@ -95,7 +95,6 @@ describe('OpenSCADParser', () => {
   });
 
   it('should parse complex OpenSCAD code correctly', async () => {
-
     // Parse the complex code
     const result = parser.parse(COMPLEX_OPENSCAD_CODE);
     console.log('result', JSON.stringify(result));
@@ -115,7 +114,6 @@ describe('OpenSCADParser', () => {
   });
 
   it('should handle invalid OpenSCAD code gracefully', async () => {
-
     // Parse the invalid code
     const result = parser.parseCST(INVALID_OPENSCAD_CODE);
 

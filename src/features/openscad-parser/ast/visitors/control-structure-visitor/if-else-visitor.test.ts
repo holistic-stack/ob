@@ -5,8 +5,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { OpenscadParser } from '../../../openscad-parser';
 import { ErrorHandler } from '../../../error-handling/index.js';
+import { OpenscadParser } from '../../../openscad-parser';
 import type * as ast from '../../ast-types.js';
 import { printNodeStructure } from '../../utils/debug-utils.js';
 import { ControlStructureVisitor } from '../control-structure-visitor.js';

@@ -12,7 +12,10 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import { createLogger } from '../../../../shared/services/logger.service.js';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { createAppStore } from '../../../store/app-store.js';
 
 const logger = createLogger('ASTToCSGConverterAdvancedPatternsTest');
@@ -396,20 +399,15 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
 
 describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
   let store: ReturnType<typeof createAppStore>;
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up advanced integration patterns test environment');
 
     // Initialize parser service with comprehensive configuration
-    parserService = new UnifiedParserService({
-      enableLogging: true, // Enable logging for detailed debugging
-      enableCaching: true,
-      retryAttempts: 3,
-      timeoutMs: 10000, // Longer timeout for complex parsing
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
 
     // Initialize store with full configuration
     store = createAppStore({
@@ -434,7 +432,7 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = await parserService.parseDocument(testCase.code);
+          const parseResult = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
           expect(parseResult).toBeDefined();
@@ -462,7 +460,7 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = await parserService.parseDocument(testCase.code);
+          const parseResult = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
           expect(parseResult).toBeDefined();
@@ -490,7 +488,7 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           logger.init(`Testing parser integration for ${testCase.name}`);
 
           // Test parser integration - these are advanced features that may not be fully supported yet
-          const parseResult = await parserService.parseDocument(testCase.code);
+          const parseResult = parserService.parseAST(testCase.code);
 
           // For advanced features, we test that the parser doesn't crash and provides meaningful feedback
           expect(parseResult).toBeDefined();
@@ -621,7 +619,7 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
           const startTime = performance.now();
 
           // Step 1: Parse with parser service
-          const parseResult = await parserService.parseDocument(testCase.code);
+          const parseResult = parserService.parseAST(testCase.code);
           expect(parseResult).toBeDefined();
 
           // Step 2: Process through store

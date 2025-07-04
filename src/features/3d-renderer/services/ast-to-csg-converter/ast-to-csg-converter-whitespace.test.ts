@@ -9,25 +9,20 @@ import * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterWhitespaceTest');
 
 describe('AST to CSG Converter - Whitespace Handling', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up whitespace handling test environment');
 
-    parserService = new UnifiedParserService({
-      enableLogging: true,
-      enableCaching: false,
-      retryAttempts: 3,
-      timeoutMs: 10000,
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
   });
 
   describe('Leading Whitespace Handling', () => {
@@ -57,14 +52,7 @@ describe('AST to CSG Converter - Whitespace Handling', () => {
     it.each(testCases)('should handle $name correctly', async ({ code, expectedFunction }) => {
       logger.init(`Testing whitespace handling for ${expectedFunction}`);
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -96,14 +84,7 @@ describe('AST to CSG Converter - Whitespace Handling', () => {
 
       logger.init('Testing trailing whitespace handling');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -145,14 +126,7 @@ describe('AST to CSG Converter - Whitespace Handling', () => {
 
       logger.init('Testing complex multi-line whitespace scenarios');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -181,14 +155,7 @@ describe('AST to CSG Converter - Whitespace Handling', () => {
 
       logger.init('Testing whitespace in function parameters');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -222,14 +189,7 @@ translate( [ 10 , 0 , 0 ] ) {
 
       logger.init('Testing whitespace in nested structures');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -256,14 +216,7 @@ translate( [ 10 , 0 , 0 ] ) {
 
       logger.init('Testing whitespace handling performance');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 

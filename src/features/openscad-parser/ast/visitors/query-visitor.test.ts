@@ -3,46 +3,20 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../openscad-parser';
-import { ErrorHandler } from '../../error-handling/index.js';
+import {
+  EnhancedOpenscadParser,
+  ErrorHandler,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../../index.js';
 import { CompositeVisitor } from './composite-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
 import { QueryVisitor } from './query-visitor.js';
 import { TransformVisitor } from './transform-visitor.js';
 
-// Create a mock language object for testing
-const mockLanguage = {
-  query: (queryString: string) => ({
-    captures: (_node: any) => {
-      // Return mock captures for testing
-      if (queryString.includes('accessor_expression')) {
-        return [
-          {
-            node: { type: 'accessor_expression', text: 'cube(10)' },
-            name: 'node',
-          },
-          {
-            node: { type: 'accessor_expression', text: 'sphere(5)' },
-            name: 'node',
-          },
-          {
-            node: { type: 'accessor_expression', text: 'cylinder(h=10, r=5)' },
-            name: 'node',
-          },
-        ];
-      } else if (queryString.includes('arguments')) {
-        return [
-          { node: { type: 'arguments', text: '(10)' }, name: 'node' },
-          { node: { type: 'arguments', text: '(5)' }, name: 'node' },
-          { node: { type: 'arguments', text: '(h=10, r=5)' }, name: 'node' },
-        ];
-      } else {
-        return [];
-      }
-    },
-  }),
-};
+// Use real Tree Sitter language for testing
 
 describe('QueryVisitor', () => {
   let parser: OpenscadParser;
@@ -74,17 +48,23 @@ describe('QueryVisitor', () => {
       errorHandler
     );
 
-    // Create a query visitor
-    queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
+    // Create a query visitor using the real parser language
+    queryVisitor = new QueryVisitor(
+      code,
+      tree,
+      parser.getLanguage(),
+      compositeVisitor,
+      errorHandler
+    );
 
-    // Find all accessor_expression nodes
-    const accessorExpressions = queryVisitor.findNodesByType('accessor_expression');
+    // Find all module_instantiation nodes (the correct node type in OpenSCAD grammar)
+    const moduleInstantiations = queryVisitor.findNodesByType('module_instantiation');
 
-    // There should be at least 3 accessor expressions (cube, sphere, cylinder)
-    expect(accessorExpressions.length).toBeGreaterThanOrEqual(3);
+    // There should be at least 3 module instantiations (cube, sphere, cylinder)
+    expect(moduleInstantiations.length).toBeGreaterThanOrEqual(3);
 
     // Check that we have cube, sphere, and cylinder
-    const functionNames = accessorExpressions.map((node) => node.text);
+    const functionNames = moduleInstantiations.map((node) => node.text);
     expect(functionNames.some((name) => name.includes('cube'))).toBe(true);
     expect(functionNames.some((name) => name.includes('sphere'))).toBe(true);
     expect(functionNames.some((name) => name.includes('cylinder'))).toBe(true);
@@ -105,22 +85,28 @@ describe('QueryVisitor', () => {
       errorHandler
     );
 
-    // Create a query visitor
-    queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
+    // Create a query visitor using the real parser language
+    queryVisitor = new QueryVisitor(
+      code,
+      tree,
+      parser.getLanguage(),
+      compositeVisitor,
+      errorHandler
+    );
 
-    // Find all accessor_expression and arguments nodes
-    const nodes = queryVisitor.findNodesByTypes(['accessor_expression', 'arguments']);
+    // Find all module_instantiation and arguments nodes
+    const nodes = queryVisitor.findNodesByTypes(['module_instantiation', 'arguments']);
 
     // There should be at least 3 nodes total
     expect(nodes.length).toBeGreaterThanOrEqual(3);
 
-    // Check that we have both accessor_expression and arguments nodes
-    const accessorExpressions = nodes.filter((node) => node.type === 'accessor_expression');
+    // Check that we have both module_instantiation and arguments nodes
+    const moduleInstantiations = nodes.filter((node) => node.type === 'module_instantiation');
     const _arguments = nodes.filter((node) => node.type === 'arguments');
 
-    // We should have at least one accessor_expression
-    expect(accessorExpressions.length).toBeGreaterThanOrEqual(1);
-    // Skip this test for now
+    // We should have at least one module_instantiation
+    expect(moduleInstantiations.length).toBeGreaterThanOrEqual(1);
+    // Arguments nodes may or may not be found depending on the grammar structure
     // expect(arguments_.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -139,14 +125,20 @@ describe('QueryVisitor', () => {
       errorHandler
     );
 
-    // Create a query visitor
-    queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
+    // Create a query visitor using the real parser language
+    queryVisitor = new QueryVisitor(
+      code,
+      tree,
+      parser.getLanguage(),
+      compositeVisitor,
+      errorHandler
+    );
 
-    // Execute a query to find all accessor expressions
-    const query = '(accessor_expression) @node';
+    // Execute a query to find all module instantiations
+    const query = '(module_instantiation) @node';
     const results1 = queryVisitor.executeQuery(query);
 
-    // There should be at least 3 accessor expressions
+    // There should be at least 3 module instantiations
     expect(results1.length).toBeGreaterThanOrEqual(3);
 
     // Execute the same query again
@@ -177,11 +169,17 @@ describe('QueryVisitor', () => {
       errorHandler
     );
 
-    // Create a query visitor
-    queryVisitor = new QueryVisitor(code, tree, mockLanguage, compositeVisitor, errorHandler);
+    // Create a query visitor using the real parser language
+    queryVisitor = new QueryVisitor(
+      code,
+      tree,
+      parser.getLanguage(),
+      compositeVisitor,
+      errorHandler
+    );
 
-    // Execute a query to find all accessor expressions
-    const query = '(accessor_expression) @node';
+    // Execute a query to find all module instantiations
+    const query = '(module_instantiation) @node';
     queryVisitor.executeQuery(query);
 
     // The cache should have one entry

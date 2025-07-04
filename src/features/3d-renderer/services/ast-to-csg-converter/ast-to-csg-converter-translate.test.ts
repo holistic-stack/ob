@@ -8,7 +8,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import {
   clearSourceCodeForExtraction,
   convertASTNodeToCSG,
@@ -19,19 +19,14 @@ import {
 const logger = createLogger('ASTToCSGConverterTranslateTest');
 
 describe('AST to CSG Converter - Translate Node Handling', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up translate node test environment');
 
-    parserService = new UnifiedParserService({
-      enableLogging: true,
-      enableCaching: false,
-      retryAttempts: 3,
-      timeoutMs: 10000,
-    });
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
   });
 
   describe('Translate Parameter Extraction', () => {
@@ -87,14 +82,7 @@ sphere(10);
       logger.init('Testing translate with sphere child - should NOT create placeholder cube');
 
       // Step 1: Parse the OpenSCAD code
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -152,14 +140,7 @@ sphere(10);
 
       logger.init('Testing simple translate with sphere');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -208,14 +189,7 @@ translate([5, 10, 15]) {
 
       logger.init('Testing complex translate with multiple children');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -260,14 +234,7 @@ translate([5, 10, 15]) {
 
       logger.init('Testing translate performance');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 
@@ -311,14 +278,7 @@ translate([0, 0, 10]) cylinder(h=8, r=2);
 
       logger.init('Testing multiple translate operations');
 
-      const parseResult = await parserService.parseDocument(code);
-      expect(parseResult.success).toBe(true);
-
-      if (!parseResult.success) {
-        throw new Error(`Parse failed: ${parseResult.error}`);
-      }
-
-      const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
       expect(ast).not.toBeNull();
 

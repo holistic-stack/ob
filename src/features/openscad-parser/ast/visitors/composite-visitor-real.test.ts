@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { OpenscadParser } from '../../openscad-parser';
+import {
+  EnhancedOpenscadParser,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../../index.js';
 
 describe('Real Parser Integration Tests', () => {
   let parser: OpenscadParser;

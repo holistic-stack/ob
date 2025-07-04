@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../openscad-parser';
-import { ErrorHandler } from '../error-handling/index.js';
+import {
+  EnhancedOpenscadParser,
+  ErrorHandler,
+  type IErrorHandler,
+  OpenscadParser,
+  SimpleErrorHandler,
+} from '../index.js';
 import { VisitorASTGenerator } from './visitor-ast-generator.js';
 
 // Create a mock language object for testing
@@ -14,7 +19,7 @@ const mockLanguage = {
 const mockErrorHandler = new ErrorHandler();
 
 describe('VisitorASTGenerator', () => {
-  let parser: OpenscadParser;
+  let parser: EnhancedOpenscadParser;
 
   beforeEach(async () => {
     parser = new EnhancedOpenscadParser();

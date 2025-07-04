@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.ts';
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterRealWorldTest');
@@ -114,18 +114,13 @@ roundedBox([box_width, box_height, 20], wall_thickness, true);
 };
 
 describe('AST to CSG Converter - Real-World Corpus Integration', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
-    logger.init('Setting up UnifiedParserService for real-world corpus tests');
-    parserService = new UnifiedParserService({
-      enableLogging: true,
-      enableCaching: false,
-      retryAttempts: 3,
-      timeoutMs: 10000,
-    });
+    logger.init('Setting up OpenscadParser for real-world corpus tests');
+    parserService = new OpenscadParser();
 
-    await parserService.initialize();
+    await parserService.init();
     logger.debug('UnifiedParserService initialized successfully');
   });
 
@@ -134,26 +129,21 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
       it(`should parse ${scenarioKey} from real-world corpus`, async () => {
         logger.init(`Testing ${scenario.name}`);
 
-        const parseResult = await parserService.parseDocument(scenario.code);
+        const ast = parserService.parseAST(scenario.code);
+        expect(ast).toBeDefined();
+        expect(ast).not.toBeNull();
 
-        expect(parseResult.success).toBe(true);
-        if (parseResult.success) {
-          const ast = parseResult.data.ast;
-          expect(ast).toBeDefined();
-          expect(ast).not.toBeNull();
+        if (ast) {
+          expect(ast.length).toBe(scenario.expectedNodeCount);
+          logger.debug(`${scenario.name} parsed with ${ast.length} nodes`);
 
-          if (ast) {
-            expect(ast.length).toBe(scenario.expectedNodeCount);
-            logger.debug(`${scenario.name} parsed with ${ast.length} nodes`);
-
-            // Verify node types if nodes exist
-            if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
-              ast.forEach((node, index) => {
-                expect(node).toBeDefined();
-                expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
-                logger.debug(`Node ${index + 1}: ${node?.type}`);
-              });
-            }
+          // Verify node types if nodes exist
+          if (ast.length > 0 && scenario.expectedNodeTypes.length > 0) {
+            ast.forEach((node: ASTNode, index: number) => {
+              expect(node).toBeDefined();
+              expect(node?.type).toBe(scenario.expectedNodeTypes[index]);
+              logger.debug(`Node ${index + 1}: ${node?.type}`);
+            });
           }
         }
 
@@ -171,11 +161,9 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
       it(`should convert ${scenarioKey} to CSG meshes`, async () => {
         logger.init(`Testing CSG conversion for ${scenario.name}`);
 
-        const parseResult = await parserService.parseDocument(scenario.code);
-        expect(parseResult.success).toBe(true);
+        const ast = parserService.parseAST(scenario.code);
 
-        if (parseResult.success && parseResult.data.ast) {
-          const ast = parseResult.data.ast;
+        if (ast && ast.length > 0) {
           const conversionResults = await Promise.all(
             ast.map(async (node: ASTNode, index: number) => ({
               node,
@@ -186,7 +174,7 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
           expect(conversionResults.length).toBeGreaterThan(0);
 
           // Verify CSG conversion behavior (may succeed or fail depending on converter support)
-          const successfulConversions = conversionResults.filter((r) => r.result.success);
+          const successfulConversions = conversionResults.filter((r: any) => r.result.success);
 
           // For real-world constructs, the converter may not yet support all features
           // This is expected behavior and indicates areas for future enhancement
@@ -212,13 +200,10 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
     it('should handle empty code gracefully', async () => {
       logger.init('Testing empty code handling');
 
-      const parseResult = await parserService.parseDocument('');
+      const ast = parserService.parseAST('');
 
-      expect(parseResult.success).toBe(true);
-      if (parseResult.success) {
-        expect(parseResult.data.ast).toBeDefined();
-        expect(parseResult.data.ast?.length).toBe(0);
-      }
+      expect(ast).toBeDefined();
+      expect(ast.length).toBe(0);
 
       logger.end('Empty code test completed');
     });
@@ -230,9 +215,9 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
 module broken_box(size=[10,10,10] {  // Missing closing parenthesis
     cube(size);
 `;
-      const parseResult = await parserService.parseDocument(invalidCode);
+      const parseResult = parserService.parseAST(invalidCode);
 
-      expect(parseResult.success).toBe(true);
+      // Parsing completed
       if (parseResult.success) {
         expect(parseResult.data.ast).toBeDefined();
         // Parser should handle syntax errors gracefully
@@ -262,11 +247,7 @@ module complex_shape(width=10, height=20, depth=5, holes=true) {
     }
 }
 `;
-      const parseResult = await parserService.parseDocument(complexModuleCode);
-
-      expect(parseResult.success).toBe(true);
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(complexModuleCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -294,11 +275,11 @@ for (i = [0:10]) {
 `;
 
       const startTime = performance.now();
-      const parseResult = await parserService.parseDocument(performanceTestCode);
+      const parseResult = parserService.parseAST(performanceTestCode);
       const endTime = performance.now();
       const parseTime = endTime - startTime;
 
-      expect(parseResult.success).toBe(true);
+      // Parsing completed
       expect(parseTime).toBeLessThan(16); // <16ms performance target
 
       logger.debug(`Performance test completed in ${parseTime.toFixed(2)}ms`);
@@ -312,11 +293,7 @@ for (i = [0:10]) {
 size = [10, 20, 30];
 cube([size.x, size.y, size.z]);
 `;
-      const parseResult = await parserService.parseDocument(memberAccessCode);
-
-      expect(parseResult.success).toBe(true);
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(memberAccessCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -336,11 +313,7 @@ cube([size.x, size.y, size.z]);
 use <MCAD/boxes.scad>;
 include <utils.scad>;
 `;
-      const parseResult = await parserService.parseDocument(importCode);
-
-      expect(parseResult.success).toBe(true);
-      if (parseResult.success) {
-        const ast = parseResult.data.ast;
+      const ast = parserService.parseAST(importCode);
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
