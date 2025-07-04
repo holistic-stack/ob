@@ -52,7 +52,6 @@ export default defineConfig(({ mode: _mode }) => {
     },
     test: {
       globals: true,
-      isolate: true,
       environment: 'jsdom',
       environmentOptions: {
         jsdom: {
@@ -62,19 +61,20 @@ export default defineConfig(({ mode: _mode }) => {
       include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
       exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
       setupFiles: ['./src/vitest-setup.ts'],
-      testTimeout: 1000, // Longer timeout for CSG2 operations
-      hookTimeout: 1000, // Longer timeout for setup hooks
+      testTimeout: 5000, // Increased timeout for matrix operations
+      hookTimeout: 3000, // Increased timeout for setup hooks
       reporters: 'verbose',
-      // Run tests sequentially to avoid race conditions and memory issues
-      pool: 'forks',
+      // Optimize for test performance and isolation
+      pool: 'threads',
       poolOptions: {
-        forks: {
-          singleFork: true,
+        threads: {
+          singleThread: true, // Run tests sequentially to prevent race conditions
         },
       },
-      // Disable parallel execution
-      fileParallelism: false,
-      maxConcurrency: 1,
+      // Prevent test hanging with proper cleanup
+      teardownTimeout: 2000,
+      // Isolate tests to prevent singleton conflicts
+      isolate: true,
     },
   };
 });

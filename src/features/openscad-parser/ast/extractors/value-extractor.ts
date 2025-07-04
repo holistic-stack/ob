@@ -68,8 +68,7 @@ export function getNodeText(node: TSNode, sourceCode?: string): string {
       if (extractedText.length > 0 && extractedText.length <= 1000) {
         return extractedText;
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   // Fallback to node.text

@@ -1,6 +1,10 @@
-import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
-import type { CoreNode, ParentNode, BaseSourceLocation } from '../../../../shared/types/ast.types.js';
+import type {
+  BaseSourceLocation,
+  CoreNode,
+  ParentNode,
+} from '../../../../shared/types/ast.types.js';
 import type { OperationResult } from '../../../../shared/types/operations.types.js';
+import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
 
 /**
  * Mirror node interface extending shared types
@@ -34,6 +38,8 @@ export interface ConverterOperation<TInput extends CoreNode, TOutput> {
  * Batch converter interface for multiple nodes
  */
 export interface BatchConverter<TInput extends CoreNode, TOutput> {
-  readonly convertBatch: (nodes: ReadonlyArray<TInput>) => OperationResult<ReadonlyArray<TOutput>, string>;
+  readonly convertBatch: (
+    nodes: ReadonlyArray<TInput>
+  ) => OperationResult<ReadonlyArray<TOutput>, string>;
   readonly canConvertBatch: (nodes: ReadonlyArray<CoreNode>) => boolean;
 }

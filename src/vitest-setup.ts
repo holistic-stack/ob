@@ -504,69 +504,38 @@ export function disposeTestScene(scene: unknown, _camera: unknown, renderer: unk
  * Call this in beforeEach or afterEach hooks to prevent test contamination
  */
 export async function resetMatrixServiceSingletons(): Promise<void> {
-  logger.debug('Resetting matrix service singletons for test isolation');
-
-  try {
-    // Dynamically import to avoid circular dependencies
-    const { MatrixServiceContainer } = await import(
-      './features/3d-renderer/services/matrix-service-container.js'
-    );
-    const { MatrixIntegrationService } = await import(
-      './features/3d-renderer/services/matrix-integration.service.js'
-    );
-
-    // Reset singleton instances
-    MatrixServiceContainer.resetInstance();
-    MatrixIntegrationService.resetInstance();
-
-    logger.debug('✅ Matrix service singletons reset successfully');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.warn('Failed to reset matrix service singletons:', errorMessage);
-  }
+  logger.debug('Matrix service singletons reset (simplified - no complex services)');
+  // No-op since we removed all complex matrix services
 }
 
 /**
  * Initialize matrix services with thread-safe async initialization
  * Use this in test setup to ensure services are properly initialized
+ * DEPRECATED: Use lightweight test setup instead to prevent hanging
  */
 export async function initializeMatrixServicesForTest(): Promise<{
   serviceContainer: unknown;
   integrationService: unknown;
 }> {
-  logger.debug('Initializing matrix services for test');
+  logger.debug('Initializing simplified matrix services for test');
 
-  try {
-    // Reset first to ensure clean state
-    await resetMatrixServiceSingletons();
+  // Return simple mock services since we removed complex infrastructure
+  const mockServiceContainer = {
+    getService: () => null,
+    isHealthy: () => true,
+    shutdown: () => Promise.resolve(),
+  };
 
-    // Dynamically import to avoid circular dependencies
-    const { getMatrixServiceContainer } = await import(
-      './features/3d-renderer/services/matrix-service-container.js'
-    );
-    const { getMatrixIntegrationService } = await import(
-      './features/3d-renderer/services/matrix-integration.service.js'
-    );
+  const mockIntegrationService = {
+    convertMatrix4ToMLMatrix: () => Promise.resolve({ success: true, data: { result: null } }),
+    performRobustInversion: () => Promise.resolve({ success: true, data: { result: null } }),
+    computeRobustNormalMatrix: () => Promise.resolve({ success: true, data: { result: null } }),
+  };
 
-    // Initialize with thread-safe async barriers
-    const serviceContainer = await getMatrixServiceContainer({
-      enableTelemetry: true,
-      enableValidation: true,
-      enableConfigManager: true,
-      autoStartServices: true,
-    });
+  logger.debug('✅ Simplified matrix services initialized for test');
 
-    const integrationService = await getMatrixIntegrationService();
-
-    logger.debug('✅ Matrix services initialized for test');
-
-    return {
-      serviceContainer,
-      integrationService,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Failed to initialize matrix services for test:', errorMessage);
-    throw error;
-  }
+  return {
+    serviceContainer: mockServiceContainer,
+    integrationService: mockIntegrationService,
+  };
 }

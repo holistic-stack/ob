@@ -7,10 +7,15 @@
 
 import type * as React from 'react';
 import type * as THREE from 'three';
-import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
-import type { AsyncOperationResult, OperationResult, OperationMetrics, OperationError } from '../../../shared/types/operations.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { CoreNode, NodeMetadata } from '../../../shared/types/ast.types.js';
+import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+  OperationMetrics,
+  OperationResult,
+} from '../../../shared/types/operations.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
  * 3D Scene configuration
@@ -148,7 +153,9 @@ export interface SceneState {
  */
 export interface RendererService {
   readonly initialize: (config: Scene3DConfig) => AsyncOperationResult<void, OperationError>;
-  readonly renderAST: (ast: ReadonlyArray<CoreNode>) => AsyncOperationResult<ReadonlyArray<Mesh3D>, OperationError>;
+  readonly renderAST: (
+    ast: ReadonlyArray<CoreNode>
+  ) => AsyncOperationResult<ReadonlyArray<Mesh3D>, OperationError>;
   readonly renderPrimitive: (params: PrimitiveParams) => OperationResult<Mesh3D, OperationError>;
   readonly performCSG: (config: CSGConfig) => AsyncOperationResult<THREE.Mesh, OperationError>;
   readonly updateCamera: (camera: CameraConfig) => OperationResult<void, OperationError>;
@@ -156,7 +163,9 @@ export interface RendererService {
   readonly dispose: () => void;
   readonly getMetrics: () => RenderingMetrics;
   readonly cancelOperation: (operationId: string) => OperationResult<void, OperationError>;
-  readonly getOperationStatus: (operationId: string) => OperationResult<OperationMetrics, OperationError>;
+  readonly getOperationStatus: (
+    operationId: string
+  ) => OperationResult<OperationMetrics, OperationError>;
 }
 
 /**
@@ -194,9 +203,14 @@ export interface PrimitiveRendererFactory {
  * Material factory using shared operation types
  */
 export interface MaterialFactory {
-  readonly createStandard: (config: MaterialConfig) => OperationResult<THREE.Material, OperationError>;
+  readonly createStandard: (
+    config: MaterialConfig
+  ) => OperationResult<THREE.Material, OperationError>;
   readonly createWireframe: (color: string) => OperationResult<THREE.Material, OperationError>;
-  readonly createTransparent: (color: string, opacity: number) => OperationResult<THREE.Material, OperationError>;
+  readonly createTransparent: (
+    color: string,
+    opacity: number
+  ) => OperationResult<THREE.Material, OperationError>;
 }
 
 /**

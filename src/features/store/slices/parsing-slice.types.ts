@@ -5,9 +5,13 @@
  * following functional programming patterns and immutable data structures.
  */
 
-import type { AsyncOperationResult, OperationMetadata, OperationError } from '../../../shared/types/operations.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { CoreNode } from '../../../shared/types/ast.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+  OperationMetadata,
+} from '../../../shared/types/operations.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
  * Parsing state for OpenSCAD AST processing
@@ -40,8 +44,14 @@ export interface ParseOptions {
  * Parsing actions interface using shared operation types
  */
 export interface ParsingActions {
-  parseCode: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
-  parseAST: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+  parseCode: (
+    code: string,
+    options?: ParseOptions
+  ) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+  parseAST: (
+    code: string,
+    options?: ParseOptions
+  ) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
   clearParsingState: () => void;
   debouncedParse: (code: string, options?: ParseOptions) => void;
   addParsingError: (error: OperationError) => void;

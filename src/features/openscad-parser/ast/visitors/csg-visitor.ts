@@ -255,8 +255,7 @@ export class CSGVisitor extends BaseASTVisitor {
       if (node.text) {
       } else {
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     // Extract function name from the accessor_expression
     const functionNode = findDescendantOfType(node, 'identifier');
@@ -324,8 +323,7 @@ export class CSGVisitor extends BaseASTVisitor {
       if (node.text) {
       } else {
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     // Extract function name using the truncation workaround
     const functionName = this.extractFunctionName(node);

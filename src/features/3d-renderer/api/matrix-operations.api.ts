@@ -5,7 +5,7 @@
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import type { Matrix } from 'ml-matrix';
+import { Matrix } from 'ml-matrix';
 import { type Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types';
@@ -144,19 +144,15 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   private matrixIntegration!: MatrixIntegrationService;
   private config: MatrixOperationConfig;
   private metrics: APIPerformanceMetrics;
+  private initializationPromise: Promise<void> | null = null;
+  private isInitialized = false;
+  private matrixCache = new Map<string, Matrix>();
+  private readonly maxCacheSize = 50; // Limit cache size to prevent memory leaks
 
   constructor(config: Partial<MatrixOperationConfig> = {}) {
     logger.init('Initializing matrix operations API');
 
     this.config = { ...DEFAULT_API_CONFIG, ...config };
-    // Use async initialization for thread-safe singleton
-    MatrixIntegrationService.getInstance()
-      .then((service) => {
-        this.matrixIntegration = service;
-      })
-      .catch((error) => {
-        logger.error('Failed to initialize MatrixIntegrationService:', error);
-      });
     this.metrics = {
       totalOperations: 0,
       successfulOperations: 0,
@@ -167,6 +163,84 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       memoryUsage: 0,
       lastOperationTime: 0,
     };
+
+    // Start async initialization but don't block constructor
+    this.initializationPromise = this.initializeAsync();
+  }
+
+  /**
+   * Async initialization method with timeout protection
+   */
+  private async initializeAsync(): Promise<void> {
+    try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Matrix service initialization timeout')), 10000);
+      });
+
+      const initPromise = MatrixIntegrationService.getInstance();
+
+      this.matrixIntegration = await Promise.race([initPromise, timeoutPromise]);
+      this.isInitialized = true;
+      logger.debug('Matrix operations API initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize MatrixIntegrationService:', error);
+      // Don't throw - allow API to work in degraded mode
+    }
+  }
+
+  /**
+   * Ensure initialization is complete before operations
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
+
+    if (!this.isInitialized) {
+      throw new Error('Matrix operations API not properly initialized');
+    }
+  }
+
+  /**
+   * Pre-allocate matrix for performance optimization
+   * Following ml-matrix best practices for memory management
+   */
+  private createOptimizedMatrix(rows: number, cols: number, cacheKey?: string): Matrix {
+    // Check cache first to reuse matrices
+    if (cacheKey && this.matrixCache.has(cacheKey)) {
+      const cached = this.matrixCache.get(cacheKey);
+      if (cached && cached.rows === rows && cached.columns === cols) {
+        // Reset matrix values to zero for reuse
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            cached.set(i, j, 0);
+          }
+        }
+        return cached;
+      }
+    }
+
+    // Pre-allocate matrix for better performance
+    const matrix = new Matrix(rows, cols);
+
+    // Cache for reuse if cache key provided and cache not full
+    if (cacheKey && this.matrixCache.size < this.maxCacheSize) {
+      this.matrixCache.set(cacheKey, matrix);
+    }
+
+    return matrix;
+  }
+
+  /**
+   * Clear matrix cache to prevent memory leaks
+   */
+  private clearMatrixCache(): void {
+    this.matrixCache.clear();
   }
 
   /**
@@ -228,6 +302,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     matrix4: Matrix4,
     config: MatrixOperationConfig = {}
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+    await this.ensureInitialized();
+
     const options: EnhancedMatrixOptions = {
       useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
@@ -247,6 +323,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     matrix: Matrix,
     config: MatrixOperationConfig = {}
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+    await this.ensureInitialized();
+
     const options: EnhancedMatrixOptions = {
       useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
@@ -265,6 +343,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     matrix: Matrix,
     config: MatrixOperationConfig = {}
   ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+    await this.ensureInitialized();
+
     const options: EnhancedMatrixOptions = {
       useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
@@ -340,6 +420,13 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
         }
       } else {
         // For ml-matrix, use validation service directly
+        if (!matrixServiceContainer) {
+          return {
+            success: false,
+            error: 'Matrix service container not available in test environment',
+          } as const;
+        }
+
         const validationService = matrixServiceContainer.getValidationService();
         if (!validationService) {
           return {
@@ -360,6 +447,14 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     _config: MatrixOperationConfig = {}
   ): Promise<Result<unknown, string>> {
     return this.executeWithMetrics(async () => {
+      // Handle test environment where matrixServiceContainer might be null
+      if (!matrixServiceContainer) {
+        return {
+          success: false,
+          error: 'Matrix service container not available in test environment',
+        } as const;
+      }
+
       const validationService = matrixServiceContainer.getValidationService();
 
       if (validationService === null) {
@@ -403,6 +498,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async getHealthStatus(): Promise<APIHealthStatus> {
     try {
+      await this.ensureInitialized();
       const serviceHealth = await this.matrixIntegration.getHealthStatus();
 
       return {
@@ -486,7 +582,17 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     logger.debug('Shutting down matrix operations API');
 
     try {
-      await this.matrixIntegration.shutdown();
+      // Clear matrix cache to prevent memory leaks
+      this.clearMatrixCache();
+
+      if (this.isInitialized && this.matrixIntegration) {
+        await this.matrixIntegration.shutdown();
+      }
+
+      // Reset initialization state
+      this.isInitialized = false;
+      this.initializationPromise = null;
+
       logger.end('Matrix operations API shutdown complete');
     } catch (err) {
       logger.error('Shutdown error:', err);

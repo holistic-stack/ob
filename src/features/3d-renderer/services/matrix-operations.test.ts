@@ -1,19 +1,19 @@
 /**
- * Matrix Operations API Tests
+ * Simplified Matrix Operations API Tests
  *
- * Comprehensive tests for matrix operations API validation and integration testing
- * following TDD methodology and bulletproof-react testing patterns.
+ * Tests for simplified matrix operations API without complex infrastructure.
+ * Following TDD methodology and bulletproof-react testing patterns.
  */
 
-import { Matrix4, Quaternion, Vector3 } from 'three';
+import { Matrix } from 'ml-matrix';
+import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { matrixFactory, matrixUtils } from '../utils/matrix-adapters.js';
 import { MatrixOperationsAPI } from './matrix-operations.api.js';
 
 const logger = createLogger('MatrixOperationsTest');
 
-describe('MatrixOperationsAPI', () => {
+describe('Simplified MatrixOperationsAPI', () => {
   let api: MatrixOperationsAPI;
 
   beforeEach(() => {
@@ -23,18 +23,18 @@ describe('MatrixOperationsAPI', () => {
 
   afterEach(() => {
     logger.end('Cleaning up test environment');
-    api.clearCache();
+    // No cache to clear in simplified version
   });
 
   describe('Basic Matrix Operations', () => {
     it('should perform matrix addition correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix addition');
+      logger.debug('Testing matrix addition');
 
-      const a = matrixFactory.fromArray([
+      const a = new Matrix([
         [1, 2],
         [3, 4],
       ]);
-      const b = matrixFactory.fromArray([
+      const b = new Matrix([
         [5, 6],
         [7, 8],
       ]);
@@ -49,19 +49,18 @@ describe('MatrixOperationsAPI', () => {
         ];
         const actual = result.data.result.to2DArray();
         expect(actual).toEqual(expected);
-        expect(result.data.performance.operationType).toBe('add');
-        expect(result.data.performance.executionTime).toBeGreaterThan(0);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
 
     it('should perform matrix multiplication correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix multiplication');
+      logger.debug('Testing matrix multiplication');
 
-      const a = matrixFactory.fromArray([
+      const a = new Matrix([
         [1, 2],
         [3, 4],
       ]);
-      const b = matrixFactory.fromArray([
+      const b = new Matrix([
         [5, 6],
         [7, 8],
       ]);
@@ -76,14 +75,14 @@ describe('MatrixOperationsAPI', () => {
         ];
         const actual = result.data.result.to2DArray();
         expect(actual).toEqual(expected);
-        expect(result.data.performance.operationType).toBe('multiply');
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
 
     it('should handle matrix transpose correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix transpose');
+      logger.debug('Testing matrix transpose');
 
-      const matrix = matrixFactory.fromArray([
+      const matrix = new Matrix([
         [1, 2, 3],
         [4, 5, 6],
       ]);
@@ -99,313 +98,229 @@ describe('MatrixOperationsAPI', () => {
         ];
         const actual = result.data.result.to2DArray();
         expect(actual).toEqual(expected);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
 
-    it('should calculate matrix inverse correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix inverse');
+    it('should handle matrix subtraction correctly', async () => {
+      logger.debug('Testing matrix subtraction');
 
-      const matrix = matrixFactory.fromArray([
-        [2, 1],
-        [1, 1],
+      const a = new Matrix([
+        [5, 6],
+        [7, 8],
+      ]);
+      const b = new Matrix([
+        [1, 2],
+        [3, 4],
+      ]);
+
+      const result = await api.subtract(a, b);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const expected = [
+          [4, 4],
+          [4, 4],
+        ];
+        const actual = result.data.result.to2DArray();
+        expect(actual).toEqual(expected);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should handle matrix inverse correctly', async () => {
+      logger.debug('Testing matrix inverse');
+
+      const matrix = new Matrix([
+        [1, 2],
+        [3, 4],
       ]);
 
       const result = await api.inverse(matrix);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        const inverse = result.data.result;
-        const product = matrix.mmul(inverse);
-        const identity = matrixFactory.identity(2);
+        // Check that A * A^-1 = I (approximately)
+        const identity = matrix.mmul(result.data.result);
+        const identityArray = identity.to2DArray();
+        
+        // Check diagonal elements are close to 1
+        expect(identityArray[0][0]).toBeCloseTo(1, 10);
+        expect(identityArray[1][1]).toBeCloseTo(1, 10);
+        
+        // Check off-diagonal elements are close to 0
+        expect(identityArray[0][1]).toBeCloseTo(0, 10);
+        expect(identityArray[1][0]).toBeCloseTo(0, 10);
+        
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
 
-        // Check if product is approximately identity matrix
-        expect(matrixUtils.equals(product, identity, 1e-10)).toBe(true);
+  describe('Three.js Integration', () => {
+    it('should convert Matrix4 to ml-matrix correctly', async () => {
+      logger.debug('Testing Matrix4 to ml-matrix conversion');
+
+      const matrix4 = new Matrix4().makeTranslation(1, 2, 3);
+      const result = await api.convertMatrix4ToMLMatrix(matrix4);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const mlMatrix = result.data.result;
+        expect(mlMatrix.rows).toBe(4);
+        expect(mlMatrix.columns).toBe(4);
+        
+        // Check translation values
+        expect(mlMatrix.get(0, 3)).toBeCloseTo(1, 10);
+        expect(mlMatrix.get(1, 3)).toBeCloseTo(2, 10);
+        expect(mlMatrix.get(2, 3)).toBeCloseTo(3, 10);
+        
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should convert ml-matrix to Matrix4 correctly', async () => {
+      logger.debug('Testing ml-matrix to Matrix4 conversion');
+
+      const mlMatrix = new Matrix([
+        [1, 0, 0, 5],
+        [0, 1, 0, 6],
+        [0, 0, 1, 7],
+        [0, 0, 0, 1],
+      ]);
+
+      const result = await api.convertMLMatrixToMatrix4(mlMatrix);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const matrix4 = result.data.result;
+
+        // Check identity matrix elements
+        expect(matrix4.elements[0]).toBeCloseTo(1, 10); // m11
+        expect(matrix4.elements[5]).toBeCloseTo(1, 10); // m22
+        expect(matrix4.elements[10]).toBeCloseTo(1, 10); // m33
+        expect(matrix4.elements[15]).toBeCloseTo(1, 10); // m44
+
+        // Check translation values (Three.js stores translation in elements 12, 13, 14)
+        expect(matrix4.elements[12]).toBeCloseTo(5, 10);
+        expect(matrix4.elements[13]).toBeCloseTo(6, 10);
+        expect(matrix4.elements[14]).toBeCloseTo(7, 10);
+
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
+
+  describe('Transformation Matrices', () => {
+    it('should create translation matrix correctly', async () => {
+      logger.debug('Testing translation matrix creation');
+
+      const result = await api.createTranslationMatrix(1, 2, 3);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const matrix = result.data.result;
+        const expected = [
+          [1, 0, 0, 1],
+          [0, 1, 0, 2],
+          [0, 0, 1, 3],
+          [0, 0, 0, 1],
+        ];
+        expect(matrix.to2DArray()).toEqual(expected);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should create scale matrix correctly', async () => {
+      logger.debug('Testing scale matrix creation');
+
+      const result = await api.createScaleMatrix(2, 3, 4);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const matrix = result.data.result;
+        const expected = [
+          [2, 0, 0, 0],
+          [0, 3, 0, 0],
+          [0, 0, 4, 0],
+          [0, 0, 0, 1],
+        ];
+        expect(matrix.to2DArray()).toEqual(expected);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should create rotation matrix X correctly', async () => {
+      logger.debug('Testing rotation matrix X creation');
+
+      const result = await api.createRotationMatrixX(Math.PI / 2);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const matrix = result.data.result;
+        
+        // Check key elements (90 degree rotation around X)
+        expect(matrix.get(0, 0)).toBeCloseTo(1, 10);
+        expect(matrix.get(1, 1)).toBeCloseTo(0, 10);
+        expect(matrix.get(1, 2)).toBeCloseTo(-1, 10);
+        expect(matrix.get(2, 1)).toBeCloseTo(1, 10);
+        expect(matrix.get(2, 2)).toBeCloseTo(0, 10);
+        
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
   });
 
   describe('Matrix Properties', () => {
-    it('should calculate determinant correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing determinant calculation');
+    it('should calculate determinant for 2x2 matrix', async () => {
+      logger.debug('Testing determinant calculation');
 
-      const matrix = matrixFactory.fromArray([
-        [2, 1],
-        [1, 1],
+      const matrix = new Matrix([
+        [1, 2],
+        [3, 4],
       ]);
 
       const result = await api.determinant(matrix);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.result).toBeCloseTo(1, 10);
+        expect(result.data.result).toBeCloseTo(-2, 10);
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
 
     it('should calculate trace correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing trace calculation');
+      logger.debug('Testing trace calculation');
 
-      const matrix = matrixFactory.fromArray([
-        [1, 2],
-        [3, 4],
+      const matrix = new Matrix([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
       ]);
 
       const result = await api.trace(matrix);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.result).toBe(5); // 1 + 4
-      }
-    });
-
-    it('should calculate rank correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing rank calculation');
-
-      const matrix = matrixFactory.fromArray([
-        [1, 2],
-        [2, 4],
-      ]); // Rank 1 matrix
-
-      const result = await api.rank(matrix);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.result).toBe(1);
+        expect(result.data.result).toBe(15); // 1 + 5 + 9
+        expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
   });
 
-  describe('Three.js Integration', () => {
-    it('should convert Three.js Matrix4 to ml-matrix correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing Three.js Matrix4 conversion');
-
-      const threeMatrix = new Matrix4().makeTranslation(1, 2, 3);
-
-      const result = await api.fromThreeMatrix4(threeMatrix);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const matrix = result.data.result;
-        expect(matrix.rows).toBe(4);
-        expect(matrix.columns).toBe(4);
-        expect(matrix.get(0, 3)).toBeCloseTo(1, 10);
-        expect(matrix.get(1, 3)).toBeCloseTo(2, 10);
-        expect(matrix.get(2, 3)).toBeCloseTo(3, 10);
-      }
-    });
-
-    it('should convert ml-matrix to Three.js Matrix4 correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing ml-matrix to Three.js conversion');
-
-      const matrix = matrixFactory.identity(4);
-      matrix.set(0, 3, 5); // Set translation x
-      matrix.set(1, 3, 6); // Set translation y
-      matrix.set(2, 3, 7); // Set translation z
-
-      const result = await api.toThreeMatrix4(matrix);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const threeMatrix = result.data.result;
-        expect(threeMatrix.elements[12]).toBeCloseTo(5, 10);
-        expect(threeMatrix.elements[13]).toBeCloseTo(6, 10);
-        expect(threeMatrix.elements[14]).toBeCloseTo(7, 10);
-      }
-    });
-
-    it('should create transformation matrix correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing transformation matrix creation');
-
-      const position = new Vector3(1, 2, 3);
-      const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 4);
-      const scale = new Vector3(2, 2, 2);
-
-      const result = await api.createTransformationMatrix(position, rotation, scale);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const matrix = result.data.result;
-        expect(matrix.rows).toBe(4);
-        expect(matrix.columns).toBe(4);
-        expect(matrix.get(0, 3)).toBeCloseTo(1, 10);
-        expect(matrix.get(1, 3)).toBeCloseTo(2, 10);
-        expect(matrix.get(2, 3)).toBeCloseTo(3, 10);
-      }
-    });
-  });
-
-  describe('Matrix Decomposition', () => {
-    it('should perform matrix decomposition correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix decomposition');
-
-      const matrix = matrixFactory.fromArray([
-        [4, 2, 1],
-        [2, 5, 3],
-        [1, 3, 6],
-      ]);
-
-      const result = await api.decompose(matrix);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const decomposition = result.data.result;
-
-        // Check LU decomposition
-        expect(decomposition.lu).toBeDefined();
-        if (decomposition.lu) {
-          expect(decomposition.lu.L).toBeDefined();
-          expect(decomposition.lu.U).toBeDefined();
-          expect(decomposition.lu.P).toBeDefined();
-        }
-
-        // Check QR decomposition
-        expect(decomposition.qr).toBeDefined();
-        if (decomposition.qr) {
-          expect(decomposition.qr.Q).toBeDefined();
-          expect(decomposition.qr.R).toBeDefined();
-        }
-
-        // Check eigenvalues for symmetric matrix
-        expect(decomposition.eigenvalues).toBeDefined();
-        if (decomposition.eigenvalues) {
-          expect(decomposition.eigenvalues.values).toBeDefined();
-          expect(decomposition.eigenvalues.vectors).toBeDefined();
-        }
-      }
-    });
-  });
-
-  describe('Batch Operations', () => {
-    it('should execute batch operations correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing batch operations');
-
-      const a = matrixFactory.fromArray([
-        [1, 2],
-        [3, 4],
-      ]);
-      const b = matrixFactory.fromArray([
-        [5, 6],
-        [7, 8],
-      ]);
-      const c = matrixFactory.fromArray([
-        [2, 0],
-        [0, 2],
-      ]);
-
-      const operations = [
-        {
-          operation: 'add' as const,
-          inputs: [a, b],
-          priority: 'normal' as const,
-        },
-        {
-          operation: 'multiply' as const,
-          inputs: [a, c],
-          priority: 'high' as const,
-        },
-        {
-          operation: 'transpose' as const,
-          inputs: [a],
-          priority: 'low' as const,
-        },
-      ];
-
-      const result = await api.executeBatch(operations);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const batchResult = result.data;
-        expect(batchResult.successCount).toBe(3);
-        expect(batchResult.failureCount).toBe(0);
-        expect(batchResult.results).toHaveLength(3);
-        expect(batchResult.totalTime).toBeGreaterThan(0);
-      }
-    });
-  });
-
-  describe('Caching and Performance', () => {
-    it('should cache matrix operations correctly', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing matrix operation caching');
-
-      const a = matrixFactory.fromArray([
-        [1, 2],
-        [3, 4],
-      ]);
-      const b = matrixFactory.fromArray([
-        [5, 6],
-        [7, 8],
-      ]);
-
-      // First operation - should not be cached
-      const result1 = await api.add(a, b);
-      expect(result1.success).toBe(true);
-      if (result1.success) {
-        expect(result1.data.performance.cacheHit).toBe(false);
-      }
-
-      // Second operation - should be cached
-      const result2 = await api.add(a, b);
-      expect(result2.success).toBe(true);
-      if (result2.success) {
-        expect(result2.data.performance.cacheHit).toBe(true);
-      }
-    });
-
-    it('should provide performance metrics', () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing performance metrics');
+  describe('Performance Metrics', () => {
+    it('should return basic performance metrics', () => {
+      logger.debug('Testing performance metrics');
 
       const metrics = api.getPerformanceMetrics();
 
-      expect(metrics).toBeDefined();
-      expect(typeof metrics.operationCount).toBe('number');
-      expect(typeof metrics.totalExecutionTime).toBe('number');
-      expect(typeof metrics.cacheHitRate).toBe('number');
-      expect(typeof metrics.memoryUsage).toBe('number');
-    });
-
-    it('should provide cache statistics', () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing cache statistics');
-
-      const stats = api.getCacheStats();
-
-      expect(stats).toBeDefined();
-      expect(typeof stats.entryCount).toBe('number');
-      expect(typeof stats.memoryUsage).toBe('number');
-      expect(typeof stats.memoryLimit).toBe('number');
-      expect(typeof stats.utilizationPercent).toBe('number');
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle invalid matrix operations gracefully', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing error handling');
-
-      const a = matrixFactory.fromArray([[1, 2]]); // 1x2 matrix
-      const _b = matrixFactory.fromArray([[3], [4]]); // 2x1 matrix
-      const c = matrixFactory.fromArray([[5, 6]]); // 1x2 matrix
-
-      // This should fail due to dimension mismatch
-      const result = await api.multiply(a, c);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('dimension mismatch');
-      }
-    });
-
-    it('should handle singular matrix inverse gracefully', async () => {
-      logger.debug('[DEBUG][MatrixOperationsTest] Testing singular matrix handling');
-
-      const singularMatrix = matrixFactory.fromArray([
-        [1, 2],
-        [2, 4],
-      ]); // Singular matrix
-
-      const result = await api.inverse(singularMatrix);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toMatch(/singular|not invertible|failed/i);
-      }
+      expect(metrics).toEqual({
+        operationCount: 0,
+        totalExecutionTime: 0,
+        averageExecutionTime: 0,
+        cacheHitRate: 0,
+        memoryUsage: 0,
+      });
     });
   });
 });

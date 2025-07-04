@@ -292,8 +292,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       if (node.text) {
       } else {
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     // Based on CST structure analysis:
     // accessor_expression has two children:

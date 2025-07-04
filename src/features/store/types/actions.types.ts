@@ -6,6 +6,7 @@
  */
 
 import type * as THREE from 'three';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AppConfig,
   CameraConfig,
@@ -15,7 +16,6 @@ import type {
 } from '../../../shared/types/common.types';
 import type { AsyncOperationResult, OperationError, OperationMetadata } from '../../../shared/types/operations.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import type { CoreNode } from '../../../shared/types/ast.types.js';
 
 /**
  * Editor action payload types

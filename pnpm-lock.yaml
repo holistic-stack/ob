@@ -17,6 +17,9 @@ importers:
       '@react-three/fiber':
         specifier: ^9.1.2
         version: 9.1.2(@types/react@19.0.0)(immer@10.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0)
+      '@types/gl-matrix':
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/three':
         specifier: ^0.177.0
         version: 0.177.0
@@ -26,6 +29,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      gl-matrix:
+        specifier: ^3.4.3
+        version: 3.4.3
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -1170,6 +1176,10 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/gl-matrix@3.2.0':
+    resolution: {integrity: sha512-CY4JAtSOGQX7rVgqVuOk7ZfaLv8VeadDMPj3smMOy8Hp/YiHONa3Mr0mEUgbo0eEwV7+Owpf6BwspcA7hv4NXg==}
+    deprecated: This is a stub types definition. gl-matrix provides its own type definitions, so you do not need this installed.
+
   '@types/mdx@2.0.13':
     resolution: {integrity: sha512-+OWZQfAYyio6YkJb3HLxDrvnx6SWWDbC0zVPfBRzUk0/nqoDyf6dNxQi3eArPe8rJ473nobTMQ/8Zk+LxJ+Yuw==}
 
@@ -1744,6 +1754,9 @@ packages:
   get-stream@8.0.1:
     resolution: {integrity: sha512-VaUJspBffn/LMCJVoMvSAdmscJyS1auj5Zulnn5UoYcY531UWmdwhRWkcGKnGU93m5HSXP9LP2usOryrBtQowA==}
     engines: {node: '>=16'}
+
+  gl-matrix@3.4.3:
+    resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
@@ -3863,6 +3876,10 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/gl-matrix@3.2.0':
+    dependencies:
+      gl-matrix: 3.4.3
+
   '@types/mdx@2.0.13': {}
 
   '@types/node@24.0.1':
@@ -4515,6 +4532,8 @@ snapshots:
       es-object-atoms: 1.1.1
 
   get-stream@8.0.1: {}
+
+  gl-matrix@3.4.3: {}
 
   glob@10.4.5:
     dependencies:
