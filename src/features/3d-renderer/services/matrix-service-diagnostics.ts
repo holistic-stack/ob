@@ -1,7 +1,7 @@
 /**
  * Matrix Service Diagnostics
  *
- * Comprehensive diagnostic instrumentation using Node.js perf_hooks for 
+ * Comprehensive diagnostic instrumentation using Node.js perf_hooks for
  * performance profiling and latency analysis of MatrixService operations.
  */
 
@@ -111,11 +111,11 @@ export class MatrixServiceDiagnostics {
 
     this.isEnabled = true;
     this.reportStartTime = Date.now();
-    
+
     // Observe performance marks and measures
-    this.perfObserver.observe({ 
+    this.perfObserver.observe({
       entryTypes: ['mark', 'measure'],
-      buffered: true 
+      buffered: true,
     });
 
     logger.info('Performance diagnostics enabled');
@@ -129,7 +129,7 @@ export class MatrixServiceDiagnostics {
 
     this.isEnabled = false;
     this.perfObserver.disconnect();
-    
+
     logger.info('Performance diagnostics disabled');
   }
 
@@ -146,7 +146,7 @@ export class MatrixServiceDiagnostics {
       endTime: entry.startTime + entry.duration,
       duration: entry.duration,
       timestamp: Date.now(),
-      metadata: entry.detail || {}
+      metadata: entry.detail || {},
     };
 
     this.addMeasurement(measurement);
@@ -155,8 +155,14 @@ export class MatrixServiceDiagnostics {
   /**
    * Categorize operation by name
    */
-  private categorizeOperation(name: string): 'bootstrap' | 'validation' | 'telemetry' | 'operation' {
-    if (name.includes('bootstrap') || name.includes('initialization') || name.includes('container')) {
+  private categorizeOperation(
+    name: string
+  ): 'bootstrap' | 'validation' | 'telemetry' | 'operation' {
+    if (
+      name.includes('bootstrap') ||
+      name.includes('initialization') ||
+      name.includes('container')
+    ) {
       return 'bootstrap';
     }
     if (name.includes('validation') || name.includes('validate')) {
@@ -173,14 +179,17 @@ export class MatrixServiceDiagnostics {
    */
   private addMeasurement(measurement: PerformanceMeasurement): void {
     this.measurements.push(measurement);
-    
+
     if (this.measurements.length > this.maxMeasurements) {
       this.measurements.shift();
     }
 
     // Log critical latencies immediately
-    if (measurement.duration > 100) { // >100ms
-      logger.warn(`High latency detected: ${measurement.name} took ${measurement.duration.toFixed(2)}ms`);
+    if (measurement.duration > 100) {
+      // >100ms
+      logger.warn(
+        `High latency detected: ${measurement.name} took ${measurement.duration.toFixed(2)}ms`
+      );
     }
   }
 
@@ -189,10 +198,10 @@ export class MatrixServiceDiagnostics {
    */
   startTiming(operationName: string, metadata?: Record<string, unknown>): void {
     if (!this.isEnabled) return;
-    
+
     const markName = `${operationName}_start`;
     performance.mark(markName, { detail: metadata });
-    
+
     logger.debug(`Started timing: ${operationName}`);
   }
 
@@ -201,28 +210,28 @@ export class MatrixServiceDiagnostics {
    */
   endTiming(operationName: string, metadata?: Record<string, unknown>): number {
     if (!this.isEnabled) return 0;
-    
+
     const startMark = `${operationName}_start`;
     const endMark = `${operationName}_end`;
     const measureName = operationName;
-    
+
     performance.mark(endMark, { detail: metadata });
-    
+
     try {
       performance.measure(measureName, startMark, endMark);
-      
+
       // Get the measurement duration
       const measures = performance.getEntriesByName(measureName, 'measure');
       const latestMeasure = measures[measures.length - 1];
       const duration = latestMeasure ? latestMeasure.duration : 0;
-      
+
       logger.debug(`Ended timing: ${operationName} - ${duration.toFixed(2)}ms`);
-      
+
       // Cleanup marks
       performance.clearMarks(startMark);
       performance.clearMarks(endMark);
       performance.clearMeasures(measureName);
-      
+
       return duration;
     } catch (err) {
       logger.error(`Failed to measure ${operationName}:`, err);
@@ -234,30 +243,30 @@ export class MatrixServiceDiagnostics {
    * Time an async operation
    */
   async timeOperation<T>(
-    operationName: string, 
+    operationName: string,
     operation: () => Promise<T>,
     metadata?: Record<string, unknown>
   ): Promise<{ result: T; duration: number }> {
     this.startTiming(operationName, metadata);
-    
+
     const startTime = performance.now();
     try {
       const result = await operation();
-      const duration = this.endTiming(operationName, { 
-        ...metadata, 
-        success: true 
+      const duration = this.endTiming(operationName, {
+        ...metadata,
+        success: true,
       });
-      
-      return { result, duration: duration || (performance.now() - startTime) };
+
+      return { result, duration: duration || performance.now() - startTime };
     } catch (error) {
-      const duration = this.endTiming(operationName, { 
-        ...metadata, 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error)
+      const duration = this.endTiming(operationName, {
+        ...metadata,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
       });
-      
+
       // Record failure
-      this.recordFailure(operationName, error as Error, duration || (performance.now() - startTime));
+      this.recordFailure(operationName, error as Error, duration || performance.now() - startTime);
       throw error;
     }
   }
@@ -271,25 +280,25 @@ export class MatrixServiceDiagnostics {
     metadata?: Record<string, unknown>
   ): { result: T; duration: number } {
     this.startTiming(operationName, metadata);
-    
+
     const startTime = performance.now();
     try {
       const result = operation();
-      const duration = this.endTiming(operationName, { 
-        ...metadata, 
-        success: true 
+      const duration = this.endTiming(operationName, {
+        ...metadata,
+        success: true,
       });
-      
-      return { result, duration: duration || (performance.now() - startTime) };
+
+      return { result, duration: duration || performance.now() - startTime };
     } catch (error) {
-      const duration = this.endTiming(operationName, { 
-        ...metadata, 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error)
+      const duration = this.endTiming(operationName, {
+        ...metadata,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
       });
-      
+
       // Record failure
-      this.recordFailure(operationName, error as Error, duration || (performance.now() - startTime));
+      this.recordFailure(operationName, error as Error, duration || performance.now() - startTime);
       throw error;
     }
   }
@@ -308,8 +317,8 @@ export class MatrixServiceDiagnostics {
       metadata: {
         error: error.message,
         errorType: error.constructor.name,
-        stack: error.stack?.split('\n').slice(0, 3).join('\n') // Truncated stack
-      }
+        stack: error.stack?.split('\n').slice(0, 3).join('\n'), // Truncated stack
+      },
     };
 
     this.addMeasurement(failureMeasurement);
@@ -319,8 +328,8 @@ export class MatrixServiceDiagnostics {
    * Calculate latency histogram
    */
   private calculateLatencyHistogram(operationName: string): LatencyHistogram {
-    const measurements = this.measurements.filter(m => 
-      m.name === operationName && !m.name.includes('_failure')
+    const measurements = this.measurements.filter(
+      (m) => m.name === operationName && !m.name.includes('_failure')
     );
 
     if (measurements.length === 0) {
@@ -335,11 +344,11 @@ export class MatrixServiceDiagnostics {
         p95: 0,
         p99: 0,
         mean: 0,
-        stdDev: 0
+        stdDev: 0,
       };
     }
 
-    const durations = measurements.map(m => m.duration).sort((a, b) => a - b);
+    const durations = measurements.map((m) => m.duration).sort((a, b) => a - b);
     const buckets = new Map<number, number>();
 
     // Fill buckets
@@ -361,9 +370,10 @@ export class MatrixServiceDiagnostics {
     const p90 = durations[Math.floor(durations.length * 0.9)] || 0;
     const p95 = durations[Math.floor(durations.length * 0.95)] || 0;
     const p99 = durations[Math.floor(durations.length * 0.99)] || 0;
-    
+
     const mean = durations.reduce((a, b) => a + b, 0) / durations.length;
-    const variance = durations.reduce((sum, duration) => sum + Math.pow(duration - mean, 2), 0) / durations.length;
+    const variance =
+      durations.reduce((sum, duration) => sum + (duration - mean) ** 2, 0) / durations.length;
     const stdDev = Math.sqrt(variance);
 
     return {
@@ -377,7 +387,7 @@ export class MatrixServiceDiagnostics {
       p95,
       p99,
       mean,
-      stdDev
+      stdDev,
     };
   }
 
@@ -385,14 +395,14 @@ export class MatrixServiceDiagnostics {
    * Calculate failure histogram
    */
   private calculateFailureHistogram(operationName: string): FailureHistogram {
-    const allMeasurements = this.measurements.filter(m => 
-      m.name === operationName || m.name === `${operationName}_failure`
+    const allMeasurements = this.measurements.filter(
+      (m) => m.name === operationName || m.name === `${operationName}_failure`
     );
-    
-    const failures = this.measurements.filter(m => m.name === `${operationName}_failure`);
+
+    const failures = this.measurements.filter((m) => m.name === `${operationName}_failure`);
     const totalAttempts = allMeasurements.length;
     const totalFailures = failures.length;
-    
+
     const failuresByType = new Map<string, number>();
     const failuresByLatency = new Map<number, number>();
 
@@ -421,7 +431,7 @@ export class MatrixServiceDiagnostics {
       totalFailures,
       failureRate: totalAttempts > 0 ? totalFailures / totalAttempts : 0,
       failuresByType,
-      failuresByLatency
+      failuresByLatency,
     };
   }
 
@@ -436,7 +446,7 @@ export class MatrixServiceDiagnostics {
 
     for (const [operation, latencyHist] of latencyHistograms.entries()) {
       const failureHist = failureHistograms.get(operation);
-      
+
       if (latencyHist.totalSamples === 0) continue;
 
       const averageLatency = latencyHist.mean;
@@ -447,20 +457,25 @@ export class MatrixServiceDiagnostics {
       const recommendations: string[] = [];
 
       // Determine severity based on latency and failure rate
-      if (p99Latency > 100 || failureRate > 0.1) { // >100ms P99 or >10% failure rate
+      if (p99Latency > 100 || failureRate > 0.1) {
+        // >100ms P99 or >10% failure rate
         severity = 'critical';
         recommendations.push('Immediate investigation required - high latency or failure rate');
-      } else if (p99Latency > 50 || failureRate > 0.05) { // >50ms P99 or >5% failure rate
+      } else if (p99Latency > 50 || failureRate > 0.05) {
+        // >50ms P99 or >5% failure rate
         severity = 'high';
         recommendations.push('Performance optimization recommended');
-      } else if (p99Latency > 25 || failureRate > 0.01) { // >25ms P99 or >1% failure rate
+      } else if (p99Latency > 25 || failureRate > 0.01) {
+        // >25ms P99 or >1% failure rate
         severity = 'medium';
         recommendations.push('Monitor closely for performance degradation');
       }
 
       // Add specific recommendations based on operation type
       if (operation.includes('validation') && p99Latency > 88) {
-        recommendations.push('Validation latency exceeds 88ms threshold - review validation algorithms');
+        recommendations.push(
+          'Validation latency exceeds 88ms threshold - review validation algorithms'
+        );
         recommendations.push('Consider caching validation results for repeated operations');
       }
 
@@ -479,7 +494,7 @@ export class MatrixServiceDiagnostics {
         p99Latency,
         failureRate,
         severity,
-        recommendations
+        recommendations,
       });
     }
 
@@ -497,14 +512,18 @@ export class MatrixServiceDiagnostics {
    */
   generateReport(): DiagnosticReport {
     const reportEndTime = Date.now();
-    const relevantMeasurements = this.measurements.filter(m => 
-      m.timestamp >= this.reportStartTime && m.timestamp <= reportEndTime
+    const relevantMeasurements = this.measurements.filter(
+      (m) => m.timestamp >= this.reportStartTime && m.timestamp <= reportEndTime
     );
 
     // Get unique operation names
-    const operationNames = [...new Set(relevantMeasurements.map(m => 
-      m.name.replace('_failure', '').replace('_start', '').replace('_end', '')
-    ))];
+    const operationNames = [
+      ...new Set(
+        relevantMeasurements.map((m) =>
+          m.name.replace('_failure', '').replace('_start', '').replace('_end', '')
+        )
+      ),
+    ];
 
     // Calculate histograms
     const latencyHistograms = new Map<string, LatencyHistogram>();
@@ -519,21 +538,23 @@ export class MatrixServiceDiagnostics {
     const hotspots = this.identifyHotspots(latencyHistograms, failureHistograms);
 
     // Calculate summary statistics
-    const totalOperations = relevantMeasurements.filter(m => !m.name.includes('_failure')).length;
-    const totalFailures = relevantMeasurements.filter(m => m.name.includes('_failure')).length;
+    const totalOperations = relevantMeasurements.filter((m) => !m.name.includes('_failure')).length;
+    const totalFailures = relevantMeasurements.filter((m) => m.name.includes('_failure')).length;
     const overallFailureRate = totalOperations > 0 ? totalFailures / totalOperations : 0;
-    
+
     const allLatencies = relevantMeasurements
-      .filter(m => !m.name.includes('_failure'))
-      .map(m => m.duration);
-    const averageLatency = allLatencies.length > 0 
-      ? allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length 
-      : 0;
+      .filter((m) => !m.name.includes('_failure'))
+      .map((m) => m.duration);
+    const averageLatency =
+      allLatencies.length > 0 ? allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length : 0;
 
     // Get specific metrics
-    const validationHist = latencyHistograms.get('validation') || latencyHistograms.get('validateMatrix');
-    const telemetryHist = latencyHistograms.get('telemetry') || latencyHistograms.get('trackOperation');
-    const bootstrapHist = latencyHistograms.get('bootstrap') || latencyHistograms.get('initialization');
+    const validationHist =
+      latencyHistograms.get('validation') || latencyHistograms.get('validateMatrix');
+    const telemetryHist =
+      latencyHistograms.get('telemetry') || latencyHistograms.get('trackOperation');
+    const bootstrapHist =
+      latencyHistograms.get('bootstrap') || latencyHistograms.get('initialization');
 
     const report: DiagnosticReport = {
       timestamp: reportEndTime,
@@ -546,18 +567,18 @@ export class MatrixServiceDiagnostics {
         totalOperations,
         averageLatency,
         overallFailureRate,
-        criticalHotspots: hotspots.filter(h => h.severity === 'critical').length,
+        criticalHotspots: hotspots.filter((h) => h.severity === 'critical').length,
         validationLatencyP99: validationHist?.p99 || 0,
         telemetryLatencyP99: telemetryHist?.p99 || 0,
-        bootstrapLatency: bootstrapHist?.mean || 0
-      }
+        bootstrapLatency: bootstrapHist?.mean || 0,
+      },
     };
 
     logger.info('Diagnostic report generated', {
       measurements: relevantMeasurements.length,
       operations: operationNames.length,
       hotspots: hotspots.length,
-      criticalHotspots: report.summary.criticalHotspots
+      criticalHotspots: report.summary.criticalHotspots,
     });
 
     return report;
@@ -571,7 +592,7 @@ export class MatrixServiceDiagnostics {
     this.reportStartTime = Date.now();
     performance.clearMarks();
     performance.clearMeasures();
-    
+
     logger.info('Diagnostic data reset');
   }
 
@@ -586,11 +607,15 @@ export class MatrixServiceDiagnostics {
    * Export measurements as JSON for external analysis
    */
   exportMeasurements(): string {
-    return JSON.stringify({
-      timestamp: Date.now(),
-      measurements: this.measurements,
-      buckets: this.latencyBuckets
-    }, null, 2);
+    return JSON.stringify(
+      {
+        timestamp: Date.now(),
+        measurements: this.measurements,
+        buckets: this.latencyBuckets,
+      },
+      null,
+      2
+    );
   }
 }
 

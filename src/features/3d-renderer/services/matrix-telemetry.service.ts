@@ -150,9 +150,9 @@ export class MatrixTelemetryService {
       operation,
       duration,
       success,
-      historySize: this.operationHistory.length
+      historySize: this.operationHistory.length,
     });
-    
+
     const entry: OperationEntry = {
       operation,
       duration,
@@ -190,11 +190,11 @@ export class MatrixTelemetryService {
 
     // Generate periodic reports
     this.checkReportingInterval();
-    
+
     // End counter mutation timing
     matrixServiceDiagnostics.endTiming(counterMutationOperation, {
       newHistorySize: this.operationHistory.length,
-      success: true
+      success: true,
     });
   }
 
