@@ -6,8 +6,6 @@
  * @returns The vector or null if the string is not a vector
  */
 export function extractVectorFromString(text: string): number[] | null {
-  console.log(`[extractVectorFromString] Extracting vector from string: ${text}`);
-
   // Check if the string is a vector
   if (text.startsWith('[') && text.endsWith(']')) {
     try {
@@ -17,11 +15,9 @@ export function extractVectorFromString(text: string): number[] | null {
 
       // Check if all values are numbers
       if (vectorValues.every((v) => !Number.isNaN(v))) {
-        console.log(`[extractVectorFromString] Extracted vector: ${JSON.stringify(vectorValues)}`);
         return vectorValues;
       }
     } catch (_e) {
-      console.log(`[extractVectorFromString] Failed to parse vector string: ${text}`);
     }
   }
 

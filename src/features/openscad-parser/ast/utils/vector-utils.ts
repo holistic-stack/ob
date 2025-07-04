@@ -172,14 +172,6 @@ function extractVectorFromArrayLiteral(
   sourceCode: string = ''
 ): ast.Vector2D | ast.Vector3D | undefined {
   const numbers: number[] = [];
-
-  console.log(
-    `[extractVectorFromArrayLiteral] Processing array_literal node: ${node.text.substring(
-      0,
-      30
-    )}, named children count: ${node.namedChildCount}`
-  );
-
   // Process only named children to skip syntax tokens like '[', ']', ','
   for (let i = 0; i < node.namedChildCount; i++) {
     const elementNode = node.namedChild(i);
@@ -276,13 +268,10 @@ function extractVectorFromArrayLiteral(
  * @internal
  */
 function extractVectorFromText(text: string): ast.Vector2D | ast.Vector3D | undefined {
-  console.log(`[extractVectorFromText] Trying to extract vector from text: ${text}`);
-
   // Try to extract 3D vector
   const matches = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
   if (matches && matches.length === 4 && matches[1] && matches[2] && matches[3]) {
     const vector = [parseFloat(matches[1]), parseFloat(matches[2]), parseFloat(matches[3])];
-    console.log(`[extractVectorFromText] Extracted 3D vector from text: ${JSON.stringify(vector)}`);
     return vector as ast.Vector3D;
   }
 
@@ -290,7 +279,6 @@ function extractVectorFromText(text: string): ast.Vector2D | ast.Vector3D | unde
   const matches2D = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/);
   if (matches2D && matches2D.length === 3 && matches2D[1] && matches2D[2]) {
     const vector = [parseFloat(matches2D[1]), parseFloat(matches2D[2])];
-    console.log(`[extractVectorFromText] Extracted 2D vector from text: ${JSON.stringify(vector)}`);
     return vector as ast.Vector2D;
   }
 
@@ -353,31 +341,11 @@ function createVectorFromNumbers(
   const validNumbers = numbers.filter((n) => n !== null && n !== undefined && !Number.isNaN(n));
 
   if (validNumbers.length === 2) {
-    console.log(
-      `[createVectorFromNumbers] Returning 2D vector: ${JSON.stringify([
-        validNumbers[0],
-        validNumbers[1],
-      ])}`
-    );
     return [validNumbers[0], validNumbers[1]] as ast.Vector2D;
   } else if (validNumbers.length === 3) {
-    console.log(
-      `[createVectorFromNumbers] Returning 3D vector: ${JSON.stringify([
-        validNumbers[0],
-        validNumbers[1],
-        validNumbers[2],
-      ])}`
-    );
     return [validNumbers[0], validNumbers[1], validNumbers[2]] as ast.Vector3D;
   } else if (validNumbers.length === 1) {
     // Single value - create uniform vector
-    console.log(
-      `[createVectorFromNumbers] Returning uniform 3D vector: ${JSON.stringify([
-        validNumbers[0],
-        validNumbers[0],
-        validNumbers[0],
-      ])}`
-    );
     return [validNumbers[0], validNumbers[0], validNumbers[0]] as ast.Vector3D;
   }
 

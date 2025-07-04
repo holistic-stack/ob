@@ -90,7 +90,6 @@ export class ExpressionEvaluationContext {
    */
   popScope(): VariableScope | undefined {
     if (this.variableScopes.length <= 1) {
-      this.errorHandler.logWarning('Cannot pop global scope');
       return undefined;
     }
     return this.variableScopes.pop();
@@ -116,7 +115,6 @@ export class ExpressionEvaluationContext {
     }
 
     if (!this.options.allowUndefinedVariables) {
-      this.errorHandler.logWarning(`Undefined variable: ${name}`);
     }
 
     return undefined;

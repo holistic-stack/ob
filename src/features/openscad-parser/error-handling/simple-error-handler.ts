@@ -167,7 +167,6 @@ export class SimpleErrorHandler implements IErrorHandler {
    */
   logInfo(message: string): void {
     this.infos.push(message);
-    console.info(`[INFO] ${message}`);
   }
 
   /**
@@ -187,7 +186,6 @@ export class SimpleErrorHandler implements IErrorHandler {
    */
   logWarning(message: string): void {
     this.warnings.push(message);
-    console.warn(`[WARNING] ${message}`);
   }
 
   /**

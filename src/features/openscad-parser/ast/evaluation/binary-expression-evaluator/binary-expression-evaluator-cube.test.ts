@@ -60,7 +60,6 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
       (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
       node.text.includes('cube')
     ) {
-      console.log(`Found potential cube node: ${node.type}`);
       return node;
     }
     for (let i = 0; i < node.childCount; i++) {
@@ -82,7 +81,6 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
       node.type === 'additive_expression' ||
       node.type === 'multiplicative_expression'
     ) {
-      console.log(`Found binary expression node: ${node.type}`);
       return node;
     }
     for (let i = 0; i < node.childCount; i++) {
@@ -102,8 +100,6 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     const tree = parser.parse(code);
     console.log('Tree parsed successfully:', !!tree);
     expect(tree).toBeDefined();
-
-    console.log('Full tree structure:');
     printNodeRecursive(tree.rootNode);
 
     const cubeNode = findCubeNode(tree.rootNode);

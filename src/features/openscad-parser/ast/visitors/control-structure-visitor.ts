@@ -170,13 +170,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The if AST node or null if the node cannot be processed
    */
   override visitIfStatement(node: TSNode): ast.IfNode | null {
-    console.log(
-      `[ControlStructureVisitor.visitIfStatement] Processing if statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Delegate to the specialized IfElseVisitor
     return this.ifElseVisitor.visitIfStatement(node);
   }
@@ -187,13 +180,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The for loop AST node, error node, or null if the node cannot be processed
    */
   override visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
-    console.log(
-      `[ControlStructureVisitor.visitForStatement] Processing for statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Delegate to the specialized ForLoopVisitor
     return this.forLoopVisitor.visitForStatement(node);
   }
@@ -204,17 +190,9 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The let AST node or null if the node cannot be processed
    */
   override visitLetExpression(node: TSNode): ast.LetNode | null {
-    console.log(
-      `[ControlStructureVisitor.visitLetExpression] Processing let expression: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Extract assignments
     const argumentsNode = node.childForFieldName('arguments');
     if (!argumentsNode) {
-      console.log(`[ControlStructureVisitor.visitLetExpression] No arguments found`);
       return null;
     }
 
@@ -234,7 +212,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     // Extract body
     const bodyNode = node.childForFieldName('body');
     if (!bodyNode) {
-      console.log(`[ControlStructureVisitor.visitLetExpression] No body found`);
       return null;
     }
 
@@ -254,17 +231,9 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The each AST node or null if the node cannot be processed
    */
   visitEachStatement(node: TSNode): ast.EachNode | null {
-    console.log(
-      `[ControlStructureVisitor.visitEachStatement] Processing each statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Extract expression
     const expressionNode = node.childForFieldName('expression');
     if (!expressionNode) {
-      console.log(`[ControlStructureVisitor.visitEachStatement] No expression found`);
       return null;
     }
 
@@ -296,10 +265,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(
-      `[ControlStructureVisitor.createASTNodeForFunction] Processing function: ${functionName}`
-    );
-
     // Handle control structure functions
     switch (functionName.trim()) {
       case 'if':
@@ -311,9 +276,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
       case 'each':
         return this.createEachNode(node, args);
       default:
-        console.log(
-          `[ControlStructureVisitor.createASTNodeForFunction] Unsupported function: ${functionName}`
-        );
         return null;
     }
   }
@@ -325,10 +287,6 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The let AST node or null if the arguments are invalid
    */
   private createLetNode(node: TSNode, args: ast.Parameter[]): ast.LetNode | null {
-    console.log(
-      `[ControlStructureVisitor.createLetNode] Creating let node with ${args.length} arguments`
-    );
-
     // Extract assignments from the arguments
     const assignments: { [key: string]: ast.ParameterValue } = {};
 
@@ -354,22 +312,14 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @returns The each AST node or null if the arguments are invalid
    */
   private createEachNode(node: TSNode, args: ast.Parameter[]): ast.EachNode | null {
-    console.log(
-      `[ControlStructureVisitor.createEachNode] Creating each node with ${args.length} arguments`
-    );
-
     // Each should have exactly one argument (the expression)
     if (args.length !== 1) {
-      console.log(
-        `[ControlStructureVisitor.createEachNode] Invalid number of arguments: ${args.length}`
-      );
       return null;
     }
 
     // Create a simple expression node
     const firstArg = args[0];
     if (!firstArg) {
-      console.log(`[ControlStructureVisitor.createEachNode] First argument is undefined`);
       return null;
     }
 

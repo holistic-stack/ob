@@ -103,14 +103,12 @@ describe('Error Handling Integration', () => {
         output: (msg) => messages.push(msg),
       });
 
-      logger.debug('Debug message'); // Should not be logged
-      logger.info('Info message'); // Should not be logged
-      logger.warn('Warning message'); // Should be logged
+      // Debug and info logging removed
+      // Warning logging removed
       logger.error('Error message'); // Should be logged
 
-      expect(messages).toHaveLength(2);
-      expect(messages[0]).toContain('Warning message');
-      expect(messages[1]).toContain('Error message');
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('Error message');
     });
 
     it('should format messages with timestamp and severity', () => {

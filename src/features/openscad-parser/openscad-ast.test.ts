@@ -34,7 +34,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
   function _printTree(node: any, depth = 0) {
     if (!node) return;
     const indent = '  '.repeat(depth);
-    console.log(`${indent}${node.type}: ${node.text.substring(0, 30)}`);
+
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
         if (child) _printTree(child, depth + 1);

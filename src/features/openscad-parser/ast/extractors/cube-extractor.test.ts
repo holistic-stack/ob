@@ -76,7 +76,6 @@ describe('Cube Extractor', () => {
       const child = cubeNode?.child(i);
       if (child && (child.type === 'argument_list' || child.type === 'arguments')) {
         argsNode = child;
-        console.log(`Found arguments node at index ${i}: ${child.type}`);
         break;
       }
     }
@@ -101,8 +100,6 @@ describe('Cube Extractor', () => {
             child.type === 'additive_expression' ||
             child.type === 'multiplicative_expression')
         ) {
-          console.log(`Found binary expression at index ${i}: ${child.type}`);
-
           const leftNode = child.childForFieldName('left') || child.child(0);
           const operatorNode = child.childForFieldName('operator') || child.child(1);
           const rightNode = child.childForFieldName('right') || child.child(2);

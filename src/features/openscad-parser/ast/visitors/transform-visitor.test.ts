@@ -97,27 +97,17 @@ describe('TransformVisitor', () => {
 
     it('should parse translate(5) /* single number */ cylinder(h=10, r=1);', () => {
       const code = 'translate(5) cylinder(h=10, r=1);';
-      console.log(`\n=== DEBUG: Testing translate(5) ===`);
-      console.log(`Code: ${code}`);
-
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-
-      console.log(`CST node found: ${transformCstNode !== null}`);
       if (transformCstNode) {
-        console.log(`CST node type: ${transformCstNode.type}`);
-        console.log(`CST node text: ${transformCstNode.text}`);
       }
 
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
 
       // Debug: Let's examine the CST structure for translate(5)
-      console.log('\n=== DEBUG: CST structure for translate(5) ===');
       console.log(`Transform node: type=${transformCstNode.type}, text="${transformCstNode.text}"`);
-      console.log(`Transform node children count: ${transformCstNode.childCount}`);
-
       // Check all children of the transform node
       for (let i = 0; i < transformCstNode.childCount; i++) {
         const child = transformCstNode.child(i);
@@ -131,9 +121,6 @@ describe('TransformVisitor', () => {
       const argsNode = transformCstNode.childForFieldName('arguments');
       if (argsNode) {
         console.log(`Arguments node: type=${argsNode.type}, text="${argsNode.text}"`);
-        console.log(`Arguments node namedChildCount: ${argsNode.namedChildCount}`);
-        console.log(`Arguments node childCount: ${argsNode.childCount}`);
-
         // Check all children (including non-named)
         for (let i = 0; i < argsNode.childCount; i++) {
           const child = argsNode.child(i);
@@ -154,10 +141,7 @@ describe('TransformVisitor', () => {
           }
         }
       } else {
-        console.log('No arguments node found');
       }
-      console.log('=== END DEBUG ===\n');
-
       const resultNode = visitor.visitModuleInstantiation(
         transformCstNode
       ) as ast.TranslateNode | null;

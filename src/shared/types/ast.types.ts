@@ -229,4 +229,3 @@ export interface NodeUtils {
   readonly findAncestors: (node: CoreNode, root: CoreNode) => ReadonlyArray<CoreNode>;
   readonly findDescendants: (node: CoreNode) => ReadonlyArray<CoreNode>;
 }
-

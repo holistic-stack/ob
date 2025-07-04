@@ -194,16 +194,8 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     args: ast.Parameter[]
   ): ast.FunctionCallNode {
     // Note: No longer returns ErrorNode directly, caller should handle
-    this.errorHandler.logInfo(
-      `[FunctionCallVisitor.createASTNodeForFunction] Processing function: ${functionName}`
-    );
-
     // Special handling for assign function calls - these should be processed as assign statements
     if (functionName === 'assign') {
-      this.errorHandler.logInfo(
-        `[FunctionCallVisitor.createASTNodeForFunction] Detected assign function call, delegating to assign statement processing`
-      );
-
       // For assign function calls, we need to return null to indicate this visitor cannot handle it
       // The CompositeVisitor will then try other visitors, including AssignStatementVisitor
       return null as any; // This will be handled by the calling visitor chain

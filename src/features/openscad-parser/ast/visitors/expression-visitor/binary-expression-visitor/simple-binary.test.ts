@@ -37,8 +37,6 @@ describe('SimpleBinaryExpressionTest', () => {
     expect(binaryNode?.type).toBe('binary_expression'); // Updated to reflect unified grammar
 
     // Debug: Print the tree structure to understand the issue
-    console.log('\n=== Testing binary expression visitor with real nodes ===');
-
     // Test that the visitor can handle the real node
     const result = visitor.visit(binaryNode!);
 

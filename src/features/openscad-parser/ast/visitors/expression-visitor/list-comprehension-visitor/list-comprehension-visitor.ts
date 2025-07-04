@@ -74,10 +74,6 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
    * ```
    */
   visitListComprehension(node: TSNode): ast.ListComprehensionExpressionNode | ast.ErrorNode | null {
-    this.errorHandler.logInfo(
-      `[ListComprehensionVisitor.visitListComprehension] Processing node: ${node.text.substring(0, 80)}`
-    );
-
     try {
       // Attempt to parse as OpenSCAD-style.
       // This method should return ListComprehensionExpressionNode, ErrorNode, or null (if not OpenSCAD style)
@@ -88,9 +84,6 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
         openScadResult.type === 'expression' &&
         openScadResult.expressionType === 'list_comprehension_expression'
       ) {
-        this.errorHandler.logInfo(
-          `[ListComprehensionVisitor.visitListComprehension] Successfully parsed as OpenSCAD style. CST: ${node.text.substring(0, 50)}`
-        );
         return openScadResult;
       }
 

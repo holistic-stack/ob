@@ -39,7 +39,6 @@ describe('IfElseVisitor', () => {
       expect(ifNode?.type).toBe('statement');
 
       // Log the node structure
-      console.log('If Node Structure:');
       printNodeStructure(ifNode!, 0, 5, 10);
 
       // Get the actual if_statement node

@@ -71,14 +71,11 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
   // Handle number literals directly
   if (node.type === 'number_literal') {
     const value = parseFloat(node.text);
-    console.log(`[extractValueEnhanced] Extracted number literal: ${value}`);
     return value;
   }
 
   // Check if this is a complex expression that needs evaluation
   if (isComplexExpression(node)) {
-    console.log(`[extractValueEnhanced] Detected complex expression: ${node.type}`);
-
     try {
       // Direct evaluation approach for binary expressions
       const evaluateBinaryExpression = (node: MockTSNode): number | undefined => {
@@ -90,15 +87,7 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
         const leftNode = node.child(0);
         const operatorNode = node.child(1);
         const rightNode = node.child(2);
-
-        console.log(
-          `[evaluateBinaryExpression] Found nodes: left=${leftNode?.text}, op=${operatorNode?.text}, right=${rightNode?.text}`
-        );
-
         if (!leftNode || !operatorNode || !rightNode) {
-          console.warn(
-            `[evaluateBinaryExpression] Could not find all parts of the binary expression`
-          );
           return undefined;
         }
 
@@ -118,13 +107,7 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
         } else {
           rightValue = extractValueEnhanced(rightNode, errorHandler);
         }
-
-        console.log(
-          `[evaluateBinaryExpression] Evaluated operands: left=${leftValue}, right=${rightValue}`
-        );
-
         if (leftValue === undefined || rightValue === undefined) {
-          console.warn(`[evaluateBinaryExpression] Could not evaluate operands`);
           return undefined;
         }
 
@@ -147,13 +130,8 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
             result = leftValue % rightValue;
             break;
           default:
-            console.warn(`[evaluateBinaryExpression] Unsupported operator: ${operatorNode.text}`);
             return undefined;
         }
-
-        console.log(
-          `[evaluateBinaryExpression] Result: ${leftValue} ${operatorNode.text} ${rightValue} = ${result}`
-        );
         return result;
       };
 
@@ -168,11 +146,8 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
           return result;
         }
       }
-
-      console.warn(`[extractValueEnhanced] Could not evaluate expression directly`);
       return undefined;
     } catch (error) {
-      console.warn(`[extractValueEnhanced] Expression evaluation failed: ${error}`);
       return undefined;
     }
   }
@@ -223,16 +198,12 @@ function runTest() {
 
   // Run each test case
   for (const test of testCases) {
-    console.log(`\n--- Testing ${test.name}: ${test.node.text} ---`);
-
     // Extract the value
     const result = extractValueEnhanced(test.node, errorHandler);
 
     // Check the result
     if (result === test.expected) {
-      console.log(`✅ PASS: ${test.name} - Got expected result: ${result}`);
     } else {
-      console.log(`❌ FAIL: ${test.name} - Expected: ${test.expected}, Got: ${result}`);
     }
   }
 }

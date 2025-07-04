@@ -8,6 +8,9 @@ import { vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { createLogger } from './shared/services/logger.service.js';
 
+// Enable Zustand mocking for proper store testing
+vi.mock('zustand');
+
 // ============================================================================
 // Real Web-Tree-Sitter Setup for Testing
 // ============================================================================

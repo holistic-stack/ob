@@ -34,7 +34,6 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.nodeType;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
-        console.log(`Node type mismatch. Expected: ${type}, Actual: ${nodeType}`);
       }
       return result;
     }
@@ -44,7 +43,6 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.type;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
-        console.log(`Node type mismatch. Expected: ${type}, Actual: ${nodeType}`);
       }
       return result;
     }
@@ -91,7 +89,6 @@ export function getNodeText(cursor: TreeCursor, source: string): string {
     let text = line.substring(range.start.column, range.end.column);
 
     // Debug logging
-    console.log('getNodeText - Single line node:');
     console.log('- Node type:', cursor.nodeType);
     console.log('- Range:', { start: range.start, end: range.end });
     console.log('- Line length:', line.length);
@@ -116,10 +113,8 @@ export function getNodeText(cursor: TreeCursor, source: string): string {
 
     // Include the semicolon if it's a statement/expression/call and there's a semicolon after
     if ((isStatement || isExpression || isCall) && hasSemicolonAfter) {
-      console.log('Including semicolon in node text');
       text += ';';
     } else {
-      console.log('Not including semicolon in node text');
     }
 
     console.log('Final text:', JSON.stringify(text));

@@ -6,7 +6,7 @@
  * and eliminate duplication between different modules.
  */
 
-import type { Result, AsyncResult, Brand } from './result.types.js';
+import type { AsyncResult, Brand, Result } from './result.types.js';
 
 /**
  * Branded types for operation identification
@@ -18,7 +18,7 @@ export type TransactionId = Brand<string, 'TransactionId'>;
 /**
  * Operation status enumeration
  */
-export type OperationStatus = 
+export type OperationStatus =
   | 'pending'
   | 'running'
   | 'completed'
@@ -205,7 +205,9 @@ export interface OperationRegistry {
   readonly register: (metadata: OperationMetadata) => Result<void, OperationError>;
   readonly unregister: (operationId: OperationId) => Result<void, OperationError>;
   readonly get: (operationId: OperationId) => Result<OperationMetadata, OperationError>;
-  readonly list: (filter?: Partial<OperationMetadata>) => Result<ReadonlyArray<OperationMetadata>, OperationError>;
+  readonly list: (
+    filter?: Partial<OperationMetadata>
+  ) => Result<ReadonlyArray<OperationMetadata>, OperationError>;
   readonly clear: () => Result<void, OperationError>;
 }
 
@@ -312,15 +314,15 @@ export interface OperationFactory {
   readonly createParse: <TInput, TOutput>(
     config: ParseOperation<TInput, TOutput>
   ) => (input: TInput) => OperationResult<TOutput, OperationError>;
-  
+
   readonly createRender: <TInput, TOutput>(
     config: RenderOperation<TInput, TOutput>
   ) => (input: TInput) => OperationResult<TOutput, OperationError>;
-  
+
   readonly createValidation: <TInput>(
     config: ValidationOperation<TInput>
   ) => (input: TInput) => OperationResult<ReadonlyArray<string>, OperationError>;
-  
+
   readonly createTransform: <TInput, TOutput>(
     config: TransformOperation<TInput, TOutput>
   ) => (input: TInput) => OperationResult<TOutput, OperationError>;
@@ -344,8 +346,13 @@ export const isOperationError = <T, E>(
 /**
  * Operation status type guards
  */
-export const isOperationPending = (status: OperationStatus): status is 'pending' => status === 'pending';
-export const isOperationRunning = (status: OperationStatus): status is 'running' => status === 'running';
-export const isOperationCompleted = (status: OperationStatus): status is 'completed' => status === 'completed';
-export const isOperationFailed = (status: OperationStatus): status is 'failed' => status === 'failed';
-export const isOperationCancelled = (status: OperationStatus): status is 'cancelled' => status === 'cancelled';
+export const isOperationPending = (status: OperationStatus): status is 'pending' =>
+  status === 'pending';
+export const isOperationRunning = (status: OperationStatus): status is 'running' =>
+  status === 'running';
+export const isOperationCompleted = (status: OperationStatus): status is 'completed' =>
+  status === 'completed';
+export const isOperationFailed = (status: OperationStatus): status is 'failed' =>
+  status === 'failed';
+export const isOperationCancelled = (status: OperationStatus): status is 'cancelled' =>
+  status === 'cancelled';

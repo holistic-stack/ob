@@ -221,18 +221,11 @@ export class TransformVisitor extends BaseASTVisitor {
       const child = node.child(i);
       if (child && child.type === 'argument_list') {
         argsNode = child;
-        console.log(
-          `[TransformVisitor.visitAccessorExpression] Found argument_list as child[${i}]`
-        );
-
         // The function name should be in the first child (before the argument_list)
         const functionChild = node.child(0);
         if (functionChild) {
           // Use the text of the function child directly, which should be the identifier
           functionName = functionChild.text;
-          console.log(
-            `[TransformVisitor.visitAccessorExpression] Found function name: ${functionName}`
-          );
         }
         break;
       }
@@ -269,17 +262,10 @@ export class TransformVisitor extends BaseASTVisitor {
             functionName = mappedName;
           }
         }
-
-        console.log(
-          `[TransformVisitor.visitAccessorExpression] Found function name (fallback): ${functionName}`
-        );
       }
     }
 
     if (!argsNode || !functionName) {
-      console.log(
-        `[TransformVisitor.visitAccessorExpression] No argument_list or function name found, delegating to parent`
-      );
       return super.visitAccessorExpression(node);
     }
 
@@ -289,9 +275,6 @@ export class TransformVisitor extends BaseASTVisitor {
         functionName
       )
     ) {
-      console.log(
-        `[TransformVisitor.visitAccessorExpression] Not a transform function: ${functionName}, delegating to parent`
-      );
       return super.visitAccessorExpression(node);
     }
 
@@ -301,21 +284,10 @@ export class TransformVisitor extends BaseASTVisitor {
       (child) => child && child.type === 'arguments'
     );
     if (argumentsNode) {
-      console.log(
-        `[TransformVisitor.visitAccessorExpression] Found arguments node: ${argumentsNode.text}`
-      );
       args = extractArguments(argumentsNode);
     } else {
-      console.log(
-        `[TransformVisitor.visitAccessorExpression] No arguments node found, trying direct extraction`
-      );
       args = extractArguments(argsNode);
     }
-
-    console.log(
-      `[TransformVisitor.visitAccessorExpression] Extracted ${args.length} arguments for ${functionName}`
-    );
-
     // Create the transform node
     return this.createTransformNode(node, functionName, args);
   }
@@ -326,105 +298,55 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   public override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[TransformVisitor.visitModuleInstantiation] Processing module instantiation: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Get function name using the truncation workaround
     const functionName = this.extractFunctionName(node);
     if (!functionName) {
-      console.log('[TransformVisitor.visitModuleInstantiation] Function name not found');
       return null;
     }
 
     // Check if this is a transform function
     if (!this.isSupportedTransformFunction(functionName)) {
-      console.log(
-        `[TransformVisitor.visitModuleInstantiation] Not a transform function: ${functionName}, returning null to let other visitors handle it`
-      );
       return null;
     }
 
     // Extract arguments
     const argsNode = node.childForFieldName('arguments');
     const args = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
-    console.log(
-      `[TransformVisitor.visitModuleInstantiation] Extracted ${args.length} arguments for ${functionName}`
-    );
-
     // Process children - handle both body field and direct child statements
     const children: ast.ASTNode[] = [];
 
     // First, try to find a body field (for block syntax)
     const bodyNode = node.childForFieldName('body');
     if (bodyNode) {
-      console.log(
-        `[TransformVisitor.visitModuleInstantiation] Found body node: type=${
-          bodyNode.type
-        }, text=${bodyNode.text.substring(0, 50)}`
-      );
-
       if (bodyNode.type === 'block') {
         // Handle block with multiple statements: translate([10, 0, 0]) { cube(); sphere(); }
-        console.log(
-          `[TransformVisitor.visitModuleInstantiation] Processing block with ${bodyNode.namedChildCount} children`
-        );
         for (let i = 0; i < bodyNode.namedChildCount; i++) {
           const child = bodyNode.namedChild(i);
           if (child) {
-            console.log(
-              `[TransformVisitor.visitModuleInstantiation] Processing block child ${i}: type=${child.type}`
-            );
             const visitedChild = this.compositeVisitor
               ? this.compositeVisitor.visitNode(child)
               : this.visitNode(child);
             if (visitedChild) {
               children.push(visitedChild);
-              console.log(
-                `[TransformVisitor.visitModuleInstantiation] Added child: type=${visitedChild.type}`
-              );
             }
           }
         }
       } else if (bodyNode.type === 'statement') {
         // Handle single statement: translate([10, 0, 0]) cube();
-        console.log(
-          `[TransformVisitor.visitModuleInstantiation] Processing single statement: ${bodyNode.text.substring(
-            0,
-            50
-          )}`
-        );
         const visitedChild = this.compositeVisitor
           ? this.compositeVisitor.visitNode(bodyNode)
           : this.visitNode(bodyNode);
         if (visitedChild) {
           children.push(visitedChild);
-          console.log(
-            `[TransformVisitor.visitModuleInstantiation] Added single child: type=${visitedChild.type}`
-          );
         }
       } else {
-        console.log(
-          `[TransformVisitor.visitModuleInstantiation] Unexpected body type: ${bodyNode.type}`
-        );
       }
     } else {
       // No body field found - look for direct child statements or blocks
       // This handles the grammar pattern: name arguments statement
-      console.log(
-        `[TransformVisitor.visitModuleInstantiation] No body field found, looking for direct children`
-      );
-
       for (let i = 0; i < node.namedChildCount; i++) {
         const child = node.namedChild(i);
         if (child && (child.type === 'statement' || child.type === 'block')) {
-          console.log(
-            `[TransformVisitor.visitModuleInstantiation] Found direct child: type=${child.type}, text=${child.text.substring(0, 50)}`
-          );
-
           if (child.type === 'block') {
             // Handle block with multiple statements
             for (let j = 0; j < child.namedChildCount; j++) {
@@ -435,9 +357,6 @@ export class TransformVisitor extends BaseASTVisitor {
                   : this.visitNode(blockChild);
                 if (visitedChild) {
                   children.push(visitedChild);
-                  console.log(
-                    `[TransformVisitor.visitModuleInstantiation] Added block child: type=${visitedChild.type}`
-                  );
                 }
               }
             }
@@ -448,9 +367,6 @@ export class TransformVisitor extends BaseASTVisitor {
               : this.visitNode(child);
             if (visitedChild) {
               children.push(visitedChild);
-              console.log(
-                `[TransformVisitor.visitModuleInstantiation] Added direct child: type=${visitedChild.type}`
-              );
             }
           }
         }
@@ -461,9 +377,6 @@ export class TransformVisitor extends BaseASTVisitor {
     const transformNode = this.createTransformNode(node, functionName, args);
     if (transformNode && 'children' in transformNode) {
       (transformNode as any).children = children;
-      console.log(
-        `[TransformVisitor.visitModuleInstantiation] Set ${children.length} children on ${functionName} node`
-      );
     }
 
     return transformNode;
@@ -671,10 +584,6 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns The translate AST node
    */
   private createTranslateNode(node: TSNode, args: ast.Parameter[]): ast.TranslateNode {
-    console.log(
-      `[TransformVisitor.createTranslateNode] Creating translate node with ${args.length} arguments`
-    );
-
     // Default vector (3D)
     let v: ast.Vector2D | ast.Vector3D = [0, 0, 0];
 
@@ -690,9 +599,6 @@ export class TransformVisitor extends BaseASTVisitor {
           } else if (vector.length >= 3) {
             v = [vector[0], vector[1], vector[2]] as ast.Vector3D;
           }
-          console.log(
-            `[TransformVisitor.createTranslateNode] Extracted vector: ${JSON.stringify(v)}`
-          );
           break;
         }
 
@@ -701,11 +607,6 @@ export class TransformVisitor extends BaseASTVisitor {
         if (number !== null) {
           // Convert single number to X-axis translation: translate(5) -> [5, 0, 0]
           v = [number, 0, 0] as ast.Vector3D;
-          console.log(
-            `[TransformVisitor.createTranslateNode] Converted single number ${number} to vector: ${JSON.stringify(
-              v
-            )}`
-          );
           break;
         }
       }
@@ -726,10 +627,6 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns The rotate AST node
    */
   private createRotateNode(node: TSNode, args: ast.Parameter[]): ast.RotateNode {
-    console.log(
-      `[TransformVisitor.createRotateNode] Creating rotate node with ${args.length} arguments`
-    );
-
     // Default values
     let a: number | ast.Vector3D = 0;
     let v: ast.Vector3D | undefined;
@@ -741,9 +638,6 @@ export class TransformVisitor extends BaseASTVisitor {
         const vector = extractVectorParameter(arg);
         if (vector && vector.length >= 3) {
           a = [vector[0]!, vector[1]!, vector[2]!];
-          console.log(
-            `[TransformVisitor.createRotateNode] Extracted angle vector: ${JSON.stringify(a)}`
-          );
           break;
         }
 
@@ -752,11 +646,6 @@ export class TransformVisitor extends BaseASTVisitor {
         if (angle !== null) {
           a = angle;
           v = [0, 0, 1]; // Default Z-axis rotation
-          console.log(
-            `[TransformVisitor.createRotateNode] Extracted angle: ${a}, default axis: ${JSON.stringify(
-              v
-            )}`
-          );
           break;
         }
       }
@@ -768,9 +657,6 @@ export class TransformVisitor extends BaseASTVisitor {
         const vector = extractVectorParameter(arg);
         if (vector && vector.length >= 3) {
           v = [vector[0]!, vector[1]!, vector[2]!];
-          console.log(
-            `[TransformVisitor.createRotateNode] Extracted rotation axis: ${JSON.stringify(v)}`
-          );
           break;
         }
       }
@@ -797,10 +683,6 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns The scale AST node
    */
   private createScaleNode(node: TSNode, args: ast.Parameter[]): ast.ScaleNode {
-    console.log(
-      `[TransformVisitor.createScaleNode] Creating scale node with ${args.length} arguments`
-    );
-
     // Default scale
     let v: ast.Vector3D = [1, 1, 1];
 
@@ -815,9 +697,6 @@ export class TransformVisitor extends BaseASTVisitor {
           } else if (vector.length >= 3) {
             v = [vector[0]!, vector[1]!, vector[2]!];
           }
-          console.log(
-            `[TransformVisitor.createScaleNode] Extracted scale vector: ${JSON.stringify(v)}`
-          );
           break;
         }
 
@@ -825,11 +704,6 @@ export class TransformVisitor extends BaseASTVisitor {
         const scale = extractNumberParameter(arg);
         if (scale !== null) {
           v = [scale, scale, scale]; // Convert uniform scale to vector
-          console.log(
-            `[TransformVisitor.createScaleNode] Extracted uniform scale: ${scale} -> ${JSON.stringify(
-              v
-            )}`
-          );
           break;
         }
       }
@@ -850,10 +724,6 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns The mirror AST node
    */
   private createMirrorNode(node: TSNode, args: ast.Parameter[]): ast.MirrorNode {
-    console.log(
-      `[TransformVisitor.createMirrorNode] Creating mirror node with ${args.length} arguments`
-    );
-
     // Default mirror plane
     let v: ast.Vector3D = [1, 0, 0];
 
@@ -867,9 +737,6 @@ export class TransformVisitor extends BaseASTVisitor {
           } else if (vector.length >= 3) {
             v = [vector[0]!, vector[1]!, vector[2]!];
           }
-          console.log(
-            `[TransformVisitor.createMirrorNode] Extracted mirror plane: ${JSON.stringify(v)}`
-          );
           break;
         }
       }
@@ -879,14 +746,8 @@ export class TransformVisitor extends BaseASTVisitor {
     // This addresses Tree-sitter memory management issues causing argument extraction failures
     if (node.text.includes('v=[0, 1, 0]')) {
       v = [0, 1, 0];
-      console.log(
-        `[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [0, 1, 0]`
-      );
     } else if (node.text.includes('[1, 1]')) {
       v = [1, 1, 0]; // 2D vector converted to 3D
-      console.log(
-        `[TransformVisitor.createMirrorNode] WORKAROUND: Applied hardcoded vector [1, 1, 0]`
-      );
     }
 
     return {
@@ -909,8 +770,6 @@ export class TransformVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(`[TransformVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
-
     // Only handle transform functions
     if (
       ['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(
@@ -921,9 +780,6 @@ export class TransformVisitor extends BaseASTVisitor {
     }
 
     // Return null for non-transform functions (will be handled by other visitors)
-    console.log(
-      `[TransformVisitor.createASTNodeForFunction] Not a transform function: ${functionName}`
-    );
     return null;
   }
 }

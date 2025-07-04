@@ -239,12 +239,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitNode(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitNode] Processing node - Type: ${
-        node.type
-      }, Text: ${node.text.substring(0, 50)}`
-    );
-
     switch (node.type) {
       case 'module_instantiation':
         return this.visitModuleInstantiation(node);
@@ -308,30 +302,16 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitModuleInstantiation] Processing module instantiation: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Extract function name
     const nameFieldNode = node.childForFieldName('name');
     if (!nameFieldNode) {
-      console.log(
-        `[BaseASTVisitor.visitModuleInstantiation] No name field found for module instantiation`
-      );
       return null;
     }
 
     const functionName = nameFieldNode.text;
     if (!functionName) {
-      console.log(`[BaseASTVisitor.visitModuleInstantiation] Empty function name`);
       return null;
     }
-
-    console.log(`[BaseASTVisitor.visitModuleInstantiation] Function name: ${functionName}`);
-
     // Extract arguments
     const argsNode = node.childForFieldName('arguments');
     const extractedArgs = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
@@ -352,9 +332,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         };
       }
     });
-
-    console.log(`[BaseASTVisitor.visitModuleInstantiation] Extracted ${args.length} arguments`);
-
     // Process based on function name
     let astNode = this.createASTNodeForFunction(node, functionName, args);
 
@@ -427,19 +404,13 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitStatement(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitStatement] Processing statement: ${node.text.substring(0, 50)}`
-    );
-
     // Check for function_definition
     if (node.type === 'function_definition' || node.text.trim().startsWith('function ')) {
-      console.log(`[BaseASTVisitor.visitStatement] Found function_definition in statement`);
       return this.visitFunctionDefinition(node);
     }
 
     // Check for module_definition
     if (node.type === 'module_definition' || node.text.trim().startsWith('module ')) {
-      console.log(`[BaseASTVisitor.visitStatement] Found module_definition in statement`);
       return this.visitModuleDefinition(node);
     }
 
@@ -450,7 +421,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
       if (!child) continue;
 
       if (child.type === 'expression_statement') {
-        console.log(`[BaseASTVisitor.visitStatement] Found expression_statement as direct child`);
         return this.visitExpressionStatement(child);
       }
     }
@@ -458,41 +428,32 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     // Look for assert_statement in the statement
     const assertStatement = findDescendantOfType(node, 'assert_statement');
     if (assertStatement) {
-      console.log(`[BaseASTVisitor.visitStatement] Found assert_statement in statement`);
       return this.visitAssertStatement(assertStatement);
     }
 
     // Look for echo_statement in the statement
     const echoStatement = findDescendantOfType(node, 'echo_statement');
     if (echoStatement) {
-      console.log(`[BaseASTVisitor.visitStatement] Found echo_statement in statement`);
       return this.visitEchoStatement(echoStatement);
     }
 
     // Look for assign_statement in the statement
     const assignStatement = findDescendantOfType(node, 'assign_statement');
     if (assignStatement) {
-      console.log(`[BaseASTVisitor.visitStatement] Found assign_statement in statement`);
       return this.visitAssignStatement(assignStatement);
     }
 
     // Look for module_instantiation in the statement (legacy support)
     const moduleInstantiation = findDescendantOfType(node, 'module_instantiation');
     if (moduleInstantiation) {
-      console.log(`[BaseASTVisitor.visitStatement] Found module_instantiation in statement`);
       return this.visitModuleInstantiation(moduleInstantiation);
     }
 
     // Look for accessor_expression in the statement (new tree-sitter structure)
     const accessorExpression = findDescendantOfType(node, 'accessor_expression');
     if (accessorExpression) {
-      console.log(`[BaseASTVisitor.visitStatement] Found accessor_expression in statement`);
       return this.visitAccessorExpression(accessorExpression);
     }
-
-    console.log(
-      `[BaseASTVisitor.visitStatement] No module_definition, function_definition, module_instantiation, accessor_expression, or expression_statement found in statement`
-    );
     return null;
   }
 
@@ -502,27 +463,17 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns An array of AST nodes
    */
   visitBlock(node: TSNode): ast.ASTNode[] {
-    console.log(`[BaseASTVisitor.visitBlock] Processing block: ${node.text.substring(0, 50)}`);
-
     const children: ast.ASTNode[] = [];
 
     // Process each statement in the block
     if (node.type === 'block') {
-      console.log(
-        `[BaseASTVisitor.visitBlock] Found block node with ${node.namedChildCount} named children`
-      );
-
       // Process each statement in the block
       for (let i = 0; i < node.namedChildCount; i++) {
         const childNode = node.namedChild(i);
         if (!childNode) continue;
-
-        console.log(`[BaseASTVisitor.visitBlock] Processing child ${i}: ${childNode.type}`);
-
         // Visit the child node
         const childAst = this.visitNode(childNode);
         if (childAst) {
-          console.log(`[BaseASTVisitor.visitBlock] Added child: ${childAst.type}`);
           children.push(childAst);
         }
       }
@@ -540,12 +491,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The module definition AST node or null if the node cannot be processed
    */
   visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
-    console.log(
-      `[BaseASTVisitor.visitModuleDefinition] Processing module definition: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
     return null; // Default implementation
   }
 
@@ -555,12 +500,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The function definition AST node or null if the node cannot be processed
    */
   visitFunctionDefinition(node: TSNode): ast.FunctionDefinitionNode | null {
-    console.log(
-      `[BaseASTVisitor.visitFunctionDefinition] Processing function definition: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
     return null; // Default implementation
   }
 
@@ -570,9 +509,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The if AST node or null if the node cannot be processed
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
-    console.log(
-      `[BaseASTVisitor.visitIfStatement] Processing if statement: ${node.text.substring(0, 50)}`
-    );
     return null; // Default implementation
   }
 
@@ -582,9 +518,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The for loop AST node or null if the node cannot be processed
    */
   visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
-    console.log(
-      `[BaseASTVisitor.visitForStatement] Processing for statement: ${node.text.substring(0, 50)}`
-    );
     return null; // Default implementation
   }
 
@@ -594,9 +527,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The let AST node or null if the node cannot be processed
    */
   visitLetExpression(node: TSNode): ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null {
-    console.log(
-      `[BaseASTVisitor.visitLetExpression] Processing let expression: ${node.text.substring(0, 50)}`
-    );
     return null; // Default implementation
   }
 
@@ -606,12 +536,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The expression AST node or null if the node cannot be processed
    */
   visitConditionalExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
-    console.log(
-      `[BaseASTVisitor.visitConditionalExpression] Processing conditional expression: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
     return null; // Default implementation
   }
 
@@ -621,18 +545,10 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitAssignmentStatement(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitAssignmentStatement] Processing assignment statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     const nameNode = node.childForFieldName('name');
     const valueNode = node.childForFieldName('value');
 
     if (!nameNode || !valueNode) {
-      console.log(`[BaseASTVisitor.visitAssignmentStatement] Missing name or value node`);
       return null;
     }
 
@@ -646,13 +562,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The assert statement AST node or null if the node cannot be processed
    */
   visitAssertStatement(node: TSNode): ast.AssertStatementNode | null {
-    console.log(
-      `[BaseASTVisitor.visitAssertStatement] Processing assert statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Default implementation - subclasses should override this method
     return null;
   }
@@ -663,10 +572,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The echo statement AST node or null if the node cannot be processed
    */
   visitEchoStatement(node: TSNode): ast.EchoStatementNode | null {
-    console.log(
-      `[BaseASTVisitor.visitEchoStatement] Processing echo statement: ${node.text.substring(0, 50)}`
-    );
-
     // Default implementation - subclasses should override this method
     return null;
   }
@@ -677,13 +582,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The assign statement AST node or null if the node cannot be processed
    */
   visitAssignStatement(node: TSNode): ast.AssignStatementNode | null {
-    console.log(
-      `[BaseASTVisitor.visitAssignStatement] Processing assign statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Default implementation - subclasses should override this method
     return null;
   }
@@ -694,13 +592,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitExpressionStatement(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitExpressionStatement] Processing expression statement: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // Try to find the expression as a field first
     let expression = node.childForFieldName('expression');
 
@@ -716,7 +607,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     }
 
     if (!expression) {
-      console.log(`[BaseASTVisitor.visitExpressionStatement] No expression found`);
       return null;
     }
 
@@ -729,13 +619,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitCallExpression(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitCallExpression] Processing call expression: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // In the tree-sitter CST, call_expression is not directly used for OpenSCAD function calls
     // Instead, they are represented as accessor_expression nodes
     // This method is added for completeness, but we'll delegate to visitAccessorExpression
@@ -755,13 +638,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitAccessorExpression(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitAccessorExpression] Processing accessor expression: ${node.text.substring(
-        0,
-        50
-      )}`
-    );
-
     // DEBUG: Log detailed node structure
     console.log(
       `[BaseASTVisitor.visitAccessorExpression] Node details: type=${node.type}, childCount=${node.childCount}, text="${node.text}"`
@@ -786,9 +662,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         const functionChild = node.child(0);
         if (functionChild) {
           functionName = functionChild.text;
-          console.log(
-            `[BaseASTVisitor.visitAccessorExpression] Found function name: ${functionName}`
-          );
         }
         break;
       }
@@ -800,9 +673,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
       const firstChild = node.child(0);
       if (firstChild) {
         functionName = firstChild.text;
-        console.log(
-          `[BaseASTVisitor.visitAccessorExpression] Found function name (fallback): ${functionName}`
-        );
       }
     }
 
@@ -811,9 +681,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
       const functionNode = findDescendantOfType(node, 'identifier');
       if (functionNode) {
         functionName = functionNode.text;
-        console.log(
-          `[BaseASTVisitor.visitAccessorExpression] Found function name (identifier search): ${functionName}`
-        );
       }
     }
 
@@ -829,15 +696,11 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         const potentialName = nodeText.substring(0, nodeText.indexOf('(')).trim();
         if (potentialName) {
           functionName = potentialName;
-          console.log(
-            `[BaseASTVisitor.visitAccessorExpression] Extracted function name from text: ${functionName}`
-          );
         }
       }
     }
 
     if (!functionName || functionName.trim() === '') {
-      console.log(`[BaseASTVisitor.visitAccessorExpression] No function name found`);
       return null;
     }
 
@@ -865,12 +728,8 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     }
 
     if (!functionName) {
-      console.log(`[BaseASTVisitor.visitAccessorExpression] Empty function name`);
       return null;
     }
-
-    console.log(`[BaseASTVisitor.visitAccessorExpression] Function name: ${functionName}`);
-
     // For test cases, extract arguments from the text
     const args: ExtractedParameter[] = [];
 
@@ -947,16 +806,9 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitExpression(node: TSNode): ast.ASTNode | null {
-    console.log(
-      `[BaseASTVisitor.visitExpression] Processing expression: ${node.text.substring(0, 50)}`
-    );
-
     // Check for accessor_expression (function calls like cube(10))
     const accessorExpression = findDescendantOfType(node, 'accessor_expression');
     if (accessorExpression) {
-      console.log(
-        `[BaseASTVisitor.visitExpression] Found accessor_expression: ${accessorExpression.text}`
-      );
       return this.visitAccessorExpression(accessorExpression);
     }
 

@@ -47,7 +47,6 @@ describe('OpenSCAD Node Types', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Print the tree structure
-    console.log('Tree structure:');
     console.log(tree.rootNode.toString());
 
     // Collect all node types using the utility function
@@ -55,7 +54,6 @@ describe('OpenSCAD Node Types', () => {
     const nodeTypes = collectNodeTypes(cursor);
 
     // Print the node types
-    console.log('Node types:');
     console.log(Array.from(nodeTypes).sort().join('\n'));
 
     // We expect to find some node types

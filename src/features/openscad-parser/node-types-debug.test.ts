@@ -23,7 +23,6 @@ describe('OpenSCAD Node Types Debug', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Print the tree structure
-    console.log('Tree structure:');
     console.log(tree.rootNode.toString());
 
     // Find the module_instantiation node (current grammar uses this instead of accessor_expression)
@@ -31,24 +30,19 @@ describe('OpenSCAD Node Types Debug', () => {
     if (!moduleInstantiation) throw new Error('Failed to find module_instantiation node');
 
     // Print the module_instantiation node structure
-    console.log('Module instantiation node:');
     console.log(moduleInstantiation.toString());
 
     // Print the module_instantiation node fields
-    console.log('Module instantiation node fields:');
     for (let i = 0; i < moduleInstantiation.namedChildCount; i++) {
       const child = moduleInstantiation.namedChild(i);
       if (child) {
-        console.log(`Field ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
     // Print the module_instantiation node children
-    console.log('Module instantiation node children:');
     for (let i = 0; i < moduleInstantiation.childCount; i++) {
       const child = moduleInstantiation.child(i);
       if (child) {
-        console.log(`Child ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 

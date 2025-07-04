@@ -118,14 +118,11 @@ describe('Cursor Utils Integration', () => {
     it('should extract correct text from nodes', () => {
       const code = 'sphere(r=5, $fn=32);';
       const tree = parser.parse(code);
-      console.log('--- Tree Inspection ---');
       console.log('Type of tree:', typeof tree);
       console.log('tree object:', JSON.stringify(tree, null, 2));
       console.log('tree.walk type:', typeof tree?.walk);
       console.log('tree.rootNode type:', typeof tree?.rootNode);
       console.log('tree.rootNode:', JSON.stringify(tree?.rootNode, null, 2));
-      console.log('--- End Tree Inspection ---');
-
       expect(tree).not.toBeNull();
 
       const cursor = tree?.walk();
@@ -150,7 +147,6 @@ describe('Cursor Utils Integration', () => {
       console.log('call_expression node:', callExpressionNode);
 
       const nodeText = cursorUtils.getNodeText(cursor, code);
-      console.log('getNodeText - Single line node:');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Range:', {
         start: cursor.startPosition,
@@ -175,8 +171,6 @@ describe('Cursor Utils Integration', () => {
         hasSemicolonAfter:
           cursor.endPosition.column < code.length && code[cursor.endPosition.column] === ';',
       });
-
-      console.log('Not including semicolon in node text');
       console.log('Final text:', nodeText);
 
       const hasSibling = cursor.gotoNextSibling();
@@ -199,8 +193,6 @@ describe('Cursor Utils Integration', () => {
           break;
         }
       }
-
-      console.log(`Traversed ${depth} levels, found args: ${foundArgs}`);
     });
   });
 });

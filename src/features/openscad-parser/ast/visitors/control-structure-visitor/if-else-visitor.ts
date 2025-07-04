@@ -40,17 +40,9 @@ export class IfElseVisitor {
    * @returns The if AST node or null if the node cannot be processed
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
-    console.log(
-      `[IfElseVisitor.visitIfStatement] Processing if statement: ${node.text.substring(0, 50)}`
-    );
-
     // Extract condition
     const conditionNode = node.childForFieldName('condition');
     if (!conditionNode) {
-      console.log(
-        `[IfElseVisitor.visitIfStatement] No condition found in field, trying child index`
-      );
-
       // Try to find the condition by child index
       // Based on the node structure, the condition is typically the named child at index 0
       if (node.namedChildCount >= 1) {
@@ -112,7 +104,6 @@ export class IfElseVisitor {
     }
 
     if (!thenNode) {
-      console.log(`[IfElseVisitor.processIfStatement] No then branch found`);
       return null;
     }
 
@@ -167,8 +158,6 @@ export class IfElseVisitor {
    * @returns An array of AST nodes representing the block's children
    */
   private visitBlock(node: TSNode): ast.ASTNode[] {
-    console.log(`[IfElseVisitor.visitBlock] Processing block: ${node.text.substring(0, 50)}`);
-
     const result: ast.ASTNode[] = [];
 
     // Process each child of the block
@@ -205,8 +194,6 @@ export class IfElseVisitor {
    * @returns The if AST node or null if the arguments are invalid
    */
   createIfNode(node: TSNode, args: ast.Parameter[]): ast.IfNode | null {
-    console.log(`[IfElseVisitor.createIfNode] Creating if node with ${args.length} arguments`);
-
     // Create condition expression
     let condition: ast.ExpressionNode;
 

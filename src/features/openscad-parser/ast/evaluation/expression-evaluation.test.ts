@@ -33,7 +33,6 @@ describe('Enhanced Expression Evaluation', () => {
         node.type === 'additive_expression' ||
         node.type === 'multiplicative_expression'
       ) {
-        console.log(`Found binary expression node: ${node.type}`);
         return node;
       }
       for (let i = 0; i < node.childCount; i++) {
@@ -94,8 +93,6 @@ describe('Enhanced Expression Evaluation', () => {
         }
       }
     }
-
-    console.log('Full tree structure:');
     printNodeRecursive(tree.rootNode);
 
     // Find the cube function call
@@ -105,7 +102,6 @@ describe('Enhanced Expression Evaluation', () => {
         (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
         node.text.includes('cube')
       ) {
-        console.log(`Found potential cube node: ${node.type}`);
         return node;
       }
       for (let i = 0; i < node.childCount; i++) {

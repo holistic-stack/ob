@@ -59,7 +59,6 @@ describe('Cylinder Extractor', () => {
         }
       }
     }
-    console.warn(`Could not find call_expression node for code: ${code}`);
     return null;
   };
 

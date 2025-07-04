@@ -72,8 +72,6 @@ describe('BinaryExpressionVisitor', () => {
       expect(ast).toBeDefined();
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThan(0);
-
-      console.log('Binary expression test completed successfully');
     } catch (error) {
       console.error('Binary expression test failed:', error);
       throw error;

@@ -174,8 +174,6 @@ export class OpenscadParser {
     treeSitterWasmPath = './tree-sitter.wasm'
   ): Promise<void> {
     try {
-      this.errorHandler.logInfo('Initializing OpenSCAD parser...');
-
       // Use the provided wasmPath directly
       const arrayBuffer = await fetch(wasmPath).then((response) => {
         if (!response.ok) {
@@ -201,8 +199,6 @@ export class OpenscadParser {
       this.language = await TreeSitter.Language.load(bytes);
       this.parser.setLanguage(this.language);
       this.isInitialized = true;
-
-      this.errorHandler.logInfo('OpenSCAD parser initialized successfully');
     } catch (error) {
       const errorMessage = `Failed to initialize parser: ${error}`;
       this.errorHandler.handleError(errorMessage);
@@ -267,11 +263,8 @@ export class OpenscadParser {
    */
   parseAST(code: string): ASTNode[] {
     try {
-      this.errorHandler.logInfo('Generating AST from OpenSCAD code...');
-
       const cst = this.parseCST(code);
       if (!cst) {
-        this.errorHandler.logWarning('Failed to generate CST, returning empty AST');
         return [];
       }
 
@@ -281,10 +274,6 @@ export class OpenscadParser {
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
-
-      this.errorHandler.logInfo(
-        `AST generation completed. Generated ${ast.length} top-level nodes.`
-      );
       return ast;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -298,11 +287,8 @@ export class OpenscadParser {
    */
   parseASTWithResult(code: string): Result<ASTNode[], string> {
     try {
-      this.errorHandler.logInfo('Generating AST from OpenSCAD code...');
-
       const cst = this.parseCST(code);
       if (!cst) {
-        this.errorHandler.logWarning('Failed to generate CST, returning error');
         return { success: false, error: 'Failed to generate CST' };
       }
 
@@ -312,10 +298,6 @@ export class OpenscadParser {
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
-
-      this.errorHandler.logInfo(
-        `AST generation completed. Generated ${ast.length} top-level nodes.`
-      );
       return { success: true, data: ast };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -380,7 +362,6 @@ export class OpenscadParser {
     newEndIndex: number
   ): TreeSitter.Tree | null {
     if (!this.parser || !this.previousTree) {
-      this.errorHandler.logInfo('No previous tree available, parsing from scratch');
       return this.parseCST(newCode);
     }
 
@@ -450,13 +431,10 @@ export class OpenscadParser {
     newEndIndex: number
   ): ASTNode[] {
     try {
-      this.errorHandler.logInfo('Updating AST incrementally...');
-
       // First update the CST incrementally
       const updatedTree = this.update(newCode, startIndex, oldEndIndex, newEndIndex);
 
       if (!updatedTree) {
-        this.errorHandler.logWarning('Failed to update CST, returning empty AST');
         return [];
       }
 
@@ -470,8 +448,6 @@ export class OpenscadParser {
       );
 
       const ast = astGenerator.generate();
-
-      this.errorHandler.logInfo(`AST update completed. Generated ${ast.length} top-level nodes.`);
       return ast;
     } catch (error) {
       this.errorHandler.handleError(`Failed to update AST: ${error}`);
@@ -529,7 +505,6 @@ export class OpenscadParser {
         this.language = null;
         this.previousTree = null;
         this.isInitialized = false;
-        this.errorHandler.logInfo('OpenSCAD parser disposed successfully');
       }
     } catch (error) {
       this.errorHandler.handleError(`Error disposing parser: ${error}`);

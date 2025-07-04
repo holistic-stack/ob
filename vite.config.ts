@@ -4,9 +4,7 @@ import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const _isDevelopment = mode === 'development';
-
+export default defineConfig(({ mode: _mode }) => {
   return {
     plugins: [
       react(),
@@ -67,6 +65,16 @@ export default defineConfig(({ mode }) => {
       testTimeout: 1000, // Longer timeout for CSG2 operations
       hookTimeout: 1000, // Longer timeout for setup hooks
       reporters: 'verbose',
+      // Run tests sequentially to avoid race conditions and memory issues
+      pool: 'forks',
+      poolOptions: {
+        forks: {
+          singleFork: true,
+        },
+      },
+      // Disable parallel execution
+      fileParallelism: false,
+      maxConcurrency: 1,
     },
   };
 });

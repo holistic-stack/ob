@@ -39,7 +39,6 @@ describe('ForLoopVisitor', () => {
       expect(forNode?.type).toBe('statement');
 
       // Log the node structure
-      console.log('For Node Structure:');
       printNodeStructure(forNode!, 0, 5, 10);
 
       // Get the actual for_statement node
@@ -134,7 +133,6 @@ describe('ForLoopVisitor', () => {
       if (actualForNode) {
         printNodeStructure(actualForNode, 0, 10, 50); // Print with depth 10, max line length 50
       } else {
-        console.log('[TEST DEBUG] actualForNode is null/undefined');
       }
 
       // Visit the for statement node

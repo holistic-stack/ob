@@ -6,31 +6,31 @@
  * that maintain type safety and consistency.
  */
 
-import type { 
-  CoreNode, 
-  ParentNode, 
-  BaseExpressionNode, 
-  BaseStatementNode, 
-  BaseErrorNode,
-  NodeMetadata,
-  NodeId,
-  NodeType,
-  TraversalContext,
+import type {
   ASTQuery,
-  NodeCollection,
+  BaseErrorNode,
+  BaseExpressionNode,
+  BasePosition,
   BaseSourceLocation,
-  BasePosition
+  BaseStatementNode,
+  CoreNode,
+  NodeCollection,
+  NodeId,
+  NodeMetadata,
+  NodeType,
+  ParentNode,
+  TraversalContext,
 } from './ast.types.js';
 
 import type {
-  OperationResult,
   AsyncOperationResult,
-  OperationMetadata,
   OperationError,
   OperationId,
-  OperationType,
+  OperationMetadata,
+  OperationMetrics,
+  OperationResult,
   OperationStatus,
-  OperationMetrics
+  OperationType,
 } from './operations.types.js';
 
 import type { Result } from './result.types.js';
@@ -99,15 +99,15 @@ export const nodeUtils = {
     predicate: (node: CoreNode) => node is T
   ): ReadonlyArray<T> => {
     const results: T[] = [];
-    
+
     const traverse = (node: CoreNode): void => {
       if (predicate(node)) {
         results.push(node);
       }
-      
+
       nodeUtils.getChildren(node).forEach(traverse);
     };
-    
+
     traverse(root);
     return results;
   },
@@ -129,7 +129,7 @@ export const nodeUtils = {
       complexity: 1,
       isOptimized: false,
       lastAccessed: new Date(),
-      ...options
+      ...options,
     };
   },
 
@@ -137,23 +137,23 @@ export const nodeUtils = {
    * Calculate node depth
    */
   calculateDepth: (node: CoreNode, root: CoreNode): number => {
-    let depth = 0;
-    
+    const depth = 0;
+
     const findDepth = (current: CoreNode, target: CoreNode, currentDepth: number): number => {
       if (current === target) {
         return currentDepth;
       }
-      
+
       for (const child of nodeUtils.getChildren(current)) {
         const found = findDepth(child, target, currentDepth + 1);
         if (found !== -1) {
           return found;
         }
       }
-      
+
       return -1;
     };
-    
+
     return findDepth(root, node, 0);
   },
 
@@ -162,15 +162,15 @@ export const nodeUtils = {
    */
   countDescendants: (node: CoreNode): number => {
     let count = 0;
-    
+
     const traverse = (current: CoreNode): void => {
       count++;
       nodeUtils.getChildren(current).forEach(traverse);
     };
-    
+
     traverse(node);
     return count - 1; // Exclude the node itself
-  }
+  },
 };
 
 /**
@@ -201,7 +201,7 @@ export const operationUtils = {
   ): OperationResult<T, OperationError> => {
     return {
       success: true,
-      data: { data, metadata, metrics }
+      data: { data, metadata, metrics },
     } as OperationResult<T, OperationError>;
   },
 
@@ -215,7 +215,7 @@ export const operationUtils = {
   ): OperationResult<T, OperationError> => {
     return {
       success: false,
-      error: { error, metadata, metrics }
+      error: { error, metadata, metrics },
     } as OperationResult<T, OperationError>;
   },
 
@@ -237,7 +237,7 @@ export const operationUtils = {
       maxRetries: 3,
       tags: [],
       context: {},
-      ...options
+      ...options,
     };
   },
 
@@ -254,7 +254,7 @@ export const operationUtils = {
       message,
       timestamp: new Date(),
       recoverable: false,
-      ...options
+      ...options,
     };
   },
 
@@ -303,7 +303,7 @@ export const operationUtils = {
       return (result as any).error.metadata;
     }
     return null;
-  }
+  },
 };
 
 /**
@@ -320,35 +320,28 @@ export const locationUtils = {
   /**
    * Create a source location
    */
-  createLocation: (
-    start: BasePosition,
-    end: BasePosition,
-    text?: string
-  ): BaseSourceLocation => {
+  createLocation: (start: BasePosition, end: BasePosition, text?: string): BaseSourceLocation => {
     return { start, end, text };
   },
 
   /**
    * Check if position is within range
    */
-  isPositionInRange: (
-    position: BasePosition,
-    location: BaseSourceLocation
-  ): boolean => {
+  isPositionInRange: (position: BasePosition, location: BaseSourceLocation): boolean => {
     const { start, end } = location;
-    
+
     if (position.line < start.line || position.line > end.line) {
       return false;
     }
-    
+
     if (position.line === start.line && position.column < start.column) {
       return false;
     }
-    
+
     if (position.line === end.line && position.column >= end.column) {
       return false;
     }
-    
+
     return true;
   },
 
@@ -362,19 +355,16 @@ export const locationUtils = {
   /**
    * Merge two locations
    */
-  mergeLocations: (
-    first: BaseSourceLocation,
-    second: BaseSourceLocation
-  ): BaseSourceLocation => {
+  mergeLocations: (first: BaseSourceLocation, second: BaseSourceLocation): BaseSourceLocation => {
     const start = first.start.offset <= second.start.offset ? first.start : second.start;
     const end = first.end.offset >= second.end.offset ? first.end : second.end;
-    
+
     return {
       start,
       end,
-      text: first.text && second.text ? `${first.text}${second.text}` : undefined
+      text: first.text && second.text ? `${first.text}${second.text}` : undefined,
     };
-  }
+  },
 };
 
 /**
@@ -387,7 +377,8 @@ export const conversionUtils = {
   resultToOperationResult: <T, E>(
     result: Result<T, E>,
     metadata: OperationMetadata,
-    errorMapper: (error: E) => OperationError = (e) => operationUtils.createOperationError('CONVERSION_ERROR', String(e))
+    errorMapper: (error: E) => OperationError = (e) =>
+      operationUtils.createOperationError('CONVERSION_ERROR', String(e))
   ): OperationResult<T, OperationError> => {
     if (result.success) {
       return operationUtils.createSuccess(result.data, metadata);
@@ -410,7 +401,7 @@ export const conversionUtils = {
       const error = operationUtils.getError(operationResult);
       return { success: false, error: error! };
     }
-  }
+  },
 };
 
 /**
@@ -422,24 +413,24 @@ export const validationUtils = {
    */
   validateNode: (node: CoreNode): ReadonlyArray<string> => {
     const errors: string[] = [];
-    
+
     if (!node.type) {
       errors.push('Node must have a type');
     }
-    
+
     if (nodeUtils.hasChildren(node)) {
       if (!Array.isArray(node.children)) {
         errors.push('Node children must be an array');
       } else {
         node.children.forEach((child, index) => {
           const childErrors = validationUtils.validateNode(child);
-          childErrors.forEach(error => {
+          childErrors.forEach((error) => {
             errors.push(`Child ${index}: ${error}`);
           });
         });
       }
     }
-    
+
     return errors;
   },
 
@@ -448,31 +439,31 @@ export const validationUtils = {
    */
   validateOperationMetadata: (metadata: OperationMetadata): ReadonlyArray<string> => {
     const errors: string[] = [];
-    
+
     if (!metadata.id) {
       errors.push('Operation metadata must have an ID');
     }
-    
+
     if (!metadata.type) {
       errors.push('Operation metadata must have a type');
     }
-    
+
     if (!metadata.startTime) {
       errors.push('Operation metadata must have a start time');
     }
-    
+
     if (metadata.endTime && metadata.endTime < metadata.startTime) {
       errors.push('Operation end time cannot be before start time');
     }
-    
+
     if (metadata.retryCount < 0) {
       errors.push('Retry count cannot be negative');
     }
-    
+
     if (metadata.maxRetries < 0) {
       errors.push('Max retries cannot be negative');
     }
-    
+
     return errors;
-  }
+  },
 };

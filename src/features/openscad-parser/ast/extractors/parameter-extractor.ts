@@ -226,11 +226,6 @@ export function extractNumberParameter(
           { name: '', value: binaryExpr.right },
           errorHandler
         );
-
-        console.log(
-          `[extractNumberParameter] Binary expression operands: left=${leftValue}, right=${rightValue}, op=${binaryExpr.operator}`
-        );
-
         if (leftValue !== null && rightValue !== null) {
           // Evaluate based on operator
           let result: number;
@@ -251,24 +246,13 @@ export function extractNumberParameter(
               result = leftValue % rightValue;
               break;
             default:
-              console.warn(
-                `[extractNumberParameter] Unsupported binary operator: ${binaryExpr.operator}`
-              );
               return null;
           }
-
-          console.log(
-            `[extractNumberParameter] Evaluated ${leftValue} ${binaryExpr.operator} ${rightValue} = ${result}`
-          );
           return result;
         } else {
-          console.warn(
-            `[extractNumberParameter] Could not extract numeric values from binary expression operands`
-          );
           return null;
         }
       } catch (error) {
-        console.warn(`[extractNumberParameter] Failed to evaluate binary expression: ${error}`);
         return null;
       }
     }
@@ -293,7 +277,6 @@ export function extractNumberParameter(
           return null;
         }
       } catch (error) {
-        console.warn(`[extractNumberParameter] Failed to evaluate expression: ${error}`);
         return null;
       }
     }

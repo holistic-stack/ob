@@ -30,8 +30,6 @@ async function runTest() {
 
     // Run each test case
     for (const test of testCases) {
-      console.log(`\n--- Testing ${test.name}: ${test.code} ---`);
-
       // Parse the code
       const tree = parser.parse(test.code);
       if (!tree) {
@@ -54,19 +52,14 @@ async function runTest() {
 
       // Extract the cube
       const cubeAST = extractCubeNode(cubeNode, errorHandler);
-      console.log(`Extracted cube AST: ${JSON.stringify(cubeAST, null, 2)}`);
-
       // Check the result
       if (cubeAST && cubeAST.size === test.expected) {
-        console.log(`✅ PASS: ${test.name} - Got expected size: ${cubeAST.size}`);
       } else {
-        console.log(`❌ FAIL: ${test.name} - Expected: ${test.expected}, Got: ${cubeAST?.size}`);
       }
 
       // Print any errors
       const errors = errorHandler.getErrors();
       if (errors.length > 0) {
-        console.log(`Errors: ${JSON.stringify(errors, null, 2)}`);
       }
     }
   } finally {
@@ -105,13 +98,11 @@ function printArgumentStructure(node: TSNode): void {
     const child = node.child(i);
     if (child && (child.type === 'argument_list' || child.type === 'arguments')) {
       argsNode = child;
-      console.log(`Found arguments node at index ${i}: ${child.type}`);
       break;
     }
   }
 
   if (!argsNode) {
-    console.log('No arguments node found');
     return;
   }
 
@@ -130,8 +121,6 @@ function printArgumentStructure(node: TSNode): void {
         child.type === 'additive_expression' ||
         child.type === 'multiplicative_expression'
       ) {
-        console.log(`    Binary expression found: ${child.type}`);
-
         // Print all children of the binary expression
         for (let j = 0; j < child.childCount; j++) {
           const grandchild = child.child(j);

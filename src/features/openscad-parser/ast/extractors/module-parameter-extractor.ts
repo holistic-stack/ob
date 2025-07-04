@@ -20,8 +20,6 @@ import { getLocation } from '../utils/location-utils.js';
  */
 export function extractModuleParameters(paramListNode: TSNode | null): ast.ModuleParameter[] {
   if (!paramListNode) return [];
-
-  console.log(`[extractModuleParameters] Processing parameter list node: ${paramListNode.text}`);
   const moduleParameters: ast.ModuleParameter[] = [];
 
   // Process each parameter in the list
@@ -48,8 +46,6 @@ export function extractModuleParameters(paramListNode: TSNode | null): ast.Modul
       });
     }
   }
-
-  console.log(`[extractModuleParameters] Extracted ${moduleParameters.length} parameters`);
   return moduleParameters;
 }
 
@@ -60,8 +56,6 @@ export function extractModuleParameters(paramListNode: TSNode | null): ast.Modul
  */
 export function extractModuleParametersFromText(paramsText: string): ast.ModuleParameter[] {
   if (!paramsText || paramsText.trim() === '') return [];
-
-  console.log(`[extractModuleParametersFromText] Processing parameters text: ${paramsText}`);
   const moduleParameters: ast.ModuleParameter[] = [];
 
   // Handle vector parameters specially
@@ -115,8 +109,6 @@ export function extractModuleParametersFromText(paramsText: string): ast.ModuleP
       });
     }
   }
-
-  console.log(`[extractModuleParametersFromText] Extracted ${moduleParameters.length} parameters`);
   return moduleParameters;
 }
 
@@ -126,8 +118,6 @@ export function extractModuleParametersFromText(paramsText: string): ast.ModuleP
  * @returns The default value
  */
 function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
-  console.log(`[extractDefaultValue] Processing default value node: ${defaultValueNode.text}`);
-
   // Handle different types of default values
   switch (defaultValueNode.type) {
     case 'number':
@@ -166,8 +156,6 @@ function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
  * @returns The array values as a Vector2D or Vector3D
  */
 function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
-  console.log(`[extractArrayLiteral] Processing array literal node: ${arrayNode.text}`);
-
   const values: number[] = [];
 
   // Process each element in the array
@@ -203,8 +191,6 @@ function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
  * @returns The parsed default value
  */
 function parseDefaultValueText(defaultValueText: string): ast.ParameterValue {
-  console.log(`[parseDefaultValueText] Parsing default value text: ${defaultValueText}`);
-
   // Try to parse as number
   if (!Number.isNaN(Number(defaultValueText))) {
     return Number(defaultValueText);

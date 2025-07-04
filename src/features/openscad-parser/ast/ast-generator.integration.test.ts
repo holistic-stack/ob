@@ -37,8 +37,6 @@ describe('AST Generator Integration Tests', () => {
           printNode(node.child(i), depth + 1);
         }
       }
-
-      console.log('\nDetailed CST structure:');
       printNode(cst?.rootNode);
 
       const ast = parser.parseAST(code);

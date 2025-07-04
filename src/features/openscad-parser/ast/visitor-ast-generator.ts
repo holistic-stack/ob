@@ -243,15 +243,10 @@ export class VisitorASTGenerator {
     // Get the root node of the Tree-sitter tree
     const rootNode = this.tree.rootNode;
     if (!rootNode) {
-      this.errorHandler.logWarning('No root node found in CST. Returning empty AST.');
       return [];
     }
 
     // Root node information for debugging
-    this.errorHandler.logInfo(
-      `Processing root node of type: ${rootNode.type} with ${rootNode.childCount} children`
-    );
-
     // Visit all children of the root node to build the AST
     const statements: ast.ASTNode[] = [];
     for (let i = 0; i < rootNode.childCount; i++) {
@@ -264,10 +259,6 @@ export class VisitorASTGenerator {
         statements.push(astNode);
       }
     }
-
-    this.errorHandler.logInfo(
-      `AST generation complete. Created ${statements.length} top-level nodes.`
-    );
     return statements;
   }
 }

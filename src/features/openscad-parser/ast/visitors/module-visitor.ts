@@ -140,8 +140,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(`[ModuleVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
-
     // Module instantiation
     return this.createModuleInstantiationNode(node, functionName, args);
   }
@@ -312,10 +310,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     moduleName: string,
     args: ast.Parameter[]
   ): ast.ASTNode {
-    console.log(
-      `[ModuleVisitor.createModuleInstantiationNode] Creating module instantiation node with name=${moduleName}, args=${args.length}`
-    );
-
     // Extract children
     const bodyNode = node.childForFieldName('body');
     const children: ast.ASTNode[] = [];
@@ -370,9 +364,6 @@ export class ModuleVisitor extends BaseASTVisitor {
       case 'offset':
         return this.createOffsetNode(node, args, children);
       default:
-        console.log(
-          `[ModuleVisitor.createModuleInstantiationNode] Created module instantiation node with name=${moduleName}, args=${args.length}, children=${children.length}`
-        );
         return {
           type: 'module_instantiation',
           name: moduleName,
@@ -395,10 +386,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.TranslateNode {
-    console.log(
-      `[ModuleVisitor.createTranslateNode] Creating translate node with ${args.length} arguments`
-    );
-
     // Extract vector parameter
     let vector: [number, number, number] = [0, 0, 0];
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
@@ -466,11 +453,6 @@ export class ModuleVisitor extends BaseASTVisitor {
         });
       }
     }
-
-    console.log(
-      `[ModuleVisitor.createTranslateNode] Created translate node with vector=[${vector}], children=${children.length}`
-    );
-
     return {
       type: 'translate',
       v: vector, // Use v property to match the TranslateNode interface
@@ -491,10 +473,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.RotateNode {
-    console.log(
-      `[ModuleVisitor.createRotateNode] Creating rotate node with ${args.length} arguments`
-    );
-
     // Extract angle parameter
     let angle: number | [number, number, number] = 0;
     let v: [number, number, number] | undefined;
@@ -535,11 +513,6 @@ export class ModuleVisitor extends BaseASTVisitor {
         v = [0, 0, 1]; // Default z-axis rotation
       }
     }
-
-    console.log(
-      `[ModuleVisitor.createRotateNode] Created rotate node with angle=${angle}, v=${v}, children=${children.length}`
-    );
-
     return {
       type: 'rotate',
       a: angle, // Use a property to match the RotateNode interface
@@ -561,10 +534,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.ScaleNode {
-    console.log(
-      `[ModuleVisitor.createScaleNode] Creating scale node with ${args.length} arguments`
-    );
-
     // Extract vector parameter
     let vector: [number, number, number] = [1, 1, 1];
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
@@ -596,11 +565,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('v=[2, 1, 0.5]')) {
       vector = [2, 1, 0.5];
     }
-
-    console.log(
-      `[ModuleVisitor.createScaleNode] Created scale node with vector=[${vector}], children=${children.length}`
-    );
-
     return {
       type: 'scale',
       v: vector, // Use v property to match the ScaleNode interface
@@ -621,10 +585,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.MirrorNode {
-    console.log(
-      `[ModuleVisitor.createMirrorNode] Creating mirror node with ${args.length} arguments`
-    );
-
     // Extract vector parameter
     let vector: [number, number, number] = [1, 0, 0];
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
@@ -649,11 +609,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('[1, 1]')) {
       vector = [1, 1, 0]; // 2D vector, Z defaults to 0
     }
-
-    console.log(
-      `[ModuleVisitor.createMirrorNode] Created mirror node with vector=[${vector}], children=${children.length}`
-    );
-
     return {
       type: 'mirror',
       v: vector, // Use v property to match the MirrorNode interface
@@ -674,10 +629,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.MultmatrixNode {
-    console.log(
-      `[ModuleVisitor.createMultmatrixNode] Creating multmatrix node with ${args.length} arguments`
-    );
-
     // Extract matrix parameter
     let matrix: number[][] = [
       [1, 0, 0, 0],
@@ -690,7 +641,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     if (matrixParam?.value) {
       // Matrix extraction would be more complex and depends on how matrices are represented in the AST
       // For now, we'll just use the identity matrix
-      console.log(`[ModuleVisitor.createMultmatrixNode] Using identity matrix for now`);
     }
 
     // For testing purposes, hardcode some values based on the node text
@@ -713,11 +663,6 @@ export class ModuleVisitor extends BaseASTVisitor {
         [0, 0, 0, 1],
       ];
     }
-
-    console.log(
-      `[ModuleVisitor.createMultmatrixNode] Created multmatrix node with children=${children.length}`
-    );
-
     return {
       type: 'multmatrix',
       m: matrix, // Use m property to match the MultmatrixNode interface
@@ -738,10 +683,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.ColorNode {
-    console.log(
-      `[ModuleVisitor.createColorNode] Creating color node with ${args.length} arguments`
-    );
-
     // Extract color parameter
     let color: string | [number, number, number] | [number, number, number, number] = 'red';
     let alpha: number | undefined;
@@ -817,11 +758,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('color("#ff0000")')) {
       color = '#ff0000';
     }
-
-    console.log(
-      `[ModuleVisitor.createColorNode] Created color node with color=${color}, alpha=${alpha}, children=${children.length}`
-    );
-
     // If color is an array with 4 elements, it already includes alpha
     if (Array.isArray(color) && color.length === 4) {
       return {
@@ -832,7 +768,6 @@ export class ModuleVisitor extends BaseASTVisitor {
       };
     } else if (typeof color === 'string') {
       // For string colors, include alpha as a separate property in the log but not in the node
-      console.log(`Alpha value ${alpha} will be ignored for string color`);
       return {
         type: 'color',
         c: color,
@@ -863,10 +798,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.OffsetNode {
-    console.log(
-      `[ModuleVisitor.createOffsetNode] Creating offset node with ${args.length} arguments`
-    );
-
     // Extract parameters
     let radius: number = 0;
     let delta: number = 0;
@@ -907,11 +838,6 @@ export class ModuleVisitor extends BaseASTVisitor {
       delta = 2;
       chamfer = true;
     }
-
-    console.log(
-      `[ModuleVisitor.createOffsetNode] Created offset node with radius=${radius}, delta=${delta}, chamfer=${chamfer}, children=${children.length}`
-    );
-
     return {
       type: 'offset',
       r: radius, // Use r property to match the OffsetNode interface
@@ -928,10 +854,6 @@ export class ModuleVisitor extends BaseASTVisitor {
    * @returns The AST node or null if the node cannot be processed
    */
   visitChildrenNode(node: TSNode): ast.ChildrenNode | null {
-    console.log(
-      `[ModuleVisitor.visitChildrenNode] Processing children node: ${node.text.substring(0, 50)}`
-    );
-
     // Extract index parameter
     let index = -1; // Default to all children
     const argsNode = node.childForFieldName('argument_list');
@@ -955,9 +877,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('children(1)')) {
       index = 1;
     }
-
-    console.log(`[ModuleVisitor.visitChildrenNode] Created children node with index=${index}`);
-
     return {
       type: 'children',
       index,

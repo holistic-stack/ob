@@ -32,7 +32,6 @@ export function cstTreeCursorWalkLog(
     // It's a TreeCursor
     cursor = initialTreeOrCursor;
   } else {
-    console.warn('initialTreeOrCursor is neither a Tree nor a TreeCursor');
     return output;
   }
 

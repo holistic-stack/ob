@@ -11,7 +11,6 @@ describe('cstTreeCursorWalkLog', () => {
     consoleSpy = vi.spyOn(console, 'log');
     parser = new OpenscadParser();
     await parser.init();
-    console.log('Parser initialized successfully');
   });
 
   afterEach(() => {

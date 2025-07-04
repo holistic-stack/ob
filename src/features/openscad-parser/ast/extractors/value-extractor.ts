@@ -69,7 +69,6 @@ export function getNodeText(node: TSNode, sourceCode?: string): string {
         return extractedText;
       }
     } catch (error) {
-      console.warn(`[getNodeText] Failed to extract text from source: ${error}`);
     }
   }
 
@@ -127,9 +126,6 @@ function isComplexExpression(node: TSNode): boolean {
 
   // Check if it's a complex type with multiple children (actual expression)
   if (complexTypes.has(node.type) && node.childCount > 1) {
-    console.log(
-      `[isComplexExpression] Detected complex expression: ${node.type} with ${node.childCount} children`
-    );
     return true;
   }
 
@@ -139,7 +135,6 @@ function isComplexExpression(node: TSNode): boolean {
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
       if (child && isComplexExpression(child)) {
-        console.log(`[isComplexExpression] Found complex child in ${node.type}: ${child.type}`);
         return true;
       }
     }
@@ -214,8 +209,6 @@ export function extractValueEnhanced(
 
   // Check if this is a complex expression that needs evaluation
   if (isComplexExpression(node) && errorHandler) {
-    console.log(`[extractValueEnhanced] Detected complex expression: ${node.type}`);
-
     try {
       // Simplified direct evaluation approach for binary expressions
       const evaluateBinaryExpression = (node: TSNode): number | undefined => {
@@ -234,9 +227,6 @@ export function extractValueEnhanced(
         );
 
         if (!leftNode || !operatorNode || !rightNode) {
-          console.warn(
-            `[evaluateBinaryExpression] Could not find all parts of the binary expression`
-          );
           return undefined;
         }
 
@@ -258,13 +248,7 @@ export function extractValueEnhanced(
           const extractedRight = extractValueEnhanced(rightNode, errorHandler, sourceCode);
           rightValue = typeof extractedRight === 'number' ? extractedRight : undefined;
         }
-
-        console.log(
-          `[evaluateBinaryExpression] Evaluated operands: left=${leftValue}, right=${rightValue}`
-        );
-
         if (leftValue === undefined || rightValue === undefined) {
-          console.warn(`[evaluateBinaryExpression] Could not evaluate operands`);
           return undefined;
         }
 
@@ -287,15 +271,8 @@ export function extractValueEnhanced(
             result = leftValue % rightValue;
             break;
           default:
-            console.warn(
-              `[evaluateBinaryExpression] Unsupported operator: ${getNodeText(operatorNode, sourceCode)}`
-            );
             return undefined;
         }
-
-        console.log(
-          `[evaluateBinaryExpression] Result: ${leftValue} ${getNodeText(operatorNode, sourceCode)} ${rightValue} = ${result}`
-        );
         return result;
       };
 
@@ -310,11 +287,8 @@ export function extractValueEnhanced(
           return result;
         }
       }
-
-      console.warn(`[extractValueEnhanced] Could not evaluate expression directly`);
       // Fall back to simple extraction
     } catch (error) {
-      console.warn(`[extractValueEnhanced] Expression evaluation failed: ${error}`);
       // Fall back to simple extraction
     }
   }
@@ -401,7 +375,6 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
     }
     case 'number': {
       const numValue = parseFloat(sourceCode ? getNodeText(node, sourceCode) : node.text);
-      console.log(`[extractValue] Extracted number: ${numValue}`);
       return numValue;
     }
     case 'string_literal':
@@ -414,10 +387,8 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
     }
     case 'boolean':
     case 'true':
-      console.log(`[extractValue] Extracted boolean: true`);
       return true;
     case 'false':
-      console.log(`[extractValue] Extracted boolean: false`);
       return false;
     case 'array_literal':
       console.log(
@@ -447,11 +418,9 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
           const operator = getNodeText(operatorNode, sourceCode);
           const operandValue = extractValue(operandNode, sourceCode);
           if (operator === '-' && typeof operandValue === 'number') {
-            console.log(`[extractValue] Applied unary minus: -${operandValue}`);
             return -operandValue;
           }
           if (operator === '+' && typeof operandValue === 'number') {
-            console.log(`[extractValue] Applied unary plus: +${operandValue}`);
             return operandValue;
           }
         }
@@ -487,17 +456,11 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
 
       // Check for booleans
       if (text === 'true') {
-        console.log(`[extractValue] Extracted boolean from unary_expression: true`);
         return true;
       }
       if (text === 'false') {
-        console.log(`[extractValue] Extracted boolean from unary_expression: false`);
         return false;
       }
-
-      console.warn(
-        `[extractValue] Unhandled unary_expression: ${getNodeText(node, sourceCode).substring(0, 30)}`
-      );
       return undefined;
     }
     case 'logical_or_expression':
@@ -507,8 +470,6 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
     case 'additive_expression':
     case 'multiplicative_expression':
     case 'exponentiation_expression': {
-      console.log(`[extractValue] Processing ${node.type} with ${node.childCount} children`);
-
       // These expression types often wrap simpler values, so try to extract from children
       if (node.childCount === 1) {
         const child = node.child(0);
@@ -523,19 +484,13 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       // For complex expressions with multiple children, this is likely a binary operation
       // that should be handled by the expression evaluator
       if (node.childCount > 1) {
-        console.log(
-          `[extractValue] Complex ${node.type} with ${node.childCount} children - attempting enhanced extraction`
-        );
-
         // Try to use enhanced extraction if this is a complex expression
         if (isComplexExpression(node)) {
-          console.log(`[extractValue] Using enhanced extraction for complex ${node.type}`);
           // Create a minimal error handler for this extraction
           const tempErrorHandler = new ErrorHandler();
 
           const enhancedResult = extractValueEnhanced(node, tempErrorHandler, sourceCode);
           if (enhancedResult !== undefined) {
-            console.log(`[extractValue] Enhanced extraction succeeded: ${enhancedResult}`);
             return enhancedResult;
           }
         }
@@ -560,11 +515,9 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
 
       // Check for boolean literals
       if (potentialNumText === 'true') {
-        console.log(`[extractValue] Extracted boolean from ${node.type}: true`);
         return true;
       }
       if (potentialNumText === 'false') {
-        console.log(`[extractValue] Extracted boolean from ${node.type}: false`);
         return false;
       }
 
@@ -671,28 +624,17 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
 
       // Check for booleans
       if (text === 'true') {
-        console.log(`[extractValue] Extracted boolean from ${node.type}: true`);
         return true;
       }
       if (text === 'false') {
-        console.log(`[extractValue] Extracted boolean from ${node.type}: false`);
         return false;
       }
-
-      console.warn(
-        `[extractValue] Unhandled ${node.type}: ${getNodeText(node, sourceCode).substring(0, 30)}`
-      );
       return undefined;
     }
     case 'argument': {
-      console.log(`[extractValue] Processing argument node with ${node.childCount} children`);
-
       // Check if this is a named argument (contains '=')
       const argText = sourceCode ? getNodeText(node, sourceCode) : node.text;
       if (argText.includes('=')) {
-        console.log(
-          `[extractValue] Detected named argument in value-extractor, should be handled by extractArgument. Returning undefined.`
-        );
         return undefined;
       }
 
@@ -717,8 +659,6 @@ export function extractValue(node: TSNode, sourceCode: string = ''): ast.Paramet
       return undefined;
     }
     case 'arguments': {
-      console.log(`[extractValue] Processing arguments node with ${node.childCount} children`);
-
       // Arguments node is a container - look for the actual expression inside
       for (let i = 0; i < node.childCount; i++) {
         const child = node.child(i);

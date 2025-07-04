@@ -35,11 +35,9 @@ describe('ModuleVisitor', () => {
       const rootNode = tree.rootNode;
 
       // Debug: Print all node types at the root level
-      console.log('Root node children types:');
       for (let i = 0; i < rootNode.namedChildCount; i++) {
         const child = rootNode.namedChild(i);
         if (child) {
-          console.log(`Child ${i}: type=${child.type}, text=${child.text.substring(0, 30)}`);
         }
       }
 
@@ -54,12 +52,6 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        console.log(
-          `Found module definition node: type=${
-            moduleDefNode.type
-          }, text=${moduleDefNode.text.substring(0, 30)}`
-        );
-
         const visitor = new ModuleVisitor(code, errorHandler);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
@@ -98,12 +90,6 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        console.log(
-          `Found module definition node: type=${
-            moduleDefNode.type
-          }, text=${moduleDefNode.text.substring(0, 30)}`
-        );
-
         const visitor = new ModuleVisitor(code, errorHandler);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
@@ -142,12 +128,6 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        console.log(
-          `Found module definition node: type=${
-            moduleDefNode.type
-          }, text=${moduleDefNode.text.substring(0, 30)}`
-        );
-
         const visitor = new ModuleVisitor(code, errorHandler);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
@@ -189,12 +169,6 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        console.log(
-          `Found module definition node: type=${
-            moduleDefNode.type
-          }, text=${moduleDefNode.text.substring(0, 30)}`
-        );
-
         const visitor = new ModuleVisitor(code, errorHandler);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
@@ -225,11 +199,9 @@ describe('ModuleVisitor', () => {
       const rootNode = tree.rootNode;
 
       // Debug: Print all node types at the root level
-      console.log('Root node children types for module instantiation:');
       for (let i = 0; i < rootNode.namedChildCount; i++) {
         const child = rootNode.namedChild(i);
         if (child) {
-          console.log(`Child ${i}: type=${child.type}, text=${child.text.substring(0, 30)}`);
         }
       }
 
@@ -245,12 +217,6 @@ describe('ModuleVisitor', () => {
       expect(moduleInstNode).toBeDefined();
 
       if (moduleInstNode) {
-        console.log(
-          `Found module instantiation node: type=${
-            moduleInstNode.type
-          }, text=${moduleInstNode.text.substring(0, 30)}`
-        );
-
         // ModuleVisitor is for module definitions, not instantiations
         // For module instantiations, we should use a different approach
         // This test should actually test module definitions, not instantiations
@@ -283,12 +249,6 @@ describe('ModuleVisitor', () => {
       expect(moduleInstNode).toBeDefined();
 
       if (moduleInstNode) {
-        console.log(
-          `Found module instantiation node: type=${
-            moduleInstNode.type
-          }, text=${moduleInstNode.text.substring(0, 30)}`
-        );
-
         // ModuleVisitor is for module definitions, not instantiations like translate()
         // For transform operations like translate(), we should use TransformVisitor
         // This test should actually test module definitions, not transform instantiations

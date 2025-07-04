@@ -9,12 +9,10 @@ describe('cursor-utils', () => {
   beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();
-    console.log('Parser initialized successfully');
   });
 
   afterEach(() => {
     parser.dispose();
-    console.log('Parser disposed successfully');
   });
 
   // Helper function to parse code and get cursor
@@ -55,7 +53,6 @@ describe('cursor-utils', () => {
       const cursor = parseCode(code);
 
       // Log initial cursor state
-      console.log('Initial cursor state:');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursor.nodeText);
 
@@ -75,14 +72,10 @@ describe('cursor-utils', () => {
         };
 
         // Log the node
-        console.log(
-          `${indent}Node: ${node.type} (${node.startPosition.row}:${node.startPosition.column}-${node.endPosition.row}:${node.endPosition.column})`
-        );
         console.log(`${indent}Text: "${node.text.replace(/\n/g, '\\n')}"`);
 
         // Log children recursively
         if (node.childCount > 0) {
-          console.log(`${indent}Children (${node.childCount}):`);
           for (let i = 0; i < node.childCount; i++) {
             const child = node.child(i);
             if (child) {
@@ -95,7 +88,6 @@ describe('cursor-utils', () => {
       };
 
       // Log the entire tree
-      console.log('\nFull syntax tree:');
       logNode(cursor.currentNode);
 
       // Test node type checking with various node types
@@ -110,21 +102,14 @@ describe('cursor-utils', () => {
 
       // Navigate to the first child
       if (cursor.gotoFirstChild()) {
-        console.log('\nAfter first child:');
         console.log('- Node type:', cursor.nodeType);
 
         // Check if it's a statement or expression
         const isStatement = testNodeType('statement');
         const isExpression = testNodeType('expression_statement');
         const isCall = testNodeType('call_expression');
-
-        console.log(
-          `Node type is ${cursor.nodeType}, isStatement: ${isStatement}, isExpression: ${isExpression}, isCall: ${isCall}`
-        );
-
         // Navigate to the function name if it's a call expression
         if (isCall && cursor.gotoFirstChild()) {
-          console.log('\nFunction name:');
           console.log('- Node type:', cursor.nodeType);
           console.log('- Node text:', cursor.nodeText);
 
@@ -135,13 +120,10 @@ describe('cursor-utils', () => {
 
           // Check if it's the expected function name
           if (cursor.nodeText === 'cube') {
-            console.log('Found cube function call');
           }
         } else {
-          console.log('Not a call expression or could not navigate to first child');
         }
       } else {
-        console.log('Could not navigate to first child');
       }
 
       // The test will pass as we're just checking the structure
@@ -205,18 +187,15 @@ describe('cursor-utils', () => {
       const cursor = parseCode(code);
 
       // Log initial cursor state
-      console.log('Initial cursor state:');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 
       // Navigate to the cube call
       expect(cursor.gotoFirstChild()).toBe(true); // source_file
-      console.log('After first child (source_file):');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 
       expect(cursor.gotoFirstChild()).toBe(true); // call_expression (cube)
-      console.log('After second child (call_expression):');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 
@@ -237,18 +216,15 @@ describe('cursor-utils', () => {
       const cursor = parseCode(code);
 
       // Log initial cursor state
-      console.log('\nTranslate test - Initial cursor state:');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 
       // Navigate to the translate call
       expect(cursor.gotoFirstChild()).toBe(true); // source_file
-      console.log('After first child (source_file):');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 
       expect(cursor.gotoFirstChild()).toBe(true); // call_expression (translate)
-      console.log('After second child (call_expression - translate):');
       console.log('- Node type:', cursor.nodeType);
       console.log('- Node text:', cursorUtils.getNodeText(cursor, code));
 

@@ -143,8 +143,6 @@ export class FunctionVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    console.log(`[FunctionVisitor.createASTNodeForFunction] Processing function: ${functionName}`);
-
     // Check if this is a function definition
     if (node.text.includes('function') && node.text.includes('=')) {
       return this.visitFunctionDefinition(node);
@@ -337,10 +335,6 @@ export class FunctionVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.FunctionCallNode {
-    console.log(
-      `[FunctionVisitor.createFunctionCallNode] Creating function call node with name=${functionName}, args=${args.length}`
-    );
-
     // For testing purposes, hardcode some values based on the node text
     if (node.text.includes('add(1, 2)')) {
       args = [
@@ -385,11 +379,6 @@ export class FunctionVisitor extends BaseASTVisitor {
         },
       ];
     }
-
-    console.log(
-      `[FunctionVisitor.createFunctionCallNode] Created function call node with name=${functionName}, args=${args.length}`
-    );
-
     return {
       type: 'expression',
       expressionType: 'function_call',

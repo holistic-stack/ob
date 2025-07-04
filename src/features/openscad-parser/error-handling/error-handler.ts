@@ -208,14 +208,12 @@ export class ErrorHandler {
       return null;
     }
 
-    this.logger.debug(`Attempting recovery for error: ${error.message}`);
-
     const recoveredCode = this.recoveryRegistry.attemptRecovery(error, code);
 
     if (recoveredCode) {
-      this.logger.info(`Successfully recovered from error: ${error.message}`);
+      // Successfully recovered from error
     } else {
-      this.logger.debug(`Could not recover from error: ${error.message}`);
+      // Could not recover from error
     }
 
     return recoveredCode;
@@ -285,7 +283,7 @@ export class ErrorHandler {
    * @param node - Optional tree-sitter node for additional context
    */
   logInfo(message: string, _context?: string, _node?: any): void {
-    this.logger.info(message);
+    // Info logging removed
   }
 
   /**
@@ -295,7 +293,7 @@ export class ErrorHandler {
    * @param node - Optional tree-sitter node for additional context
    */
   logDebug(message: string, _context?: string, _node?: any): void {
-    this.logger.debug(message);
+    // Debug logging removed
   }
 
   /**
@@ -328,7 +326,7 @@ export class ErrorHandler {
    * @since 0.1.0
    */
   logWarning(message: string, _context?: string, _node?: any): void {
-    this.logger.warn(message);
+    // Warning logging removed
   }
 
   /**

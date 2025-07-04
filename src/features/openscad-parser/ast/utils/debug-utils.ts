@@ -166,43 +166,34 @@ export function printNodeStructure(
   // Print children
   const childCount = node.childCount;
   if (childCount > 0) {
-    console.log(`${indent}Children (${childCount}):`);
-
     const childrenToPrint = Math.min(childCount, maxChildren);
     for (let i = 0; i < childrenToPrint; i++) {
       const child = node.child(i);
       if (child) {
         const fieldName = node.fieldNameForChild(i);
         if (fieldName) {
-          console.log(`${indent}  Child ${i} (field: ${fieldName}):`);
         } else {
-          console.log(`${indent}  Child ${i}:`);
         }
         printNodeStructure(child, depth + 2, maxDepth, maxChildren);
       }
     }
 
     if (childCount > maxChildren) {
-      console.log(`${indent}  ... (${childCount - maxChildren} more children)`);
     }
   }
 
   // Print named children if different from regular children
   const namedChildCount = node.namedChildCount;
   if (namedChildCount > 0 && namedChildCount !== childCount) {
-    console.log(`${indent}Named Children (${namedChildCount}):`);
-
     const namedChildrenToPrint = Math.min(namedChildCount, maxChildren);
     for (let i = 0; i < namedChildrenToPrint; i++) {
       const child = node.namedChild(i);
       if (child) {
-        console.log(`${indent}  Named Child ${i}:`);
         printNodeStructure(child, depth + 2, maxDepth, maxChildren);
       }
     }
 
     if (namedChildCount > maxChildren) {
-      console.log(`${indent}  ... (${namedChildCount - maxChildren} more named children)`);
     }
   }
 }

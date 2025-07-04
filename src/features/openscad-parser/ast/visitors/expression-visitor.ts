@@ -384,10 +384,6 @@ export class ExpressionVisitor extends BaseASTVisitor {
    * @returns The expression AST node or null if the node cannot be processed
    */
   public dispatchSpecificExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
-    this.errorHandler.logInfo(
-      `[ExpressionVisitor.dispatchSpecificExpression] Dispatching node type: ${node.type}`
-    );
-
     // Check for binary expression types first
     // Note: Grammar refactoring unified all binary expressions under 'binary_expression'
     const binaryExpressionTypes = ['binary_expression'];

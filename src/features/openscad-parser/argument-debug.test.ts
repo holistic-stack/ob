@@ -23,7 +23,6 @@ describe('OpenSCAD Argument Debug', () => {
     if (!tree) throw new Error('Failed to parse CST');
 
     // Print the tree structure
-    console.log('Tree structure:');
     console.log(tree.rootNode.toString());
 
     // Find the argument_list node
@@ -31,24 +30,19 @@ describe('OpenSCAD Argument Debug', () => {
     if (!argumentList) throw new Error('Failed to find argument_list node');
 
     // Print the argument_list node structure
-    console.log('Argument list node:');
     console.log(argumentList.toString());
 
     // Print the argument_list node fields
-    console.log('Argument list node fields:');
     for (let i = 0; i < argumentList.namedChildCount; i++) {
       const child = argumentList.namedChild(i);
       if (child) {
-        console.log(`Field ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
     // Print the argument_list node children
-    console.log('Argument list node children:');
     for (let i = 0; i < argumentList.childCount; i++) {
       const child = argumentList.child(i);
       if (child) {
-        console.log(`Child ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
@@ -57,24 +51,19 @@ describe('OpenSCAD Argument Debug', () => {
     if (!arguments_) throw new Error('Failed to find arguments node');
 
     // Print the arguments node structure
-    console.log('Arguments node:');
     console.log(arguments_.toString());
 
     // Print the arguments node fields
-    console.log('Arguments node fields:');
     for (let i = 0; i < arguments_.namedChildCount; i++) {
       const child = arguments_.namedChild(i);
       if (child) {
-        console.log(`Field ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
     // Print the arguments node children
-    console.log('Arguments node children:');
     for (let i = 0; i < arguments_.childCount; i++) {
       const child = arguments_.child(i);
       if (child) {
-        console.log(`Child ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
@@ -83,24 +72,19 @@ describe('OpenSCAD Argument Debug', () => {
     if (!argument) throw new Error('Failed to find argument node');
 
     // Print the argument node structure
-    console.log('Argument node:');
     console.log(argument.toString());
 
     // Print the argument node fields
-    console.log('Argument node fields:');
     for (let i = 0; i < argument.namedChildCount; i++) {
       const child = argument.namedChild(i);
       if (child) {
-        console.log(`Field ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
     // Print the argument node children
-    console.log('Argument node children:');
     for (let i = 0; i < argument.childCount; i++) {
       const child = argument.child(i);
       if (child) {
-        console.log(`Child ${i}: type=${child.type}, text=${child.text}`);
       }
     }
 
