@@ -5,7 +5,7 @@
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import { Matrix } from 'ml-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 import { type Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types';
@@ -74,15 +74,15 @@ export interface APIHealthStatus {
  */
 export interface MatrixOperationsAPI {
   // Core matrix operations
-  convertMatrix4ToMLMatrix(
+  convertMatrix4ToGLMatrix(
     matrix4: Matrix4,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
+  ): Promise<Result<EnhancedMatrixResult<mat4>, string>>;
 
-  convertMLMatrixToMatrix4(
-    matrix: Matrix,
+  convertGLMatrixToMatrix4(
+    matrix: mat4,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
+  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>>;
 
   performRobustInversion(
     matrix: Matrix,
@@ -296,12 +296,12 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   }
 
   /**
-   * Convert Matrix4 to ml-matrix
+   * Convert Matrix4 to gl-matrix
    */
-  async convertMatrix4ToMLMatrix(
+  async convertMatrix4ToGLMatrix(
     matrix4: Matrix4,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+  ): Promise<Result<EnhancedMatrixResult<mat4>, string>> {
     await this.ensureInitialized();
 
     const options: EnhancedMatrixOptions = {
@@ -311,18 +311,18 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     };
 
     return this.executeWithMetrics(
-      () => this.matrixIntegration.convertMatrix4ToMLMatrix(matrix4, options),
-      'convertMatrix4ToMLMatrix'
+      () => this.matrixIntegration.convertMatrix4ToGLMatrix(matrix4, options),
+      'convertMatrix4ToGLMatrix'
     );
   }
 
   /**
-   * Convert ml-matrix to Matrix4
+   * Convert gl-matrix to Matrix4
    */
-  async convertMLMatrixToMatrix4(
-    matrix: Matrix,
+  async convertGLMatrixToMatrix4(
+    matrix: mat4,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>> {
     await this.ensureInitialized();
 
     const options: EnhancedMatrixOptions = {
@@ -331,8 +331,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
     };
 
     return this.executeWithMetrics(
-      () => this.matrixIntegration.convertMatrix4ToMLMatrix(matrix as unknown as Matrix4, options),
-      'convertMatrix4ToMLMatrix'
+      () => this.matrixIntegration.convertGLMatrixToMatrix4(matrix, options),
+      'convertGLMatrixToMatrix4'
     );
   }
 
@@ -408,7 +408,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   ): Promise<Result<unknown, string>> {
     return this.executeWithMetrics(async () => {
       if (matrix instanceof Matrix4) {
-        const conversionResult = await this.matrixIntegration.convertMatrix4ToMLMatrix(matrix, {
+        const conversionResult = await this.matrixIntegration.convertMatrix4ToGLMatrix(matrix, {
           useValidation: true,
           useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
         });
@@ -467,7 +467,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       // validateMatrix expects Matrix type, not Matrix4
       if (matrix instanceof Matrix4) {
         // Convert Matrix4 to Matrix format for validation
-        const conversionResult = await this.matrixIntegration.convertMatrix4ToMLMatrix(matrix, {
+        const conversionResult = await this.matrixIntegration.convertMatrix4ToGLMatrix(matrix, {
           useValidation: false,
           useTelemetry: false,
         });

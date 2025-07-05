@@ -76,7 +76,7 @@ pnpm storybook
 - **Production-Ready Boolean Operations**: Union, difference, intersection with three-csg-ts
 - **Real BSP Tree Algorithms**: Comprehensive CSG with 92% test success rate
 - **Performance Optimization**: <16ms render targets achieved (3.94ms average)
-- **Matrix Integration**: Enhanced numerical stability with ml-matrix and SVD fallback
+- **Matrix Integration**: Enhanced numerical stability with gl-matrix and WebGL optimization
 
 ### 🎯 **OpenSCAD Parser Integration**
 - **Real-time AST Parsing**: Live code analysis with @holistic-stack/openscad-parser

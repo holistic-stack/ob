@@ -1,11 +1,11 @@
 /**
  * Simplified Matrix Operations API
  *
- * Essential ml-matrix operations for 3D transformations and basic matrix math.
+ * Essential gl-matrix operations for 3D transformations and basic matrix math.
  * Simplified without caching, telemetry, or complex infrastructure.
  */
 
-import { inverse, Matrix } from 'ml-matrix';
+import { mat4 } from 'gl-matrix';
 import { Matrix4 } from 'three';
 import type { Result } from '../../../shared/types/result.types';
 import { error, success } from '../../../shared/utils/functional/result';
@@ -13,7 +13,7 @@ import { error, success } from '../../../shared/utils/functional/result';
 /**
  * Simple result type for matrix operations
  */
-export interface SimpleMatrixResult<T = Matrix> {
+export interface SimpleMatrixResult<T = mat4> {
   result: T;
   executionTime: number;
 }
@@ -52,73 +52,77 @@ export class MatrixOperationsAPI {
   /**
    * Basic matrix operations
    */
-  async add(a: Matrix, b: Matrix): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('add', () => a.add(b));
+  async add(a: mat4, b: mat4): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('add', () => {
+      const result = mat4.create();
+      mat4.add(result, a, b);
+      return result;
+    });
   }
 
-  async subtract(a: Matrix, b: Matrix): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('subtract', () => a.sub(b));
+  async subtract(a: mat4, b: mat4): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('subtract', () => {
+      const result = mat4.create();
+      mat4.subtract(result, a, b);
+      return result;
+    });
   }
 
-  async multiply(a: Matrix, b: Matrix): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('multiply', () => a.mmul(b));
+  async multiply(a: mat4, b: mat4): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('multiply', () => {
+      const result = mat4.create();
+      mat4.multiply(result, a, b);
+      return result;
+    });
   }
 
-  async transpose(matrix: Matrix): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('transpose', () => matrix.transpose());
+  async transpose(matrix: mat4): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('transpose', () => {
+      const result = mat4.create();
+      mat4.transpose(result, matrix);
+      return result;
+    });
   }
 
-  async inverse(matrix: Matrix): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('inverse', () => inverse(matrix));
+  async inverse(matrix: mat4): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('inverse', () => {
+      const result = mat4.create();
+      const success = mat4.invert(result, matrix);
+      if (!success) {
+        throw new Error('Matrix is not invertible');
+      }
+      return result;
+    });
   }
 
   /**
    * Three.js integration
    */
-  async convertMatrix4ToMLMatrix(
+  async convertMatrix4ToGLMatrix(
     matrix4: Matrix4
-  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
-    return this.executeOperation('convertMatrix4ToMLMatrix', () => {
+  ): Promise<Result<SimpleMatrixResult<mat4>, string>> {
+    return this.executeOperation('convertMatrix4ToGLMatrix', () => {
+      const result = mat4.create();
+      // Three.js and gl-matrix both use column-major order, so direct copy
       const elements = matrix4.elements;
-      // Three.js uses column-major order, convert to row-major for ml-matrix
-      return new Matrix([
-        [elements[0], elements[4], elements[8], elements[12]],
-        [elements[1], elements[5], elements[9], elements[13]],
-        [elements[2], elements[6], elements[10], elements[14]],
-        [elements[3], elements[7], elements[11], elements[15]],
-      ]);
+      for (let i = 0; i < 16; i++) {
+        result[i] = elements[i];
+      }
+      return result;
     });
   }
 
-  async convertMLMatrixToMatrix4(
-    matrix: Matrix
+  async convertGLMatrixToMatrix4(
+    matrix: mat4
   ): Promise<Result<SimpleMatrixResult<Matrix4>, string>> {
-    return this.executeOperation('convertMLMatrixToMatrix4', () => {
-      if (matrix.rows !== 4 || matrix.columns !== 4) {
+    return this.executeOperation('convertGLMatrixToMatrix4', () => {
+      if (matrix.length !== 16) {
         throw new Error('Matrix must be 4x4 for Three.js Matrix4 conversion');
       }
 
       const matrix4 = new Matrix4();
-      // Convert from row-major (ml-matrix) to column-major (Three.js)
-      matrix4.set(
-        matrix.get(0, 0),
-        matrix.get(0, 1),
-        matrix.get(0, 2),
-        matrix.get(0, 3),
-        matrix.get(1, 0),
-        matrix.get(1, 1),
-        matrix.get(1, 2),
-        matrix.get(1, 3),
-        matrix.get(2, 0),
-        matrix.get(2, 1),
-        matrix.get(2, 2),
-        matrix.get(2, 3),
-        matrix.get(3, 0),
-        matrix.get(3, 1),
-        matrix.get(3, 2),
-        matrix.get(3, 3)
-      );
-
+      // Both gl-matrix and Three.js use column-major order, so direct copy
+      matrix4.fromArray(matrix);
       return matrix4;
     });
   }
@@ -130,14 +134,11 @@ export class MatrixOperationsAPI {
     x: number,
     y: number,
     z: number
-  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  ): Promise<Result<SimpleMatrixResult<mat4>, string>> {
     return this.executeOperation('createTranslationMatrix', () => {
-      return new Matrix([
-        [1, 0, 0, x],
-        [0, 1, 0, y],
-        [0, 0, 1, z],
-        [0, 0, 0, 1],
-      ]);
+      const result = mat4.create();
+      mat4.fromTranslation(result, [x, y, z]);
+      return result;
     });
   }
 
@@ -145,91 +146,51 @@ export class MatrixOperationsAPI {
     x: number,
     y: number,
     z: number
-  ): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  ): Promise<Result<SimpleMatrixResult<mat4>, string>> {
     return this.executeOperation('createScaleMatrix', () => {
-      return new Matrix([
-        [x, 0, 0, 0],
-        [0, y, 0, 0],
-        [0, 0, z, 0],
-        [0, 0, 0, 1],
-      ]);
+      const result = mat4.create();
+      mat4.fromScaling(result, [x, y, z]);
+      return result;
     });
   }
 
-  async createRotationMatrixX(angle: number): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async createRotationMatrixX(angle: number): Promise<Result<SimpleMatrixResult<mat4>, string>> {
     return this.executeOperation('createRotationMatrixX', () => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return new Matrix([
-        [1, 0, 0, 0],
-        [0, cos, -sin, 0],
-        [0, sin, cos, 0],
-        [0, 0, 0, 1],
-      ]);
+      const result = mat4.create();
+      mat4.fromXRotation(result, angle);
+      return result;
     });
   }
 
-  async createRotationMatrixY(angle: number): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async createRotationMatrixY(angle: number): Promise<Result<SimpleMatrixResult<mat4>, string>> {
     return this.executeOperation('createRotationMatrixY', () => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return new Matrix([
-        [cos, 0, sin, 0],
-        [0, 1, 0, 0],
-        [-sin, 0, cos, 0],
-        [0, 0, 0, 1],
-      ]);
+      const result = mat4.create();
+      mat4.fromYRotation(result, angle);
+      return result;
     });
   }
 
-  async createRotationMatrixZ(angle: number): Promise<Result<SimpleMatrixResult<Matrix>, string>> {
+  async createRotationMatrixZ(angle: number): Promise<Result<SimpleMatrixResult<mat4>, string>> {
     return this.executeOperation('createRotationMatrixZ', () => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return new Matrix([
-        [cos, -sin, 0, 0],
-        [sin, cos, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-      ]);
+      const result = mat4.create();
+      mat4.fromZRotation(result, angle);
+      return result;
     });
   }
 
   /**
    * Matrix properties
    */
-  async determinant(matrix: Matrix): Promise<Result<SimpleMatrixResult<number>, string>> {
+  async determinant(matrix: mat4): Promise<Result<SimpleMatrixResult<number>, string>> {
     return this.executeOperation('determinant', () => {
-      // Simple determinant calculation for 2x2 and 3x3 matrices
-      if (matrix.rows === 2 && matrix.columns === 2) {
-        return matrix.get(0, 0) * matrix.get(1, 1) - matrix.get(0, 1) * matrix.get(1, 0);
-      }
-      if (matrix.rows === 3 && matrix.columns === 3) {
-        const a = matrix.get(0, 0),
-          b = matrix.get(0, 1),
-          c = matrix.get(0, 2);
-        const d = matrix.get(1, 0),
-          e = matrix.get(1, 1),
-          f = matrix.get(1, 2);
-        const g = matrix.get(2, 0),
-          h = matrix.get(2, 1),
-          i = matrix.get(2, 2);
-        return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-      }
-      throw new Error('Determinant calculation only supported for 2x2 and 3x3 matrices');
+      return mat4.determinant(matrix);
     });
   }
 
-  async trace(matrix: Matrix): Promise<Result<SimpleMatrixResult<number>, string>> {
+  async trace(matrix: mat4): Promise<Result<SimpleMatrixResult<number>, string>> {
     return this.executeOperation('trace', () => {
-      if (matrix.rows !== matrix.columns) {
-        throw new Error('Trace can only be calculated for square matrices');
-      }
-      let trace = 0;
-      for (let i = 0; i < matrix.rows; i++) {
-        trace += matrix.get(i, i);
-      }
-      return trace;
+      // Calculate trace (sum of diagonal elements)
+      return matrix[0] + matrix[5] + matrix[10] + matrix[15];
     });
   }
 

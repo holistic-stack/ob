@@ -35,18 +35,17 @@ describe('Matrix Adapters', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const matrix = result.data;
-        expect(matrix.rows).toBe(3);
-        expect(matrix.columns).toBe(3);
-        expect(matrix.get(0, 0)).toBe(1);
-        expect(matrix.get(0, 1)).toBe(2);
-        expect(matrix.get(0, 2)).toBe(3);
-        expect(matrix.get(1, 0)).toBe(4);
-        expect(matrix.get(2, 2)).toBe(9);
+        expect(matrix.length).toBe(9); // 3x3 matrix
+        expect(matrix[0]).toBe(1); // m00
+        expect(matrix[1]).toBe(4); // m01 (column-major)
+        expect(matrix[2]).toBe(7); // m02
+        expect(matrix[3]).toBe(2); // m10
+        expect(matrix[8]).toBe(9); // m22
       }
     });
 
-    it('should convert Three.js Matrix4 to ml-matrix correctly', () => {
-      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix4 to ml-matrix conversion');
+    it('should convert Three.js Matrix4 to gl-matrix correctly', () => {
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix4 to gl-matrix conversion');
 
       const threeMatrix = new Matrix4().makeTranslation(1, 2, 3);
 
@@ -55,17 +54,16 @@ describe('Matrix Adapters', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const matrix = result.data;
-        expect(matrix.rows).toBe(4);
-        expect(matrix.columns).toBe(4);
-        expect(matrix.get(0, 3)).toBeCloseTo(1, 10);
-        expect(matrix.get(1, 3)).toBeCloseTo(2, 10);
-        expect(matrix.get(2, 3)).toBeCloseTo(3, 10);
-        expect(matrix.get(3, 3)).toBeCloseTo(1, 10);
+        expect(matrix.length).toBe(16); // 4x4 matrix
+        expect(matrix[12]).toBeCloseTo(1, 10); // Translation X
+        expect(matrix[13]).toBeCloseTo(2, 10); // Translation Y
+        expect(matrix[14]).toBeCloseTo(3, 10); // Translation Z
+        expect(matrix[15]).toBeCloseTo(1, 10); // m33
       }
     });
 
-    it('should convert ml-matrix to Three.js Matrix3 correctly', () => {
-      logger.debug('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix3 conversion');
+    it('should convert gl-matrix to Three.js Matrix3 correctly', () => {
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing gl-matrix to Matrix3 conversion');
 
       const matrix = matrixFactory.fromArray([
         [1, 2, 3],
@@ -134,11 +132,10 @@ describe('Matrix Adapters', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const matrix = result.data;
-        expect(matrix.rows).toBe(3);
-        expect(matrix.columns).toBe(1);
-        expect(matrix.get(0, 0)).toBe(1);
-        expect(matrix.get(1, 0)).toBe(2);
-        expect(matrix.get(2, 0)).toBe(3);
+        expect(matrix.length).toBe(16); // 4x4 matrix
+        expect(matrix[12]).toBe(1); // Translation X
+        expect(matrix[13]).toBe(2); // Translation Y
+        expect(matrix[14]).toBe(3); // Translation Z
       }
     });
 

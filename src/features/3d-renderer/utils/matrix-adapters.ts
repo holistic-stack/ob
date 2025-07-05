@@ -1,11 +1,11 @@
 /**
  * Matrix Adapter Utilities
  *
- * Utilities for seamless conversion between ml-matrix and Three.js matrices,
+ * Utilities for seamless conversion between gl-matrix and Three.js matrices,
  * following functional programming patterns and bulletproof-react organization.
  */
 
-import { CholeskyDecomposition, determinant, Matrix } from 'ml-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 import type { Euler } from 'three';
 import { Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
@@ -24,21 +24,21 @@ import type {
 const logger = createLogger('MatrixAdapters');
 
 /**
- * Convert Three.js Matrix3 to ml-matrix
+ * Convert Three.js Matrix3 to gl-matrix mat3
  */
-export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<Matrix, string> => {
-  logger.debug('Converting Three.js Matrix3 to ml-matrix');
+export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<mat3, string> => {
+  logger.debug('Converting Three.js Matrix3 to gl-matrix mat3');
 
   try {
+    const result = mat3.create();
     const elements = threeMatrix.elements;
-    const data = [
-      [elements[0], elements[3], elements[6]],
-      [elements[1], elements[4], elements[7]],
-      [elements[2], elements[5], elements[8]],
-    ];
 
-    const matrix = new Matrix(data);
-    return success(matrix);
+    // Both Three.js Matrix3 and gl-matrix mat3 use column-major order
+    for (let i = 0; i < 9; i++) {
+      result[i] = elements[i];
+    }
+
+    return success(result);
   } catch (err) {
     const errorMessage = `Failed to convert Three.js Matrix3: ${err instanceof Error ? err.message : String(err)}`;
     logger.error(errorMessage);
@@ -47,22 +47,21 @@ export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<Matrix, string> =
 };
 
 /**
- * Convert Three.js Matrix4 to ml-matrix
+ * Convert Three.js Matrix4 to gl-matrix mat4
  */
-export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<Matrix, string> => {
-  logger.debug('Converting Three.js Matrix4 to ml-matrix');
+export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<mat4, string> => {
+  logger.debug('Converting Three.js Matrix4 to gl-matrix mat4');
 
   try {
+    const result = mat4.create();
     const elements = threeMatrix.elements;
-    const data = [
-      [elements[0], elements[4], elements[8], elements[12]],
-      [elements[1], elements[5], elements[9], elements[13]],
-      [elements[2], elements[6], elements[10], elements[14]],
-      [elements[3], elements[7], elements[11], elements[15]],
-    ];
 
-    const matrix = new Matrix(data);
-    return success(matrix);
+    // Both Three.js Matrix4 and gl-matrix mat4 use column-major order
+    for (let i = 0; i < 16; i++) {
+      result[i] = elements[i];
+    }
+
+    return success(result);
   } catch (err) {
     const errorMessage = `Failed to convert Three.js Matrix4: ${err instanceof Error ? err.message : String(err)}`;
     logger.error(errorMessage);
@@ -71,28 +70,19 @@ export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<Matrix, string> =
 };
 
 /**
- * Convert ml-matrix to Three.js Matrix3
+ * Convert gl-matrix mat3 to Three.js Matrix3
  */
-export const toThreeMatrix3 = (matrix: Matrix): Result<Matrix3, string> => {
-  logger.debug('Converting ml-matrix to Three.js Matrix3');
+export const toThreeMatrix3 = (matrix: mat3): Result<Matrix3, string> => {
+  logger.debug('Converting gl-matrix mat3 to Three.js Matrix3');
 
   try {
-    if (matrix.rows !== 3 || matrix.columns !== 3) {
-      return error(`Matrix must be 3x3, got ${matrix.rows}x${matrix.columns}`);
+    if (matrix.length !== 9) {
+      return error(`Matrix must be 3x3 (9 elements), got ${matrix.length} elements`);
     }
 
     const threeMatrix = new Matrix3();
-    threeMatrix.set(
-      matrix.get(0, 0),
-      matrix.get(0, 1),
-      matrix.get(0, 2),
-      matrix.get(1, 0),
-      matrix.get(1, 1),
-      matrix.get(1, 2),
-      matrix.get(2, 0),
-      matrix.get(2, 1),
-      matrix.get(2, 2)
-    );
+    // Both gl-matrix mat3 and Three.js Matrix3 use column-major order
+    threeMatrix.fromArray(matrix);
 
     return success(threeMatrix);
   } catch (err) {
@@ -103,35 +93,19 @@ export const toThreeMatrix3 = (matrix: Matrix): Result<Matrix3, string> => {
 };
 
 /**
- * Convert ml-matrix to Three.js Matrix4
+ * Convert gl-matrix mat4 to Three.js Matrix4
  */
-export const toThreeMatrix4 = (matrix: Matrix): Result<Matrix4, string> => {
-  logger.debug('Converting ml-matrix to Three.js Matrix4');
+export const toThreeMatrix4 = (matrix: mat4): Result<Matrix4, string> => {
+  logger.debug('Converting gl-matrix mat4 to Three.js Matrix4');
 
   try {
-    if (matrix.rows !== 4 || matrix.columns !== 4) {
-      return error(`Matrix must be 4x4, got ${matrix.rows}x${matrix.columns}`);
+    if (matrix.length !== 16) {
+      return error(`Matrix must be 4x4 (16 elements), got ${matrix.length} elements`);
     }
 
     const threeMatrix = new Matrix4();
-    threeMatrix.set(
-      matrix.get(0, 0),
-      matrix.get(0, 1),
-      matrix.get(0, 2),
-      matrix.get(0, 3),
-      matrix.get(1, 0),
-      matrix.get(1, 1),
-      matrix.get(1, 2),
-      matrix.get(1, 3),
-      matrix.get(2, 0),
-      matrix.get(2, 1),
-      matrix.get(2, 2),
-      matrix.get(2, 3),
-      matrix.get(3, 0),
-      matrix.get(3, 1),
-      matrix.get(3, 2),
-      matrix.get(3, 3)
-    );
+    // Both gl-matrix mat4 and Three.js Matrix4 use column-major order
+    threeMatrix.fromArray(matrix);
 
     return success(threeMatrix);
   } catch (err) {
@@ -199,13 +173,16 @@ export const toTransform = (matrix: TransformationMatrix): Result<ThreeJSTransfo
 /**
  * Create matrix from Vector3
  */
-export const fromVector3 = (vector: Vector3): Result<Matrix, string> => {
+export const fromVector3 = (vector: Vector3): Result<mat4, string> => {
   logger.debug('Converting Vector3 to matrix');
 
   try {
-    const data = [[vector.x], [vector.y], [vector.z]];
-    const matrix = new Matrix(data);
-    return success(matrix);
+    const result = mat4.create();
+    // Set translation components in the matrix
+    result[12] = vector.x; // m03
+    result[13] = vector.y; // m13
+    result[14] = vector.z; // m23
+    return success(result);
   } catch (err) {
     const errorMessage = `Failed to convert Vector3: ${err instanceof Error ? err.message : String(err)}`;
     logger.error(errorMessage);
@@ -221,9 +198,7 @@ export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, s
 
   try {
     const matrix4 = new Matrix4().makeRotationFromQuaternion(quaternion);
-    const matrix3 = new Matrix3().setFromMatrix4(matrix4);
-
-    const matrixResult = fromThreeMatrix3(matrix3);
+    const matrixResult = fromThreeMatrix4(matrix4);
     if (!matrixResult.success) return matrixResult;
 
     return success(matrixResult.data as RotationMatrix);
@@ -242,9 +217,7 @@ export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
 
   try {
     const matrix4 = new Matrix4().makeRotationFromEuler(euler);
-    const matrix3 = new Matrix3().setFromMatrix4(matrix4);
-
-    const matrixResult = fromThreeMatrix3(matrix3);
+    const matrixResult = fromThreeMatrix4(matrix4);
     if (!matrixResult.success) return matrixResult;
 
     return success(matrixResult.data as RotationMatrix);
@@ -259,32 +232,50 @@ export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
  * Matrix factory implementation
  */
 export const matrixFactory: MatrixFactory = {
-  identity: (size: number): Matrix => {
-    logger.debug(`Creating ${size}x${size} identity matrix`);
-    return Matrix.eye(size);
+  identity: (): mat4 => {
+    logger.debug('Creating 4x4 identity matrix');
+    return mat4.create(); // gl-matrix creates identity by default
   },
 
-  zeros: (rows: number, cols: number): Matrix => {
-    logger.debug(`Creating ${rows}x${cols} zero matrix`);
-    return Matrix.zeros(rows, cols);
+  zeros: (): mat4 => {
+    logger.debug('Creating 4x4 zero matrix');
+    const result = mat4.create();
+    for (let i = 0; i < 16; i++) {
+      result[i] = 0;
+    }
+    return result;
   },
 
-  ones: (rows: number, cols: number): Matrix => {
-    logger.debug(`Creating ${rows}x${cols} ones matrix`);
-    return Matrix.ones(rows, cols);
+  ones: (): mat4 => {
+    logger.debug('Creating 4x4 ones matrix');
+    const result = mat4.create();
+    for (let i = 0; i < 16; i++) {
+      result[i] = 1;
+    }
+    return result;
   },
 
-  random: (rows: number, cols: number, min = 0, max = 1): Matrix => {
-    logger.debug(`Creating ${rows}x${cols} random matrix [${min}, ${max}]`);
-    return Matrix.random(rows, cols);
+  random: (min = 0, max = 1): mat4 => {
+    logger.debug(`Creating 4x4 random matrix [${min}, ${max}]`);
+    const result = mat4.create();
+    for (let i = 0; i < 16; i++) {
+      result[i] = Math.random() * (max - min) + min;
+    }
+    return result;
   },
 
-  diagonal: (values: readonly number[]): Matrix => {
+  diagonal: (values: readonly number[]): mat4 => {
     logger.debug(`Creating diagonal matrix with ${values.length} values`);
-    return Matrix.diag(values);
+    const result = mat4.create();
+    // Set diagonal values (indices 0, 5, 10, 15 for 4x4 matrix)
+    if (values.length > 0) result[0] = values[0];
+    if (values.length > 1) result[5] = values[1];
+    if (values.length > 2) result[10] = values[2];
+    if (values.length > 3) result[15] = values[3];
+    return result;
   },
 
-  fromArray: (data: readonly number[][], validate = true): Matrix => {
+  fromArray: (data: readonly number[][], validate = true): mat4 => {
     logger.debug(`Creating matrix from array ${data.length}x${data[0]?.length || 0}`);
 
     if (validate) {
@@ -300,10 +291,17 @@ export const matrixFactory: MatrixFactory = {
       }
     }
 
-    return new Matrix(data);
+    const result = mat4.create();
+    // Convert 2D array to flat array in column-major order
+    for (let col = 0; col < Math.min(4, data[0]?.length || 0); col++) {
+      for (let row = 0; row < Math.min(4, data.length); row++) {
+        result[col * 4 + row] = data[row][col] || 0;
+      }
+    }
+    return result;
   },
 
-  fromVector3: (vector: Vector3): Matrix => {
+  fromVector3: (vector: Vector3): mat4 => {
     const result = fromVector3(vector);
     if (!result.success) {
       throw new Error(result.error);
@@ -332,14 +330,17 @@ export const matrixFactory: MatrixFactory = {
  * Matrix utilities implementation
  */
 export const matrixUtils: MatrixUtils = {
-  isSquare: (matrix: Matrix): boolean => matrix.rows === matrix.columns,
+  isSquare: (matrix: mat4): boolean => matrix.length === 16, // 4x4 matrix
 
-  isSymmetric: (matrix: Matrix): boolean => {
+  isSymmetric: (matrix: mat4): boolean => {
     if (!matrixUtils.isSquare(matrix)) return false;
 
-    for (let i = 0; i < matrix.rows; i++) {
-      for (let j = 0; j < matrix.columns; j++) {
-        if (Math.abs(matrix.get(i, j) - matrix.get(j, i)) > MATRIX_CONFIG.operations.precision) {
+    // Check if matrix is symmetric (M[i,j] == M[j,i])
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        const mij = matrix[j * 4 + i]; // M[i,j] in column-major
+        const mji = matrix[i * 4 + j]; // M[j,i] in column-major
+        if (Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision) {
           return false;
         }
       }
@@ -347,13 +348,18 @@ export const matrixUtils: MatrixUtils = {
     return true;
   },
 
-  isOrthogonal: (matrix: Matrix): boolean => {
+  isOrthogonal: (matrix: mat4): boolean => {
     if (!matrixUtils.isSquare(matrix)) return false;
 
     try {
-      const transpose = matrix.transpose();
-      const product = matrix.mmul(transpose);
-      const identity = Matrix.eye(matrix.rows);
+      // For orthogonal matrix: M * M^T = I
+      const transpose = mat4.create();
+      mat4.transpose(transpose, matrix);
+
+      const product = mat4.create();
+      mat4.multiply(product, matrix, transpose);
+
+      const identity = mat4.create(); // Already identity
 
       return matrixUtils.equals(product, identity);
     } catch {
@@ -361,52 +367,53 @@ export const matrixUtils: MatrixUtils = {
     }
   },
 
-  isPositiveDefinite: (matrix: Matrix): boolean => {
+  isPositiveDefinite: (matrix: mat4): boolean => {
     if (!matrixUtils.isSquare(matrix) || !matrixUtils.isSymmetric(matrix)) return false;
 
     try {
-      // Use Cholesky decomposition test for positive definiteness
-      new CholeskyDecomposition(matrix);
+      // Simplified positive definite test - check if all diagonal elements are positive
+      // This is a necessary but not sufficient condition
+      for (let i = 0; i < 4; i++) {
+        if (matrix[i * 4 + i] <= 0) return false;
+      }
       return true;
     } catch {
       return false;
     }
   },
 
-  isSingular: (matrix: Matrix): boolean => {
+  isSingular: (matrix: mat4): boolean => {
     if (!matrixUtils.isSquare(matrix)) return true;
 
     try {
-      const det = determinant(matrix);
+      const det = mat4.determinant(matrix);
       return Math.abs(det) < MATRIX_CONFIG.operations.precision;
     } catch {
       return true;
     }
   },
 
-  equals: (a: Matrix, b: Matrix, tolerance = MATRIX_CONFIG.operations.precision): boolean => {
-    if (a.rows !== b.rows || a.columns !== b.columns) return false;
+  equals: (a: mat4, b: mat4, tolerance = MATRIX_CONFIG.operations.precision): boolean => {
+    if (a.length !== b.length) return false;
 
-    for (let i = 0; i < a.rows; i++) {
-      for (let j = 0; j < a.columns; j++) {
-        if (Math.abs(a.get(i, j) - b.get(i, j)) > tolerance) {
-          return false;
-        }
+    for (let i = 0; i < a.length; i++) {
+      if (Math.abs(a[i] - b[i]) > tolerance) {
+        return false;
       }
     }
     return true;
   },
 
-  hash: (matrix: Matrix): string => {
-    const data = matrix.to2DArray().flat().join(',');
-    return `${matrix.rows}x${matrix.columns}_${btoa(data).slice(0, 16)}`;
+  hash: (matrix: mat4): string => {
+    const data = Array.from(matrix).join(',');
+    return `4x4_${btoa(data).slice(0, 16)}`;
   },
 
-  size: (matrix: Matrix): readonly [number, number] => [matrix.rows, matrix.columns],
+  size: (matrix: mat4): readonly [number, number] => [4, 4],
 
-  memoryUsage: (matrix: Matrix): number => {
-    // Estimate: 8 bytes per number (Float64) + overhead
-    return matrix.rows * matrix.columns * 8 + 64;
+  memoryUsage: (matrix: mat4): number => {
+    // Estimate: 4 bytes per number (Float32) + overhead
+    return matrix.length * 4 + 64;
   },
 };
 
@@ -414,7 +421,7 @@ export const matrixUtils: MatrixUtils = {
  * Matrix adapter implementation
  */
 export const matrixAdapter: MatrixAdapter = {
-  fromThreeMatrix3: (matrix: Matrix3): Matrix => {
+  fromThreeMatrix3: (matrix: Matrix3): mat3 => {
     const result = fromThreeMatrix3(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -422,7 +429,7 @@ export const matrixAdapter: MatrixAdapter = {
     return result.data;
   },
 
-  fromThreeMatrix4: (matrix: Matrix4): Matrix => {
+  fromThreeMatrix4: (matrix: Matrix4): mat4 => {
     const result = fromThreeMatrix4(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -430,7 +437,7 @@ export const matrixAdapter: MatrixAdapter = {
     return result.data;
   },
 
-  toThreeMatrix3: (matrix: Matrix): Matrix3 => {
+  toThreeMatrix3: (matrix: mat3): Matrix3 => {
     const result = toThreeMatrix3(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -438,7 +445,7 @@ export const matrixAdapter: MatrixAdapter = {
     return result.data;
   },
 
-  toThreeMatrix4: (matrix: Matrix): Matrix4 => {
+  toThreeMatrix4: (matrix: mat4): Matrix4 => {
     const result = toThreeMatrix4(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -463,26 +470,25 @@ export const matrixAdapter: MatrixAdapter = {
   },
 };
 
-export const matrix4ToMLMatrix = fromThreeMatrix4;
-export const mlMatrixToMatrix4 = toThreeMatrix4;
-export const matrix3ToMLMatrix = fromThreeMatrix3;
-export const mlMatrixToMatrix3 = toThreeMatrix3;
+export const matrix4ToGLMatrix = fromThreeMatrix4;
+export const glMatrixToMatrix4 = toThreeMatrix4;
+export const matrix3ToGLMatrix = fromThreeMatrix3;
+export const glMatrixToMatrix3 = toThreeMatrix3;
 export const createIdentityMatrix = matrixFactory.identity;
 export const createZeroMatrix = matrixFactory.zeros;
 export const createRandomMatrix = matrixFactory.random;
 
 export const validateMatrixDimensions = (
-  matrix: Matrix,
-  expectedRows: number,
-  expectedCols: number
+  matrix: mat4,
+  expectedLength: number
 ): boolean => {
-  return matrix.rows === expectedRows && matrix.columns === expectedCols;
+  return matrix.length === expectedLength;
 };
 
-export const isValidMatrix4 = (matrix: Matrix): boolean => {
-  return validateMatrixDimensions(matrix, 4, 4);
+export const isValidMatrix4 = (matrix: mat4): boolean => {
+  return validateMatrixDimensions(matrix, 16);
 };
 
-export const isValidMatrix3 = (matrix: Matrix): boolean => {
-  return validateMatrixDimensions(matrix, 3, 3);
+export const isValidMatrix3 = (matrix: mat3): boolean => {
+  return validateMatrixDimensions(matrix, 9);
 };

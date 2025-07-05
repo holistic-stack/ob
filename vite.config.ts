@@ -24,6 +24,7 @@ export default defineConfig(({ mode: _mode }) => {
         'monaco-editor',
         '@monaco-editor/react',
         'tslog',
+        'gl-matrix',
       ],
     },
     build: {
@@ -45,7 +46,7 @@ export default defineConfig(({ mode: _mode }) => {
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ['zustand', 'clsx', 'class-variance-authority', 'tslog'],
+            utils: ['zustand', 'clsx', 'class-variance-authority', 'tslog', 'gl-matrix'],
           },
         },
       },

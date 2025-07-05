@@ -5,7 +5,7 @@
  * and numerical accuracy testing following bulletproof-react architecture.
  */
 
-import { Matrix } from 'ml-matrix';
+import { mat4 } from 'gl-matrix';
 import { Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
@@ -52,14 +52,16 @@ export class MatrixTestDataGenerator {
   /**
    * Generate identity matrix
    */
-  generateIdentityMatrix(size = this.config.size): Matrix {
-    return Matrix.eye(size);
+  generateIdentityMatrix(): mat4 {
+    return mat4.create(); // gl-matrix creates identity by default
   }
 
   /**
    * Generate random matrix with controlled properties
    */
-  generateRandomMatrix(rows = this.config.size, cols = this.config.size, seed?: number): Matrix {
+  generateRandomMatrix(seed?: number): mat4 {
+    const result = mat4.create();
+
     if (seed !== undefined) {
       // Simple seeded random for reproducible tests
       let seedValue = seed;
@@ -68,56 +70,62 @@ export class MatrixTestDataGenerator {
         return seedValue / 233280;
       };
 
-      const data: number[][] = [];
-      for (let i = 0; i < rows; i++) {
-        const row: number[] = [];
-        for (let j = 0; j < cols; j++) {
-          row.push(seededRandom() * 10 - 5); // Range [-5, 5]
-        }
-        data.push(row);
+      for (let i = 0; i < 16; i++) {
+        result[i] = seededRandom() * 10 - 5; // Range [-5, 5]
       }
-      return new Matrix(data);
+    } else {
+      for (let i = 0; i < 16; i++) {
+        result[i] = Math.random() * 10 - 5; // Range [-5, 5]
+      }
     }
 
-    return Matrix.random(rows, cols);
+    return result;
   }
 
   /**
    * Generate well-conditioned matrix (good for numerical operations)
    */
-  generateWellConditionedMatrix(size = this.config.size): Matrix {
-    const matrix = Matrix.random(size, size);
-    // Add diagonal dominance to ensure good conditioning
-    for (let i = 0; i < size; i++) {
-      matrix.set(i, i, matrix.get(i, i) + size);
+  generateWellConditionedMatrix(): mat4 {
+    const result = mat4.create();
+    // Generate random values and add diagonal dominance
+    for (let i = 0; i < 16; i++) {
+      result[i] = Math.random() * 2 - 1; // Range [-1, 1]
     }
-    return matrix;
+    // Add diagonal dominance to ensure good conditioning
+    result[0] += 4; // m00
+    result[5] += 4; // m11
+    result[10] += 4; // m22
+    result[15] += 4; // m33
+    return result;
   }
 
   /**
    * Generate ill-conditioned matrix (for edge case testing)
    */
-  generateIllConditionedMatrix(size = this.config.size): Matrix {
-    const matrix = Matrix.ones(size, size);
-    // Create near-singular matrix
-    for (let i = 0; i < size; i++) {
-      matrix.set(i, i, 1e-12);
+  generateIllConditionedMatrix(): mat4 {
+    const result = mat4.create();
+    // Create near-singular matrix with very small diagonal values
+    for (let i = 0; i < 16; i++) {
+      result[i] = 1.0;
     }
-    return matrix;
+    result[0] = 1e-12; // m00
+    result[5] = 1e-12; // m11
+    result[10] = 1e-12; // m22
+    result[15] = 1e-12; // m33
+    return result;
   }
 
   /**
    * Generate singular matrix (determinant = 0)
    */
-  generateSingularMatrix(size = this.config.size): Matrix {
-    const matrix = Matrix.zeros(size, size);
-    // Fill only upper triangle
-    for (let i = 0; i < size - 1; i++) {
-      for (let j = i + 1; j < size; j++) {
-        matrix.set(i, j, Math.random());
-      }
-    }
-    return matrix;
+  generateSingularMatrix(): mat4 {
+    const result = mat4.create();
+    // Create matrix with zero determinant by making rows dependent
+    result[0] = 1; result[4] = 2; result[8] = 3; result[12] = 4;
+    result[1] = 2; result[5] = 4; result[9] = 6; result[13] = 8;
+    result[2] = 0; result[6] = 0; result[10] = 0; result[14] = 0;
+    result[3] = 0; result[7] = 0; result[11] = 0; result[15] = 1;
+    return result;
   }
 
   /**

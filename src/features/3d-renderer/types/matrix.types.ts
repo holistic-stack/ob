@@ -5,23 +5,23 @@
  * branded types for type safety, and performance optimization types.
  */
 
-import type { Matrix as MLMatrix } from 'ml-matrix';
+import type { mat3, mat4 } from 'gl-matrix';
 import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 
 /**
  * Branded types for enhanced type safety
  */
-export type TransformationMatrix = MLMatrix & { readonly __brand: 'TransformationMatrix' };
-export type RotationMatrix = MLMatrix & { readonly __brand: 'RotationMatrix' };
-export type ScaleMatrix = MLMatrix & { readonly __brand: 'ScaleMatrix' };
-export type ProjectionMatrix = MLMatrix & { readonly __brand: 'ProjectionMatrix' };
-export type ViewMatrix = MLMatrix & { readonly __brand: 'ViewMatrix' };
-export type NormalMatrix = MLMatrix & { readonly __brand: 'NormalMatrix' };
+export type TransformationMatrix = mat4 & { readonly __brand: 'TransformationMatrix' };
+export type RotationMatrix = mat4 & { readonly __brand: 'RotationMatrix' };
+export type ScaleMatrix = mat4 & { readonly __brand: 'ScaleMatrix' };
+export type ProjectionMatrix = mat4 & { readonly __brand: 'ProjectionMatrix' };
+export type ViewMatrix = mat4 & { readonly __brand: 'ViewMatrix' };
+export type NormalMatrix = mat3 & { readonly __brand: 'NormalMatrix' };
 
 /**
  * Matrix operation result types with performance metadata
  */
-export interface MatrixOperationResult<T = MLMatrix> {
+export interface MatrixOperationResult<T = mat4> {
   readonly result: T;
   readonly performance: {
     readonly executionTime: number;
@@ -41,7 +41,7 @@ export interface MatrixOperationResult<T = MLMatrix> {
  * Matrix cache entry type
  */
 export interface MatrixCacheEntry {
-  readonly matrix: MLMatrix;
+  readonly matrix: mat4;
   readonly timestamp: number;
   readonly accessCount: number;
   readonly lastAccessed: number;
@@ -56,7 +56,7 @@ export interface MatrixCacheEntry {
 export interface _ThreeJSMatrixConversion {
   readonly matrix3: Matrix3;
   readonly matrix4: Matrix4;
-  readonly source: MLMatrix;
+  readonly source: mat4;
   readonly conversionTime: number;
   readonly cached: boolean;
 }
@@ -74,24 +74,24 @@ export interface ThreeJSTransformData {
  */
 export interface MatrixDecomposition {
   readonly lu?: {
-    readonly L: MLMatrix;
-    readonly U: MLMatrix;
-    readonly P: MLMatrix;
+    readonly L: mat4;
+    readonly U: mat4;
+    readonly P: mat4;
   };
   readonly qr?: {
-    readonly Q: MLMatrix;
-    readonly R: MLMatrix;
+    readonly Q: mat4;
+    readonly R: mat4;
   };
   readonly svd?: {
-    readonly U: MLMatrix;
-    readonly S: MLMatrix;
-    readonly V: MLMatrix;
+    readonly U: mat4;
+    readonly S: mat4;
+    readonly V: mat4;
   };
   readonly eigenvalues?: {
     readonly values: number[];
-    readonly vectors: MLMatrix;
+    readonly vectors: mat4;
   };
-  readonly cholesky?: MLMatrix;
+  readonly cholesky?: mat4;
 }
 
 /**
@@ -170,10 +170,10 @@ export interface MatrixBatchResult<T = MLMatrix> {
  * Matrix adapter types for Three.js integration
  */
 export interface MatrixAdapter {
-  readonly fromThreeMatrix3: (matrix: Matrix3) => MLMatrix;
-  readonly fromThreeMatrix4: (matrix: Matrix4) => MLMatrix;
-  readonly toThreeMatrix3: (matrix: MLMatrix) => Matrix3;
-  readonly toThreeMatrix4: (matrix: MLMatrix) => Matrix4;
+  readonly fromThreeMatrix3: (matrix: Matrix3) => mat3;
+  readonly fromThreeMatrix4: (matrix: Matrix4) => mat4;
+  readonly toThreeMatrix3: (matrix: mat3) => Matrix3;
+  readonly toThreeMatrix4: (matrix: mat4) => Matrix4;
   readonly fromTransform: (transform: ThreeJSTransformData) => TransformationMatrix;
   readonly toTransform: (matrix: TransformationMatrix) => ThreeJSTransformData;
 }
@@ -182,13 +182,13 @@ export interface MatrixAdapter {
  * Matrix factory types
  */
 export interface MatrixFactory {
-  readonly identity: (size: number) => MLMatrix;
-  readonly zeros: (rows: number, cols: number) => MLMatrix;
-  readonly ones: (rows: number, cols: number) => MLMatrix;
-  readonly random: (rows: number, cols: number, min?: number, max?: number) => MLMatrix;
-  readonly diagonal: (values: readonly number[]) => MLMatrix;
-  readonly fromArray: (data: readonly number[][], validate?: boolean) => MLMatrix;
-  readonly fromVector3: (vector: Vector3) => MLMatrix;
+  readonly identity: () => mat4;
+  readonly zeros: () => mat4;
+  readonly ones: () => mat4;
+  readonly random: (min?: number, max?: number) => mat4;
+  readonly diagonal: (values: readonly number[]) => mat4;
+  readonly fromArray: (data: readonly number[][], validate?: boolean) => mat4;
+  readonly fromVector3: (vector: Vector3) => mat4;
   readonly fromQuaternion: (quaternion: Quaternion) => RotationMatrix;
   readonly fromEuler: (euler: Euler) => RotationMatrix;
 }
@@ -197,15 +197,15 @@ export interface MatrixFactory {
  * Matrix utility types
  */
 export interface MatrixUtils {
-  readonly isSquare: (matrix: MLMatrix) => boolean;
-  readonly isSymmetric: (matrix: MLMatrix) => boolean;
-  readonly isOrthogonal: (matrix: MLMatrix) => boolean;
-  readonly isPositiveDefinite: (matrix: MLMatrix) => boolean;
-  readonly isSingular: (matrix: MLMatrix) => boolean;
-  readonly equals: (a: MLMatrix, b: MLMatrix, tolerance?: number) => boolean;
-  readonly hash: (matrix: MLMatrix) => string;
-  readonly size: (matrix: MLMatrix) => readonly [number, number];
-  readonly memoryUsage: (matrix: MLMatrix) => number;
+  readonly isSquare: (matrix: mat4) => boolean;
+  readonly isSymmetric: (matrix: mat4) => boolean;
+  readonly isOrthogonal: (matrix: mat4) => boolean;
+  readonly isPositiveDefinite: (matrix: mat4) => boolean;
+  readonly isSingular: (matrix: mat4) => boolean;
+  readonly equals: (a: mat4, b: mat4, tolerance?: number) => boolean;
+  readonly hash: (matrix: mat4) => string;
+  readonly size: (matrix: mat4) => readonly [number, number];
+  readonly memoryUsage: (matrix: mat4) => number;
 }
 
 /**

@@ -5,7 +5,7 @@
  * with comprehensive coverage of test data generation and performance assertions.
  */
 
-import { Matrix } from 'ml-matrix';
+import { mat4 } from 'gl-matrix';
 import { Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
@@ -42,76 +42,75 @@ describe('Matrix Test Utils', () => {
     it('should generate identity matrix', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing identity matrix generation');
 
-      const matrix = generator.generateIdentityMatrix(3);
+      const matrix = generator.generateIdentityMatrix();
 
-      expect(matrix.rows).toBe(3);
-      expect(matrix.columns).toBe(3);
-      expect(matrix.get(0, 0)).toBe(1);
-      expect(matrix.get(1, 1)).toBe(1);
-      expect(matrix.get(2, 2)).toBe(1);
-      expect(matrix.get(0, 1)).toBe(0);
-      expect(matrix.get(1, 0)).toBe(0);
+      expect(matrix.length).toBe(16); // 4x4 matrix
+      expect(matrix[0]).toBe(1);  // m00
+      expect(matrix[5]).toBe(1);  // m11
+      expect(matrix[10]).toBe(1); // m22
+      expect(matrix[15]).toBe(1); // m33
+      expect(matrix[1]).toBe(0);  // m01
+      expect(matrix[4]).toBe(0);  // m10
     });
 
     it('should generate reproducible random matrix with seed', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing seeded random matrix generation');
 
-      const matrix1 = generator.generateRandomMatrix(2, 2, 12345);
-      const matrix2 = generator.generateRandomMatrix(2, 2, 12345);
+      const matrix1 = generator.generateRandomMatrix(12345);
+      const matrix2 = generator.generateRandomMatrix(12345);
 
-      expect(matrix1.rows).toBe(2);
-      expect(matrix1.columns).toBe(2);
-      expect(matrix2.rows).toBe(2);
-      expect(matrix2.columns).toBe(2);
+      expect(matrix1.length).toBe(16); // 4x4 matrix
+      expect(matrix2.length).toBe(16); // 4x4 matrix
 
       // Should be identical with same seed
-      for (let i = 0; i < 2; i++) {
-        for (let j = 0; j < 2; j++) {
-          expect(matrix1.get(i, j)).toBeCloseTo(matrix2.get(i, j), 10);
-        }
+      for (let i = 0; i < 16; i++) {
+        expect(matrix1[i]).toBeCloseTo(matrix2[i], 10);
       }
     });
 
     it('should generate well-conditioned matrix', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing well-conditioned matrix generation');
 
-      const matrix = generator.generateWellConditionedMatrix(3);
+      const matrix = generator.generateWellConditionedMatrix();
 
-      expect(matrix.rows).toBe(3);
-      expect(matrix.columns).toBe(3);
+      expect(matrix.length).toBe(16); // 4x4 matrix
 
       // Check diagonal dominance (well-conditioned property)
-      for (let i = 0; i < 3; i++) {
-        expect(Math.abs(matrix.get(i, i))).toBeGreaterThan(1); // Should have strong diagonal
-      }
+      // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
+      expect(Math.abs(matrix[0])).toBeGreaterThan(1);  // m00
+      expect(Math.abs(matrix[5])).toBeGreaterThan(1);  // m11
+      expect(Math.abs(matrix[10])).toBeGreaterThan(1); // m22
+      expect(Math.abs(matrix[15])).toBeGreaterThan(1); // m33
     });
 
     it('should generate ill-conditioned matrix', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing ill-conditioned matrix generation');
 
-      const matrix = generator.generateIllConditionedMatrix(3);
+      const matrix = generator.generateIllConditionedMatrix();
 
-      expect(matrix.rows).toBe(3);
-      expect(matrix.columns).toBe(3);
+      expect(matrix.length).toBe(16); // 4x4 matrix
 
       // Check that diagonal elements are very small (ill-conditioned property)
-      for (let i = 0; i < 3; i++) {
-        expect(Math.abs(matrix.get(i, i))).toBeLessThan(1e-10);
-      }
+      // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
+      expect(Math.abs(matrix[0])).toBeLessThan(1e-10);  // m00
+      expect(Math.abs(matrix[5])).toBeLessThan(1e-10);  // m11
+      expect(Math.abs(matrix[10])).toBeLessThan(1e-10); // m22
+      expect(Math.abs(matrix[15])).toBeLessThan(1e-10); // m33
     });
 
     it('should generate singular matrix', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing singular matrix generation');
 
-      const matrix = generator.generateSingularMatrix(3);
+      const matrix = generator.generateSingularMatrix();
 
-      expect(matrix.rows).toBe(3);
-      expect(matrix.columns).toBe(3);
+      expect(matrix.length).toBe(16); // 4x4 matrix
 
       // Check that it's upper triangular with zeros on diagonal
-      for (let i = 0; i < 3; i++) {
-        expect(matrix.get(i, i)).toBe(0);
-      }
+      // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
+      expect(matrix[0]).toBe(0);  // m00
+      expect(matrix[5]).toBe(0);  // m11
+      expect(matrix[10]).toBe(0); // m22
+      expect(matrix[15]).toBe(0); // m33
     });
 
     it('should generate Matrix4 test data', () => {
@@ -147,7 +146,8 @@ describe('Matrix Test Utils', () => {
 
       // Check that each edge case has required properties
       for (const edgeCase of edgeCases) {
-        expect(edgeCase.matrix).toBeInstanceOf(Matrix);
+        expect(edgeCase.matrix).toBeInstanceOf(Float32Array);
+        expect(edgeCase.matrix.length).toBe(16); // 4x4 matrix
         expect(['success', 'warning', 'error']).toContain(edgeCase.expectedBehavior);
       }
     });
@@ -175,12 +175,13 @@ describe('Matrix Test Utils', () => {
 
       const result = await assertion.assertPerformance(() => {
         // Fast operation
-        return Matrix.eye(3);
+        return mat4.create(); // Identity matrix
       }, 'fast_operation');
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data).toBeInstanceOf(Matrix);
+        expect(result.data).toBeInstanceOf(Float32Array);
+        expect(result.data.length).toBe(16); // 4x4 matrix
       }
     });
 
@@ -197,7 +198,7 @@ describe('Matrix Test Utils', () => {
       const result = await assertion.assertPerformance(async () => {
         // Artificially slow operation
         await new Promise((resolve) => setTimeout(resolve, 10));
-        return Matrix.eye(3);
+        return mat4.create(); // Identity matrix
       }, 'slow_operation');
 
       expect(result.success).toBe(false);
@@ -229,14 +230,18 @@ describe('Matrix Test Utils', () => {
     it('should assert numerical accuracy for matrices', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing matrix numerical accuracy');
 
-      const matrix1 = new Matrix([
-        [1, 2],
-        [3, 4],
-      ]);
-      const matrix2 = new Matrix([
-        [1.0000000001, 2.0000000001],
-        [3.0000000001, 4.0000000001],
-      ]);
+      const matrix1 = mat4.fromValues(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      );
+      const matrix2 = mat4.fromValues(
+        1.0000000001, 0, 0, 0,
+        0, 1.0000000001, 0, 0,
+        0, 0, 1.0000000001, 0,
+        0, 0, 0, 1.0000000001
+      );
 
       const result = assertion.assertNumericalAccuracy(matrix1, matrix2, 1e-8);
 
@@ -246,14 +251,8 @@ describe('Matrix Test Utils', () => {
     it('should fail matrix accuracy with dimension mismatch', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing matrix dimension mismatch');
 
-      const matrix1 = new Matrix([
-        [1, 2],
-        [3, 4],
-      ]);
-      const matrix2 = new Matrix([
-        [1, 2, 3],
-        [4, 5, 6],
-      ]);
+      const matrix1 = mat4.create(); // 4x4 matrix
+      const matrix2 = new Float32Array(9); // 3x3 matrix (different size)
 
       const result = assertion.assertNumericalAccuracy(matrix1, matrix2);
 
@@ -282,11 +281,13 @@ describe('Matrix Test Utils', () => {
     it('should test successful matrix operation', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing successful matrix operation');
 
-      const mockOperation = async (matrix: Matrix): Promise<Result<Matrix, string>> => {
+      const mockOperation = async (matrix: mat4): Promise<Result<mat4, string>> => {
         // Simple successful operation
+        const result = mat4.create();
+        mat4.transpose(result, matrix);
         return {
           success: true,
-          data: matrix.transpose(),
+          data: result,
         };
       };
 
@@ -294,14 +295,15 @@ describe('Matrix Test Utils', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data).toBeInstanceOf(Matrix);
+        expect(result.data).toBeInstanceOf(Float32Array);
+        expect(result.data.length).toBe(16); // 4x4 matrix
       }
     });
 
     it('should test failing matrix operation', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing failing matrix operation');
 
-      const mockOperation = async (_matrix: Matrix): Promise<Result<Matrix, string>> => {
+      const mockOperation = async (_matrix: mat4): Promise<Result<mat4, string>> => {
         // Simulated failure
         return {
           success: false,
@@ -320,17 +322,11 @@ describe('Matrix Test Utils', () => {
     it('should test edge cases systematically', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing edge case handling');
 
-      const mockOperation = async (matrix: Matrix): Promise<Result<Matrix, string>> => {
+      const mockOperation = async (matrix: mat4): Promise<Result<mat4, string>> => {
         // Operation that fails for singular matrices
         try {
-          // Use determinant calculation for 3x3 matrices
-          const det =
-            matrix.get(0, 0) *
-              (matrix.get(1, 1) * matrix.get(2, 2) - matrix.get(1, 2) * matrix.get(2, 1)) -
-            matrix.get(0, 1) *
-              (matrix.get(1, 0) * matrix.get(2, 2) - matrix.get(1, 2) * matrix.get(2, 0)) +
-            matrix.get(0, 2) *
-              (matrix.get(1, 0) * matrix.get(2, 1) - matrix.get(1, 1) * matrix.get(2, 0));
+          // Use gl-matrix determinant calculation for 4x4 matrices
+          const det = mat4.determinant(matrix);
 
           if (Math.abs(det) < 1e-10) {
             return {
@@ -340,9 +336,11 @@ describe('Matrix Test Utils', () => {
           }
 
           // Simple mock inversion (not real inverse)
+          const result = mat4.create();
+          mat4.transpose(result, matrix);
           return {
             success: true,
-            data: matrix.transpose(),
+            data: result,
           };
         } catch (err) {
           return {
@@ -384,9 +382,9 @@ describe('Matrix Test Utils', () => {
       expect(matrixOperationTester).toBeInstanceOf(MatrixOperationTester);
 
       // Test that they work
-      const matrix = matrixTestDataGenerator.generateIdentityMatrix(2);
-      expect(matrix.rows).toBe(2);
-      expect(matrix.columns).toBe(2);
+      const matrix = matrixTestDataGenerator.generateIdentityMatrix();
+      expect(matrix.length).toBe(16); // 4x4 matrix
+      expect(matrix[0]).toBe(1); // Identity matrix diagonal
     });
   });
 });

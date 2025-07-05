@@ -36,7 +36,7 @@ import { useMatrixOperations } from '@/features/3d-renderer';
 
 const MyComponent = () => {
   const {
-    convertMatrix4ToMLMatrix,
+    convertMatrix4ToGLMatrix,
     performRobustInversion,
     computeNormalMatrix,
     isServiceHealthy
@@ -106,7 +106,7 @@ const meshResult = await CSGCoreService.fromMesh(mesh);
   "@react-three/drei": "^10.3.0",
   "three": "^0.177.0",
   "@types/three": "^0.177.0",
-  "ml-matrix": "^6.12.1"
+  "gl-matrix": "^3.4.3"
 }
 ```
 

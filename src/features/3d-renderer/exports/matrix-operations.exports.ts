@@ -5,8 +5,8 @@
  * Simplified without complex infrastructure.
  */
 
-// Essential ml-matrix re-exports
-export { Matrix } from 'ml-matrix';
+// Essential gl-matrix re-exports
+export { mat3, mat4 } from 'gl-matrix';
 // Three.js integration
 export { Matrix4 } from 'three';
 // Result types for error handling

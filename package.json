@@ -9,7 +9,6 @@
     "build": "tsc && vite build",
     "test": "vitest run",
     "test:run": "vitest run",
-
     "test:e2e": "playwright test --config playwright.config.ts",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
     "validate:pipeline": "vitest run src/features/openscad-pipeline --reporter=verbose",
@@ -40,7 +39,6 @@
     "test:e2e:ui": "playwright test --config playwright.config.ts --ui",
     "test:e2e:headed": "playwright test --config playwright.config.ts --headed",
     "test:e2e:debug": "playwright test --config playwright.config.ts --debug",
-
     "test:pipeline": "tsx scripts/test-runner.ts --suite=integration",
     "test:ci": "tsx scripts/test-runner.ts --ci --skip-optional",
     "test:watch": "vitest --config vitest.config.ts",
@@ -48,7 +46,6 @@
     "test:coverage:all": "tsx scripts/test-runner.ts --coverage",
     "test:ast-service": "vitest run src/features/ui-components/editor/code-editor/openscad-ast-service.test.ts",
     "test:error-boundary": "vitest run src/features/ui-components/shared/error-boundary/openscad-error-boundary.test.tsx",
-
     "test:r3f-visual": "playwright test src/features/r3f-renderer/components/r3f-renderer/r3f-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots",
     "validate:shared-utilities": "node scripts/validate-shared-utilities.js",
     "validate:types": "tsc --noEmit --strict",
@@ -62,8 +59,8 @@
     "@types/three": "^0.177.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "gl-matrix": "^3.4.3",
     "immer": "^10.1.1",
-    "ml-matrix": "^6.12.1",
     "monaco-editor": "0.52.2",
     "react": "19.0.0",
     "react-dom": "19.0.0",

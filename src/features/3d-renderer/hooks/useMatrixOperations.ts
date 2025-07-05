@@ -5,7 +5,7 @@
  * and integration with the matrix service layer following bulletproof-react patterns.
  */
 
-import type { Matrix } from 'ml-matrix';
+import type { mat4 } from 'gl-matrix';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
@@ -77,15 +77,15 @@ export interface MatrixOperationState<T> {
  */
 export interface UseMatrixOperationsReturn {
   // Matrix conversion operations
-  readonly convertMatrix4ToMLMatrix: (
+  readonly convertMatrix4ToGLMatrix: (
     matrix4: Matrix4,
     options?: EnhancedMatrixOptions
-  ) => Promise<MatrixOperationState<Matrix>>;
+  ) => Promise<MatrixOperationState<mat4>>;
 
   readonly performRobustInversion: (
-    matrix: Matrix,
+    matrix: mat4,
     options?: EnhancedMatrixOptions
-  ) => Promise<MatrixOperationState<Matrix>>;
+  ) => Promise<MatrixOperationState<mat4>>;
 
   readonly computeNormalMatrix: (
     modelMatrix: Matrix4,
@@ -226,14 +226,14 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   }, []);
 
   /**
-   * Convert Matrix4 to ml-matrix with React state management
+   * Convert Matrix4 to gl-matrix with React state management
    */
-  const convertMatrix4ToMLMatrix = useCallback(
+  const convertMatrix4ToGLMatrix = useCallback(
     async (
       matrix4: Matrix4,
       options: EnhancedMatrixOptions = {}
-    ): Promise<MatrixOperationState<Matrix>> => {
-      logger.debug('Converting Matrix4 to ml-matrix');
+    ): Promise<MatrixOperationState<mat4>> => {
+      logger.debug('Converting Matrix4 to gl-matrix');
 
       if (!matrixIntegrationRef.current) {
         return createErrorState('Matrix integration service not initialized');
@@ -264,9 +264,9 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
    */
   const performRobustInversion = useCallback(
     async (
-      matrix: Matrix,
+      matrix: mat4,
       options: EnhancedMatrixOptions = {}
-    ): Promise<MatrixOperationState<Matrix>> => {
+    ): Promise<MatrixOperationState<mat4>> => {
       logger.debug('Performing robust matrix inversion');
 
       if (!matrixIntegrationRef.current) {
@@ -502,7 +502,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   }, []);
 
   return {
-    convertMatrix4ToMLMatrix,
+    convertMatrix4ToGLMatrix,
     performRobustInversion,
     computeNormalMatrix,
     performBatchOperations,
