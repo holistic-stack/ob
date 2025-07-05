@@ -67,7 +67,7 @@ Enhanced CSG Operations: 25 tests
 #### Production Capabilities
 - **Real BSP Tree Algorithms**: ✅ Using production-grade three-csg-ts
 - **Boolean Operations**: ✅ Union, difference, intersection working
-- **Matrix Integration**: ✅ Enhanced numerical stability with ml-matrix
+- **Matrix Integration**: ✅ Enhanced numerical stability with gl-matrix
 - **Error Handling**: ✅ Comprehensive Result<T,E> patterns
 
 ### 3. **Critical Parser Investigation** ⚠️ **BLOCKING ISSUE**

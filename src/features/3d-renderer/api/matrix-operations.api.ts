@@ -208,7 +208,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
 
   /**
    * Pre-allocate matrix for performance optimization
-   * Following ml-matrix best practices for memory management
+   * Following gl-matrix best practices for memory management
    */
   private createOptimizedMatrix(rows: number, cols: number, cacheKey?: string): Matrix {
     // Check cache first to reuse matrices
@@ -419,7 +419,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
           return error(!conversionResult.success ? conversionResult.error : 'Unknown error');
         }
       } else {
-        // For ml-matrix, use validation service directly
+        // For gl-matrix, use validation service directly
         if (!matrixServiceContainer) {
           return {
             success: false,

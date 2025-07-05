@@ -44,7 +44,7 @@
 - **Enhanced CSG Operations**: Production-ready boolean operations with three-csg-ts
 - **Real BSP Tree Algorithms**: Comprehensive CSG with 92% test success rate
 - **AST-to-CSG Converter**: Complete OpenSCAD AST to Three.js mesh conversion
-- **Matrix Integration**: Enhanced numerical stability with ml-matrix
+- **Matrix Integration**: Enhanced numerical stability with gl-matrix
 - **Primitive Renderer**: OpenSCAD geometries (cube, sphere, cylinder)
 - **Performance Optimization**: <16ms render times, frustum culling
 - **Camera Controls**: Interactive 3D scene navigation
@@ -55,7 +55,7 @@
 - **Boolean Operations**: Union, difference, intersection with real BSP tree algorithms
 - **AST-to-CSG Converter**: Complete OpenSCAD AST to Three.js mesh conversion
 - **Performance Optimization**: <16ms render targets achieved (3.94ms average)
-- **Matrix Integration**: Enhanced numerical stability with ml-matrix and SVD fallback
+- **Matrix Integration**: Enhanced numerical stability with gl-matrix and SVD fallback
 - **Comprehensive Testing**: 92% success rate with real three-csg-ts integration
 - **Error Handling**: Result<T,E> patterns with detailed diagnostics
 - **Memory Management**: Automatic cleanup and resource disposal

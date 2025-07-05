@@ -25,8 +25,8 @@ const logger = createLogger('MatrixAdaptersTest');
 
 describe('Matrix Adapters', () => {
   describe('Three.js Matrix Conversions', () => {
-    it('should convert Three.js Matrix3 to ml-matrix correctly', () => {
-      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix3 to ml-matrix conversion');
+    it('should convert Three.js Matrix3 to gl-matrix correctly', () => {
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing Matrix3 to gl-matrix conversion');
 
       const threeMatrix = new Matrix3().set(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
@@ -84,8 +84,8 @@ describe('Matrix Adapters', () => {
       }
     });
 
-    it('should convert ml-matrix to Three.js Matrix4 correctly', () => {
-      logger.debug('[DEBUG][MatrixAdaptersTest] Testing ml-matrix to Matrix4 conversion');
+    it('should convert gl-matrix to Three.js Matrix4 correctly', () => {
+      logger.debug('[DEBUG][MatrixAdaptersTest] Testing gl-matrix to Matrix4 conversion');
 
       const matrix = matrixFactory.identity(4);
       matrix.set(0, 3, 5);

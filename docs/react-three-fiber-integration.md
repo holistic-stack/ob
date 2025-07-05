@@ -9,7 +9,7 @@
 **COMPLETED**: Complete 3D rendering pipeline with enhanced matrix operations including:
 - Three.js renderer component with React Three Fiber
 - Enhanced CSG operations with robust matrix validation and telemetry
-- Advanced matrix operations with ml-matrix integration
+- Advanced matrix operations with gl-matrix integration
 - React integration layer with hooks, providers, and error boundaries
 - Development tools for performance monitoring and debugging
 - Primitive renderer for OpenSCAD geometries
