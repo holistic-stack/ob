@@ -8,17 +8,20 @@
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { AsyncOperationResult, OperationError } from '../../../shared/types/operations.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+} from '../../../shared/types/operations.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { operationUtils } from '../../../shared/types/utils.js';
+import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
-import type { ASTNode, CoreNode } from '../../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
-import type { ParseOptions } from '../../../shared/types/operations.types.js';
 import type { AppStore } from '../types/store.types.js';
-import type { ParsingActions } from './parsing-slice.types.js';
+import type { ParsingActions, ParseOptions } from './parsing-slice.types.js';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
 
 const logger = createLogger('ParsingSlice');
 
@@ -32,7 +35,10 @@ export const createParsingSlice = (
   { parserService }: ParsingSliceConfig
 ): ParsingActions => {
   return {
-    parseCode: async (code: string, options?: ParseOptions): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+    parseCode: async (
+      code: string,
+      options?: ParseOptions
+    ): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
       const operationId = operationUtils.generateOperationId();
       const metadata = operationUtils.createMetadata(
         operationId,
@@ -67,51 +73,46 @@ export const createParsingSlice = (
           });
 
           logger.error(errorMessage);
-          const operationError = operationUtils.createOperationError(
-            'PARSE_ERROR',
-            errorMessage,
-            { recoverable: true }
-          );
+          const operationError = operationUtils.createOperationError('PARSE_ERROR', errorMessage, {
+            recoverable: true,
+          });
           return operationUtils.createError(operationError, metadata);
         }
 
-          if (parseResult.data.length > 0) {
-            // Apply AST restructuring to fix hierarchical relationships
-            logger.debug(`Restructuring AST with ${parseResult.data.length} nodes`);
-            const restructureResult = restructureAST(parseResult.data, {
-              enableLogging: true,
-              enableSourceLocationAnalysis: true,
-            });
+        if (parseResult.data.length > 0) {
+          // Apply AST restructuring to fix hierarchical relationships
+          logger.debug(`Restructuring AST with ${parseResult.data.length} nodes`);
+          const restructureResult = restructureAST(parseResult.data, {
+            enableLogging: true,
+            enableSourceLocationAnalysis: true,
+          });
 
-            if (!restructureResult.success) {
-              logger.warn(
-                `AST restructuring failed: ${restructureResult.error}, using original AST`
-              );
-            }
-
-            const ast = restructureResult.success ? restructureResult.data : parseResult.data;
-            const endTime = performance.now();
-            const parseTime = endTime - startTime;
-
-            set((state: WritableDraft<AppStore>) => {
-              state.parsing.ast = [...ast];
-              state.parsing.isLoading = false;
-              state.parsing.lastParsed = new Date();
-              state.parsing.parseTime = parseTime;
-            });
-
-            // Record performance metrics
-            get().recordParseTime(parseTime);
-
-            logger.debug(
-              `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
-            );
-            return operationUtils.createSuccess(ast as ReadonlyArray<CoreNode>, metadata);
-          } else {
-            // No AST nodes were parsed
-            logger.warn('No AST nodes were parsed from the provided code');
-            return operationUtils.createSuccess([] as ReadonlyArray<CoreNode>, metadata);
+          if (!restructureResult.success) {
+            logger.warn(`AST restructuring failed: ${restructureResult.error}, using original AST`);
           }
+
+          const ast = restructureResult.success ? restructureResult.data : parseResult.data;
+          const endTime = performance.now();
+          const parseTime = endTime - startTime;
+
+          set((state: WritableDraft<AppStore>) => {
+            state.parsing.ast = [...ast];
+            state.parsing.isLoading = false;
+            state.parsing.lastParsed = new Date();
+            state.parsing.parseTime = parseTime;
+          });
+
+          // Performance metrics recording removed
+
+          logger.debug(
+            `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
+          );
+          return operationUtils.createSuccess(ast as ReadonlyArray<CoreNode>, metadata);
+        } else {
+          // No AST nodes were parsed
+          logger.warn('No AST nodes were parsed from the provided code');
+          return operationUtils.createSuccess([] as ReadonlyArray<CoreNode>, metadata);
+        }
       } catch (err: unknown) {
         const endTime = performance.now();
         const parseTime = endTime - startTime;
@@ -127,13 +128,16 @@ export const createParsingSlice = (
         const operationError = operationUtils.createOperationError(
           'PARSE_EXCEPTION',
           errorMessage,
-          { recoverable: false, stack: err instanceof Error ? err.stack : undefined }
+          { recoverable: false, ...(err instanceof Error && err.stack ? { stack: err.stack } : {}) }
         );
         return operationUtils.createError(operationError, metadata);
       }
     },
 
-    parseAST: async (code: string, options?: ParseOptions): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+    parseAST: async (
+      code: string,
+      options?: ParseOptions
+    ): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
       // Alias for backwards compatibility
       return get().parseCode(code, options);
     },
@@ -164,6 +168,19 @@ export const createParsingSlice = (
     clearParsingErrors: () => {
       set((state: WritableDraft<AppStore>) => {
         state.parsing.errors = [];
+      });
+    },
+
+    getParsingMetrics: () => {
+      return get().parsing.operations;
+    },
+
+    cancelParsing: (operationId: string) => {
+      logger.debug('Cancelling parsing operation', { operationId });
+      // Implementation would cancel the specific operation
+      // For now, just clear the loading state
+      set((state) => {
+        state.parsing.isLoading = false;
       });
     },
   };

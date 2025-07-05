@@ -195,7 +195,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
   /**
    * Use render loop for continuous updates (replaces complex useEffect patterns)
    */
-  useThreeFrame(scene, threeCamera, renderer, (_state, delta) => {
+  useThreeFrame(scene!, threeCamera!, renderer, (_state, delta) => {
     // Continuous render loop - no dependencies needed
     // This replaces useEffect-based rendering logic
     if (meshes.length > 0) {

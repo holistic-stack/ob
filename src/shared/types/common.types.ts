@@ -227,8 +227,6 @@ export interface Theme {
   readonly borderRadius: Record<string, string>;
 }
 
-
-
 export interface PerformanceThresholds {
   readonly maxRenderTime: number;
   readonly maxParseTime: number;

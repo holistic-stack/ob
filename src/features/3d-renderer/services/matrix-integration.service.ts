@@ -66,39 +66,51 @@ export class MatrixIntegrationService {
     return success(matrix);
   }
 
-  async convertMatrix4ToGLMatrix(matrix4: any, options?: EnhancedMatrixOptions): Promise<EnhancedMatrixResult> {
+  async convertMatrix4ToGLMatrix(
+    matrix4: any,
+    options?: EnhancedMatrixOptions
+  ): Promise<EnhancedMatrixResult> {
     logger.debug('Matrix4 to GL Matrix conversion (stub)');
     return {
       success: true,
       data: matrix4,
-      metadata: { operationTime: 0 }
+      metadata: { operationTime: 0 },
     };
   }
 
-  async convertGLMatrixToMatrix4(matrix: any, options?: EnhancedMatrixOptions): Promise<EnhancedMatrixResult> {
+  async convertGLMatrixToMatrix4(
+    matrix: any,
+    options?: EnhancedMatrixOptions
+  ): Promise<EnhancedMatrixResult> {
     logger.debug('GL Matrix to Matrix4 conversion (stub)');
     return {
       success: true,
       data: matrix,
-      metadata: { operationTime: 0 }
+      metadata: { operationTime: 0 },
     };
   }
 
-  async computeEnhancedNormalMatrix(modelMatrix: any, options?: EnhancedMatrixOptions): Promise<EnhancedMatrixResult> {
+  async computeEnhancedNormalMatrix(
+    modelMatrix: any,
+    options?: EnhancedMatrixOptions
+  ): Promise<EnhancedMatrixResult> {
     logger.debug('Enhanced normal matrix computation (stub)');
     return {
       success: true,
       data: modelMatrix,
-      metadata: { operationTime: 0 }
+      metadata: { operationTime: 0 },
     };
   }
 
-  async performBatchOperations(operations: any[], options?: EnhancedMatrixOptions): Promise<EnhancedMatrixResult> {
+  async performBatchOperations(
+    operations: any[],
+    options?: EnhancedMatrixOptions
+  ): Promise<EnhancedMatrixResult> {
     logger.debug('Batch operations (stub)');
     return {
       success: true,
       data: operations,
-      metadata: { operationTime: 0 }
+      metadata: { operationTime: 0 },
     };
   }
 
@@ -107,7 +119,7 @@ export class MatrixIntegrationService {
     return {
       totalOperations: 0,
       averageTime: 0,
-      cacheHitRate: 0
+      cacheHitRate: 0,
     };
   }
 
@@ -116,7 +128,7 @@ export class MatrixIntegrationService {
     return {
       success: true,
       data: {},
-      metadata: { operationTime: 0 }
+      metadata: { operationTime: 0 },
     };
   }
 

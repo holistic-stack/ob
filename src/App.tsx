@@ -16,13 +16,11 @@ import { useAppStore } from './features/store/app-store';
 import {
   selectEditorCode,
   selectParsingAST,
-  selectPerformanceMetrics,
   selectRenderingErrors,
   selectRenderingIsRendering,
   selectRenderingMeshes,
 } from './features/store/selectors';
 import { createLogger } from './shared/services/logger.service';
-
 
 /**
  * Main Application Component
@@ -38,7 +36,7 @@ export function App(): React.JSX.Element {
   const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
   const applicationStatus: boolean = useAppStore(selectRenderingIsRendering);
   const renderingStateMeshes: ReadonlyArray<THREE.Mesh> = useAppStore(selectRenderingMeshes);
-  const performanceMetrics: PerformanceMetrics = useAppStore(selectPerformanceMetrics);
+
   const renderErrors: ReadonlyArray<RenderingError> = useAppStore(selectRenderingErrors);
   // Display render errors if any
   useEffect(() => {
@@ -71,9 +69,8 @@ export function App(): React.JSX.Element {
       astNodeCount: ast?.length ?? 0,
       isRendering: applicationStatus,
       meshCount: renderingStateMeshes.length,
-      renderTime: performanceMetrics.renderTime,
     });
-  }, [applicationStatus, editorCode, ast, renderingStateMeshes, performanceMetrics]);
+  }, [applicationStatus, editorCode, ast, renderingStateMeshes]);
 
   /**
    * Handle panel resize
@@ -117,7 +114,6 @@ export function App(): React.JSX.Element {
         <div className="flex items-center space-x-4 text-sm text-gray-400">
           <span>AST: {ast?.length ?? 0} nodes</span>
           <span>Meshes: {renderingStateMeshes.length}</span>
-          <span>Render: {performanceMetrics.renderTime.toFixed(1)}ms</span>
         </div>
       </header>
 

@@ -273,6 +273,4 @@ describe('Simplified MatrixOperationsAPI', () => {
       }
     });
   });
-
-
 });

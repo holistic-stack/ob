@@ -35,7 +35,7 @@ export class MatrixServiceContainer {
   getValidationService(): any {
     logger.debug('Getting validation service (stub)');
     return {
-      validate: () => ({ isValid: true, errors: [], warnings: [], suggestions: [] })
+      validate: () => ({ isValid: true, errors: [], warnings: [], suggestions: [] }),
     };
   }
 

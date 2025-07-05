@@ -12,9 +12,12 @@ import type {
   CameraConfig,
   EditorPosition,
   EditorSelection,
-  PerformanceMetrics,
 } from '../../../shared/types/common.types';
-import type { AsyncOperationResult, OperationError, OperationMetadata } from '../../../shared/types/operations.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+  OperationMetadata,
+} from '../../../shared/types/operations.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
@@ -94,33 +97,6 @@ export interface AddRenderErrorPayload {
 }
 
 /**
- * Performance action payload types
- */
-export interface UpdateMetricsPayload {
-  readonly metrics: PerformanceMetrics;
-  readonly timestamp?: Date;
-}
-
-export interface RecordParseTimePayload {
-  readonly duration: number;
-  readonly nodeCount?: number;
-  readonly codeLength?: number;
-}
-
-export interface RecordRenderTimePayload {
-  readonly duration: number;
-  readonly meshCount?: number;
-  readonly triangleCount?: number;
-}
-
-export interface AddPerformanceViolationPayload {
-  readonly violation: string;
-  readonly metric: 'parseTime' | 'renderTime' | 'memoryUsage' | 'frameRate';
-  readonly value: number;
-  readonly threshold: number;
-}
-
-/**
  * Configuration action payload types
  */
 export interface UpdateConfigPayload {
@@ -155,12 +131,6 @@ export interface ActionCreators {
   readonly renderFromAST: (payload: RenderFromASTPayload) => RenderFromASTResult;
   readonly updateCamera: (payload: UpdateCameraPayload) => void;
   readonly addRenderError: (payload: AddRenderErrorPayload) => void;
-
-  // Performance actions
-  readonly updateMetrics: (payload: UpdateMetricsPayload) => void;
-  readonly recordParseTime: (payload: RecordParseTimePayload) => void;
-  readonly recordRenderTime: (payload: RecordRenderTimePayload) => void;
-  readonly addPerformanceViolation: (payload: AddPerformanceViolationPayload) => void;
 
   // Configuration actions
   readonly updateConfig: (payload: UpdateConfigPayload) => void;

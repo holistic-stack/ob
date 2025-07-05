@@ -78,28 +78,28 @@ export interface MatrixOperationsAPI {
   convertMatrix4ToGLMatrix(
     matrix4: Matrix4,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<mat4>, string>>;
+  ): Promise<Result<mat4, string>>;
 
   convertGLMatrixToMatrix4(
     matrix: mat4,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>>;
+  ): Promise<Result<Matrix4, string>>;
 
   performRobustInversion(
     matrix: Matrix,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>>;
+  ): Promise<Result<Matrix, string>>;
 
   computeNormalMatrix(
     modelMatrix: Matrix4,
     config?: MatrixOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<Matrix3>, string>>;
+  ): Promise<Result<Matrix3, string>>;
 
   // Batch operations
   performBatchConversions<T>(
-    operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
+    operations: Array<() => Promise<Result<T, string>>>,
     config?: BatchOperationConfig
-  ): Promise<Result<EnhancedMatrixResult<T>[], string>>;
+  ): Promise<Result<T[], string>>;
 
   // Validation and analysis
   validateMatrix(
@@ -264,10 +264,29 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   }
 
   /**
+   * Convert EnhancedMatrixResult to Result<T, string>
+   */
+  private convertEnhancedResult<T>(enhanced: EnhancedMatrixResult<T>): Result<T, string> {
+    if (enhanced.success && enhanced.data !== undefined) {
+      return success(enhanced.data);
+    } else {
+      return error(enhanced.error ?? 'Unknown matrix operation error');
+    }
+  }
+
+  /**
    * Execute operation with metrics tracking
    */
   private async executeWithMetrics<T>(
     operation: () => Promise<Result<T, string>>,
+    operationName: string
+  ): Promise<Result<T, string>>;
+  private async executeWithMetrics<T>(
+    operation: () => Promise<EnhancedMatrixResult<T>>,
+    operationName: string
+  ): Promise<Result<T, string>>;
+  private async executeWithMetrics<T>(
+    operation: () => Promise<Result<T, string> | EnhancedMatrixResult<T>>,
     operationName: string
   ): Promise<Result<T, string>> {
     const startTime = Date.now();
@@ -279,13 +298,18 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       const executionTime = Date.now() - startTime;
       this.trackOperation(result.success, executionTime);
 
-      if (result.success) {
+      // Check if result is EnhancedMatrixResult or Result<T, string>
+      const finalResult = 'data' in result && 'metadata' in result
+        ? this.convertEnhancedResult(result as EnhancedMatrixResult<T>)
+        : result as Result<T, string>;
+
+      if (finalResult.success) {
         logger.debug(`${operationName} completed successfully in ${executionTime}ms`);
       } else {
-        logger.warn(`${operationName} failed: ${!result.success ? result.error : 'Unknown error'}`);
+        logger.warn(`${operationName} failed: ${finalResult.error}`);
       }
 
-      return result;
+      return finalResult;
     } catch (err) {
       const executionTime = Date.now() - startTime;
       this.trackOperation(false, executionTime);
@@ -302,7 +326,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async convertMatrix4ToGLMatrix(
     matrix4: Matrix4,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<mat4>, string>> {
+  ): Promise<Result<mat4, string>> {
     await this.ensureInitialized();
 
     const options: EnhancedMatrixOptions = {
@@ -323,7 +347,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async convertGLMatrixToMatrix4(
     matrix: mat4,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix4>, string>> {
+  ): Promise<Result<Matrix4, string>> {
     await this.ensureInitialized();
 
     const options: EnhancedMatrixOptions = {
@@ -343,17 +367,11 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async performRobustInversion(
     matrix: Matrix,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix>, string>> {
+  ): Promise<Result<Matrix, string>> {
     await this.ensureInitialized();
 
-    const options: EnhancedMatrixOptions = {
-      useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
-      useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
-      enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
-    };
-
     return this.executeWithMetrics(
-      () => this.matrixIntegration.performRobustInversion(matrix, options),
+      () => this.matrixIntegration.performRobustInversion(matrix),
       'performRobustInversion'
     );
   }
@@ -364,7 +382,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
   async computeNormalMatrix(
     modelMatrix: Matrix4,
     config: MatrixOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<Matrix3>, string>> {
+  ): Promise<Result<Matrix3, string>> {
     const options: EnhancedMatrixOptions = {
       useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
@@ -381,9 +399,9 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Perform batch operations
    */
   async performBatchConversions<T>(
-    operations: Array<() => Promise<Result<EnhancedMatrixResult<T>, string>>>,
+    operations: Array<() => Promise<Result<T, string>>>,
     config: BatchOperationConfig = {}
-  ): Promise<Result<EnhancedMatrixResult<T>[], string>> {
+  ): Promise<Result<T[], string>> {
     const options: EnhancedMatrixOptions = {
       useValidation: config.enableValidation ?? this.config.enableValidation ?? false,
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
@@ -504,7 +522,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
 
       return {
         status: serviceHealth.overall === 'healthy' ? 'healthy' : 'degraded',
-        services: serviceHealth.services.map((service) => ({
+        services: serviceHealth.services.map((service: any) => ({
           name: service.service,
           status: service.healthy ? 'healthy' : 'unhealthy',
           lastCheck: Date.now(),
@@ -557,7 +575,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       if (configResult.success) {
         return success(undefined);
       } else {
-        return error(!configResult.success ? configResult.error : 'Unknown error');
+        return error(configResult.error ?? 'Unknown error');
       }
     } catch (err) {
       const errorMessage = `Configuration update failed: ${err instanceof Error ? err.message : String(err)}`;

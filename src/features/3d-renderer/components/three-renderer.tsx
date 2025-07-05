@@ -259,8 +259,6 @@ const SceneContent: React.FC<{
     onRenderComplete?.(newMeshes);
   }, [ast, meshes, scene, onRenderComplete]);
 
-
-
   /**
    * Render AST when it changes
    */

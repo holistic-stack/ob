@@ -5,7 +5,7 @@
  * branded types for type safety, and performance optimization types.
  */
 
-import { mat3, mat4 } from 'gl-matrix';
+import { type mat3, mat4 } from 'gl-matrix';
 import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 
 /**
@@ -18,7 +18,27 @@ export class Matrix {
   constructor(rows: number, cols: number, data?: number[]) {
     this.data = mat4.create();
     if (data && data.length >= 16) {
-      mat4.set(this.data, ...data.slice(0, 16) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]);
+      mat4.set(
+        this.data,
+        ...(data.slice(0, 16) as [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+        ])
+      );
     }
   }
 

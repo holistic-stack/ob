@@ -53,8 +53,6 @@ export interface RenderingState {
   readonly camera: CameraConfig;
 }
 
-
-
 /**
  * Main application state
  */
@@ -107,8 +105,6 @@ export interface RenderingActions {
 
 export type RenderingSlice = RenderingState & RenderingActions;
 
-
-
 export interface ConfigActions {
   updateConfig: (config: Partial<AppConfig>) => void;
   resetConfig: () => void;
@@ -122,11 +118,7 @@ export type ConfigSlice = { config: AppConfig } & ConfigActions;
 /**
  * Store interface combining state and actions from all slices
  */
-export type AppStore = AppState &
-  EditorActions &
-  ParsingActions &
-  RenderingActions &
-  ConfigActions;
+export type AppStore = AppState & EditorActions & ParsingActions & RenderingActions & ConfigActions;
 
 /**
  * Store selector types for performance optimization

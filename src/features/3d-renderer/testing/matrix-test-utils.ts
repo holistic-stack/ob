@@ -23,8 +23,6 @@ export interface MatrixTestConfig {
   readonly performanceThreshold: number; // milliseconds
 }
 
-
-
 /**
  * Matrix test data generator
  */
@@ -208,8 +206,6 @@ export class MatrixTestDataGenerator {
   }
 }
 
-
-
 /**
  * Matrix operation test helpers
  */
@@ -313,8 +309,6 @@ export class MatrixOperationTester {
   getDataGenerator(): MatrixTestDataGenerator {
     return this.dataGenerator;
   }
-
-
 }
 
 /**

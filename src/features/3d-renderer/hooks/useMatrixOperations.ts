@@ -240,7 +240,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       }
 
       try {
-        const result = await matrixIntegrationRef.current.convertMatrix4ToMLMatrix(
+        const result = await matrixIntegrationRef.current.convertMatrix4ToGLMatrix(
           matrix4,
           options
         );
@@ -248,7 +248,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         if (result.success) {
           return createSuccessState(result.data.result, result.data.performance);
         } else {
-          return createErrorState(result.error);
+          return createErrorState(result.error ?? 'Unknown matrix operation error');
         }
       } catch (err) {
         const errorMessage = `Matrix conversion failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -274,7 +274,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       }
 
       try {
-        const result = await matrixIntegrationRef.current.performRobustInversion(matrix, options);
+        const result = await matrixIntegrationRef.current.performRobustInversion(matrix);
 
         if (result.success) {
           return createSuccessState(result.data.result, result.data.performance);
@@ -313,7 +313,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         if (result.success) {
           return createSuccessState(result.data.result, result.data.performance);
         } else {
-          return createErrorState(result.error);
+          return createErrorState(result.error ?? 'Unknown matrix operation error');
         }
       } catch (err) {
         const errorMessage = `Normal matrix computation failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -347,7 +347,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         if (result.success) {
           return createSuccessState(result.data);
         } else {
-          return createErrorState(result.error);
+          return createErrorState(result.error ?? 'Unknown matrix operation error');
         }
       } catch (err) {
         const errorMessage = `Batch operations failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -426,7 +426,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       const healthStatus: HealthStatus = {
         isHealthy: status.overall === 'healthy',
         services: status.services.reduce(
-          (acc, service) => {
+          (acc: any, service: any) => {
             acc[service.service] = service.healthy;
             return acc;
           },
@@ -459,7 +459,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       if (result.success) {
         return createSuccessState(undefined);
       } else {
-        return createErrorState(result.error);
+        return createErrorState(result.error ?? 'Unknown matrix operation error');
       }
     } catch (err) {
       const errorMessage = `Configuration optimization failed: ${err instanceof Error ? err.message : String(err)}`;

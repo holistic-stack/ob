@@ -280,8 +280,6 @@ export class MaterialService {
     );
   }
 
-
-
   /**
    * Clear cache and dispose materials
    */

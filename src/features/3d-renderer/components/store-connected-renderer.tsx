@@ -20,7 +20,6 @@ import { useAppStore } from '../../store/app-store.js';
 import {
   selectConfigEnableRealTimeRendering,
   selectParsingAST,
-  selectPerformanceMetrics,
   selectRenderingCamera,
   selectRenderingState,
 } from '../../store/selectors/index.js';
@@ -50,12 +49,7 @@ const DEFAULT_RENDERING_STATE: RenderingState = {
   },
 };
 
-const DEFAULT_PERFORMANCE_METRICS = {
-  renderTime: 0,
-  parseTime: 0,
-  memoryUsage: 0,
-  frameRate: 60,
-};
+
 
 /**
  * Props for the store-connected renderer
@@ -96,7 +90,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       } as CameraConfig)
   );
   const renderingState = useAppStore(selectRenderingState) ?? DEFAULT_RENDERING_STATE;
-  const performanceMetrics = useAppStore(selectPerformanceMetrics) ?? DEFAULT_PERFORMANCE_METRICS;
+
   const enableRealTimeRendering = useAppStore(selectConfigEnableRealTimeRendering) ?? true;
 
   // Store actions - use direct selectors with stable callbacks (more efficient)
@@ -132,8 +126,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     },
     [updateCamera]
   );
-
-
 
   /**
    * Handle render completion - update store state
@@ -212,7 +204,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       meshCount: renderingState?.meshes?.length ?? 0,
       errorCount: renderingState?.renderErrors?.length ?? 0,
       cameraPosition: camera?.position ?? [0, 0, 0],
-      lastRenderTime: performanceMetrics?.renderTime ?? 0,
+      lastRenderTime: 0,
     }),
     [
       processedAST.length,
@@ -220,7 +212,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       renderingState?.meshes?.length,
       renderingState?.renderErrors?.length,
       camera?.position,
-      performanceMetrics?.renderTime,
     ]
   );
 
@@ -290,16 +281,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         </div>
       )}
 
-      {/* Performance metrics display (development only) */}
+      {/* Development info display */}
       {process.env.NODE_ENV === 'development' && (
         <div
           className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-2 rounded text-sm"
-          data-testid="performance-display"
+          data-testid="development-display"
         >
-          <div>Render Time: {performanceMetrics?.renderTime?.toFixed(2) ?? '0.00'}ms</div>
-          <div>Parse Time: {performanceMetrics?.parseTime?.toFixed(2) ?? '0.00'}ms</div>
-          <div>Memory: {((performanceMetrics?.memoryUsage ?? 0) / 1024 / 1024).toFixed(1)}MB</div>
           <div>Meshes: {renderingState?.meshes?.length ?? 0}</div>
+          <div>Errors: {renderingState?.renderErrors?.length ?? 0}</div>
         </div>
       )}
     </div>

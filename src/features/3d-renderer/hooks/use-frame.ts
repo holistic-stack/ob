@@ -29,7 +29,7 @@ type FrameCallback = (state: FrameState, delta: number) => void;
  */
 export const useFrame = (callback: FrameCallback, _priority = 0) => {
   const callbackRef = useRef(callback);
-  const frameIdRef = useRef<number>();
+  const frameIdRef = useRef<number | undefined>(undefined);
   const lastTimeRef = useRef(performance.now());
   const startTimeRef = useRef(performance.now());
 

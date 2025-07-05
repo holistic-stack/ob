@@ -106,7 +106,7 @@ export class MatrixOperationsAPI {
       // Three.js and gl-matrix both use column-major order, so direct copy
       const elements = matrix4.elements;
       for (let i = 0; i < 16; i++) {
-        result[i] = elements[i];
+        result[i] = elements[i] ?? 0;
       }
       return result;
     });
