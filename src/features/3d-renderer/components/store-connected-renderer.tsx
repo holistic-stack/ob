@@ -24,7 +24,7 @@ import {
   selectRenderingCamera,
   selectRenderingState,
 } from '../../store/selectors/index.js';
-import type { RenderingState, RenderingError } from '../../store/types/store.types';
+import type { RenderingError, RenderingState } from '../../store/types/store.types';
 import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 import { R3FScene } from './r3f-scene';
 
@@ -107,7 +107,12 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     useCallback((state: AppStore) => state.updateMetrics ?? (() => {}), [])
   );
   const renderFromAST = useAppStore(
-    useCallback((state: AppStore) => state.renderFromAST ?? (() => Promise.resolve({ success: false, error: 'Store not initialized' })), [])
+    useCallback(
+      (state: AppStore) =>
+        state.renderFromAST ??
+        (() => Promise.resolve({ success: false, error: 'Store not initialized' })),
+      []
+    )
   );
   const addRenderError = useAppStore(
     useCallback((state: AppStore) => state.addRenderError ?? (() => {}), [])
@@ -174,7 +179,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Memoized AST processing (expensive calculation optimization)
    */
   const processedAST = useMemo(() => {
-    return ast?.filter(node => node != null) ?? [];
+    return ast?.filter((node) => node != null) ?? [];
   }, [ast]);
 
   /**
@@ -211,14 +216,24 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   /**
    * Memoized debug info (prevent unnecessary recalculations)
    */
-  const debugInfo = useMemo(() => ({
-    astNodeCount: processedAST.length,
-    isRendering: renderingState?.isRendering ?? false,
-    meshCount: renderingState?.meshes?.length ?? 0,
-    errorCount: renderingState?.renderErrors?.length ?? 0,
-    cameraPosition: camera?.position ?? [0, 0, 0],
-    lastRenderTime: performanceMetrics?.renderTime ?? 0,
-  }), [processedAST.length, renderingState?.isRendering, renderingState?.meshes?.length, renderingState?.renderErrors?.length, camera?.position, performanceMetrics?.renderTime]);
+  const debugInfo = useMemo(
+    () => ({
+      astNodeCount: processedAST.length,
+      isRendering: renderingState?.isRendering ?? false,
+      meshCount: renderingState?.meshes?.length ?? 0,
+      errorCount: renderingState?.renderErrors?.length ?? 0,
+      cameraPosition: camera?.position ?? [0, 0, 0],
+      lastRenderTime: performanceMetrics?.renderTime ?? 0,
+    }),
+    [
+      processedAST.length,
+      renderingState?.isRendering,
+      renderingState?.meshes?.length,
+      renderingState?.renderErrors?.length,
+      camera?.position,
+      performanceMetrics?.renderTime,
+    ]
+  );
 
   /**
    * Effect: Log store state changes for debugging (optimized dependencies)

@@ -44,7 +44,7 @@ describe('ChangeTracker', () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
     // Wait a bit to ensure different timestamps
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const _change2 = tracker.trackChange(20, 22, 25, sourceText);
 
@@ -78,7 +78,7 @@ describe('ChangeTracker', () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
     // Wait a bit to ensure different timestamps
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     tracker.trackChange(25, 27, 28, sourceText);
 

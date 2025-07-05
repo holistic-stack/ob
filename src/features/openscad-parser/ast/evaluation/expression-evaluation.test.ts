@@ -44,7 +44,8 @@ describe('Enhanced Expression Evaluation', () => {
       const childCount = node.childCount || 0;
       for (let i = 0; i < childCount; i++) {
         const child = node.child(i);
-        if (child && child !== node) { // Prevent circular references
+        if (child && child !== node) {
+          // Prevent circular references
           const result = findBinaryExpressionNode(child, depth + 1);
           if (result) return result;
         }
