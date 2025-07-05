@@ -7,8 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "vitest run",
-    "test:run": "vitest run",
+    "test": "cross-env NODE_OPTIONS=\"--expose-gc --max-old-space-size=4096\" vitest run",
+    "test:run": "cross-env NODE_OPTIONS=\"--expose-gc --max-old-space-size=4096\" vitest run",
+
     "test:e2e": "playwright test --config playwright.config.ts",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
     "validate:pipeline": "vitest run src/features/openscad-pipeline --reporter=verbose",

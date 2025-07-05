@@ -363,7 +363,6 @@ export function extractArguments(
     const argNodeText = getNodeText(argNode, sourceCode);
     // Handle 'arguments' node that contains 'argument' nodes or direct expressions
     if (argNode.type === 'arguments') {
-      console.log(`[extractArguments] Found 'arguments' node, processing its children`);
       // Check if this arguments node has argument children
       let hasArgumentChildren = false;
       let extractedAnyArguments = false;
@@ -372,7 +371,6 @@ export function extractArguments(
         const innerArgNode = argNode.namedChild(j);
         if (!innerArgNode) continue;
 
-        const innerArgNodeText = getNodeText(innerArgNode, sourceCode);
         if (innerArgNode.type === 'argument') {
           hasArgumentChildren = true;
           const param = extractArgument(innerArgNode, errorHandler, sourceCode);
@@ -481,7 +479,6 @@ function extractArgument(
       const child = argNode.child(i);
       if (!child) continue;
 
-      const childText = getNodeText(child, sourceCode);
       if (child.type === 'identifier' && !identifierNode) {
         identifierNode = child;
       } else if (
@@ -512,7 +509,7 @@ function extractArgument(
 
   if (nameField && valueField) {
     const name = getNodeText(nameField, sourceCode);
-    const valueFieldText = getNodeText(valueField, sourceCode);
+
     // Extract the value from the expression
     const value = extractValue(valueField, sourceCode);
     if (!value) {
@@ -534,9 +531,6 @@ function extractArgument(
     const child = argNode.child(i);
     if (!child) continue;
 
-    const childText = getNodeText(child, sourceCode);
-    console.log(`[extractArgument] Examining child ${i}: type=${child.type}, text='${childText}'`);
-
     if (child.type === 'identifier' && !identifierNode) {
       identifierNode = child;
     } else if (child.type === '=' || child.type === 'equals') {
@@ -549,13 +543,12 @@ function extractArgument(
     ) {
       // This should be the expression part (not the '=' operator or identifier)
       expressionNode = child;
-      console.log(`[extractArgument] Found expression: type=${child.type}, text='${childText}'`);
     }
   }
 
   if (identifierNode && expressionNode && hasEqualsSign) {
     const name = getNodeText(identifierNode, sourceCode);
-    const expressionText = getNodeText(expressionNode, sourceCode);
+
     // Extract the value from the expression
     const value = extractValue(expressionNode, sourceCode);
     if (!value) {
@@ -568,7 +561,6 @@ function extractArgument(
     // This is a positional argument
     const valueNode = argNode.namedChild(0);
     if (valueNode) {
-      const valueNodeText = getNodeText(valueNode, sourceCode);
       // Extract the value
       const value = extractValue(valueNode, sourceCode);
       if (!value) {
@@ -588,13 +580,6 @@ function extractArgument(
  * @returns A value object or null if the value is invalid
  */
 export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Value | null {
-  // --- BEGIN DIAGNOSTIC LOGGING ---
-  // console.log(`[extractValue ENTRY] Node Type: '${valueNode.type}', Text: '${valueNode.text.replace(/\n/g, '\\n')}', isNamed: ${valueNode.isNamed}`);
-  // --- END DIAGNOSTIC LOGGING ---
-
-  console.log(
-    `[extractValue] Processing value node: type=${valueNode.type}, text='${valueNode.text}'`
-  );
   switch (valueNode.type) {
     case 'expression': {
       const expressionChild = valueNode.namedChild(0); // Or child(0) if expressions can be anonymous
@@ -662,10 +647,6 @@ export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Va
         if (operatorNode && operandNode) {
           const operator = operatorNode.text;
           const operandValue = extractValue(operandNode, sourceCode);
-
-          console.log(
-            `[extractValue] Unary operator: '${operator}', operand: ${JSON.stringify(operandValue)}`
-          );
 
           if (operandValue && typeof operandValue === 'object' && 'value' in operandValue) {
             // Handle structured value objects
@@ -824,9 +805,6 @@ export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Va
  * @returns A vector value object or null if the vector is invalid
  */
 function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.VectorValue | null {
-  console.log(
-    `[extractVectorLiteral] Processing vector/array node: type=${vectorNode.type}, text='${vectorNode.text}'`
-  );
   const values: ast.Value[] = [];
 
   // Iterate over named children to skip syntax tokens like '[', ']', ','
@@ -834,19 +812,8 @@ function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.
     const elementNode = vectorNode.namedChild(i);
     if (elementNode) {
       // Ensure child exists
-      // --- BEGIN DIAGNOSTIC LOGGING ---
-      console.log(
-        `[extractVectorLiteral BEFORE extractValue] Child node: Type='${
-          elementNode.type
-        }', Text='${elementNode.text.replace(/\n/g, '\\n')}', isNamed=${elementNode.isNamed}`
-      );
-      // --- END DIAGNOSTIC LOGGING ---
       const value = extractValue(elementNode, sourceCode);
       if (value) {
-        console.log(
-          '[extractVectorLiteral] Successfully extracted value for child:',
-          JSON.stringify(value)
-        );
         values.push(value);
       }
     }
@@ -854,12 +821,6 @@ function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.
 
   // It's possible for an array like `[,,]` to parse with no actual values.
   // Or if extractValue fails for all children. Default OpenSCAD behavior might be relevant here.
-  // For now, if values is empty but the text wasn't just '[]', it might indicate a parsing problem for its elements.
-  if (values.length === 0 && vectorNode.text.trim() !== '[]' && vectorNode.text.trim() !== '') {
-    console.warn(
-      `[extractVectorLiteral] Parsed an empty vector from non-empty text: '${vectorNode.text}'. This might indicate issues extracting its elements.`
-    );
-  }
   return { type: 'vector', value: values };
 }
 

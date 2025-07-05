@@ -95,7 +95,8 @@ export class OpenscadParser {
   private language: TreeSitter.Language | null = null;
   private previousTree: TreeSitter.Tree | null = null;
   private errorHandler: IErrorHandler;
-  private astGenerators: Set<import('./ast/visitor-ast-generator.js').VisitorASTGenerator> = new Set();
+  private astGenerators: Set<import('./ast/visitor-ast-generator.js').VisitorASTGenerator> =
+    new Set();
   public isInitialized = false;
 
   /**
@@ -272,7 +273,7 @@ export class OpenscadParser {
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
-      
+
       // Track the AST generator for proper cleanup
       this.astGenerators.add(astGenerator);
 
@@ -299,7 +300,7 @@ export class OpenscadParser {
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
-      
+
       // Track the AST generator for proper cleanup
       this.astGenerators.add(astGenerator);
 
@@ -453,7 +454,7 @@ export class OpenscadParser {
         this.language,
         errorHandlerAdapter
       );
-      
+
       // Track the AST generator for proper cleanup
       this.astGenerators.add(astGenerator);
 

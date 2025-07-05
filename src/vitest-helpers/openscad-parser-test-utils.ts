@@ -1,6 +1,6 @@
 /**
  * OpenSCAD Parser Test Utilities
- * 
+ *
  * Provides test helpers with automatic cleanup and memory management
  * for OpenSCAD parser instances.
  */
@@ -18,10 +18,10 @@ const parserInstances = new Set<OpenscadParser>();
  */
 export function createTestParser(): OpenscadParser {
   const parser = new OpenscadParser();
-  
+
   // Track the parser for cleanup
   parserInstances.add(parser);
-  
+
   return parser;
 }
 
@@ -40,7 +40,7 @@ afterEach(() => {
       console.warn('Failed to dispose parser:', error);
     }
   }
-  
+
   // Clear the tracking set
   parserInstances.clear();
 });

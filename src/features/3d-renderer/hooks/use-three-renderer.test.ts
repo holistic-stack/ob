@@ -164,12 +164,12 @@ Object.defineProperty(window, 'innerHeight', {
   value: 768,
 });
 
-describe('useThreeRenderer Hook', () => {
+describe('useThreeRenderer Hook (Memory-Optimized)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPerformanceNow.mockReturnValue(0);
 
-    // Create fresh store for each test
+    // Minimal store setup to reduce memory usage
     _mockStore = createAppStore({
       enableDevtools: false,
       enablePersistence: false,
@@ -179,10 +179,28 @@ describe('useThreeRenderer Hook', () => {
         saveDelayMs: 0,
       },
     });
+
+    // Clear any existing refs
+    mockScene.children.length = 0;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Clear mock state
+    mockScene.children.length = 0;
+    mockScene.add.mockClear();
+    mockScene.remove.mockClear();
+    mockRenderer.render.mockClear();
+    mockRenderer.dispose.mockClear();
+
+    // Clear store actions
+    Object.values(mockStoreActions).forEach((mock) => mock.mockClear());
   });
 
   describe('Hook Initialization', () => {

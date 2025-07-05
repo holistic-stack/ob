@@ -694,10 +694,6 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    * @since 1.0.0
    */
   override visitAssignStatement(node: TSNode): ast.AssignStatementNode {
-    console.log('[visitAssignStatement] node:', node);
-    console.log('[visitAssignStatement] node.text:', node.text);
-    console.log('[visitAssignStatement] node.type:', node.type);
-
     this.safeLog(
       'info',
       `[AssignStatementVisitor.visitAssignStatement] Processing assignment statement: ${node.text.substring(
@@ -818,10 +814,6 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    * @private
    */
   private processModernAssignmentStatement(node: TSNode): ast.AssignmentNode {
-    console.log('[processModernAssignmentStatement] node:', node);
-    console.log('[processModernAssignmentStatement] node.text:', node.text);
-    console.log('[processModernAssignmentStatement] node.type:', node.type);
-
     this.safeLog(
       'info',
       `[AssignStatementVisitor.processModernAssignmentStatement] Processing modern assignment: ${node.text.substring(

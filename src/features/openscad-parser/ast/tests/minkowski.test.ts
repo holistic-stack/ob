@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../openscad-parser.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type { OpenscadParser } from '../../openscad-parser.js';
 import type * as ast from '../ast-types.js';
 
 describe('Minkowski Operation AST Generation', () => {

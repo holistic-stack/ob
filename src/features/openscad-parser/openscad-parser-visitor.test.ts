@@ -1,6 +1,6 @@
 import { beforeEach } from 'vitest';
-import { OpenscadParser } from './openscad-parser';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type { OpenscadParser } from './openscad-parser';
 
 describe('OpenscadParser with Visitor AST Generator', () => {
   let parser: OpenscadParser;

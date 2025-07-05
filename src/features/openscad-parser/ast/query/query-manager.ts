@@ -176,7 +176,7 @@ export class QueryManager {
       }
     }
     this.queryMap.clear();
-    
+
     // Clear the cache
     this.cache.clear();
   }

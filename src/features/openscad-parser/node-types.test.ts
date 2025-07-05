@@ -4,8 +4,8 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { TreeCursor } from 'web-tree-sitter';
-import { OpenscadParser } from './openscad-parser.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type { OpenscadParser } from './openscad-parser.js';
 
 /**
  * Collects all unique node types from a tree by traversing it depth-first.

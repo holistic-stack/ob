@@ -51,10 +51,6 @@ export function extractCubeNode(
     };
   }
 
-  console.log(
-    `[extractCubeNode] Found arguments node: type=${argsNode.type}, text='${argsNode.text}'`
-  );
-
   const args = extractArguments(argsNode, errorHandler, sourceCode);
   // Process arguments
   for (let i = 0; i < args.length; i++) {

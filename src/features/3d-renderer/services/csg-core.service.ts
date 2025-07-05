@@ -23,8 +23,7 @@ import {
 import { NBuf2, NBuf3 } from '../utils/NBuf.js';
 import { Vector } from '../utils/Vector.js';
 import { BSPTreeNode, BSPTreeService } from './bsp-tree.service.js';
-import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { matrixServiceContainer } from './matrix-service-container.js';
+import { MatrixOperationsAPI } from './matrix-operations.api.js';
 
 const logger = createLogger('CSGCoreService');
 

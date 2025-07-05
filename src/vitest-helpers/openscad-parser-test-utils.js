@@ -1,6 +1,6 @@
 /**
  * OpenSCAD Parser Test Utilities (JavaScript version)
- * 
+ *
  * This is a simple JavaScript version imported by vitest-setup.ts
  * to register the global cleanup hooks. The actual implementation
  * is in the TypeScript file.

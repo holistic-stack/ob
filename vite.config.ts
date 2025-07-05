@@ -64,17 +64,24 @@ export default defineConfig(({ mode: _mode }) => {
       testTimeout: 5000, // Increased timeout for matrix operations
       hookTimeout: 3000, // Increased timeout for setup hooks
       reporters: 'verbose',
-      // Optimize for test performance and isolation
-      pool: 'threads',
+      // Optimize for memory usage and prevent OOM errors
+      pool: 'forks',
       poolOptions: {
-        threads: {
-          singleThread: true, // Run tests sequentially to prevent race conditions
+        forks: {
+          singleFork: true, // Run tests sequentially to prevent race conditions
+          isolate: false, // Disable isolation to reduce memory overhead
+          maxForks: 1, // Force single fork for memory-intensive tests
         },
+      },
+      // Force sequential execution for memory-intensive tests
+      sequence: {
+        concurrent: false,
+        shuffle: false,
       },
       // Prevent test hanging with proper cleanup
       teardownTimeout: 2000,
-      // Isolate tests to prevent singleton conflicts
-      isolate: true,
+      // Disable test isolation to prevent memory issues with WASM/Three.js
+      isolate: false,
     },
   };
 });
