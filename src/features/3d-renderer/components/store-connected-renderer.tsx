@@ -103,9 +103,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const updateCamera = useAppStore(
     useCallback((state: AppStore) => state.updateCamera ?? (() => {}), [])
   );
-  const updateMetrics = useAppStore(
-    useCallback((state: AppStore) => state.updateMetrics ?? (() => {}), [])
-  );
+
   const renderFromAST = useAppStore(
     useCallback(
       (state: AppStore) =>
@@ -135,16 +133,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     [updateCamera]
   );
 
-  /**
-   * Handle performance metrics updates - update store
-   */
-  const handlePerformanceUpdate = useCallback(
-    (metrics: RenderingMetrics) => {
-      logger.debug('Performance metrics updated');
-      updateMetrics(metrics);
-    },
-    [updateMetrics]
-  );
+
 
   /**
    * Handle render completion - update store state
@@ -265,7 +254,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           astNodes={ast ?? []}
           camera={defaultCamera}
           onCameraChange={handleCameraChange}
-          onPerformanceUpdate={handlePerformanceUpdate}
           onRenderComplete={handleRenderComplete}
           onRenderError={handleRenderError}
         />

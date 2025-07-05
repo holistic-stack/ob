@@ -35,6 +35,7 @@ describe('OpenSCAD Node Types Debug', () => {
     for (let i = 0; i < moduleInstantiation.namedChildCount; i++) {
       const child = moduleInstantiation.namedChild(i);
       if (child) {
+        // Intentionally empty for debugging purposes
       }
     }
 
@@ -42,6 +43,7 @@ describe('OpenSCAD Node Types Debug', () => {
     for (let i = 0; i < moduleInstantiation.childCount; i++) {
       const child = moduleInstantiation.child(i);
       if (child) {
+        // Intentionally empty for debugging purposes
       }
     }
 
@@ -63,7 +65,7 @@ describe('OpenSCAD Node Types Debug', () => {
 });
 
 // Helper function to find a node of a specific type
-function findNodeOfType(node: any, type: string): any {
+function findNodeOfType(node: TSNode, type: string): TSNode | null {
   if (node.type === type) {
     return node;
   }

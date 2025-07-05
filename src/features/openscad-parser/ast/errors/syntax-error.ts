@@ -12,7 +12,7 @@ import { type ErrorPosition, type ErrorSuggestion, ParserError } from './parser-
 /**
  * SyntaxError class for syntax errors in the parser
  */
-export class SyntaxError extends ParserError {
+export class OpenSCADSyntaxError extends ParserError {
   /**
    * Create a new SyntaxError
    *

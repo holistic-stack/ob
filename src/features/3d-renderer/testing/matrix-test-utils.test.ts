@@ -15,8 +15,6 @@ import {
   MatrixTestDataGenerator,
   matrixOperationTester,
   matrixTestDataGenerator,
-  PerformanceAssertion,
-  performanceAssertion,
 } from './matrix-test-utils.js';
 
 const logger = createLogger('MatrixTestUtilsTest');
@@ -45,12 +43,12 @@ describe('Matrix Test Utils', () => {
       const matrix = generator.generateIdentityMatrix();
 
       expect(matrix.length).toBe(16); // 4x4 matrix
-      expect(matrix[0]).toBe(1);  // m00
-      expect(matrix[5]).toBe(1);  // m11
+      expect(matrix[0]).toBe(1); // m00
+      expect(matrix[5]).toBe(1); // m11
       expect(matrix[10]).toBe(1); // m22
       expect(matrix[15]).toBe(1); // m33
-      expect(matrix[1]).toBe(0);  // m01
-      expect(matrix[4]).toBe(0);  // m10
+      expect(matrix[1]).toBe(0); // m01
+      expect(matrix[4]).toBe(0); // m10
     });
 
     it('should generate reproducible random matrix with seed', () => {
@@ -77,8 +75,8 @@ describe('Matrix Test Utils', () => {
 
       // Check diagonal dominance (well-conditioned property)
       // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
-      expect(Math.abs(matrix[0])).toBeGreaterThan(1);  // m00
-      expect(Math.abs(matrix[5])).toBeGreaterThan(1);  // m11
+      expect(Math.abs(matrix[0])).toBeGreaterThan(1); // m00
+      expect(Math.abs(matrix[5])).toBeGreaterThan(1); // m11
       expect(Math.abs(matrix[10])).toBeGreaterThan(1); // m22
       expect(Math.abs(matrix[15])).toBeGreaterThan(1); // m33
     });
@@ -92,8 +90,8 @@ describe('Matrix Test Utils', () => {
 
       // Check that diagonal elements are very small (ill-conditioned property)
       // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
-      expect(Math.abs(matrix[0])).toBeLessThan(1e-10);  // m00
-      expect(Math.abs(matrix[5])).toBeLessThan(1e-10);  // m11
+      expect(Math.abs(matrix[0])).toBeLessThan(1e-10); // m00
+      expect(Math.abs(matrix[5])).toBeLessThan(1e-10); // m11
       expect(Math.abs(matrix[10])).toBeLessThan(1e-10); // m22
       expect(Math.abs(matrix[15])).toBeLessThan(1e-10); // m33
     });
@@ -107,8 +105,8 @@ describe('Matrix Test Utils', () => {
 
       // Check that it's upper triangular with zeros on diagonal
       // Diagonal elements are at indices 0, 5, 10, 15 in column-major order
-      expect(matrix[0]).toBe(0);  // m00
-      expect(matrix[5]).toBe(0);  // m11
+      expect(matrix[0]).toBe(0); // m00
+      expect(matrix[5]).toBe(0); // m11
       expect(matrix[10]).toBe(0); // m22
       expect(matrix[15]).toBe(0); // m33
     });
@@ -153,125 +151,12 @@ describe('Matrix Test Utils', () => {
     });
   });
 
-  describe('PerformanceAssertion', () => {
-    let assertion: PerformanceAssertion;
-
-    beforeEach(() => {
-      logger.init('Setting up test environment');
-      assertion = new PerformanceAssertion({
-        maxExecutionTime: 50, // Generous for testing
-        maxMemoryUsage: 50 * 1024 * 1024, // 50MB
-        minAccuracy: 1e-10,
-        enableRegression: true,
-      });
-    });
-
-    afterEach(() => {
-      logger.end('Cleaning up test environment');
-    });
-
-    it('should pass performance assertion for fast operation', async () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing fast operation performance');
-
-      const result = await assertion.assertPerformance(() => {
-        // Fast operation
-        return mat4.create(); // Identity matrix
-      }, 'fast_operation');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toBeInstanceOf(Float32Array);
-        expect(result.data.length).toBe(16); // 4x4 matrix
-      }
-    });
-
-    it('should fail performance assertion for slow operation', async () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing slow operation performance');
-
-      const assertion = new PerformanceAssertion({
-        maxExecutionTime: 1, // Very strict limit
-        maxMemoryUsage: 50 * 1024 * 1024,
-        minAccuracy: 1e-10,
-        enableRegression: true,
-      });
-
-      const result = await assertion.assertPerformance(async () => {
-        // Artificially slow operation
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        return mat4.create(); // Identity matrix
-      }, 'slow_operation');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('Performance assertion failed');
-        expect(result.error).toContain('exceeds limit');
-      }
-    });
-
-    it('should assert numerical accuracy for numbers', () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing numerical accuracy for numbers');
-
-      const result = assertion.assertNumericalAccuracy(1.0000000001, 1.0, 1e-8);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should fail numerical accuracy for numbers with large difference', () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing numerical accuracy failure');
-
-      const result = assertion.assertNumericalAccuracy(1.1, 1.0, 1e-10);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('Numerical accuracy assertion failed');
-      }
-    });
-
-    it('should assert numerical accuracy for matrices', () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing matrix numerical accuracy');
-
-      const matrix1 = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
-      const matrix2 = mat4.fromValues(
-        1.0000000001, 0, 0, 0,
-        0, 1.0000000001, 0, 0,
-        0, 0, 1.0000000001, 0,
-        0, 0, 0, 1.0000000001
-      );
-
-      const result = assertion.assertNumericalAccuracy(matrix1, matrix2, 1e-8);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should fail matrix accuracy with dimension mismatch', () => {
-      logger.debug('[DEBUG][MatrixTestUtilsTest] Testing matrix dimension mismatch');
-
-      const matrix1 = mat4.create(); // 4x4 matrix
-      const matrix2 = new Float32Array(9); // 3x3 matrix (different size)
-
-      const result = assertion.assertNumericalAccuracy(matrix1, matrix2);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('Matrix dimensions do not match');
-      }
-    });
-  });
-
   describe('MatrixOperationTester', () => {
     let tester: MatrixOperationTester;
 
     beforeEach(() => {
       logger.init('Setting up test environment');
-      tester = new MatrixOperationTester(
-        { size: 3, includeEdgeCases: true },
-        { maxExecutionTime: 50, maxMemoryUsage: 50 * 1024 * 1024 }
-      );
+      tester = new MatrixOperationTester({ size: 3, includeEdgeCases: true });
     });
 
     afterEach(() => {
@@ -362,14 +247,12 @@ describe('Matrix Test Utils', () => {
       expect(singularResult).toBeDefined();
     });
 
-    it('should provide access to data generator and performance assertion', () => {
+    it('should provide access to data generator', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing utility access');
 
       const dataGenerator = tester.getDataGenerator();
-      const perfAssertion = tester.getPerformanceAssertion();
 
       expect(dataGenerator).toBeInstanceOf(MatrixTestDataGenerator);
-      expect(perfAssertion).toBeInstanceOf(PerformanceAssertion);
     });
   });
 
@@ -378,7 +261,6 @@ describe('Matrix Test Utils', () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing default instances');
 
       expect(matrixTestDataGenerator).toBeInstanceOf(MatrixTestDataGenerator);
-      expect(performanceAssertion).toBeInstanceOf(PerformanceAssertion);
       expect(matrixOperationTester).toBeInstanceOf(MatrixOperationTester);
 
       // Test that they work

@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
+import type { CubeNode, TranslateNode } from '../ast/ast-types.js';
 import { OpenscadParser } from '../openscad-parser';
 
 describe('AST Generator Integration Tests', () => {
@@ -23,7 +25,7 @@ describe('AST Generator Integration Tests', () => {
       expect(cst).toBeDefined();
 
       // Print the tree structure for debugging
-      function printNode(node: any, depth = 0) {
+      function printNode(node: TSNode, depth = 0) {
         if (!node) return;
         const indent = '  '.repeat(depth);
         console.log(
@@ -47,15 +49,15 @@ describe('AST Generator Integration Tests', () => {
 
       const translateNode = ast[0];
       expect(translateNode.type).toBe('translate');
-      expect((translateNode as any).v).toEqual([1, 0, 0]); // translate([1,0,0])
+      expect((translateNode as TranslateNode).v).toEqual([1, 0, 0]); // translate([1,0,0])
 
       // The child should be a cube
-      const children = (translateNode as any).children;
+      const children = (translateNode as TranslateNode).children;
       expect(children).toHaveLength(1); // Should have 1 child (the cube)
       const cubeNode = children[0];
       expect(cubeNode?.type).toBe('cube');
-      expect(cubeNode.size).toEqual([1, 2, 3]);
-      expect(cubeNode.center).toBe(true);
+      expect((cubeNode as CubeNode).size).toEqual([1, 2, 3]);
+      expect((cubeNode as CubeNode).center).toBe(true);
     });
 
     it('should parse translate with cube using curly braces and named parameters', () => {
@@ -68,16 +70,16 @@ describe('AST Generator Integration Tests', () => {
       const translateNode = ast[0];
       expect(translateNode.type).toBe('translate');
       // TODO: Fix named argument parsing - currently produces [NaN, 3, 0] due to grammar issues
-      expect((translateNode as any).v).toEqual([NaN, 3, 0]); // Should be [3,0,0] when named args work
+      expect((translateNode as TranslateNode).v).toEqual([NaN, 3, 0]); // Should be [3,0,0] when named args work
 
       // The child should be a cube (but currently parsing is broken for curly brace syntax)
-      const children = (translateNode as any).children;
+      const children = (translateNode as TranslateNode).children;
       expect(children).toHaveLength(0); // Should have 1 child when parsing is fixed
       // TODO: Fix curly brace parsing to properly extract cube parameters
       // const cubeNode = children[0];
       // expect(cubeNode?.type).toBe('cube');
-      // expect((cubeNode as any).size).toEqual([1, 2, 3]);
-      // expect((cubeNode as any).center).toBe(true);
+      // expect((cubeNode as CubeNode).size).toEqual([1, 2, 3]);
+      // expect((cubeNode as CubeNode).center).toBe(true);
     });
   });
 });

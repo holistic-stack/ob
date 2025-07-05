@@ -277,7 +277,7 @@ export const operationUtils = {
    */
   getData: <T>(result: OperationResult<T, OperationError>): T | null => {
     if (operationUtils.isSuccess(result)) {
-      return (result as any).data.data;
+      return (result as { success: true; data: { data: T; metadata: OperationMetadata; metrics?: OperationMetrics } }).data.data;
     }
     return null;
   },
@@ -287,7 +287,7 @@ export const operationUtils = {
    */
   getError: <T>(result: OperationResult<T, OperationError>): OperationError | null => {
     if (operationUtils.isError(result)) {
-      return (result as any).error.error;
+      return (result as { success: false; error: { error: OperationError; metadata: OperationMetadata; metrics?: OperationMetrics } }).error.error;
     }
     return null;
   },
@@ -297,10 +297,10 @@ export const operationUtils = {
    */
   getMetadata: <T>(result: OperationResult<T, OperationError>): OperationMetadata | null => {
     if (operationUtils.isSuccess(result)) {
-      return (result as any).data.metadata;
+      return (result as { success: true; data: { data: T; metadata: OperationMetadata; metrics?: OperationMetrics } }).data.metadata;
     }
     if (operationUtils.isError(result)) {
-      return (result as any).error.metadata;
+      return (result as { success: false; error: { error: OperationError; metadata: OperationMetadata; metrics?: OperationMetrics } }).error.metadata;
     }
     return null;
   },

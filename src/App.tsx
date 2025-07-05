@@ -22,7 +22,7 @@ import {
   selectRenderingMeshes,
 } from './features/store/selectors';
 import { createLogger } from './shared/services/logger.service';
-import type { PerformanceMetrics } from './shared/types/common.types';
+
 
 /**
  * Main Application Component

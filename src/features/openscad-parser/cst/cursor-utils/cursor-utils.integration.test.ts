@@ -184,12 +184,12 @@ describe('Cursor Utils Integration', () => {
 
       let depth = 0;
       const maxDepth = 10;
-      let foundArgs = false;
+      let _foundArgs = false;
 
       while (cursor.gotoFirstChild() && depth < maxDepth) {
         depth++;
         if (cursorUtils.getNodeText(cursor, code).includes('r=5')) {
-          foundArgs = true;
+          _foundArgs = true;
           break;
         }
       }

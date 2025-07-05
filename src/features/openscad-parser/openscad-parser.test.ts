@@ -12,7 +12,7 @@
  * - tree-sitter-openscad.wasm: WebAssembly module containing the OpenSCAD grammar
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from './openscad-parser';
 

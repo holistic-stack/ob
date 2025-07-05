@@ -13,7 +13,6 @@ import type {
   EditorPosition,
   EditorSelection,
   EditorState,
-  PerformanceMetrics,
 } from '../../../shared/types/common.types';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
@@ -54,15 +53,7 @@ export interface RenderingState {
   readonly camera: CameraConfig;
 }
 
-/**
- * Application performance state
- */
-export interface PerformanceState {
-  readonly metrics: PerformanceMetrics;
-  readonly isMonitoring: boolean;
-  readonly violations: ReadonlyArray<string>;
-  readonly lastUpdated: Date | null;
-}
+
 
 /**
  * Main application state
@@ -71,7 +62,6 @@ export interface AppState {
   readonly editor: EditorState;
   readonly parsing: ParsingState;
   readonly rendering?: RenderingState;
-  readonly performance: PerformanceState;
   readonly config: AppConfig;
 }
 
@@ -117,17 +107,7 @@ export interface RenderingActions {
 
 export type RenderingSlice = RenderingState & RenderingActions;
 
-export interface PerformanceActions {
-  updateMetrics: (metrics: PerformanceMetrics) => void;
-  startMonitoring: () => void;
-  stopMonitoring: () => void;
-  recordParseTime: (duration: number) => void;
-  recordRenderTime: (duration: number) => void;
-  addPerformanceViolation: (violation: string) => void;
-  clearPerformanceViolations: () => void;
-}
 
-export type PerformanceSlice = PerformanceState & PerformanceActions;
 
 export interface ConfigActions {
   updateConfig: (config: Partial<AppConfig>) => void;
@@ -146,7 +126,6 @@ export type AppStore = AppState &
   EditorActions &
   ParsingActions &
   RenderingActions &
-  PerformanceActions &
   ConfigActions;
 
 /**
@@ -155,7 +134,6 @@ export type AppStore = AppState &
 export type EditorSelector<T> = (state: AppState) => T;
 export type ParsingSelector<T> = (state: AppState) => T;
 export type RenderingSelector<T> = (state: AppState) => T;
-export type PerformanceSelector<T> = (state: AppState) => T;
 
 /**
  * Store subscription types
@@ -192,8 +170,7 @@ export type StoreEvent =
   | { readonly type: 'parse-failed'; readonly error: string }
   | { readonly type: 'render-started'; readonly timestamp: Date }
   | { readonly type: 'render-completed'; readonly duration: number; readonly meshCount: number }
-  | { readonly type: 'render-failed'; readonly error: string }
-  | { readonly type: 'performance-violation'; readonly violation: string };
+  | { readonly type: 'render-failed'; readonly error: string };
 
 /**
  * Store event listener type

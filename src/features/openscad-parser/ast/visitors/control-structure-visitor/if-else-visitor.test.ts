@@ -39,14 +39,14 @@ describe('IfElseVisitor', () => {
       expect(ifNode?.type).toBe('statement');
 
       // Log the node structure
-      printNodeStructure(ifNode!, 0, 5, 10);
+      printNodeStructure(ifNode as TSNode, 0, 5, 10);
 
       // Get the actual if_statement node
       const actualIfNode = ifNode?.namedChild(0);
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
-      const result = visitor.visitIfStatement(actualIfNode!);
+      const result = visitor.visitIfStatement(actualIfNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -72,7 +72,7 @@ describe('IfElseVisitor', () => {
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
-      const result = visitor.visitIfStatement(actualIfNode!);
+      const result = visitor.visitIfStatement(actualIfNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -98,7 +98,7 @@ describe('IfElseVisitor', () => {
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
-      const result = visitor.visitIfStatement(actualIfNode!);
+      const result = visitor.visitIfStatement(actualIfNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -133,7 +133,7 @@ describe('IfElseVisitor', () => {
       expect(actualIfNode?.type).toBe('if_statement');
 
       // Visit the if statement node
-      const result = visitor.visitIfStatement(actualIfNode!);
+      const result = visitor.visitIfStatement(actualIfNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();

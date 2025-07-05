@@ -8,10 +8,6 @@
 import { createLogger } from '../../services/logger.service';
 import type { Result } from '../../types/result.types';
 import { error, success } from '../functional/result';
-import {
-  type EnhancedPerformanceMetrics,
-  performanceMonitor,
-} from '../performance/performance-monitor';
 
 const logger = createLogger('TestUtils');
 
@@ -31,7 +27,6 @@ export interface TestResult {
   readonly testName: string;
   readonly success: boolean;
   readonly executionTime: number;
-  readonly performanceMetrics?: EnhancedPerformanceMetrics;
   readonly error?: string;
   readonly metadata?: Record<string, unknown>;
 }
@@ -101,28 +96,13 @@ export class EnhancedTestRunner {
     const context = this.startTest(testName, metadata);
 
     try {
-      // Use performance monitor to track the test execution
-      const performanceResult = await performanceMonitor.measureAsync(
-        `test_${testName}`,
-        'ui', // Tests are UI category for timing purposes
-        async () => testFn()
-      );
-
-      if (!performanceResult.success) {
-        this.endTest(context, false, performanceResult.error);
-        return error(`Test execution failed: ${performanceResult.error}`);
-      }
-
+      // Run the test function
+      const data = await testFn();
       const testResult = this.endTest(context, true);
-      // Create a new result with performance metrics
-      const enhancedResult: TestResult = {
-        ...testResult,
-        performanceMetrics: performanceResult.data.metrics,
-      };
 
       return success({
-        data: performanceResult.data.data,
-        result: enhancedResult,
+        data,
+        result: testResult,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -132,7 +112,7 @@ export class EnhancedTestRunner {
   }
 
   /**
-   * Get test summary with performance insights
+   * Get test summary
    */
   getSummary(): {
     totalTests: number;

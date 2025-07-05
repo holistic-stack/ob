@@ -238,30 +238,7 @@ describe('MaterialService', () => {
     });
   });
 
-  describe('Performance Metrics', () => {
-    it('should track performance metrics', () => {
-      logger.debug('[DEBUG][MaterialServiceTest] Testing performance metrics');
 
-      const config: MaterialConfig = {
-        color: '#0000ff',
-        opacity: 1,
-        metalness: 0.1,
-        roughness: 0.8,
-        wireframe: false,
-        transparent: false,
-        side: 'front',
-      };
-
-      // Create some materials
-      service.createMaterial(config);
-      service.createMaterial(config);
-
-      const metrics = service.getPerformanceMetrics();
-      expect(metrics.operationCount).toBeGreaterThan(0);
-      expect(typeof metrics.cacheSize).toBe('number');
-      expect(typeof metrics.cacheHitRate).toBe('number');
-    });
-  });
 
   describe('Legacy Compatibility', () => {
     it('should support legacy createMaterial function', () => {

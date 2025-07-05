@@ -31,10 +31,10 @@ describe('AssignStatementVisitor', () => {
   afterEach(() => {
     if (parser) {
       parser.dispose();
-      parser = null as any; // Clear reference to help GC
+      parser = null as unknown as OpenscadParser; // Clear reference to help GC
     }
     if (errorHandler) {
-      errorHandler = null as any; // Clear reference to help GC
+      errorHandler = null as unknown as SimpleErrorHandler; // Clear reference to help GC
     }
 
     // Force garbage collection if available
@@ -236,7 +236,7 @@ describe('AssignStatementVisitor', () => {
       expect(assignNode.assignments[0].variable.location).toBeDefined();
       expect(assignNode.body).toBeDefined();
       expect(assignNode.body.type).toBe('expression');
-      expect((assignNode.body as any).expressionType).toBe('block');
+      expect((assignNode.body as ast.BlockStatementNode).expressionType).toBe('block');
     });
 
     it('should parse assign statement with complex block', () => {
@@ -258,7 +258,7 @@ describe('AssignStatementVisitor', () => {
       expect(assignNode.assignments[1].variable.expressionType).toBe('identifier');
       expect(assignNode.assignments[1].variable.location).toBeDefined();
       expect(assignNode.body.type).toBe('expression');
-      expect((assignNode.body as any).expressionType).toBe('block');
+      expect((assignNode.body as ast.BlockStatementNode).expressionType).toBe('block');
     });
   });
 

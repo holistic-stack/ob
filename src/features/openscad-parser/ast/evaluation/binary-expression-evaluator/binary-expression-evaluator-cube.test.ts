@@ -107,7 +107,7 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
 
     // Find the binary expression node inside the cube arguments
-    const binaryExprNode = findBinaryExpressionNode(cubeNode!);
+    const binaryExprNode = findBinaryExpressionNode(cubeNode);
     console.log('Binary expression node found in cube arguments:', binaryExprNode ? 'yes' : 'no');
 
     if (binaryExprNode) {
@@ -125,7 +125,7 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     }
 
     // Extract the cube with enhanced expression evaluation
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     console.log('Extracted cube AST:', JSON.stringify(cubeAST, null, 2));
     console.log('Error handler errors:', errorHandler.getErrors());
 
@@ -150,7 +150,7 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     expect(cubeNode).not.toBeNull();
 
     // Extract the cube with enhanced expression evaluation
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     console.log('Extracted cube AST:', JSON.stringify(cubeAST, null, 2));
 
     expect(cubeAST).toBeDefined();
@@ -173,7 +173,7 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     expect(cubeNode).not.toBeNull();
 
     // Extract the cube with enhanced expression evaluation
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     console.log('Extracted cube AST:', JSON.stringify(cubeAST, null, 2));
 
     expect(cubeAST).toBeDefined();

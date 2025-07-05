@@ -42,7 +42,7 @@ import {
   evaluateBinaryExpression,
   isFunctionLiteral,
 } from '../../../openscad-parser/ast/utils/ast-evaluator.js';
-import type { MaterialConfig, Mesh3D } from '../../types/renderer.types.js';
+import type { MaterialConfig, Mesh3D, MeshMetadata } from '../../types/renderer.types.js';
 import {
   convertDifferenceNode,
   convertIntersectionNode,
@@ -1204,10 +1204,19 @@ export const convertASTNodeToCSG = async (
             mesh.geometry.computeBoundingBox();
             const boundingBox = mesh.geometry.boundingBox ?? new THREE.Box3();
 
-            const metadata = {
-              id: `csg-${node.type}-${index}`,
+            const metadata: MeshMetadata = {
+              // NodeMetadata properties
+              nodeId: `csg-${node.type}-${index}`,
               nodeType: node.type,
-              nodeIndex: index,
+              depth: 0,
+              parentId: undefined,
+              childrenIds: [],
+              size: 1,
+              complexity: 1,
+              isOptimized: false,
+              lastAccessed: new Date(),
+              // MeshMetadata properties
+              meshId: `mesh-${node.type}-${index}`,
               triangleCount: mesh.geometry.attributes.position?.count
                 ? mesh.geometry.attributes.position.count / 3
                 : 0,
@@ -1354,10 +1363,19 @@ export const convertASTNodesToCSGUnion = async (
       resultMesh.geometry.computeBoundingBox();
       const boundingBox = resultMesh.geometry.boundingBox ?? new THREE.Box3();
 
-      const metadata = {
-        id: `csg-union-${Date.now()}`,
+      const metadata: MeshMetadata = {
+        // NodeMetadata properties
+        nodeId: `csg-union-${Date.now()}`,
         nodeType: 'union',
-        nodeIndex: 0,
+        depth: 0,
+        parentId: undefined,
+        childrenIds: [],
+        size: 1,
+        complexity: 1,
+        isOptimized: false,
+        lastAccessed: new Date(),
+        // MeshMetadata properties
+        meshId: `mesh-union-${Date.now()}`,
         triangleCount: resultMesh.geometry.attributes.position?.count
           ? resultMesh.geometry.attributes.position.count / 3
           : 0,

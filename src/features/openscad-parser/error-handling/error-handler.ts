@@ -282,7 +282,7 @@ export class ErrorHandler {
    * @param context - Optional context information
    * @param node - Optional tree-sitter node for additional context
    */
-  logInfo(message: string, _context?: string, _node?: any): void {
+  logInfo(_message: string, _context?: string, _node?: any): void {
     // Info logging removed
   }
 
@@ -292,7 +292,7 @@ export class ErrorHandler {
    * @param context - Optional context information
    * @param node - Optional tree-sitter node for additional context
    */
-  logDebug(message: string, _context?: string, _node?: any): void {
+  logDebug(_message: string, _context?: string, _node?: any): void {
     // Debug logging removed
   }
 
@@ -325,7 +325,7 @@ export class ErrorHandler {
    *
    * @since 0.1.0
    */
-  logWarning(message: string, _context?: string, _node?: any): void {
+  logWarning(_message: string, _context?: string, _node?: any): void {
     // Warning logging removed
   }
 

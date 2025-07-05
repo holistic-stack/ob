@@ -5,8 +5,60 @@
  * branded types for type safety, and performance optimization types.
  */
 
-import type { mat3, mat4 } from 'gl-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
+
+/**
+ * Matrix class for compatibility with existing code
+ * Uses gl-matrix internally for performance
+ */
+export class Matrix {
+  private data: mat4;
+
+  constructor(rows: number, cols: number, data?: number[]) {
+    this.data = mat4.create();
+    if (data && data.length >= 16) {
+      mat4.set(this.data, ...data.slice(0, 16) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]);
+    }
+  }
+
+  get rows(): number {
+    return 4;
+  }
+
+  get columns(): number {
+    return 4;
+  }
+
+  get(row: number, col: number): number {
+    return this.data[col * 4 + row] ?? 0;
+  }
+
+  set(row: number, col: number, value: number): void {
+    this.data[col * 4 + row] = value;
+  }
+
+  toArray(): number[] {
+    return Array.from(this.data);
+  }
+
+  static fromMat4(matrix: mat4): Matrix {
+    const result = new Matrix(4, 4);
+    mat4.copy(result.data, matrix);
+    return result;
+  }
+
+  toMat4(): mat4 {
+    const result = mat4.create();
+    mat4.copy(result, this.data);
+    return result;
+  }
+}
+
+/**
+ * Type alias for compatibility with existing code that expects MLMatrix
+ */
+export type MLMatrix = Matrix;
 
 /**
  * Branded types for enhanced type safety

@@ -18,15 +18,15 @@ describe('LRUQueryCache', () => {
     const cache = new LRUQueryCache(2);
 
     // Add two entries
-    cache.set('query1', 'source1', [new MockNode('node1', 'type1')] as any[]);
-    cache.set('query2', 'source2', [new MockNode('node2', 'type2')] as any[]);
+    cache.set('query1', 'source1', [new MockNode('node1', 'type1')] as TSNode[]);
+    cache.set('query2', 'source2', [new MockNode('node2', 'type2')] as TSNode[]);
 
     // Both entries should be in the cache
     expect(cache.get('query1', 'source1')).not.toBeNull();
     expect(cache.get('query2', 'source2')).not.toBeNull();
 
     // Add a third entry, which should evict the least recently used entry (query1)
-    cache.set('query3', 'source3', [new MockNode('node3', 'type3')] as any[]);
+    cache.set('query3', 'source3', [new MockNode('node3', 'type3')] as TSNode[]);
 
     // query1 should be evicted
     expect(cache.get('query1', 'source1')).toBeNull();
@@ -40,14 +40,14 @@ describe('LRUQueryCache', () => {
     const cache = new LRUQueryCache(2);
 
     // Add two entries
-    cache.set('query1', 'source1', [new MockNode('node1', 'type1')] as any[]);
-    cache.set('query2', 'source2', [new MockNode('node2', 'type2')] as any[]);
+    cache.set('query1', 'source1', [new MockNode('node1', 'type1')] as TSNode[]);
+    cache.set('query2', 'source2', [new MockNode('node2', 'type2')] as TSNode[]);
 
     // Access query1, making query2 the least recently used
     cache.get('query1', 'source1');
 
     // Add a third entry, which should evict the least recently used entry (query2)
-    cache.set('query3', 'source3', [new MockNode('node3', 'type3')] as any[]);
+    cache.set('query3', 'source3', [new MockNode('node3', 'type3')] as TSNode[]);
 
     // query2 should be evicted
     expect(cache.get('query2', 'source2')).toBeNull();
@@ -65,8 +65,8 @@ describe('LRUQueryCache', () => {
     const source2 = 'b'.repeat(1000);
 
     // Add entries with the same query string but different sources
-    cache.set('query', source1, [new MockNode('node1', 'type1')] as any[]);
-    cache.set('query', source2, [new MockNode('node2', 'type2')] as any[]);
+    cache.set('query', source1, [new MockNode('node1', 'type1')] as TSNode[]);
+    cache.set('query', source2, [new MockNode('node2', 'type2')] as TSNode[]);
 
     // Both entries should be retrievable with their respective sources
     const result1 = cache.get('query', source1);
@@ -81,7 +81,7 @@ describe('LRUQueryCache', () => {
     const cache = new LRUQueryCache();
 
     // Add an entry
-    cache.set('query', 'source', [new MockNode('node', 'type')] as any[]);
+    cache.set('query', 'source', [new MockNode('node', 'type')] as TSNode[]);
 
     // Get the entry (hit)
     cache.get('query', 'source');

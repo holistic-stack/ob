@@ -17,7 +17,9 @@ export function extractVectorFromString(text: string): number[] | null {
       if (vectorValues.every((v) => !Number.isNaN(v))) {
         return vectorValues;
       }
-    } catch (_e) {}
+    } catch (_e) {
+      // Intentionally empty, as per design, to handle potential parsing errors gracefully.
+    }
   }
 
   return null;

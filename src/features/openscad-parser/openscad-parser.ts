@@ -231,7 +231,7 @@ export class OpenscadParser {
     }
 
     try {
-      const tree = this.parser.parse(code, this.previousTree);
+      const tree = this.parser.parse(code, this.previousTree ?? undefined);
       this.previousTree = tree;
 
       // Check for syntax errors
@@ -272,6 +272,9 @@ export class OpenscadParser {
 
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
+      if (!this.language) {
+        throw new Error('Parser language not initialized');
+      }
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
 
       // Track the AST generator for proper cleanup
@@ -299,6 +302,9 @@ export class OpenscadParser {
 
       // Create visitor-based AST generator with adapter
       const errorHandlerAdapter = this.createErrorHandlerAdapter();
+      if (!this.language) {
+        return { success: false, error: 'Parser language not initialized' };
+      }
       const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
 
       // Track the AST generator for proper cleanup
@@ -531,8 +537,11 @@ export class OpenscadParser {
       }
 
       // Dispose language instance if it has a delete method (WASM builds)
-      if (this.language && typeof (this.language as any).delete === 'function') {
-        (this.language as any).delete();
+      if (
+        this.language &&
+        typeof (this.language as unknown as { delete?: () => void }).delete === 'function'
+      ) {
+        (this.language as unknown as { delete: () => void }).delete();
       }
       this.language = null;
 
@@ -540,8 +549,11 @@ export class OpenscadParser {
       this.isInitialized = false;
 
       // Clear error handler if it has cleanup methods
-      if (this.errorHandler && typeof (this.errorHandler as any).clear === 'function') {
-        (this.errorHandler as any).clear();
+      if (
+        this.errorHandler &&
+        typeof (this.errorHandler as unknown as { clear?: () => void }).clear === 'function'
+      ) {
+        (this.errorHandler as unknown as { clear: () => void }).clear();
       }
     } catch (error) {
       this.errorHandler.handleError(`Error disposing parser: ${error}`);

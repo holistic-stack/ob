@@ -168,7 +168,7 @@ export function extractVector(
  */
 function extractVectorFromArrayLiteral(
   node: TSNode,
-  sourceCode: string = ''
+  _sourceCode: string = ''
 ): ast.Vector2D | ast.Vector3D | undefined {
   const numbers: number[] = [];
   // Process only named children to skip syntax tokens like '[', ']', ','
@@ -187,7 +187,7 @@ function extractVectorFromArrayLiteral(
       const numberChild = findDescendantOfType(elementNode, 'number');
       if (numberChild) {
         const value = parseFloat(numberChild.text);
-        if (!isNaN(value)) {
+        if (!Number.isNaN(value)) {
           numbers.push(value);
         }
       }

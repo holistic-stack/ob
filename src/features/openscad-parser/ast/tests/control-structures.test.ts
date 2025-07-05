@@ -477,10 +477,10 @@ describe('Control Structures AST Generation', () => {
 
       const ifNode = astNodes[0] as ast.IfNode;
       expect(ifNode.type).toBe('if');
-      expect((ifNode as any).condition).toBeDefined();
-      expect((ifNode as any).thenBranch).toHaveLength(1);
-      expect((ifNode as any).thenBranch[0].type).toBe('cube');
-      expect((ifNode as any).elseBranch).toBeUndefined();
+      expect(ifNode.condition).toBeDefined();
+      expect(ifNode.thenBranch).toHaveLength(1);
+      expect(ifNode.thenBranch[0].type).toBe('cube');
+      expect(ifNode.elseBranch).toBeUndefined();
     });
 
     it('should parse an if-else statement', () => {
@@ -496,11 +496,11 @@ describe('Control Structures AST Generation', () => {
 
       const ifNode = astNodes[0] as ast.IfNode;
       expect(ifNode.type).toBe('if');
-      expect((ifNode as any).condition).toBeDefined();
-      expect((ifNode as any).thenBranch).toHaveLength(1);
-      expect((ifNode as any).thenBranch[0].type).toBe('cube');
-      expect((ifNode as any).elseBranch).toHaveLength(1);
-      expect((ifNode as any).elseBranch[0].type).toBe('sphere');
+      expect(ifNode.condition).toBeDefined();
+      expect(ifNode.thenBranch).toHaveLength(1);
+      expect(ifNode.thenBranch[0].type).toBe('cube');
+      expect(ifNode.elseBranch).toHaveLength(1);
+      expect(ifNode.elseBranch[0].type).toBe('sphere');
     });
 
     it('should parse an if-else-if-else statement', () => {
@@ -518,15 +518,19 @@ describe('Control Structures AST Generation', () => {
 
       const ifNode = astNodes[0] as ast.IfNode;
       expect(ifNode.type).toBe('if');
-      expect((ifNode as any).condition).toBeDefined();
-      expect((ifNode as any).thenBranch).toHaveLength(1);
-      expect((ifNode as any).thenBranch[0].type).toBe('cube');
-      expect((ifNode as any).elseBranch).toHaveLength(1);
-      expect((ifNode as any).elseBranch[0].type).toBe('if');
-      expect((ifNode as any).elseBranch[0].thenBranch).toHaveLength(1);
-      expect((ifNode as any).elseBranch[0].thenBranch[0].type).toBe('sphere');
-      expect((ifNode as any).elseBranch[0].elseBranch).toHaveLength(1);
-      expect((ifNode as any).elseBranch[0].elseBranch[0].type).toBe('cylinder');
+      expect(ifNode.condition).toBeDefined();
+      expect(ifNode.thenBranch).toHaveLength(1);
+      expect(ifNode.thenBranch[0].type).toBe('cube');
+      expect(ifNode.elseBranch).toHaveLength(1);
+      expect((ifNode.elseBranch[0] as ast.IfNode).type).toBe('if');
+      expect((ifNode.elseBranch[0] as ast.IfNode).thenBranch).toHaveLength(1);
+      expect(((ifNode.elseBranch[0] as ast.IfNode).thenBranch[0] as ast.SphereNode).type).toBe(
+        'sphere'
+      );
+      expect((ifNode.elseBranch[0] as ast.IfNode).elseBranch).toHaveLength(1);
+      expect(((ifNode.elseBranch[0] as ast.IfNode).elseBranch[0] as ast.CylinderNode).type).toBe(
+        'cylinder'
+      );
     });
   });
 
@@ -542,11 +546,11 @@ describe('Control Structures AST Generation', () => {
 
       const forNode = astNodes[0] as ast.ForLoopNode;
       expect(forNode.type).toBe('for_loop');
-      expect((forNode as any).variables).toHaveLength(1);
-      expect((forNode as any).variables[0].variable).toBe('i');
-      expect((forNode as any).variables[0].range).toEqual([0, 5]);
-      expect((forNode as any).body).toHaveLength(1);
-      expect((forNode as any).body[0].type).toBe('translate');
+      expect(forNode.variables).toHaveLength(1);
+      expect(forNode.variables[0].variable).toBe('i');
+      expect(forNode.variables[0].range).toEqual([0, 5]);
+      expect(forNode.body).toHaveLength(1);
+      expect(forNode.body[0].type).toBe('translate');
     });
 
     it('should parse a for loop with step', () => {
@@ -560,12 +564,12 @@ describe('Control Structures AST Generation', () => {
 
       const forNode = astNodes[0] as ast.ForLoopNode;
       expect(forNode.type).toBe('for_loop');
-      expect((forNode as any).variables).toHaveLength(1);
-      expect((forNode as any).variables[0].variable).toBe('i');
-      expect((forNode as any).variables[0].range).toEqual([0, 5]);
-      expect((forNode as any).variables[0].step).toBe(0.5);
-      expect((forNode as any).body).toHaveLength(1);
-      expect((forNode as any).body[0].type).toBe('translate');
+      expect(forNode.variables).toHaveLength(1);
+      expect(forNode.variables[0].variable).toBe('i');
+      expect(forNode.variables[0].range).toEqual([0, 5]);
+      expect(forNode.variables[0].step).toBe(0.5);
+      expect(forNode.body).toHaveLength(1);
+      expect(forNode.body[0].type).toBe('translate');
     });
 
     it('should parse a for loop with multiple variables', () => {
@@ -579,13 +583,13 @@ describe('Control Structures AST Generation', () => {
 
       const forNode = astNodes[0] as ast.ForLoopNode;
       expect(forNode.type).toBe('for_loop');
-      expect((forNode as any).variables).toHaveLength(2);
-      expect((forNode as any).variables[0].variable).toBe('i');
-      expect((forNode as any).variables[0].range).toEqual([0, 5]);
-      expect((forNode as any).variables[1].variable).toBe('j');
-      expect((forNode as any).variables[1].range).toEqual([0, 5]);
-      expect((forNode as any).body).toHaveLength(1);
-      expect((forNode as any).body[0].type).toBe('translate');
+      expect(forNode.variables).toHaveLength(2);
+      expect(forNode.variables[0].variable).toBe('i');
+      expect(forNode.variables[0].range).toEqual([0, 5]);
+      expect(forNode.variables[1].variable).toBe('j');
+      expect(forNode.variables[1].range).toEqual([0, 5]);
+      expect(forNode.body).toHaveLength(1);
+      expect(forNode.body[0].type).toBe('translate');
     });
   });
 
@@ -601,10 +605,10 @@ describe('Control Structures AST Generation', () => {
 
       const letNode = astNodes[0] as ast.LetNode;
       expect(letNode.type).toBe('let');
-      expect((letNode as any).assignments).toBeDefined();
-      expect((letNode as any).assignments.a).toBe(10);
-      expect((letNode as any).body).toHaveLength(1);
-      expect((letNode as any).body[0].type).toBe('cube');
+      expect(letNode.assignments).toBeDefined();
+      expect(letNode.assignments.a).toBe(10);
+      expect(letNode.body).toHaveLength(1);
+      expect(letNode.body[0].type).toBe('cube');
     });
 
     it('should parse a let expression with multiple assignments', () => {
@@ -618,11 +622,11 @@ describe('Control Structures AST Generation', () => {
 
       const letNode = astNodes[0] as ast.LetNode;
       expect(letNode.type).toBe('let');
-      expect((letNode as any).assignments).toBeDefined();
-      expect((letNode as any).assignments.a).toBe(10);
-      expect((letNode as any).assignments.b).toBe(20);
-      expect((letNode as any).body).toHaveLength(1);
-      expect((letNode as any).body[0].type).toBe('translate');
+      expect(letNode.assignments).toBeDefined();
+      expect(letNode.assignments.a).toBe(10);
+      expect(letNode.assignments.b).toBe(20);
+      expect(letNode.body).toHaveLength(1);
+      expect(letNode.body[0].type).toBe('translate');
     });
   });
 
@@ -636,8 +640,8 @@ describe('Control Structures AST Generation', () => {
 
       const eachNode = astNodes[0] as ast.EachNode;
       expect(eachNode.type).toBe('each');
-      expect((eachNode as any).expression).toBeDefined();
-      expect((eachNode as any).expression.expressionType).toBe('array');
+      expect(eachNode.expression).toBeDefined();
+      expect(eachNode.expression.expressionType).toBe('array');
     });
   });
 });

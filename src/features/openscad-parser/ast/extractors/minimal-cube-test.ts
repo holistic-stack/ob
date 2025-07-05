@@ -54,12 +54,15 @@ async function runTest() {
       const cubeAST = extractCubeNode(cubeNode, errorHandler);
       // Check the result
       if (cubeAST && cubeAST.size === test.expected) {
+        // Test passes, handled by expect in actual tests
       } else {
+        // Test fails, handled by expect in actual tests
       }
 
       // Print any errors
       const errors = errorHandler.getErrors();
       if (errors.length > 0) {
+        // No action needed, errors are logged by the error handler
       }
     }
   } finally {

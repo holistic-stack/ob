@@ -252,7 +252,7 @@ export function extractNumberParameter(
         } else {
           return null;
         }
-      } catch (error) {
+      } catch (_error) {
         return null;
       }
     }
@@ -276,7 +276,7 @@ export function extractNumberParameter(
           console.log(`[extractNumberParameter] Expression did not evaluate to a number:`, result);
           return null;
         }
-      } catch (error) {
+      } catch (_error) {
         return null;
       }
     }

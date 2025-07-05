@@ -83,13 +83,10 @@ const SceneContent: React.FC<{
   config: Scene3DConfig;
   onRenderComplete?: (meshes: ReadonlyArray<Mesh3D>) => void;
   onRenderError?: (error: RenderingError) => void;
-  onPerformanceUpdate?: (metrics: RenderingMetrics) => void;
-}> = ({ ast, camera, config, onRenderComplete, onRenderError, onPerformanceUpdate }) => {
+}> = ({ ast, camera, config, onRenderComplete, onRenderError }) => {
   const { scene, gl: _gl, size: _size } = useThree();
   const [meshes, setMeshes] = useState<ReadonlyArray<Mesh3D>>([]);
   const [_isRendering, setIsRendering] = useState(false);
-  const frameCount = useRef(0);
-  const lastFrameTime = useRef(performance.now());
 
   /**
    * Render OpenSCAD primitive from AST node
@@ -260,55 +257,9 @@ const SceneContent: React.FC<{
     setMeshes(newMeshes);
     setIsRendering(false);
     onRenderComplete?.(newMeshes);
+  }, [ast, meshes, scene, onRenderComplete]);
 
-    // Update performance metrics
-    const metrics: RenderingMetrics = {
-      renderTime: duration,
-      parseTime: 0, // Will be set by parser
-      memoryUsage: 0, // Will be calculated separately
-      frameRate: 60, // Will be calculated in frame loop
-      meshCount: newMeshes.length,
-      triangleCount: newMeshes.reduce((sum, m) => sum + m.metadata.triangleCount, 0),
-      vertexCount: newMeshes.reduce((sum, m) => sum + m.metadata.vertexCount, 0),
-      drawCalls: newMeshes.length,
-      textureMemory: 0,
-      bufferMemory: newMeshes.length * 1024, // Rough estimate
-    };
 
-    onPerformanceUpdate?.(metrics);
-  }, [ast, meshes, scene, onRenderComplete, onPerformanceUpdate]);
-
-  /**
-   * Frame loop for performance monitoring
-   */
-  useFrame(() => {
-    frameCount.current++;
-    const now = performance.now();
-
-    // Calculate frame rate every second
-    if (now - lastFrameTime.current >= 1000) {
-      const fps = Math.round((frameCount.current * 1000) / (now - lastFrameTime.current));
-      frameCount.current = 0;
-      lastFrameTime.current = now;
-
-      // Update frame rate in metrics
-      if (onPerformanceUpdate && meshes.length > 0) {
-        const metrics: RenderingMetrics = {
-          renderTime: 0,
-          parseTime: 0,
-          memoryUsage: 0,
-          frameRate: fps,
-          meshCount: meshes.length,
-          triangleCount: meshes.reduce((sum, m) => sum + m.metadata.triangleCount, 0),
-          vertexCount: meshes.reduce((sum, m) => sum + m.metadata.vertexCount, 0),
-          drawCalls: meshes.length,
-          textureMemory: 0,
-          bufferMemory: meshes.length * 1024,
-        };
-        onPerformanceUpdate(metrics);
-      }
-    }
-  });
 
   /**
    * Render AST when it changes

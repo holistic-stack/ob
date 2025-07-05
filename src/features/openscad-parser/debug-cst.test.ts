@@ -62,7 +62,7 @@ function formatNode(node: any) {
 }
 
 function walkTree(node: any, targetType: string, depth = 0) {
-  const indent = '  '.repeat(depth);
+  const _indent = '  '.repeat(depth);
 
   if (node.type === targetType) {
     for (let i = 0; i < node.childCount; i++) {

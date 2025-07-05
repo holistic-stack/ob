@@ -68,7 +68,9 @@ export function getNodeText(node: TSNode, sourceCode?: string): string {
       if (extractedText.length > 0 && extractedText.length <= 1000) {
         return extractedText;
       }
-    } catch (error) {}
+    } catch (_error) {
+      // Intentionally empty, as per design, to handle potential Tree-sitter memory issues gracefully.
+    }
   }
 
   // Fallback to node.text
@@ -273,7 +275,7 @@ export function extractValueEnhanced(
         }
       }
       // Fall back to simple extraction
-    } catch (error) {
+    } catch (_error) {
       // Fall back to simple extraction
     }
   }

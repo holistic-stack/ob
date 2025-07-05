@@ -14,7 +14,6 @@ import { OpenscadParser } from '../openscad-parser/openscad-parser.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
-import { createPerformanceSlice } from './slices/performance-slice.js';
 import { createRenderingSlice } from './slices/rendering-slice.js';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
@@ -89,17 +88,6 @@ const createInitialState = (options?: StoreOptions): AppState => ({
     renderTime: 0,
     camera: options?.initialState?.rendering?.camera ?? DEFAULT_CAMERA,
   },
-  performance: {
-    metrics: {
-      renderTime: 0,
-      parseTime: 0,
-      memoryUsage: 0,
-      frameRate: 60,
-    },
-    isMonitoring: false,
-    violations: [],
-    lastUpdated: null,
-  },
   config: {
     ...DEFAULT_CONFIG,
     ...options?.initialState?.config,
@@ -131,7 +119,6 @@ export const createAppStore = (
           }),
           ...createParsingSlice(set, get, { parserService }),
           ...createRenderingSlice(set, get),
-          ...createPerformanceSlice(set, get),
           ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
         })),
         {
@@ -217,7 +204,6 @@ export const useAppStore = create<AppStore>()(
           }),
           ...createParsingSlice(set, get, { parserService }),
           ...createRenderingSlice(set, get),
-          ...createPerformanceSlice(set, get),
           ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
         };
 

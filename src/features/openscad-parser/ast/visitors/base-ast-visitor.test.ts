@@ -246,7 +246,9 @@ describe('BaseASTVisitor', () => {
           gotoParent: () => false,
           currentNode: () => mockNode,
           currentFieldName: () => null,
-          reset: () => {},
+          reset: () => {
+            /* no-op */
+          },
         }),
         descendantForPosition: () => null,
         descendantsOfType: () => [],

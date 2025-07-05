@@ -32,17 +32,16 @@ describe('OpenSCAD Argument Debug', () => {
     console.log(argumentList.toString());
 
     // Print the argument_list node fields
+    // Print the argument_list node fields
     for (let i = 0; i < argumentList.namedChildCount; i++) {
-      const child = argumentList.namedChild(i);
-      if (child) {
-      }
+      const _child = argumentList.namedChild(i);
+      // No action needed, just iterating for debug
     }
 
     // Print the argument_list node children
     for (let i = 0; i < argumentList.childCount; i++) {
-      const child = argumentList.child(i);
-      if (child) {
-      }
+      const _child = argumentList.child(i);
+      // No action needed, just iterating for debug
     }
 
     // Find the arguments node
@@ -54,16 +53,14 @@ describe('OpenSCAD Argument Debug', () => {
 
     // Print the arguments node fields
     for (let i = 0; i < arguments_.namedChildCount; i++) {
-      const child = arguments_.namedChild(i);
-      if (child) {
-      }
+      const _child = arguments_.namedChild(i);
+      // No action needed, just iterating for debug
     }
 
     // Print the arguments node children
     for (let i = 0; i < arguments_.childCount; i++) {
-      const child = arguments_.child(i);
-      if (child) {
-      }
+      const _child = arguments_.child(i);
+      // No action needed, just iterating for debug
     }
 
     // Find the argument node
@@ -75,16 +72,14 @@ describe('OpenSCAD Argument Debug', () => {
 
     // Print the argument node fields
     for (let i = 0; i < argument.namedChildCount; i++) {
-      const child = argument.namedChild(i);
-      if (child) {
-      }
+      const _child = argument.namedChild(i);
+      // No action needed, just iterating for debug
     }
 
     // Print the argument node children
     for (let i = 0; i < argument.childCount; i++) {
-      const child = argument.child(i);
-      if (child) {
-      }
+      const _child = argument.child(i);
+      // No action needed, just iterating for debug
     }
 
     // Expect the test to pass
@@ -93,7 +88,9 @@ describe('OpenSCAD Argument Debug', () => {
 });
 
 // Helper function to find a node of a specific type
-function findNodeOfType(node: any, type: string): any {
+import type { Node as TSNode } from 'web-tree-sitter';
+
+function findNodeOfType(node: TSNode, type: string): TSNode | null {
   if (node.type === type) {
     return node;
   }

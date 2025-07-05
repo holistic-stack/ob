@@ -171,8 +171,8 @@ export class QueryManager {
   dispose(): void {
     // Delete all cached Query objects
     for (const query of this.queryMap.values()) {
-      if (query && typeof (query as any).delete === 'function') {
-        (query as any).delete();
+      if (query && typeof query.delete === 'function') {
+        query.delete();
       }
     }
     this.queryMap.clear();

@@ -675,8 +675,8 @@ export class ForLoopVisitor extends BaseASTVisitor {
           typeof arg.name === 'object' &&
             arg.name !== null &&
             'cstNode' in arg.name &&
-            (arg.name as any).cstNode
-            ? (arg.name as any).cstNode
+            (arg.name as ast.VariableNode & { cstNode?: TSNode }).cstNode
+            ? (arg.name as ast.VariableNode & { cstNode?: TSNode }).cstNode
             : node, // Try to get more specific CST node
           `Invalid parameter name type: ${argNameType}`,
           'E_INVALID_PARAM_NAME_TYPE',
@@ -693,8 +693,8 @@ export class ForLoopVisitor extends BaseASTVisitor {
           rangeNode = astValueNode as ast.ErrorNode;
         } else {
           const unknownTypeString =
-            typeof (astValueNode as any)?.type === 'string'
-              ? (astValueNode as any).type
+            typeof (astValueNode as ast.ExpressionNode)?.type === 'string'
+              ? (astValueNode as ast.ExpressionNode).type
               : 'unknown ASTNode subtype';
           const varNameForLog1 = isAstVariableNode(variableNode)
             ? variableNode.name

@@ -71,7 +71,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
 
     console.log(`[Test] Found array node: type='${arrayNode?.type}', text='${arrayNode?.text}'`);
 
-    const result = extractValue(arrayNode!, code);
+    const result = extractValue(arrayNode as TSNode, code);
     console.log(`[Test] Extracted result:`, result);
 
     return result as Vector2D | Vector3D;
@@ -167,7 +167,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -252,7 +252,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -266,7 +266,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -280,7 +280,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -362,7 +362,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(arrayNode).not.toBeNull();
 
       // Extract using both the node and source code to test getNodeText function
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -383,7 +383,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode!, code);
+      const result = extractValue(arrayNode as TSNode, code);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -401,8 +401,8 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toHaveLength(2);
 
       // Type guard checks
-      const isVector2D = (v: any): v is Vector2D =>
-        Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'number');
+      const isVector2D = (v: unknown): v is Vector2D =>
+        Array.isArray(v) && v.length === 2 && v.every((x: unknown) => typeof x === 'number');
 
       expect(isVector2D(result)).toBe(true);
     });
@@ -416,8 +416,8 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(result).toHaveLength(3);
 
       // Type guard checks
-      const isVector3D = (v: any): v is Vector3D =>
-        Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === 'number');
+      const isVector3D = (v: unknown): v is Vector3D =>
+        Array.isArray(v) && v.length === 3 && v.every((x: unknown) => typeof x === 'number');
 
       expect(isVector3D(result)).toBe(true);
     });

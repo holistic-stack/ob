@@ -99,8 +99,10 @@ export class ExpressionEvaluationContext {
    * Set a variable in the current scope
    */
   setVariable(name: string, result: EvaluationResult): void {
-    const currentScope = this.variableScopes[this.variableScopes.length - 1]!;
-    currentScope[name] = result;
+    const currentScope = this.variableScopes[this.variableScopes.length - 1];
+    if (currentScope) {
+      currentScope[name] = result;
+    }
   }
 
   /**
@@ -108,13 +110,14 @@ export class ExpressionEvaluationContext {
    */
   getVariable(name: string): EvaluationResult | undefined {
     for (let i = this.variableScopes.length - 1; i >= 0; i--) {
-      const scope = this.variableScopes[i]!;
-      if (name in scope) {
+      const scope = this.variableScopes[i];
+      if (scope && name in scope) {
         return scope[name];
       }
     }
 
     if (!this.options.allowUndefinedVariables) {
+      // Intentionally empty, as per design, to allow undefined variables based on option.
     }
 
     return undefined;

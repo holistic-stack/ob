@@ -433,7 +433,7 @@ export class TransformVisitor extends BaseASTVisitor {
           // Handle expression objects that wrap the actual value
           let actualValue = argValue;
           if (typeof argValue === 'object' && argValue !== null && 'value' in argValue) {
-            actualValue = (argValue as any).value;
+            actualValue = (argValue as { value: unknown }).value;
           }
 
           if (typeof actualValue === 'string') {
@@ -489,7 +489,7 @@ export class TransformVisitor extends BaseASTVisitor {
         ];
 
         // Create a safe matrix conversion function
-        const createMatrixFromValue = (value: any): number[][] => {
+        const createMatrixFromValue = (value: unknown): number[][] => {
           if (!value) return identityMatrix;
 
           // If it's already a 2D array with the right structure, use it
@@ -507,11 +507,12 @@ export class TransformVisitor extends BaseASTVisitor {
             value.length === 16 &&
             value.every((item) => typeof item === 'number')
           ) {
+            const numArray = value as number[];
             return [
-              [value[0]!, value[1]!, value[2]!, value[3]!],
-              [value[4]!, value[5]!, value[6]!, value[7]!],
-              [value[8]!, value[9]!, value[10]!, value[11]!],
-              [value[12]!, value[13]!, value[14]!, value[15]!],
+              [numArray[0] ?? 0, numArray[1] ?? 0, numArray[2] ?? 0, numArray[3] ?? 0],
+              [numArray[4] ?? 0, numArray[5] ?? 0, numArray[6] ?? 0, numArray[7] ?? 0],
+              [numArray[8] ?? 0, numArray[9] ?? 0, numArray[10] ?? 0, numArray[11] ?? 0],
+              [numArray[12] ?? 0, numArray[13] ?? 0, numArray[14] ?? 0, numArray[15] ?? 0],
             ];
           }
 

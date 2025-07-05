@@ -134,54 +134,6 @@ describe('Integration Test Suite', () => {
     }, 10000); // Longer timeout for multiple tests
   });
 
-  describe('Performance Validation', () => {
-    it('should validate performance requirements', async () => {
-      logger.debug('[DEBUG][IntegrationTestSuiteTest] Testing performance validation');
-
-      const strictTestSuite = new IntegrationTestSuite({
-        enablePerformanceValidation: true,
-        maxRenderTime: 1000, // Very generous
-        maxMemoryUsage: 100 * 1024 * 1024, // 100MB
-        validateVisualOutput: true,
-        enableMatrixValidation: true,
-      });
-
-      const result = await strictTestSuite.testCompletePipeline('cube([10,10,10]);', 'cube');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const pipelineResult = result.data;
-        expect(pipelineResult.success).toBe(true);
-        expect(pipelineResult.totalDuration).toBeLessThan(1000);
-      }
-
-      strictTestSuite.dispose();
-    });
-
-    it('should fail with strict performance requirements', async () => {
-      logger.debug('[DEBUG][IntegrationTestSuiteTest] Testing strict performance requirements');
-
-      const strictTestSuite = new IntegrationTestSuite({
-        enablePerformanceValidation: true,
-        maxRenderTime: 0.1, // Impossibly strict
-        maxMemoryUsage: 1024, // 1KB - impossibly strict
-        validateVisualOutput: true,
-        enableMatrixValidation: true,
-      });
-
-      const result = await strictTestSuite.testCompletePipeline('cube([10,10,10]);', 'cube');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const pipelineResult = result.data;
-        expect(pipelineResult.success).toBe(false);
-        expect(pipelineResult.error).toContain('Performance requirement failed');
-      }
-
-      strictTestSuite.dispose();
-    });
-  });
-
   describe('Configuration Options', () => {
     it('should work with matrix validation disabled', async () => {
       logger.debug('[DEBUG][IntegrationTestSuiteTest] Testing with matrix validation disabled');

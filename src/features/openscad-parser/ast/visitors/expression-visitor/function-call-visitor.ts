@@ -45,7 +45,7 @@ export class FunctionCallVisitor extends BaseASTVisitor {
    * @param node The node to visit
    * @returns The AST node or null if the node cannot be processed
    */
-  visit(node: TSNode): ast.FunctionCallNode | ast.ErrorNode {
+  visit(node: TSNode): ast.FunctionCallNode | ast.ErrorNode | null {
     let functionNameNode: TSNode | null = null;
     let argsNode: TSNode | null = null;
 
@@ -128,7 +128,7 @@ export class FunctionCallVisitor extends BaseASTVisitor {
    * @param node The function call node
    * @returns The AST node or an ErrorNode if processing fails
    */
-  public visitFunctionCall(node: TSNode): ast.FunctionCallNode | ast.ErrorNode {
+  public visitFunctionCall(node: TSNode): ast.FunctionCallNode | ast.ErrorNode | null {
     const functionNode = node.childForFieldName('function');
     const argumentsNode = node.childForFieldName('arguments');
 
@@ -192,13 +192,13 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     node: TSNode, // The original CST node for location info
     functionName: string,
     args: ast.Parameter[]
-  ): ast.FunctionCallNode {
+  ): ast.FunctionCallNode | null {
     // Note: No longer returns ErrorNode directly, caller should handle
     // Special handling for assign function calls - these should be processed as assign statements
     if (functionName === 'assign') {
       // For assign function calls, we need to return null to indicate this visitor cannot handle it
       // The CompositeVisitor will then try other visitors, including AssignStatementVisitor
-      return null as any; // This will be handled by the calling visitor chain
+      return null; // This will be handled by the calling visitor chain
     }
 
     return {

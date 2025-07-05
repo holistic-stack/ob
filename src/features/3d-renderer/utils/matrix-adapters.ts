@@ -478,10 +478,7 @@ export const createIdentityMatrix = matrixFactory.identity;
 export const createZeroMatrix = matrixFactory.zeros;
 export const createRandomMatrix = matrixFactory.random;
 
-export const validateMatrixDimensions = (
-  matrix: mat4,
-  expectedLength: number
-): boolean => {
+export const validateMatrixDimensions = (matrix: mat4, expectedLength: number): boolean => {
   return matrix.length === expectedLength;
 };
 

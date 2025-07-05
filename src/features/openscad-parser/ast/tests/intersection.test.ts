@@ -29,7 +29,7 @@ describe('Intersection AST Generation', () => {
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect((intersectionNode as any).children).toBeDefined();
+      expect(intersectionNode.children).toBeDefined();
       // We won't check the children's properties as they might not be populated yet
     });
 
@@ -48,7 +48,7 @@ describe('Intersection AST Generation', () => {
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect((intersectionNode as any).children).toBeDefined();
+      expect(intersectionNode.children).toBeDefined();
       // We won't check the children's properties as they might not be populated yet
     });
 
@@ -64,7 +64,7 @@ describe('Intersection AST Generation', () => {
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect((intersectionNode as any).children).toBeDefined();
+      expect(intersectionNode.children).toBeDefined();
     });
   });
 });

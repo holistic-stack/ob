@@ -132,13 +132,13 @@ describe('Difference AST Generation', () => {
       expect(differenceNode.type).toBe('difference');
 
       // Check children
-      expect((differenceNode as any).children).toHaveLength(2);
-      expect((differenceNode as any).children[0].type).toBe('cube');
-      expect((differenceNode as any).children[0].size).toBe(20);
-      expect((differenceNode as any).children[0].center).toBe(true);
+      expect((differenceNode as ast.DifferenceNode).children).toHaveLength(2);
+      expect((differenceNode as ast.DifferenceNode).children[0].type).toBe('cube');
+      expect((differenceNode as ast.DifferenceNode).children[0].size).toBe(20);
+      expect((differenceNode as ast.DifferenceNode).children[0].center).toBe(true);
 
-      expect((differenceNode as any).children[1].type).toBe('sphere');
-      expect((differenceNode as any).children[1].radius).toBe(10);
+      expect((differenceNode as ast.DifferenceNode).children[1].type).toBe('sphere');
+      expect((differenceNode as ast.DifferenceNode).children[1].radius).toBe(10);
     });
 
     it('should parse difference with nested transformations', () => {
@@ -155,18 +155,57 @@ describe('Difference AST Generation', () => {
       expect(differenceNode.type).toBe('difference');
 
       // Check children
-      expect((differenceNode as any).children).toHaveLength(2);
-      expect((differenceNode as any).children[0].type).toBe('cube');
-      expect((differenceNode as any).children[0].size).toBe(20);
-      expect((differenceNode as any).children[0].center).toBe(true);
+      expect((differenceNode as ast.DifferenceNode).children).toHaveLength(2);
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode).size).toBe(20);
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode).center).toBe(
+        true
+      );
 
-      expect((differenceNode as any).children[1].type).toBe('translate');
-      expect((differenceNode as any).children[1].v).toEqual([0, 0, 5]);
-      expect((differenceNode as any).children[1].children[0].type).toBe('rotate');
-      expect((differenceNode as any).children[1].children[0].a).toEqual([0, 0, 45]);
-      expect((differenceNode as any).children[1].children[0].children[0].type).toBe('cube');
-      expect((differenceNode as any).children[1].children[0].children[0].size).toBe(10);
-      expect((differenceNode as any).children[1].children[0].children[0].center).toBe(true);
+      expect(((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode).type).toBe(
+        'translate'
+      );
+      expect(((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode).v).toEqual([
+        0, 0, 5,
+      ]);
+      expect(
+        (
+          ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
+            .children[0] as ast.RotateNode
+        ).type
+      ).toBe('rotate');
+      expect(
+        (
+          ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
+            .children[0] as ast.RotateNode
+        ).a
+      ).toEqual([0, 0, 45]);
+      expect(
+        (
+          (
+            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
+              .children[0] as ast.RotateNode
+          ).children[0] as ast.CubeNode
+        ).type
+      ).toBe('cube');
+      expect(
+        (
+          (
+            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
+              .children[0] as ast.RotateNode
+          ).children[0] as ast.CubeNode
+        ).size
+      ).toBe(10);
+      expect(
+        (
+          (
+            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
+              .children[0] as ast.RotateNode
+          ).children[0] as ast.CubeNode
+        ).center
+      ).toBe(true);
     });
 
     it('should parse empty difference', () => {
@@ -180,7 +219,7 @@ describe('Difference AST Generation', () => {
       expect(differenceNode.type).toBe('difference');
 
       // Check children
-      expect((differenceNode as any).children).toHaveLength(0);
+      expect((differenceNode as ast.DifferenceNode).children).toHaveLength(0);
     });
   });
 });

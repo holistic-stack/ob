@@ -267,13 +267,13 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         // Named argument
         return {
           name: arg.name,
-          value: arg.value as any, // Type conversion handled by createASTNodeForFunction
+          value: arg.value as ast.ParameterValue, // Type conversion handled by createASTNodeForFunction
         };
       } else {
         // Positional argument
         return {
           name: '', // Positional arguments have an empty name
-          value: (arg as any).value as any, // Type conversion handled by createASTNodeForFunction
+          value: (arg as { value: unknown }).value as ast.ParameterValue, // Type conversion handled by createASTNodeForFunction
         };
       }
     });
@@ -292,7 +292,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       if (node.text) {
       } else {
       }
-    } catch (error) {}
+    } catch (_error) {}
 
     // Based on CST structure analysis:
     // accessor_expression has two children:

@@ -30,26 +30,16 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should perform matrix addition correctly', async () => {
       logger.debug('Testing matrix addition');
 
-      const a = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 2, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
-      const b = mat4.fromValues(
-        5, 0, 0, 0,
-        0, 6, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
+      const a = mat4.fromValues(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      const b = mat4.fromValues(5, 0, 0, 0, 0, 6, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
       const result = await api.add(a, b);
 
       expect(result.success).toBe(true);
       if (result.success) {
         const resultMatrix = result.data.result;
-        expect(resultMatrix[0]).toBe(6);  // m00: 1 + 5
-        expect(resultMatrix[5]).toBe(8);  // m11: 2 + 6
+        expect(resultMatrix[0]).toBe(6); // m00: 1 + 5
+        expect(resultMatrix[5]).toBe(8); // m11: 2 + 6
         expect(resultMatrix[10]).toBe(2); // m22: 1 + 1
         expect(resultMatrix[15]).toBe(2); // m33: 1 + 1
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
@@ -59,26 +49,16 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should perform matrix multiplication correctly', async () => {
       logger.debug('Testing matrix multiplication');
 
-      const a = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 2, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
-      const b = mat4.fromValues(
-        2, 0, 0, 0,
-        0, 3, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
+      const a = mat4.fromValues(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      const b = mat4.fromValues(2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
       const result = await api.multiply(a, b);
 
       expect(result.success).toBe(true);
       if (result.success) {
         const resultMatrix = result.data.result;
-        expect(resultMatrix[0]).toBe(2);  // m00: 1 * 2
-        expect(resultMatrix[5]).toBe(6);  // m11: 2 * 3
+        expect(resultMatrix[0]).toBe(2); // m00: 1 * 2
+        expect(resultMatrix[5]).toBe(6); // m11: 2 * 3
         expect(resultMatrix[10]).toBe(1); // m22: 1 * 1
         expect(resultMatrix[15]).toBe(1); // m33: 1 * 1
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
@@ -88,12 +68,7 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should handle matrix transpose correctly', async () => {
       logger.debug('Testing matrix transpose');
 
-      const matrix = mat4.fromValues(
-        1, 4, 0, 0,
-        2, 5, 0, 0,
-        3, 6, 0, 0,
-        0, 0, 0, 1
-      );
+      const matrix = mat4.fromValues(1, 4, 0, 0, 2, 5, 0, 0, 3, 6, 0, 0, 0, 0, 0, 1);
 
       const result = await api.transpose(matrix);
 
@@ -101,12 +76,12 @@ describe('Simplified MatrixOperationsAPI', () => {
       if (result.success) {
         const resultMatrix = result.data.result;
         // Check transposed values
-        expect(resultMatrix[0]).toBe(1);  // m00
-        expect(resultMatrix[1]).toBe(2);  // m01 (was m10)
-        expect(resultMatrix[2]).toBe(3);  // m02 (was m20)
-        expect(resultMatrix[4]).toBe(4);  // m10 (was m01)
-        expect(resultMatrix[5]).toBe(5);  // m11
-        expect(resultMatrix[6]).toBe(6);  // m12 (was m21)
+        expect(resultMatrix[0]).toBe(1); // m00
+        expect(resultMatrix[1]).toBe(2); // m01 (was m10)
+        expect(resultMatrix[2]).toBe(3); // m02 (was m20)
+        expect(resultMatrix[4]).toBe(4); // m10 (was m01)
+        expect(resultMatrix[5]).toBe(5); // m11
+        expect(resultMatrix[6]).toBe(6); // m12 (was m21)
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
     });
@@ -114,26 +89,16 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should handle matrix subtraction correctly', async () => {
       logger.debug('Testing matrix subtraction');
 
-      const a = mat4.fromValues(
-        5, 0, 0, 0,
-        0, 6, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
-      const b = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 2, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
+      const a = mat4.fromValues(5, 0, 0, 0, 0, 6, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      const b = mat4.fromValues(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
       const result = await api.subtract(a, b);
 
       expect(result.success).toBe(true);
       if (result.success) {
         const resultMatrix = result.data.result;
-        expect(resultMatrix[0]).toBe(4);  // m00: 5 - 1
-        expect(resultMatrix[5]).toBe(4);  // m11: 6 - 2
+        expect(resultMatrix[0]).toBe(4); // m00: 5 - 1
+        expect(resultMatrix[5]).toBe(4); // m11: 6 - 2
         expect(resultMatrix[10]).toBe(0); // m22: 1 - 1
         expect(resultMatrix[15]).toBe(0); // m33: 1 - 1
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
@@ -143,12 +108,7 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should handle matrix inverse correctly', async () => {
       logger.debug('Testing matrix inverse');
 
-      const matrix = mat4.fromValues(
-        2, 0, 0, 0,
-        0, 3, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
+      const matrix = mat4.fromValues(2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
       const result = await api.inverse(matrix);
 
@@ -157,10 +117,10 @@ describe('Simplified MatrixOperationsAPI', () => {
         const inverseMatrix = result.data.result;
 
         // Check that the inverse has expected values for a diagonal matrix
-        expect(inverseMatrix[0]).toBeCloseTo(0.5, 10);  // 1/2
+        expect(inverseMatrix[0]).toBeCloseTo(0.5, 10); // 1/2
         expect(inverseMatrix[5]).toBeCloseTo(0.333, 2); // 1/3 (approximately)
-        expect(inverseMatrix[10]).toBeCloseTo(1, 10);   // 1/1
-        expect(inverseMatrix[15]).toBeCloseTo(1, 10);   // 1/1
+        expect(inverseMatrix[10]).toBeCloseTo(1, 10); // 1/1
+        expect(inverseMatrix[15]).toBeCloseTo(1, 10); // 1/1
 
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
@@ -191,12 +151,7 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should convert gl-matrix to Matrix4 correctly', async () => {
       logger.debug('Testing gl-matrix to Matrix4 conversion');
 
-      const glMatrix = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        5, 6, 7, 1
-      );
+      const glMatrix = mat4.fromValues(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 6, 7, 1);
 
       const result = await api.convertGLMatrixToMatrix4(glMatrix);
 
@@ -236,8 +191,8 @@ describe('Simplified MatrixOperationsAPI', () => {
         expect(matrix[14]).toBeCloseTo(3, 10); // Translation Z
 
         // Check identity elements
-        expect(matrix[0]).toBeCloseTo(1, 10);  // m00
-        expect(matrix[5]).toBeCloseTo(1, 10);  // m11
+        expect(matrix[0]).toBeCloseTo(1, 10); // m00
+        expect(matrix[5]).toBeCloseTo(1, 10); // m11
         expect(matrix[10]).toBeCloseTo(1, 10); // m22
         expect(matrix[15]).toBeCloseTo(1, 10); // m33
 
@@ -255,14 +210,14 @@ describe('Simplified MatrixOperationsAPI', () => {
         const matrix = result.data.result;
 
         // Check scale values in gl-matrix format (column-major)
-        expect(matrix[0]).toBeCloseTo(2, 10);  // Scale X
-        expect(matrix[5]).toBeCloseTo(3, 10);  // Scale Y
+        expect(matrix[0]).toBeCloseTo(2, 10); // Scale X
+        expect(matrix[5]).toBeCloseTo(3, 10); // Scale Y
         expect(matrix[10]).toBeCloseTo(4, 10); // Scale Z
         expect(matrix[15]).toBeCloseTo(1, 10); // m33
 
         // Check that other elements are zero
-        expect(matrix[1]).toBeCloseTo(0, 10);  // m01
-        expect(matrix[4]).toBeCloseTo(0, 10);  // m10
+        expect(matrix[1]).toBeCloseTo(0, 10); // m01
+        expect(matrix[4]).toBeCloseTo(0, 10); // m10
 
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
       }
@@ -278,10 +233,10 @@ describe('Simplified MatrixOperationsAPI', () => {
         const matrix = result.data.result;
 
         // Check key elements (90 degree rotation around X) in gl-matrix format
-        expect(matrix[0]).toBeCloseTo(1, 10);  // m00 - X axis unchanged
-        expect(matrix[5]).toBeCloseTo(0, 10);  // m11 - cos(90°) = 0
+        expect(matrix[0]).toBeCloseTo(1, 10); // m00 - X axis unchanged
+        expect(matrix[5]).toBeCloseTo(0, 10); // m11 - cos(90°) = 0
         expect(matrix[6]).toBeCloseTo(-1, 10); // m12 - -sin(90°) = -1
-        expect(matrix[9]).toBeCloseTo(1, 10);  // m21 - sin(90°) = 1
+        expect(matrix[9]).toBeCloseTo(1, 10); // m21 - sin(90°) = 1
         expect(matrix[10]).toBeCloseTo(0, 10); // m22 - cos(90°) = 0
 
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
@@ -293,12 +248,7 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should calculate determinant for 4x4 matrix', async () => {
       logger.debug('Testing determinant calculation');
 
-      const matrix = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 2, 0, 0,
-        0, 0, 3, 0,
-        0, 0, 0, 4
-      );
+      const matrix = mat4.fromValues(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4);
 
       const result = await api.determinant(matrix);
 
@@ -312,12 +262,7 @@ describe('Simplified MatrixOperationsAPI', () => {
     it('should calculate trace correctly', async () => {
       logger.debug('Testing trace calculation');
 
-      const matrix = mat4.fromValues(
-        1, 0, 0, 0,
-        0, 5, 0, 0,
-        0, 0, 9, 0,
-        0, 0, 0, 4
-      );
+      const matrix = mat4.fromValues(1, 0, 0, 0, 0, 5, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4);
 
       const result = await api.trace(matrix);
 
@@ -329,19 +274,5 @@ describe('Simplified MatrixOperationsAPI', () => {
     });
   });
 
-  describe('Performance Metrics', () => {
-    it('should return basic performance metrics', () => {
-      logger.debug('Testing performance metrics');
 
-      const metrics = api.getPerformanceMetrics();
-
-      expect(metrics).toEqual({
-        operationCount: 0,
-        totalExecutionTime: 0,
-        averageExecutionTime: 0,
-        cacheHitRate: 0,
-        memoryUsage: 0,
-      });
-    });
-  });
 });

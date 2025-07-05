@@ -182,7 +182,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('union');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle module_instantiation nodes for union operations', () => {
@@ -201,7 +201,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('union');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for difference operations', () => {
@@ -220,7 +220,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -229,7 +229,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('difference');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for intersection operations', () => {
@@ -248,7 +248,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -257,7 +257,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('intersection');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for hull operations', () => {
@@ -276,7 +276,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -285,7 +285,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('hull');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for minkowski operations', () => {
@@ -304,7 +304,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -313,7 +313,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('minkowski');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create a union node with children', () => {
@@ -352,7 +352,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -364,7 +364,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('difference');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create an intersection node', () => {
@@ -383,7 +383,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -395,7 +395,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('intersection');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as any).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create a hull node', () => {
@@ -414,7 +414,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -444,7 +444,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as any;
+      } as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -492,7 +492,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as any;
+    } as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('intersection()')) {
@@ -508,7 +508,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as any;
+    } as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('hull()')) {
@@ -524,7 +524,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as any;
+    } as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('minkowski()')) {
@@ -540,7 +540,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as any;
+    } as TSNode;
   }
 
   if (node.type === type) {

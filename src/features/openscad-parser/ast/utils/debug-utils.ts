@@ -172,13 +172,16 @@ export function printNodeStructure(
       if (child) {
         const fieldName = node.fieldNameForChild(i);
         if (fieldName) {
+          // No action needed, just for debugging
         } else {
+          // No action needed, just for debugging
         }
         printNodeStructure(child, depth + 2, maxDepth, maxChildren);
       }
     }
 
     if (childCount > maxChildren) {
+      // No action needed, just for debugging
     }
   }
 
@@ -194,6 +197,7 @@ export function printNodeStructure(
     }
 
     if (namedChildCount > maxChildren) {
+      // No action needed, just for debugging
     }
   }
 }

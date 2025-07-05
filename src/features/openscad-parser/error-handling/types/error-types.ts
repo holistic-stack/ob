@@ -191,7 +191,7 @@ export interface ErrorContext {
 
   // Additional properties for type mismatch errors
   /** The value that caused the error */
-  value?: any;
+  value?: unknown;
   /** Location information for the error */
   location?: { line: number; column: number };
   /** Operation that caused the error (for binary operations) */
@@ -201,9 +201,9 @@ export interface ErrorContext {
   /** Type of the right operand (for binary operations) */
   rightType?: string;
   /** Value of the left operand (for binary operations) */
-  leftValue?: any;
+  leftValue?: unknown;
   /** Value of the right operand (for binary operations) */
-  rightValue?: any;
+  rightValue?: unknown;
   /** Function name (for function call errors) */
   functionName?: string;
   /** Parameter index (for function call errors) */
@@ -264,13 +264,13 @@ export class ParserError extends Error {
 }
 
 // Specific error types
-export class SyntaxError extends ParserError {
+export class OpenSCADSyntaxError extends ParserError {
   constructor(message: string, context: ErrorContext = {}) {
     super(message, ErrorCode.SYNTAX_ERROR, Severity.ERROR, context);
   }
 }
 
-export class TypeError extends ParserError {
+export class OpenSCADTypeError extends ParserError {
   constructor(message: string, context: ErrorContext = {}) {
     super(message, ErrorCode.TYPE_ERROR, Severity.ERROR, context);
   }
@@ -282,7 +282,7 @@ export class ValidationError extends ParserError {
   }
 }
 
-export class ReferenceError extends ParserError {
+export class OpenSCADReferenceError extends ParserError {
   constructor(message: string, context: ErrorContext = {}) {
     super(message, ErrorCode.REFERENCE_ERROR, Severity.ERROR, context);
   }

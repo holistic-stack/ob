@@ -2,233 +2,63 @@
  * Tests for the QueryManager class
  */
 
-import { describe, expect, it, vi } from 'vitest';
-import type { QueryCache } from './query-cache.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Language, Tree } from 'web-tree-sitter';
+import { OpenscadParser } from '../../openscad-parser.js';
+import { LRUQueryCache } from './lru-query-cache.js';
 import { QueryManager } from './query-manager.js';
 
-// Mock the Query constructor from web-tree-sitter
-vi.mock('web-tree-sitter', async () => {
-  const actual = await vi.importActual('web-tree-sitter');
-  return {
-    ...actual,
-    Query: vi.fn(),
-  };
-});
-
-// Mock the Tree-sitter types
-class MockTree {
-  constructor(public rootNode: MockNode) {}
-}
-
-class MockNode {
-  constructor(
-    public text: string,
-    public type: string
-  ) {}
-}
-
-class MockMatch {
-  constructor(public captures: MockCapture[]) {}
-}
-
-class MockCapture {
-  constructor(public node: MockNode) {}
-}
-
-class MockQuery {
-  private matches_: MockMatch[];
-
-  constructor(matches: MockMatch[]) {
-    this.matches_ = matches;
-  }
-
-  matches(_node: MockNode): MockMatch[] {
-    return this.matches_;
-  }
-}
-
-// Mock the QueryCache
-class MockQueryCache implements QueryCache {
-  private cache: Map<string, any[]> = new Map();
-  private _hits = 0;
-  private _misses = 0;
-
-  get(queryString: string, sourceText: string): any[] | null {
-    const key = `${queryString}:${sourceText}`;
-    const result = this.cache.get(key) ?? null;
-
-    if (result) {
-      this._hits++;
-    } else {
-      this._misses++;
-    }
-
-    return result;
-  }
-
-  set(queryString: string, sourceText: string, results: any[]): void {
-    const key = `${queryString}:${sourceText}`;
-    this.cache.set(key, results);
-  }
-
-  clear(): void {
-    this.cache.clear();
-    this._hits = 0;
-    this._misses = 0;
-  }
-
-  size(): number {
-    return this.cache.size;
-  }
-
-  getStats(): { hits: number; misses: number; size: number } {
-    return {
-      hits: this._hits,
-      misses: this._misses,
-      size: this.cache.size,
-    };
-  }
-}
-
 describe('QueryManager', () => {
-  it('should execute a query and cache the results', async () => {
-    // Import the mocked Query constructor
-    const { Query } = await import('web-tree-sitter');
-    const mockQueryConstructor = Query as any;
+  let parser: OpenscadParser;
+  let language: Language;
+  let tree: Tree;
+  let queryManager: QueryManager;
 
-    // Create a mock language
-    const mockLanguage = {
-      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-    };
-
-    // Setup the mock Query constructor
-    mockQueryConstructor.mockImplementation((_language: any, _queryString: string) => {
-      return new MockQuery([
-        new MockMatch([
-          new MockCapture(new MockNode('node1', 'type1')),
-          new MockCapture(new MockNode('node2', 'type2')),
-        ]),
-      ]);
-    });
-
-    // Create a mock cache
-    const mockCache = new MockQueryCache();
-
-    // Create a query manager
-    const queryManager = new QueryManager(mockLanguage, mockCache);
-
-    // Create a mock tree
-    const mockTree = new MockTree(new MockNode('root', 'program'));
-
-    // Execute a query
-    const results = queryManager.executeQuery('(type1) @node', mockTree as any);
-
-    // The query should be executed and the results cached
-    expect(mockQueryConstructor).toHaveBeenCalledWith(mockLanguage, '(type1) @node');
-    expect(results).toHaveLength(2);
-    expect(mockCache.size()).toBe(1);
-
-    // Execute the same query again
-    queryManager.executeQuery('(type1) @node', mockTree as any);
-
-    // The query should be retrieved from the cache
-    expect(mockQueryConstructor).toHaveBeenCalledTimes(1);
-    expect(mockCache.getStats().hits).toBe(1);
+  beforeEach(async () => {
+    parser = new OpenscadParser();
+    await parser.init();
+    language = parser.getLanguage();
+    tree = parser.parse('cube(10); sphere(5);');
+    queryManager = new QueryManager(language, new LRUQueryCache());
   });
 
-  it('should find nodes by type', async () => {
-    // Import the mocked Query constructor
-    const { Query } = await import('web-tree-sitter');
-    const mockQueryConstructor = Query as any;
+  afterEach(() => {
+    queryManager.dispose();
+    tree.delete();
+    parser.dispose();
+  });
 
-    // Create a mock language
-    const mockLanguage = {
-      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-    };
+  it('should execute a query and cache the results', () => {
+    const queryString = '(module_instantiation) @capture';
+    const results1 = queryManager.executeQuery(queryString, tree);
+    expect(results1.length).toBe(2);
+    expect(queryManager.getCacheStats().misses).toBe(1);
+    expect(queryManager.getCacheStats().hits).toBe(0);
 
-    // Setup the mock Query constructor
-    mockQueryConstructor.mockImplementation((_language: any, _queryString: string) => {
-      return new MockQuery([
-        new MockMatch([
-          new MockCapture(new MockNode('node1', 'type1')),
-          new MockCapture(new MockNode('node2', 'type1')),
-        ]),
-      ]);
-    });
+    const results2 = queryManager.executeQuery(queryString, tree);
+    expect(results2.length).toBe(2);
+    expect(queryManager.getCacheStats().misses).toBe(1);
+    expect(queryManager.getCacheStats().hits).toBe(1);
+  });
 
-    // Create a query manager
-    const queryManager = new QueryManager(mockLanguage);
-
-    // Create a mock tree
-    const mockTree = new MockTree(new MockNode('root', 'program'));
-
-    // Find nodes by type
-    const results = queryManager.findNodesByType('type1', mockTree as any);
-
-    // The query should be executed with the correct query string
-    expect(mockQueryConstructor).toHaveBeenCalledWith(mockLanguage, '(type1) @node');
-    expect(results).toHaveLength(2);
+  it('should find nodes by type', () => {
+    const results = queryManager.findNodesByType('module_instantiation', tree);
+    expect(results.length).toBe(2);
   });
 
   it('should clear the cache', () => {
-    // Create a mock language
-    const mockLanguage = {
-      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-      query: vi.fn().mockImplementation((_queryString) => {
-        return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
-      }),
-    };
-
-    // Create a mock cache
-    const mockCache = new MockQueryCache();
-
-    // Create a query manager
-    const queryManager = new QueryManager(mockLanguage, mockCache);
-
-    // Create a mock tree
-    const mockTree = new MockTree(new MockNode('root', 'program'));
-
-    // Execute a query
-    queryManager.executeQuery('(type1) @node', mockTree as any);
-
-    // The results should be cached
-    expect(mockCache.size()).toBe(1);
-
-    // Clear the cache
+    const queryString = '(module_instantiation) @capture';
+    queryManager.executeQuery(queryString, tree);
+    expect(queryManager.getCacheStats().size).toBe(1);
     queryManager.clearCache();
-
-    // The cache should be empty
-    expect(mockCache.size()).toBe(0);
+    expect(queryManager.getCacheStats().size).toBe(0);
   });
 
   it('should get cache statistics', () => {
-    // Create a mock language
-    const mockLanguage = {
-      lengthBytesUTF8: (str: string) => new TextEncoder().encode(str).length,
-      query: vi.fn().mockImplementation((_queryString) => {
-        return new MockQuery([new MockMatch([new MockCapture(new MockNode('node1', 'type1'))])]);
-      }),
-    };
-
-    // Create a mock cache
-    const mockCache = new MockQueryCache();
-
-    // Create a query manager
-    const queryManager = new QueryManager(mockLanguage, mockCache);
-
-    // Create a mock tree
-    const mockTree = new MockTree(new MockNode('root', 'program'));
-
-    // Execute a query
-    queryManager.executeQuery('(type1) @node', mockTree as any);
-
-    // Execute the same query again
-    queryManager.executeQuery('(type1) @node', mockTree as any);
-
-    // Get the cache statistics
+    const queryString = '(module_instantiation) @capture';
+    queryManager.executeQuery(queryString, tree);
+    queryManager.executeQuery(queryString, tree);
     const stats = queryManager.getCacheStats();
-
-    // The statistics should be correct
     expect(stats.hits).toBe(1);
     expect(stats.misses).toBe(1);
     expect(stats.size).toBe(1);

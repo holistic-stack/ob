@@ -8,6 +8,7 @@
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
 
@@ -27,7 +28,7 @@ vi.mock('./r3f-scene', () => ({
 }));
 
 // Create stable constants outside of mocks to prevent reference changes
-const STABLE_EMPTY_ARRAY: any[] = [];
+const STABLE_EMPTY_ARRAY: readonly ASTNode[] = [];
 const STABLE_CAMERA = {
   position: [5, 5, 5] as const,
   target: [0, 0, 0] as const,
@@ -68,7 +69,9 @@ vi.mock('../../store', () => ({
       if (selectorStr.includes('selectConfigEnableRealTimeRendering')) return true;
 
       // For action selectors, return stable no-op functions
-      return () => {}; // Stable no-op function
+      return () => {
+        /* no-op */
+      }; // Stable no-op function
     }
     return STABLE_EMPTY_ARRAY;
   }),

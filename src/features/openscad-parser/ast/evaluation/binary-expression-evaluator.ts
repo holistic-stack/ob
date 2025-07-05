@@ -73,7 +73,9 @@ export class BinaryExpressionEvaluator extends BaseExpressionEvaluator {
 
     try {
       // Handle both direct binary expressions and expressions with binary expressionType
-      let leftNode, operatorNode, rightNode;
+      let leftNode: TSNode | null = null;
+      let operatorNode: TSNode | null = null;
+      let rightNode: TSNode | null = null;
 
       if (node.type === 'expression') {
         // For expression nodes created by the ExpressionVisitor, find the binary expression child

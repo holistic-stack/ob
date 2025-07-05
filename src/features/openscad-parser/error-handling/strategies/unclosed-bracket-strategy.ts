@@ -46,7 +46,7 @@
  * @example Basic unclosed bracket recovery
  * ```typescript
  * import { UnclosedBracketStrategy } from './unclosed-bracket-strategy';
- * import { SyntaxError } from '../types/error-types';
+ * import { OpenSCADSyntaxError as SyntaxError } from '../types/error-types';
  *
  * const strategy = new UnclosedBracketStrategy();
  *

@@ -38,7 +38,8 @@ describe('SimpleBinaryExpressionTest', () => {
 
     // Debug: Print the tree structure to understand the issue
     // Test that the visitor can handle the real node
-    const result = visitor.visit(binaryNode!);
+    if (!binaryNode) throw new Error('Binary node not found');
+    const result = visitor.visit(binaryNode);
 
     // The visitor should return a binary expression AST node or delegate properly
     // Note: This might return null if the visitor delegates to parent, which is expected behavior
@@ -53,7 +54,8 @@ describe('SimpleBinaryExpressionTest', () => {
     expect(binaryNode?.type).toBe('binary_expression'); // Updated to reflect unified grammar
 
     // Test that the visitor can handle the real node
-    const result = visitor.visit(binaryNode!);
+    if (!binaryNode) throw new Error('Binary node not found');
+    const result = visitor.visit(binaryNode);
 
     // The visitor should return a binary expression AST node or delegate properly
     expect(result).toBeDefined(); // Either an AST node or null is acceptable
@@ -66,7 +68,8 @@ describe('SimpleBinaryExpressionTest', () => {
     expect(binaryNode).not.toBeNull();
 
     // Test that the visitor can handle the real node
-    const result = visitor.visit(binaryNode!);
+    if (!binaryNode) throw new Error('Binary node not found');
+    const result = visitor.visit(binaryNode);
 
     // The visitor should return a binary expression AST node or delegate properly
     expect(result).toBeDefined(); // Either an AST node or null is acceptable

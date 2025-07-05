@@ -131,10 +131,10 @@ export interface UpdateConfigPayload {
 /**
  * Async action result types using shared operation types
  */
-export type SaveCodeResult = AsyncOperationResultcvoid, OperationErrore;
-export type LoadCodeResult = AsyncOperationResultcvoid, OperationErrore;
-export type ParseCodeResult = AsyncOperationResultcReadonlyArraycCoreNodee, OperationErrore;
-export type RenderFromASTResult = AsyncOperationResultcReadonlyArraycTHREE.Meshe, OperationErrore;
+export type SaveCodeResult = AsyncOperationResult<void, OperationError>;
+export type LoadCodeResult = AsyncOperationResult<void, OperationError>;
+export type ParseCodeResult = AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+export type RenderFromASTResult = AsyncOperationResult<ReadonlyArray<THREE.Mesh>, OperationError>;
 
 /**
  * Action creator types for type-safe action dispatch

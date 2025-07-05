@@ -46,28 +46,32 @@ export * from './operations.types.js';
 
 // Re-export commonly used types for convenience
 export type {
-  // Common types
-  AppConfig,
+  // Result types
   AsyncResult,
+  Result,
+  Option,
+  ValidationResult,
+  ParseResult,
+  NetworkResult,
+  FileResult,
   // Branded types
   Brand,
   ComponentId,
+  UserId,
+  SessionId,
   // Utility types
   DeepReadonly,
-  EditorState,
-  Immutable,
-  Mapper,
-  NetworkResult,
-  Option,
-  ParseResult,
-  PerformanceMetrics,
-  Predicate,
-  Reducer,
-  // Result types
-  Result,
-  SceneState,
-  ValidationResult,
+  ReadonlyNonEmptyArray,
+  AsyncPureFunction,
+  EventHandler,
+  EventHandlerWithPayload,
 } from './result.types.js';
+
+// Re-export from common.types.js
+export type {
+  ThemeColors,
+  Theme,
+} from './common.types.js';
 // Result and error handling types
 export * from './result.types.js';
 // Type utilities and helpers

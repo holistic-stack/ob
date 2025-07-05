@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import type { Camera, Scene, WebGLRenderer } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 
 const logger = createLogger('useFrame');
@@ -16,7 +17,7 @@ interface FrameState {
     getDelta: () => number;
   };
   gl: {
-    render: (scene: any, camera: any) => void;
+    render: (scene: Scene, camera: Camera) => void;
   };
 }
 
@@ -26,7 +27,7 @@ type FrameCallback = (state: FrameState, delta: number) => void;
  * Custom useFrame hook for render loop operations
  * Eliminates the need for useEffect with complex dependencies
  */
-export const useFrame = (callback: FrameCallback, priority = 0) => {
+export const useFrame = (callback: FrameCallback, _priority = 0) => {
   const callbackRef = useRef(callback);
   const frameIdRef = useRef<number>();
   const lastTimeRef = useRef(performance.now());
@@ -89,7 +90,12 @@ export const useFrame = (callback: FrameCallback, priority = 0) => {
 /**
  * Hook for Three.js render loop with automatic rendering
  */
-export const useThreeFrame = (scene: any, camera: any, renderer: any, callback?: FrameCallback) => {
+export const useThreeFrame = (
+  scene: Scene,
+  camera: Camera,
+  renderer: WebGLRenderer,
+  callback?: FrameCallback
+) => {
   const renderFrame = useCallback(
     (state: FrameState, delta: number) => {
       // Call user callback first

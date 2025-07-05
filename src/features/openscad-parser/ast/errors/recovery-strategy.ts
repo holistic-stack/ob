@@ -9,7 +9,7 @@
 
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { ParserError } from './parser-error.js';
-import { SyntaxError } from './syntax-error.js';
+import { OpenSCADSyntaxError } from './syntax-error.js';
 
 /**
  * Interface for error recovery strategies
@@ -93,7 +93,7 @@ export class InsertMissingTokenStrategy implements RecoveryStrategy {
    */
   recover(node: TSNode, error: ParserError): TSNode | null {
     // This strategy only works for syntax errors
-    if (!(error instanceof SyntaxError)) {
+    if (!(error instanceof OpenSCADSyntaxError)) {
       return null;
     }
 
@@ -122,7 +122,7 @@ export class DeleteExtraTokenStrategy implements RecoveryStrategy {
    */
   recover(node: TSNode, error: ParserError): TSNode | null {
     // This strategy only works for syntax errors
-    if (!(error instanceof SyntaxError)) {
+    if (!(error instanceof OpenSCADSyntaxError)) {
       return null;
     }
 
@@ -135,31 +135,23 @@ export class DeleteExtraTokenStrategy implements RecoveryStrategy {
 /**
  * Factory for creating recovery strategies
  */
-export class RecoveryStrategyFactory {
-  /**
-   * Create a recovery strategy for an error
-   *
-   * @param error - The error to recover from
-   * @returns A recovery strategy or null if no strategy is available
-   */
-  static createStrategy(error: ParserError): RecoveryStrategy | null {
-    // Choose a strategy based on the error type
-    if (error instanceof SyntaxError) {
-      // Check if the error is a missing token error
-      if (error.message.includes('Missing')) {
-        return new InsertMissingTokenStrategy();
-      }
-
-      // Check if the error is an unexpected token error
-      if (error.message.includes('Unexpected')) {
-        return new DeleteExtraTokenStrategy();
-      }
-
-      // Default to skipping to the next statement
-      return new SkipToNextStatementStrategy();
+export function createRecoveryStrategy(error: ParserError): RecoveryStrategy | null {
+  // Choose a strategy based on the error type
+  if (error instanceof OpenSCADSyntaxError) {
+    // Check if the error is a missing token error
+    if (error.message.includes('Missing')) {
+      return new InsertMissingTokenStrategy();
     }
 
-    // No strategy available for other error types
-    return null;
+    // Check if the error is an unexpected token error
+    if (error.message.includes('Unexpected')) {
+      return new DeleteExtraTokenStrategy();
+    }
+
+    // Default to skipping to the next statement
+    return new SkipToNextStatementStrategy();
   }
+
+  // No strategy available for other error types
+  return null;
 }

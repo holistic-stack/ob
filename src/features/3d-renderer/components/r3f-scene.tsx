@@ -26,7 +26,6 @@ interface R3FSceneProps {
   readonly astNodes: ReadonlyArray<ASTNode>;
   readonly camera: CameraConfig;
   readonly onCameraChange?: (camera: CameraConfig) => void;
-  readonly onPerformanceUpdate?: (metrics: RenderingMetrics) => void;
   readonly onRenderComplete?: (meshes: ReadonlyArray<Mesh3D>) => void;
   readonly onRenderError?: (error: { message: string }) => void;
 }
@@ -60,14 +59,11 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
   astNodes,
   camera,
   onCameraChange,
-  onPerformanceUpdate,
   onRenderComplete,
   onRenderError,
 }) => {
-  const { scene, gl } = useThree();
+  const { scene } = useThree();
   const meshesRef = useRef<Mesh3D[]>([]);
-  const frameCount = useRef(0);
-  const lastPerformanceUpdate = useRef(0);
 
   /**
    * Update scene when AST nodes change
@@ -131,38 +127,6 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         // Report render completion
         logger.debug(`Calling onRenderComplete with ${meshes.length} meshes`);
         onRenderComplete?.(meshes);
-
-        // Update performance metrics
-        const memoryUsage =
-          (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
-            ?.usedJSHeapSize ?? 0;
-        const triangleCount = meshes.reduce((total, mesh3D) => {
-          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-          if (geometry.index) {
-            return total + (geometry.index as THREE.BufferAttribute).count / 3;
-          } else if (geometry.attributes.position) {
-            return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
-          }
-          return total;
-        }, 0);
-
-        const vertexCount = meshes.reduce((total, mesh3D) => {
-          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-          return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
-        }, 0);
-
-        onPerformanceUpdate?.({
-          renderTime,
-          parseTime: 0, // AST parsing happens elsewhere
-          memoryUsage: memoryUsage / (1024 * 1024), // Convert to MB
-          frameRate: 60, // Approximate - will be updated in frame loop
-          meshCount: meshes.length,
-          triangleCount,
-          vertexCount,
-          drawCalls: meshes.length, // Approximate - one draw call per mesh
-          textureMemory: 0, // Not tracking texture memory yet
-          bufferMemory: 0, // Not tracking buffer memory yet
-        });
       } catch (error) {
         logger.error('Failed to update scene:', error);
         onRenderError?.({
@@ -178,51 +142,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         message: error instanceof Error ? error.message : 'Unknown scene update error',
       });
     });
-  }, [astNodes, scene, onRenderComplete, onRenderError, onPerformanceUpdate]);
-
-  /**
-   * Frame loop for performance monitoring
-   */
-  useFrame(() => {
-    frameCount.current++;
-
-    // Update performance metrics every second
-    const now = performance.now();
-    if (now - lastPerformanceUpdate.current > 1000) {
-      const frameRate = frameCount.current;
-      frameCount.current = 0;
-      lastPerformanceUpdate.current = now;
-
-      const memoryUsage =
-        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
-          ?.usedJSHeapSize ?? 0;
-      const currentMeshes = meshesRef.current;
-
-      onPerformanceUpdate?.({
-        renderTime: gl.info.render.frame > 0 ? 16.67 : 0, // Approximate frame time
-        parseTime: 0,
-        memoryUsage: memoryUsage / (1024 * 1024),
-        frameRate,
-        meshCount: currentMeshes.length,
-        triangleCount: currentMeshes.reduce((total, mesh3D) => {
-          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-          if (geometry.index) {
-            return total + (geometry.index as THREE.BufferAttribute).count / 3;
-          } else if (geometry.attributes.position as THREE.BufferAttribute) {
-            return total + (geometry.attributes.position as THREE.BufferAttribute).count / 3;
-          }
-          return total;
-        }, 0),
-        vertexCount: currentMeshes.reduce((total, mesh3D) => {
-          const geometry = (mesh3D.mesh as THREE.Mesh).geometry;
-          return total + ((geometry.attributes.position as THREE.BufferAttribute)?.count ?? 0);
-        }, 0),
-        drawCalls: currentMeshes.length,
-        textureMemory: 0,
-        bufferMemory: 0,
-      });
-    }
-  });
+  }, [astNodes, scene, onRenderComplete, onRenderError]);
 
   return (
     <>

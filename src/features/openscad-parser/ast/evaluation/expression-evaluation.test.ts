@@ -26,7 +26,7 @@ describe('Enhanced Expression Evaluation', () => {
     expect(tree).toBeDefined();
 
     // Find the binary expression node with depth limit to prevent infinite recursion
-    function findBinaryExpressionNode(node: any, depth = 0): any {
+    function findBinaryExpressionNode(node: TSNode, depth = 0): TSNode | null {
       if (depth > 10) {
         console.log('Max depth reached, stopping recursion');
         return null;
@@ -86,7 +86,7 @@ describe('Enhanced Expression Evaluation', () => {
     console.log('Tree root node text:', tree.rootNode.text);
 
     // Let's print the entire tree structure for debugging
-    function printNodeRecursive(node: any, depth = 0) {
+    function printNodeRecursive(node: TSNode, depth = 0) {
       const indent = '  '.repeat(depth);
       console.log(`${indent}Node: ${node.type}, Text: "${node.text.replace(/\n/g, '\\n')}"`);
       for (let i = 0; i < node.childCount; i++) {
@@ -99,7 +99,7 @@ describe('Enhanced Expression Evaluation', () => {
     printNodeRecursive(tree.rootNode);
 
     // Find the cube function call
-    function findCubeNode(node: any): any {
+    function findCubeNode(node: TSNode): TSNode | null {
       console.log(`Checking node: ${node.type} - "${node.text}"`);
       if (
         (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
@@ -141,7 +141,7 @@ describe('Enhanced Expression Evaluation', () => {
     expect(tree).toBeDefined();
 
     // Find the cube function call
-    function findCubeNode(node: any): any {
+    function findCubeNode(node: TSNode): TSNode | null {
       if (
         (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
         node.text.includes('cube')
@@ -181,7 +181,7 @@ describe('Enhanced Expression Evaluation', () => {
     expect(tree).toBeDefined();
 
     // Find the cube function call
-    function findCubeNode(node: any): any {
+    function findCubeNode(node: TSNode): TSNode | null {
       if (
         (node.type === 'module_instantiation' || node.type === 'accessor_expression') &&
         node.text.includes('cube')

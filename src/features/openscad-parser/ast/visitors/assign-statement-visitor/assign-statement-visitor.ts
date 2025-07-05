@@ -1153,7 +1153,9 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private convertExtractedValueToExpression(extractedValue: any): ast.ExpressionNode | null {
+  private convertExtractedValueToExpression(
+    extractedValue: ast.ParameterValue
+  ): ast.ExpressionNode | null {
     if (!extractedValue || typeof extractedValue !== 'object') {
       return null;
     }

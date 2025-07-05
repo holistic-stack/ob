@@ -5,7 +5,7 @@
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import { mat3, mat4 } from 'gl-matrix';
+import { mat3, type mat4 } from 'gl-matrix';
 import { type Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types';
@@ -16,6 +16,7 @@ import {
   MatrixIntegrationService,
 } from '../services/matrix-integration.service.js';
 import { matrixServiceContainer } from '../services/matrix-service-container.js';
+import { Matrix } from '../types/matrix.types';
 
 const logger = createLogger('MatrixOperationsAPI');
 

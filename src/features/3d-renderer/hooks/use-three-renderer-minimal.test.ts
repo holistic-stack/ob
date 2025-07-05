@@ -4,7 +4,6 @@
  * Simplified test to isolate memory issues
  */
 
-import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 // Simple mock for Three.js

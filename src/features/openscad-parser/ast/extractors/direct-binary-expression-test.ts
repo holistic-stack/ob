@@ -147,7 +147,7 @@ function extractValueEnhanced(node: MockTSNode, errorHandler?: ErrorHandler): nu
         }
       }
       return undefined;
-    } catch (error) {
+    } catch (_error) {
       return undefined;
     }
   }
@@ -203,7 +203,9 @@ function runTest() {
 
     // Check the result
     if (result === test.expected) {
+      // No action needed, test passes
     } else {
+      // No action needed, test fails (handled by expect in actual tests)
     }
   }
 }

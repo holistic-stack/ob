@@ -160,12 +160,12 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as any).vector).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as any).children).toHaveLength(1);
-      expect((scaleNode as any).children[0].type).toBe('cube');
-      expect((scaleNode as any).children[0].size).toBe(10);
+      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with scalar parameter (uniform)', () => {
@@ -177,12 +177,12 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as any).vector).toEqual([2, 2, 2]);
+      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 2, 2]);
 
       // Check children
-      expect((scaleNode as any).children).toHaveLength(1);
-      expect((scaleNode as any).children[0].type).toBe('cube');
-      expect((scaleNode as any).children[0].size).toBe(10);
+      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with named v parameter', () => {
@@ -194,12 +194,12 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as any).vector).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as any).children).toHaveLength(1);
-      expect((scaleNode as any).children[0].type).toBe('cube');
-      expect((scaleNode as any).children[0].size).toBe(10);
+      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with 2D vector parameter', () => {
@@ -211,12 +211,12 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as any).vector).toEqual([2, 1, 1]); // Z should default to 1
+      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 1]); // Z should default to 1
 
       // Check children
-      expect((scaleNode as any).children).toHaveLength(1);
-      expect((scaleNode as any).children[0].type).toBe('cube');
-      expect((scaleNode as any).children[0].size).toBe(10);
+      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with child block', () => {
@@ -231,14 +231,14 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as any).vector).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as any).children).toHaveLength(2);
-      expect((scaleNode as any).children[0].type).toBe('cube');
-      expect((scaleNode as any).children[0].size).toBe(10);
-      expect((scaleNode as any).children[1].type).toBe('sphere');
-      expect((scaleNode as any).children[1].radius).toBe(5);
+      expect((scaleNode as ast.ScaleNode).children).toHaveLength(2);
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
+      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect(((scaleNode as ast.ScaleNode).children[1] as ast.SphereNode).type).toBe('sphere');
+      expect(((scaleNode as ast.ScaleNode).children[1] as ast.SphereNode).radius).toBe(5);
     });
   });
 });

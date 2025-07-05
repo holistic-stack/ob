@@ -202,11 +202,11 @@ describe('ControlStructureVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      expect((result as any).condition).toBeDefined();
-      expect((result as any).condition.type).toBe('expression');
-      expect((result as any).condition.expressionType).toBe('literal');
-      expect((result as any).condition.value).toBe('true');
-      expect((result as any).thenBranch).toEqual([]);
+      expect((result as ast.IfNode).condition).toBeDefined();
+      expect((result as ast.IfNode).condition.type).toBe('expression');
+      expect((result as ast.IfNode).condition.expressionType).toBe('literal');
+      expect((result as ast.IfNode).condition.value).toBe('true');
+      expect((result as ast.IfNode).thenBranch).toEqual([]);
     });
 
     it('should create a for loop node with variables', () => {
@@ -320,10 +320,10 @@ describe('ControlStructureVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
-      expect((result as any).variables).toHaveLength(1);
-      expect((result as any).variables[0].variable).toBe('i');
-      expect((result as any).variables[0].range).toBeDefined();
-      expect((result as any).body).toEqual([]);
+      expect((result as ast.ForLoopNode).variables).toHaveLength(1);
+      expect((result as ast.ForLoopNode).variables[0].variable).toBe('i');
+      expect((result as ast.ForLoopNode).variables[0].range).toBeDefined();
+      expect((result as ast.ForLoopNode).body).toEqual([]);
     });
   });
 });

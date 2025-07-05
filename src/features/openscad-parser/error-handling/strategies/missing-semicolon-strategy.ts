@@ -40,7 +40,7 @@
  * @example Basic missing semicolon recovery
  * ```typescript
  * import { MissingSemicolonStrategy } from './missing-semicolon-strategy';
- * import { SyntaxError } from '../types/error-types';
+ * import { OpenSCADSyntaxError as SyntaxError } from '../types/error-types';
  *
  * const strategy = new MissingSemicolonStrategy();
  *

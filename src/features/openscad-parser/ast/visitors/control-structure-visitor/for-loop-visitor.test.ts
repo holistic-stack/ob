@@ -39,14 +39,17 @@ describe('ForLoopVisitor', () => {
       expect(forNode?.type).toBe('statement');
 
       // Log the node structure
-      printNodeStructure(forNode!, 0, 5, 10);
+      if (forNode) {
+        // No action needed, just for debugging
+        printNodeStructure(forNode, 0, 5, 10);
+      }
 
       // Get the actual for_statement node
       const actualForNode = forNode?.namedChild(0);
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node
-      const result = visitor.visitForStatement(actualForNode!);
+      const result = visitor.visitForStatement(actualForNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -83,7 +86,7 @@ describe('ForLoopVisitor', () => {
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node
-      const result = visitor.visitForStatement(actualForNode!);
+      const result = visitor.visitForStatement(actualForNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -133,10 +136,11 @@ describe('ForLoopVisitor', () => {
       if (actualForNode) {
         printNodeStructure(actualForNode, 0, 10, 50); // Print with depth 10, max line length 50
       } else {
+        // No action needed, just for debugging
       }
 
       // Visit the for statement node
-      const result = visitor.visitForStatement(actualForNode!);
+      const result = visitor.visitForStatement(actualForNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -184,7 +188,7 @@ describe('ForLoopVisitor', () => {
       expect(actualForNode?.type).toBe('for_statement');
 
       // Visit the for statement node
-      const result = visitor.visitForStatement(actualForNode!);
+      const result = visitor.visitForStatement(actualForNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();

@@ -745,7 +745,11 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  protected processFunctionCall(_node: TSNode, _functionName: string, _args: any[]): any {
+  protected processFunctionCall(
+    _node: TSNode,
+    _functionName: string,
+    _args: ast.Parameter[]
+  ): ast.ASTNode | null {
     // Echo statements don't need special function call processing
     // This is handled by the expression visitor system
     return null;
@@ -809,7 +813,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    *
    * @private
    */
-  private extractCallArguments(node: TSNode): any[] {
+  private extractCallArguments(node: TSNode): ast.ExpressionNode[] {
     // For now, return a simple representation
     // In a full implementation, this would parse the arguments properly
     return [node.text];

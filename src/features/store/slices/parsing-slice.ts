@@ -8,12 +8,15 @@
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
+import type { AsyncOperationResult, OperationError } from '../../../shared/types/operations.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
+import { operationUtils } from '../../../shared/types/utils.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { ASTNode, CoreNode } from '../../openscad-parser/core/ast-types.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
+import type { ParseOptions } from '../../../shared/types/operations.types.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParsingActions } from './parsing-slice.types.js';
 
@@ -29,7 +32,14 @@ export const createParsingSlice = (
   { parserService }: ParsingSliceConfig
 ): ParsingActions => {
   return {
-    parseCode: async (code: string): AsyncResult<ReadonlyArray<ASTNode>, string> => {
+    parseCode: async (code: string, options?: ParseOptions): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+      const operationId = operationUtils.generateOperationId();
+      const metadata = operationUtils.createMetadata(
+        operationId,
+        operationUtils.createOperationType('parse'),
+        { priority: 'normal', tags: ['parsing', 'ast'] }
+      );
+
       set((state) => {
         state.parsing.isLoading = true;
         state.parsing.errors = [];
@@ -37,29 +47,33 @@ export const createParsingSlice = (
 
       const startTime = performance.now();
 
-      return tryCatchAsync(
-        async () => {
-          logger.debug(`Starting parse of ${code.length} characters`);
+      try {
+        logger.debug(`Starting parse of ${code.length} characters`);
 
-          // Ensure parser is initialized
-          await parserService.init();
+        // Ensure parser is initialized
+        await parserService.init();
 
-          // Use unified parser service
-          const parseResult = parserService.parseASTWithResult(code);
+        // Use unified parser service
+        const parseResult = parserService.parseASTWithResult(code);
 
-          if (!isSuccess(parseResult)) {
-            const errorMessage = `Parse failed: ${parseResult.error}`;
-            const parseTime = performance.now() - startTime;
+        if (!isSuccess(parseResult)) {
+          const errorMessage = `Parse failed: ${parseResult.error}`;
+          const parseTime = performance.now() - startTime;
 
-            set((state: WritableDraft<AppStore>) => {
-              state.parsing.isLoading = false;
-              state.parsing.errors = [errorMessage];
-              state.parsing.parseTime = parseTime;
-            });
+          set((state: WritableDraft<AppStore>) => {
+            state.parsing.isLoading = false;
+            state.parsing.errors = [errorMessage];
+            state.parsing.parseTime = parseTime;
+          });
 
-            logger.error(errorMessage);
-            return errorMessage;
-          }
+          logger.error(errorMessage);
+          const operationError = operationUtils.createOperationError(
+            'PARSE_ERROR',
+            errorMessage,
+            { recoverable: true }
+          );
+          return operationUtils.createError(operationError, metadata);
+        }
 
           if (parseResult.data.length > 0) {
             // Apply AST restructuring to fix hierarchical relationships
@@ -92,33 +106,36 @@ export const createParsingSlice = (
             logger.debug(
               `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
             );
-            return ast;
+            return operationUtils.createSuccess(ast as ReadonlyArray<CoreNode>, metadata);
           } else {
             // No AST nodes were parsed
             logger.warn('No AST nodes were parsed from the provided code');
-            return [];
+            return operationUtils.createSuccess([] as ReadonlyArray<CoreNode>, metadata);
           }
-        },
-        (err: unknown) => {
-          const endTime = performance.now();
-          const parseTime = endTime - startTime;
-          const errorMessage = err instanceof Error ? err.message : String(err);
+      } catch (err: unknown) {
+        const endTime = performance.now();
+        const parseTime = endTime - startTime;
+        const errorMessage = err instanceof Error ? err.message : String(err);
 
-          set((state: WritableDraft<AppStore>) => {
-            state.parsing.isLoading = false;
-            state.parsing.errors = [errorMessage];
-            state.parsing.parseTime = parseTime;
-          });
+        set((state: WritableDraft<AppStore>) => {
+          state.parsing.isLoading = false;
+          state.parsing.errors = [errorMessage];
+          state.parsing.parseTime = parseTime;
+        });
 
-          logger.error(`Parse failed: ${errorMessage}`);
-          return `Parse failed: ${errorMessage}`;
-        }
-      );
+        logger.error(`Parse failed: ${errorMessage}`);
+        const operationError = operationUtils.createOperationError(
+          'PARSE_EXCEPTION',
+          errorMessage,
+          { recoverable: false, stack: err instanceof Error ? err.stack : undefined }
+        );
+        return operationUtils.createError(operationError, metadata);
+      }
     },
 
-    parseAST: async (code: string): AsyncResult<ReadonlyArray<ASTNode>, string> => {
+    parseAST: async (code: string, options?: ParseOptions): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
       // Alias for backwards compatibility
-      return get().parseCode(code);
+      return get().parseCode(code, options);
     },
 
     clearParsingState: () => {
@@ -138,9 +155,9 @@ export const createParsingSlice = (
       void get().parseCode(code);
     },
 
-    addParsingError: (error: string) => {
+    addParsingError: (error: OperationError) => {
       set((state) => {
-        state.parsing.errors = [...state.parsing.errors, error];
+        state.parsing.errors = [...state.parsing.errors, error.message];
       });
     },
 

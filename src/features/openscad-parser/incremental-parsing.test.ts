@@ -50,7 +50,7 @@ describe('Incremental Parsing', () => {
     expect(initialAST.length).toBe(1);
     expect(initialAST[0].type).toBe('cube');
     // With the real parser, we need to be more flexible about the size value
-    expect(typeof (initialAST[0] as any).size).toBe('number');
+    expect(typeof (initialAST[0] as ast.CubeNode).size).toBe('number');
 
     // Modified code - change size from 10 to 20
     const modifiedCode = 'cube(20);';
@@ -67,7 +67,7 @@ describe('Incremental Parsing', () => {
     expect(updatedAST.length).toBe(1);
     expect(updatedAST[0].type).toBe('cube');
     // With the real parser, we need to be more flexible about the size value
-    expect(typeof (updatedAST[0] as any).size).toBe('number');
+    expect(typeof (updatedAST[0] as ast.CubeNode).size).toBe('number');
   });
 
   it('should handle multiple incremental updates', () => {
@@ -108,10 +108,10 @@ describe('Incremental Parsing', () => {
     expect(finalAST.length).toBe(1);
     expect(finalAST[0].type).toBe('cube');
     // With the real parser, we need to be more flexible about the size value
-    expect(typeof (finalAST[0] as any).size).toBe('number');
+    expect(typeof (finalAST[0] as ast.CubeNode).size).toBe('number');
     // With the real parser, the center parameter might be different
     // We'll just check that it's a boolean
-    expect(typeof (finalAST[0] as any).center).toBe('boolean');
+    expect(typeof (finalAST[0] as ast.CubeNode).center).toBe('boolean');
   });
 
   it('should handle complex code changes', () => {
@@ -155,9 +155,9 @@ describe('Incremental Parsing', () => {
     // Find the cylinder node
     const cylinderNode = updatedAST.find((node) => node.type === 'cylinder');
     expect(cylinderNode).toBeDefined();
-    expect((cylinderNode as any).h).toBe(1);
+    expect((cylinderNode as ast.CylinderNode).h).toBe(1);
 
     // The property is named r1 in the implementation, and r=2 means radius1=2
-    expect((cylinderNode as any).r1).toBe(2);
+    expect((cylinderNode as ast.CylinderNode).r1).toBe(2);
   });
 });

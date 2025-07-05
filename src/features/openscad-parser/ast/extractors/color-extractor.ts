@@ -22,7 +22,7 @@ export function extractColorNode(
 ): ast.ColorNode | null {
   // Default values
   let color: string | ast.Vector4D = 'red';
-  let alpha: number | undefined;
+  let _alpha: number | undefined;
 
   // Extract arguments from the argument_list
   const argsNode = node.childForFieldName('arguments');
@@ -43,31 +43,34 @@ export function extractColorNode(
     // Handle color parameter (first positional parameter or named 'c')
     if ((i === 0 && !arg?.name) || arg?.name === 'c') {
       // Check if it's a vector parameter (RGB or RGBA)
-      const vectorValue = extractVectorParameter(arg!);
+      const vectorValue = arg ? extractVectorParameter(arg) : null;
       if (vectorValue) {
         if (vectorValue.length === 3) {
           // Convert RGB to RGBA by adding alpha=1
           color = [vectorValue[0], vectorValue[1], vectorValue[2], 1.0] as ast.Vector4D;
         } else if (vectorValue.length === 4) {
           color = [vectorValue[0], vectorValue[1], vectorValue[2], vectorValue[3]] as ast.Vector4D;
-          alpha = vectorValue[3];
+          _alpha = vectorValue[3];
         } else {
+          // No action needed if vectorValue is null or has invalid length
         }
       } else {
         // Try as a string parameter (color name or hex)
-        const stringValue = extractStringParameter(arg!);
+        const stringValue = arg ? extractStringParameter(arg) : null;
         if (stringValue !== null) {
           color = stringValue;
         } else {
+          // No action needed if stringValue is null
         }
       }
     }
     // Handle alpha parameter (second positional parameter or named 'alpha')
     else if ((i === 1 && !arg?.name) || arg?.name === 'alpha') {
-      const alphaValue = extractNumberParameter(arg!);
+      const alphaValue = arg ? extractNumberParameter(arg) : null;
       if (alphaValue !== null) {
-        alpha = alphaValue;
+        _alpha = alphaValue;
       } else {
+        // No action needed if alphaValue is null
       }
     }
   }

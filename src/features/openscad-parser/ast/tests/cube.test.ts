@@ -94,7 +94,8 @@ describe('Cube Primitive', () => {
       expect(cubeNode.type).toBe('cube');
       // With the real parser, the size might be a number or an array
       // We'll just check that it's a valid size
-      expect(typeof cubeNode.size).toBe('number');
+      expect(Array.isArray(cubeNode.size)).toBe(true);
+      expect(cubeNode.size).toEqual([10, 20, 30]);
       expect(cubeNode.center).toBe(false);
     });
 
@@ -111,7 +112,8 @@ describe('Cube Primitive', () => {
       expect(cubeNode.type).toBe('cube');
       // With the real parser, the size might be a number or an array
       // We'll just check that it's a valid size
-      expect(typeof cubeNode.size).toBe('number');
+      expect(Array.isArray(cubeNode.size)).toBe(true);
+      expect(cubeNode.size).toEqual([10, 20, 30]);
       expect(cubeNode.center).toBe(false);
     });
 

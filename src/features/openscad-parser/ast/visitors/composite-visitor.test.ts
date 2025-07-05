@@ -41,9 +41,15 @@ const _mockTranslateNode: ast.TranslateNode = {
 
 // Simple mock ErrorHandler for testing
 class MockErrorHandler {
-  logInfo() {}
-  logWarning() {}
-  handleError() {}
+  logInfo() {
+    /* no-op */
+  }
+  logWarning() {
+    /* no-op */
+  }
+  handleError() {
+    /* no-op */
+  }
 }
 
 describe('CompositeVisitor', () => {
@@ -79,7 +85,7 @@ describe('CompositeVisitor', () => {
     const testableNode = findTestableNode(tree?.rootNode);
     expect(testableNode).not.toBeNull();
 
-    return testableNode!;
+    return testableNode as TSNode;
   }
 
   beforeEach(async () => {
@@ -91,14 +97,11 @@ describe('CompositeVisitor', () => {
     errorHandler = new MockErrorHandler();
 
     // Create a composite visitor with primitive, transform, and CSG visitors
-    const primitiveVisitor = new PrimitiveVisitor('', errorHandler as any);
-    const transformVisitor = new TransformVisitor('', undefined, errorHandler as any);
-    const csgVisitor = new CSGVisitor('', errorHandler as any);
+    const primitiveVisitor = new PrimitiveVisitor('', errorHandler);
+    const transformVisitor = new TransformVisitor('', undefined, errorHandler);
+    const csgVisitor = new CSGVisitor('', errorHandler);
 
-    visitor = new CompositeVisitor(
-      [primitiveVisitor, transformVisitor, csgVisitor],
-      errorHandler as any
-    );
+    visitor = new CompositeVisitor([primitiveVisitor, transformVisitor, csgVisitor], errorHandler);
   });
 
   afterEach(() => {

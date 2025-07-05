@@ -3,7 +3,6 @@
  */
 
 import type { ErrorPosition } from './parser-error.js';
-import { SyntaxError } from './syntax-error.js';
 
 describe('SyntaxError', () => {
   // Test data

@@ -280,20 +280,7 @@ export class MaterialService {
     );
   }
 
-  /**
-   * Get performance metrics
-   */
-  getPerformanceMetrics(): {
-    operationCount: number;
-    cacheSize: number;
-    cacheHitRate: number;
-  } {
-    return {
-      operationCount: this.operationCount,
-      cacheSize: this.materialCache.size,
-      cacheHitRate: 0, // Would need to track hits/misses for accurate calculation
-    };
-  }
+
 
   /**
    * Clear cache and dispose materials

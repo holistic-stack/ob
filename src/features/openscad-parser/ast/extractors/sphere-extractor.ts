@@ -53,6 +53,7 @@ export function extractSphereNode(
       if (radiusValue !== null) {
         radius = radiusValue;
       } else {
+        // No action needed if radiusValue is null
       }
     }
     // Handle diameter parameter (named 'd')
@@ -62,6 +63,7 @@ export function extractSphereNode(
         diameter = diameterValue;
         radius = diameterValue / 2; // Set radius based on diameter
       } else {
+        // No action needed if diameterValue is null
       }
     }
     // Handle $fn parameter
@@ -70,6 +72,7 @@ export function extractSphereNode(
       if (fnValue !== null) {
         fn = fnValue;
       } else {
+        // No action needed if fnValue is null
       }
     }
     // Handle $fa parameter
@@ -78,6 +81,7 @@ export function extractSphereNode(
       if (faValue !== null) {
         fa = faValue;
       } else {
+        // No action needed if faValue is null
       }
     }
     // Handle $fs parameter
@@ -86,6 +90,7 @@ export function extractSphereNode(
       if (fsValue !== null) {
         fs = fsValue;
       } else {
+        // No action needed if fsValue is null
       }
     }
   }

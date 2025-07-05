@@ -105,8 +105,8 @@ describe('cursor-utils', () => {
         console.log('- Node type:', cursor.nodeType);
 
         // Check if it's a statement or expression
-        const isStatement = testNodeType('statement');
-        const isExpression = testNodeType('expression_statement');
+        const _isStatement = testNodeType('statement');
+        const _isExpression = testNodeType('expression_statement');
         const isCall = testNodeType('call_expression');
         // Navigate to the function name if it's a call expression
         if (isCall && cursor.gotoFirstChild()) {

@@ -490,7 +490,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The module definition node to visit
    * @returns The module definition AST node or null if the node cannot be processed
    */
-  visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
+  visitModuleDefinition(_node: TSNode): ast.ModuleDefinitionNode | null {
     return null; // Default implementation
   }
 
@@ -499,7 +499,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The function definition node to visit
    * @returns The function definition AST node or null if the node cannot be processed
    */
-  visitFunctionDefinition(node: TSNode): ast.FunctionDefinitionNode | null {
+  visitFunctionDefinition(_node: TSNode): ast.FunctionDefinitionNode | null {
     return null; // Default implementation
   }
 
@@ -508,7 +508,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The if statement node to visit
    * @returns The if AST node or null if the node cannot be processed
    */
-  visitIfStatement(node: TSNode): ast.IfNode | null {
+  visitIfStatement(_node: TSNode): ast.IfNode | null {
     return null; // Default implementation
   }
 
@@ -517,7 +517,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The for statement node to visit
    * @returns The for loop AST node or null if the node cannot be processed
    */
-  visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
+  visitForStatement(_node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
     return null; // Default implementation
   }
 
@@ -526,7 +526,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The let expression node to visit
    * @returns The let AST node or null if the node cannot be processed
    */
-  visitLetExpression(node: TSNode): ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null {
+  visitLetExpression(_node: TSNode): ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null {
     return null; // Default implementation
   }
 
@@ -535,7 +535,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The conditional expression node to visit
    * @returns The expression AST node or null if the node cannot be processed
    */
-  visitConditionalExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
+  visitConditionalExpression(_node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
     return null; // Default implementation
   }
 
@@ -561,7 +561,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The assert statement node to visit
    * @returns The assert statement AST node or null if the node cannot be processed
    */
-  visitAssertStatement(node: TSNode): ast.AssertStatementNode | null {
+  visitAssertStatement(_node: TSNode): ast.AssertStatementNode | null {
     // Default implementation - subclasses should override this method
     return null;
   }
@@ -571,7 +571,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The echo statement node to visit
    * @returns The echo statement AST node or null if the node cannot be processed
    */
-  visitEchoStatement(node: TSNode): ast.EchoStatementNode | null {
+  visitEchoStatement(_node: TSNode): ast.EchoStatementNode | null {
     // Default implementation - subclasses should override this method
     return null;
   }
@@ -581,7 +581,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
    * @param node The assign statement node to visit
    * @returns The assign statement AST node or null if the node cannot be processed
    */
-  visitAssignStatement(node: TSNode): ast.AssignStatementNode | null {
+  visitAssignStatement(_node: TSNode): ast.AssignStatementNode | null {
     // Default implementation - subclasses should override this method
     return null;
   }

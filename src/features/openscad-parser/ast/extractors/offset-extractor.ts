@@ -46,6 +46,7 @@ export function extractOffsetNode(
       if (radiusValue !== null) {
         radius = radiusValue;
       } else {
+        // No action needed if radiusValue is null
       }
     }
     // Handle delta parameter (named 'delta')
@@ -54,6 +55,7 @@ export function extractOffsetNode(
       if (deltaValue !== null) {
         delta = deltaValue;
       } else {
+        // No action needed if deltaValue is null
       }
     }
     // Handle chamfer parameter (named 'chamfer')
@@ -62,6 +64,7 @@ export function extractOffsetNode(
       if (chamferValue !== null) {
         chamfer = chamferValue;
       } else {
+        // No action needed if chamferValue is null
       }
     }
   }

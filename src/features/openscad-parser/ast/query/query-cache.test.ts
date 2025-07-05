@@ -24,7 +24,7 @@ describe('QueryCache', () => {
   it('should store and retrieve query results', () => {
     const queryString = '(module_definition) @module';
     const sourceText = 'module test() {}';
-    const results = [new MockNode('test', 'identifier')] as any[];
+    const results = [new MockNode('test', 'identifier')] as TSNode[];
 
     cache.set(queryString, sourceText, results);
     const cachedResults = cache.get(queryString, sourceText);
@@ -44,7 +44,7 @@ describe('QueryCache', () => {
   it('should clear the cache', () => {
     const queryString = '(module_definition) @module';
     const sourceText = 'module test() {}';
-    const results = [new MockNode('test', 'identifier')] as any[];
+    const results = [new MockNode('test', 'identifier')] as TSNode[];
 
     cache.set(queryString, sourceText, results);
     cache.clear();
@@ -58,7 +58,7 @@ describe('QueryCache', () => {
   it('should track cache statistics', () => {
     const queryString = '(module_definition) @module';
     const sourceText = 'module test() {}';
-    const results = [new MockNode('test', 'identifier')] as any[];
+    const results = [new MockNode('test', 'identifier')] as TSNode[];
 
     // Set a value
     cache.set(queryString, sourceText, results);

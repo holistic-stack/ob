@@ -10,7 +10,7 @@ import {
   SkipToNextStatementStrategy,
 } from './recovery-strategy.js';
 import { SemanticError } from './semantic-error.js';
-import { SyntaxError } from './syntax-error.js';
+import { OpenSCADSyntaxError } from './syntax-error.js';
 
 // Mock the TreeSitter Node type
 class MockNode {
@@ -61,10 +61,10 @@ describe('RecoveryStrategies', () => {
       statementNode.setNextSibling(nextStatementNode);
       errorNode.setParent(statementNode);
 
-      const error = new SyntaxError('Test error', source, position);
+      const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = new SkipToNextStatementStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       expect(result).toBe(nextStatementNode);
     });
@@ -75,10 +75,10 @@ describe('RecoveryStrategies', () => {
 
       errorNode.setParent(statementNode);
 
-      const error = new SyntaxError('Test error', source, position);
+      const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = new SkipToNextStatementStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       expect(result).toBeNull();
     });
@@ -87,10 +87,10 @@ describe('RecoveryStrategies', () => {
   describe('InsertMissingTokenStrategy', () => {
     it('should handle missing token errors', () => {
       const errorNode = new MockNode('ERROR');
-      const error = SyntaxError.missingToken(']', source, position);
+      const error = OpenSCADSyntaxError.missingToken(']', source, position);
       const strategy = new InsertMissingTokenStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       // In our implementation, we just return the node for now
       expect(result).toBe(errorNode);
@@ -101,7 +101,7 @@ describe('RecoveryStrategies', () => {
       const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new InsertMissingTokenStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       expect(result).toBeNull();
     });
@@ -114,10 +114,10 @@ describe('RecoveryStrategies', () => {
 
       errorNode.setNextSibling(nextNode);
 
-      const error = SyntaxError.unexpectedToken(')', ']', source, position);
+      const error = OpenSCADSyntaxError.unexpectedToken(')', ']', source, position);
       const strategy = new DeleteExtraTokenStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       // Should return the next sibling
       expect(result).toBe(nextNode);
@@ -128,7 +128,7 @@ describe('RecoveryStrategies', () => {
       const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new DeleteExtraTokenStrategy();
 
-      const result = strategy.recover(errorNode as any, error);
+      const result = strategy.recover(errorNode as TSNode, error);
 
       expect(result).toBeNull();
     });
@@ -136,21 +136,21 @@ describe('RecoveryStrategies', () => {
 
   describe('RecoveryStrategyFactory', () => {
     it('should create InsertMissingTokenStrategy for missing token errors', () => {
-      const error = SyntaxError.missingToken(']', source, position);
+      const error = OpenSCADSyntaxError.missingToken(']', source, position);
       const strategy = RecoveryStrategyFactory.createStrategy(error);
 
       expect(strategy).toBeInstanceOf(InsertMissingTokenStrategy);
     });
 
     it('should create DeleteExtraTokenStrategy for unexpected token errors', () => {
-      const error = SyntaxError.unexpectedToken(')', ']', source, position);
+      const error = OpenSCADSyntaxError.unexpectedToken(')', ']', source, position);
       const strategy = RecoveryStrategyFactory.createStrategy(error);
 
       expect(strategy).toBeInstanceOf(DeleteExtraTokenStrategy);
     });
 
     it('should create SkipToNextStatementStrategy for other syntax errors', () => {
-      const error = new SyntaxError('Test error', source, position);
+      const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = RecoveryStrategyFactory.createStrategy(error);
 
       expect(strategy).toBeInstanceOf(SkipToNextStatementStrategy);

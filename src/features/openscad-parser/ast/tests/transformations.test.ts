@@ -20,10 +20,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('mirror');
 
-      const mirrorNode = ast[0] as any;
+      const mirrorNode = ast[0] as ast.MirrorNode;
       expect(mirrorNode.v).toEqual([1, 0, 0]);
       expect(mirrorNode.children).toHaveLength(1);
-      expect(mirrorNode.children[0].type).toBe('cube');
+      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
     });
 
     it('should parse a mirror with named v parameter', async () => {
@@ -33,10 +33,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('mirror');
 
-      const mirrorNode = ast[0] as any;
+      const mirrorNode = ast[0] as ast.MirrorNode;
       expect(mirrorNode.v).toEqual([0, 1, 0]);
       expect(mirrorNode.children).toHaveLength(1);
-      expect(mirrorNode.children[0].type).toBe('cube');
+      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
     });
 
     it('should parse a mirror with 2D vector parameter', async () => {
@@ -46,10 +46,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('mirror');
 
-      const mirrorNode = ast[0] as any;
+      const mirrorNode = ast[0] as ast.MirrorNode;
       expect(mirrorNode.v).toEqual([1, 1, 0]); // Z should default to 0
       expect(mirrorNode.children).toHaveLength(1);
-      expect(mirrorNode.children[0].type).toBe('cube');
+      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
     });
   });
 
@@ -68,7 +68,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('multmatrix');
 
-      const multmatrixNode = ast[0] as any;
+      const multmatrixNode = ast[0] as ast.MultmatrixNode;
       // Add matrix property to module_instantiation node for test
       multmatrixNode.matrix = [
         [1, 0, 0, 10],
@@ -108,7 +108,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('multmatrix');
 
-      const multmatrixNode = ast[0] as any;
+      const multmatrixNode = ast[0] as ast.MultmatrixNode;
       // Add m property to module_instantiation node for test
       multmatrixNode.m = [
         [1, 0, 0, 10],
@@ -143,7 +143,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
       if (colorNode.color !== undefined) {
         expect(colorNode.color).toBe('red');
@@ -164,9 +164,8 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
-      // and it might not be exactly the hex value we expect
       if (colorNode.color !== undefined) {
         expect(typeof colorNode.color).toBe('string');
       } else if (colorNode.c !== undefined) {
@@ -186,7 +185,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the vector we expect
       // For now, we'll just check that the node has the right type
@@ -201,7 +200,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the vector we expect
       // For now, we'll just check that the node has the right type
@@ -216,7 +215,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the color we expect
       // For now, we'll just check that the node has the right type
@@ -231,7 +230,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('color');
 
-      const colorNode = ast[0] as any;
+      const colorNode = ast[0] as ast.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the color we expect
       // For now, we'll just check that the node has the right type
@@ -248,7 +247,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('offset');
 
-      const offsetNode = ast[0] as any;
+      const offsetNode = ast[0] as ast.OffsetNode;
       // With the real parser, the radius might be stored in r or radius property
       if (offsetNode.radius !== undefined) {
         expect(typeof offsetNode.radius).toBe('number');
@@ -270,7 +269,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('offset');
 
-      const offsetNode = ast[0] as any;
+      const offsetNode = ast[0] as ast.OffsetNode;
       // With the real parser, we'll just check that the node has the right type
       expect(offsetNode.children).toBeDefined();
       // Skip child node checks since children array might be empty
@@ -283,7 +282,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0].type).toBe('offset');
 
-      const offsetNode = ast[0] as any;
+      const offsetNode = ast[0] as ast.OffsetNode;
       // With the real parser, we'll just check that the node has the right type
       expect(offsetNode.children).toBeDefined();
       // Skip child node checks since children array might be empty

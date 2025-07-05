@@ -28,7 +28,7 @@ describe('Union AST Generation', () => {
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect((unionNode as any).children).toBeDefined();
+      expect(unionNode.children).toBeDefined();
       // Skip child node checks since children array might be empty
     });
 
@@ -60,7 +60,7 @@ describe('Union AST Generation', () => {
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect((unionNode as any).children).toBeDefined();
+      expect(unionNode.children).toBeDefined();
       // Skip child node checks since children array might be empty
     });
 
@@ -75,7 +75,7 @@ describe('Union AST Generation', () => {
       expect(unionNode.type).toBe('union');
 
       // Check children
-      expect((unionNode as any).children).toHaveLength(0);
+      expect(unionNode.children).toHaveLength(0);
     });
   });
 });

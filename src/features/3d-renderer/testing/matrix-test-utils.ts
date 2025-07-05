@@ -23,15 +23,7 @@ export interface MatrixTestConfig {
   readonly performanceThreshold: number; // milliseconds
 }
 
-/**
- * Performance assertion configuration
- */
-export interface PerformanceAssertionConfig {
-  readonly maxExecutionTime: number;
-  readonly maxMemoryUsage: number;
-  readonly minAccuracy: number;
-  readonly enableRegression: boolean;
-}
+
 
 /**
  * Matrix test data generator
@@ -121,10 +113,22 @@ export class MatrixTestDataGenerator {
   generateSingularMatrix(): mat4 {
     const result = mat4.create();
     // Create matrix with zero determinant by making rows dependent
-    result[0] = 1; result[4] = 2; result[8] = 3; result[12] = 4;
-    result[1] = 2; result[5] = 4; result[9] = 6; result[13] = 8;
-    result[2] = 0; result[6] = 0; result[10] = 0; result[14] = 0;
-    result[3] = 0; result[7] = 0; result[11] = 0; result[15] = 1;
+    result[0] = 1;
+    result[4] = 2;
+    result[8] = 3;
+    result[12] = 4;
+    result[1] = 2;
+    result[5] = 4;
+    result[9] = 6;
+    result[13] = 8;
+    result[2] = 0;
+    result[6] = 0;
+    result[10] = 0;
+    result[14] = 0;
+    result[3] = 0;
+    result[7] = 0;
+    result[11] = 0;
+    result[15] = 1;
     return result;
   }
 
@@ -204,168 +208,47 @@ export class MatrixTestDataGenerator {
   }
 }
 
-/**
- * Performance assertion utilities
- */
-export class PerformanceAssertion {
-  private readonly config: PerformanceAssertionConfig;
 
-  constructor(config: Partial<PerformanceAssertionConfig> = {}) {
-    this.config = {
-      maxExecutionTime: 16, // <16ms requirement
-      maxMemoryUsage: 10 * 1024 * 1024, // 10MB
-      minAccuracy: 1e-10,
-      enableRegression: true,
-      ...config,
-    };
-  }
-
-  /**
-   * Assert operation performance meets requirements
-   */
-  async assertPerformance<T>(
-    operation: () => Promise<T> | T,
-    operationName: string
-  ): Promise<Result<T, string>> {
-    const startTime = performance.now();
-    const startMemory = this.getMemoryUsage();
-
-    try {
-      logger.debug(`[DEBUG][PerformanceAssertion] Starting performance test: ${operationName}`);
-
-      const result = await operation();
-
-      const endTime = performance.now();
-      const endMemory = this.getMemoryUsage();
-
-      const executionTime = endTime - startTime;
-      const memoryUsage = endMemory - startMemory;
-
-      // Performance assertions
-      if (executionTime > this.config.maxExecutionTime) {
-        return error(
-          `Performance assertion failed: ${operationName} took ${executionTime.toFixed(2)}ms, exceeds limit of ${this.config.maxExecutionTime}ms`
-        );
-      }
-
-      if (memoryUsage > this.config.maxMemoryUsage) {
-        return error(
-          `Memory assertion failed: ${operationName} used ${(memoryUsage / 1024 / 1024).toFixed(2)}MB, exceeds limit of ${(this.config.maxMemoryUsage / 1024 / 1024).toFixed(2)}MB`
-        );
-      }
-
-      logger.debug(
-        `[DEBUG][PerformanceAssertion] Performance test passed: ${operationName} (${executionTime.toFixed(2)}ms, ${(memoryUsage / 1024).toFixed(2)}KB)`
-      );
-
-      return success(result);
-    } catch (err) {
-      const endTime = performance.now();
-      const executionTime = endTime - startTime;
-
-      logger.error(
-        `[ERROR][PerformanceAssertion] Performance test failed: ${operationName} (${executionTime.toFixed(2)}ms)`,
-        err
-      );
-
-      return error(`Performance test failed: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  }
-
-  /**
-   * Assert numerical accuracy
-   */
-  assertNumericalAccuracy(
-    actual: number | Matrix,
-    expected: number | Matrix,
-    tolerance = this.config.minAccuracy
-  ): Result<void, string> {
-    try {
-      if (typeof actual === 'number' && typeof expected === 'number') {
-        const diff = Math.abs(actual - expected);
-        if (diff > tolerance) {
-          return error(
-            `Numerical accuracy assertion failed: difference ${diff} exceeds tolerance ${tolerance}`
-          );
-        }
-      } else if (actual instanceof Matrix && expected instanceof Matrix) {
-        if (actual.rows !== expected.rows || actual.columns !== expected.columns) {
-          return error('Matrix dimensions do not match');
-        }
-
-        for (let i = 0; i < actual.rows; i++) {
-          for (let j = 0; j < actual.columns; j++) {
-            const diff = Math.abs(actual.get(i, j) - expected.get(i, j));
-            if (diff > tolerance) {
-              return error(
-                `Matrix accuracy assertion failed at [${i}, ${j}]: difference ${diff} exceeds tolerance ${tolerance}`
-              );
-            }
-          }
-        }
-      } else {
-        return error('Type mismatch: both values must be numbers or both must be matrices');
-      }
-
-      return success(undefined);
-    } catch (err) {
-      return error(`Accuracy assertion error: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  }
-
-  /**
-   * Get current memory usage
-   */
-  private getMemoryUsage(): number {
-    if ('memory' in performance) {
-      const memory = (performance as unknown as { memory: { usedJSHeapSize: number } }).memory;
-      return memory.usedJSHeapSize;
-    }
-    return 0;
-  }
-}
 
 /**
  * Matrix operation test helpers
  */
 export class MatrixOperationTester {
   private readonly dataGenerator: MatrixTestDataGenerator;
-  private readonly performanceAssertion: PerformanceAssertion;
 
-  constructor(
-    testConfig: Partial<MatrixTestConfig> = {},
-    perfConfig: Partial<PerformanceAssertionConfig> = {}
-  ) {
+  constructor(testConfig: Partial<MatrixTestConfig> = {}) {
     this.dataGenerator = new MatrixTestDataGenerator(testConfig);
-    this.performanceAssertion = new PerformanceAssertion(perfConfig);
   }
 
   /**
    * Test matrix operation with comprehensive validation
    */
   async testMatrixOperation<T>(
-    operation: (matrix: Matrix) => Promise<Result<T, string>> | Result<T, string>,
+    operation: (matrix: any) => Promise<Result<T, string>> | Result<T, string>,
     operationName: string,
-    testMatrix?: Matrix
+    testMatrix?: any
   ): Promise<Result<T, string>> {
     const matrix = testMatrix || this.dataGenerator.generateWellConditionedMatrix();
 
-    return this.performanceAssertion.assertPerformance(async () => {
+    try {
+      logger.debug(`[DEBUG][MatrixOperationTester] Testing operation: ${operationName}`);
       const result = await operation(matrix);
 
       if (!result.success) {
-        throw new Error(result.error);
+        return error(result.error);
       }
 
-      return result.data;
-    }, operationName);
+      return success(result.data);
+    } catch (err) {
+      return error(`Operation failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   /**
    * Test edge cases systematically
    */
   async testEdgeCases<T>(
-    operation: (matrix: Matrix) => Promise<Result<T, string>> | Result<T, string>,
+    operation: (matrix: any) => Promise<Result<T, string>> | Result<T, string>,
     operationName: string
   ): Promise<{
     passed: number;
@@ -431,17 +314,11 @@ export class MatrixOperationTester {
     return this.dataGenerator;
   }
 
-  /**
-   * Get performance assertion utility
-   */
-  getPerformanceAssertion(): PerformanceAssertion {
-    return this.performanceAssertion;
-  }
+
 }
 
 /**
  * Default instances for convenience
  */
 export const matrixTestDataGenerator = new MatrixTestDataGenerator();
-export const performanceAssertion = new PerformanceAssertion();
 export const matrixOperationTester = new MatrixOperationTester();

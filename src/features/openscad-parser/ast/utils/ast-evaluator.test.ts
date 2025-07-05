@@ -255,7 +255,7 @@ describe('AST Evaluator Handlers', () => {
     it('should handle unknown expression types with error Result', () => {
       const unknownExpr: ExpressionNode = {
         type: 'expression',
-        expressionType: 'unknown_type' as any,
+        expressionType: 'unknown_type' as 'unknown_type',
         location: createLocation(),
       };
 

@@ -59,7 +59,7 @@ export function extractCubeNode(
     // Handle size parameter (first positional parameter or named 'size')
     if ((i === 0 && !arg?.name) || arg?.name === 'size') {
       // Check if it's a vector parameter
-      const vectorValue = extractVectorParameter(arg!);
+      const vectorValue = arg ? extractVectorParameter(arg) : null;
       if (vectorValue && vectorValue.length >= 1) {
         if (vectorValue.length === 3) {
           size = vectorValue as ast.Vector3D;
@@ -83,7 +83,7 @@ export function extractCubeNode(
         }
       } else {
         // vectorValue is null or empty
-        const numberValue = extractNumberParameter(arg!, errorHandler);
+        const numberValue = arg ? extractNumberParameter(arg, errorHandler) : null;
         if (numberValue !== null) {
           size = numberValue;
         } else {
@@ -93,10 +93,11 @@ export function extractCubeNode(
     }
     // Handle center parameter (second positional parameter or named 'center')
     else if ((i === 1 && !arg?.name) || arg?.name === 'center') {
-      const centerValue = extractBooleanParameter(arg!, errorHandler);
+      const centerValue = arg ? extractBooleanParameter(arg, errorHandler) : null;
       if (centerValue !== null) {
         center = centerValue;
       } else {
+        // No action needed if centerValue is null
       }
     }
   }

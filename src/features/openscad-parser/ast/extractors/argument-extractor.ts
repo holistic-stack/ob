@@ -52,7 +52,9 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
       if (extractedText.length > 0 && extractedText.length <= 1000) {
         return extractedText;
       }
-    } catch (error) {}
+    } catch (_error) {
+      // Intentionally empty, as per design, to handle potential Tree-sitter memory issues gracefully.
+    }
   }
 
   // Fallback to node.text
@@ -292,14 +294,14 @@ export function extractArguments(
         }
       } else if (child.type === 'named_argument') {
         // Handle named arguments directly
-        const childText = getNodeText(child, sourceCode);
+        const _childText = getNodeText(child, sourceCode);
         const param = extractArgument(child, errorHandler, sourceCode);
         if (param) {
           args.push(param);
         }
       } else if (child.type === 'arguments') {
         // Handle arguments node that contains expressions
-        const childText = getNodeText(child, sourceCode);
+        const _childText = getNodeText(child, sourceCode);
         // Check if this arguments node contains named arguments by examining CST structure
         // instead of relying on text (which can be truncated due to tree-sitter memory issues)
         let hasNamedArguments = false;
@@ -345,7 +347,7 @@ export function extractArguments(
         child.type === 'identifier'
       ) {
         // Handle direct value nodes (positional arguments)
-        const childText = getNodeText(child, sourceCode);
+        const _childText = getNodeText(child, sourceCode);
         const value = convertNodeToParameterValue(child, errorHandler, sourceCode);
         if (value !== undefined) {
           args.push({ name: undefined, value }); // Positional argument
@@ -360,7 +362,7 @@ export function extractArguments(
     const argNode = argsNode.namedChild(i);
     if (!argNode) continue;
 
-    const argNodeText = getNodeText(argNode, sourceCode);
+    const _argNodeText = getNodeText(argNode, sourceCode);
     // Handle 'arguments' node that contains 'argument' nodes or direct expressions
     if (argNode.type === 'arguments') {
       // Check if this arguments node has argument children

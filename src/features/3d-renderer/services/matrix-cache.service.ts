@@ -15,35 +15,35 @@ const logger = createLogger('MatrixCacheService');
  */
 export class MatrixCacheService {
   private cache = new Map<string, any>();
-  
+
   get(key: string): any | undefined {
     logger.debug(`Cache get: ${key} (stub)`);
     return this.cache.get(key);
   }
-  
+
   set(key: string, value: any): void {
     logger.debug(`Cache set: ${key} (stub)`);
     this.cache.set(key, value);
   }
-  
+
   has(key: string): boolean {
     return this.cache.has(key);
   }
-  
+
   delete(key: string): boolean {
     logger.debug(`Cache delete: ${key} (stub)`);
     return this.cache.delete(key);
   }
-  
+
   clear(): void {
     logger.debug('Cache clear (stub)');
     this.cache.clear();
   }
-  
+
   size(): number {
     return this.cache.size;
   }
-  
+
   getStats(): any {
     return {
       size: this.cache.size,

@@ -11,7 +11,6 @@ import type { AppConfig, EditorState } from '../../../shared/types/common.types'
 import type {
   AppState,
   ParsingState,
-  PerformanceState,
   RenderingError,
   RenderingState,
 } from '../types/store.types';
@@ -84,34 +83,7 @@ export const selectRenderingHasErrors = (state: AppState): boolean =>
 export const selectRenderingMeshCount = (state: AppState): number =>
   state.rendering?.meshes?.length ?? 0;
 
-/**
- * Performance selectors
- */
-export const selectPerformanceState = (state: AppState): PerformanceState => state.performance;
 
-export const selectPerformanceMetrics = (state: AppState) => state.performance.metrics;
-
-export const selectPerformanceIsMonitoring = (state: AppState): boolean =>
-  state.performance.isMonitoring;
-
-export const selectPerformanceViolations = (state: AppState) => state.performance.violations;
-
-export const selectPerformanceLastUpdated = (state: AppState) => state.performance.lastUpdated;
-
-export const selectPerformanceRenderTime = (state: AppState): number =>
-  state.performance.metrics.renderTime;
-
-export const selectPerformanceParseTime = (state: AppState): number =>
-  state.performance.metrics.parseTime;
-
-export const selectPerformanceMemoryUsage = (state: AppState): number =>
-  state.performance.metrics.memoryUsage;
-
-export const selectPerformanceFrameRate = (state: AppState): number =>
-  state.performance.metrics.frameRate;
-
-export const selectPerformanceHasViolations = (state: AppState): boolean =>
-  state.performance.violations.length > 0;
 
 /**
  * Configuration selectors

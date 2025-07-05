@@ -53,7 +53,7 @@ describe('Cube Extractor', () => {
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(5);
   });
@@ -112,7 +112,7 @@ describe('Cube Extractor', () => {
     }
 
     // Extract the cube and check the result
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     console.log('Extracted cube AST:', JSON.stringify(cubeAST, null, 2));
     console.log('Error handler errors:', errorHandler.getErrors());
 
@@ -128,7 +128,7 @@ describe('Cube Extractor', () => {
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(6); // 2 * 3 = 6
   });
@@ -141,7 +141,7 @@ describe('Cube Extractor', () => {
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(7); // 1 + 2 * 3 = 7
   });
@@ -154,7 +154,7 @@ describe('Cube Extractor', () => {
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     expect(cubeAST).toBeDefined();
     expect(Array.isArray(cubeAST?.size)).toBe(true);
     expect(cubeAST?.size).toEqual([10, 20, 30]);
@@ -168,7 +168,7 @@ describe('Cube Extractor', () => {
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode!, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
     expect(cubeAST).toBeDefined();
     expect(Array.isArray(cubeAST?.size)).toBe(true);
     expect(cubeAST?.size).toEqual([10, 20, 30]); // [5+5, 10*2, 5*6]
