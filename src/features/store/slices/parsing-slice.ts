@@ -14,7 +14,7 @@ import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
-import type { AppStore } from '../app-store.js';
+import type { AppStore } from '../types/store.types.js';
 import type { ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');

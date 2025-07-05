@@ -40,15 +40,11 @@ describe('ChangeTracker', () => {
     expect(changes[1].startIndex).toBe(20);
   });
 
-  it('should get changes since a specific time', () => {
+  it('should get changes since a specific time', async () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
     // Wait a bit to ensure different timestamps
-    const waitTime = 10;
-    const startTime = Date.now();
-    while (Date.now() - startTime < waitTime) {
-      // Wait
-    }
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     const _change2 = tracker.trackChange(20, 22, 25, sourceText);
 
@@ -78,15 +74,11 @@ describe('ChangeTracker', () => {
     expect(tracker.isNodeAffected(25, 30)).toBe(false);
   });
 
-  it('should check if a node is affected by changes since a specific time', () => {
+  it('should check if a node is affected by changes since a specific time', async () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
     // Wait a bit to ensure different timestamps
-    const waitTime = 10;
-    const startTime = Date.now();
-    while (Date.now() - startTime < waitTime) {
-      // Wait
-    }
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     tracker.trackChange(25, 27, 28, sourceText);
 

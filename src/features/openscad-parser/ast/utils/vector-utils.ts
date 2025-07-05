@@ -53,7 +53,6 @@
 
 import type { Node as TSNode } from 'web-tree-sitter';
 import type * as ast from '../ast-types.js';
-import { extractValue } from '../extractors/value-extractor.js';
 import { findDescendantOfType } from './node-utils.js';
 
 /**
@@ -184,10 +183,13 @@ function extractVectorFromArrayLiteral(
     );
 
     if (elementNode.type === 'expression') {
-      // Process expression node
-      const value = extractValue(elementNode, sourceCode);
-      if (typeof value === 'number') {
-        numbers.push(value);
+      // Process expression node - look for number child
+      const numberChild = findDescendantOfType(elementNode, 'number');
+      if (numberChild) {
+        const value = parseFloat(numberChild.text);
+        if (!isNaN(value)) {
+          numbers.push(value);
+        }
       }
     } else if (elementNode.type === 'number') {
       // Process number node directly

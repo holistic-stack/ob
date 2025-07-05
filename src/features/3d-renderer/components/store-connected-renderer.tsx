@@ -9,11 +9,12 @@
 import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type React from 'react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { Result } from '../../../shared/types/result.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
@@ -23,8 +24,8 @@ import {
   selectRenderingCamera,
   selectRenderingState,
 } from '../../store/selectors/index.js';
-import type { RenderingState } from '../../store/types/store.types';
-import type { Mesh3D, RenderingError, RenderingMetrics } from '../types/renderer.types';
+import type { RenderingState, RenderingError } from '../../store/types/store.types';
+import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
 import { R3FScene } from './r3f-scene';
 
 const logger = createLogger('StoreConnectedRenderer');
@@ -98,46 +99,24 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const performanceMetrics = useAppStore(selectPerformanceMetrics) ?? DEFAULT_PERFORMANCE_METRICS;
   const enableRealTimeRendering = useAppStore(selectConfigEnableRealTimeRendering) ?? true;
 
-  // Store actions - all mutations go through Zustand with fallbacks
+  // Store actions - use direct selectors with stable callbacks (more efficient)
   const updateCamera = useAppStore(
-    (state: AppStore) =>
-      state.updateCamera ??
-      (() => {
-        /* fallback */
-      })
+    useCallback((state: AppStore) => state.updateCamera ?? (() => {}), [])
   );
   const updateMetrics = useAppStore(
-    (state: AppStore) =>
-      state.updateMetrics ??
-      (() => {
-        /* fallback */
-      })
+    useCallback((state: AppStore) => state.updateMetrics ?? (() => {}), [])
   );
   const renderFromAST = useAppStore(
-    (state: AppStore) =>
-      state.renderFromAST ??
-      (() => Promise.resolve({ success: false, error: 'Store not initialized' }))
+    useCallback((state: AppStore) => state.renderFromAST ?? (() => Promise.resolve({ success: false, error: 'Store not initialized' })), [])
   );
   const addRenderError = useAppStore(
-    (state: AppStore) =>
-      state.addRenderError ??
-      (() => {
-        /* fallback */
-      })
+    useCallback((state: AppStore) => state.addRenderError ?? (() => {}), [])
   );
   const clearRenderErrors = useAppStore(
-    (state: AppStore) =>
-      state.clearRenderErrors ??
-      (() => {
-        /* fallback */
-      })
+    useCallback((state: AppStore) => state.clearRenderErrors ?? (() => {}), [])
   );
   const updateMeshes = useAppStore(
-    (state: AppStore) =>
-      state.updateMeshes ??
-      (() => {
-        /* fallback */
-      })
+    useCallback((state: AppStore) => state.updateMeshes ?? (() => {}), [])
   );
 
   /**
@@ -192,10 +171,17 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   );
 
   /**
-   * Effect: Trigger rendering when AST changes (if real-time rendering is enabled)
+   * Memoized AST processing (expensive calculation optimization)
+   */
+  const processedAST = useMemo(() => {
+    return ast?.filter(node => node != null) ?? [];
+  }, [ast]);
+
+  /**
+   * Effect: Trigger rendering when AST changes (stable dependencies only)
    */
   useEffect(() => {
-    if (!enableRealTimeRendering || !ast || ast.length === 0) {
+    if (!enableRealTimeRendering || processedAST.length === 0) {
       return;
     }
 
@@ -203,7 +189,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     clearRenderErrors();
 
     // Trigger rendering through store action
-    renderFromAST(ast)
+    renderFromAST(processedAST)
       .then((result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
         if (result.success) {
           logger.debug(`AST rendering successful: ${result.data?.length ?? 0} meshes`);
@@ -220,21 +206,26 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           message: errorMessage,
         });
       });
-  }, [ast, enableRealTimeRendering, renderFromAST, clearRenderErrors, addRenderError]);
+  }, [enableRealTimeRendering, processedAST, renderFromAST, clearRenderErrors, addRenderError]); // Stable functions only
 
   /**
-   * Effect: Log store state changes for debugging
+   * Memoized debug info (prevent unnecessary recalculations)
+   */
+  const debugInfo = useMemo(() => ({
+    astNodeCount: processedAST.length,
+    isRendering: renderingState?.isRendering ?? false,
+    meshCount: renderingState?.meshes?.length ?? 0,
+    errorCount: renderingState?.renderErrors?.length ?? 0,
+    cameraPosition: camera?.position ?? [0, 0, 0],
+    lastRenderTime: performanceMetrics?.renderTime ?? 0,
+  }), [processedAST.length, renderingState?.isRendering, renderingState?.meshes?.length, renderingState?.renderErrors?.length, camera?.position, performanceMetrics?.renderTime]);
+
+  /**
+   * Effect: Log store state changes for debugging (optimized dependencies)
    */
   useEffect(() => {
-    logger.debug('Store state updated:', {
-      astNodeCount: ast?.length ?? 0,
-      isRendering: renderingState?.isRendering ?? false,
-      meshCount: renderingState?.meshes?.length ?? 0,
-      errorCount: renderingState?.renderErrors?.length ?? 0,
-      cameraPosition: camera?.position ?? [0, 0, 0],
-      lastRenderTime: performanceMetrics?.renderTime ?? 0,
-    });
-  }, [ast, renderingState, camera, performanceMetrics]);
+    logger.debug('Store state updated:', debugInfo);
+  }, [debugInfo]); // Single memoized dependency
 
   // Camera is already properly typed from the selector with fallback
   const defaultCamera: CameraConfig = camera;
