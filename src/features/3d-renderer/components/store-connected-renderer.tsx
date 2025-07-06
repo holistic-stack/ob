@@ -92,7 +92,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
   // Store actions - use direct selectors with stable callbacks (more efficient)
   const updateCamera = useAppStore(
-    useCallback((state: AppStore) => state.updateCamera ?? (() => {}), [])
+    useCallback(
+      (state: AppStore) =>
+        state.updateCamera ??
+        (() => {
+          // Default empty implementation
+        }),
+      []
+    )
   );
 
   const renderFromAST = useAppStore(
@@ -104,13 +111,34 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     )
   );
   const addRenderError = useAppStore(
-    useCallback((state: AppStore) => state.addRenderError ?? (() => {}), [])
+    useCallback(
+      (state: AppStore) =>
+        state.addRenderError ??
+        (() => {
+          // Default empty implementation
+        }),
+      []
+    )
   );
   const clearRenderErrors = useAppStore(
-    useCallback((state: AppStore) => state.clearRenderErrors ?? (() => {}), [])
+    useCallback(
+      (state: AppStore) =>
+        state.clearRenderErrors ??
+        (() => {
+          // Default empty implementation
+        }),
+      []
+    )
   );
   const updateMeshes = useAppStore(
-    useCallback((state: AppStore) => state.updateMeshes ?? (() => {}), [])
+    useCallback(
+      (state: AppStore) =>
+        state.updateMeshes ??
+        (() => {
+          // Default empty implementation
+        }),
+      []
+    )
   );
 
   /**

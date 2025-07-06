@@ -12,13 +12,10 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import { MATRIX_CONFIG } from '../config/matrix-config.js';
-import type {
-  MatrixAdapter,
-  MatrixFactory,
-  MatrixUtils,
-  RotationMatrix,
-  ThreeJSTransformData,
-  TransformationMatrix,
+import {
+  Matrix,
+  type ThreeJSTransformData,
+  type TransformationMatrix,
 } from '../types/matrix.types.js';
 
 const logger = createLogger('MatrixAdapters');
@@ -72,10 +69,27 @@ export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<mat4, string> => 
 /**
  * Convert gl-matrix mat3 to Three.js Matrix3
  */
-export const toThreeMatrix3 = (matrix: mat3): Result<Matrix3, string> => {
+export const toThreeMatrix3 = (matrix: mat3 | Matrix): Result<Matrix3, string> => {
   logger.debug('Converting gl-matrix mat3 to Three.js Matrix3');
 
   try {
+    // Handle Matrix class instances
+    if (matrix instanceof Matrix) {
+      if (matrix.rows !== 3 || matrix.columns !== 3) {
+        return error(`Matrix must be 3x3, got ${matrix.rows}x${matrix.columns}`);
+      }
+      const threeMatrix = new Matrix3();
+      const elements = [];
+      for (let col = 0; col < 3; col++) {
+        for (let row = 0; row < 3; row++) {
+          elements.push(matrix.get(row, col));
+        }
+      }
+      threeMatrix.fromArray(elements);
+      return success(threeMatrix);
+    }
+
+    // Handle raw mat3 arrays
     if (matrix.length !== 9) {
       return error(`Matrix must be 3x3 (9 elements), got ${matrix.length} elements`);
     }
@@ -95,10 +109,27 @@ export const toThreeMatrix3 = (matrix: mat3): Result<Matrix3, string> => {
 /**
  * Convert gl-matrix mat4 to Three.js Matrix4
  */
-export const toThreeMatrix4 = (matrix: mat4): Result<Matrix4, string> => {
+export const toThreeMatrix4 = (matrix: mat4 | Matrix): Result<Matrix4, string> => {
   logger.debug('Converting gl-matrix mat4 to Three.js Matrix4');
 
   try {
+    // Handle Matrix class instances
+    if (matrix instanceof Matrix) {
+      if (matrix.rows !== 4 || matrix.columns !== 4) {
+        return error(`Matrix must be 4x4, got ${matrix.rows}x${matrix.columns}`);
+      }
+      const threeMatrix = new Matrix4();
+      const elements = [];
+      for (let col = 0; col < 4; col++) {
+        for (let row = 0; row < 4; row++) {
+          elements.push(matrix.get(row, col));
+        }
+      }
+      threeMatrix.fromArray(elements);
+      return success(threeMatrix);
+    }
+
+    // Handle raw mat4 arrays
     if (matrix.length !== 16) {
       return error(`Matrix must be 4x4 (16 elements), got ${matrix.length} elements`);
     }
@@ -193,15 +224,24 @@ export const fromVector3 = (vector: Vector3): Result<mat4, string> => {
 /**
  * Create matrix from Quaternion
  */
-export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, string> => {
+export const fromQuaternion = (quaternion: Quaternion): Result<Matrix, string> => {
   logger.debug('Converting Quaternion to rotation matrix');
 
   try {
     const matrix4 = new Matrix4().makeRotationFromQuaternion(quaternion);
-    const matrixResult = fromThreeMatrix4(matrix4);
-    if (!matrixResult.success) return matrixResult;
+    // Extract 3x3 rotation part
+    const matrix3 = new Matrix3().setFromMatrix4(matrix4);
+    const elements = matrix3.elements;
 
-    return success(matrixResult.data as RotationMatrix);
+    // Create 3x3 Matrix instance
+    const result = new Matrix(3, 3);
+    for (let col = 0; col < 3; col++) {
+      for (let row = 0; row < 3; row++) {
+        result.set(row, col, elements[col * 3 + row]);
+      }
+    }
+
+    return success(result);
   } catch (err) {
     const errorMessage = `Failed to convert Quaternion: ${err instanceof Error ? err.message : String(err)}`;
     logger.error(errorMessage);
@@ -212,15 +252,24 @@ export const fromQuaternion = (quaternion: Quaternion): Result<RotationMatrix, s
 /**
  * Create matrix from Euler angles
  */
-export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
+export const fromEuler = (euler: Euler): Result<Matrix, string> => {
   logger.debug('Converting Euler to rotation matrix');
 
   try {
     const matrix4 = new Matrix4().makeRotationFromEuler(euler);
-    const matrixResult = fromThreeMatrix4(matrix4);
-    if (!matrixResult.success) return matrixResult;
+    // Extract 3x3 rotation part
+    const matrix3 = new Matrix3().setFromMatrix4(matrix4);
+    const elements = matrix3.elements;
 
-    return success(matrixResult.data as RotationMatrix);
+    // Create 3x3 Matrix instance
+    const result = new Matrix(3, 3);
+    for (let col = 0; col < 3; col++) {
+      for (let row = 0; row < 3; row++) {
+        result.set(row, col, elements[col * 3 + row]);
+      }
+    }
+
+    return success(result);
   } catch (err) {
     const errorMessage = `Failed to convert Euler: ${err instanceof Error ? err.message : String(err)}`;
     logger.error(errorMessage);
@@ -231,51 +280,54 @@ export const fromEuler = (euler: Euler): Result<RotationMatrix, string> => {
 /**
  * Matrix factory implementation
  */
-export const matrixFactory: MatrixFactory = {
-  identity: (): mat4 => {
-    logger.debug('Creating 4x4 identity matrix');
-    return mat4.create(); // gl-matrix creates identity by default
+export const matrixFactory = {
+  identity: (size?: number): Matrix => {
+    const actualSize = size || 4;
+    logger.debug(`Creating ${actualSize}x${actualSize} identity matrix`);
+    return new Matrix(actualSize, actualSize); // Constructor creates identity by default
   },
 
-  zeros: (): mat4 => {
-    logger.debug('Creating 4x4 zero matrix');
-    const result = mat4.create();
-    for (let i = 0; i < 16; i++) {
-      result[i] = 0;
+  zeros: (rows?: number, cols?: number): Matrix => {
+    const actualRows = rows || 4;
+    const actualCols = cols || 4;
+    logger.debug(`Creating ${actualRows}x${actualCols} zero matrix`);
+    const data = new Array(actualRows * actualCols).fill(0);
+    return new Matrix(actualRows, actualCols, data);
+  },
+
+  ones: (rows?: number, cols?: number): Matrix => {
+    const actualRows = rows || 4;
+    const actualCols = cols || 4;
+    logger.debug(`Creating ${actualRows}x${actualCols} ones matrix`);
+    const data = new Array(actualRows * actualCols).fill(1);
+    return new Matrix(actualRows, actualCols, data);
+  },
+
+  random: (rows?: number, cols?: number, min = 0, max = 1): Matrix => {
+    const actualRows = rows || 4;
+    const actualCols = cols || 4;
+    logger.debug(`Creating ${actualRows}x${actualCols} random matrix [${min}, ${max}]`);
+    const data = [];
+    for (let i = 0; i < actualRows * actualCols; i++) {
+      data.push(Math.random() * (max - min) + min);
+    }
+    return new Matrix(actualRows, actualCols, data);
+  },
+
+  diagonal: (values: readonly number[]): Matrix => {
+    const size = values.length;
+    logger.debug(`Creating ${size}x${size} diagonal matrix with ${values.length} values`);
+    const result = new Matrix(size, size);
+    // Clear identity and set diagonal values
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        result.set(i, j, i === j ? values[i] : 0);
+      }
     }
     return result;
   },
 
-  ones: (): mat4 => {
-    logger.debug('Creating 4x4 ones matrix');
-    const result = mat4.create();
-    for (let i = 0; i < 16; i++) {
-      result[i] = 1;
-    }
-    return result;
-  },
-
-  random: (min = 0, max = 1): mat4 => {
-    logger.debug(`Creating 4x4 random matrix [${min}, ${max}]`);
-    const result = mat4.create();
-    for (let i = 0; i < 16; i++) {
-      result[i] = Math.random() * (max - min) + min;
-    }
-    return result;
-  },
-
-  diagonal: (values: readonly number[]): mat4 => {
-    logger.debug(`Creating diagonal matrix with ${values.length} values`);
-    const result = mat4.create();
-    // Set diagonal values (indices 0, 5, 10, 15 for 4x4 matrix)
-    if (values.length > 0) result[0] = values[0];
-    if (values.length > 1) result[5] = values[1];
-    if (values.length > 2) result[10] = values[2];
-    if (values.length > 3) result[15] = values[3];
-    return result;
-  },
-
-  fromArray: (data: readonly number[][], validate = true): mat4 => {
+  fromArray: (data: readonly number[][], validate = true): Matrix => {
     logger.debug(`Creating matrix from array ${data.length}x${data[0]?.length || 0}`);
 
     if (validate) {
@@ -291,25 +343,28 @@ export const matrixFactory: MatrixFactory = {
       }
     }
 
-    const result = mat4.create();
-    // Convert 2D array to flat array in column-major order
-    for (let col = 0; col < Math.min(4, data[0]?.length || 0); col++) {
-      for (let row = 0; row < Math.min(4, data.length); row++) {
-        result[col * 4 + row] = data[row][col] || 0;
+    const rows = data.length;
+    const cols = data[0]?.length || 0;
+    const result = new Matrix(rows, cols);
+
+    // Set values from 2D array
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        result.set(row, col, data[row][col] || 0);
       }
     }
     return result;
   },
 
-  fromVector3: (vector: Vector3): mat4 => {
+  fromVector3: (vector: Vector3): Matrix => {
     const result = fromVector3(vector);
     if (!result.success) {
       throw new Error(result.error);
     }
-    return result.data;
+    return Matrix.fromMat4(result.data);
   },
 
-  fromQuaternion: (quaternion: Quaternion): RotationMatrix => {
+  fromQuaternion: (quaternion: Quaternion): Matrix => {
     const result = fromQuaternion(quaternion);
     if (!result.success) {
       throw new Error(result.error);
@@ -317,7 +372,7 @@ export const matrixFactory: MatrixFactory = {
     return result.data;
   },
 
-  fromEuler: (euler: Euler): RotationMatrix => {
+  fromEuler: (euler: Euler): Matrix => {
     const result = fromEuler(euler);
     if (!result.success) {
       throw new Error(result.error);
@@ -329,13 +384,35 @@ export const matrixFactory: MatrixFactory = {
 /**
  * Matrix utilities implementation
  */
-export const matrixUtils: MatrixUtils = {
-  isSquare: (matrix: mat4): boolean => matrix.length === 16, // 4x4 matrix
+export const matrixUtils = {
+  isSquare: (matrix: Matrix | mat4): boolean => {
+    if (matrix instanceof Matrix) {
+      return matrix.rows === matrix.columns;
+    }
+    return matrix.length === 16; // 4x4 matrix for raw mat4
+  },
 
-  isSymmetric: (matrix: mat4): boolean => {
+  isSymmetric: (matrix: Matrix | mat4): boolean => {
+    if (matrix instanceof Matrix) {
+      if (!matrixUtils.isSquare(matrix)) return false;
+      const size = matrix.rows;
+
+      // Check if matrix is symmetric (M[i,j] == M[j,i])
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          const mij = matrix.get(i, j);
+          const mji = matrix.get(j, i);
+          if (Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    // Handle raw mat4
     if (!matrixUtils.isSquare(matrix)) return false;
 
-    // Check if matrix is symmetric (M[i,j] == M[j,i])
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 4; j++) {
         const mij = matrix[j * 4 + i]; // M[i,j] in column-major
@@ -348,11 +425,31 @@ export const matrixUtils: MatrixUtils = {
     return true;
   },
 
-  isOrthogonal: (matrix: mat4): boolean => {
+  isOrthogonal: (matrix: Matrix | mat4): boolean => {
     if (!matrixUtils.isSquare(matrix)) return false;
 
     try {
-      // For orthogonal matrix: M * M^T = I
+      if (matrix instanceof Matrix) {
+        // For Matrix instances, check if M * M^T = I
+        const size = matrix.rows;
+        const tolerance = MATRIX_CONFIG.operations.precision;
+
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            let dotProduct = 0;
+            for (let k = 0; k < size; k++) {
+              dotProduct += matrix.get(i, k) * matrix.get(j, k);
+            }
+            const expected = i === j ? 1 : 0;
+            if (Math.abs(dotProduct - expected) > tolerance) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      // For raw mat4: M * M^T = I
       const transpose = mat4.create();
       mat4.transpose(transpose, matrix);
 
@@ -367,12 +464,19 @@ export const matrixUtils: MatrixUtils = {
     }
   },
 
-  isPositiveDefinite: (matrix: mat4): boolean => {
+  isPositiveDefinite: (matrix: Matrix | mat4): boolean => {
     if (!matrixUtils.isSquare(matrix) || !matrixUtils.isSymmetric(matrix)) return false;
 
     try {
-      // Simplified positive definite test - check if all diagonal elements are positive
-      // This is a necessary but not sufficient condition
+      if (matrix instanceof Matrix) {
+        // Check if all diagonal elements are positive (necessary but not sufficient)
+        for (let i = 0; i < matrix.rows; i++) {
+          if (matrix.get(i, i) <= 0) return false;
+        }
+        return true;
+      }
+
+      // For raw mat4
       for (let i = 0; i < 4; i++) {
         if (matrix[i * 4 + i] <= 0) return false;
       }
@@ -382,36 +486,108 @@ export const matrixUtils: MatrixUtils = {
     }
   },
 
-  isSingular: (matrix: mat4): boolean => {
+  isSingular: (matrix: Matrix | mat4): boolean => {
     if (!matrixUtils.isSquare(matrix)) return true;
 
     try {
-      const det = mat4.determinant(matrix);
-      return Math.abs(det) < MATRIX_CONFIG.operations.precision;
+      if (matrix instanceof Matrix) {
+        if (matrix.rows === 4) {
+          const mat4Data = matrix.toMat4();
+          const det = mat4.determinant(mat4Data);
+          return Math.abs(det) < MATRIX_CONFIG.operations.precision;
+        } else if (matrix.rows === 3) {
+          const mat3Data = matrix.toMat3();
+          const det = mat3.determinant(mat3Data);
+          return Math.abs(det) < MATRIX_CONFIG.operations.precision;
+        } else if (matrix.rows === 2) {
+          // For 2x2 matrix: det = a*d - b*c
+          const a = matrix.get(0, 0);
+          const b = matrix.get(0, 1);
+          const c = matrix.get(1, 0);
+          const d = matrix.get(1, 1);
+          const det = a * d - b * c;
+          return Math.abs(det) < MATRIX_CONFIG.operations.precision;
+        } else {
+          // For other sizes, check if any row/column is all zeros (simple singularity test)
+          for (let i = 0; i < matrix.rows; i++) {
+            let rowAllZero = true;
+            for (let j = 0; j < matrix.columns; j++) {
+              if (Math.abs(matrix.get(i, j)) >= MATRIX_CONFIG.operations.precision) {
+                rowAllZero = false;
+                break;
+              }
+            }
+            if (rowAllZero) return true;
+          }
+          return false;
+        }
+      }
+
+      if (!(matrix instanceof Matrix)) {
+        const det = mat4.determinant(matrix);
+        return Math.abs(det) < MATRIX_CONFIG.operations.precision;
+      }
+
+      return false;
     } catch {
       return true;
     }
   },
 
-  equals: (a: mat4, b: mat4, tolerance = MATRIX_CONFIG.operations.precision): boolean => {
-    if (a.length !== b.length) return false;
+  equals: (
+    a: Matrix | mat4,
+    b: Matrix | mat4,
+    tolerance = MATRIX_CONFIG.operations.precision
+  ): boolean => {
+    if (a instanceof Matrix && b instanceof Matrix) {
+      if (a.rows !== b.rows || a.columns !== b.columns) return false;
 
-    for (let i = 0; i < a.length; i++) {
-      if (Math.abs(a[i] - b[i]) > tolerance) {
-        return false;
+      for (let i = 0; i < a.rows; i++) {
+        for (let j = 0; j < a.columns; j++) {
+          if (Math.abs(a.get(i, j) - b.get(i, j)) > tolerance) {
+            return false;
+          }
+        }
       }
+      return true;
     }
-    return true;
+
+    if (!(a instanceof Matrix) && !(b instanceof Matrix)) {
+      if (a.length !== b.length) return false;
+
+      for (let i = 0; i < a.length; i++) {
+        if (Math.abs(a[i] - b[i]) > tolerance) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Mixed types - not equal
+    return false;
   },
 
-  hash: (matrix: mat4): string => {
+  hash: (matrix: Matrix | mat4): string => {
+    if (matrix instanceof Matrix) {
+      const data = matrix.toArray().join(',');
+      return `${matrix.rows}x${matrix.columns}_${btoa(data).slice(0, 16)}`;
+    }
+
     const data = Array.from(matrix).join(',');
     return `4x4_${btoa(data).slice(0, 16)}`;
   },
 
-  size: (_matrix: mat4): readonly [number, number] => [4, 4],
+  size: (matrix: Matrix | mat4): readonly [number, number] => {
+    if (matrix instanceof Matrix) {
+      return [matrix.rows, matrix.columns];
+    }
+    return [4, 4];
+  },
 
-  memoryUsage: (matrix: mat4): number => {
+  memoryUsage: (matrix: Matrix | mat4): number => {
+    if (matrix instanceof Matrix) {
+      return matrix.length * 8 + 64; // 8 bytes per number + overhead
+    }
     // Estimate: 4 bytes per number (Float32) + overhead
     return matrix.length * 4 + 64;
   },
@@ -420,24 +596,24 @@ export const matrixUtils: MatrixUtils = {
 /**
  * Matrix adapter implementation
  */
-export const matrixAdapter: MatrixAdapter = {
-  fromThreeMatrix3: (matrix: Matrix3): mat3 => {
+export const matrixAdapter = {
+  fromThreeMatrix3: (matrix: Matrix3): Matrix => {
     const result = fromThreeMatrix3(matrix);
     if (!result.success) {
       throw new Error(result.error);
     }
-    return result.data;
+    return Matrix.fromMat3(result.data);
   },
 
-  fromThreeMatrix4: (matrix: Matrix4): mat4 => {
+  fromThreeMatrix4: (matrix: Matrix4): Matrix => {
     const result = fromThreeMatrix4(matrix);
     if (!result.success) {
       throw new Error(result.error);
     }
-    return result.data;
+    return Matrix.fromMat4(result.data);
   },
 
-  toThreeMatrix3: (matrix: mat3): Matrix3 => {
+  toThreeMatrix3: (matrix: Matrix | mat3): Matrix3 => {
     const result = toThreeMatrix3(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -445,7 +621,7 @@ export const matrixAdapter: MatrixAdapter = {
     return result.data;
   },
 
-  toThreeMatrix4: (matrix: mat4): Matrix4 => {
+  toThreeMatrix4: (matrix: Matrix | mat4): Matrix4 => {
     const result = toThreeMatrix4(matrix);
     if (!result.success) {
       throw new Error(result.error);
@@ -453,16 +629,23 @@ export const matrixAdapter: MatrixAdapter = {
     return result.data;
   },
 
-  fromTransform: (transform: ThreeJSTransformData): TransformationMatrix => {
+  fromTransform: (transform: ThreeJSTransformData): Matrix => {
     const result = fromTransform(transform);
     if (!result.success) {
       throw new Error(result.error);
     }
-    return result.data;
+    return Matrix.fromMat4(result.data);
   },
 
-  toTransform: (matrix: TransformationMatrix): ThreeJSTransformData => {
-    const result = toTransform(matrix);
+  toTransform: (matrix: Matrix | mat4): ThreeJSTransformData => {
+    let transformMatrix: mat4;
+    if (matrix instanceof Matrix) {
+      transformMatrix = matrix.toMat4();
+    } else {
+      transformMatrix = matrix;
+    }
+
+    const result = toTransform(transformMatrix as TransformationMatrix);
     if (!result.success) {
       throw new Error(result.error);
     }

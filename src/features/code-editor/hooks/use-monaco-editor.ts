@@ -53,7 +53,7 @@ export const useMonacoEditor = (
   // State
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<EditorPerformanceMetrics>({
+  const [metrics, _setMetrics] = useState<EditorPerformanceMetrics>({
     renderTime: 0,
     updateTime: 0,
     validationTime: 0,

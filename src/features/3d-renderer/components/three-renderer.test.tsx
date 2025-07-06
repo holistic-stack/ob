@@ -222,6 +222,12 @@ describe('Three.js Renderer Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mock state
+    mockScene.children.length = 0;
+    mockScene.add.mockClear();
+    mockScene.remove.mockClear();
+    mockScene.clear.mockClear();
+    mockRenderer.render.mockClear();
 
     defaultConfig = {
       enableShadows: true,
@@ -255,6 +261,8 @@ describe('Three.js Renderer Component', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    // Clean up DOM to prevent multiple element issues
+    document.body.innerHTML = '';
   });
 
   describe('Component Rendering', () => {
@@ -266,15 +274,17 @@ describe('Three.js Renderer Component', () => {
     });
 
     it('should render Three.js canvas', () => {
-      render(<MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />);
+      const { container } = render(
+        <MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />
+      );
 
-      const canvas = screen.getByTestId('three-canvas');
+      const canvas = container.querySelector('[data-testid="three-canvas"]');
       expect(canvas).toBeInTheDocument();
     });
 
     it('should apply custom className', () => {
       const customClass = 'custom-renderer-class';
-      render(
+      const { container } = render(
         <MockThreeRenderer
           ast={[]}
           camera={defaultCamera}
@@ -283,7 +293,7 @@ describe('Three.js Renderer Component', () => {
         />
       );
 
-      const renderer = screen.getByTestId('three-renderer');
+      const renderer = container.querySelector('[data-testid="three-renderer"]');
       expect(renderer).toHaveClass(customClass);
     });
 
@@ -303,26 +313,32 @@ describe('Three.js Renderer Component', () => {
     });
 
     it('should have correct dimensions', () => {
-      render(<MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />);
+      const { container } = render(
+        <MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />
+      );
 
-      const renderer = screen.getByTestId('three-renderer');
+      const renderer = container.querySelector('[data-testid="three-renderer"]');
       expect(renderer).toHaveStyle({ width: '100%', height: '400px' });
     });
   });
 
   describe('AST Rendering', () => {
     it('should render empty scene with no AST nodes', () => {
-      render(<MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />);
+      const { container } = render(
+        <MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />
+      );
 
-      const meshCount = screen.getByTestId('mesh-count');
+      const meshCount = container.querySelector('[data-testid="mesh-count"]');
       expect(meshCount).toHaveTextContent('0 meshes');
     });
 
     it('should render meshes from AST nodes', async () => {
-      render(<MockThreeRenderer ast={mockAST} camera={defaultCamera} config={defaultConfig} />);
+      const { container } = render(
+        <MockThreeRenderer ast={mockAST} camera={defaultCamera} config={defaultConfig} />
+      );
 
       await waitFor(() => {
-        const meshCount = screen.getByTestId('mesh-count');
+        const meshCount = container.querySelector('[data-testid="mesh-count"]');
         expect(meshCount).toHaveTextContent('2 meshes');
       });
     });
@@ -365,21 +381,23 @@ describe('Three.js Renderer Component', () => {
 
   describe('Camera Configuration', () => {
     it('should display camera position', () => {
-      render(<MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />);
+      const { container } = render(
+        <MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />
+      );
 
-      const cameraPosition = screen.getByTestId('camera-position');
+      const cameraPosition = container.querySelector('[data-testid="camera-position"]');
       expect(cameraPosition).toHaveTextContent('Camera: [10, 10, 10]');
     });
 
     it('should update camera position when prop changes', () => {
-      const { rerender } = render(
+      const { rerender, container } = render(
         <MockThreeRenderer ast={[]} camera={defaultCamera} config={defaultConfig} />
       );
 
       const newCamera = { ...defaultCamera, position: [5, 5, 5] as const };
       rerender(<MockThreeRenderer ast={[]} camera={newCamera} config={defaultConfig} />);
 
-      const cameraPosition = screen.getByTestId('camera-position');
+      const cameraPosition = container.querySelector('[data-testid="camera-position"]');
       expect(cameraPosition).toHaveTextContent('Camera: [5, 5, 5]');
     });
   });
@@ -415,7 +433,7 @@ describe('Three.js Renderer Component', () => {
     it('should handle rendering errors gracefully', () => {
       const onRenderError = vi.fn();
 
-      render(
+      const { container } = render(
         <MockThreeRenderer
           ast={mockAST}
           camera={defaultCamera}
@@ -425,7 +443,7 @@ describe('Three.js Renderer Component', () => {
       );
 
       // Component should render without throwing
-      const renderer = screen.getByTestId('three-renderer');
+      const renderer = container.querySelector('[data-testid="three-renderer"]');
       expect(renderer).toBeInTheDocument();
     });
 

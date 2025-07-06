@@ -10,6 +10,9 @@ declare module 'web-tree-sitter' {
     readonly name: string;
   }
 
+  // Type alias for compatibility with existing code
+  export type Node = SyntaxNode;
+
   export interface Point {
     readonly row: number;
     readonly column: number;
@@ -49,11 +52,31 @@ declare module 'web-tree-sitter' {
     toString(): string;
   }
 
+  export interface TreeCursor {
+    readonly nodeType: string;
+    readonly nodeText: string;
+    readonly startPosition: Point;
+    readonly endPosition: Point;
+    readonly startIndex: number;
+    readonly endIndex: number;
+    readonly currentNode: SyntaxNode;
+    readonly currentFieldName: string | null;
+    readonly currentDepth: number;
+    gotoFirstChild(): boolean;
+    gotoNextSibling(): boolean;
+    gotoParent(): boolean;
+    gotoFirstChildForIndex(index: number): boolean;
+    gotoDescendant(index: number): void;
+    reset(node: SyntaxNode): void;
+    delete(): void;
+  }
+
   export interface Tree {
     readonly rootNode: SyntaxNode;
     copy(): Tree;
     delete(): void;
     edit(edit: Edit): void;
+    walk(): TreeCursor;
   }
 
   export interface Parser {
@@ -72,14 +95,19 @@ declare module 'web-tree-sitter' {
     newEndPosition: Point;
   }
 
-  export default class TreeSitter {
-    static init(options?: { locateFile?: (file: string) => string }): Promise<void>;
-    static Language: {
-      load(wasmBytes: Uint8Array): Promise<Language>;
+  export namespace TreeSitter {
+    export function init(options?: { locateFile?: (file: string) => string }): Promise<void>;
+    export const Language: {
+      load(path: string): Promise<Language>;
     };
-    static Parser: {
-      new (): Parser;
-      init(options?: { locateFile?: (file: string) => string }): Promise<void>;
+    export const Parser: new () => {
+      setLanguage(language: Language): void;
+      parse(input: string | Input): Tree;
     };
   }
+
+  export default TreeSitter;
+
+  // Additional type aliases for enhanced parser types
+  export type EnhancedOpenscadParser = Parser;
 }

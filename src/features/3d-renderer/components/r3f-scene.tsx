@@ -73,7 +73,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       logger.debug(`Updating scene with ${astNodes.length} AST nodes`);
 
       try {
-        const { result: meshes, duration: renderTime } = await measureTimeAsync(async () => {
+        const { result: meshes, duration: _renderTime } = await measureTimeAsync(async () => {
           // Clear existing meshes using proper disposal
           meshesRef.current.forEach((mesh3D) => {
             scene.remove(mesh3D.mesh);

@@ -26,15 +26,14 @@ export function createNodeHandlerRegistry(): NodeHandlerRegistry {
 }
 
 /**
- * Class-based factory for creating and configuring NodeHandlerRegistry instances.
+ * Factory function for creating and configuring NodeHandlerRegistry instances.
  */
-export class NodeHandlerRegistryFactory {
-  /**
-   * Create a registry with all handlers registered
-   */
-  static createRegistry(): NodeHandlerRegistry {
-    return createNodeHandlerRegistry();
-  }
+
+/**
+ * Create a default registry with standard OpenSCAD handlers
+ */
+export function createDefaultNodeHandlerRegistry(): NodeHandlerRegistry {
+  return new NodeHandlerRegistry();
 }
 
 /**

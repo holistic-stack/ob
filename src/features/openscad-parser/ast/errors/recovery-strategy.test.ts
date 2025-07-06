@@ -2,11 +2,12 @@
  * Tests for the recovery strategies
  */
 
+import type { TSNode } from '../../types/ast.types.js';
 import { type ErrorPosition, ParserError } from './parser-error.js';
 import {
+  createRecoveryStrategy,
   DeleteExtraTokenStrategy,
   InsertMissingTokenStrategy,
-  RecoveryStrategyFactory,
   SkipToNextStatementStrategy,
 } from './recovery-strategy.js';
 import { SemanticError } from './semantic-error.js';
@@ -134,31 +135,31 @@ describe('RecoveryStrategies', () => {
     });
   });
 
-  describe('RecoveryStrategyFactory', () => {
+  describe('createRecoveryStrategy', () => {
     it('should create InsertMissingTokenStrategy for missing token errors', () => {
       const error = OpenSCADSyntaxError.missingToken(']', source, position);
-      const strategy = RecoveryStrategyFactory.createStrategy(error);
+      const strategy = createRecoveryStrategy(error);
 
       expect(strategy).toBeInstanceOf(InsertMissingTokenStrategy);
     });
 
     it('should create DeleteExtraTokenStrategy for unexpected token errors', () => {
       const error = OpenSCADSyntaxError.unexpectedToken(')', ']', source, position);
-      const strategy = RecoveryStrategyFactory.createStrategy(error);
+      const strategy = createRecoveryStrategy(error);
 
       expect(strategy).toBeInstanceOf(DeleteExtraTokenStrategy);
     });
 
     it('should create SkipToNextStatementStrategy for other syntax errors', () => {
       const error = new OpenSCADSyntaxError('Test error', source, position);
-      const strategy = RecoveryStrategyFactory.createStrategy(error);
+      const strategy = createRecoveryStrategy(error);
 
       expect(strategy).toBeInstanceOf(SkipToNextStatementStrategy);
     });
 
     it('should return null for non-syntax errors', () => {
       const error = new SemanticError('Test error', source, position);
-      const strategy = RecoveryStrategyFactory.createStrategy(error);
+      const strategy = createRecoveryStrategy(error);
 
       expect(strategy).toBeNull();
     });

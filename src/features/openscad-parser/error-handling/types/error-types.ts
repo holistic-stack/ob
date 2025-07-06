@@ -297,6 +297,11 @@ export class InternalError extends ParserError {
   }
 }
 
+// Aliases for compatibility with existing code
+export { OpenSCADSyntaxError as SyntaxError };
+export { OpenSCADTypeError as TypeError };
+export { OpenSCADReferenceError as ReferenceError };
+
 /** Type guard to check if an error is a ParserError */
 export function isParserError(error: unknown): error is ParserError {
   return error instanceof Error && 'code' in error && 'severity' in error && 'context' in error;

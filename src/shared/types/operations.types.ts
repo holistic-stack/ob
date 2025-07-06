@@ -48,8 +48,6 @@ export interface OperationMetadata {
   readonly context: Record<string, unknown>;
 }
 
-
-
 /**
  * Operation error details interface
  */
@@ -62,6 +60,21 @@ export interface OperationError {
   readonly recoverable: boolean;
   readonly retryAfter?: number; // milliseconds
   readonly cause?: OperationError;
+}
+
+/**
+ * Operation metrics interface for performance monitoring
+ */
+export interface OperationMetrics {
+  readonly executionTime: number; // milliseconds
+  readonly memoryUsage: number; // bytes
+  readonly cpuTime?: number; // milliseconds
+  readonly throughput?: number; // operations per second
+  readonly errorRate?: number; // 0-1
+  readonly cacheHitRate?: number; // 0-1
+  readonly networkLatency?: number; // milliseconds
+  readonly queueTime?: number; // milliseconds
+  readonly customMetrics?: Record<string, number>;
 }
 
 /**

@@ -8,9 +8,10 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import type { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverter2DExtrusionTest');
@@ -151,7 +152,7 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
   beforeEach(async () => {
     logger.init('Setting up 2D and extrusion corpus integration test environment');
 
-    parserService = new OpenscadParser();
+    parserService = createTestParser();
 
     await parserService.init();
   });
@@ -182,9 +183,12 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
         ast.forEach((node: ASTNode, index: number) => {
           expect(node).toBeDefined();
           if (scenario.expectedNodeTypes[index]) {
+            // Accept specific primitive types (circle, square, etc.) as well as generic module_instantiation
             // Tree Sitter may parse some constructs as function_call or assignment_statement
             expect(node?.type).toMatch(
-              new RegExp(`${scenario.expectedNodeTypes[index]}|function_call|assignment_statement`)
+              new RegExp(
+                `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement|circle|square|polygon|text|cube|sphere|cylinder`
+              )
             );
           }
         });
@@ -391,10 +395,12 @@ text("Test", size=12, font="Arial");
       if (ast) {
         expect(ast.length).toBe(7);
 
-        // Verify each node is a module instantiation or function call
+        // Verify each node is a module instantiation, function call, or specific primitive type
         ast.forEach((node: ASTNode, index: number) => {
           expect(node).toBeDefined();
-          expect(node?.type).toMatch(/module_instantiation|function_call/);
+          expect(node?.type).toMatch(
+            /module_instantiation|function_call|circle|square|polygon|text|cube|sphere|cylinder/
+          );
           logger.debug(`2D primitive ${index + 1}: ${node?.type}`);
         });
       }

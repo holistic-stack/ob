@@ -242,4 +242,28 @@ export const curryWithLogging = <T, U, V, R>(fn: (a: T, b: U, c: V) => R) => {
   };
 };
 
+/**
+ * Higher-order function that adds performance logging to any function
+ */
+export const withPerformanceLogging = <TArgs extends readonly unknown[], TReturn>(
+  fn: (...args: TArgs) => TReturn,
+  functionName?: string
+): ((...args: TArgs) => TReturn) => {
+  const name = functionName || fn.name || 'anonymous';
 
+  return (...args: TArgs): TReturn => {
+    logger.debug(`Starting execution of '${name}'`);
+    const startTime = performance.now();
+
+    try {
+      const result = fn(...args);
+      const executionTime = performance.now() - startTime;
+      logger.debug(`Function '${name}' completed in ${executionTime.toFixed(2)}ms`);
+      return result;
+    } catch (error) {
+      const executionTime = performance.now() - startTime;
+      logger.error(`Function '${name}' failed after ${executionTime.toFixed(2)}ms:`, error);
+      throw error;
+    }
+  };
+};

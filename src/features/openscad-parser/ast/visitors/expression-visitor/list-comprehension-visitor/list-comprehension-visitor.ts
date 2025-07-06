@@ -333,7 +333,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
 
     // Extract for clause
     // forClauseCstNode is guaranteed non-null here due to the check above.
-    const forClause = this.extractForClause(forClauseCstNode!);
+    const forClause = this.extractForClause(forClauseCstNode as any);
     this.errorHandler.logInfo(
       `[ListComprehensionVisitor.parseOpenScadStyle] Extracted forClause. Variable: ${forClause.variable}, Range CST: ${forClauseCstNode?.childForFieldName('range')?.text?.substring(0, 50)}, Range AST type: ${forClause.range.type}, Range AST expressionType: ${'expressionType' in forClause.range ? (forClause.range as any).expressionType : 'N/A'}, Range AST errorCode: ${'errorCode' in forClause.range ? (forClause.range as any).errorCode : 'N/A'}`,
       'parseOpenScadStyle.forClauseResult',
@@ -359,7 +359,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
         type: 'error' as const,
         errorCode: 'LC_FOR_CLAUSE_NO_VARIABLE_PROP',
         message: 'Failed to extract variable name from for clause.',
-        location: getLocation(forClauseCstNode!),
+        location: getLocation(forClauseCstNode as any),
         originalNodeType: forClauseCstNode?.type,
         cstNodeText: forClauseCstNode?.text,
       };
@@ -400,7 +400,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
         type: 'error' as const,
         errorCode: 'LC_BODY_EXPRESSION_UNPARSABLE_NULL',
         message: 'Failed to parse body expression (visitor returned null).',
-        location: getLocation(bodyExpressionCstNode!),
+        location: getLocation(bodyExpressionCstNode as any),
         originalNodeType: bodyExpressionCstNode?.type,
         cstNodeText: bodyExpressionCstNode?.text,
       };

@@ -497,7 +497,7 @@ describe('RangeExpressionVisitor', () => {
         expect(valueNode).toBeTruthy(); // Ensure valueNode is found
         expect(valueNode?.type).toBe(tc.expectedValueNodeType);
 
-        const result = visitor.visitNode(valueNode!);
+        const result = visitor.visitNode(valueNode as any);
         expect(result?.type).toBe('error');
         const errorNode = result as ast.ErrorNode;
         expect(errorNode.errorCode).toBe(tc.errorCode);

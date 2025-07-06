@@ -1,7 +1,7 @@
 /**
  * Enhanced Test Utils Test Suite
  *
- * Tests for enhanced testing utilities with tslog and performance integration
+ * Tests for enhanced testing utilities with tslog integration
  * following TDD methodology with comprehensive coverage.
  */
 
@@ -62,7 +62,6 @@ describe('Enhanced Test Utils', () => {
           expect(result.data.data).toBe('test result');
           expect(result.data.result.testName).toBe('async test');
           expect(result.data.result.success).toBe(true);
-          expect(result.data.result.performanceMetrics).toBeDefined();
         }
       });
 

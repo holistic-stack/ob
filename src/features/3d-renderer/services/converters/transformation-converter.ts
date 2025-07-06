@@ -26,9 +26,25 @@ export const convertTranslateNode = async (
   return tryCatchAsync(async () => {
     logger.debug(`Converting translate node:`, node);
 
-    // TranslateNode should have children and a vector parameter
+    // Check if TranslateNode has children and a vector parameter
     if (!node.children || node.children.length === 0) {
-      throw new Error('Translate node must have children');
+      // If no children, create a placeholder mesh at the translated position
+      logger.debug('Translate node has no children, creating placeholder');
+      const translationVector: [number, number, number] =
+        Array.isArray(node.v) && node.v.length === 3
+          ? [node.v[0], node.v[1], node.v[2]]
+          : [0, 0, 0];
+
+      const [x, y, z] = translationVector;
+
+      // Create a small marker mesh to represent the translation
+      const markerGeometry = new THREE.SphereGeometry(0.5, 8, 6);
+      const markerMesh = new THREE.Mesh(markerGeometry, material);
+      markerMesh.position.set(x, y, z);
+      markerMesh.updateMatrix();
+
+      logger.debug(`Created placeholder translate mesh at [${x}, ${y}, ${z}]`);
+      return markerMesh;
     }
 
     // Process the first child (OpenSCAD translate applies to one child)
@@ -85,7 +101,30 @@ export const convertRotateNode = async (
     logger.debug(`Converting rotate node:`, node);
 
     if (!node.children || node.children.length === 0) {
-      throw new Error('Rotate node must have children');
+      // If no children, create a placeholder mesh with rotation applied
+      logger.debug('Rotate node has no children, creating placeholder');
+
+      // Create a small marker mesh to represent the rotation
+      const markerGeometry = new THREE.BoxGeometry(1, 0.2, 0.2); // Arrow-like shape
+      const markerMesh = new THREE.Mesh(markerGeometry, material);
+
+      // Apply rotation
+      if (typeof node.a === 'number') {
+        // If 'a' is a single number, it's rotation around Z-axis
+        markerMesh.rotation.set(0, 0, THREE.MathUtils.degToRad(node.a));
+      } else if (Array.isArray(node.a)) {
+        // If 'a' is a vector, it's rotation around [x,y,z] axes
+        const [x, y, z] = node.a;
+        markerMesh.rotation.set(
+          THREE.MathUtils.degToRad(x),
+          THREE.MathUtils.degToRad(y),
+          THREE.MathUtils.degToRad(z)
+        );
+      }
+
+      markerMesh.updateMatrix();
+      logger.debug(`Created placeholder rotate mesh with rotation applied`);
+      return markerMesh;
     }
 
     const firstChild = node.children[0];
@@ -135,7 +174,26 @@ export const convertScaleNode = async (
     logger.debug(`Converting scale node:`, node);
 
     if (!node.children || node.children.length === 0) {
-      throw new Error('Scale node must have children');
+      // If no children, create a placeholder mesh with scaling applied
+      logger.debug('Scale node has no children, creating placeholder');
+
+      // Create a small marker mesh to represent the scaling
+      const markerGeometry = new THREE.BoxGeometry(1, 1, 1);
+      const markerMesh = new THREE.Mesh(markerGeometry, material);
+
+      // Apply scaling
+      if (node.v) {
+        if (typeof node.v === 'number') {
+          markerMesh.scale.set(node.v, node.v, node.v);
+        } else if (Array.isArray(node.v) && node.v.length === 3) {
+          const [x, y, z] = node.v;
+          markerMesh.scale.set(x, y, z);
+        }
+      }
+
+      markerMesh.updateMatrix();
+      logger.debug(`Created placeholder scale mesh with scaling applied`);
+      return markerMesh;
     }
 
     const firstChild = node.children[0];

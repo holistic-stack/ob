@@ -19,9 +19,17 @@ export const convertCubeToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
+      if (!node) {
+        throw new Error('Cube node is null or undefined');
+      }
+      if (!material) {
+        throw new Error('Material is null or undefined');
+      }
+
       logger.debug(`Converting cube node:`, {
         size: node.size,
         center: node.center,
+        nodeType: node.type,
       });
 
       // Extract size parameters with proper defaults
@@ -58,8 +66,16 @@ export const convertSphereToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
+      if (!node) {
+        throw new Error('Sphere node is null or undefined');
+      }
+      if (!material) {
+        throw new Error('Material is null or undefined');
+      }
+
       logger.debug(`Converting sphere node:`, {
         radius: node.radius,
+        nodeType: node.type,
       });
 
       const radius = Number(node.radius) || 1;
@@ -86,10 +102,18 @@ export const convertCylinderToMesh = (
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
     () => {
+      if (!node) {
+        throw new Error('Cylinder node is null or undefined');
+      }
+      if (!material) {
+        throw new Error('Material is null or undefined');
+      }
+
       logger.debug(`Converting cylinder node:`, {
         h: node.h,
         r: node.r,
         center: node.center,
+        nodeType: node.type,
       });
 
       const height = Number(node.h) || 1;

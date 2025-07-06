@@ -5,7 +5,7 @@
  * branded types for type safety, and performance optimization types.
  */
 
-import { type mat3, mat4 } from 'gl-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 
 /**
@@ -13,49 +13,54 @@ import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
  * Uses gl-matrix internally for performance
  */
 export class Matrix {
-  private data: mat4;
+  private data: number[];
+  private _rows: number;
+  private _columns: number;
 
-  constructor(_rows: number, _cols: number, data?: number[]) {
-    this.data = mat4.create();
-    if (data && data.length >= 16) {
-      mat4.set(
-        this.data,
-        ...(data.slice(0, 16) as [
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-        ])
-      );
+  constructor(rows: number, cols: number, data?: number[]) {
+    this._rows = rows;
+    this._columns = cols;
+    const totalSize = rows * cols;
+
+    if (data && data.length >= totalSize) {
+      this.data = data.slice(0, totalSize);
+    } else {
+      this.data = new Array(totalSize).fill(0);
+      // Set identity matrix by default for square matrices
+      if (rows === cols) {
+        for (let i = 0; i < Math.min(rows, cols); i++) {
+          this.set(i, i, 1);
+        }
+      }
     }
   }
 
   get rows(): number {
-    return 4;
+    return this._rows;
   }
 
   get columns(): number {
-    return 4;
+    return this._columns;
+  }
+
+  get length(): number {
+    return this.data.length;
   }
 
   get(row: number, col: number): number {
-    return this.data[col * 4 + row] ?? 0;
+    if (row < 0 || row >= this._rows || col < 0 || col >= this._columns) {
+      return 0;
+    }
+    // Column-major order: data[col * rows + row]
+    return this.data[col * this._rows + row] ?? 0;
   }
 
   set(row: number, col: number, value: number): void {
-    this.data[col * 4 + row] = value;
+    if (row < 0 || row >= this._rows || col < 0 || col >= this._columns) {
+      return;
+    }
+    // Column-major order: data[col * rows + row]
+    this.data[col * this._rows + row] = value;
   }
 
   toArray(): number[] {
@@ -64,13 +69,39 @@ export class Matrix {
 
   static fromMat4(matrix: mat4): Matrix {
     const result = new Matrix(4, 4);
-    mat4.copy(result.data, matrix);
+    for (let i = 0; i < 16; i++) {
+      result.data[i] = matrix[i];
+    }
+    return result;
+  }
+
+  static fromMat3(matrix: mat3): Matrix {
+    const result = new Matrix(3, 3);
+    for (let i = 0; i < 9; i++) {
+      result.data[i] = matrix[i];
+    }
     return result;
   }
 
   toMat4(): mat4 {
+    if (this._rows !== 4 || this._columns !== 4) {
+      throw new Error('Matrix must be 4x4 to convert to mat4');
+    }
     const result = mat4.create();
-    mat4.copy(result, this.data);
+    for (let i = 0; i < 16; i++) {
+      result[i] = this.data[i];
+    }
+    return result;
+  }
+
+  toMat3(): mat3 {
+    if (this._rows !== 3 || this._columns !== 3) {
+      throw new Error('Matrix must be 3x3 to convert to mat3');
+    }
+    const result = mat3.create();
+    for (let i = 0; i < 9; i++) {
+      result[i] = this.data[i];
+    }
     return result;
   }
 }
@@ -206,8 +237,6 @@ export interface MatrixValidation {
   readonly suggestions: readonly string[];
 }
 
-
-
 /**
  * Matrix batch operation types
  */
@@ -325,8 +354,6 @@ export interface MatrixOperationDependencies {
   readonly telemetry?: IMatrixTelemetry;
 }
 
-
-
 /**
  * Matrix configuration override types
  */
@@ -338,20 +365,20 @@ export interface MatrixConfigOverride {
 /**
  * Type guards for matrix types
  */
-export const isTransformationMatrix = (matrix: MLMatrix): matrix is TransformationMatrix => {
-  return matrix.rows === 4 && matrix.columns === 4;
+export const isTransformationMatrix = (matrix: mat4): matrix is TransformationMatrix => {
+  return matrix.length === 16;
 };
 
-export const isRotationMatrix = (matrix: MLMatrix): matrix is RotationMatrix => {
-  return matrix.rows === 3 && matrix.columns === 3;
+export const isRotationMatrix = (matrix: mat4): matrix is RotationMatrix => {
+  return matrix.length === 16;
 };
 
-export const isScaleMatrix = (matrix: MLMatrix): matrix is ScaleMatrix => {
-  return matrix.rows >= 3 && matrix.columns >= 3;
+export const isScaleMatrix = (matrix: mat4): matrix is ScaleMatrix => {
+  return matrix.length === 16;
 };
 
-export const isProjectionMatrix = (matrix: MLMatrix): matrix is ProjectionMatrix => {
-  return matrix.rows === 4 && matrix.columns === 4;
+export const isProjectionMatrix = (matrix: mat4): matrix is ProjectionMatrix => {
+  return matrix.length === 16;
 };
 
 export const isValidMatrixSize = (rows: number, cols: number): boolean => {

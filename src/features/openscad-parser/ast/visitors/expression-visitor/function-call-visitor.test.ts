@@ -41,7 +41,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode!);
+      const result = visitor.visit(moduleInstNode as any);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -67,7 +67,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode!);
+      const result = visitor.visit(moduleInstNode as any);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -106,7 +106,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode!);
+      const result = visitor.visit(moduleInstNode as any);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -141,7 +141,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode!);
+      const result = visitor.visit(moduleInstNode as any);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -206,7 +206,7 @@ describe('FunctionCallVisitor', () => {
           return originalMethod?.call(visitor, node) ?? null;
         });
 
-      const result = visitor.visit(moduleInstNode!);
+      const result = visitor.visit(moduleInstNode as any);
 
       // Verify the result
       expect(result).not.toBeNull();

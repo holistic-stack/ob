@@ -246,7 +246,6 @@ export class VisitorASTGenerator {
       return [];
     }
 
-    // Root node information for debugging
     // Visit all children of the root node to build the AST
     const statements: ast.ASTNode[] = [];
     for (let i = 0; i < rootNode.childCount; i++) {
@@ -259,6 +258,7 @@ export class VisitorASTGenerator {
         statements.push(astNode);
       }
     }
+
     return statements;
   }
 

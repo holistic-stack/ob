@@ -110,7 +110,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     async (astNodes: ReadonlyArray<ASTNode>) => {
       await storeRenderAST(astNodes);
     },
-    [] // Empty dependency array - storeRenderAST is stable from Zustand
+    [storeRenderAST] // storeRenderAST is stable from Zustand
   );
 
   /**
@@ -118,7 +118,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
    */
   const clearScene = useCallback(() => {
     storeClearScene();
-  }, []); // Empty dependency array - storeClearScene is stable from Zustand
+  }, [storeClearScene]); // storeClearScene is stable from Zustand
 
   /**
    * Update camera using Zustand store
@@ -128,7 +128,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       storeUpdateCamera(newCamera);
       updateStoreCamera(newCamera);
     },
-    [] // Empty dependency array - store functions are stable from Zustand
+    [storeUpdateCamera, updateStoreCamera] // store functions are stable from Zustand
   );
 
   /**
@@ -137,14 +137,14 @@ export const useThreeRenderer = (): UseRendererReturn => {
   const resetCamera = useCallback(() => {
     storeResetCamera();
     updateStoreCamera(DEFAULT_CAMERA);
-  }, []); // Empty dependency array - store functions are stable from Zustand
+  }, [storeResetCamera, updateStoreCamera]); // store functions are stable from Zustand
 
   /**
    * Take screenshot using Zustand store
    */
   const takeScreenshot = useCallback(async (): Promise<string> => {
     return await storeTakeScreenshot();
-  }, []); // Empty dependency array - storeTakeScreenshot is stable from Zustand
+  }, [storeTakeScreenshot]); // storeTakeScreenshot is stable from Zustand
 
   /**
    * Initialize renderer on mount (no circular dependencies)
@@ -160,7 +160,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       // Cleanup using Zustand store
       storeDispose();
     };
-  }, []); // Empty dependency array - only run once, store functions are stable
+  }, [initializeRenderer, storeDispose]); // only run once, store functions are stable
 
   /**
    * Render AST when it changes (using useMemo for expensive calculations)
@@ -181,7 +181,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
       // Only clear scene if there are meshes to clear (prevents infinite loop)
       clearScene();
     }
-  }, [isInitialized, processedAST, renderAST, meshes.length]); // Include meshes.length to prevent infinite loop
+  }, [isInitialized, processedAST, renderAST, meshes.length, storeSetError, clearScene]); // Include all dependencies
 
   /**
    * Update camera when store camera changes (no circular dependencies)
@@ -190,15 +190,15 @@ export const useThreeRenderer = (): UseRendererReturn => {
     if (isInitialized && cameraConfig) {
       updateCamera(cameraConfig);
     }
-  }, [cameraConfig, isInitialized]); // updateCamera is stable from Zustand
+  }, [cameraConfig, isInitialized, updateCamera]); // updateCamera is stable from Zustand
 
   /**
    * Use render loop for continuous updates (replaces complex useEffect patterns)
    */
-  useThreeFrame(scene!, threeCamera!, renderer!, (_state, delta) => {
+  useThreeFrame(scene || null, threeCamera || null, renderer || null, (_state, delta) => {
     // Continuous render loop - no dependencies needed
     // This replaces useEffect-based rendering logic
-    if (meshes.length > 0) {
+    if (scene && threeCamera && renderer && meshes.length > 0) {
       // Optional: Add mesh animations here
       meshes.forEach((meshWrapper) => {
         if (meshWrapper.mesh.rotation) {

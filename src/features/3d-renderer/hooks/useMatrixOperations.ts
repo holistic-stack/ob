@@ -245,8 +245,11 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
           options
         );
 
-        if (result.success) {
-          return createSuccessState(result.data.result, result.data.performance);
+        if (result.success && result.data) {
+          // Extract result and performance from enhanced matrix result
+          const resultData = (result.data as any)?.result || result.data;
+          const performanceData = (result.data as any)?.performance;
+          return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
         }
@@ -276,10 +279,14 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       try {
         const result = await matrixIntegrationRef.current.performRobustInversion(matrix);
 
-        if (result.success) {
-          return createSuccessState(result.data.result, result.data.performance);
+        if (result.success && result.data) {
+          // Extract result and performance from enhanced matrix result
+          const resultData = (result.data as any)?.result || result.data;
+          const performanceData = (result.data as any)?.performance;
+          return createSuccessState(resultData, performanceData);
         } else {
-          return createErrorState(result.error);
+          const errorMessage = result.success ? 'Matrix inversion failed' : result.error;
+          return createErrorState(errorMessage || 'Matrix inversion failed');
         }
       } catch (err) {
         const errorMessage = `Matrix inversion failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -310,8 +317,11 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
           options
         );
 
-        if (result.success) {
-          return createSuccessState(result.data.result, result.data.performance);
+        if (result.success && result.data) {
+          // Extract result and performance from enhanced matrix result
+          const resultData = (result.data as any)?.result || result.data;
+          const performanceData = (result.data as any)?.performance;
+          return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
         }

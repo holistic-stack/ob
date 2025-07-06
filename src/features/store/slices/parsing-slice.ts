@@ -165,5 +165,9 @@ export const createParsingSlice = (
         state.parsing.isLoading = false;
       });
     },
+
+    getParsingMetrics: () => {
+      return get().parsing.operations;
+    },
   };
 };

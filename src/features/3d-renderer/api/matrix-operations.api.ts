@@ -278,15 +278,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Execute operation with metrics tracking
    */
   private async executeWithMetrics<T>(
-    operation: () => Promise<Result<T, string>>,
-    operationName: string
-  ): Promise<Result<T, string>>;
-  private async executeWithMetrics<T>(
     operation: () => Promise<EnhancedMatrixResult<T>>,
-    operationName: string
-  ): Promise<Result<T, string>>;
-  private async executeWithMetrics<T>(
-    operation: () => Promise<Result<T, string> | EnhancedMatrixResult<T>>,
     operationName: string
   ): Promise<Result<T, string>> {
     const startTime = Date.now();
@@ -298,11 +290,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       const executionTime = Date.now() - startTime;
       this.trackOperation(result.success, executionTime);
 
-      // Check if result is EnhancedMatrixResult or Result<T, string>
-      const finalResult =
-        'data' in result && 'metadata' in result
-          ? this.convertEnhancedResult(result as EnhancedMatrixResult<T>)
-          : (result as Result<T, string>);
+      // Convert EnhancedMatrixResult to Result<T, string>
+      const finalResult = this.convertEnhancedResult(result);
 
       if (finalResult.success) {
         logger.debug(`${operationName} completed successfully in ${executionTime}ms`);
@@ -433,10 +422,13 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
           useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
         });
 
-        if (conversionResult.success) {
-          return success(conversionResult.data.validation);
+        if (conversionResult.success && conversionResult.data) {
+          // Extract validation result from enhanced matrix result
+          const validationData =
+            (conversionResult.data as { validation?: boolean })?.validation || true;
+          return success(validationData);
         } else {
-          return error(!conversionResult.success ? conversionResult.error : 'Unknown error');
+          return error(conversionResult.error || 'Matrix validation failed');
         }
       } else {
         // For gl-matrix, use validation service directly
@@ -492,12 +484,15 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
           useTelemetry: false,
         });
 
-        if (conversionResult.success) {
-          return validationService.validateMatrix(conversionResult.data.result);
+        if (conversionResult.success && conversionResult.data) {
+          // Extract matrix result from enhanced matrix result
+          const matrixData =
+            (conversionResult.data as { result?: unknown })?.result || conversionResult.data;
+          return validationService.validateMatrix(matrixData);
         } else {
           return {
             success: false,
-            error: !conversionResult.success ? conversionResult.error : 'Unknown error',
+            error: conversionResult.error || 'Matrix conversion failed',
           } as const;
         }
       } else {
@@ -523,7 +518,9 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
 
       return {
         status: serviceHealth.overall === 'healthy' ? 'healthy' : 'degraded',
-        services: serviceHealth.services.map((service: any) => ({
+        services: (
+          serviceHealth.services as unknown as Array<{ service: string; healthy: boolean }>
+        ).map((service) => ({
           name: service.service,
           status: service.healthy ? 'healthy' : 'unhealthy',
           lastCheck: Date.now(),

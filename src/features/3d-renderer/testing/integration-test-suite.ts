@@ -16,7 +16,8 @@ import { MaterialService } from '../services/material.service.js';
 import { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../services/matrix-service-container.js';
 import type { MaterialConfig, Mesh3D } from '../types/renderer.types.js';
-import { matrixOperationTester } from './matrix-test-utils.js';
+
+// Matrix test utils removed
 
 const logger = createLogger('IntegrationTestSuite');
 
@@ -80,7 +81,7 @@ export class IntegrationTestSuite {
    */
   async testCompletePipeline(
     openscadCode: string,
-    expectedPrimitiveType?: string
+    _expectedPrimitiveType?: string
   ): Promise<Result<PipelineTestResult, string>> {
     const startTime = performance.now();
     const startMemory = this.getMemoryUsage();

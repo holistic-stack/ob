@@ -411,10 +411,10 @@ export const conversionUtils = {
   ): Result<T, OperationError> => {
     if (operationUtils.isSuccess(operationResult)) {
       const data = operationUtils.getData(operationResult);
-      return { success: true, data: data! };
+      return { success: true, data: data as T };
     } else {
       const error = operationUtils.getError(operationResult);
-      return { success: false, error: error! };
+      return { success: false, error: error as OperationError };
     }
   },
 };

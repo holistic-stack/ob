@@ -29,6 +29,14 @@ export class MatrixServiceContainer {
 
   getService(name: string): unknown {
     logger.debug(`Getting service: ${name} (stub)`);
+    if (name === 'conversion') {
+      return {
+        convertMLMatrixToMatrix4: (matrix: unknown, _options?: unknown) => ({
+          success: true,
+          data: { result: matrix },
+        }),
+      };
+    }
     return null;
   }
 
@@ -39,10 +47,16 @@ export class MatrixServiceContainer {
       warnings: string[];
       suggestions: string[];
     };
+    validateMatrix: (matrix: unknown) => {
+      success: boolean;
+      data?: unknown;
+      error?: string;
+    };
   } | null {
     logger.debug('Getting validation service (stub)');
     return {
       validate: () => ({ isValid: true, errors: [], warnings: [], suggestions: [] }),
+      validateMatrix: (matrix: unknown) => ({ success: true, data: matrix }),
     };
   }
 

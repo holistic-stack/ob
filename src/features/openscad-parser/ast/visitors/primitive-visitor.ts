@@ -223,17 +223,13 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         // Placeholder for future implementation
         return null;
       case 'square':
-        // Placeholder for future implementation
-        return null;
+        return this.createSquareNode(node, args);
       case 'circle':
-        // Placeholder for future implementation
-        return null;
+        return this.createCircleNode(node, args);
       case 'polygon':
-        // Placeholder for future implementation
-        return null;
+        return this.createPolygonNode(node, args);
       case 'text':
-        // Placeholder for future implementation
-        return null;
+        return this.createTextNode(node, args);
       default:
         return null;
     }
@@ -714,6 +710,317 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       r1: radius1,
       r2: radius2,
       center,
+      ...(fa !== undefined && { $fa: fa }),
+      ...(fs !== undefined && { $fs: fs }),
+      ...(fn !== undefined && { $fn: fn }),
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a circle node
+   * @param node The AST node
+   * @param args The arguments
+   * @returns The circle node
+   */
+  private createCircleNode(node: TSNode, args: ast.Parameter[]): ast.CircleNode {
+    let radius = 1; // Default radius
+    let fn: number | undefined;
+    let fa: number | undefined;
+    let fs: number | undefined;
+
+    // Handle diameter parameter first (takes precedence over radius)
+    const diameterParam = args.find((arg) => arg.name === 'd');
+    if (diameterParam) {
+      const diameterValue = extractNumberParameter(diameterParam);
+      if (diameterValue !== null) {
+        radius = diameterValue / 2;
+      }
+    } else {
+      // Handle radius parameter
+      const radiusParam = args.find((arg) => arg.name === 'r');
+      if (radiusParam) {
+        const radiusValue = extractNumberParameter(radiusParam);
+        if (radiusValue !== null) {
+          radius = radiusValue;
+        }
+      } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
+        // Handle case where radius is provided as the first positional parameter
+        const radiusValue = extractNumberParameter(args[0]);
+        if (radiusValue !== null) {
+          radius = radiusValue;
+        }
+      }
+    }
+
+    // Extract $fa, $fs, $fn parameters
+    const faParam = args.find((arg) => arg.name === '$fa');
+    if (faParam) {
+      const faValue = extractNumberParameter(faParam);
+      if (faValue !== null) {
+        fa = faValue;
+      }
+    }
+
+    const fsParam = args.find((arg) => arg.name === '$fs');
+    if (fsParam) {
+      const fsValue = extractNumberParameter(fsParam);
+      if (fsValue !== null) {
+        fs = fsValue;
+      }
+    }
+
+    const fnParam = args.find((arg) => arg.name === '$fn');
+    if (fnParam) {
+      const fnValue = extractNumberParameter(fnParam);
+      if (fnValue !== null) {
+        fn = fnValue;
+      }
+    }
+
+    return {
+      type: 'circle',
+      r: radius,
+      ...(fa !== undefined && { $fa: fa }),
+      ...(fs !== undefined && { $fs: fs }),
+      ...(fn !== undefined && { $fn: fn }),
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a square node
+   * @param node The AST node
+   * @param args The arguments
+   * @returns The square node
+   */
+  private createSquareNode(node: TSNode, args: ast.Parameter[]): ast.SquareNode {
+    let size: ast.Vector2D | number = 1; // Default size
+    let center = false; // Default center
+
+    // Handle size parameter
+    const sizeParam = args.find((arg) => arg.name === 'size');
+    if (sizeParam) {
+      const sizeValue = extractVectorParameter(sizeParam);
+      if (sizeValue !== null) {
+        if (Array.isArray(sizeValue)) {
+          if (sizeValue.length >= 2) {
+            size = [sizeValue[0], sizeValue[1]] as ast.Vector2D;
+          } else if (sizeValue.length === 1) {
+            size = sizeValue[0];
+          }
+        } else {
+          size = sizeValue;
+        }
+      }
+    } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
+      // Handle case where size is provided as the first positional parameter
+      const sizeValue = extractVectorParameter(args[0]);
+      if (sizeValue !== null) {
+        if (Array.isArray(sizeValue)) {
+          if (sizeValue.length >= 2) {
+            size = [sizeValue[0], sizeValue[1]] as ast.Vector2D;
+          } else if (sizeValue.length === 1) {
+            size = sizeValue[0];
+          }
+        } else {
+          size = sizeValue;
+        }
+      }
+    }
+
+    // Extract center parameter
+    const centerParam = args.find((arg) => arg.name === 'center');
+    if (centerParam) {
+      const centerValue = extractBooleanParameter(centerParam);
+      if (centerValue !== null) {
+        center = centerValue;
+      }
+    }
+
+    return {
+      type: 'square',
+      size,
+      center,
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a polygon node
+   * @param node The AST node
+   * @param args The arguments
+   * @returns The polygon node
+   */
+  private createPolygonNode(node: TSNode, args: ast.Parameter[]): ast.PolygonNode {
+    const points: ast.Vector2D[] = []; // Default empty points
+    let paths: number[][] | undefined;
+    let convexity = 1; // Default convexity
+
+    // Handle points parameter
+    const pointsParam = args.find((arg) => arg.name === 'points');
+    if (pointsParam) {
+      // This is a simplified implementation - in a real parser you'd need to
+      // properly extract the array of points from the parameter value
+      // For now, we'll create a basic structure
+    } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
+      // Handle case where points are provided as the first positional parameter
+    }
+
+    // Handle paths parameter
+    const pathsParam = args.find((arg) => arg.name === 'paths');
+    if (pathsParam) {
+      // This is a simplified implementation - in a real parser you'd need to
+      // properly extract the array of paths from the parameter value
+    }
+
+    // Extract convexity parameter
+    const convexityParam = args.find((arg) => arg.name === 'convexity');
+    if (convexityParam) {
+      const convexityValue = extractNumberParameter(convexityParam);
+      if (convexityValue !== null) {
+        convexity = convexityValue;
+      }
+    }
+
+    return {
+      type: 'polygon',
+      points,
+      ...(paths !== undefined && { paths }),
+      convexity,
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a text node
+   * @param node The AST node
+   * @param args The arguments
+   * @returns The text node
+   */
+  private createTextNode(node: TSNode, args: ast.Parameter[]): ast.TextNode {
+    let text = ''; // Default text
+    let size = 10; // Default size
+    let font = 'Liberation Sans'; // Default font
+    let halign = 'left'; // Default horizontal alignment
+    let valign = 'baseline'; // Default vertical alignment
+    let spacing = 1; // Default spacing
+    let direction = 'ltr'; // Default direction
+    let language = 'en'; // Default language
+    let script = 'latin'; // Default script
+    let fn: number | undefined;
+    let fa: number | undefined;
+    let fs: number | undefined;
+
+    // Handle text parameter
+    const textParam = args.find((arg) => arg.name === 'text');
+    if (textParam) {
+      // Extract string value
+      if (typeof textParam.value === 'string') {
+        text = textParam.value;
+      }
+    } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
+      // Handle case where text is provided as the first positional parameter
+      if (typeof args[0].value === 'string') {
+        text = args[0].value;
+      }
+    }
+
+    // Extract other parameters
+    const sizeParam = args.find((arg) => arg.name === 'size');
+    if (sizeParam) {
+      const sizeValue = extractNumberParameter(sizeParam);
+      if (sizeValue !== null) {
+        size = sizeValue;
+      }
+    }
+
+    const fontParam = args.find((arg) => arg.name === 'font');
+    if (fontParam) {
+      if (typeof fontParam.value === 'string') {
+        font = fontParam.value;
+      }
+    }
+
+    const halignParam = args.find((arg) => arg.name === 'halign');
+    if (halignParam) {
+      if (typeof halignParam.value === 'string') {
+        halign = halignParam.value;
+      }
+    }
+
+    const valignParam = args.find((arg) => arg.name === 'valign');
+    if (valignParam) {
+      if (typeof valignParam.value === 'string') {
+        valign = valignParam.value;
+      }
+    }
+
+    const spacingParam = args.find((arg) => arg.name === 'spacing');
+    if (spacingParam) {
+      const spacingValue = extractNumberParameter(spacingParam);
+      if (spacingValue !== null) {
+        spacing = spacingValue;
+      }
+    }
+
+    const directionParam = args.find((arg) => arg.name === 'direction');
+    if (directionParam) {
+      if (typeof directionParam.value === 'string') {
+        direction = directionParam.value;
+      }
+    }
+
+    const languageParam = args.find((arg) => arg.name === 'language');
+    if (languageParam) {
+      if (typeof languageParam.value === 'string') {
+        language = languageParam.value;
+      }
+    }
+
+    const scriptParam = args.find((arg) => arg.name === 'script');
+    if (scriptParam) {
+      if (typeof scriptParam.value === 'string') {
+        script = scriptParam.value;
+      }
+    }
+
+    // Extract $fa, $fs, $fn parameters
+    const faParam = args.find((arg) => arg.name === '$fa');
+    if (faParam) {
+      const faValue = extractNumberParameter(faParam);
+      if (faValue !== null) {
+        fa = faValue;
+      }
+    }
+
+    const fsParam = args.find((arg) => arg.name === '$fs');
+    if (fsParam) {
+      const fsValue = extractNumberParameter(fsParam);
+      if (fsValue !== null) {
+        fs = fsValue;
+      }
+    }
+
+    const fnParam = args.find((arg) => arg.name === '$fn');
+    if (fnParam) {
+      const fnValue = extractNumberParameter(fnParam);
+      if (fnValue !== null) {
+        fn = fnValue;
+      }
+    }
+
+    return {
+      type: 'text',
+      text,
+      size,
+      font,
+      halign,
+      valign,
+      spacing,
+      direction,
+      language,
+      script,
       ...(fa !== undefined && { $fa: fa }),
       ...(fs !== undefined && { $fs: fs }),
       ...(fn !== undefined && { $fn: fn }),

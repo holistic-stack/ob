@@ -118,7 +118,7 @@ sphere(10);
       if (translateResult.success) {
         expect(translateResult.data).toBeDefined();
         expect(translateResult.data.mesh).toBeDefined();
-        expect(translateResult.data.metadata.nodeType).toBe('function_call');
+        expect(translateResult.data.metadata.nodeType).toBe('translate');
 
         // The mesh should be positioned at the translated location [200,0,0]
         const position = translateResult.data.mesh.position;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DefaultNodeHandlerRegistry } from './default-node-handler-registry.js';
 import type { NodeHandler } from './node-handler-registry.js';
-import { NodeHandlerRegistryFactory } from './node-handler-registry-factory.js';
+import { createNodeHandlerRegistry } from './node-handler-registry-factory.js';
 
 describe('NodeHandlerRegistry', () => {
   describe('DefaultNodeHandlerRegistry', () => {
@@ -65,7 +65,7 @@ describe('NodeHandlerRegistry', () => {
   describe('NodeHandlerRegistryFactory', () => {
     test('should create a registry with all handlers registered', () => {
       // Create a registry
-      const registry = NodeHandlerRegistryFactory.createRegistry();
+      const registry = createNodeHandlerRegistry();
 
       // Verify that handlers are registered
       expect(registry.hasHandler('cube')).toBe(true);
@@ -81,7 +81,7 @@ describe('NodeHandlerRegistry', () => {
 
     test('should register all primitive handlers', () => {
       // Create a registry
-      const registry = NodeHandlerRegistryFactory.createRegistry();
+      const registry = createNodeHandlerRegistry();
 
       // Verify that primitive handlers are registered
       expect(registry.hasHandler('cube')).toBe(true);
@@ -98,7 +98,7 @@ describe('NodeHandlerRegistry', () => {
 
     test('should register all transformation handlers', () => {
       // Create a registry
-      const registry = NodeHandlerRegistryFactory.createRegistry();
+      const registry = createNodeHandlerRegistry();
 
       // Verify that transformation handlers are registered
       expect(registry.hasHandler('translate')).toBe(true);
@@ -112,7 +112,7 @@ describe('NodeHandlerRegistry', () => {
 
     test('should register all CSG operation handlers', () => {
       // Create a registry
-      const registry = NodeHandlerRegistryFactory.createRegistry();
+      const registry = createNodeHandlerRegistry();
 
       // Verify that CSG operation handlers are registered
       expect(registry.hasHandler('union')).toBe(true);
@@ -124,7 +124,7 @@ describe('NodeHandlerRegistry', () => {
 
     test('should register all module and function handlers', () => {
       // Create a registry
-      const registry = NodeHandlerRegistryFactory.createRegistry();
+      const registry = createNodeHandlerRegistry();
 
       // Verify that module and function handlers are registered
       expect(registry.hasHandler('module')).toBe(true);

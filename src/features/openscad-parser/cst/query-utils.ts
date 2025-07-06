@@ -61,7 +61,11 @@ export class QueryManager {
    */
   public async loadQuery(name: string): Promise<Query> {
     if (this.queryCache.has(name)) {
-      return this.queryCache.get(name)!;
+      const cachedQuery = this.queryCache.get(name);
+      if (!cachedQuery) {
+        throw new Error(`Query ${name} not found in cache`);
+      }
+      return cachedQuery;
     }
 
     try {

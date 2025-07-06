@@ -35,6 +35,20 @@ export interface PerformanceConfig {
 }
 
 /**
+ * Performance metrics interface
+ */
+export interface PerformanceMetrics {
+  readonly fps: number;
+  readonly frameTime: number; // milliseconds
+  readonly renderTime: number; // milliseconds
+  readonly memoryUsage: number; // bytes
+  readonly triangleCount: number;
+  readonly drawCalls: number;
+  readonly cpuUsage?: number; // percentage
+  readonly gpuUsage?: number; // percentage
+}
+
+/**
  * Editor-related types
  */
 export interface EditorPosition {
@@ -226,5 +240,3 @@ export interface Theme {
   readonly spacing: Record<string, string>;
   readonly borderRadius: Record<string, string>;
 }
-
-

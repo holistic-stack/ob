@@ -229,3 +229,29 @@ export interface NodeUtils {
   readonly findAncestors: (node: CoreNode, root: CoreNode) => ReadonlyArray<CoreNode>;
   readonly findDescendants: (node: CoreNode) => ReadonlyArray<CoreNode>;
 }
+
+/**
+ * Generic AST Node type alias for backward compatibility
+ * This represents any AST node in the system
+ */
+export type ASTNode =
+  | CoreNode
+  | BaseExpressionNode
+  | BaseStatementNode
+  | ParentNode
+  | BaseErrorNode;
+
+/**
+ * Type utility to extract the node type from an AST node
+ */
+export type ExtractNodeType<T extends ASTNode> = T['type'];
+
+/**
+ * Type utility to check if a node has children
+ */
+export type HasChildren<T extends ASTNode> = T extends ParentNode ? true : false;
+
+/**
+ * Type utility to get the children type from a parent node
+ */
+export type ChildrenType<T extends ParentNode> = T['children'][number];

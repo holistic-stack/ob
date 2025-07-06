@@ -26,6 +26,7 @@ export interface ParsingState {
   readonly warnings: ReadonlyArray<string>;
   readonly isLoading: boolean;
   readonly lastParsed: Date | null;
+  readonly parseTime: number; // parsing time in milliseconds
 }
 
 import type { RenderingError } from '../../3d-renderer/types/renderer.types.js';
@@ -49,6 +50,7 @@ export interface RenderingState {
   readonly renderErrors: ReadonlyArray<RenderingError>;
   readonly lastRendered: Date | null;
   readonly camera: CameraConfig;
+  readonly renderTime: number; // rendering time in milliseconds
 }
 
 /**

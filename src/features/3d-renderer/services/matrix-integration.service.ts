@@ -66,7 +66,7 @@ export class MatrixIntegrationService {
     return success(true);
   }
 
-  async performRobustInversion(matrix: unknown): Promise<Result<Matrix, string>> {
+  async performRobustInversion(_matrix: unknown): Promise<Result<Matrix, string>> {
     logger.debug('Matrix inversion (stub)');
     // Return a stub Matrix instance for compatibility
     return success(new Matrix(4, 4));

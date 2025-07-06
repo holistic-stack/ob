@@ -60,17 +60,25 @@ logger.end('Component cleanup completed');
 - Co-locate tests with implementation files (no `__tests__` folders)
 - Comprehensive test coverage with meaningful assertions
 
-### Enhanced Testing Utilities
+### Testing Utilities
 ```typescript
-import { testRunner, createAssertion, measurePerformance } from '../../../shared/utils/testing';
+// Use standard Vitest testing patterns with real implementations
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
-// Use enhanced test runner for performance monitoring
-const result = await testRunner.runTest('operation test', async () => {
-  return await performOperation();
+// Example test with real parser instance
+describe('OpenSCAD Operation', () => {
+  let parser: OpenscadParser;
+
+  beforeEach(() => {
+    parser = createTestParser(); // Automatic cleanup handled
+  });
+
+  it('should perform operation correctly', async () => {
+    const result = await performOperation();
+    expect(result).toBeDefined();
+  });
 });
-
-// Create assertions with logging
-const assertion = createAssertion('equality check', actual, expected);
 ```
 
 ### Test Categories

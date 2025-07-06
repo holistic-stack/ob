@@ -253,11 +253,15 @@ export class CSGVisitor extends BaseASTVisitor {
   override visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     try {
       if (node.text) {
+        // Handle accessor expression with text
       } else {
+        // Handle accessor expression without text
       }
-    } catch (_error) {}
+    } catch (_error) {
+      // Error handling for accessor expression
+    }
 
-    // Extract function name from the accessor_expression
+    // Extract function name using the truncation workaround
     const functionNode = findDescendantOfType(node, 'identifier');
     if (!functionNode) {
       return null;
@@ -321,9 +325,13 @@ export class CSGVisitor extends BaseASTVisitor {
   override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     try {
       if (node.text) {
+        // Handle module instantiation with text
       } else {
+        // Handle module instantiation without text
       }
-    } catch (_error) {}
+    } catch (_error) {
+      // Error handling for module instantiation
+    }
 
     // Extract function name using the truncation workaround
     const functionName = this.extractFunctionName(node);

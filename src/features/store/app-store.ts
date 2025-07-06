@@ -54,7 +54,7 @@ export const DEFAULT_CAMERA: CameraConfig = {
 /**
  * Default OpenSCAD code for initialization
  */
-export const DEFAULT_OPENSCAD_CODE = 'cube([10,10,10]);';
+export const DEFAULT_OPENSCAD_CODE = '';
 
 /**
  * Shared parser service instance

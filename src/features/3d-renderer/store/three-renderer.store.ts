@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import { create } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { OperationId } from '../../../shared/types/operations.types.js';
+// OperationId removed
 import type { ASTNode } from '../../openscad-parser/types/ast.types.js';
 import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import type { Mesh3D } from '../types/mesh.types.js';
@@ -45,25 +45,21 @@ interface ThreeRendererState {
 
 const initialMetrics: RenderingMetrics = {
   // PerformanceMetrics
+  fps: 60,
+  frameTime: 16.67, // 1000/60 fps
   renderTime: 0,
-  parseTime: 0,
   memoryUsage: 0,
-  frameRate: 60,
+  triangleCount: 0,
+  drawCalls: 0,
   // OperationMetrics
-  operationId: 'initial' as OperationId,
+  executionTime: 0,
   cpuTime: 0,
-  peakMemoryUsage: 0,
-  ioOperations: 0,
-  networkRequests: 0,
-  cacheHits: 0,
-  cacheMisses: 0,
   throughput: 0,
   errorRate: 0,
+  cacheHitRate: 0,
   // RenderingMetrics specific
   meshCount: 0,
-  triangleCount: 0,
   vertexCount: 0,
-  drawCalls: 0,
   textureMemory: 0,
   bufferMemory: 0,
 };
@@ -175,7 +171,6 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
       // Update metrics
       const newMetrics: RenderingMetrics = {
         ...get().metrics,
-        operationId: `render_${Date.now()}` as OperationId,
         meshCount: newMeshes.length,
         triangleCount: newMeshes.reduce((sum, m) => sum + (m.metadata.triangleCount ?? 0), 0),
         vertexCount: newMeshes.reduce((sum, m) => sum + (m.metadata.vertexCount ?? 0), 0),

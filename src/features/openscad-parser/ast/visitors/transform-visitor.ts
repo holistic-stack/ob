@@ -638,7 +638,7 @@ export class TransformVisitor extends BaseASTVisitor {
         // Try vector first (for angle vector like [90, 0, 0])
         const vector = extractVectorParameter(arg);
         if (vector && vector.length >= 3) {
-          a = [vector[0]!, vector[1]!, vector[2]!];
+          a = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
           break;
         }
 
@@ -657,7 +657,7 @@ export class TransformVisitor extends BaseASTVisitor {
       if (arg.name === 'v') {
         const vector = extractVectorParameter(arg);
         if (vector && vector.length >= 3) {
-          v = [vector[0]!, vector[1]!, vector[2]!];
+          v = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
           break;
         }
       }
@@ -694,9 +694,9 @@ export class TransformVisitor extends BaseASTVisitor {
         const vector = extractVectorParameter(arg);
         if (vector) {
           if (vector.length === 2) {
-            v = [vector[0]!, vector[1]!, 1]; // Convert 2D to 3D
+            v = [vector[0] ?? 0, vector[1] ?? 0, 1]; // Convert 2D to 3D
           } else if (vector.length >= 3) {
-            v = [vector[0]!, vector[1]!, vector[2]!];
+            v = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
           }
           break;
         }
@@ -734,9 +734,9 @@ export class TransformVisitor extends BaseASTVisitor {
         const vector = extractVectorParameter(arg);
         if (vector) {
           if (vector.length === 2) {
-            v = [vector[0]!, vector[1]!, 0]; // Convert 2D to 3D
+            v = [vector[0] ?? 0, vector[1] ?? 0, 0]; // Convert 2D to 3D
           } else if (vector.length >= 3) {
-            v = [vector[0]!, vector[1]!, vector[2]!];
+            v = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
           }
           break;
         }
