@@ -499,7 +499,6 @@ describe('Primitive Renderer Service', () => {
 
         const result = geometryFactory.createPolyhedron(vertices, faces);
 
-
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.type).toBe('BufferGeometry');
@@ -670,7 +669,6 @@ describe('Primitive Renderer Service', () => {
 
       const result = renderPrimitive(params);
 
-
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry.type).toBe('BoxGeometry');
@@ -699,7 +697,6 @@ describe('Primitive Renderer Service', () => {
       };
 
       const result = renderPrimitive(params);
-
 
       expect(result.success).toBe(true);
       if (result.success) {

@@ -584,8 +584,6 @@ export function clearTestMemory(): void {
   forceGarbageCollection();
 }
 
-
-
 // ============================================================================
 // Global Test Hooks for Memory Management
 // ============================================================================
