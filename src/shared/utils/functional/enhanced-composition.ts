@@ -208,12 +208,11 @@ export const retryWithLogging = async <T, E = Error>(
 };
 
 /**
- * Function composition with performance monitoring
+ * Function composition with logging
  */
 export const composeWithLogging = <T>(...fns: Array<(arg: T) => T>) => {
   return (initialValue: T): T => {
     logger.debug('Starting compose operation with', fns.length, 'functions');
-    const startTime = performance.now();
 
     // Compose applies functions right-to-left
     const result = fns.reduceRight((acc, fn, index) => {
@@ -221,8 +220,7 @@ export const composeWithLogging = <T>(...fns: Array<(arg: T) => T>) => {
       return fn(acc);
     }, initialValue);
 
-    const executionTime = performance.now() - startTime;
-    logger.debug(`Compose operation completed in ${executionTime.toFixed(2)}ms`);
+    logger.debug('Compose operation completed');
 
     return result;
   };
@@ -244,29 +242,4 @@ export const curryWithLogging = <T, U, V, R>(fn: (a: T, b: U, c: V) => R) => {
   };
 };
 
-/**
- * Performance monitoring wrapper for any function
- */
-export const withPerformanceLogging = <TArgs extends readonly unknown[], TReturn>(
-  fn: (...args: TArgs) => TReturn,
-  functionName?: string
-): ((...args: TArgs) => TReturn) => {
-  const name = functionName || fn.name || 'anonymous';
 
-  return (...args: TArgs): TReturn => {
-    logger.debug(`Starting performance monitoring for ${name}`);
-    const startTime = performance.now();
-
-    const result = fn(...args);
-
-    const executionTime = performance.now() - startTime;
-    logger.debug(`${name} executed in ${executionTime.toFixed(2)}ms`);
-
-    // Log performance warning if execution time exceeds 16ms (render target)
-    if (executionTime > 16) {
-      logger.warn(`Performance warning: ${name} took ${executionTime.toFixed(2)}ms (>16ms target)`);
-    }
-
-    return result;
-  };
-};

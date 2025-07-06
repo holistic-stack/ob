@@ -48,21 +48,7 @@ export interface OperationMetadata {
   readonly context: Record<string, unknown>;
 }
 
-/**
- * Operation performance metrics interface
- */
-export interface OperationMetrics {
-  readonly operationId: OperationId;
-  readonly cpuTime: number; // milliseconds
-  readonly memoryUsage: number; // bytes
-  readonly peakMemoryUsage: number; // bytes
-  readonly ioOperations: number;
-  readonly networkRequests: number;
-  readonly cacheHits: number;
-  readonly cacheMisses: number;
-  readonly throughput: number; // operations per second
-  readonly errorRate: number; // percentage
-}
+
 
 /**
  * Operation error details interface

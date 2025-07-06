@@ -584,22 +584,7 @@ export function clearTestMemory(): void {
   forceGarbageCollection();
 }
 
-/**
- * Monitor memory usage during tests
- */
-export function logMemoryUsage(context: string): void {
-  if (process.memoryUsage) {
-    const usage = process.memoryUsage();
-    const heapUsedMB = Math.round(usage.heapUsed / 1024 / 1024);
-    const heapTotalMB = Math.round(usage.heapTotal / 1024 / 1024);
-    logger.debug(`Memory usage [${context}]: ${heapUsedMB}MB / ${heapTotalMB}MB heap`);
 
-    // Warn if memory usage is getting high
-    if (heapUsedMB > 2048) {
-      logger.warn(`High memory usage detected: ${heapUsedMB}MB heap used`);
-    }
-  }
-}
 
 // ============================================================================
 // Global Test Hooks for Memory Management

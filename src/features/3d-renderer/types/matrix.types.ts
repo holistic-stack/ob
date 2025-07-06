@@ -206,18 +206,7 @@ export interface MatrixValidation {
   readonly suggestions: readonly string[];
 }
 
-/**
- * Performance monitoring types
- */
-export interface MatrixPerformanceMetrics {
-  readonly operationCount: number;
-  readonly totalExecutionTime: number;
-  readonly averageExecutionTime: number;
-  readonly cacheHitRate: number;
-  readonly memoryUsage: number;
-  readonly largeMatrixOperations: number;
-  readonly failedOperations: number;
-}
+
 
 /**
  * Matrix batch operation types
@@ -336,26 +325,12 @@ export interface MatrixOperationDependencies {
   readonly telemetry?: IMatrixTelemetry;
 }
 
-export interface PerformanceReport {
-  readonly metrics: MatrixPerformanceMetrics;
-  readonly operationBreakdown: Record<
-    string,
-    {
-      count: number;
-      totalTime: number;
-      averageTime: number;
-      successRate: number;
-    }
-  >;
-}
+
 
 /**
  * Matrix configuration override types
  */
 export interface MatrixConfigOverride {
-  readonly performance?: Partial<
-    typeof import('../config/matrix-config').MATRIX_CONFIG.performance
-  >;
   readonly cache?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.cache>;
   readonly operations?: Partial<typeof import('../config/matrix-config').MATRIX_CONFIG.operations>;
 }

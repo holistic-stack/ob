@@ -227,19 +227,4 @@ export interface Theme {
   readonly borderRadius: Record<string, string>;
 }
 
-export interface PerformanceThresholds {
-  readonly maxRenderTime: number;
-  readonly maxParseTime: number;
-  readonly maxMemoryUsage: number;
-  readonly minFrameRate: number;
-}
 
-/**
- * Performance metrics interface for tracking application performance
- */
-export interface PerformanceMetrics {
-  readonly renderTime: number; // milliseconds
-  readonly parseTime: number; // milliseconds
-  readonly memoryUsage: number; // bytes
-  readonly frameRate: number; // frames per second
-}

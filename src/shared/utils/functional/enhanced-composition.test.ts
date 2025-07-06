@@ -240,31 +240,5 @@ describe('Enhanced Functional Composition', () => {
     });
   });
 
-  describe('withPerformanceLogging', () => {
-    it('should measure function execution time', () => {
-      const slowFunction = (x: number) => {
-        // Simulate some work
-        let result = x;
-        for (let i = 0; i < 1000; i++) {
-          result += Math.random();
-        }
-        return result;
-      };
 
-      const monitored = withPerformanceLogging(slowFunction, 'slowFunction');
-      const result = monitored(5);
-
-      expect(typeof result).toBe('number');
-      expect(result).toBeGreaterThan(5);
-    });
-
-    it('should use function name when no custom name provided', () => {
-      function namedFunction(x: number) {
-        return x * 2;
-      }
-
-      const monitored = withPerformanceLogging(namedFunction);
-      expect(monitored(5)).toBe(10);
-    });
-  });
 });
