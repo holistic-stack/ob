@@ -1,0 +1,92 @@
+# Qdrant Configuration with GPU Support (RTX 3070)
+log_level: INFO
+
+# GPU Configuration for NVIDIA RTX 3070
+gpu:
+  # Enable GPU indexing for faster vector operations
+  indexing: true
+
+  # Force half precision for better performance on RTX 3070
+  force_half_precision: true
+
+  # Optimal groups count for RTX 3070 (can be tuned)
+  groups_count: 512
+
+  # Filter for NVIDIA devices only
+  device_filter: "nvidia"
+
+  # Allow only discrete GPUs (not integrated)
+  allow_integrated: false
+
+  # Disable emulated GPUs
+  allow_emulated: false
+
+  # Number of parallel indexing processes
+  parallel_indexes: 1
+
+storage:
+  # Where to store all the data
+  storage_path: ./storage
+
+  # Where to store snapshots
+  snapshots_path: ./snapshots
+
+  # Use local storage for snapshots
+  snapshots_config:
+    snapshots_storage: local
+
+  # Store payloads on disk to save memory
+  on_disk_payload: true
+
+  # Write-ahead-log configuration
+  wal:
+    wal_capacity_mb: 32
+    wal_segments_ahead: 0
+
+  # Performance optimizations for GPU usage
+  performance:
+    # Auto-select search threads (GPU will handle indexing)
+    max_search_threads: 0
+
+    # Limit optimization threads to not interfere with GPU
+    max_optimization_threads: 2
+
+  # Optimizers configuration for GPU-friendly segments
+  optimizers:
+    # Segment size optimized for RTX 3070 (8GB VRAM)
+    # Keep segments under 1GB for optimal GPU performance
+    max_segment_size_kb: 1000000  # 1GB in KB
+
+    # Enable memory mapping for large segments
+    memmap_threshold_kb: 500000   # 500MB threshold
+
+    # Standard optimization settings
+    deleted_threshold: 0.2
+    vacuum_min_vector_number: 1000
+    default_segment_number: 0
+    indexing_threshold_kb: 20000
+    flush_interval_sec: 5
+
+service:
+  # Host and port configuration
+  host: 0.0.0.0
+  http_port: 6333
+  grpc_port: 6334
+
+  # Enable CORS for web applications
+  enable_cors: true
+
+  # API key for authentication (change this in production!)
+  api_key: qdrant
+
+  # Maximum request size
+  max_request_size_mb: 32
+
+# Disable telemetry
+telemetry_disabled: true
+
+# Single-node setup (cluster disabled)
+cluster:
+  enabled: false
+
+

@@ -1,0 +1,51 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {
+        "DEFAULT_MINIMUM_TOKENS": ""
+      }
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/luciano/git/openscad-babylon"
+      ]
+    },
+    "qdrant": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-p",
+        "8000:8000",
+        "-e",
+        "QDRANT_URL",
+        "-e",
+        "QDRANT_API_KEY",
+        "-e",
+        "COLLECTION_NAME",
+        "mcp-server-qdrant"
+      ],
+      "env": {
+        "QDRANT_URL": "http://localhost:6333",
+        "QDRANT_API_KEY": "Qdrant",
+        "COLLECTION_NAME": "babylon"
+      },
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}

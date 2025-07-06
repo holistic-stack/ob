@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  qdrant:
+    # Use NVIDIA GPU-enabled image
+    image: qdrant/qdrant:gpu-nvidia-latest
+    
+    container_name: qdrant-gpu
+    
+    # Enable GPU access for NVIDIA RTX 3070
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    # Alternative GPU configuration (use if deploy section doesn't work)
+    # runtime: nvidia
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"  # gRPC API
+    
+    volumes:
+      # Mount configuration file
+      - ./qdrant-config.yaml:/qdrant/config/config.yaml:ro
+      
+      # Persistent storage for vector data
+      - qdrant_storage:/qdrant/storage
+      
+      # Persistent storage for snapshots
+      - qdrant_snapshots:/qdrant/snapshots
+    
+    environment:
+      # Enable GPU indexing via environment variable
+      - QDRANT__GPU__INDEXING=1
+      
+      # Optional: Set log level
+      - QDRANT__LOG_LEVEL=INFO
+      
+      # Optional: Override API key via environment
+      # - QDRANT__SERVICE__API_KEY=your_secure_api_key_here
+    
+    restart: unless-stopped
+    
+    # Health check to ensure Qdrant is running properly
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  # Named volumes for persistent data
+  qdrant_storage:
+    driver: local
+  qdrant_snapshots:
+    driver: local
+
+# Optional: Network configuration
+networks:
+  default:
+    name: qdrant-network
