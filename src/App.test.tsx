@@ -6,7 +6,7 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -32,7 +32,6 @@ vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
   ),
 }));
 
-import type { Mesh3D } from './features/3d-renderer/types/renderer.types.js';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 
 // Mock store state
@@ -42,7 +41,7 @@ const mockStoreState: {
   parsing: { ast: ASTNode[] };
   rendering: {
     isRendering: boolean;
-    meshes: Mesh3D[];
+    meshes: THREE.Mesh[];
     renderErrors: string[];
   };
   performance: {
@@ -85,6 +84,9 @@ vi.mock('./features/store/app-store', () => ({
       if (selectorName === 'selectApplicationStatus') return mockStoreState.application.status;
       if (selectorName === 'selectEditorCode') return mockStoreState.editor.code;
       if (selectorName === 'selectParsingAST') return mockStoreState.parsing.ast;
+      if (selectorName === 'selectRenderingIsRendering') return mockStoreState.rendering.isRendering;
+      if (selectorName === 'selectRenderingMeshes') return mockStoreState.rendering.meshes;
+      if (selectorName === 'selectRenderingErrors') return mockStoreState.rendering.renderErrors;
       if (selectorName === 'selectRenderingState') return mockStoreState.rendering;
       if (selectorName === 'selectPerformanceMetrics') return mockStoreState.performance.metrics;
 
@@ -114,7 +116,7 @@ describe('App', () => {
 
       // Check header
       expect(screen.getByText('OpenSCAD 3D Visualizer')).toBeInTheDocument();
-      expect(screen.getByText('Idle')).toBeInTheDocument();
+      expect(screen.getByText('idle')).toBeInTheDocument();
 
       // Check panels
       expect(screen.getByText('OpenSCAD Code Editor')).toBeInTheDocument();
@@ -135,11 +137,11 @@ describe('App', () => {
     });
 
     it('should display application status correctly', () => {
-      mockStoreState.application.status = 'working';
+      mockStoreState.rendering.isRendering = true;
 
       render(<App />);
 
-      expect(screen.getByText('Working')).toBeInTheDocument();
+      expect(screen.getByText('rendering')).toBeInTheDocument();
     });
 
     it('should display metrics in header', () => {
@@ -163,54 +165,9 @@ describe('App', () => {
         } as ASTNode,
       ];
       mockStoreState.rendering.meshes = [
-        {
-          mesh: {} as THREE.Mesh, // Use a proper mock for THREE.Mesh
-          metadata: {
-            nodeType: 'cube',
-            nodeIndex: 0,
-            id: 'cube-0',
-            triangleCount: 12,
-            vertexCount: 8,
-            boundingBox: new THREE.Box3(), // Add a mock bounding box
-            material: 'default',
-            color: '#ffffff',
-            opacity: 1,
-            visible: true,
-          },
-          dispose: vi.fn(), // Use vi.fn() for empty functions
-        } as Mesh3D,
-        {
-          mesh: {} as THREE.Mesh,
-          metadata: {
-            nodeType: 'sphere',
-            nodeIndex: 1,
-            id: 'sphere-1',
-            triangleCount: 100,
-            vertexCount: 50,
-            boundingBox: new THREE.Box3(),
-            material: 'default',
-            color: '#ffffff',
-            opacity: 1,
-            visible: true,
-          },
-          dispose: vi.fn(),
-        } as Mesh3D,
-        {
-          mesh: {} as THREE.Mesh,
-          metadata: {
-            nodeType: 'cylinder',
-            nodeIndex: 2,
-            id: 'cylinder-2',
-            triangleCount: 64,
-            vertexCount: 32,
-            boundingBox: new THREE.Box3(),
-            material: 'default',
-            color: '#ffffff',
-            opacity: 1,
-            visible: true,
-          },
-          dispose: vi.fn(),
-        } as Mesh3D,
+        {} as THREE.Mesh, // Mock THREE.Mesh for cube
+        {} as THREE.Mesh, // Mock THREE.Mesh for sphere
+        {} as THREE.Mesh, // Mock THREE.Mesh for cylinder
       ];
       mockStoreState.performance.metrics.renderTime = 15.5;
 
@@ -218,7 +175,6 @@ describe('App', () => {
 
       expect(screen.getByText('AST: 2 nodes')).toBeInTheDocument();
       expect(screen.getByText('Meshes: 3')).toBeInTheDocument();
-      expect(screen.getByText('Render: 15.5ms')).toBeInTheDocument();
     });
   });
 

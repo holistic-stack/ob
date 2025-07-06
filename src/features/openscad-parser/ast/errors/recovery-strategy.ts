@@ -155,3 +155,36 @@ export function createRecoveryStrategy(error: ParserError): RecoveryStrategy | n
   // No strategy available for other error types
   return null;
 }
+
+/**
+ * Class-based factory for creating recovery strategies
+ */
+export class RecoveryStrategyFactory {
+  /**
+   * Create InsertMissingTokenStrategy for missing token errors
+   */
+  static createInsertMissingTokenStrategy(): InsertMissingTokenStrategy {
+    return new InsertMissingTokenStrategy();
+  }
+
+  /**
+   * Create DeleteExtraTokenStrategy for unexpected token errors
+   */
+  static createDeleteExtraTokenStrategy(): DeleteExtraTokenStrategy {
+    return new DeleteExtraTokenStrategy();
+  }
+
+  /**
+   * Create SkipToNextStatementStrategy for other syntax errors
+   */
+  static createSkipToNextStatementStrategy(): SkipToNextStatementStrategy {
+    return new SkipToNextStatementStrategy();
+  }
+
+  /**
+   * Create appropriate strategy based on error type
+   */
+  static createStrategy(error: ParserError): RecoveryStrategy | null {
+    return createRecoveryStrategy(error);
+  }
+}

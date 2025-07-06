@@ -50,7 +50,7 @@ export const useFrame = (callback: FrameCallback, _priority = 0) => {
         getDelta: () => delta,
       },
       gl: {
-        render: (scene: any, camera: any) => {
+        render: (_scene: any, _camera: any) => {
           // This would be implemented by the renderer
         },
       },
@@ -77,7 +77,7 @@ export const useFrame = (callback: FrameCallback, _priority = 0) => {
         cancelAnimationFrame(frameIdRef.current);
       }
     };
-  }, []); // Empty dependency array - only start/stop once
+  }, [animate]); // Empty dependency array - only start/stop once
 
   // Return cleanup function
   return useCallback(() => {

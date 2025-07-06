@@ -22,10 +22,6 @@ export interface SimpleMatrixResult<T = mat4> {
  * Simplified Matrix Operations API
  */
 export class MatrixOperationsAPI {
-  constructor() {
-    // Minimal initialization
-  }
-
   /**
    * Execute operation with basic error handling
    */

@@ -100,7 +100,7 @@ describe('QueryManager', () => {
             startIndex: 0,
             endIndex: source.length,
           },
-        }) as any;
+        }) as unknown;
 
       const tree = parser.parse(source);
       if (tree) {

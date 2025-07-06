@@ -265,7 +265,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
   const performRobustInversion = useCallback(
     async (
       matrix: mat4,
-      options: EnhancedMatrixOptions = {}
+      _options: EnhancedMatrixOptions = {}
     ): Promise<MatrixOperationState<mat4>> => {
       logger.debug('Performing robust matrix inversion');
 

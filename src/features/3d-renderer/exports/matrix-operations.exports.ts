@@ -23,23 +23,23 @@ export type { SimpleMatrixResult } from '../services/matrix-operations.api.js';
  * Stub exports for compatibility with existing code
  */
 export interface MatrixOperationsBundle {
-  readonly api: any; // Stub for compatibility
+  readonly api: Record<string, unknown>; // Stub for compatibility
   readonly version: string;
 }
 
 export interface MatrixOperationsDevProviderProps {
   readonly children: React.ReactNode;
-  readonly config?: any;
+  readonly config?: Record<string, unknown>;
 }
 
 export interface MatrixOperationsProdProviderProps {
   readonly children: React.ReactNode;
-  readonly config?: any;
+  readonly config?: Record<string, unknown>;
 }
 
 export function createMatrixOperationsBundle(): MatrixOperationsBundle {
   return {
-    api: {} as any, // Stub implementation
+    api: {}, // Stub implementation
     version: '1.0.0',
   };
 }

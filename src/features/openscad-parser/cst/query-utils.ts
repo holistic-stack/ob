@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import {
+  type Language,
   type Parser,
   Query,
   type QueryMatch,
@@ -26,11 +27,11 @@ export interface QueryResult {
 export class QueryManager {
   private queryCache: Map<string, Query> = new Map();
   private parser: Parser;
-  private language: any; // Tree-sitter Language
+  private language: Language; // Tree-sitter Language
   private queryDir: string;
   private tree?: Tree;
 
-  constructor(parser: Parser, language: any, queryDir: string) {
+  constructor(parser: Parser, language: Language, queryDir: string) {
     this.parser = parser;
     this.language = language;
     this.queryDir = queryDir;

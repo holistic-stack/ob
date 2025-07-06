@@ -14,7 +14,7 @@ const logger = createLogger('IntegrationTestSuiteTest');
 describe('Integration Test Suite', () => {
   let testSuite: IntegrationTestSuite;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger.init('Setting up test environment');
     testSuite = new IntegrationTestSuite({
       enablePerformanceValidation: true,
@@ -23,6 +23,7 @@ describe('Integration Test Suite', () => {
       validateVisualOutput: true,
       enableMatrixValidation: true,
     });
+    await testSuite.init();
   });
 
   afterEach(() => {
@@ -104,7 +105,7 @@ describe('Integration Test Suite', () => {
         const pipelineResult = result.data;
         expect(pipelineResult.success).toBe(false);
         expect(pipelineResult.stages.astParsing.success).toBe(false);
-        expect(pipelineResult.error).toContain('Unsupported OpenSCAD code');
+        expect(pipelineResult.error).toContain('No AST nodes generated');
       }
     });
   });
@@ -143,6 +144,7 @@ describe('Integration Test Suite', () => {
         validateVisualOutput: false,
         enablePerformanceValidation: false,
       });
+      await testSuite.init();
 
       const result = await testSuite.testCompletePipeline('cube([10,10,10]);', 'cube');
 
@@ -161,6 +163,9 @@ describe('Integration Test Suite', () => {
       logger.debug('[DEBUG][IntegrationTestSuiteTest] Testing default instance');
 
       expect(integrationTestSuite).toBeInstanceOf(IntegrationTestSuite);
+
+      // Initialize the default instance
+      await integrationTestSuite.init();
 
       // Test that it works
       const result = await integrationTestSuite.testCompletePipeline('cube([5,5,5]);', 'cube');

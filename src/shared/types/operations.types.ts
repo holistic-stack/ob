@@ -294,7 +294,7 @@ export interface IOOperation<TData> {
 /**
  * Network operation types
  */
-export interface NetworkOperation<TRequest, TResponse> {
+export interface NetworkOperation<TRequest, _TResponse> {
   readonly url: string;
   readonly method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   readonly data?: TRequest;

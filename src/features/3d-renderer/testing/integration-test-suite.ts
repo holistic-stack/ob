@@ -9,13 +9,14 @@ import type * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '../../openscad-parser/ast/ast-types.js';
+import { OpenscadParser } from '../../openscad-parser/openscad-parser.js';
 import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import { MaterialService } from '../services/material.service.js';
 import { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../services/matrix-service-container.js';
 import type { MaterialConfig, Mesh3D } from '../types/renderer.types.js';
-import { matrixOperationTester, type PerformanceAssertion } from './matrix-test-utils.js';
+import { matrixOperationTester } from './matrix-test-utils.js';
 
 const logger = createLogger('IntegrationTestSuite');
 
@@ -52,10 +53,10 @@ export interface PipelineTestResult {
  */
 export class IntegrationTestSuite {
   private readonly config: IntegrationTestConfig;
-  private readonly performanceAssertion: PerformanceAssertion;
   private readonly materialService: MaterialService;
   private readonly matrixServiceContainer: MatrixServiceContainer;
   private readonly matrixIntegrationService: MatrixIntegrationService;
+  private readonly parser: OpenscadParser;
 
   constructor(config: Partial<IntegrationTestConfig> = {}) {
     this.config = {
@@ -67,11 +68,11 @@ export class IntegrationTestSuite {
       ...config,
     };
 
-    this.performanceAssertion = matrixOperationTester.getPerformanceAssertion();
     this.materialService = new MaterialService();
     // Use thread-safe singletons
-    this.matrixServiceContainer = MatrixServiceContainer.getInstanceSync();
+    this.matrixServiceContainer = MatrixServiceContainer.getInstance();
     this.matrixIntegrationService = MatrixIntegrationService.getInstanceSync();
+    this.parser = new OpenscadParser();
   }
 
   /**
@@ -99,9 +100,9 @@ export class IntegrationTestSuite {
     };
 
     try {
-      // Stage 1: AST Parsing (simulated - would normally use OpenSCAD parser)
+      // Stage 1: AST Parsing (using real OpenSCAD parser)
       const astStageStart = performance.now();
-      const astResult = await this.simulateASTGeneration(openscadCode, expectedPrimitiveType);
+      const astResult = await this.parseOpenSCADCode(openscadCode);
       const astStageEnd = performance.now();
 
       result.stages.astParsing = {
@@ -267,83 +268,58 @@ export class IntegrationTestSuite {
   }
 
   /**
-   * Simulate AST generation (would normally use real OpenSCAD parser)
+   * Parse OpenSCAD code using real parser
    */
-  private async simulateASTGeneration(
-    code: string,
-    expectedType?: string
-  ): Promise<Result<ASTNode, string>> {
+  private async parseOpenSCADCode(code: string): Promise<Result<ASTNode[], string>> {
     try {
-      // Simple simulation based on code patterns
-      if (code.includes('cube(')) {
-        return success({
-          type: 'cube',
-          size: [10, 10, 10],
-          center: false,
-          location: {
-            start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: code.length, offset: code.length - 1 },
-          },
-        } as ASTNode);
+      logger.debug('Parsing OpenSCAD code:', code);
+      logger.debug('Parser initialized:', this.parser.isInitialized);
+
+      const parseResult = this.parser.parseASTWithResult(code);
+      logger.debug('Parse result success:', parseResult.success);
+      if (parseResult.success) {
+        logger.debug('AST nodes count:', parseResult.data.length);
+        parseResult.data.forEach((node, index) => {
+          logger.debug(`Node ${index}:`, {
+            type: node.type,
+            name: (node as any).name || 'unnamed',
+            children: (node as any).children?.length || 0,
+          });
+        });
+      } else {
+        logger.debug('Parse error:', parseResult.error);
       }
 
-      if (code.includes('sphere(')) {
-        return success({
-          type: 'sphere',
-          radius: 5,
-          location: {
-            start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: code.length, offset: code.length - 1 },
-          },
-        } as ASTNode);
+      if (!parseResult.success) {
+        logger.error('Parse failed with error:', parseResult.error);
+        return error(`AST parsing failed: ${parseResult.error}`);
       }
 
-      if (code.includes('cylinder(')) {
-        return success({
-          type: 'cylinder',
-          h: 10,
-          r: 3,
-          location: {
-            start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: code.length, offset: code.length - 1 },
-          },
-        } as ASTNode);
+      if (parseResult.data.length === 0) {
+        logger.error('Parse succeeded but no AST nodes generated');
+        return error('No AST nodes generated from code');
       }
 
-      // Handle transformations
-      if (code.includes('translate(') || code.includes('rotate(') || code.includes('scale(')) {
-        return success({
-          type: expectedType || 'transform',
-          children: [
-            {
-              type: 'cube',
-              size: [10, 10, 10],
-              center: false,
-              location: {
-                start: { line: 1, column: 1, offset: 0 },
-                end: { line: 1, column: code.length, offset: code.length - 1 },
-              },
-            },
-          ],
-          location: {
-            start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: code.length, offset: code.length - 1 },
-          },
-        } as ASTNode);
-      }
-
-      return error(`Unsupported OpenSCAD code: ${code}`);
+      logger.debug(`Parse successful: ${parseResult.data.length} AST nodes generated`);
+      return success(parseResult.data);
     } catch (err) {
-      return error(`AST generation failed: ${err instanceof Error ? err.message : String(err)}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('Error parsing OpenSCAD code:', errorMessage);
+      return error(`Parser error: ${errorMessage}`);
     }
   }
 
   /**
    * Test CSG conversion stage
    */
-  private async testCSGConversion(astNode: ASTNode): Promise<Result<Mesh3D, string>> {
+  private async testCSGConversion(astNodes: ASTNode[]): Promise<Result<Mesh3D, string>> {
     try {
-      const result = await convertASTNodeToCSG(astNode, 0);
+      if (astNodes.length === 0) {
+        return error('No AST nodes to convert');
+      }
+
+      // Convert the first AST node (for simplicity in testing)
+      const result = await convertASTNodeToCSG(astNodes[0], 0);
       return result;
     } catch (err) {
       return error(`CSG conversion failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -360,7 +336,7 @@ export class IntegrationTestSuite {
 
     try {
       // Test matrix validation on the mesh's transformation matrix
-      const matrixResult = await this.matrixIntegrationService.convertMatrix4ToMLMatrix(
+      const matrixResult = await this.matrixIntegrationService.convertMatrix4ToGLMatrix(
         mesh.mesh.matrix,
         {
           useValidation: true,
@@ -486,10 +462,19 @@ export class IntegrationTestSuite {
   }
 
   /**
+   * Initialize the test suite
+   */
+  async init(): Promise<void> {
+    logger.init('Initializing Integration Test Suite');
+    await this.parser.init();
+  }
+
+  /**
    * Dispose resources
    */
   dispose(): void {
     logger.end('Disposing Integration Test Suite');
+    this.parser.dispose();
     this.materialService.dispose();
     this.matrixServiceContainer.shutdown();
   }

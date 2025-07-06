@@ -281,7 +281,7 @@ describe('TransformVisitor', () => {
         loc: mockLocation,
         childForFieldName: () => null,
         children: [],
-      } as any;
+      } as unknown;
       // @ts-expect-error Accessing protected method for testing purposes
       const result = visitor.createASTNodeForFunction(
         mockSphereCstNode,

@@ -8,22 +8,23 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
+import { OpenscadParser } from '../../openscad-parser/openscad-parser.js';
 
 const logger = createLogger('ASTStructureDebugTest');
 
 describe('AST Structure Debug', () => {
-  let parserService: UnifiedParserService;
+  let parserService: OpenscadParser;
 
   beforeEach(async () => {
     logger.init('Setting up AST structure debug test environment');
-    parserService = new UnifiedParserService();
-    await parserService.initialize();
+    parserService = new OpenscadParser();
+    await parserService.init();
   });
 
   afterEach(async () => {
     logger.end('Cleaning up AST structure debug test environment');
     if (parserService) {
-      await parserService.dispose();
+      parserService.dispose();
     }
   });
 
@@ -50,7 +51,7 @@ translate([24,0,0]) {
     logger.debug('Testing problematic OpenSCAD code');
     logger.debug('Code to parse:', problematicCode);
 
-    const parseResult = await parserService.parseDocument(problematicCode);
+    const parseResult = parserService.parseASTWithResult(problematicCode);
 
     expect(parseResult.success).toBe(true);
 
@@ -104,7 +105,7 @@ translate([24,0,0]) {
 }`;
 
     logger.debug('Testing simple translate code');
-    const parseResult = await parserService.parseDocument(simpleTranslateCode);
+    const parseResult = parserService.parseASTWithResult(simpleTranslateCode);
 
     expect(parseResult.success).toBe(true);
 
@@ -121,7 +122,7 @@ translate([24,0,0]) {
 }`;
 
     logger.debug('Testing simple union code');
-    const parseResult = await parserService.parseDocument(simpleUnionCode);
+    const parseResult = parserService.parseASTWithResult(simpleUnionCode);
 
     expect(parseResult.success).toBe(true);
 
@@ -154,7 +155,7 @@ translate([24,0,0]) {
 }`;
 
     logger.debug('Testing AST restructuring on union code');
-    const parseResult = await parserService.parseDocument(problematicCode);
+    const parseResult = parserService.parseASTWithResult(problematicCode);
 
     expect(parseResult.success).toBe(true);
 

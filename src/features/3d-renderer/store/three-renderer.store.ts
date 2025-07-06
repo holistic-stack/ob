@@ -11,7 +11,7 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 import type { OperationId } from '../../../shared/types/operations.types.js';
 import { measureTimeAsync } from '../../../shared/utils/performance/metrics.js';
 import type { ASTNode } from '../../openscad-parser/types/ast.types.js';
-import { ASTToCSGConverter } from '../services/ast-to-csg-converter/ast-to-csg-converter.service.js';
+import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import type { Mesh3D } from '../types/mesh.types.js';
 import type { RenderingMetrics } from '../types/renderer.types.js';
 
@@ -81,7 +81,7 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
   metrics: initialMetrics,
 
   // Initialize Three.js renderer
-  initializeRenderer: (canvas: HTMLCanvasElement, config = {}) => {
+  initializeRenderer: (canvas: HTMLCanvasElement, _config = {}) => {
     try {
       // Create Three.js objects
       const scene = new THREE.Scene();
@@ -155,10 +155,13 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
         // Render new meshes
         const renderedMeshes: Mesh3D[] = [];
 
-        for (const node of ast) {
-          const result = await ASTToCSGConverter.convertAST([node]);
-          if (result.success && result.data) {
-            renderedMeshes.push(...result.data);
+        for (let i = 0; i < ast.length; i++) {
+          const node = ast[i];
+          if (node) {
+            const result = await convertASTNodeToCSG(node, i);
+            if (result.success && result.data) {
+              renderedMeshes.push(result.data);
+            }
           }
         }
 

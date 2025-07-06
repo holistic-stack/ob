@@ -342,10 +342,20 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
       geometryResult.data.computeBoundingBox();
       const boundingBox = geometryResult.data.boundingBox || new THREE.Box3();
 
-      const metadata = {
-        id: `${params.type}-${Date.now()}`,
-        nodeType: params.type,
-        nodeIndex: 0,
+      const metadata: import('../types/renderer.types.js').MeshMetadata = {
+        // NodeMetadata properties
+        nodeId:
+          `${params.type}-${Date.now()}` as import('../../../shared/types/ast.types.js').NodeId,
+        nodeType: params.type as import('../../../shared/types/ast.types.js').NodeType,
+        depth: 0,
+        parentId: undefined,
+        childrenIds: [],
+        size: 1,
+        complexity: 1,
+        isOptimized: false,
+        lastAccessed: new Date(),
+        // MeshMetadata properties
+        meshId: `mesh-${params.type}-${Date.now()}`,
         triangleCount: geometryResult.data.attributes.position?.count
           ? geometryResult.data.attributes.position.count / 3
           : 0,

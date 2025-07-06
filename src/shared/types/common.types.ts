@@ -233,3 +233,13 @@ export interface PerformanceThresholds {
   readonly maxMemoryUsage: number;
   readonly minFrameRate: number;
 }
+
+/**
+ * Performance metrics interface for tracking application performance
+ */
+export interface PerformanceMetrics {
+  readonly renderTime: number; // milliseconds
+  readonly parseTime: number; // milliseconds
+  readonly memoryUsage: number; // bytes
+  readonly frameRate: number; // frames per second
+}

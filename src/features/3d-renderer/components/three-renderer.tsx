@@ -6,7 +6,7 @@
  */
 
 import { Bounds, Grid, OrbitControls, Stats } from '@react-three/drei';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import type React from 'react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -18,7 +18,6 @@ import type {
   Mesh3D,
   RendererProps,
   RenderingError,
-  RenderingMetrics,
   Scene3DConfig,
 } from '../types/renderer.types.js';
 
@@ -167,10 +166,20 @@ const SceneContent: React.FC<{
           geometry.computeBoundingBox();
           const boundingBox = geometry.boundingBox ?? new THREE.Box3();
 
-          const metadata = {
-            id: `mesh-${index}`,
-            nodeType: node.type || 'unknown',
-            nodeIndex: index,
+          const metadata: import('../types/renderer.types.js').MeshMetadata = {
+            // NodeMetadata properties
+            nodeId: `mesh-${index}` as import('../../../shared/types/ast.types.js').NodeId,
+            nodeType: (node.type ||
+              'unknown') as import('../../../shared/types/ast.types.js').NodeType,
+            depth: 0,
+            parentId: undefined as import('../../../shared/types/ast.types.js').NodeId | undefined,
+            childrenIds: [],
+            size: 1,
+            complexity: 1,
+            isOptimized: false,
+            lastAccessed: new Date(),
+            // MeshMetadata properties
+            meshId: `mesh-${index}`,
             triangleCount: geometry.attributes.position
               ? geometry.attributes.position.count / 3
               : 0,
@@ -252,7 +261,7 @@ const SceneContent: React.FC<{
       }
     }
 
-    const duration = performance.now() - start;
+    const _duration = performance.now() - start;
 
     setMeshes(newMeshes);
     setIsRendering(false);

@@ -7,29 +7,24 @@
  */
 
 import type {
-  ASTQuery,
   BaseErrorNode,
   BaseExpressionNode,
   BasePosition,
   BaseSourceLocation,
   BaseStatementNode,
   CoreNode,
-  NodeCollection,
   NodeId,
   NodeMetadata,
   NodeType,
   ParentNode,
-  TraversalContext,
 } from './ast.types.js';
 
 import type {
-  AsyncOperationResult,
   OperationError,
   OperationId,
   OperationMetadata,
   OperationMetrics,
   OperationResult,
-  OperationStatus,
   OperationType,
 } from './operations.types.js';
 
@@ -137,7 +132,7 @@ export const nodeUtils = {
    * Calculate node depth
    */
   calculateDepth: (node: CoreNode, root: CoreNode): number => {
-    const depth = 0;
+    const _depth = 0;
 
     const findDepth = (current: CoreNode, target: CoreNode, currentDepth: number): number => {
       if (current === target) {

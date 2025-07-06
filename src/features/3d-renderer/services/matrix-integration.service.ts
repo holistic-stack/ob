@@ -9,6 +9,7 @@
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { success } from '../../../shared/utils/functional/result.js';
+import { Matrix } from '../types/matrix.types.js';
 
 const logger = createLogger('MatrixIntegrationService');
 
@@ -28,7 +29,7 @@ export interface EnhancedMatrixOptions {
 /**
  * Enhanced matrix operation result
  */
-export interface EnhancedMatrixResult<T = any> {
+export interface EnhancedMatrixResult<T = unknown> {
   readonly success: boolean;
   readonly data?: T;
   readonly error?: string;
@@ -45,6 +46,10 @@ export interface EnhancedMatrixResult<T = any> {
 export class MatrixIntegrationService {
   private static instance: MatrixIntegrationService | null = null;
 
+  static resetInstance(): void {
+    MatrixIntegrationService.instance = null;
+  }
+
   static getInstanceSync(): MatrixIntegrationService {
     if (!MatrixIntegrationService.instance) {
       MatrixIntegrationService.instance = new MatrixIntegrationService();
@@ -56,19 +61,20 @@ export class MatrixIntegrationService {
     return MatrixIntegrationService.getInstanceSync();
   }
 
-  async validateMatrix(matrix: any): Promise<Result<boolean, string>> {
+  async validateMatrix(_matrix: unknown): Promise<Result<boolean, string>> {
     logger.debug('Matrix validation (stub)');
     return success(true);
   }
 
-  async performRobustInversion(matrix: any): Promise<Result<any, string>> {
+  async performRobustInversion(matrix: unknown): Promise<Result<Matrix, string>> {
     logger.debug('Matrix inversion (stub)');
-    return success(matrix);
+    // Return a stub Matrix instance for compatibility
+    return success(new Matrix(4, 4));
   }
 
   async convertMatrix4ToGLMatrix(
-    matrix4: any,
-    options?: EnhancedMatrixOptions
+    matrix4: unknown,
+    _options?: EnhancedMatrixOptions
   ): Promise<EnhancedMatrixResult> {
     logger.debug('Matrix4 to GL Matrix conversion (stub)');
     return {
@@ -79,8 +85,8 @@ export class MatrixIntegrationService {
   }
 
   async convertGLMatrixToMatrix4(
-    matrix: any,
-    options?: EnhancedMatrixOptions
+    matrix: unknown,
+    _options?: EnhancedMatrixOptions
   ): Promise<EnhancedMatrixResult> {
     logger.debug('GL Matrix to Matrix4 conversion (stub)');
     return {
@@ -91,8 +97,8 @@ export class MatrixIntegrationService {
   }
 
   async computeEnhancedNormalMatrix(
-    modelMatrix: any,
-    options?: EnhancedMatrixOptions
+    modelMatrix: unknown,
+    _options?: EnhancedMatrixOptions
   ): Promise<EnhancedMatrixResult> {
     logger.debug('Enhanced normal matrix computation (stub)');
     return {
@@ -103,8 +109,8 @@ export class MatrixIntegrationService {
   }
 
   async performBatchOperations(
-    operations: any[],
-    options?: EnhancedMatrixOptions
+    operations: unknown[],
+    _options?: EnhancedMatrixOptions
   ): Promise<EnhancedMatrixResult> {
     logger.debug('Batch operations (stub)');
     return {
@@ -114,7 +120,7 @@ export class MatrixIntegrationService {
     };
   }
 
-  getPerformanceReport(): any {
+  getPerformanceReport(): { totalOperations: number; averageTime: number; cacheHitRate: number } {
     logger.debug('Performance report (stub)');
     return {
       totalOperations: 0,
@@ -136,7 +142,12 @@ export class MatrixIntegrationService {
     logger.debug('Matrix service shutdown (stub)');
   }
 
-  async getHealthStatus(): Promise<any> {
+  async getHealthStatus(): Promise<{
+    overall: string;
+    services: Record<string, unknown>;
+    timestamp: number;
+    recommendations: string[];
+  }> {
     return {
       overall: 'healthy',
       services: {},

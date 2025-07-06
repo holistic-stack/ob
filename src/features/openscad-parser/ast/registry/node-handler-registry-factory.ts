@@ -26,6 +26,18 @@ export function createNodeHandlerRegistry(): NodeHandlerRegistry {
 }
 
 /**
+ * Class-based factory for creating and configuring NodeHandlerRegistry instances.
+ */
+export class NodeHandlerRegistryFactory {
+  /**
+   * Create a registry with all handlers registered
+   */
+  static createRegistry(): NodeHandlerRegistry {
+    return createNodeHandlerRegistry();
+  }
+}
+
+/**
  * Registers handlers for primitive shapes.
  * @param registry The registry to register handlers with.
  */

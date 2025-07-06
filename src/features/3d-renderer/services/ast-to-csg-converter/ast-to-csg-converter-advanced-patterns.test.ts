@@ -107,9 +107,9 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
         name: 'Nested Conditional Logic',
         code: `
           size = 15;
-          type = "box";
-          
-          if (type == "box") {
+          type = 1; // 1 for box, 0 for other
+
+          if (type == 1) {
             if (size > 10) {
               cube([size, size, size/2]);
             } else {
@@ -139,7 +139,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
             }
           } else {
             rotate([90, 0, 0]) {
-              cylinder(h=height, r=min(width, depth)/2);
+              cylinder(h=height, r=(width < depth ? width : depth)/2);
             }
           }
         `,
@@ -244,9 +244,9 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
         name: 'Complex Variable Expressions',
         code: `
           dimensions = [30, 20, 15];
-          center_point = [dimensions.x/2, dimensions.y/2, dimensions.z/2];
-          hole_radius = min(dimensions.x, dimensions.y) * 0.2;
-          
+          center_point = [dimensions[0]/2, dimensions[1]/2, dimensions[2]/2];
+          hole_radius = (dimensions[0] < dimensions[1] ? dimensions[0] : dimensions[1]) * 0.2;
+
           difference() {
             cube(dimensions);
             translate(center_point) {

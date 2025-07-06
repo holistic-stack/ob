@@ -23,7 +23,8 @@ import {
 import { NBuf2, NBuf3 } from '../utils/NBuf.js';
 import { Vector } from '../utils/Vector.js';
 import { BSPTreeNode, BSPTreeService } from './bsp-tree.service.js';
-import { MatrixOperationsAPI } from './matrix-operations.api.js';
+import { MatrixIntegrationService } from './matrix-integration.service.js';
+import { matrixServiceContainer } from './matrix-service-container.js';
 
 const logger = createLogger('CSGCoreService');
 
@@ -184,7 +185,7 @@ export class CSGCoreService implements CSGData {
 
       // Validate mesh matrix using matrix integration service with improved tolerance
       const matrixIntegration = MatrixIntegrationService.getInstanceSync();
-      const matrixValidationResult = await matrixIntegration.convertMatrix4ToMLMatrix(mesh.matrix, {
+      const matrixValidationResult = await matrixIntegration.convertMatrix4ToGLMatrix(mesh.matrix, {
         useValidation: true,
         useTelemetry: false, // Reduce telemetry noise during CSG operations
       });
@@ -198,7 +199,7 @@ export class CSGCoreService implements CSGData {
       } else if (matrixValidationResult.data.validation?.warnings.length) {
         // Only log warnings if they're critical
         const criticalWarnings = matrixValidationResult.data.validation.warnings.filter(
-          (warning) => !warning.includes('near-singular')
+          (warning: string) => !warning.includes('near-singular')
         );
         if (criticalWarnings.length > 0) {
           logger.warn('Critical matrix validation warnings:', criticalWarnings);
@@ -381,7 +382,7 @@ export class CSGCoreService implements CSGData {
 
       // Use enhanced matrix operations for robust inversion
       const matrixIntegration = MatrixIntegrationService.getInstanceSync();
-      const inversionResult = await matrixIntegration.convertMatrix4ToMLMatrix(toMatrix, {
+      const inversionResult = await matrixIntegration.convertMatrix4ToGLMatrix(toMatrix, {
         useValidation: true,
         useTelemetry: true,
         enableSVDFallback: true,
@@ -392,12 +393,7 @@ export class CSGCoreService implements CSGData {
       }
 
       const robustInversionResult = await matrixIntegration.performRobustInversion(
-        inversionResult.data.result,
-        {
-          useValidation: true,
-          useTelemetry: true,
-          enableSVDFallback: true,
-        }
+        inversionResult.data.result
       );
 
       if (!robustInversionResult.success) {
@@ -405,7 +401,7 @@ export class CSGCoreService implements CSGData {
       }
 
       // Convert back to Three.js Matrix4
-      const conversionService = matrixServiceContainer.getConversionService();
+      const conversionService = matrixServiceContainer.getService('conversion');
       const matrix4Result = await conversionService.convertMLMatrixToMatrix4(
         robustInversionResult.data.result,
         { useCache: true, validateInput: true }

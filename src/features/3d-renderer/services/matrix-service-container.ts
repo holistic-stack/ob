@@ -27,12 +27,19 @@ export class MatrixServiceContainer {
     return MatrixServiceContainer.instance;
   }
 
-  getService(name: string): any {
+  getService(name: string): unknown {
     logger.debug(`Getting service: ${name} (stub)`);
     return null;
   }
 
-  getValidationService(): any {
+  getValidationService(): {
+    validate: () => {
+      isValid: boolean;
+      errors: string[];
+      warnings: string[];
+      suggestions: string[];
+    };
+  } | null {
     logger.debug('Getting validation service (stub)');
     return {
       validate: () => ({ isValid: true, errors: [], warnings: [], suggestions: [] }),
@@ -51,7 +58,7 @@ export class MatrixServiceContainer {
 /**
  * Get matrix service container instance
  */
-export async function getMatrixServiceContainer(config?: any): Promise<MatrixServiceContainer> {
+export async function getMatrixServiceContainer(_config?: any): Promise<MatrixServiceContainer> {
   logger.debug('Getting matrix service container (stub)');
   return MatrixServiceContainer.getInstance();
 }

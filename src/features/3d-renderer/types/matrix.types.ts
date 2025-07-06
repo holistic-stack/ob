@@ -15,7 +15,7 @@ import type { Euler, Matrix3, Matrix4, Quaternion, Vector3 } from 'three';
 export class Matrix {
   private data: mat4;
 
-  constructor(rows: number, cols: number, data?: number[]) {
+  constructor(_rows: number, _cols: number, data?: number[]) {
     this.data = mat4.create();
     if (data && data.length >= 16) {
       mat4.set(

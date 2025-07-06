@@ -513,8 +513,7 @@ describe('Primitive Renderer Service', () => {
       if (result.success) {
         expect(result.data.mesh).toBeInstanceOf(THREE.Mesh);
         expect(result.data.metadata.nodeType).toBe('cube');
-        expect(result.data.metadata.nodeIndex).toBe(0);
-        expect(result.data.metadata.id).toBe('cube-0');
+        expect(result.data.metadata.meshId).toContain('cube');
       }
     });
 
@@ -533,8 +532,7 @@ describe('Primitive Renderer Service', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry).toBeInstanceOf(THREE.SphereGeometry);
-        expect(result.data.metadata.nodeIndex).toBe(1);
-        expect(result.data.metadata.id).toBe('sphere-1');
+        expect(result.data.metadata.meshId).toContain('sphere');
 
         // Check that transformations were applied
         expect(result.data.mesh.position.y).toBe(1);
@@ -560,7 +558,7 @@ describe('Primitive Renderer Service', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry).toBeInstanceOf(THREE.CylinderGeometry);
-        expect(result.data.metadata.nodeIndex).toBe(2);
+        expect(result.data.metadata.meshId).toContain('cylinder');
       }
     });
   });

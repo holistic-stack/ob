@@ -220,9 +220,9 @@ export class MatrixOperationTester {
    * Test matrix operation with comprehensive validation
    */
   async testMatrixOperation<T>(
-    operation: (matrix: any) => Promise<Result<T, string>> | Result<T, string>,
+    operation: (matrix: unknown) => Promise<Result<T, string>> | Result<T, string>,
     operationName: string,
-    testMatrix?: any
+    testMatrix?: unknown
   ): Promise<Result<T, string>> {
     const matrix = testMatrix || this.dataGenerator.generateWellConditionedMatrix();
 

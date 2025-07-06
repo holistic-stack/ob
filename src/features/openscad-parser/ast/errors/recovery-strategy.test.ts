@@ -64,7 +64,7 @@ describe('RecoveryStrategies', () => {
       const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = new SkipToNextStatementStrategy();
 
-      const result = strategy.recover(errorNode as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error);
 
       expect(result).toBe(nextStatementNode);
     });

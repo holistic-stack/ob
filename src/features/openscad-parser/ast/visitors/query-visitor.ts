@@ -86,7 +86,7 @@
  * @since 0.1.0
  */
 
-import type { Tree, Node as TSNode } from 'web-tree-sitter';
+import type { Language, Tree, Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
 import { QueryManager } from '../query/query-manager.js';
@@ -139,7 +139,7 @@ export class QueryVisitor extends BaseASTVisitor {
   constructor(
     source: string,
     tree: Tree,
-    language: any,
+    language: Language,
     private delegate: ASTVisitor,
     errorHandler: ErrorHandler
   ) {
@@ -231,7 +231,15 @@ export class QueryVisitor extends BaseASTVisitor {
   ): ast.ASTNode | null {
     // Delegate to the delegate visitor
     if (this.delegate instanceof BaseASTVisitor) {
-      return (this.delegate as any).createASTNodeForFunction(node, functionName, args);
+      return (
+        this.delegate as BaseASTVisitor & {
+          createASTNodeForFunction: (
+            node: TSNode,
+            functionName: string,
+            args: ast.Parameter[]
+          ) => ast.ASTNode | null;
+        }
+      ).createASTNodeForFunction(node, functionName, args);
     }
     return null;
   }

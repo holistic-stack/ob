@@ -80,7 +80,16 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor as any, 'createASTNodeForFunction')
+        .spyOn(
+          visitor as unknown as {
+            createASTNodeForFunction: (
+              node: unknown,
+              functionName: string,
+              args: unknown[]
+            ) => unknown;
+          },
+          'createASTNodeForFunction'
+        )
         .mockReturnValue({
           type: 'cube',
           size: 1,
@@ -100,8 +109,8 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cube');
-      expect((result as any).size).toBe(1);
-      expect((result as any).center).toBe(false);
+      expect((result as { size: number }).size).toBe(1);
+      expect((result as { center: boolean }).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -802,7 +811,7 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('sphere');
-      expect((result as any).radius).toBe(5);
+      expect((result as { radius: number }).radius).toBe(5);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();

@@ -1,10 +1,6 @@
-import type {
-  BaseSourceLocation,
-  CoreNode,
-  ParentNode,
-} from '../../../../shared/types/ast.types.js';
+import type { CoreNode, ParentNode } from '../../../../shared/types/ast.types.js';
 import type { OperationResult } from '../../../../shared/types/operations.types.js';
-import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 
 /**
  * Mirror node interface extending shared types

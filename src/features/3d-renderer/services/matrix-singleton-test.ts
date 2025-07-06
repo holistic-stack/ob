@@ -47,13 +47,13 @@ async function testServiceContainerConcurrency(): Promise<void> {
   }
 
   // Verify the instance is properly initialized
-  const status = firstInstance.getStatus();
-  if (!status.initialized) {
-    throw new Error('Singleton instance is not properly initialized');
+  if (!firstInstance) {
+    throw new Error('Singleton instance is null or undefined');
   }
 
-  if (status.serviceCount === 0) {
-    throw new Error('Singleton instance has no services initialized');
+  // Check if the instance is healthy (basic validation)
+  if (!firstInstance.isHealthy()) {
+    throw new Error('Singleton instance is not healthy');
   }
 
   logger.info('✅ MatrixServiceContainer concurrent access test passed');

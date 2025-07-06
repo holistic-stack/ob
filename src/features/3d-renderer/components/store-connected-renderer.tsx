@@ -14,7 +14,6 @@ import type * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { Result } from '../../../shared/types/result.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
@@ -24,7 +23,7 @@ import {
   selectRenderingState,
 } from '../../store/selectors/index.js';
 import type { RenderingError, RenderingState } from '../../store/types/store.types';
-import type { Mesh3D, RenderingMetrics } from '../types/renderer.types';
+import type { Mesh3D } from '../types/renderer.types';
 import { R3FScene } from './r3f-scene';
 
 const logger = createLogger('StoreConnectedRenderer');
@@ -48,8 +47,6 @@ const DEFAULT_RENDERING_STATE: RenderingState = {
     autoRotateSpeed: 1,
   },
 };
-
-
 
 /**
  * Props for the store-connected renderer

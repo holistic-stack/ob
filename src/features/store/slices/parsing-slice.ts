@@ -8,20 +8,17 @@
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AsyncOperationResult,
   OperationError,
 } from '../../../shared/types/operations.types.js';
-import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
-import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 import type { AppStore } from '../types/store.types.js';
-import type { ParsingActions, ParseOptions } from './parsing-slice.types.js';
-import type { CoreNode } from '../../../shared/types/ast.types.js';
+import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
 
@@ -37,7 +34,7 @@ export const createParsingSlice = (
   return {
     parseCode: async (
       code: string,
-      options?: ParseOptions
+      _options?: ParseOptions
     ): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
       const operationId = operationUtils.generateOperationId();
       const metadata = operationUtils.createMetadata(

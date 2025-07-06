@@ -5,7 +5,7 @@
  * dependency injection, and backward compatibility following bulletproof-react patterns.
  */
 
-import { mat3, type mat4 } from 'gl-matrix';
+import type { mat4 } from 'gl-matrix';
 import { type Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types';
@@ -299,9 +299,10 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       this.trackOperation(result.success, executionTime);
 
       // Check if result is EnhancedMatrixResult or Result<T, string>
-      const finalResult = 'data' in result && 'metadata' in result
-        ? this.convertEnhancedResult(result as EnhancedMatrixResult<T>)
-        : result as Result<T, string>;
+      const finalResult =
+        'data' in result && 'metadata' in result
+          ? this.convertEnhancedResult(result as EnhancedMatrixResult<T>)
+          : (result as Result<T, string>);
 
       if (finalResult.success) {
         logger.debug(`${operationName} completed successfully in ${executionTime}ms`);
@@ -366,7 +367,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    */
   async performRobustInversion(
     matrix: Matrix,
-    config: MatrixOperationConfig = {}
+    _config: MatrixOperationConfig = {}
   ): Promise<Result<Matrix, string>> {
     await this.ensureInitialized();
 

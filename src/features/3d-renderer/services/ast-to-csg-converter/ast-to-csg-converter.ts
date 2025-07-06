@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { NodeId, NodeType } from '../../../../shared/types/ast.types.js';
 import type { Result } from '../../../../shared/types/result.types.js';
 import {
   error,
@@ -66,6 +67,17 @@ import { moduleRegistry } from './module-registry.service.js';
 import { variableScope } from './variable-scope.service.js';
 
 const logger = createLogger('ASTToCSGConverter');
+
+/**
+ * Helper functions to create branded types
+ */
+function createNodeId(id: string): NodeId {
+  return id as NodeId;
+}
+
+function createNodeType(type: string): NodeType {
+  return type as NodeType;
+}
 
 /**
  * Exhaustive compile-time checking utility for switch statements
@@ -1206,10 +1218,10 @@ export const convertASTNodeToCSG = async (
 
             const metadata: MeshMetadata = {
               // NodeMetadata properties
-              nodeId: `csg-${node.type}-${index}`,
-              nodeType: node.type,
+              nodeId: createNodeId(`csg-${node.type}-${index}`),
+              nodeType: createNodeType(node.type),
               depth: 0,
-              parentId: undefined,
+              parentId: createNodeId('root') as NodeId | undefined,
               childrenIds: [],
               size: 1,
               complexity: 1,
@@ -1365,10 +1377,10 @@ export const convertASTNodesToCSGUnion = async (
 
       const metadata: MeshMetadata = {
         // NodeMetadata properties
-        nodeId: `csg-union-${Date.now()}`,
-        nodeType: 'union',
+        nodeId: createNodeId(`csg-union-${Date.now()}`),
+        nodeType: createNodeType('union'),
         depth: 0,
-        parentId: undefined,
+        parentId: undefined as NodeId | undefined,
         childrenIds: [],
         size: 1,
         complexity: 1,

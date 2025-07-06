@@ -138,38 +138,63 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
         setIsRendering(false);
 
         if (onRenderComplete) {
-          const mockMeshes = ast.map((node, index) => ({
-            mesh: mockMesh as unknown as THREE.Mesh,
-            metadata: {
-              id: `mesh-${index}`,
-              nodeType: node.type || 'unknown',
-              nodeIndex: index,
-              triangleCount: 12,
-              vertexCount: 8,
-              boundingBox: new THREE.Box3(),
-              material: 'standard',
-              color: '#ffffff',
-              opacity: 1,
-              visible: true,
-            },
-            dispose: vi.fn(),
-          }));
+          const mockMeshes = ast.map(
+            (node, index) =>
+              ({
+                mesh: mockMesh as unknown as THREE.Mesh,
+                metadata: {
+                  // NodeMetadata properties
+                  nodeId: `node-${index}`,
+                  nodeType: node.type || 'unknown',
+                  depth: 0,
+                  parentId: undefined,
+                  childrenIds: [],
+                  size: 1,
+                  complexity: 1,
+                  isOptimized: false,
+                  lastAccessed: new Date(),
+                  // MeshMetadata properties
+                  meshId: `mesh-${index}`,
+                  triangleCount: 12,
+                  vertexCount: 8,
+                  boundingBox: new THREE.Box3(),
+                  material: 'standard',
+                  color: '#ffffff',
+                  opacity: 1,
+                  visible: true,
+                },
+                dispose: vi.fn(),
+              }) as any
+          );
           onRenderComplete(mockMeshes);
         }
 
         if (onPerformanceUpdate) {
           onPerformanceUpdate({
+            // PerformanceMetrics
             renderTime: 10,
             parseTime: 5,
             memoryUsage: 50,
             frameRate: 60,
+            // OperationMetrics
+            operationId:
+              'test-operation' as import('../../../shared/types/operations.types.js').OperationId,
+            cpuTime: 10,
+            peakMemoryUsage: 100,
+            ioOperations: 0,
+            networkRequests: 0,
+            cacheHits: 0,
+            cacheMisses: 0,
+            throughput: 1,
+            errorRate: 0,
+            // RenderingMetrics specific
             meshCount: ast.length,
             triangleCount: ast.length * 12,
             vertexCount: ast.length * 8,
             drawCalls: ast.length,
             textureMemory: 0,
             bufferMemory: ast.length * 1024,
-          });
+          } as any);
         }
       }, 10);
     }

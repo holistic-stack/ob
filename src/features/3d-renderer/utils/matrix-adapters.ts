@@ -409,7 +409,7 @@ export const matrixUtils: MatrixUtils = {
     return `4x4_${btoa(data).slice(0, 16)}`;
   },
 
-  size: (matrix: mat4): readonly [number, number] => [4, 4],
+  size: (_matrix: mat4): readonly [number, number] => [4, 4],
 
   memoryUsage: (matrix: mat4): number => {
     // Estimate: 4 bytes per number (Float32) + overhead

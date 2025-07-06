@@ -40,18 +40,27 @@ describe('ChangeTracker', () => {
     expect(changes[1].startIndex).toBe(20);
   });
 
-  it('should get changes since a specific time', async () => {
+  it('should get changes since a specific time', () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
-    // Wait a bit to ensure different timestamps
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // Manually set a later timestamp to ensure different timestamps
+    const laterTimestamp = change1.timestamp + 1;
 
-    const _change2 = tracker.trackChange(20, 22, 25, sourceText);
+    // Mock Date.now to return a later timestamp for the second change
+    const originalDateNow = Date.now;
+    Date.now = () => laterTimestamp;
 
-    const changesSince = tracker.getChangesSince(change1.timestamp);
+    try {
+      const _change2 = tracker.trackChange(20, 22, 25, sourceText);
 
-    expect(changesSince.length).toBe(1);
-    expect(changesSince[0].startIndex).toBe(20);
+      const changesSince = tracker.getChangesSince(change1.timestamp);
+
+      expect(changesSince.length).toBe(1);
+      expect(changesSince[0].startIndex).toBe(20);
+    } finally {
+      // Restore original Date.now
+      Date.now = originalDateNow;
+    }
   });
 
   it('should check if a node is affected by changes', () => {
@@ -74,19 +83,28 @@ describe('ChangeTracker', () => {
     expect(tracker.isNodeAffected(25, 30)).toBe(false);
   });
 
-  it('should check if a node is affected by changes since a specific time', async () => {
+  it('should check if a node is affected by changes since a specific time', () => {
     const change1 = tracker.trackChange(15, 17, 18, sourceText);
 
-    // Wait a bit to ensure different timestamps
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // Manually set a later timestamp to ensure different timestamps
+    const laterTimestamp = change1.timestamp + 1;
 
-    tracker.trackChange(25, 27, 28, sourceText);
+    // Mock Date.now to return a later timestamp for the second change
+    const originalDateNow = Date.now;
+    Date.now = () => laterTimestamp;
 
-    // Node affected by first change but not second
-    expect(tracker.isNodeAffected(10, 20, change1.timestamp)).toBe(false);
+    try {
+      tracker.trackChange(25, 27, 28, sourceText);
 
-    // Node affected by second change but not first
-    expect(tracker.isNodeAffected(20, 30, change1.timestamp)).toBe(true);
+      // Node affected by first change but not second
+      expect(tracker.isNodeAffected(10, 20, change1.timestamp)).toBe(false);
+
+      // Node affected by second change but not first
+      expect(tracker.isNodeAffected(20, 30, change1.timestamp)).toBe(true);
+    } finally {
+      // Restore original Date.now
+      Date.now = originalDateNow;
+    }
   });
 
   it('should clear all changes', () => {

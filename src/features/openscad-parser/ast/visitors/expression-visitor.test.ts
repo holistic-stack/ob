@@ -95,7 +95,12 @@ describe('ExpressionVisitor', () => {
       const _code = 'x > 5;';
 
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(
+        visitor as unknown as {
+          createExpressionNode: (node: unknown) => ast.ExpressionNode | null;
+        },
+        'createExpressionNode'
+      ).mockImplementation((node: unknown) => {
         if (node.text === 'x') {
           return {
             type: 'expression',
@@ -237,7 +242,12 @@ describe('ExpressionVisitor', () => {
       const _code = '-5;';
 
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(
+        visitor as unknown as {
+          createExpressionNode: (node: unknown) => ast.ExpressionNode | null;
+        },
+        'createExpressionNode'
+      ).mockImplementation((node: unknown) => {
         if (node.text === '5') {
           return {
             type: 'expression',

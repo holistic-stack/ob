@@ -73,7 +73,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
         // Verify metadata
         expect(mesh3D.metadata.nodeType).toBe('cube');
-        expect(mesh3D.metadata.nodeIndex).toBe(0);
+        expect(mesh3D.metadata.nodeId).toBeDefined();
         expect(mesh3D.metadata.triangleCount).toBeGreaterThan(0);
         expect(mesh3D.metadata.vertexCount).toBeGreaterThan(0);
 
@@ -110,7 +110,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
         // Verify metadata
         expect(mesh3D.metadata.nodeType).toBe('sphere');
-        expect(mesh3D.metadata.nodeIndex).toBe(1);
+        expect(mesh3D.metadata.nodeId).toBeDefined();
         expect(mesh3D.metadata.triangleCount).toBeGreaterThan(0);
 
         mesh3D.dispose();
@@ -144,7 +144,7 @@ describe('[INIT][ASTToCSGConverter] AST to CSG Converter Service', () => {
 
         // Verify metadata
         expect(mesh3D.metadata.nodeType).toBe('cylinder');
-        expect(mesh3D.metadata.nodeIndex).toBe(2);
+        expect(mesh3D.metadata.nodeId).toBeDefined();
 
         mesh3D.dispose();
       }

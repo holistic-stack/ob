@@ -15,6 +15,7 @@ import type {
   OperationMetrics,
   OperationResult,
 } from '../../../shared/types/operations.types.js';
+import type { Result } from '../../../shared/types/result.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
@@ -178,39 +179,34 @@ export interface ASTNodeRenderer {
 }
 
 /**
- * Primitive renderer factory using shared operation types
+ * Primitive renderer factory using basic Result types
  */
 export interface PrimitiveRendererFactory {
   readonly createCube: (
     size: number | readonly [number, number, number]
-  ) => OperationResult<THREE.BufferGeometry, OperationError>;
+  ) => Result<THREE.BufferGeometry, string>;
   readonly createSphere: (
     radius: number,
     segments?: number
-  ) => OperationResult<THREE.BufferGeometry, OperationError>;
+  ) => Result<THREE.BufferGeometry, string>;
   readonly createCylinder: (
     radius: number,
     height: number,
     segments?: number
-  ) => OperationResult<THREE.BufferGeometry, OperationError>;
+  ) => Result<THREE.BufferGeometry, string>;
   readonly createPolyhedron: (
     vertices: ReadonlyArray<readonly [number, number, number]>,
     faces: ReadonlyArray<ReadonlyArray<number>>
-  ) => OperationResult<THREE.BufferGeometry, OperationError>;
+  ) => Result<THREE.BufferGeometry, string>;
 }
 
 /**
- * Material factory using shared operation types
+ * Material factory using basic Result types
  */
 export interface MaterialFactory {
-  readonly createStandard: (
-    config: MaterialConfig
-  ) => OperationResult<THREE.Material, OperationError>;
-  readonly createWireframe: (color: string) => OperationResult<THREE.Material, OperationError>;
-  readonly createTransparent: (
-    color: string,
-    opacity: number
-  ) => OperationResult<THREE.Material, OperationError>;
+  readonly createStandard: (config: MaterialConfig) => Result<THREE.Material, string>;
+  readonly createWireframe: (color: string) => Result<THREE.Material, string>;
+  readonly createTransparent: (color: string, opacity: number) => Result<THREE.Material, string>;
 }
 
 /**

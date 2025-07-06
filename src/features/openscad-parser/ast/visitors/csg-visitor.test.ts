@@ -425,7 +425,7 @@ describe('CSGVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('hull');
-      expect((result as any).children).toEqual([]);
+      expect((result as { children: unknown[] }).children).toEqual([]);
     });
 
     it('should create a minkowski node', () => {
@@ -455,7 +455,7 @@ describe('CSGVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('minkowski');
-      expect((result as any).children).toEqual([]);
+      expect((result as { children: unknown[] }).children).toEqual([]);
     });
 
     it('should return null for unsupported functions', () => {

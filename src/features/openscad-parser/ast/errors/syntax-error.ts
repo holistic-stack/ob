@@ -37,13 +37,13 @@ export class OpenSCADSyntaxError extends ParserError {
    * @param tokenName - The name of the missing token
    * @param source - The source code
    * @param position - The position in the source code
-   * @returns A SyntaxError for a missing token
+   * @returns An OpenSCADSyntaxError for a missing token
    */
   public static missingToken(
     tokenName: string,
     source: string,
     position: ErrorPosition
-  ): SyntaxError {
+  ): OpenSCADSyntaxError {
     const message = `Missing ${tokenName}`;
     const suggestions: ErrorSuggestion[] = [
       {
@@ -51,7 +51,7 @@ export class OpenSCADSyntaxError extends ParserError {
         replacement: tokenName,
       },
     ];
-    return new SyntaxError(message, source, position, suggestions);
+    return new OpenSCADSyntaxError(message, source, position, suggestions);
   }
 
   /**
@@ -61,14 +61,14 @@ export class OpenSCADSyntaxError extends ParserError {
    * @param expectedToken - The token that was expected
    * @param source - The source code
    * @param position - The position in the source code
-   * @returns A SyntaxError for an unexpected token
+   * @returns An OpenSCADSyntaxError for an unexpected token
    */
   public static unexpectedToken(
     foundToken: string,
     expectedToken: string,
     source: string,
     position: ErrorPosition
-  ): SyntaxError {
+  ): OpenSCADSyntaxError {
     const message = `Unexpected token '${foundToken}', expected '${expectedToken}'`;
     const suggestions: ErrorSuggestion[] = [
       {
@@ -76,7 +76,7 @@ export class OpenSCADSyntaxError extends ParserError {
         replacement: expectedToken,
       },
     ];
-    return new SyntaxError(message, source, position, suggestions);
+    return new OpenSCADSyntaxError(message, source, position, suggestions);
   }
 
   /**
