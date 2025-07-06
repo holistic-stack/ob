@@ -26,7 +26,6 @@ export interface ParsingState {
   readonly warnings: ReadonlyArray<string>;
   readonly isLoading: boolean;
   readonly lastParsed: Date | null;
-  readonly parseTime: number;
 }
 
 import type { RenderingError } from '../../3d-renderer/types/renderer.types.js';
@@ -49,7 +48,6 @@ export interface RenderingState {
   readonly isRendering: boolean;
   readonly renderErrors: ReadonlyArray<RenderingError>;
   readonly lastRendered: Date | null;
-  readonly renderTime: number;
   readonly camera: CameraConfig;
 }
 
@@ -158,10 +156,8 @@ export interface StoreOptions {
 export type StoreEvent =
   | { readonly type: 'code-changed'; readonly code: string }
   | { readonly type: 'parse-started'; readonly timestamp: Date }
-  | { readonly type: 'parse-completed'; readonly duration: number; readonly nodeCount: number }
   | { readonly type: 'parse-failed'; readonly error: string }
   | { readonly type: 'render-started'; readonly timestamp: Date }
-  | { readonly type: 'render-completed'; readonly duration: number; readonly meshCount: number }
   | { readonly type: 'render-failed'; readonly error: string };
 
 /**

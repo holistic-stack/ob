@@ -9,7 +9,6 @@ import * as THREE from 'three';
 import { create } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { OperationId } from '../../../shared/types/operations.types.js';
-import { measureTimeAsync } from '../../../shared/utils/performance/metrics.js';
 import type { ASTNode } from '../../openscad-parser/types/ast.types.js';
 import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import type { Mesh3D } from '../types/mesh.types.js';
@@ -144,7 +143,7 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
     try {
       set({ isRendering: true, error: null });
 
-      const { result: newMeshes, duration } = await measureTimeAsync(async () => {
+      const newMeshes = await (async () => {
         // Clear existing meshes
         const currentMeshes = get().meshes;
         currentMeshes.forEach((meshWrapper) => {
@@ -171,20 +170,17 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
         });
 
         return renderedMeshes;
-      });
+      })();
 
       // Update metrics
       const newMetrics: RenderingMetrics = {
         ...get().metrics,
         operationId: `render_${Date.now()}` as OperationId,
-        renderTime: duration,
-        cpuTime: duration,
         meshCount: newMeshes.length,
         triangleCount: newMeshes.reduce((sum, m) => sum + (m.metadata.triangleCount ?? 0), 0),
         vertexCount: newMeshes.reduce((sum, m) => sum + (m.metadata.vertexCount ?? 0), 0),
         drawCalls: newMeshes.length,
         bufferMemory: newMeshes.length * 1024,
-        throughput: newMeshes.length / (duration / 1000),
         errorRate: 0,
       };
 

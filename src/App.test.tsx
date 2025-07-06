@@ -84,7 +84,8 @@ vi.mock('./features/store/app-store', () => ({
       if (selectorName === 'selectApplicationStatus') return mockStoreState.application.status;
       if (selectorName === 'selectEditorCode') return mockStoreState.editor.code;
       if (selectorName === 'selectParsingAST') return mockStoreState.parsing.ast;
-      if (selectorName === 'selectRenderingIsRendering') return mockStoreState.rendering.isRendering;
+      if (selectorName === 'selectRenderingIsRendering')
+        return mockStoreState.rendering.isRendering;
       if (selectorName === 'selectRenderingMeshes') return mockStoreState.rendering.meshes;
       if (selectorName === 'selectRenderingErrors') return mockStoreState.rendering.renderErrors;
       if (selectorName === 'selectRenderingState') return mockStoreState.rendering;

@@ -48,7 +48,6 @@ describe('App Store', () => {
       expect(state.parsing.warnings).toEqual([]);
       expect(state.parsing.isLoading).toBe(false);
       expect(state.parsing.lastParsed).toBeNull();
-      expect(state.parsing.parseTime).toBe(0);
     });
 
     it('should have correct initial rendering state', () => {
@@ -57,21 +56,9 @@ describe('App Store', () => {
       expect(state.rendering?.isRendering).toBe(false);
       expect(state.rendering?.renderErrors).toEqual([]);
       expect(state.rendering?.lastRendered).toBeNull();
-      expect(state.rendering?.renderTime).toBe(0);
       expect(state.rendering?.camera?.position).toEqual([10, 10, 10]);
       expect(state.rendering?.camera?.target).toEqual([0, 0, 0]);
       expect(state.rendering?.camera?.zoom).toBe(1);
-    });
-
-    it('should have correct initial performance state', () => {
-      const state = store.getState();
-      expect(state.performance.metrics.renderTime).toBe(0);
-      expect(state.performance.metrics.parseTime).toBe(0);
-      expect(state.performance.metrics.memoryUsage).toBe(0);
-      expect(state.performance.metrics.frameRate).toBe(60);
-      expect(state.performance.isMonitoring).toBe(false);
-      expect(state.performance.violations).toEqual([]);
-      expect(state.performance.lastUpdated).toBeNull();
     });
 
     it('should have correct initial config state', () => {
@@ -81,8 +68,6 @@ describe('App Store', () => {
       expect(state.config.enableRealTimeParsing).toBe(true);
       expect(state.config.enableRealTimeRendering).toBe(true);
       expect(state.config.theme).toBe('dark');
-      expect(state.config.performance.enableMetrics).toBe(true);
-      expect(state.config.performance.maxRenderTime).toBe(16);
     });
   });
 
@@ -189,7 +174,6 @@ describe('App Store', () => {
       const state = store.getState();
       expect(state.parsing.isLoading).toBe(false);
       expect(state.parsing.lastParsed).toBeInstanceOf(Date);
-      expect(state.parsing.parseTime).toBeGreaterThan(0);
       expect(state.parsing.errors).toEqual([]);
     });
 
@@ -207,7 +191,6 @@ describe('App Store', () => {
       expect(state.parsing.warnings).toEqual([]);
       expect(state.parsing.isLoading).toBe(false);
       expect(state.parsing.lastParsed).toBeNull();
-      expect(state.parsing.parseTime).toBe(0);
     });
 
     it('should add parsing error', () => {
@@ -260,7 +243,6 @@ describe('App Store', () => {
       const state = store.getState();
       expect(state.rendering?.isRendering).toBe(false);
       expect(state.rendering?.lastRendered).toBeInstanceOf(Date);
-      expect(state.rendering?.renderTime).toBeGreaterThan(0);
       expect(state.rendering?.renderErrors).toEqual([]);
     });
 
@@ -278,7 +260,6 @@ describe('App Store', () => {
       expect(state.rendering?.meshes).toEqual([]);
       expect(state.rendering?.renderErrors).toEqual([]);
       expect(state.rendering?.lastRendered).toBeNull();
-      expect(state.rendering?.renderTime).toBe(0);
     });
 
     it('should update camera', () => {
@@ -342,80 +323,6 @@ describe('App Store', () => {
 
       const state = store.getState();
       expect(state.rendering?.renderErrors).toEqual([]);
-    });
-  });
-
-  describe('Performance Actions', () => {
-    it('should update metrics', () => {
-      const metrics = {
-        renderTime: 12,
-        parseTime: 5,
-        memoryUsage: 25,
-        frameRate: 60,
-      };
-      store.getState().updateMetrics(metrics);
-
-      const state = store.getState();
-      expect(state.performance.metrics).toEqual(metrics);
-      expect(state.performance.lastUpdated).toBeInstanceOf(Date);
-    });
-
-    it('should start monitoring', () => {
-      store.getState().startMonitoring();
-
-      const state = store.getState();
-      expect(state.performance.isMonitoring).toBe(true);
-    });
-
-    it('should stop monitoring', () => {
-      // First start monitoring
-      store.getState().startMonitoring();
-      expect(store.getState().performance.isMonitoring).toBe(true);
-
-      // Then stop
-      store.getState().stopMonitoring();
-
-      const state = store.getState();
-      expect(state.performance.isMonitoring).toBe(false);
-    });
-
-    it('should record parse time', () => {
-      const duration = 15.5;
-      store.getState().recordParseTime(duration);
-
-      const state = store.getState();
-      expect(state.performance.metrics.parseTime).toBe(duration);
-      expect(state.performance.lastUpdated).toBeInstanceOf(Date);
-    });
-
-    it('should record render time', () => {
-      const duration = 8.2;
-      store.getState().recordRenderTime(duration);
-
-      const state = store.getState();
-      expect(state.performance.metrics.renderTime).toBe(duration);
-      expect(state.performance.lastUpdated).toBeInstanceOf(Date);
-    });
-
-    it('should add performance violation', () => {
-      const violation = 'Render time exceeded threshold';
-      store.getState().addPerformanceViolation(violation);
-
-      const state = store.getState();
-      expect(state.performance.violations).toContain(violation);
-    });
-
-    it('should clear performance violations', () => {
-      // First add some violations
-      store.getState().addPerformanceViolation('violation 1');
-      store.getState().addPerformanceViolation('violation 2');
-      expect(store.getState().performance.violations).toHaveLength(2);
-
-      // Then clear them
-      store.getState().clearPerformanceViolations();
-
-      const state = store.getState();
-      expect(state.performance.violations).toEqual([]);
     });
   });
 

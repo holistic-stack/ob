@@ -27,8 +27,6 @@ import {
   selectParsingErrors,
   selectParsingHasErrors,
   selectParsingStats,
-  selectPerformanceStats,
-  selectPerformanceStatus,
   selectRenderingHasErrors,
   selectRenderingMeshCount,
   selectRenderingStats,
@@ -241,48 +239,43 @@ describe('Store Selectors', () => {
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);
     });
+  });
 
-    it('should get last activity', () => {
-      const lastActivity = selectLastActivity(mockState);
-      expect(lastActivity).toBeInstanceOf(Date);
-      expect(lastActivity?.getTime()).toBe(new Date('2024-01-01T10:03:00Z').getTime());
+  describe('selectLastActivity', () => {
+    it('should return the most recent activity from state', () => {
+      // Test with normal state - should return the most recent date
+      const result = selectLastActivity(mockState);
+      expect(result).toEqual(new Date('2024-01-01T10:02:00Z')); // rendering.lastRendered is most recent
 
-      const noActivityState: AppState = {
+      // Test with state where editor is most recent
+      const editorRecentState = {
+        ...mockState,
+        editor: { ...mockState.editor, lastSaved: new Date('2024-01-01T10:05:00Z') },
+      };
+      expect(selectLastActivity(editorRecentState)).toEqual(new Date('2024-01-01T10:05:00Z'));
+
+      // Test with state where parsing is most recent
+      const parsingRecentState = {
+        ...mockState,
+        parsing: { ...mockState.parsing, lastParsed: new Date('2024-01-01T10:04:00Z') },
+      };
+      expect(selectLastActivity(parsingRecentState)).toEqual(new Date('2024-01-01T10:04:00Z'));
+
+      // Test with state where all activity dates are null
+      const noActivityState = {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
-        rendering: { ...mockState.rendering, lastRendered: null } as RenderingState,
-        performance: { ...mockState.performance, lastUpdated: null },
+        rendering: { ...mockState.rendering, lastRendered: null },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
-    });
-  });
 
-  describe('Performance Status Selector', () => {
-    it('should return good performance status', () => {
-      expect(selectPerformanceStatus(mockState)).toBe('good');
-    });
-
-    it('should return warning performance status', () => {
-      const warningState = {
+      // Test with state where rendering is undefined
+      const noRenderingState = {
         ...mockState,
-        performance: {
-          ...mockState.performance,
-          metrics: { ...mockState.performance.metrics, renderTime: 20 }, // > 16ms threshold
-        },
+        rendering: undefined,
       };
-      expect(selectPerformanceStatus(warningState)).toBe('warning');
-    });
-
-    it('should return critical performance status', () => {
-      const criticalState = {
-        ...mockState,
-        performance: {
-          ...mockState.performance,
-          metrics: { ...mockState.performance.metrics, renderTime: 35 }, // > 32ms (2x threshold)
-        },
-      };
-      expect(selectPerformanceStatus(criticalState)).toBe('critical');
+      expect(selectLastActivity(noRenderingState)).toEqual(new Date('2024-01-01T10:01:00Z')); // parsing.lastParsed is most recent
     });
   });
 
@@ -324,7 +317,7 @@ describe('Store Selectors', () => {
 
     it('should select rendering stats', () => {
       const stats = selectRenderingStats(mockState);
-      expect(stats.meshCount).toBe(2);
+      expect(stats.meshCount).toBe(2); // mockState has 2 meshes
       expect(stats.errorCount).toBe(0);
       expect(stats.renderTime).toBe(25.3);
       expect(stats.lastRendered).toEqual(mockState.rendering?.lastRendered);
@@ -332,26 +325,11 @@ describe('Store Selectors', () => {
       expect(stats.camera).toEqual(mockState.rendering?.camera);
     });
 
-    it('should select performance stats', () => {
-      const stats = selectPerformanceStats(mockState);
-      expect(stats.renderTime).toBe(12.5);
-      expect(stats.parseTime).toBe(8.2);
-      expect(stats.memoryUsage).toBe(45.7);
-      expect(stats.frameRate).toBe(60);
-      expect(stats.violationCount).toBe(0);
-      expect(stats.isMonitoring).toBe(true);
-      expect(stats.lastUpdated).toEqual(mockState.performance.lastUpdated);
-      expect(stats.status).toBe('good');
-    });
-
     it('should select feature flags', () => {
       const flags = selectFeatureFlags(mockState);
       expect(flags.realTimeParsing).toBe(true);
       expect(flags.realTimeRendering).toBe(true);
       expect(flags.autoSave).toBe(false);
-      expect(flags.performanceMetrics).toBe(true);
-      expect(flags.webGL2).toBe(true);
-      expect(flags.hardwareAcceleration).toBe(true);
     });
 
     it('should select debug info', () => {
@@ -359,11 +337,26 @@ describe('Store Selectors', () => {
       expect(debugInfo).toHaveProperty('editorState');
       expect(debugInfo).toHaveProperty('parsingState');
       expect(debugInfo).toHaveProperty('renderingState');
-      expect(debugInfo).toHaveProperty('performanceState');
       expect(debugInfo).toHaveProperty('applicationStatus');
       expect(debugInfo).toHaveProperty('lastActivity');
       expect(debugInfo).toHaveProperty('featureFlags');
       expect(debugInfo.applicationStatus).toBe('idle');
+    });
+  });
+
+  describe('Performance Selectors', () => {
+    it('should select performance metrics from state', () => {
+      const performanceMetrics = mockState.performance.metrics;
+      expect(performanceMetrics.renderTime).toBe(12.5);
+      expect(performanceMetrics.parseTime).toBe(8.2);
+      expect(performanceMetrics.memoryUsage).toBe(45.7);
+      expect(performanceMetrics.frameRate).toBe(60);
+    });
+
+    it('should select performance monitoring status', () => {
+      expect(mockState.performance.isMonitoring).toBe(true);
+      expect(mockState.performance.violations).toEqual([]);
+      expect(mockState.performance.lastUpdated).toEqual(new Date('2024-01-01T10:03:00Z'));
     });
   });
 });

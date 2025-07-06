@@ -48,8 +48,6 @@ export const createParsingSlice = (
         state.parsing.errors = [];
       });
 
-      const startTime = performance.now();
-
       try {
         logger.debug(`Starting parse of ${code.length} characters`);
 
@@ -61,12 +59,10 @@ export const createParsingSlice = (
 
         if (!isSuccess(parseResult)) {
           const errorMessage = `Parse failed: ${parseResult.error}`;
-          const parseTime = performance.now() - startTime;
 
           set((state: WritableDraft<AppStore>) => {
             state.parsing.isLoading = false;
             state.parsing.errors = [errorMessage];
-            state.parsing.parseTime = parseTime;
           });
 
           logger.error(errorMessage);
@@ -89,20 +85,17 @@ export const createParsingSlice = (
           }
 
           const ast = restructureResult.success ? restructureResult.data : parseResult.data;
-          const endTime = performance.now();
-          const parseTime = endTime - startTime;
 
           set((state: WritableDraft<AppStore>) => {
             state.parsing.ast = [...ast];
             state.parsing.isLoading = false;
             state.parsing.lastParsed = new Date();
-            state.parsing.parseTime = parseTime;
           });
 
           // Performance metrics recording removed
 
           logger.debug(
-            `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes in ${parseTime.toFixed(2)}ms`
+            `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes`
           );
           return operationUtils.createSuccess(ast as ReadonlyArray<CoreNode>, metadata);
         } else {
@@ -111,14 +104,11 @@ export const createParsingSlice = (
           return operationUtils.createSuccess([] as ReadonlyArray<CoreNode>, metadata);
         }
       } catch (err: unknown) {
-        const endTime = performance.now();
-        const parseTime = endTime - startTime;
         const errorMessage = err instanceof Error ? err.message : String(err);
 
         set((state: WritableDraft<AppStore>) => {
           state.parsing.isLoading = false;
           state.parsing.errors = [errorMessage];
-          state.parsing.parseTime = parseTime;
         });
 
         logger.error(`Parse failed: ${errorMessage}`);
@@ -146,7 +136,6 @@ export const createParsingSlice = (
         state.parsing.warnings = [];
         state.parsing.isLoading = false;
         state.parsing.lastParsed = null;
-        state.parsing.parseTime = 0;
       });
     },
 
@@ -166,10 +155,6 @@ export const createParsingSlice = (
       set((state: WritableDraft<AppStore>) => {
         state.parsing.errors = [];
       });
-    },
-
-    getParsingMetrics: () => {
-      return get().parsing.operations;
     },
 
     cancelParsing: (operationId: string) => {

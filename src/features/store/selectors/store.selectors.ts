@@ -136,7 +136,7 @@ export const selectLastActivity = createSelector(
   ],
   (editorLastSaved, parsingLastParsed, renderingLastRendered) => {
     const dates = [editorLastSaved, parsingLastParsed, renderingLastRendered].filter(
-      (date): date is Date => date !== null
+      (date): date is Date => date !== null && date !== undefined && date instanceof Date
     );
 
     return dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;

@@ -42,8 +42,6 @@ export const createRenderingSlice = (
         }
       });
 
-      const startTime = performance.now();
-
       return tryCatchAsync(
         async () => {
           logger.debug(`Processing ${ast.length} AST nodes for rendering`);
@@ -55,27 +53,19 @@ export const createRenderingSlice = (
           // The actual meshes are created by R3FScene component
           // We'll return an empty array here and let the R3FScene update the store
           const meshes: THREE.Mesh[] = [];
-          const endTime = performance.now();
-          const renderTime = endTime - startTime;
 
           set((state) => {
             if (state.rendering) {
               state.rendering.isRendering = false;
               state.rendering.lastRendered = new Date();
-              state.rendering.renderTime = renderTime;
               // Don't update meshes here - let R3FScene handle that
             }
           });
 
-          // Record performance metrics
-          get().recordRenderTime(renderTime);
-
-          logger.debug(`renderFromAST completed in ${renderTime.toFixed(2)}ms`);
+          logger.debug(`renderFromAST completed`);
           return meshes;
         },
         (err) => {
-          const endTime = performance.now();
-          const renderTime = endTime - startTime;
           const errorMessage = err instanceof Error ? err.message : String(err);
 
           logger.error(`renderFromAST failed:`, errorMessage);
@@ -83,7 +73,6 @@ export const createRenderingSlice = (
           set((state) => {
             if (state.rendering) {
               state.rendering.isRendering = false;
-              state.rendering.renderTime = renderTime;
             }
           });
           get().addRenderError({
@@ -102,7 +91,6 @@ export const createRenderingSlice = (
           state.rendering.meshes = [];
           state.rendering.renderErrors = [];
           state.rendering.lastRendered = null;
-          state.rendering.renderTime = 0;
         }
       });
     },

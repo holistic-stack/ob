@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
-import { measureTime } from '../../../shared/utils/performance/metrics.js';
 import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
 import {
@@ -71,19 +70,13 @@ export const useMonacoEditor = (
   const updateCursorPosition = useAppStore((state: AppStore) => state.updateCursorPosition);
   const updateSelection = useAppStore((state: AppStore) => state.updateSelection);
   const markDirty = useAppStore((state: AppStore) => state.markDirty);
-  const recordParseTime = useAppStore((state: AppStore) => state.recordParseTime);
 
   /**
    * Debounced code update handler
    */
   const debouncedUpdateCode = useCallback(
     debounce((newCode: string) => {
-      const { result: _parseResult, duration } = measureTime(() => {
-        updateCode(newCode);
-        recordParseTime(duration as number);
-      });
-
-      setMetrics((prev) => ({ ...prev, updateTime: duration }));
+      updateCode(newCode);
     }, mergedOptions.debounceMs || debounceMs),
     []
   );
@@ -94,12 +87,8 @@ export const useMonacoEditor = (
   const handleContentChange = useCallback(
     (value: string | undefined) => {
       if (value !== undefined && value !== code) {
-        const { duration } = measureTime(() => {
-          debouncedUpdateCode(value);
-          markDirty();
-        });
-
-        setMetrics((prev) => ({ ...prev, updateTime: duration }));
+        debouncedUpdateCode(value);
+        markDirty();
       }
     },
     [code, debouncedUpdateCode, markDirty]
@@ -218,11 +207,7 @@ export const useMonacoEditor = (
 
     format: async () => {
       if (editorRef.current) {
-        const { duration } = await measureTime(async () => {
-          await editorRef.current?.getAction('editor.action.formatDocument')?.run();
-        });
-
-        setMetrics((prev) => ({ ...prev, validationTime: duration }));
+        await editorRef.current?.getAction('editor.action.formatDocument')?.run();
       }
     },
   };
@@ -255,14 +240,6 @@ export const useMonacoEditor = (
           disposables.push(editor.onDidChangeCursorSelection(handleSelectionChange));
 
           // Performance monitoring
-          disposables.push(
-            editor.onDidChangeModelContent(() => {
-              const { duration } = measureTime(() => {
-                // Measure render time
-              });
-              setMetrics((prev) => ({ ...prev, renderTime: duration }));
-            })
-          );
 
           // Store disposables for cleanup
           (editor as unknown as { _hookDisposables: monaco.IDisposable[] })._hookDisposables =
