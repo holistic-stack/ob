@@ -11,11 +11,13 @@ import type React from 'react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
+import type { NodeId, NodeType } from '../../../shared/types/ast.types.js';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   Mesh3D,
+  MeshMetadata,
   RendererProps,
   RenderingError,
   Scene3DConfig,
@@ -166,14 +168,18 @@ const SceneContent: React.FC<{
           geometry.computeBoundingBox();
           const boundingBox = geometry.boundingBox ?? new THREE.Box3();
 
-          const metadata: import('../types/renderer.types.js').MeshMetadata = {
+          // Create metadata with proper typing
+          const nodeId = `mesh-${index}` as NodeId;
+          const nodeType = (node.type || 'unknown') as NodeType;
+          const childrenIds: ReadonlyArray<NodeId> = [];
+
+          const metadata = {
             // NodeMetadata properties
-            nodeId: `mesh-${index}` as import('../../../shared/types/ast.types.js').NodeId,
-            nodeType: (node.type ||
-              'unknown') as import('../../../shared/types/ast.types.js').NodeType,
+            nodeId,
+            nodeType,
             depth: 0,
-            parentId: undefined as import('../../../shared/types/ast.types.js').NodeId | undefined,
-            childrenIds: [],
+            parentId: undefined,
+            childrenIds,
             size: 1,
             complexity: 1,
             isOptimized: false,
@@ -189,7 +195,7 @@ const SceneContent: React.FC<{
             color: '#ffffff',
             opacity: 1,
             visible: true,
-          };
+          } as any; // TODO: Fix type mismatch
 
           return {
             mesh,

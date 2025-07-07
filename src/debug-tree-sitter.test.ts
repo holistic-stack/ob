@@ -19,6 +19,9 @@ describe('Debug Tree-sitter Parsing', () => {
       'square(5);',
       'translate([1,2,3]) cube(10);',
       'linear_extrude(height=10) square(5);',
+      'import("model.stl");',
+      'surface(file="heightmap.png");',
+      'projection(cut=true) cube(10);',
     ];
 
     for (const code of testCases) {

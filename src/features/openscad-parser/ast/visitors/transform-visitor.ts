@@ -150,6 +150,9 @@ export class TransformVisitor extends BaseASTVisitor {
       'offset',
       'linear_extrude',
       'rotate_extrude',
+      'import',
+      'surface',
+      'projection',
     ].includes(functionName);
   }
 
@@ -685,6 +688,88 @@ export class TransformVisitor extends BaseASTVisitor {
           ...($fn !== undefined && { $fn }),
           ...($fa !== undefined && { $fa }),
           ...($fs !== undefined && { $fs }),
+          children: [],
+          location: getLocation(node),
+        };
+      }
+      case 'import': {
+        // Handle import operation
+        let _file = '';
+        let _convexity: number | undefined;
+
+        // Extract file parameter (first positional parameter)
+        const fileParam = args.find((arg) => arg.name === undefined || arg.name === 'file');
+        if (fileParam?.value && typeof fileParam.value === 'string') {
+          _file = fileParam.value;
+        }
+
+        // Extract convexity parameter
+        const convexityParam = args.find((arg) => arg.name === 'convexity');
+        if (convexityParam?.value && typeof convexityParam.value === 'number') {
+          _convexity = convexityParam.value;
+        }
+
+        return {
+          type: 'module_instantiation',
+          name: 'import',
+          args,
+          children: [],
+          location: getLocation(node),
+        };
+      }
+      case 'surface': {
+        // Handle surface operation
+        let _file = '';
+        let _center = false;
+        let _convexity: number | undefined;
+        let _invert = false;
+
+        // Extract file parameter (first positional parameter)
+        const fileParam = args.find((arg) => arg.name === undefined || arg.name === 'file');
+        if (fileParam?.value && typeof fileParam.value === 'string') {
+          _file = fileParam.value;
+        }
+
+        // Extract center parameter
+        const centerParam = args.find((arg) => arg.name === 'center');
+        if (centerParam?.value && typeof centerParam.value === 'boolean') {
+          _center = centerParam.value;
+        }
+
+        // Extract convexity parameter
+        const convexityParam = args.find((arg) => arg.name === 'convexity');
+        if (convexityParam?.value && typeof convexityParam.value === 'number') {
+          _convexity = convexityParam.value;
+        }
+
+        // Extract invert parameter
+        const invertParam = args.find((arg) => arg.name === 'invert');
+        if (invertParam?.value && typeof invertParam.value === 'boolean') {
+          _invert = invertParam.value;
+        }
+
+        return {
+          type: 'module_instantiation',
+          name: 'surface',
+          args,
+          children: [],
+          location: getLocation(node),
+        };
+      }
+      case 'projection': {
+        // Handle projection operation
+        let _cut = false;
+
+        // Extract cut parameter
+        const cutParam = args.find((arg) => arg.name === 'cut');
+        if (cutParam?.value && typeof cutParam.value === 'boolean') {
+          _cut = cutParam.value;
+        }
+
+        return {
+          type: 'module_instantiation',
+          name: 'projection',
+          args,
           children: [],
           location: getLocation(node),
         };

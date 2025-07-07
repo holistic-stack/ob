@@ -14,26 +14,49 @@ const _createMockNode = (text: string): TSNode => {
   return mockNode;
 };
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { OpenscadParser } from '../../openscad-parser';
 import { extractSphereNode } from '../extractors/sphere-extractor.js';
 
 let parser: OpenscadParser;
+let currentTree: unknown = null; // Track current tree for cleanup
 
 describe('Sphere Extractor', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();
   });
 
-  afterAll(() => {
-    parser.dispose();
+  afterEach(() => {
+    // Clean up the current tree if it exists
+    if (currentTree) {
+      try {
+        (currentTree as { delete(): void }).delete();
+      } catch (_error) {
+        // Ignore cleanup errors
+      }
+      currentTree = null;
+    }
+
+    // Dispose the parser
+    if (parser) {
+      parser.dispose();
+    }
   });
 
   const parseToSyntaxNode = (code: string): TSNode | null => {
-    const tree = parser.parseCST(code);
+    // Clean up previous tree
+    if (currentTree) {
+      try {
+        (currentTree as { delete(): void }).delete();
+      } catch (_error) {
+        // Ignore cleanup errors
+      }
+    }
+
+    currentTree = parser.parseCST(code);
     // Assuming the structure is source_file -> statement -> module_instantiation
-    const moduleInstantiationNode = tree?.rootNode?.child(0)?.child(0);
+    const moduleInstantiationNode = currentTree?.rootNode?.child(0)?.child(0);
     // console.log('Module Instantiation Node:', moduleInstantiationNode?.toString());
     return moduleInstantiationNode || null;
   };

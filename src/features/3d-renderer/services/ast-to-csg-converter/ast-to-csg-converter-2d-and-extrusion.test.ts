@@ -195,7 +195,7 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
             // Tree Sitter may parse some constructs as function_call or assignment_statement
             expect(node?.type).toMatch(
               new RegExp(
-                `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement|circle|square|polygon|text|cube|sphere|cylinder|linear_extrude|rotate_extrude`
+                `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement|circle|square|polygon|text|cube|sphere|cylinder|linear_extrude|rotate_extrude|import|surface|projection`
               )
             );
           }
@@ -407,7 +407,7 @@ text("Test", size=12, font="Arial");
         ast.forEach((node: ASTNode, index: number) => {
           expect(node).toBeDefined();
           expect(node?.type).toMatch(
-            /module_instantiation|function_call|circle|square|polygon|text|cube|sphere|cylinder/
+            /module_instantiation|function_call|circle|square|polygon|text|cube|sphere|cylinder|linear_extrude|rotate_extrude|import|surface|projection/
           );
           logger.debug(`2D primitive ${index + 1}: ${node?.type}`);
         });

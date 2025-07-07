@@ -180,28 +180,25 @@ export function extractNumberParameter(
   param: ast.Parameter,
   errorHandler?: ErrorHandler
 ): number | null {
-  console.log(`[extractNumberParameter] INIT - param:`, JSON.stringify(param, null, 2));
   if (!param?.value) {
-    console.log(`[extractNumberParameter] DEBUG - param.value is null or undefined.`);
     return null;
   }
 
   // Handle number as raw value
   if (typeof param.value === 'number') {
-    console.log(`[extractNumberParameter] DEBUG - param.value is raw number: ${param.value}`);
     return param.value;
   }
 
   // Handle expression node
   if (isExpressionNode(param.value)) {
-    console.log(`[extractNumberParameter] DEBUG - param.value is an expression node.`);
-    if (
-      param.value.expressionType === 'literal' &&
-      typeof (param.value as ast.LiteralNode).value === 'number'
-    ) {
-      const literalValue = (param.value as ast.LiteralNode).value as number;
-      console.log(`[extractNumberParameter] DEBUG - Literal number expression: ${literalValue}`);
-      return literalValue;
+    if (param.value.expressionType === 'literal') {
+      const literalNode = param.value as ast.LiteralNode;
+      // Check if the literal value is a valid number (not null or undefined)
+      if (typeof literalNode.value === 'number' && !Number.isNaN(literalNode.value)) {
+        return literalNode.value;
+      } else {
+        return null;
+      }
     }
 
     if (param.value.expressionType === 'unary') {

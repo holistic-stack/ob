@@ -68,10 +68,20 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
  */
 function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   if (value.type === 'number') {
+    // Ensure we have a valid numeric value before parsing
+    const numericValue = value.value;
+    if (numericValue === null || numericValue === undefined) {
+      return null;
+    }
+    const parsedValue =
+      typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+    if (Number.isNaN(parsedValue)) {
+      return null;
+    }
     return {
       type: 'expression',
       expressionType: 'literal',
-      value: parseFloat(value.value as string),
+      value: parsedValue,
     } as ast.LiteralNode;
   } else if (value.type === 'boolean') {
     return {
@@ -97,7 +107,13 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   } else if (value.type === 'vector') {
     const vectorValues = (value.value as ast.Value[]).map((v) => {
       if (v.type === 'number') {
-        return parseFloat(v.value as string);
+        const numericValue = v.value;
+        if (numericValue === null || numericValue === undefined) {
+          return 0; // Default for null/undefined values in vector context
+        }
+        const parsedValue =
+          typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+        return Number.isNaN(parsedValue) ? 0 : parsedValue;
       }
       return 0; // Default for non-numeric elements in a vector context
     });
