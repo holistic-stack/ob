@@ -28,8 +28,8 @@ describe('Debug Accessor Expression Structure', () => {
   });
 });
 
-function formatNode(node: any) {
-  const result: any = {
+function formatNode(node: TSNode) {
+  const result: Record<string, unknown> = {
     type: node.type,
     text: node.text,
     startPosition: node.startPosition,
@@ -47,7 +47,7 @@ function formatNode(node: any) {
   return result;
 }
 
-function walkTree(node: any, targetType: string, depth = 0) {
+function walkTree(node: TSNode, targetType: string, depth = 0) {
   const _indent = '  '.repeat(depth);
 
   if (node.type === targetType) {
@@ -57,24 +57,19 @@ function walkTree(node: any, targetType: string, depth = 0) {
         // If this is a call_expression, print its children too
         if (child.type === 'call_expression') {
           for (let j = 0; j < child.childCount; j++) {
-            const callChild = child.child(j);
-            if (callChild) {
-            }
+            const _callChild = child.child(j);
+            // No-op: This block was for debugging and had an empty statement.
           }
         }
       }
     }
 
     // Try to get field names
-    const nameField = node.childForFieldName('name');
-    if (nameField) {
-    } else {
-    }
+    const _nameField = node.childForFieldName('name');
+    // No-op: This block was for debugging and had an empty statement.
 
-    const argsField = node.childForFieldName('arguments');
-    if (argsField) {
-    } else {
-    }
+    const _argsField = node.childForFieldName('arguments');
+    // No-op: This block was for debugging and had an empty statement.
   }
 
   for (let i = 0; i < node.childCount; i++) {

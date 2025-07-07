@@ -49,12 +49,12 @@ vi.mock('three', async () => {
   const threeModule = actual as typeof import('three');
 
   // Create a proper BufferGeometry constructor that maintains instanceof checks
-  class MockBufferGeometry extends threeModule.BufferGeometry {
-    constructor() {
-      super();
-      this.type = 'BufferGeometry';
-    }
-  }
+  // class MockBufferGeometry extends threeModule.BufferGeometry {
+  //   constructor() {
+  //     super();
+  //     this.type = 'BufferGeometry';
+  //   }
+  // }
 
   // Create mocked geometries that extend the base geometry structure
   function mockBoxGeometry(_width = 1, _height = 1, _depth = 1) {

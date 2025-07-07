@@ -363,6 +363,10 @@ export class ModuleVisitor extends BaseASTVisitor {
         return this.createColorNode(node, args, children);
       case 'offset':
         return this.createOffsetNode(node, args, children);
+      case 'linear_extrude':
+        return this.createLinearExtrudeNode(node, args, children);
+      case 'rotate_extrude':
+        return this.createRotateExtrudeNode(node, args, children);
       default:
         return {
           type: 'module_instantiation',
@@ -707,21 +711,17 @@ export class ModuleVisitor extends BaseASTVisitor {
               0, // Default Z value
               1, // Default alpha value
             ];
+          } else if (Array.isArray(colorParam.value)) {
+            const colorArray = colorParam.value as number[];
+            color = [
+              colorArray[0] ?? 0,
+              colorArray[1] ?? 0,
+              colorArray.length > 2 ? (colorArray[2] ?? 0) : 0,
+              colorArray.length > 3 ? (colorArray[3] ?? 1) : 1,
+            ];
           } else {
-            // For Vector3D or larger, use the first 4 elements
-            // First ensure we're working with an array
-            if (Array.isArray(colorParam.value)) {
-              const colorArray = colorParam.value as number[];
-              color = [
-                colorArray[0] ?? 0,
-                colorArray[1] ?? 0,
-                colorArray.length > 2 ? (colorArray[2] ?? 0) : 0,
-                colorArray.length > 3 ? (colorArray[3] ?? 1) : 1,
-              ];
-            } else {
-              // Fallback to default color if not an array
-              color = [1, 1, 1, 1];
-            }
+            // Fallback to default color if not an array
+            color = [1, 1, 1, 1];
           }
         }
       }
@@ -880,6 +880,142 @@ export class ModuleVisitor extends BaseASTVisitor {
     return {
       type: 'children',
       index,
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a linear_extrude node
+   * @param node The node to process
+   * @param args The arguments to the function
+   * @param children The children nodes
+   * @returns The linear_extrude AST node
+   */
+  private createLinearExtrudeNode(
+    node: TSNode,
+    args: ast.Parameter[],
+    children: ast.ASTNode[]
+  ): ast.LinearExtrudeNode {
+    // Extract parameters
+    let height = 1;
+    let center = false;
+    let convexity: number | undefined;
+    let twist: number | undefined;
+    let slices: number | undefined;
+    let scale: number | ast.Vector2D | undefined;
+    let $fn: number | undefined;
+
+    // Extract height parameter
+    const heightParam = args.find((arg) => arg.name === undefined || arg.name === 'height');
+    if (heightParam?.value && typeof heightParam.value === 'number') {
+      height = heightParam.value;
+    }
+
+    // Extract center parameter
+    const centerParam = args.find((arg) => arg.name === 'center');
+    if (centerParam?.value && typeof centerParam.value === 'boolean') {
+      center = centerParam.value;
+    }
+
+    // Extract other parameters
+    const convexityParam = args.find((arg) => arg.name === 'convexity');
+    if (convexityParam?.value && typeof convexityParam.value === 'number') {
+      convexity = convexityParam.value;
+    }
+
+    const twistParam = args.find((arg) => arg.name === 'twist');
+    if (twistParam?.value && typeof twistParam.value === 'number') {
+      twist = twistParam.value;
+    }
+
+    const slicesParam = args.find((arg) => arg.name === 'slices');
+    if (slicesParam?.value && typeof slicesParam.value === 'number') {
+      slices = slicesParam.value;
+    }
+
+    const scaleParam = args.find((arg) => arg.name === 'scale');
+    if (scaleParam?.value) {
+      if (typeof scaleParam.value === 'number') {
+        scale = scaleParam.value;
+      } else if (Array.isArray(scaleParam.value) && scaleParam.value.length >= 2) {
+        scale = [scaleParam.value[0], scaleParam.value[1]];
+      }
+    }
+
+    const fnParam = args.find((arg) => arg.name === '$fn');
+    if (fnParam?.value && typeof fnParam.value === 'number') {
+      $fn = fnParam.value;
+    }
+
+    return {
+      type: 'linear_extrude',
+      height,
+      center,
+      ...(convexity !== undefined && { convexity }),
+      ...(twist !== undefined && { twist }),
+      ...(slices !== undefined && { slices }),
+      ...(scale !== undefined && { scale }),
+      ...($fn !== undefined && { $fn }),
+      children,
+      location: getLocation(node),
+    };
+  }
+
+  /**
+   * Create a rotate_extrude node
+   * @param node The node to process
+   * @param args The arguments to the function
+   * @param children The children nodes
+   * @returns The rotate_extrude AST node
+   */
+  private createRotateExtrudeNode(
+    node: TSNode,
+    args: ast.Parameter[],
+    children: ast.ASTNode[]
+  ): ast.RotateExtrudeNode {
+    // Extract parameters
+    let angle = 360; // Default to full revolution
+    let convexity: number | undefined;
+    let $fn: number | undefined;
+    let $fa: number | undefined;
+    let $fs: number | undefined;
+
+    // Extract angle parameter
+    const angleParam = args.find((arg) => arg.name === undefined || arg.name === 'angle');
+    if (angleParam?.value && typeof angleParam.value === 'number') {
+      angle = angleParam.value;
+    }
+
+    // Extract convexity parameter
+    const convexityParam = args.find((arg) => arg.name === 'convexity');
+    if (convexityParam?.value && typeof convexityParam.value === 'number') {
+      convexity = convexityParam.value;
+    }
+
+    // Extract resolution parameters
+    const fnParam = args.find((arg) => arg.name === '$fn');
+    if (fnParam?.value && typeof fnParam.value === 'number') {
+      $fn = fnParam.value;
+    }
+
+    const faParam = args.find((arg) => arg.name === '$fa');
+    if (faParam?.value && typeof faParam.value === 'number') {
+      $fa = faParam.value;
+    }
+
+    const fsParam = args.find((arg) => arg.name === '$fs');
+    if (fsParam?.value && typeof fsParam.value === 'number') {
+      $fs = fsParam.value;
+    }
+
+    return {
+      type: 'rotate_extrude',
+      ...(angle !== 360 && { angle }),
+      ...(convexity !== undefined && { convexity }),
+      ...($fn !== undefined && { $fn }),
+      ...($fa !== undefined && { $fa }),
+      ...($fs !== undefined && { $fs }),
+      children,
       location: getLocation(node),
     };
   }

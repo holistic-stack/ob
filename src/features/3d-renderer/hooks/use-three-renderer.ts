@@ -12,7 +12,7 @@ import type { CameraConfig } from '../../../shared/types/common.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { selectParsingAST, selectRenderingCamera, useAppStore } from '../../store/index.js';
 import { useThreeRendererStore } from '../store/three-renderer.store.js';
-import type { Scene3DConfig, UseRendererReturn } from '../types/renderer.types.js';
+import type { Mesh3D, Scene3DConfig, UseRendererReturn } from '../types/renderer.types.js';
 import { useThreeFrame } from './use-frame.js';
 
 /**
@@ -62,7 +62,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     initializeRenderer: storeInitializeRenderer,
     renderAST: storeRenderAST,
     clearScene: storeClearScene,
-    updateCamera: storeUpdateCamera,
+    updateCameraFromShared: storeUpdateCameraFromShared,
     resetCamera: storeResetCamera,
     takeScreenshot: storeTakeScreenshot,
     setError: storeSetError,
@@ -79,8 +79,8 @@ export const useThreeRenderer = (): UseRendererReturn => {
   cameraRef.current = threeCamera;
   rendererRef.current = renderer;
 
-  // App store selectors and actions
-  const ast = useAppStore(selectParsingAST);
+  // App store selectors and actions (with null safety)
+  const ast = useAppStore(selectParsingAST) ?? [];
   const cameraConfig = useAppStore(selectRenderingCamera) ?? DEFAULT_CAMERA;
   const config = DEFAULT_CONFIG;
 
@@ -125,10 +125,10 @@ export const useThreeRenderer = (): UseRendererReturn => {
    */
   const updateCamera = useCallback(
     (newCamera: CameraConfig) => {
-      storeUpdateCamera(newCamera);
+      storeUpdateCameraFromShared(newCamera);
       updateStoreCamera(newCamera);
     },
-    [storeUpdateCamera, updateStoreCamera] // store functions are stable from Zustand
+    [storeUpdateCameraFromShared, updateStoreCamera] // store functions are stable from Zustand
   );
 
   /**
@@ -166,7 +166,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
    * Render AST when it changes (using useMemo for expensive calculations)
    */
   const processedAST = useMemo(() => {
-    return ast.filter((node) => node != null); // Remove null/undefined nodes
+    return ast?.filter((node) => node != null) ?? []; // Remove null/undefined nodes with null safety
   }, [ast]);
 
   /**
@@ -217,7 +217,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     isRendering,
     error,
     metrics,
-    meshes,
+    meshes: meshes as ReadonlyArray<Mesh3D>,
     actions: {
       renderAST,
       clearScene,

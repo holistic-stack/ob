@@ -136,6 +136,14 @@ describe('Enhanced Functional Composition', () => {
   });
 
   describe('debounceWithLogging', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should debounce function calls', async () => {
       const fn = vi.fn();
       const debounced = debounceWithLogging(fn, 100);
@@ -146,7 +154,7 @@ describe('Enhanced Functional Composition', () => {
 
       expect(fn).not.toHaveBeenCalled();
 
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      vi.advanceTimersByTime(150);
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
@@ -156,12 +164,20 @@ describe('Enhanced Functional Composition', () => {
 
       debounced('arg1', 'arg2');
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      vi.advanceTimersByTime(100);
       expect(fn).toHaveBeenCalledWith('arg1', 'arg2');
     });
   });
 
   describe('throttleWithLogging', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should throttle function calls', async () => {
       const fn = vi.fn();
       const throttled = throttleWithLogging(fn, 100);
@@ -172,7 +188,7 @@ describe('Enhanced Functional Composition', () => {
 
       expect(fn).toHaveBeenCalledTimes(1);
 
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      vi.advanceTimersByTime(150);
 
       throttled();
       expect(fn).toHaveBeenCalledTimes(2);
@@ -180,6 +196,14 @@ describe('Enhanced Functional Composition', () => {
   });
 
   describe('retryWithLogging', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should succeed on first attempt', async () => {
       const successFn = vi.fn().mockResolvedValue('success');
       const result = await retryWithLogging(successFn, 3);

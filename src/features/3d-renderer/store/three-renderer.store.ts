@@ -9,12 +9,43 @@ import * as THREE from 'three';
 import { create } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
 // OperationId removed
+import type { CameraConfig as SharedCameraConfig } from '../../../shared/types/common.types.js';
 import type { ASTNode } from '../../openscad-parser/types/ast.types.js';
 import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
-import type { Mesh3D } from '../types/mesh.types.js';
-import type { RenderingMetrics } from '../types/renderer.types.js';
+import type { Mesh3D, RenderingMetrics, Scene3DConfig } from '../types/renderer.types.js';
 
 const logger = createLogger('ThreeRendererStore');
+
+/**
+ * Renderer configuration - compatible with Scene3DConfig
+ */
+type RendererConfig = Scene3DConfig | Record<string, unknown>;
+
+/**
+ * Convert shared CameraConfig to store-specific format
+ */
+const convertCameraConfig = (camera: SharedCameraConfig): StoreCameraConfig => ({
+  position: {
+    x: camera.position[0],
+    y: camera.position[1],
+    z: camera.position[2],
+  },
+  target: {
+    x: camera.target[0],
+    y: camera.target[1],
+    z: camera.target[2],
+  },
+  fov: camera.fov,
+});
+
+/**
+ * Store-specific camera configuration for internal Three.js operations
+ */
+interface StoreCameraConfig {
+  position?: { x: number; y: number; z: number };
+  target?: { x: number; y: number; z: number };
+  fov?: number;
+}
 
 interface ThreeRendererState {
   // Three.js Objects (stable references)
@@ -32,10 +63,11 @@ interface ThreeRendererState {
   metrics: RenderingMetrics;
 
   // Actions
-  initializeRenderer: (canvas: HTMLCanvasElement, config?: any) => void;
+  initializeRenderer: (canvas: HTMLCanvasElement, config?: RendererConfig) => void;
   renderAST: (ast: ReadonlyArray<ASTNode>) => Promise<void>;
   clearScene: () => void;
-  updateCamera: (config: any) => void;
+  updateCamera: (config: StoreCameraConfig) => void;
+  updateCameraFromShared: (config: SharedCameraConfig) => void;
   resetCamera: () => void;
   takeScreenshot: () => Promise<string>;
   updateMetrics: (newMetrics: Partial<RenderingMetrics>) => void;
@@ -221,7 +253,7 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
   },
 
   // Update camera configuration
-  updateCamera: (config: any) => {
+  updateCamera: (config: StoreCameraConfig) => {
     const { camera } = get();
     if (!camera) return;
 
@@ -235,6 +267,12 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
       camera.fov = config.fov;
       camera.updateProjectionMatrix();
     }
+  },
+
+  // Update camera from shared CameraConfig format
+  updateCameraFromShared: (config: SharedCameraConfig) => {
+    const storeConfig = convertCameraConfig(config);
+    get().updateCamera(storeConfig);
   },
 
   // Reset camera to default position

@@ -93,7 +93,7 @@ export class OpenSCADSyntaxError extends ParserError {
     closeToken: string,
     source: string,
     position: ErrorPosition
-  ): SyntaxError {
+  ): OpenSCADSyntaxError {
     const message = `Unmatched '${openToken}', missing '${closeToken}'`;
     const suggestions: ErrorSuggestion[] = [
       {
@@ -101,7 +101,7 @@ export class OpenSCADSyntaxError extends ParserError {
         replacement: closeToken,
       },
     ];
-    return new SyntaxError(message, source, position, suggestions);
+    return new OpenSCADSyntaxError(message, source, position, suggestions);
   }
 
   /**
@@ -111,7 +111,7 @@ export class OpenSCADSyntaxError extends ParserError {
    * @param position - The position in the source code
    * @returns A SyntaxError for a missing semicolon
    */
-  public static missingSemicolon(source: string, position: ErrorPosition): SyntaxError {
+  public static missingSemicolon(source: string, position: ErrorPosition): OpenSCADSyntaxError {
     const message = `Missing semicolon`;
     const suggestions: ErrorSuggestion[] = [
       {
@@ -119,6 +119,6 @@ export class OpenSCADSyntaxError extends ParserError {
         replacement: ';',
       },
     ];
-    return new SyntaxError(message, source, position, suggestions);
+    return new OpenSCADSyntaxError(message, source, position, suggestions);
   }
 }

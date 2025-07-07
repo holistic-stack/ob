@@ -311,7 +311,7 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
    * Handles function argument type mismatches
    */
   private handleInvalidArguments(error: ParserError, code: string): string | null {
-    const { functionName, paramIndex, expected, found, value, location } = error.context;
+    const { expected, found, value, location } = error.context;
 
     if (expected === undefined || found === undefined || !location || value === undefined) {
       return null;

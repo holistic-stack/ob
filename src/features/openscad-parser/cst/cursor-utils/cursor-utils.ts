@@ -34,6 +34,7 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.nodeType;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
+        // No-op: This block was for debugging and had an empty statement.
       }
       return result;
     }
@@ -43,6 +44,7 @@ export function isNodeType(cursor: TreeCursor, type: string): boolean {
       const nodeType = cursor.type;
       const result = nodeType.toLowerCase() === type.toLowerCase();
       if (!result) {
+        // No-op: This block was for debugging and had an empty statement.
       }
       return result;
     }
@@ -115,6 +117,7 @@ export function getNodeText(cursor: TreeCursor, source: string): string {
     if ((isStatement || isExpression || isCall) && hasSemicolonAfter) {
       text += ';';
     } else {
+      // No-op: This block was for debugging and had an empty statement.
     }
 
     console.log('Final text:', JSON.stringify(text));
@@ -206,8 +209,8 @@ export function findFirstChildOfType(cursor: TreeCursor, type: string): boolean 
  * @param cursor - The tree-sitter cursor
  * @returns Array of child nodes
  */
-export function getChildren(cursor: TreeCursor): any[] {
-  const children: any[] = [];
+export function getChildren(cursor: TreeCursor): TSNode[] {
+  const children: TSNode[] = [];
 
   if (!cursor.gotoFirstChild()) {
     cursor.gotoParent();

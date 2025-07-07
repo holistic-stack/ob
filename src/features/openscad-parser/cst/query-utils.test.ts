@@ -13,7 +13,7 @@ describe('QueryManager', () => {
     parser = new Parser();
 
     // Create a mock language object
-    const language = {} as any;
+    const language = {} as Parser.Language;
 
     // Set up the query manager with mocks
     const queryDir = path.join(__dirname, 'queries');
@@ -22,14 +22,14 @@ describe('QueryManager', () => {
     // Mock the loadQuery method
     queryManager.loadQuery = async (_name: string) => {
       // Mock implementation that returns a fake Query object
-      return { matches: () => [] } as any;
+      return { matches: () => [] } as Parser.Query;
     };
 
     // Mock the query cache
     queryManager.queryCache = new Map();
     queryManager.queryCache.set('find-function-calls', {
       matches: () => [],
-    } as any);
+    } as Parser.Query);
   });
 
   afterEach(() => {
@@ -63,7 +63,7 @@ describe('QueryManager', () => {
             // Add other required properties
           },
           // Add other required properties
-        }) as any;
+        }) as Parser.Tree;
 
       // Set the tree property directly
       const tree = parser.parse(source);
@@ -76,7 +76,7 @@ describe('QueryManager', () => {
       try {
         const results = queryManager.queryTree('find-function-calls');
         expect(Array.isArray(results)).toBe(true);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If the query doesn't exist, that's okay for this test
         expect(error.message).toContain('Query');
       }
@@ -124,7 +124,7 @@ describe('QueryManager', () => {
             parent: null,
           },
         },
-      } as any;
+      } as TSNode;
 
       // Test with an existing ancestor type
       expect(queryManager.hasAncestorOfType(childNode, 'call_expression')).toBe(true);
@@ -140,7 +140,7 @@ describe('QueryManager', () => {
 
       // Mock the getNodeTextWithSemicolon method to return the expected value
       const originalMethod = queryManager.getNodeTextWithSemicolon;
-      queryManager.getNodeTextWithSemicolon = (_node: any, _source: string) => {
+      queryManager.getNodeTextWithSemicolon = (_node: TSNode, _source: string) => {
         return 'cube(10);';
       };
 
@@ -148,7 +148,7 @@ describe('QueryManager', () => {
         startIndex: 0,
         endIndex: 7, // Points to 'cube(10)'
         text: 'cube(10)',
-      } as any;
+      } as TSNode;
 
       const result = queryManager.getNodeTextWithSemicolon(node, source);
       expect(result).toBe('cube(10);');
@@ -163,7 +163,7 @@ describe('QueryManager', () => {
         startIndex: 0,
         endIndex: 7,
         text: 'cube(10)',
-      } as any;
+      } as TSNode;
 
       const result = queryManager.getNodeTextWithSemicolon(node, source);
       expect(result).toBe('cube(10)');

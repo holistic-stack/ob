@@ -33,7 +33,7 @@ export function createNodeHandlerRegistry(): NodeHandlerRegistry {
  * Create a default registry with standard OpenSCAD handlers
  */
 export function createDefaultNodeHandlerRegistry(): NodeHandlerRegistry {
-  return new NodeHandlerRegistry();
+  return new DefaultNodeHandlerRegistry();
 }
 
 /**

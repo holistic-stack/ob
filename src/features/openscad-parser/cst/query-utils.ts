@@ -344,6 +344,6 @@ export class QueryManager {
    */
   public dispose(): void {
     this.queryCache.clear();
-    (this as any).tree = undefined;
+    this.tree = undefined;
   }
 }

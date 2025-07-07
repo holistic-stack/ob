@@ -14,14 +14,14 @@ const logger = createLogger('MatrixCacheService');
  * Minimal matrix cache service for compatibility
  */
 export class MatrixCacheService {
-  private cache = new Map<string, any>();
+  private cache = new Map<string, unknown>();
 
-  get(key: string): any | undefined {
+  get(key: string): unknown | undefined {
     logger.debug(`Cache get: ${key} (stub)`);
     return this.cache.get(key);
   }
 
-  set(key: string, value: any): void {
+  set(key: string, value: unknown): void {
     logger.debug(`Cache set: ${key} (stub)`);
     this.cache.set(key, value);
   }
@@ -44,7 +44,7 @@ export class MatrixCacheService {
     return this.cache.size;
   }
 
-  getStats(): any {
+  getStats(): Record<string, unknown> {
     return {
       size: this.cache.size,
       hitRate: 0,

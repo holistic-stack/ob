@@ -90,7 +90,7 @@ CSG Operations System
 ├── Boolean Converters      # Union, difference, intersection converters
 ├── Primitive Converters    # Cube, sphere, cylinder converters
 ├── Transform Converters    # Translate, rotate, scale converters
-└── Matrix Integration      # Enhanced matrix operations with ml-matrix
+└── Matrix Integration      # Enhanced matrix operations with gl-matrix
 ```
 
 ### Data Flow
@@ -577,7 +577,7 @@ if (complexity > 10000) {
 
 ### Performance Improvements
 - **3-5x faster** CSG operations with real BSP tree algorithms
-- **Enhanced numerical stability** with ml-matrix integration
+- **Enhanced numerical stability** with gl-matrix integration
 - **Better memory management** with automatic cleanup
 - **Improved error handling** with detailed diagnostics
 

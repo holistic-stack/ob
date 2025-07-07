@@ -6,9 +6,91 @@
  */
 
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { ASTNode } from '../../../openscad-parser/ast/ast-types.js';
+import type {
+  ASTNode,
+  BinaryExpressionNode,
+  ConditionalExpressionNode,
+  ErrorNode,
+  ExpressionNode,
+  FunctionCallNode,
+  IdentifierExpressionNode,
+  LiteralNode,
+  ParenthesizedExpressionNode,
+  SpecialVariableNode,
+  UnaryExpressionNode,
+  VectorExpressionNode,
+} from '../../../openscad-parser/ast/ast-types.ts';
 
 const logger = createLogger('ASTExpressionHandlers');
+
+interface NodeWithParameters extends ASTNode {
+  parameters: ModuleParameter[];
+}
+
+function _hasTextProperty(node: ASTNode): node is ASTNode & { text: string } {
+  return 'text' in node && typeof (node as { text?: string }).text === 'string';
+}
+
+function isLiteralNode(node: ASTNode): node is LiteralNode {
+  return node.type === 'expression' && (node as ExpressionNode).expressionType === 'literal';
+}
+
+function isIdentifierExpressionNode(node: ASTNode): node is IdentifierExpressionNode {
+  return node.type === 'expression' && (node as ExpressionNode).expressionType === 'identifier';
+}
+
+function isSpecialVariableNode(node: ASTNode): node is SpecialVariableNode {
+  return (
+    node.type === 'expression' && (node as ExpressionNode).expressionType === 'special_variable'
+  );
+}
+
+function isBinaryExpressionNode(node: ASTNode): node is BinaryExpressionNode {
+  return (
+    node.type === 'expression' && (node as ExpressionNode).expressionType === 'binary_expression'
+  );
+}
+
+function isUnaryExpressionNode(node: ASTNode): node is UnaryExpressionNode {
+  return (
+    node.type === 'expression' && (node as ExpressionNode).expressionType === 'unary_expression'
+  );
+}
+
+function isConditionalExpressionNode(node: ASTNode): node is ConditionalExpressionNode {
+  return (
+    node.type === 'expression' &&
+    (node as ExpressionNode).expressionType === 'conditional_expression'
+  );
+}
+
+function isErrorNode(node: ASTNode): node is ErrorNode {
+  return node.type === 'error';
+}
+
+function isParenthesizedExpressionNode(node: ASTNode): node is ParenthesizedExpressionNode {
+  return (
+    node.type === 'expression' &&
+    (node as ExpressionNode).expressionType === 'parenthesized_expression'
+  );
+}
+
+function isVectorExpressionNode(node: ASTNode): node is VectorExpressionNode {
+  return (
+    node.type === 'expression' && (node as ExpressionNode).expressionType === 'vector_expression'
+  );
+}
+
+function isFunctionCallNode(node: ASTNode): node is FunctionCallNode {
+  return (
+    node.type === 'module_instantiation' ||
+    (node.type === 'expression' && (node as ExpressionNode).expressionType === 'function_call')
+  );
+}
+
+function isParameterNode(node: ASTNode): node is ASTNode & { name: string; value: ASTNode } {
+  return 'name' in node && 'value' in node && typeof node.name === 'string';
+}
 
 /**
  * Extract a numeric value from an AST node
@@ -20,120 +102,121 @@ export function extractValue(node: ASTNode): number | null {
   }
 
   logger.debug(
-    `[extractValue] Processing node type: '${node.type}', text: '${node.text || 'no text'}'`
+    `[extractValue] Processing node type: '${node.type}', expressionType: '${(node as ExpressionNode).expressionType || 'N/A'}', text: '${node.location?.text || 'no text'}'`
   );
 
-  switch (node.type) {
-    case 'number':
-    case 'integer':
-    case 'float': {
-      // Direct numeric literals
-      const numericValue = parseFloat(node.text || '0');
+  if (isLiteralNode(node)) {
+    if (typeof node.value === 'number') {
+      return node.value;
+    }
+    if (typeof node.value === 'string') {
+      const numericValue = parseFloat(node.value);
       if (!Number.isNaN(numericValue)) {
         return numericValue;
       }
-      return null;
     }
-
-    case 'literal':
-      // Generic literal node
-      if (node.text) {
-        const literalValue = parseFloat(node.text);
-        if (!Number.isNaN(literalValue)) {
-          return literalValue;
-        }
-      }
-      return null;
-
-    case 'identifier':
-      // Variable reference - for now return 0 as placeholder
-      logger.debug(`[extractValue] Identifier '${node.text}' treated as 0`);
-      return 0;
-
-    case 'special_variable':
-      // Special variables like $t, $fn, etc. - treat as 0
-      logger.debug(`[extractValue] Special variable '${node.text}' treated as 0`);
-      return 0;
-
-    case 'binary_expression':
-      // Handle simple binary expressions
-      return evaluateBinaryExpression(node);
-
-    case 'unary_expression':
-      // Handle unary expressions like -5
-      return evaluateUnaryExpression(node);
-
-    case 'member_expression':
-      // Handle member access like size.x - for now return 0
-      logger.debug(`[extractValue] Member expression '${node.text}' treated as 0`);
-      return 0;
-
-    case 'function_call':
-      // Function calls that return numeric values - for now return 0
-      logger.debug(`[extractValue] Function call treated as 0`);
-      return 0;
-
-    case 'conditional_expression':
-      // Conditional expressions - evaluate the true branch for simplicity
-      if ('thenBranch' in node && node.thenBranch) {
-        return extractValue(node.thenBranch as ASTNode);
-      }
-      return 0;
-
-    case 'ERROR':
-      // Error nodes - try to extract numbers from text content
-      logger.warn(`[extractValue] Unhandled node type: 'ERROR', text: '${node.text || 'no text'}'`);
-      if (node.text) {
-        // Try to extract numbers from error node text
-        const numbers = node.text.match(/\d+(?:\.\d+)?/g);
-        if (numbers && numbers.length > 0) {
-          const firstNumber = parseFloat(numbers[0]);
-          if (!Number.isNaN(firstNumber)) {
-            logger.debug(`[extractValue] Extracted number ${firstNumber} from ERROR node text`);
-            return firstNumber;
-          }
-        }
-      }
-      return null;
-
-    case 'parenthesized_expression':
-      // Parenthesized expressions - try direct content extraction as fallback
-      if ('expression' in node && node.expression) {
-        return extractValue(node.expression as ASTNode);
-      }
-      // Try to extract number from text content as fallback
-      if (node.text) {
-        const textContent = node.text.replace(/[()[\]]/g, '').trim();
-        const numValue = parseFloat(textContent);
-        if (!Number.isNaN(numValue)) {
-          logger.debug(
-            `[extractValue] Extracted number ${numValue} from parenthesized text: '${node.text}'`
-          );
-          return numValue;
-        }
-      }
-      logger.warn(`[extractValue] Parenthesized expression missing inner expression`);
-      return null;
-
-    default:
-      // Unknown node types
-      logger.warn(
-        `[extractValue] Unhandled node type: '${node.type}', text: '${node.text || 'no text'}'`
-      );
-      return null;
+    return null;
   }
+
+  if (isIdentifierExpressionNode(node)) {
+    // Variable reference - for now return 0 as placeholder
+    logger.debug(`[extractValue] Identifier '${node.text}' treated as 0`);
+    return 0;
+  }
+
+  if (isSpecialVariableNode(node)) {
+    // Special variables like $t, $fn, etc. - treat as 0
+    logger.debug(`[extractValue] Special variable '${node.variable}' treated as 0`);
+    return 0;
+  }
+
+  if (isBinaryExpressionNode(node)) {
+    // Handle simple binary expressions
+    return evaluateBinaryExpression(node);
+  }
+
+  if (isUnaryExpressionNode(node)) {
+    // Handle unary expressions like -5
+    return evaluateUnaryExpression(node);
+  }
+
+  // For member_expression, we don't have a direct numeric value without evaluation context
+  // For now, return 0 as a placeholder.
+  if (node.type === 'expression' && (node as ExpressionNode).expressionType === 'accessor') {
+    logger.debug(`[extractValue] Member expression treated as 0`);
+    return 0;
+  }
+
+  if (isFunctionCallNode(node)) {
+    // Function calls that return numeric values - for now return 0
+    logger.debug(`[extractValue] Function call treated as 0`);
+    return 0;
+  }
+
+  if (isConditionalExpressionNode(node)) {
+    // Conditional expressions - evaluate the true branch for simplicity
+    if (node.thenBranch) {
+      return extractValue(node.thenBranch);
+    }
+    return 0;
+  }
+
+  if (isErrorNode(node)) {
+    // Error nodes - try to extract numbers from text content
+    logger.warn(
+      `[extractValue] Unhandled node type: 'ERROR', text: '${node.cstNodeText || 'no text'}'`
+    );
+    if (node.cstNodeText) {
+      // Try to extract numbers from error node text
+      const numbers = node.cstNodeText.match(/\d+(?:\.\d+)?/g);
+      if (numbers && numbers.length > 0) {
+        const firstNumber = parseFloat(numbers[0]);
+        if (!Number.isNaN(firstNumber)) {
+          logger.debug(`[extractValue] Extracted number ${firstNumber} from ERROR node text`);
+          return firstNumber;
+        }
+      }
+    }
+    return null;
+  }
+
+  if (isParenthesizedExpressionNode(node)) {
+    // Parenthesized expressions - try direct content extraction as fallback
+    if (node.expression) {
+      return extractValue(node.expression);
+    }
+    // Try to extract number from text content as fallback
+    if (node.location?.text) {
+      const textContent = node.location.text.replace(/[()[\]]/g, '').trim();
+      const numValue = parseFloat(textContent);
+      if (!Number.isNaN(numValue)) {
+        logger.debug(
+          `[extractValue] Extracted number ${numValue} from parenthesized text: '${node.location.text}'`
+        );
+        return numValue;
+      }
+    }
+    logger.warn(`[extractValue] Parenthesized expression missing inner expression`);
+    return null;
+  }
+
+  // Unknown node types
+  logger.warn(
+    `[extractValue] Unhandled node type: '${node.type}', text: '${node.location?.text || 'no text'}'`
+  );
+  return null;
 }
 
 /**
  * Evaluate a binary expression node
  */
 function evaluateBinaryExpression(node: ASTNode): number | null {
-  if (!('operator' in node) || !('left' in node) || !('right' in node)) {
+  if (!isBinaryExpressionNode(node)) {
     return null;
   }
 
-  const left = extractValue(node.left as ASTNode);
-  const right = extractValue(node.right as ASTNode);
+  const left = extractValue(node.left);
+  const right = extractValue(node.right);
 
   if (left === null || right === null) {
     return null;
@@ -162,11 +245,11 @@ function evaluateBinaryExpression(node: ASTNode): number | null {
  * Evaluate a unary expression node
  */
 function evaluateUnaryExpression(node: ASTNode): number | null {
-  if (!('operator' in node) || !('operand' in node)) {
+  if (!isUnaryExpressionNode(node)) {
     return null;
   }
 
-  const operand = extractValue(node.operand as ASTNode);
+  const operand = extractValue(node.operand);
   if (operand === null) {
     return null;
   }
@@ -193,101 +276,89 @@ export function extractVector(node: ASTNode): [number, number, number] | null {
 
   logger.debug(`[extractVector] Processing node type: '${node.type}'`);
 
-  switch (node.type) {
-    case 'vector':
-    case 'list':
-    case 'array':
-      // Direct vector/array nodes
-      if ('elements' in node && Array.isArray(node.elements)) {
-        const elements = node.elements as ASTNode[];
-        if (elements.length >= 3) {
-          const x = extractValue(elements[0]) ?? 0;
-          const y = extractValue(elements[1]) ?? 0;
-          const z = extractValue(elements[2]) ?? 0;
+  if (isVectorExpressionNode(node)) {
+    // Direct vector/array nodes
+    if (node.elements && Array.isArray(node.elements)) {
+      const elements = node.elements;
+      if (elements.length >= 3) {
+        const x = extractValue(elements[0] as ASTNode) ?? 0;
+        const y = extractValue(elements[1] as ASTNode) ?? 0;
+        const z = extractValue(elements[2] as ASTNode) ?? 0;
+        return [x, y, z];
+      }
+    }
+    return null;
+  }
+
+  if (isParenthesizedExpressionNode(node)) {
+    // Vector wrapped in parentheses
+    if (node.expression) {
+      return extractVector(node.expression);
+    }
+    // Try to parse vector from text content as fallback
+    if (node.location?.text) {
+      const vectorMatch = node.location.text.match(
+        /\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/
+      );
+      if (vectorMatch?.[1] && vectorMatch[2] && vectorMatch[3]) {
+        const x = parseFloat(vectorMatch[1]);
+        const y = parseFloat(vectorMatch[2]);
+        const z = parseFloat(vectorMatch[3]);
+        if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
+          logger.debug(
+            `[extractVector] Extracted vector [${x}, ${y}, ${z}] from parenthesized text: '${node.location.text}'`
+          );
           return [x, y, z];
         }
       }
-      return null;
+    }
+    return null;
+  }
 
-    case 'parenthesized_expression':
-      // Vector wrapped in parentheses
-      if ('expression' in node && node.expression) {
-        return extractVector(node.expression as ASTNode);
-      }
-      // Try to parse vector from text content as fallback
-      if (node.text) {
-        const vectorMatch = node.text.match(/\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/);
-        if (vectorMatch) {
-          const x = parseFloat(vectorMatch[1]);
-          const y = parseFloat(vectorMatch[2]);
-          const z = parseFloat(vectorMatch[3]);
-          if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
-            logger.debug(
-              `[extractVector] Extracted vector [${x}, ${y}, ${z}] from parenthesized text: '${node.text}'`
-            );
-            return [x, y, z];
-          }
+  if (isErrorNode(node)) {
+    // Try to extract vector from ERROR node text
+    if (node.cstNodeText) {
+      const vectorMatch = node.cstNodeText.match(
+        /\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/
+      );
+      if (vectorMatch?.[1] && vectorMatch[2] && vectorMatch[3]) {
+        const x = parseFloat(vectorMatch[1]);
+        const y = parseFloat(vectorMatch[2]);
+        const z = parseFloat(vectorMatch[3]);
+        if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
+          logger.debug(
+            `[extractVector] Extracted vector [${x}, ${y}, ${z}] from ERROR node text: '${node.cstNodeText}'`
+          );
+          return [x, y, z];
         }
       }
-      return null;
+    }
+    return null;
+  }
 
-    case 'expression':
-      // Handle expression nodes that might contain vectors
-      if ('expressionType' in node && node.expressionType === 'vector') {
-        if ('elements' in node && Array.isArray(node.elements)) {
-          const elements = node.elements as ASTNode[];
-          if (elements.length >= 3) {
-            const x = extractValue(elements[0]) ?? 0;
-            const y = extractValue(elements[1]) ?? 0;
-            const z = extractValue(elements[2]) ?? 0;
-            return [x, y, z];
-          }
-        }
+  // Try to extract single value and create a uniform vector
+  const value = extractValue(node);
+  if (value !== null) {
+    return [value, value, value];
+  }
+  // Try to parse vector from text as final fallback
+  if (node.location?.text) {
+    const vectorMatch = node.location.text.match(
+      /\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/
+    );
+    if (vectorMatch?.[1] && vectorMatch[2] && vectorMatch[3]) {
+      const x = parseFloat(vectorMatch[1]);
+      const y = parseFloat(vectorMatch[2]);
+      const z = parseFloat(vectorMatch[3]);
+      if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
+        logger.debug(
+          `[extractVector] Extracted vector [${x}, ${y}, ${z}] from text: '${node.location.text}'`
+        );
+        return [x, y, z];
       }
-      return null;
-
-    case 'ERROR':
-      // Try to extract vector from ERROR node text
-      if (node.text) {
-        const vectorMatch = node.text.match(/\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/);
-        if (vectorMatch) {
-          const x = parseFloat(vectorMatch[1]);
-          const y = parseFloat(vectorMatch[2]);
-          const z = parseFloat(vectorMatch[3]);
-          if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
-            logger.debug(
-              `[extractVector] Extracted vector [${x}, ${y}, ${z}] from ERROR node text: '${node.text}'`
-            );
-            return [x, y, z];
-          }
-        }
-      }
-      return null;
-
-    default: {
-      // Try to extract single value and create a uniform vector
-      const value = extractValue(node);
-      if (value !== null) {
-        return [value, value, value];
-      }
-      // Try to parse vector from text as final fallback
-      if (node.text) {
-        const vectorMatch = node.text.match(/\[\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/);
-        if (vectorMatch) {
-          const x = parseFloat(vectorMatch[1]);
-          const y = parseFloat(vectorMatch[2]);
-          const z = parseFloat(vectorMatch[3]);
-          if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
-            logger.debug(
-              `[extractVector] Extracted vector [${x}, ${y}, ${z}] from text: '${node.text}'`
-            );
-            return [x, y, z];
-          }
-        }
-      }
-      return null;
     }
   }
+  return null;
 }
 
 /**
@@ -298,45 +369,53 @@ export function extractBoolean(node: ASTNode): boolean | null {
     return null;
   }
 
-  switch (node.type) {
-    case 'boolean':
-    case 'true':
-      return true;
-    case 'false':
-      return false;
-    case 'number':
-    case 'integer':
-    case 'float': {
-      // Non-zero numbers are truthy
-      const value = extractValue(node);
-      return value !== null ? value !== 0 : null;
+  if (isLiteralNode(node)) {
+    if (typeof node.value === 'boolean') {
+      return node.value;
     }
-    default:
-      return null;
+    if (typeof node.value === 'number') {
+      // Non-zero numbers are truthy
+      return node.value !== 0;
+    }
   }
+  // For other node types, try to extract a numeric value and convert to boolean
+  const value = extractValue(node);
+  return value !== null ? value !== 0 : null;
 }
 
 /**
  * Extract parameters from a parameter list node
  */
-export function extractParameters(node: ASTNode): Record<string, any> {
-  const params: Record<string, any> = {};
+export function extractParameters(node: ASTNode): Record<string, number | null> {
+  const params: Record<string, number | null> = {};
 
-  if (!node || !('parameters' in node)) {
-    return params;
-  }
+  // Check if the node has a 'parameters' property and it's an array
+  if ('parameters' in node && Array.isArray((node as NodeWithParameters).parameters)) {
+    const parameters = (node as NodeWithParameters).parameters; // Use the new interface
 
-  const parameters = node.parameters as ASTNode[];
-  if (!Array.isArray(parameters)) {
-    return params;
-  }
+    for (const param of parameters) {
+      if (isParameterNode(param)) {
+        const name = param.name;
+        let value: number | null = null;
 
-  for (const param of parameters) {
-    if ('name' in param && 'value' in param) {
-      const name = param.name as string;
-      const value = extractValue(param.value as ASTNode);
-      if (name && value !== null) {
-        params[name] = value;
+        // param.value is ParameterValue, which can be ASTNode or primitive
+        if (typeof param.value === 'object' && param.value !== null && 'type' in param.value) {
+          // It's an ASTNode
+          value = extractValue(param.value as ASTNode);
+        } else if (typeof param.value === 'number') {
+          value = param.value;
+        } else if (typeof param.value === 'boolean') {
+          value = param.value ? 1 : 0;
+        } else if (typeof param.value === 'string') {
+          const numValue = parseFloat(param.value);
+          if (!Number.isNaN(numValue)) {
+            value = numValue;
+          }
+        }
+
+        if (name && value !== null) {
+          params[name] = value;
+        }
       }
     }
   }
@@ -347,19 +426,22 @@ export function extractParameters(node: ASTNode): Record<string, any> {
 /**
  * Create default value for a given type
  */
-export function createDefaultValue(type: 'number' | 'vector' | 'boolean', defaultVal?: any): any {
+export function createDefaultValue(
+  type: 'number' | 'vector' | 'boolean',
+  defaultVal?: number | number[] | boolean
+): number | number[] | boolean {
   switch (type) {
     case 'number':
       return typeof defaultVal === 'number' ? defaultVal : 1;
     case 'vector':
       if (Array.isArray(defaultVal) && defaultVal.length >= 3) {
-        return [defaultVal[0], defaultVal[1], defaultVal[2]];
+        return [defaultVal[0] ?? 1, defaultVal[1] ?? 1, defaultVal[2] ?? 1];
       }
       return [1, 1, 1];
     case 'boolean':
       return typeof defaultVal === 'boolean' ? defaultVal : false;
     default:
-      return defaultVal;
+      return defaultVal ?? 0; // Fallback for unexpected types
   }
 }
 
@@ -409,10 +491,9 @@ export function evaluateBinaryExpressionExternal(node: {
  */
 export function isFunctionLiteral(node: ASTNode): boolean {
   return (
-    node.type === 'function' ||
-    node.type === 'function_literal' ||
-    node.type === 'function_definition' ||
-    ('expressionType' in node && node.expressionType === 'function_literal')
+    (node.type === 'expression' &&
+      (node as ExpressionNode).expressionType === 'function_literal') ||
+    node.type === 'function_definition'
   );
 }
 
@@ -421,7 +502,11 @@ export function isFunctionLiteral(node: ASTNode): boolean {
  */
 export function evaluateSpecialVariable(node: ASTNode): number {
   // Special variables like $t, $fn, $fa, $fs always return 0 for CSG operations
-  logger.debug(`[evaluateSpecialVariable] Special variable '${node.text}' evaluated as 0`);
+  if (isSpecialVariableNode(node)) {
+    logger.debug(`[evaluateSpecialVariable] Special variable '${node.variable}' evaluated as 0`);
+  } else {
+    logger.warn(`[evaluateSpecialVariable] Node is not a SpecialVariableNode: '${node.type}'`);
+  }
   return 0;
 }
 

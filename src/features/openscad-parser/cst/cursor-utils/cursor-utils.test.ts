@@ -60,10 +60,10 @@ describe('cursor-utils', () => {
       console.log('Cursor properties:', Object.getOwnPropertyNames(cursor));
 
       // Log the current node in detail
-      const logNode = (node: any, depth = 0) => {
+      const logNode = (node: TSNode, depth = 0) => {
         if (!node) return {};
         const indent = '  '.repeat(depth);
-        const result: any = {
+        const result: Record<string, unknown> = {
           type: node.type,
           text: node.text,
           startPosition: node.startPosition,
@@ -120,10 +120,13 @@ describe('cursor-utils', () => {
 
           // Check if it's the expected function name
           if (cursor.nodeText === 'cube') {
+            // No-op: This block was for debugging and had an empty statement.
           }
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       } else {
+        // No-op: This block was for debugging and had an empty statement.
       }
 
       // The test will pass as we're just checking the structure

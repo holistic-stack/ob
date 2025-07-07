@@ -100,8 +100,7 @@ describe('TransformVisitor', () => {
       // Update the visitor with the current code being tested
       visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
-      if (transformCstNode) {
-      }
+      // No-op: This block was for debugging and had an empty statement.
 
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
@@ -140,8 +139,9 @@ describe('TransformVisitor', () => {
             );
           }
         }
-      } else {
       }
+
+      // No-op: This block was for debugging and had an empty statement.
       const resultNode = visitor.visitModuleInstantiation(
         transformCstNode
       ) as ast.TranslateNode | null;
@@ -252,7 +252,7 @@ describe('TransformVisitor', () => {
         loc: mockLocation,
         childForFieldName: () => null,
         children: [],
-      } as any;
+      } as TSNode;
       const mockAngleParam: ast.Parameter = {
         name: 'a',
         value: {
@@ -263,9 +263,11 @@ describe('TransformVisitor', () => {
         } as ast.LiteralNode,
       };
       // Access protected method for testing
-      const result = (visitor as any).createASTNodeForFunction(mockRotateCstNode, 'rotate', [
-        mockAngleParam,
-      ]) as ast.RotateNode | null;
+      const result = (visitor as TransformVisitor).createASTNodeForFunction(
+        mockRotateCstNode,
+        'rotate',
+        [mockAngleParam]
+      ) as ast.RotateNode | null;
       expect(result?.type).toBe('rotate');
       // expect(result?.angle).toBe(90); // or result.a depending on ast-types
       // expect(result?.v).toBeUndefined(); // or some default if applicable

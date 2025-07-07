@@ -20,7 +20,7 @@
  * ```
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, fail, it } from 'vitest';
 import { ErrorHandler } from '../../../../error-handling/index.js';
 import { OpenscadParser } from '../../../../openscad-parser';
 import type * as ast from '../../../ast-types.js';
@@ -38,8 +38,8 @@ function isRangeExpressionNode(node: unknown): node is ast.RangeExpressionNode {
   return (
     !!node &&
     typeof node === 'object' &&
-    (node as any).type === 'expression' &&
-    (node as any).expressionType === 'range_expression'
+    (node as ast.ExpressionNode).type === 'expression' &&
+    (node as ast.RangeExpressionNode).expressionType === 'range_expression'
   );
 }
 
@@ -497,7 +497,7 @@ describe('RangeExpressionVisitor', () => {
         expect(valueNode).toBeTruthy(); // Ensure valueNode is found
         expect(valueNode?.type).toBe(tc.expectedValueNodeType);
 
-        const result = visitor.visitNode(valueNode as any);
+        const result = visitor.visitNode(valueNode);
         expect(result?.type).toBe('error');
         const errorNode = result as ast.ErrorNode;
         expect(errorNode.errorCode).toBe(tc.errorCode);

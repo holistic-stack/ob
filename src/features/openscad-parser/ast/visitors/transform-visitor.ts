@@ -140,9 +140,17 @@ export class TransformVisitor extends BaseASTVisitor {
    * @returns True if the function is a transform operation
    */
   private isSupportedTransformFunction(functionName: string): boolean {
-    return ['translate', 'rotate', 'scale', 'mirror', 'color', 'multmatrix', 'offset'].includes(
-      functionName
-    );
+    return [
+      'translate',
+      'rotate',
+      'scale',
+      'mirror',
+      'color',
+      'multmatrix',
+      'offset',
+      'linear_extrude',
+      'rotate_extrude',
+    ].includes(functionName);
   }
 
   /**
@@ -340,6 +348,7 @@ export class TransformVisitor extends BaseASTVisitor {
           children.push(visitedChild);
         }
       } else {
+        // No-op: This block was for debugging and had an empty statement.
       }
     } else {
       // No body field found - look for direct child statements or blocks
@@ -376,7 +385,7 @@ export class TransformVisitor extends BaseASTVisitor {
     // Create the transform node with children
     const transformNode = this.createTransformNode(node, functionName, args);
     if (transformNode && 'children' in transformNode) {
-      (transformNode as any).children = children;
+      (transformNode as ast.ASTNode & { children: ast.ASTNode[] }).children = children;
     }
 
     return transformNode;
@@ -568,6 +577,118 @@ export class TransformVisitor extends BaseASTVisitor {
           children: [],
           location: getLocation(node),
         };
+      case 'linear_extrude': {
+        // Handle linear_extrude transform
+        let height = 1;
+        let center = false;
+        let convexity: number | undefined;
+        let twist: number | undefined;
+        let slices: number | undefined;
+        let scale: number | ast.Vector2D | undefined;
+        let $fn: number | undefined;
+
+        // Extract height parameter
+        const heightParam = args.find((arg) => arg.name === undefined || arg.name === 'height');
+        if (heightParam?.value && typeof heightParam.value === 'number') {
+          height = heightParam.value;
+        }
+
+        // Extract center parameter
+        const centerParam = args.find((arg) => arg.name === 'center');
+        if (centerParam?.value && typeof centerParam.value === 'boolean') {
+          center = centerParam.value;
+        }
+
+        // Extract other parameters
+        const convexityParam = args.find((arg) => arg.name === 'convexity');
+        if (convexityParam?.value && typeof convexityParam.value === 'number') {
+          convexity = convexityParam.value;
+        }
+
+        const twistParam = args.find((arg) => arg.name === 'twist');
+        if (twistParam?.value && typeof twistParam.value === 'number') {
+          twist = twistParam.value;
+        }
+
+        const slicesParam = args.find((arg) => arg.name === 'slices');
+        if (slicesParam?.value && typeof slicesParam.value === 'number') {
+          slices = slicesParam.value;
+        }
+
+        const scaleParam = args.find((arg) => arg.name === 'scale');
+        if (scaleParam?.value) {
+          if (typeof scaleParam.value === 'number') {
+            scale = scaleParam.value;
+          } else if (Array.isArray(scaleParam.value) && scaleParam.value.length >= 2) {
+            scale = [scaleParam.value[0], scaleParam.value[1]];
+          }
+        }
+
+        const fnParam = args.find((arg) => arg.name === '$fn');
+        if (fnParam?.value && typeof fnParam.value === 'number') {
+          $fn = fnParam.value;
+        }
+
+        return {
+          type: 'linear_extrude',
+          height,
+          center,
+          ...(convexity !== undefined && { convexity }),
+          ...(twist !== undefined && { twist }),
+          ...(slices !== undefined && { slices }),
+          ...(scale !== undefined && { scale }),
+          ...($fn !== undefined && { $fn }),
+          children: [],
+          location: getLocation(node),
+        };
+      }
+      case 'rotate_extrude': {
+        // Handle rotate_extrude transform
+        let angle = 360; // Default to full revolution
+        let convexity: number | undefined;
+        let $fn: number | undefined;
+        let $fa: number | undefined;
+        let $fs: number | undefined;
+
+        // Extract angle parameter
+        const angleParam = args.find((arg) => arg.name === undefined || arg.name === 'angle');
+        if (angleParam?.value && typeof angleParam.value === 'number') {
+          angle = angleParam.value;
+        }
+
+        // Extract convexity parameter
+        const convexityParam = args.find((arg) => arg.name === 'convexity');
+        if (convexityParam?.value && typeof convexityParam.value === 'number') {
+          convexity = convexityParam.value;
+        }
+
+        // Extract resolution parameters
+        const fnParam = args.find((arg) => arg.name === '$fn');
+        if (fnParam?.value && typeof fnParam.value === 'number') {
+          $fn = fnParam.value;
+        }
+
+        const faParam = args.find((arg) => arg.name === '$fa');
+        if (faParam?.value && typeof faParam.value === 'number') {
+          $fa = faParam.value;
+        }
+
+        const fsParam = args.find((arg) => arg.name === '$fs');
+        if (fsParam?.value && typeof fsParam.value === 'number') {
+          $fs = fsParam.value;
+        }
+
+        return {
+          type: 'rotate_extrude',
+          ...(angle !== 360 && { angle }),
+          ...(convexity !== undefined && { convexity }),
+          ...($fn !== undefined && { $fn }),
+          ...($fa !== undefined && { $fa }),
+          ...($fs !== undefined && { $fs }),
+          children: [],
+          location: getLocation(node),
+        };
+      }
       default:
         this.errorHandler.logWarning(
           `[TransformVisitor.createTransformNode] Unsupported transform: ${functionName}`,

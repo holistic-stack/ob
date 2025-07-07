@@ -6,6 +6,7 @@
  */
 
 import { render, screen } from '@testing-library/react';
+
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';

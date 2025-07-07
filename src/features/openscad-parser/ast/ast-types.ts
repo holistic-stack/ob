@@ -826,12 +826,14 @@ export type BinaryOperator =
   | '>'
   | '>='
   | '&&'
-  | '||';
+  | '||'
+  | '^' // Added
+  | '**'; // Added
 
 /**
  * Unary operators in OpenSCAD
  */
-export type UnaryOperator = '-' | '!';
+export type UnaryOperator = '-' | '!' | '+'; // Added '+'
 
 /**
  * Represents a module definition

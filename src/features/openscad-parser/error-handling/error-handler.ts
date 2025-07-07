@@ -43,14 +43,14 @@
 import { Logger, type LoggerOptions } from './logger.js';
 import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 import {
+  ReferenceError as CustomReferenceError,
+  SyntaxError as CustomSyntaxError,
+  TypeError as CustomTypeError,
   ErrorCode,
   type ErrorContext,
-  InternalError,
+  InternalError as InternalParserError,
   ParserError,
-  ReferenceError,
   Severity,
-  SyntaxError,
-  TypeError,
   ValidationError,
 } from './types/error-types.js';
 
@@ -136,8 +136,8 @@ export class ErrorHandler {
    * @param context - Error context
    * @returns New SyntaxError instance
    */
-  createSyntaxError(message: string, context: ErrorContext = {}): SyntaxError {
-    return new SyntaxError(message, context);
+  createSyntaxError(message: string, context: ErrorContext = {}): CustomSyntaxError {
+    return new CustomSyntaxError(message, context);
   }
 
   /**
@@ -146,8 +146,8 @@ export class ErrorHandler {
    * @param context - Error context
    * @returns New TypeError instance
    */
-  createTypeError(message: string, context: ErrorContext = {}): TypeError {
-    return new TypeError(message, context);
+  createTypeError(message: string, context: ErrorContext = {}): CustomTypeError {
+    return new CustomTypeError(message, context);
   }
 
   /**
@@ -166,8 +166,8 @@ export class ErrorHandler {
    * @param context - Error context
    * @returns New ReferenceError instance
    */
-  createReferenceError(message: string, context: ErrorContext = {}): ReferenceError {
-    return new ReferenceError(message, context);
+  createReferenceError(message: string, context: ErrorContext = {}): CustomReferenceError {
+    return new CustomReferenceError(message, context);
   }
 
   /**
@@ -176,8 +176,8 @@ export class ErrorHandler {
    * @param context - Error context
    * @returns New InternalError instance
    */
-  createInternalError(message: string, context: ErrorContext = {}): InternalError {
-    return new InternalError(message, context);
+  createInternalError(message: string, context: ErrorContext = {}): InternalParserError {
+    return new InternalParserError(message, context);
   }
 
   /**
@@ -282,7 +282,7 @@ export class ErrorHandler {
    * @param context - Optional context information
    * @param node - Optional tree-sitter node for additional context
    */
-  logInfo(_message: string, _context?: string, _node?: any): void {
+  logInfo(_message: string, _context?: string, _node?: TSNode): void {
     // Info logging removed
   }
 
@@ -292,7 +292,7 @@ export class ErrorHandler {
    * @param context - Optional context information
    * @param node - Optional tree-sitter node for additional context
    */
-  logDebug(_message: string, _context?: string, _node?: any): void {
+  logDebug(_message: string, _context?: string, _node?: TSNode): void {
     // Debug logging removed
   }
 
@@ -325,7 +325,7 @@ export class ErrorHandler {
    *
    * @since 0.1.0
    */
-  logWarning(_message: string, _context?: string, _node?: any): void {
+  logWarning(_message: string, _context?: string, _node?: TSNode): void {
     // Warning logging removed
   }
 
@@ -361,7 +361,7 @@ export class ErrorHandler {
    *
    * @since 0.1.0
    */
-  logError(message: string, _context?: string, _node?: any): void {
+  logError(message: string, _context?: string, _node?: TSNode): void {
     this.logger.error(message);
   }
 
@@ -403,7 +403,7 @@ export class ErrorHandler {
    *
    * @since 0.1.0
    */
-  handleError(error: Error, context?: string, _node?: any): void {
+  handleError(error: Error, context?: string, _node?: TSNode): void {
     const message = context ? `${context}: ${error.message}` : error.message;
     this.logger.error(message);
   }

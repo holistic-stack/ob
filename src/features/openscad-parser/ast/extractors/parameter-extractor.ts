@@ -180,37 +180,48 @@ export function extractNumberParameter(
   param: ast.Parameter,
   errorHandler?: ErrorHandler
 ): number | null {
-  if (!param?.value) return null;
+  console.log(`[extractNumberParameter] INIT - param:`, JSON.stringify(param, null, 2));
+  if (!param?.value) {
+    console.log(`[extractNumberParameter] DEBUG - param.value is null or undefined.`);
+    return null;
+  }
 
   // Handle number as raw value
   if (typeof param.value === 'number') {
+    console.log(`[extractNumberParameter] DEBUG - param.value is raw number: ${param.value}`);
     return param.value;
   }
 
   // Handle expression node
   if (isExpressionNode(param.value)) {
+    console.log(`[extractNumberParameter] DEBUG - param.value is an expression node.`);
     if (
       param.value.expressionType === 'literal' &&
       typeof (param.value as ast.LiteralNode).value === 'number'
     ) {
-      return (param.value as ast.LiteralNode).value as number;
+      const literalValue = (param.value as ast.LiteralNode).value as number;
+      console.log(`[extractNumberParameter] DEBUG - Literal number expression: ${literalValue}`);
+      return literalValue;
     }
 
     if (param.value.expressionType === 'unary') {
       const unaryExpr = param.value as ast.UnaryExpressionNode;
+      console.log(`[extractNumberParameter] DEBUG - Unary expression: ${unaryExpr.operator}`);
       if (
         unaryExpr.operator === '-' &&
         unaryExpr.operand.expressionType === 'literal' &&
         typeof (unaryExpr.operand as ast.LiteralNode).value === 'number'
       ) {
-        return -(unaryExpr.operand as ast.LiteralNode).value;
+        const unaryResult = -(unaryExpr.operand as ast.LiteralNode).value;
+        console.log(`[extractNumberParameter] DEBUG - Unary expression result: ${unaryResult}`);
+        return unaryResult;
       }
     }
 
     // Handle binary expressions directly
     if (param.value.expressionType === 'binary' && errorHandler) {
       console.log(
-        `[extractNumberParameter] Attempting to evaluate binary expression:`,
+        `[extractNumberParameter] DEBUG - Attempting to evaluate binary expression:`,
         JSON.stringify(param.value, null, 2)
       );
       try {
@@ -246,13 +257,19 @@ export function extractNumberParameter(
               result = leftValue % rightValue;
               break;
             default:
+              console.log(
+                `[extractNumberParameter] WARN - Unknown binary operator: ${binaryExpr.operator}`
+              );
               return null;
           }
+          console.log(`[extractNumberParameter] DEBUG - Binary expression result: ${result}`);
           return result;
         } else {
+          console.log(`[extractNumberParameter] DEBUG - Left or right operand is null.`);
           return null;
         }
-      } catch (_error) {
+      } catch (error) {
+        console.log(`[extractNumberParameter] ERROR - Error evaluating binary expression:`, error);
         return null;
       }
     }
@@ -260,23 +277,33 @@ export function extractNumberParameter(
     // Handle other expression types
     if (errorHandler) {
       console.log(
-        `[extractNumberParameter] Attempting to evaluate expression:`,
+        `[extractNumberParameter] DEBUG - Attempting to evaluate expression via registry:`,
         JSON.stringify(param.value, null, 2)
       );
       try {
         // Use the expression evaluator registry for non-binary expressions
         const result = evaluateExpression(param.value, errorHandler);
 
-        console.log(`[extractNumberParameter] Expression evaluation result:`, result);
+        console.log(
+          `[extractNumberParameter] DEBUG - Expression evaluation registry result:`,
+          result
+        );
 
         // Check if the result is a number
         if (result !== null && typeof result === 'number') {
           return result;
         } else {
-          console.log(`[extractNumberParameter] Expression did not evaluate to a number:`, result);
+          console.log(
+            `[extractNumberParameter] WARN - Expression did not evaluate to a number:`,
+            result
+          );
           return null;
         }
-      } catch (_error) {
+      } catch (error) {
+        console.log(
+          `[extractNumberParameter] ERROR - Error evaluating expression via registry:`,
+          error
+        );
         return null;
       }
     }
@@ -284,12 +311,21 @@ export function extractNumberParameter(
 
   // Try to parse the value as a number if it's a string
   if (typeof param.value === 'string') {
+    console.log(
+      `[extractNumberParameter] DEBUG - param.value is string, attempting parseFloat: '${param.value}'`
+    );
     const num = parseFloat(param.value);
     if (!Number.isNaN(num)) {
+      console.log(`[extractNumberParameter] DEBUG - parseFloat successful: ${num}`);
       return num;
+    } else {
+      console.log(
+        `[extractNumberParameter] WARN - parseFloat returned NaN for string: '${param.value}'`
+      );
     }
   }
 
+  console.log(`[extractNumberParameter] END - Could not extract number. Returning null.`);
   return null;
 }
 

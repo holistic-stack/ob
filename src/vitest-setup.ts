@@ -69,20 +69,6 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock navigator.userAgent for detect-gpu
-if (global.navigator) {
-  Object.defineProperty(global.navigator, 'userAgent', {
-    value:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-    writable: true,
-  });
-} else {
-  (global as any).navigator = {
-    userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-  };
-}
-
 // Mock IntersectionObserver for visibility-based components
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),

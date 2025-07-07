@@ -72,7 +72,9 @@ export class MatrixServiceContainer {
 /**
  * Get matrix service container instance
  */
-export async function getMatrixServiceContainer(_config?: any): Promise<MatrixServiceContainer> {
+export async function getMatrixServiceContainer(
+  _config?: unknown
+): Promise<MatrixServiceContainer> {
   logger.debug('Getting matrix service container (stub)');
   return MatrixServiceContainer.getInstance();
 }

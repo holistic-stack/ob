@@ -41,7 +41,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode as any);
+      const result = visitor.visit(moduleInstNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -67,7 +67,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode as any);
+      const result = visitor.visit(moduleInstNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -106,7 +106,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode as any);
+      const result = visitor.visit(moduleInstNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -141,7 +141,7 @@ describe('FunctionCallVisitor', () => {
 
       // Create visitor and process the node
       const visitor = new FunctionCallVisitor(code, errorHandler);
-      const result = visitor.visit(moduleInstNode as any);
+      const result = visitor.visit(moduleInstNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();
@@ -182,8 +182,8 @@ describe('FunctionCallVisitor', () => {
       const visitor = new FunctionCallVisitor(code, errorHandler);
 
       // Mock the createExpressionNode method to handle the nested function call
-      const originalMethod = (visitor as any).createExpressionNode;
-      (visitor as any).createExpressionNode = vi
+      const originalMethod = (visitor as FunctionCallVisitor).createExpressionNode;
+      (visitor as FunctionCallVisitor).createExpressionNode = vi
         .fn()
         .mockImplementation((node: TSNode): ast.ExpressionNode | null => {
           if (node.text.includes('inner')) {
@@ -206,7 +206,7 @@ describe('FunctionCallVisitor', () => {
           return originalMethod?.call(visitor, node) ?? null;
         });
 
-      const result = visitor.visit(moduleInstNode as any);
+      const result = visitor.visit(moduleInstNode as TSNode);
 
       // Verify the result
       expect(result).not.toBeNull();

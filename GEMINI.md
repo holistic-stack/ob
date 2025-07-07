@@ -28,7 +28,7 @@ This document provides guidelines for the Gemini code assistant to ensure its co
 
 - **Frontend**: React 19, TypeScript 5.8, Vite
 - **State Management**: Zustand 5
-- **3D Rendering**: React Three Fiber, three.js, and a custom CSG utility.
+- **3D Rendering**: React Three Fiber, three.js, a custom CSG utility, and `gl-matrix` for optimized matrix operations.
 - **Code Editor**: Monaco Editor
 - **Parsing**: `@holistic-stack/openscad-parser`
 - **Styling**: Tailwind CSS v4 with a custom Glass Morphism design system.

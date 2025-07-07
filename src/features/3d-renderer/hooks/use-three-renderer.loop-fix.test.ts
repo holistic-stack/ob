@@ -11,75 +11,89 @@ import { useThreeRenderer } from './use-three-renderer.js';
 
 // Mock Three.js renderer store with stable state - tracks if initialized
 let mockIsInitialized = false;
-const mockStoreState = {
-  get scene() {
-    return null;
-  },
-  get camera() {
-    return null;
-  },
-  get renderer() {
-    return null;
-  },
-  get isInitialized() {
-    return mockIsInitialized;
-  },
-  isRendering: false,
-  error: null,
-  meshes: [],
-  metrics: {
-    renderTime: 0,
-    parseTime: 0,
-    memoryUsage: 0,
-    frameRate: 60,
-    operationId: 'initial',
-    cpuTime: 0,
-    peakMemoryUsage: 0,
-    ioOperations: 0,
-    networkRequests: 0,
-    cacheHits: 0,
-    cacheMisses: 0,
-    throughput: 0,
-    errorRate: 0,
-    meshCount: 0,
-    triangleCount: 0,
-    vertexCount: 0,
-    drawCalls: 0,
-    textureMemory: 0,
-    bufferMemory: 0,
-  },
-  initializeRenderer: vi.fn(() => {
-    mockIsInitialized = true;
-  }),
-  renderAST: vi.fn(),
-  clearScene: vi.fn(),
-  updateCamera: vi.fn(),
-  resetCamera: vi.fn(),
-  takeScreenshot: vi.fn(),
-  updateMetrics: vi.fn(),
-  setError: vi.fn(),
-  dispose: vi.fn(() => {
-    mockIsInitialized = false;
-  }),
-};
 
 vi.mock('../store/three-renderer.store.js', () => ({
-  useThreeRendererStore: vi.fn(() => mockStoreState),
+  useThreeRendererStore: vi.fn(() => ({
+    get scene() {
+      return null;
+    },
+    get camera() {
+      return null;
+    },
+    get renderer() {
+      return null;
+    },
+    get isInitialized() {
+      return mockIsInitialized;
+    },
+    isRendering: false,
+    error: null,
+    meshes: [],
+    metrics: {
+      renderTime: 0,
+      parseTime: 0,
+      memoryUsage: 0,
+      frameRate: 60,
+      operationId: 'initial',
+      cpuTime: 0,
+      peakMemoryUsage: 0,
+      ioOperations: 0,
+      networkRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      throughput: 0,
+      errorRate: 0,
+      meshCount: 0,
+      triangleCount: 0,
+      vertexCount: 0,
+      drawCalls: 0,
+      textureMemory: 0,
+      bufferMemory: 0,
+    },
+    initializeRenderer: vi.fn(() => {
+      mockIsInitialized = true;
+    }),
+    renderAST: vi.fn(),
+    clearScene: vi.fn(),
+    updateCamera: vi.fn(),
+    resetCamera: vi.fn(),
+    takeScreenshot: vi.fn(),
+    updateMetrics: vi.fn(),
+    setError: vi.fn(),
+    dispose: vi.fn(() => {
+      mockIsInitialized = false;
+    }),
+  })),
 }));
 
-// Mock app store
+// Mock app store with proper fallbacks
 vi.mock('../../store/index.js', () => ({
   useAppStore: vi.fn((selector) => {
     if (typeof selector === 'function') {
-      const selectorStr = selector.toString();
-      if (selectorStr.includes('selectParsingAST')) return [];
-      if (selectorStr.includes('selectRenderingCamera')) return null;
-      if (selectorStr.includes('updateCamera')) return vi.fn();
+      // Create a mock state to pass to selectors
+      const mockState = {
+        parsing: { ast: [] },
+        rendering: { camera: null },
+        updateCamera: vi.fn(),
+      };
+
+      try {
+        // Try to call the selector with mock state
+        const result = selector(mockState);
+        return result;
+      } catch (_error) {
+        // If selector fails, provide safe defaults
+        const selectorStr = selector.toString();
+        if (selectorStr.includes('parsing') || selectorStr.includes('ast')) return [];
+        if (selectorStr.includes('camera')) return null;
+        if (selectorStr.includes('updateCamera')) return vi.fn();
+        return null;
+      }
     }
     return null;
   }),
-  selectParsingAST: vi.fn(),
-  selectRenderingCamera: vi.fn(),
+  selectParsingAST: vi.fn(() => []),
+  selectRenderingCamera: vi.fn(() => null),
 }));
 
 // Mock the frame hook

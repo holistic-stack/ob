@@ -9,9 +9,19 @@ import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import * as THREE from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NodeId, NodeType } from '../../../shared/types/ast.types';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { ASTNode, CubeNode, SphereNode } from '../../openscad-parser/core/ast-types.js';
-import type { RendererProps, Scene3DConfig } from '../types/renderer.types';
+import type {
+  Mesh3D,
+  RendererProps,
+  RenderingMetrics,
+  Scene3DConfig,
+} from '../types/renderer.types';
+
+// Helper to create branded types for testing
+const createNodeId = (id: string): NodeId => id as NodeId;
+const createNodeType = (type: string): NodeType => type as NodeType;
 
 interface MockCanvasProps {
   children: React.ReactNode;
@@ -144,10 +154,10 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
                 mesh: mockMesh as unknown as THREE.Mesh,
                 metadata: {
                   // NodeMetadata properties
-                  nodeId: `node-${index}`,
-                  nodeType: node.type || 'unknown',
+                  nodeId: createNodeId(`node-${index}`),
+                  nodeType: createNodeType(node.type || 'unknown'),
                   depth: 0,
-                  parentId: undefined,
+                  parentId: undefined as NodeId | undefined, // Explicitly cast to NodeId | undefined
                   childrenIds: [],
                   size: 1,
                   complexity: 1,
@@ -164,7 +174,7 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
                   visible: true,
                 },
                 dispose: vi.fn(),
-              }) as any
+              }) as Mesh3D
           );
           onRenderComplete(mockMeshes);
         }
@@ -194,7 +204,10 @@ const MockThreeRenderer: React.FC<RendererProps> = ({
             drawCalls: ast.length,
             textureMemory: 0,
             bufferMemory: ast.length * 1024,
-          } as any);
+            fps: 60, // Added for RenderingMetrics
+            frameTime: 16.67, // Added for RenderingMetrics (approx 1000/60)
+            executionTime: 10, // Added for RenderingMetrics (same as renderTime)
+          } as RenderingMetrics);
         }
       }, 10);
     }

@@ -283,8 +283,8 @@ export class IntegrationTestSuite {
         parseResult.data.forEach((node, index) => {
           logger.debug(`Node ${index}:`, {
             type: node.type,
-            name: (node as any).name || 'unnamed',
-            children: (node as any).children?.length || 0,
+            name: 'name' in node && typeof node.name === 'string' ? node.name : 'unnamed',
+            children: 'children' in node && Array.isArray(node.children) ? node.children.length : 0,
           });
         });
       } else {

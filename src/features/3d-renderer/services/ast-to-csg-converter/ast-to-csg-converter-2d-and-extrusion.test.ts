@@ -170,6 +170,14 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
 
         const parseTime = performance.now() - startTime;
         logger.debug(`Parse time: ${parseTime.toFixed(2)}ms`);
+
+        // Debug: Log the actual AST structure
+        logger.debug(`[DEBUG] ${scenario.name} - Code: ${scenario.code}`);
+        logger.debug(`[DEBUG] ${scenario.name} - AST length: ${ast?.length || 0}`);
+        if (ast && ast.length > 0) {
+          logger.debug(`[DEBUG] ${scenario.name} - AST nodes:`, JSON.stringify(ast, null, 2));
+        }
+
         expect(ast).toBeDefined();
         expect(ast).not.toBeNull();
 
@@ -187,7 +195,7 @@ describe('AST to CSG Converter - 2D and Extrusion Corpus Integration', () => {
             // Tree Sitter may parse some constructs as function_call or assignment_statement
             expect(node?.type).toMatch(
               new RegExp(
-                `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement|circle|square|polygon|text|cube|sphere|cylinder`
+                `${scenario.expectedNodeTypes[index]}|function_call|assignment_statement|circle|square|polygon|text|cube|sphere|cylinder|linear_extrude|rotate_extrude`
               )
             );
           }

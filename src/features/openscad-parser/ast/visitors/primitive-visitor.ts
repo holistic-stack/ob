@@ -285,10 +285,10 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    */
   override visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     try {
-      if (node.text) {
-      } else {
-      }
-    } catch (_error) {}
+      // No-op: This block was for debugging and had empty statements.
+    } catch (_error) {
+      // No-op: This block was for debugging and had an empty catch.
+    }
 
     // Based on CST structure analysis:
     // accessor_expression has two children:
@@ -380,6 +380,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         args = extractArguments(argsNode, undefined, this.source);
       }
     } else {
+      // No-op: This block was for debugging and had an empty statement.
     }
 
     // Process based on function name
@@ -463,6 +464,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
               // For 2D vectors, add a default z value
               size = [vector[0] ?? 0, vector[1] ?? 0, 1];
             } else {
+              // No-op: This block was for debugging and had an empty statement.
             }
           } else {
             // If not a vector, try to extract as a number
@@ -470,6 +472,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
             if (sizeValue !== null) {
               size = sizeValue;
             } else {
+              // No-op: This block was for debugging and had an empty statement.
             }
           }
         }
@@ -480,6 +483,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           if (centerValue !== null) {
             center = centerValue;
           } else {
+            // No-op: This block was for debugging and had an empty statement.
           }
         }
       }
@@ -517,6 +521,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (radiusValue !== null) {
           radius = radiusValue;
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       }
       // Handle diameter parameter (named 'd')
@@ -526,6 +531,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           diameter = diameterValue;
           radius = diameterValue / 2; // Set radius based on diameter
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       }
       // Handle $fn parameter
@@ -534,6 +540,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (fnValue !== null) {
           fn = fnValue;
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       }
       // Handle $fa parameter
@@ -542,6 +549,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (faValue !== null) {
           fa = faValue;
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       }
       // Handle $fs parameter
@@ -550,6 +558,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (fsValue !== null) {
           fs = fsValue;
         } else {
+          // No-op: This block was for debugging and had an empty statement.
         }
       }
     }

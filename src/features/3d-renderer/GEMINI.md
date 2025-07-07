@@ -1,6 +1,6 @@
 ## Gemini Guidelines for 3D Renderer
 
-- **Technology**: React Three Fiber, three.js, and our custom CSG utility.
+- **Technology**: React Three Fiber, three.js, our custom CSG utility, and `gl-matrix` for optimized matrix operations.
 - **CSG Operations**: All CSG operations (union, difference, intersection) are handled by the functions in `src/features/3d-renderer/services/csg-operations.ts`. Do not use any other CSG library.
 - **State**: The 3D scene state is managed by the `scene` slice in the Zustand store. All updates to the scene should be done through actions. Use `readonly` for all state properties.
 - **Performance**: Prioritize performance. Use `React.memo`, `useMemo`, and `useCallback` to prevent unnecessary re-renders. WebGL2 features are enabled. Optimize for readability first, then performance. Profile to identify actual bottlenecks. Use appropriate data structures and memoization. Minimize DOM manipulations and optimize 3D operations.

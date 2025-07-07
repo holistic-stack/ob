@@ -42,8 +42,8 @@ interface ServiceStatus {
   readonly initialized: boolean;
   readonly errors: readonly string[];
   readonly lastOperation: number;
-  readonly overall?: 'healthy' | 'degraded' | 'unhealthy';
-  readonly services?: readonly unknown[];
+  readonly overall?: string; // Changed to string to match MatrixIntegrationService
+  readonly services?: Record<string, unknown>; // Changed to Record<string, unknown> to match MatrixIntegrationService
   readonly timestamp?: number;
   readonly recommendations?: readonly string[];
 }
@@ -247,8 +247,8 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
         if (result.success && result.data) {
           // Extract result and performance from enhanced matrix result
-          const resultData = (result.data as any)?.result || result.data;
-          const performanceData = (result.data as any)?.performance;
+          const resultData = result.data.result;
+          const performanceData = result.data.performance;
           return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
@@ -281,8 +281,8 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
         if (result.success && result.data) {
           // Extract result and performance from enhanced matrix result
-          const resultData = (result.data as any)?.result || result.data;
-          const performanceData = (result.data as any)?.performance;
+          const resultData = result.data.result;
+          const performanceData = result.data.performance;
           return createSuccessState(resultData, performanceData);
         } else {
           const errorMessage = result.success ? 'Matrix inversion failed' : result.error;
@@ -319,8 +319,8 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
         if (result.success && result.data) {
           // Extract result and performance from enhanced matrix result
-          const resultData = (result.data as any)?.result || result.data;
-          const performanceData = (result.data as any)?.performance;
+          const resultData = result.data.result;
+          const performanceData = result.data.performance;
           return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
@@ -436,7 +436,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       const healthStatus: HealthStatus = {
         isHealthy: status.overall === 'healthy',
         services: status.services.reduce(
-          (acc: any, service: any) => {
+          (acc: Record<string, boolean>, service: { service: string; healthy: boolean }) => {
             acc[service.service] = service.healthy;
             return acc;
           },

@@ -36,9 +36,8 @@ describe('ModuleVisitor', () => {
 
       // Debug: Print all node types at the root level
       for (let i = 0; i < rootNode.namedChildCount; i++) {
-        const child = rootNode.namedChild(i);
-        if (child) {
-        }
+        const _child = rootNode.namedChild(i);
+        // No-op: This loop was for debugging and had an empty block.
       }
 
       // Find the module definition node - use the correct node type
@@ -200,9 +199,8 @@ describe('ModuleVisitor', () => {
 
       // Debug: Print all node types at the root level
       for (let i = 0; i < rootNode.namedChildCount; i++) {
-        const child = rootNode.namedChild(i);
-        if (child) {
-        }
+        const _child = rootNode.namedChild(i);
+        // No-op: This loop was for debugging and had an empty block.
       }
 
       // Find the module instantiation node - use the correct node type

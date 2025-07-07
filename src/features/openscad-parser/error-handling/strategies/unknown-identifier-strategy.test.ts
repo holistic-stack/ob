@@ -64,7 +64,8 @@ describe('UnknownIdentifierStrategy', () => {
         found: 'lenght',
       });
 
-      const identifier = (strategy as any).extractIdentifier(error);
+      // @ts-expect-error - Accessing private method for testing
+      const identifier = strategy.extractIdentifier(error);
       expect(identifier).toBe('lenght');
     });
 
@@ -75,21 +76,24 @@ describe('UnknownIdentifierStrategy', () => {
         Severity.ERROR
       );
 
-      const identifier = (strategy as any).extractIdentifier(error);
+      // @ts-expect-error - Accessing private method for testing
+      const identifier = strategy.extractIdentifier(error);
       expect(identifier).toBe('lenght');
     });
   });
 
   describe('findSimilarIdentifiers', () => {
     it('should find similar variable names', () => {
-      const suggestions = (strategy as any).findSimilarIdentifiers('lenght');
+      // @ts-expect-error - Accessing private method for testing
+      const suggestions = strategy.findSimilarIdentifiers('lenght');
       expect(suggestions).toHaveLength(2);
       expect(suggestions[0].name).toBe('height'); // 'height' comes before 'length' alphabetically with same distance
       expect(suggestions[1].name).toBe('length');
     });
 
     it('should find similar function names', () => {
-      const suggestions = (strategy as any).findSimilarIdentifiers('rendr');
+      // @ts-expect-error - Accessing private method for testing
+      const suggestions = strategy.findSimilarIdentifiers('rendr');
       expect(suggestions).toHaveLength(1); // Only 'render' is within edit distance 2
       expect(suggestions[0].name).toBe('render');
     });
@@ -99,7 +103,8 @@ describe('UnknownIdentifierStrategy', () => {
       strategy.addIdentifier('w1dth', 'variable');
       strategy.addIdentifier('w1dth2', 'variable');
 
-      const suggestions = (strategy as any).findSimilarIdentifiers('width');
+      // @ts-expect-error - Accessing private method for testing
+      const suggestions = strategy.findSimilarIdentifiers('width');
       expect(suggestions).toHaveLength(3); // Default max is 3
     });
   });

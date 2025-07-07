@@ -6,6 +6,8 @@
  * This stub prevents import errors but provides minimal functionality.
  */
 
+import type { mat4 } from 'gl-matrix';
+import type { Matrix3, Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { success } from '../../../shared/utils/functional/result.js';
@@ -75,11 +77,11 @@ export class MatrixIntegrationService {
   async convertMatrix4ToGLMatrix(
     matrix4: unknown,
     _options?: EnhancedMatrixOptions
-  ): Promise<EnhancedMatrixResult> {
+  ): Promise<EnhancedMatrixResult<mat4>> {
     logger.debug('Matrix4 to GL Matrix conversion (stub)');
     return {
       success: true,
-      data: matrix4,
+      data: matrix4 as mat4,
       metadata: { operationTime: 0 },
     };
   }
@@ -87,11 +89,11 @@ export class MatrixIntegrationService {
   async convertGLMatrixToMatrix4(
     matrix: unknown,
     _options?: EnhancedMatrixOptions
-  ): Promise<EnhancedMatrixResult> {
+  ): Promise<EnhancedMatrixResult<Matrix4>> {
     logger.debug('GL Matrix to Matrix4 conversion (stub)');
     return {
       success: true,
-      data: matrix,
+      data: matrix as Matrix4,
       metadata: { operationTime: 0 },
     };
   }
@@ -99,23 +101,23 @@ export class MatrixIntegrationService {
   async computeEnhancedNormalMatrix(
     modelMatrix: unknown,
     _options?: EnhancedMatrixOptions
-  ): Promise<EnhancedMatrixResult> {
+  ): Promise<EnhancedMatrixResult<Matrix3>> {
     logger.debug('Enhanced normal matrix computation (stub)');
     return {
       success: true,
-      data: modelMatrix,
+      data: modelMatrix as Matrix3,
       metadata: { operationTime: 0 },
     };
   }
 
-  async performBatchOperations(
+  async performBatchOperations<T>(
     operations: unknown[],
     _options?: EnhancedMatrixOptions
-  ): Promise<EnhancedMatrixResult> {
+  ): Promise<EnhancedMatrixResult<T[]>> {
     logger.debug('Batch operations (stub)');
     return {
       success: true,
-      data: operations,
+      data: operations as T[],
       metadata: { operationTime: 0 },
     };
   }
@@ -129,11 +131,11 @@ export class MatrixIntegrationService {
     };
   }
 
-  async optimizeConfiguration(): Promise<EnhancedMatrixResult> {
+  async optimizeConfiguration(): Promise<EnhancedMatrixResult<void>> {
     logger.debug('Configuration optimization (stub)');
     return {
       success: true,
-      data: {},
+      data: undefined,
       metadata: { operationTime: 0 },
     };
   }

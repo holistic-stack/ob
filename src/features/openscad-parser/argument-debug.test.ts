@@ -96,7 +96,7 @@ function findNodeOfType(node: TSNode, type: string): TSNode | null {
   }
 
   for (let i = 0; i < node.childCount; i++) {
-    const child = node.child(i);
+    const child: TSNode | null = node.child(i);
     if (!child) continue;
 
     const result = findNodeOfType(child, type);

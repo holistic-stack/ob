@@ -325,7 +325,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
-    return this.executeWithMetrics(
+    return this.executeWithMetrics<mat4>(
       () => this.matrixIntegration.convertMatrix4ToGLMatrix(matrix4, options),
       'convertMatrix4ToGLMatrix'
     );
@@ -345,7 +345,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       useTelemetry: config.enableTelemetry ?? this.config.enableTelemetry ?? false,
     };
 
-    return this.executeWithMetrics(
+    return this.executeWithMetrics<Matrix4>(
       () => this.matrixIntegration.convertGLMatrixToMatrix4(matrix, options),
       'convertGLMatrixToMatrix4'
     );
@@ -379,7 +379,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
-    return this.executeWithMetrics(
+    return this.executeWithMetrics<Matrix3>(
       () => this.matrixIntegration.computeEnhancedNormalMatrix(modelMatrix, options),
       'computeNormalMatrix'
     );
@@ -398,7 +398,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
       enableSVDFallback: config.enableSVDFallback ?? this.config.enableSVDFallback ?? false,
     };
 
-    return this.executeWithMetrics(
+    return this.executeWithMetrics<T[]>(
       () =>
         this.matrixIntegration.performBatchOperations(operations, {
           ...options,
@@ -586,7 +586,7 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
    * Optimize configuration
    */
   async optimizeConfiguration(): Promise<Result<void, string>> {
-    return this.executeWithMetrics(
+    return this.executeWithMetrics<void>(
       () => this.matrixIntegration.optimizeConfiguration(),
       'optimizeConfiguration'
     );

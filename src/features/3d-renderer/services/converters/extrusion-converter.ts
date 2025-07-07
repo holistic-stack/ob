@@ -1,19 +1,36 @@
 import * as THREE from 'three';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { Result } from '../../../../shared/types/result.types.js';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result.js';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
+import { isError, tryCatchAsync } from '../../../../shared/utils/functional/result.js';
+import type {
+  ASTNode,
+  LinearExtrudeNode,
+  MirrorNode,
+  ModuleInstantiationNode,
+  ParameterValue,
+  RotateExtrudeNode,
+} from '../../../openscad-parser/core/ast-types.js';
 
 const logger = createLogger('ExtrusionConverter');
+
+type ExtrusionNode = LinearExtrudeNode | RotateExtrudeNode | ModuleInstantiationNode;
+
+// Type for Three.js geometry parameters
+interface GeometryParameters {
+  radius?: number;
+  radialSegments?: number;
+  width?: number;
+  height?: number;
+}
 
 /**
  * Extract parameters from a module_instantiation node
  */
-function extractParametersFromNode(node: any): Record<string, any> {
-  const params: Record<string, any> = {};
+function extractParametersFromNode(node: ExtrusionNode): Record<string, ParameterValue> {
+  const params: Record<string, ParameterValue> = {};
 
   // Handle different node structures
-  if (node.args && Array.isArray(node.args)) {
+  if ('args' in node && node.args && Array.isArray(node.args)) {
     // Process argument list
     for (const arg of node.args) {
       if (arg.name && arg.value !== undefined) {
@@ -35,7 +52,7 @@ function extractParametersFromNode(node: any): Record<string, any> {
  * Convert linear_extrude node to mesh by processing 2D children and applying linear extrusion
  */
 export const convertLinearExtrudeNode = async (
-  node: any, // Can be LinearExtrudeNode or module_instantiation
+  node: ExtrusionNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
@@ -79,7 +96,7 @@ export const convertLinearExtrudeNode = async (
 
     // Convert the 2D child to get its shape
     const childResult = await convertASTNodeToMesh(firstChild, material);
-    if (!childResult.success) {
+    if (isError(childResult)) {
       throw new Error(`Failed to convert linear extrude child: ${childResult.error}`);
     }
 
@@ -96,14 +113,16 @@ export const convertLinearExtrudeNode = async (
 
     if (childMesh.geometry instanceof THREE.CircleGeometry) {
       // For circles, create a cylinder
-      const radius = (childMesh.geometry.parameters as any).radius || 1;
-      const segments = (childMesh.geometry.parameters as any).radialSegments || 8;
+      const params = childMesh.geometry.parameters as GeometryParameters;
+      const radius = params.radius || 1;
+      const segments = params.radialSegments || 8;
       const geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
       extrudedMesh = new THREE.Mesh(geometry, material);
     } else if (childMesh.geometry instanceof THREE.PlaneGeometry) {
       // For squares/rectangles, create a box
-      const width = (childMesh.geometry.parameters as any).width || 1;
-      const depth = (childMesh.geometry.parameters as any).height || 1;
+      const params = childMesh.geometry.parameters as GeometryParameters;
+      const width = params.width || 1;
+      const depth = params.height || 1;
       const geometry = new THREE.BoxGeometry(width, height, depth);
       extrudedMesh = new THREE.Mesh(geometry, material);
     } else {
@@ -147,7 +166,7 @@ export const convertLinearExtrudeNode = async (
  * Convert rotate_extrude node to mesh by processing 2D children and applying rotational extrusion
  */
 export const convertRotateExtrudeNode = async (
-  node: any, // Can be RotateExtrudeNode or module_instantiation
+  node: ExtrusionNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
@@ -184,7 +203,7 @@ export const convertRotateExtrudeNode = async (
 
     // Convert the 2D child to get its shape
     const childResult = await convertASTNodeToMesh(firstChild, material);
-    if (!childResult.success) {
+    if (isError(childResult)) {
       throw new Error(`Failed to convert rotate extrude child: ${childResult.error}`);
     }
 
@@ -200,7 +219,8 @@ export const convertRotateExtrudeNode = async (
 
     if (childMesh.geometry instanceof THREE.CircleGeometry) {
       // For circles, create a torus
-      const radius = (childMesh.geometry.parameters as any).radius || 1;
+      const params = childMesh.geometry.parameters as GeometryParameters;
+      const radius = params.radius || 1;
       const tubeRadius = radius / 4; // Make the tube smaller
       const radialSegments = Math.max(8, Math.min(32, Math.round(angle / 15))); // Adaptive segments
       const tubularSegments = 16;
@@ -215,8 +235,9 @@ export const convertRotateExtrudeNode = async (
       extrudedMesh = new THREE.Mesh(geometry, material);
     } else if (childMesh.geometry instanceof THREE.PlaneGeometry) {
       // For squares/rectangles, create a partial cylinder or full cylinder
-      const width = (childMesh.geometry.parameters as any).width || 1;
-      const height = (childMesh.geometry.parameters as any).height || 1;
+      const params = childMesh.geometry.parameters as GeometryParameters;
+      const width = params.width || 1;
+      const height = params.height || 1;
       const radius = Math.max(width, height) / 2;
       const segments = Math.max(8, Math.min(32, Math.round(angle / 15)));
 
@@ -248,7 +269,7 @@ export const convertRotateExtrudeNode = async (
  * Convert mirror node to mesh by processing children and applying mirroring
  */
 export const convertMirrorNode = async (
-  node: any, // MirrorNode type to be defined
+  node: MirrorNode,
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
@@ -284,7 +305,7 @@ export const convertMirrorNode = async (
     }
 
     const childResult = await convertASTNodeToMesh(firstChild, material);
-    if (!childResult.success) {
+    if (isError(childResult)) {
       throw new Error(`Failed to convert mirror child: ${childResult.error}`);
     }
 

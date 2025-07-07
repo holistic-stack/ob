@@ -226,7 +226,7 @@ export class CSGCoreService implements CSGData {
 
         if (normalMatrixResult.success && normalMatrixResult.data) {
           // Extract result from enhanced matrix result
-          const matrixData = (normalMatrixResult.data as any)?.result || normalMatrixResult.data;
+          const matrixData = normalMatrixResult.data.result;
           tmpm3.copy(matrixData);
         } else {
           // Use standard Three.js normal matrix computation as fallback
@@ -395,7 +395,7 @@ export class CSGCoreService implements CSGData {
       }
 
       // Extract matrix data from enhanced result
-      const matrixData = (inversionResult.data as any)?.result || inversionResult.data;
+      const matrixData = inversionResult.data.result;
       const robustInversionResult = await matrixIntegration.performRobustInversion(matrixData);
 
       if (!robustInversionResult.success) {
@@ -404,8 +404,7 @@ export class CSGCoreService implements CSGData {
 
       // Convert back to Three.js Matrix4
       const conversionService = matrixServiceContainer.getService('conversion');
-      const robustMatrixData =
-        (robustInversionResult.data as any)?.result || robustInversionResult.data;
+      const robustMatrixData = robustInversionResult.data.result;
       const matrix4Result = await conversionService.convertMLMatrixToMatrix4(robustMatrixData, {
         useCache: true,
         validateInput: true,

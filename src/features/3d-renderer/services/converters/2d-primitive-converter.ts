@@ -5,16 +5,35 @@ import { tryCatch } from '../../../../shared/utils/functional/result.js';
 
 // AST types are passed as parameters
 
+import type {
+  CircleNode,
+  ModuleInstantiationNode,
+  ParameterValue,
+  PolygonNode,
+  SquareNode,
+  TextNode,
+} from '../../../openscad-parser/ast/ast-types.js';
+
 const logger = createLogger('2DPrimitiveConverter');
 
 /**
- * Extract parameters from a module_instantiation node
+ * Union type for primitive nodes that can be converted to 2D meshes
  */
-function extractParametersFromNode(node: any): Record<string, any> {
-  const params: Record<string, any> = {};
+export type PrimitiveNode =
+  | CircleNode
+  | SquareNode
+  | PolygonNode
+  | TextNode
+  | ModuleInstantiationNode;
+
+/**
+ * Extract parameters from a module_instantiation node or primitive node
+ */
+function extractParametersFromNode(node: PrimitiveNode): Record<string, ParameterValue> {
+  const params: Record<string, ParameterValue> = {};
 
   // Handle different node structures
-  if (node.args && Array.isArray(node.args)) {
+  if ('args' in node && node.args && Array.isArray(node.args)) {
     // Process argument list
     for (const arg of node.args) {
       if (arg.name && arg.value !== undefined) {
@@ -37,7 +56,7 @@ function extractParametersFromNode(node: any): Record<string, any> {
  * Creates a circular 2D shape using PlaneGeometry with circular shape
  */
 export const convertCircleToMesh = (
-  node: any, // Can be CircleNode or module_instantiation
+  node: PrimitiveNode,
   material: THREE.Material
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
@@ -94,7 +113,7 @@ export const convertCircleToMesh = (
  * Creates a square/rectangular 2D shape using PlaneGeometry
  */
 export const convertSquareToMesh = (
-  node: any, // Can be SquareNode or module_instantiation
+  node: PrimitiveNode,
   material: THREE.Material
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
@@ -168,7 +187,7 @@ export const convertSquareToMesh = (
  * Creates a polygon 2D shape using custom geometry from points
  */
 export const convertPolygonToMesh = (
-  node: any, // Can be PolygonNode or module_instantiation
+  node: PrimitiveNode,
   material: THREE.Material
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
@@ -186,7 +205,7 @@ export const convertPolygonToMesh = (
       const params = extractParametersFromNode(node);
       const points = params.points || params._firstParam || [];
 
-      if (!points || points.length < 3) {
+      if (!points || !Array.isArray(points) || points.length < 3) {
         // Create a default triangle if no valid points
         logger.warn('Polygon has insufficient points, creating default triangle');
         const geometry = new THREE.BufferGeometry();
@@ -203,16 +222,18 @@ export const convertPolygonToMesh = (
       const shape = new THREE.Shape();
 
       // Move to first point
-      const firstPoint = points[0];
-      if (firstPoint && firstPoint.length >= 2) {
-        shape.moveTo(firstPoint[0], firstPoint[1]);
+      const firstPoint = Array.isArray(points) ? points[0] : null;
+      if (firstPoint && Array.isArray(firstPoint) && firstPoint.length >= 2) {
+        shape.moveTo(firstPoint[0] as number, firstPoint[1] as number);
       }
 
       // Line to subsequent points
-      for (let i = 1; i < points.length; i++) {
-        const point = points[i];
-        if (point && point.length >= 2) {
-          shape.lineTo(point[0], point[1]);
+      if (Array.isArray(points)) {
+        for (let i = 1; i < points.length; i++) {
+          const point = points[i];
+          if (point && Array.isArray(point) && point.length >= 2) {
+            shape.lineTo(point[0] as number, point[1] as number);
+          }
         }
       }
 
@@ -228,7 +249,7 @@ export const convertPolygonToMesh = (
       const mesh = new THREE.Mesh(geometry, material);
       mesh.updateMatrix();
 
-      logger.debug(`Created polygon mesh with ${points.length} points`);
+      logger.debug(`Created polygon mesh with ${Array.isArray(points) ? points.length : 0} points`);
       return mesh;
     },
     (err) => `Failed to convert polygon node: ${err instanceof Error ? err.message : String(err)}`
@@ -240,7 +261,7 @@ export const convertPolygonToMesh = (
  * Creates a text 2D shape using TextGeometry (simplified version)
  */
 export const convertTextToMesh = (
-  node: any, // Can be TextNode or module_instantiation
+  node: PrimitiveNode,
   material: THREE.Material
 ): Result<THREE.Mesh, string> => {
   return tryCatch(
@@ -257,7 +278,8 @@ export const convertTextToMesh = (
       // Extract parameters from node
       const params = extractParametersFromNode(node);
       const text = params.text || params._firstParam || 'Text';
-      const textSize = params.size || 10;
+      const textSizeParam = params.size || 10;
+      const textSize = typeof textSizeParam === 'number' ? textSizeParam : 10;
       const _font = params.font || 'Arial';
 
       // For now, create a placeholder mesh since TextGeometry requires font loading

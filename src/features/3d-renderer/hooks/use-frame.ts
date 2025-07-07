@@ -50,7 +50,7 @@ export const useFrame = (callback: FrameCallback, _priority = 0) => {
         getDelta: () => delta,
       },
       gl: {
-        render: (_scene: any, _camera: any) => {
+        render: (_scene: Scene, _camera: Camera) => {
           // This would be implemented by the renderer
         },
       },

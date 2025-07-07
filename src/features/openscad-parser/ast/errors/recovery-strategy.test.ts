@@ -20,6 +20,9 @@ class MockNode {
   nextSibling: MockNode | null = null;
   childCount: number = 0;
   private children: MockNode[] = [];
+  startPosition: { row: number; column: number } = { row: 0, column: 0 };
+  endPosition: { row: number; column: number } = { row: 0, column: 0 };
+  text: string = '';
 
   constructor(type: string) {
     this.type = type;

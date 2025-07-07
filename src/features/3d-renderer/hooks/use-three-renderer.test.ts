@@ -106,7 +106,45 @@ const mockStoreActions = {
   updateMetrics: vi.fn(),
   renderFromAST: vi.fn(),
   markDirty: vi.fn(),
+  takeScreenshot: vi.fn(),
 };
+
+// Mock Zustand three-renderer store
+const mockThreeRendererStore = {
+  scene: mockScene,
+  camera: mockCamera,
+  renderer: mockRenderer,
+  isInitialized: true,
+  isRendering: false,
+  error: null,
+  meshes: [],
+  metrics: {
+    renderTime: 0,
+    parseTime: 0,
+    memoryUsage: 0,
+    peakMemoryUsage: 0,
+    throughput: 0,
+    meshCount: 0,
+    triangleCount: 0,
+    vertexCount: 0,
+    drawCalls: 0,
+    textureMemory: 0,
+    bufferMemory: 0,
+  },
+  initializeRenderer: vi.fn(),
+  renderAST: vi.fn(),
+  clearScene: vi.fn(),
+  updateCamera: vi.fn(),
+  resetCamera: vi.fn(),
+  takeScreenshot: vi.fn().mockResolvedValue('data:image/png;base64,mock-image-data'),
+  updateMetrics: vi.fn(),
+  setError: vi.fn(),
+  dispose: vi.fn(),
+};
+
+vi.mock('../store/three-renderer.store', () => ({
+  useThreeRendererStore: vi.fn(() => mockThreeRendererStore),
+}));
 
 // Mock useAppStore hook
 vi.mock('../../store', () => {
@@ -142,6 +180,7 @@ vi.mock('../../store', () => {
           updateMetrics: mockStoreActions.updateMetrics,
           renderFromAST: mockStoreActions.renderFromAST,
           markDirty: mockStoreActions.markDirty,
+          takeScreenshot: mockStoreActions.takeScreenshot,
         };
         return selector(mockState);
       }
@@ -214,6 +253,18 @@ describe('useThreeRenderer Hook (Memory-Optimized)', () => {
 
     // Clear store actions
     Object.values(mockStoreActions).forEach((mock) => mock.mockClear());
+
+    // Reset Zustand store mocks
+    Object.values(mockThreeRendererStore).forEach((mock) => {
+      if (typeof mock === 'function' && 'mockClear' in mock) {
+        mock.mockClear();
+      }
+    });
+
+    // Reset takeScreenshot to default resolved value
+    mockThreeRendererStore.takeScreenshot.mockResolvedValue(
+      'data:image/png;base64,mock-image-data'
+    );
   });
 
   describe('Hook Initialization', () => {
@@ -367,13 +418,12 @@ describe('useThreeRenderer Hook (Memory-Optimized)', () => {
     });
 
     it('should throw error when taking screenshot without initialization', async () => {
+      // Mock the store's takeScreenshot to throw an error
+      mockThreeRendererStore.takeScreenshot.mockRejectedValueOnce(
+        new Error('Renderer not initialized')
+      );
+
       const { result } = renderHook(() => useThreeRenderer());
-
-      // Mock the takeScreenshot function to throw an error
-      const mockTakeScreenshot = vi.fn().mockRejectedValue(new Error('Renderer not initialized'));
-
-      // Replace the action with our mock
-      (result.current.actions as any).takeScreenshot = mockTakeScreenshot;
 
       await expect(result.current.actions.takeScreenshot()).rejects.toThrow(
         'Renderer not initialized'

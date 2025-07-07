@@ -5,7 +5,7 @@ import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
 
 describe('cstTreeCursorWalkLog', () => {
   let parser: OpenscadParser;
-  let consoleSpy: any;
+  let consoleSpy: vi.SpyInstance;
 
   beforeEach(async () => {
     consoleSpy = vi.spyOn(console, 'log');
@@ -29,7 +29,7 @@ describe('cstTreeCursorWalkLog', () => {
 
   // Helper to get all console output as a single string
   const getConsoleOutput = () => {
-    return consoleSpy.mock.calls.map((call: any[]) => call[0]).join('\n');
+    return consoleSpy.mock.calls.map((call: unknown[]) => call[0]).join('\n');
   };
 
   // Helper to check if specific node types appear in the output in the correct order

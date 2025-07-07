@@ -23,7 +23,7 @@ describe('ExpressionVisitor', () => {
   describe('visitBinaryExpression', () => {
     it('should handle arithmetic binary expressions', async () => {
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(visitor, 'createExpressionNode').mockImplementation((node: TSNode) => {
         if (node.text === '1') {
           return {
             type: 'expression',
@@ -170,7 +170,7 @@ describe('ExpressionVisitor', () => {
       const _code = 'true || false;';
 
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(visitor, 'createExpressionNode').mockImplementation((node: TSNode) => {
         if (node.text === 'true') {
           return {
             type: 'expression',
@@ -303,7 +303,7 @@ describe('ExpressionVisitor', () => {
       const _code = '!true;';
 
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(visitor, 'createExpressionNode').mockImplementation((node: TSNode) => {
         if (node.text === 'true') {
           return {
             type: 'expression',
@@ -361,7 +361,7 @@ describe('ExpressionVisitor', () => {
       const _code = 'x > 5 ? 10 : 20;';
 
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(visitor, 'createExpressionNode').mockImplementation((node: TSNode) => {
         if (node.text === 'x > 5') {
           return {
             type: 'expression',
@@ -579,7 +579,7 @@ describe('ExpressionVisitor', () => {
   describe('visitArrayExpression', () => {
     it('should handle array expressions', async () => {
       // Mock the necessary methods
-      vi.spyOn(visitor as any, 'createExpressionNode').mockImplementation((node: any) => {
+      vi.spyOn(visitor, 'createExpressionNode').mockImplementation((node: TSNode) => {
         if (node.text === '1') {
           return {
             type: 'expression',

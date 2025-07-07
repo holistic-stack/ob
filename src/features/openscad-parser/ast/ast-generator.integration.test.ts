@@ -25,7 +25,7 @@ describe('AST Generator Integration Tests', () => {
       expect(cst).toBeDefined();
 
       // Print the tree structure for debugging
-      function printNode(node: TSNode, depth = 0) {
+      function printNode(node: TSNode | null | undefined, depth = 0) {
         if (!node) return;
         const indent = '  '.repeat(depth);
         console.log(
@@ -36,7 +36,8 @@ describe('AST Generator Integration Tests', () => {
           }'`
         );
         for (let i = 0; i < node.childCount; i++) {
-          printNode(node.child(i), depth + 1);
+          const child: TSNode | null = node.child(i);
+          printNode(child, depth + 1);
         }
       }
       printNode(cst?.rootNode);
@@ -48,6 +49,9 @@ describe('AST Generator Integration Tests', () => {
       expect(ast).toHaveLength(1);
 
       const translateNode = ast[0];
+      if (translateNode === undefined) {
+        throw new Error('Expected AST node at index 0 but found none.');
+      }
       expect(translateNode.type).toBe('translate');
       expect((translateNode as TranslateNode).v).toEqual([1, 0, 0]); // translate([1,0,0])
 
@@ -68,6 +72,9 @@ describe('AST Generator Integration Tests', () => {
       expect(ast).toHaveLength(1);
 
       const translateNode = ast[0];
+      if (translateNode === undefined) {
+        throw new Error('Expected AST node at index 0 but found none.');
+      }
       expect(translateNode.type).toBe('translate');
       // TODO: Fix named argument parsing - currently produces [NaN, 3, 0] due to grammar issues
       expect((translateNode as TranslateNode).v).toEqual([NaN, 3, 0]); // Should be [3,0,0] when named args work

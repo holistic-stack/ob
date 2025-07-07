@@ -5,7 +5,9 @@
 
 import * as THREE from 'three';
 
-const trackedObjects = new Set<any>();
+const trackedObjects = new Set<
+  THREE.Object3D | THREE.Material | THREE.BufferGeometry | THREE.Texture
+>();
 
 /**
  * Tracks a Three.js object for later disposal.
@@ -40,7 +42,7 @@ export function disposeAllTrackedObjects() {
     }
     if (obj.material) {
       if (Array.isArray(obj.material)) {
-        obj.material.forEach((m: any) => {
+        obj.material.forEach((m: THREE.Material) => {
           if (m.dispose) m.dispose();
           // Dispose textures
           for (const key in m) {

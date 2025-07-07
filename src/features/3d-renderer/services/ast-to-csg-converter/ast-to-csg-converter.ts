@@ -11,6 +11,7 @@ import type { NodeId, NodeType } from '../../../../shared/types/ast.types.js';
 import type { Result } from '../../../../shared/types/result.types.js';
 import {
   error,
+  isError,
   success,
   tryCatch,
   tryCatchAsync,
@@ -27,9 +28,11 @@ import type {
   ForLoopNode,
   IfNode,
   IntersectionNode,
+  LinearExtrudeNode,
   ListComprehensionExpressionNode,
   MirrorNode,
   ModuleDefinitionNode,
+  ModuleInstantiationNode,
   ParenthesizedExpressionNode,
   RotateExtrudeNode,
   RotateNode,
@@ -44,6 +47,7 @@ import {
   isFunctionLiteral,
 } from '../../../openscad-parser/ast/utils/ast-evaluator.js';
 import type { MaterialConfig, Mesh3D, MeshMetadata } from '../../types/renderer.types.js';
+import type { PrimitiveNode } from '../converters/2d-primitive-converter.js';
 import {
   convertCircleToMesh,
   convertPolygonToMesh,
@@ -673,13 +677,13 @@ const convertFunctionCallNode = async (
 
     // 2D primitives
     case 'circle':
-      return convertCircleToMesh(typedNode as any, material);
+      return convertCircleToMesh(typedNode as PrimitiveNode, material);
     case 'square':
-      return convertSquareToMesh(typedNode as any, material);
+      return convertSquareToMesh(typedNode as PrimitiveNode, material);
     case 'polygon':
-      return convertPolygonToMesh(typedNode as any, material);
+      return convertPolygonToMesh(typedNode as PrimitiveNode, material);
     case 'text':
-      return convertTextToMesh(typedNode as any, material);
+      return convertTextToMesh(typedNode as PrimitiveNode, material);
 
     // Transformations
     case 'translate':
@@ -693,7 +697,11 @@ const convertFunctionCallNode = async (
 
     // Extrusions
     case 'linear_extrude':
-      return await convertLinearExtrudeNode(typedNode as any, material, convertASTNodeToMesh);
+      return await convertLinearExtrudeNode(
+        typedNode as LinearExtrudeNode,
+        material,
+        convertASTNodeToMesh
+      );
     case 'rotate_extrude':
       return await convertRotateExtrudeNode(
         typedNode as RotateExtrudeNode,
@@ -727,7 +735,7 @@ const convertFunctionCallNode = async (
         // In a full implementation, this would properly evaluate the arguments
 
         const moduleInstanceResult = moduleRegistry.createModuleInstance(functionName, args);
-        if (!moduleInstanceResult.success) {
+        if (isError(moduleInstanceResult)) {
           return error(
             `Failed to instantiate module '${functionName}': ${moduleInstanceResult.error}`
           );
@@ -785,7 +793,7 @@ const convertFunctionCallNode = async (
  * Convert module instantiation node by extracting module name and routing to appropriate converter
  */
 const convertModuleInstantiationNode = async (
-  node: any, // ModuleInstantiationNode
+  node: ModuleInstantiationNode, // ModuleInstantiationNode
   material: THREE.Material,
   convertASTNodeToMesh: (
     node: ASTNode,
@@ -820,13 +828,13 @@ const convertModuleInstantiationNode = async (
 
     // 2D primitives
     case 'circle':
-      return convertCircleToMesh(node as any, material);
+      return convertCircleToMesh(node as PrimitiveNode, material);
     case 'square':
-      return convertSquareToMesh(node as any, material);
+      return convertSquareToMesh(node as PrimitiveNode, material);
     case 'polygon':
-      return convertPolygonToMesh(node as any, material);
+      return convertPolygonToMesh(node as PrimitiveNode, material);
     case 'text':
-      return convertTextToMesh(node as any, material);
+      return convertTextToMesh(node as PrimitiveNode, material);
 
     // Transformations
     case 'translate':
@@ -840,10 +848,14 @@ const convertModuleInstantiationNode = async (
 
     // Extrusions
     case 'linear_extrude':
-      return await convertLinearExtrudeNode(node as any, material, convertASTNodeToMesh);
+      return await convertLinearExtrudeNode(
+        node as LinearExtrudeNode,
+        material,
+        convertASTNodeToMesh
+      );
     case 'rotate_extrude':
       return await convertRotateExtrudeNodeFromConverter(
-        node as any,
+        node as RotateExtrudeNode,
         material,
         convertASTNodeToMesh
       );
@@ -897,7 +909,7 @@ const convertModuleDefinitionNode = async (
 
   // Register the module definition
   const registrationResult = moduleRegistry.registerModule(node);
-  if (!registrationResult.success) {
+  if (isError(registrationResult)) {
     return error(`Failed to register module '${moduleName}': ${registrationResult.error}`);
   }
 
@@ -934,7 +946,7 @@ const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE
       : undefined
   );
 
-  if (!assignmentResult.success) {
+  if (isError(assignmentResult)) {
     return error(`Failed to assign variable '${node.variable.name}': ${assignmentResult.error}`);
   }
 
@@ -1269,24 +1281,32 @@ const convertASTNodeToMesh = async (
 
     // Handle 2D primitives
     case 'circle':
-      return convertCircleToMesh(node as any, material);
+      return convertCircleToMesh(node as PrimitiveNode, material);
 
     case 'square':
-      return convertSquareToMesh(node as any, material);
+      return convertSquareToMesh(node as PrimitiveNode, material);
 
     case 'polygon':
-      return convertPolygonToMesh(node as any, material);
+      return convertPolygonToMesh(node as PrimitiveNode, material);
 
     case 'text':
-      return convertTextToMesh(node as any, material);
+      return convertTextToMesh(node as PrimitiveNode, material);
 
     // Handle extrusion operations
     case 'linear_extrude':
-      return await convertLinearExtrudeNode(node as any, material, convertASTNodeToMesh);
+      return await convertLinearExtrudeNode(
+        node as LinearExtrudeNode,
+        material,
+        convertASTNodeToMesh
+      );
 
     // Handle module instantiation (this includes function calls parsed as module_instantiation)
     case 'module_instantiation':
-      return await convertModuleInstantiationNode(node as any, material, convertASTNodeToMesh);
+      return await convertModuleInstantiationNode(
+        node as ModuleInstantiationNode,
+        material,
+        convertASTNodeToMesh
+      );
 
     // Add basic support for other node types that we don't fully convert yet
     case 'polyhedron':
@@ -1456,7 +1476,7 @@ export const convertASTNodesToCSGUnion = async (
           throw new Error(`Node ${i} is undefined`);
         }
         const meshResult = await convertASTNodeToMesh(node, material);
-        if (!meshResult.success) {
+        if (isError(meshResult)) {
           throw new Error(`Failed to convert node ${i}: ${meshResult.error}`);
         }
 
@@ -1493,7 +1513,7 @@ export const convertASTNodesToCSGUnion = async (
 
         try {
           const firstCSGResult = await CSGCoreService.union(firstMesh, firstMesh); // Identity operation for first mesh
-          if (!firstCSGResult.success) {
+          if (isError(firstCSGResult)) {
             throw new Error(`Failed to prepare first mesh for CSG: ${firstCSGResult.error}`);
           }
           resultMesh = firstCSGResult.data;
@@ -1506,7 +1526,7 @@ export const convertASTNodesToCSGUnion = async (
               throw new Error(`Mesh ${i} is undefined`);
             }
             const unionResult = await CSGCoreService.union(resultMesh, currentMesh);
-            if (!unionResult.success) {
+            if (isError(unionResult)) {
               throw new Error(`Union operation ${i} failed: ${unionResult.error}`);
             }
             resultMesh = unionResult.data;

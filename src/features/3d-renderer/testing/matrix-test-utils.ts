@@ -5,7 +5,7 @@
  * and numerical accuracy testing following bulletproof-react architecture.
  */
 
-import { mat4 } from 'gl-matrix';
+import { Matrix, mat4 } from 'gl-matrix';
 import { Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
@@ -244,7 +244,7 @@ export class MatrixOperationTester {
    * Test edge cases systematically
    */
   async testEdgeCases<T>(
-    operation: (matrix: any) => Promise<Result<T, string>> | Result<T, string>,
+    operation: (matrix: unknown) => Promise<Result<T, string>> | Result<T, string>,
     operationName: string
   ): Promise<{
     passed: number;
