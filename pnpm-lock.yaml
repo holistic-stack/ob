@@ -78,6 +78,9 @@ importers:
       '@playwright/test':
         specifier: ^1.53.0
         version: 1.53.0
+      '@react-three/test-renderer':
+        specifier: ^9.1.0
+        version: 9.1.0(@react-three/fiber@9.1.2(@types/react@19.0.0)(immer@10.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react@19.0.0)(three@0.177.0)
       '@storybook/addon-a11y':
         specifier: ^9.0.12
         version: 9.0.12(storybook@9.0.12(@testing-library/dom@10.4.0)(prettier@3.5.3))
@@ -814,6 +817,13 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  '@react-three/test-renderer@9.1.0':
+    resolution: {integrity: sha512-bLjG+cdpVW69wG1W3TuziHrHvA1JQbLesYddY94QMaFF8yzpgwovWK8hGaHWBET1dvsCPIOWVNYHbKAbRj2xSg==}
+    peerDependencies:
+      '@react-three/fiber': '>=9.0.0'
+      react: ^19.0.0
+      three: '>=0.156'
 
   '@rolldown/pluginutils@1.0.0-beta.11':
     resolution: {integrity: sha512-L/gAA/hyCSuzTF1ftlzUSI/IKr2POHsv1Dd78GfqkR83KMNuswWD61JxGV2L7nRwBBBSDr6R1gCkdTmoN7W4ag==}
@@ -3602,6 +3612,12 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - immer
+
+  '@react-three/test-renderer@9.1.0(@react-three/fiber@9.1.2(@types/react@19.0.0)(immer@10.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react@19.0.0)(three@0.177.0)':
+    dependencies:
+      '@react-three/fiber': 9.1.2(@types/react@19.0.0)(immer@10.1.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0)
+      react: 19.0.0
+      three: 0.177.0
 
   '@rolldown/pluginutils@1.0.0-beta.11': {}
 

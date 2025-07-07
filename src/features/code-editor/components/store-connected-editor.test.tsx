@@ -5,7 +5,7 @@
  * proper data flow through the store.
  */
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EditorChangeEvent, EditorCursorEvent, EditorSelection } from '../types/editor.types';
 import { StoreConnectedEditor } from './store-connected-editor';
@@ -98,6 +98,7 @@ vi.mock('../../store/app-store', () => ({
 
 describe('StoreConnectedEditor', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
     // Reset mock store state
     mockStoreState.editor.code = '';
@@ -110,6 +111,7 @@ describe('StoreConnectedEditor', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    cleanup();
   });
 
   describe('Component Rendering', () => {

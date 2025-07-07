@@ -96,7 +96,7 @@ import { RangeExpressionVisitor } from './expression-visitor/range-expression-vi
 // Keywords like 'let' are part of specific expression structures (e.g., LetExpressionNode)
 // and are handled by their respective visitors if they appear in valid constructs.
 // This list targets keywords that, if parsed as a simple identifier in an expression context, are invalid.
-const RESERVED_KEYWORDS_AS_EXPRESSION_BLOCKLIST = new Set([
+const _RESERVED_KEYWORDS_AS_EXPRESSION_BLOCKLIST = new Set([
   'if',
   'else',
   'for',

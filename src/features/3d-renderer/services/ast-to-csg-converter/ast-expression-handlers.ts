@@ -89,7 +89,7 @@ function isFunctionCallNode(node: ASTNode): node is FunctionCallNode {
   );
 }
 
-function isParameterNode(node: ASTNode): node is ASTNode & { name: string; value: ASTNode } {
+function _isParameterNode(node: ASTNode): node is ASTNode & { name: string; value: ASTNode } {
   return 'name' in node && 'value' in node && typeof node.name === 'string';
 }
 

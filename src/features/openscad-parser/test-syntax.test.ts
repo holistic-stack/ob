@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../shared/services/logger.service.js';
 import { OpenscadParser } from './openscad-parser.js';
 
-const logger = createLogger('SyntaxTest');
+const _logger = createLogger('SyntaxTest');
 
 describe('OpenSCAD Syntax Tests', () => {
   let parser: OpenscadParser;

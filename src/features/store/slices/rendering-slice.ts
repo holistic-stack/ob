@@ -102,7 +102,7 @@ export const createRenderingSlice = (
           const updatedCamera = { ...state.rendering.camera };
 
           // Update non-array properties
-          Object.keys(cameraUpdate).forEach(key => {
+          Object.keys(cameraUpdate).forEach((key) => {
             if (key !== 'position' && key !== 'target') {
               (updatedCamera as any)[key] = (cameraUpdate as any)[key];
             }
@@ -113,14 +113,14 @@ export const createRenderingSlice = (
             updatedCamera.position = [
               cameraUpdate.position[0],
               cameraUpdate.position[1],
-              cameraUpdate.position[2]
+              cameraUpdate.position[2],
             ];
           }
           if (cameraUpdate.target) {
             updatedCamera.target = [
               cameraUpdate.target[0],
               cameraUpdate.target[1],
-              cameraUpdate.target[2]
+              cameraUpdate.target[2],
             ];
           }
 

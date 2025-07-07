@@ -76,6 +76,17 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock window addEventListener and removeEventListener for react-use-measure
+Object.defineProperty(window, 'addEventListener', {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(window, 'removeEventListener', {
+  writable: true,
+  value: vi.fn(),
+});
+
 const __dirname = import.meta.dirname;
 const projectRoot = join(__dirname, '..');
 

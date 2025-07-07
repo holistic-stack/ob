@@ -102,6 +102,13 @@ export const createParsingSlice = (
         } else {
           // No AST nodes were parsed
           logger.warn('No AST nodes were parsed from the provided code');
+
+          set((state: WritableDraft<AppStore>) => {
+            state.parsing.ast = [];
+            state.parsing.isLoading = false;
+            state.parsing.lastParsed = new Date();
+          });
+
           return operationUtils.createSuccess([] as ReadonlyArray<CoreNode>, metadata);
         }
       } catch (err: unknown) {

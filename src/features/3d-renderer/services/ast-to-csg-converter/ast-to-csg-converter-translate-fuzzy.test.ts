@@ -331,10 +331,18 @@ describe('AST to CSG Converter - Production Fuzzy Testing', () => {
               const conversionTime = endTime - startTime;
 
               if (result.success) {
-                expect(conversionTime).toBeLessThan(100); // Performance target
-                logger.debug(
-                  `Translate([${x}, ${y}, ${z}]) conversion time: ${conversionTime.toFixed(2)}ms`
-                );
+                // Skip performance assertion if timing measurement failed (NaN)
+                // Following project requirement to remove performance requirements from tests
+                if (!Number.isNaN(conversionTime) && Number.isFinite(conversionTime)) {
+                  expect(conversionTime).toBeLessThan(100); // Performance target
+                  logger.debug(
+                    `Translate([${x}, ${y}, ${z}]) conversion time: ${conversionTime.toFixed(2)}ms`
+                  );
+                } else {
+                  logger.debug(
+                    `Translate([${x}, ${y}, ${z}]) conversion completed (timing measurement unavailable)`
+                  );
+                }
               }
             } finally {
               clearSourceCodeForExtraction();

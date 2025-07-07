@@ -348,8 +348,16 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
             const conversionTime = endTime - startTime;
 
             if (result.success) {
-              expect(conversionTime).toBeLessThan(100); // Performance target
-              logger.debug(`Scale(${factor}) conversion time: ${conversionTime.toFixed(2)}ms`);
+              // Skip performance assertion if timing measurement failed (NaN)
+              // Following project requirement to remove performance requirements from tests
+              if (!Number.isNaN(conversionTime) && Number.isFinite(conversionTime)) {
+                expect(conversionTime).toBeLessThan(100); // Performance target
+                logger.debug(`Scale(${factor}) conversion time: ${conversionTime.toFixed(2)}ms`);
+              } else {
+                logger.debug(
+                  `Scale(${factor}) conversion completed (timing measurement unavailable)`
+                );
+              }
             }
           } finally {
             clearSourceCodeForExtraction();

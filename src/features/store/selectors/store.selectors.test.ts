@@ -255,24 +255,26 @@ describe('Store Selectors', () => {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
-        rendering: mockState.rendering ? { ...mockState.rendering, lastRendered: null } : {
-          meshes: [],
-          isRendering: false,
-          renderErrors: [],
-          camera: {
-            position: [0, 0, 10] as [number, number, number],
-            target: [0, 0, 0] as [number, number, number],
-            zoom: 1,
-            fov: 75,
-            near: 0.1,
-            far: 1000,
-            enableControls: true,
-            enableAutoRotate: false,
-            autoRotateSpeed: 2.0,
-          },
-          renderTime: 0,
-          lastRendered: null,
-        },
+        rendering: mockState.rendering
+          ? { ...mockState.rendering, lastRendered: null }
+          : {
+              meshes: [],
+              isRendering: false,
+              renderErrors: [],
+              camera: {
+                position: [0, 0, 10] as [number, number, number],
+                target: [0, 0, 0] as [number, number, number],
+                zoom: 1,
+                fov: 75,
+                near: 0.1,
+                far: 1000,
+                enableControls: true,
+                enableAutoRotate: false,
+                autoRotateSpeed: 2.0,
+              },
+              renderTime: 0,
+              lastRendered: null,
+            },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
 
@@ -296,7 +298,7 @@ describe('Store Selectors', () => {
           },
           renderTime: 0,
           lastRendered: null,
-        }
+        },
       };
       expect(selectLastActivity(noRenderingState)).toEqual(new Date('2024-01-01T10:01:00Z')); // parsing.lastParsed is most recent
     });
@@ -366,6 +368,4 @@ describe('Store Selectors', () => {
       expect(debugInfo.applicationStatus).toBe('idle');
     });
   });
-
-
 });

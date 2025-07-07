@@ -31,10 +31,17 @@ export class MatrixServiceContainer {
     logger.debug(`Getting service: ${name} (stub)`);
     if (name === 'conversion') {
       return {
-        convertMLMatrixToMatrix4: (matrix: unknown, _options?: unknown) => ({
-          success: true,
-          data: { result: matrix },
-        }),
+        convertMLMatrixToMatrix4: (_matrix: unknown, _options?: unknown) => {
+          logger.debug('Converting ML Matrix to Matrix4 (stub implementation)');
+          // Return Matrix4 directly, not wrapped in result object
+          // Create a proper Matrix4 identity matrix as fallback
+          const Matrix4 = require('three').Matrix4;
+          const identityMatrix = new Matrix4();
+          return {
+            success: true,
+            data: identityMatrix, // Return Matrix4 directly, not wrapped
+          };
+        },
       };
     }
     return null;

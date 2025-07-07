@@ -1222,7 +1222,12 @@ const _convertConditionalExpressionNode = async (
     ) {
       const varName = (binaryNode.left.variable as { name: string }).name;
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
+      if (
+        varBinding &&
+        (typeof varBinding.value === 'number' ||
+          typeof varBinding.value === 'string' ||
+          typeof varBinding.value === 'boolean')
+      ) {
         leftValue = varBinding.value;
       }
     }
@@ -1240,7 +1245,12 @@ const _convertConditionalExpressionNode = async (
     ) {
       const varName = (binaryNode.right.variable as { name: string }).name;
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
+      if (
+        varBinding &&
+        (typeof varBinding.value === 'number' ||
+          typeof varBinding.value === 'string' ||
+          typeof varBinding.value === 'boolean')
+      ) {
         rightValue = varBinding.value;
       }
     }
@@ -1329,7 +1339,12 @@ const convertIfStatementNode = async (
       const varName = (binaryNode.left.variable as { name: string }).name;
       logger.debug(`Left operand is variable reference: ${varName}`);
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
+      if (
+        varBinding &&
+        (typeof varBinding.value === 'number' ||
+          typeof varBinding.value === 'string' ||
+          typeof varBinding.value === 'boolean')
+      ) {
         leftValue = varBinding.value;
         logger.debug(
           `Resolved variable ${varName} to value: ${leftValue} (type: ${typeof leftValue})`
@@ -1360,7 +1375,12 @@ const convertIfStatementNode = async (
       const varName = (binaryNode.right.variable as { name: string }).name;
       logger.debug(`Right operand is variable reference: ${varName}`);
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
+      if (
+        varBinding &&
+        (typeof varBinding.value === 'number' ||
+          typeof varBinding.value === 'string' ||
+          typeof varBinding.value === 'boolean')
+      ) {
         rightValue = varBinding.value;
         logger.debug(
           `Resolved variable ${varName} to value: ${rightValue} (type: ${typeof rightValue})`

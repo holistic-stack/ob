@@ -180,7 +180,7 @@ describe('TransformVisitor', () => {
       if (!transformCstNode) return;
 
       const argsNode = transformCstNode.childForFieldName('arguments');
-      const params = argsNode ? extractArguments(argsNode, code, variableScope) : [];
+      const _params = argsNode ? extractArguments(argsNode, code, variableScope) : [];
 
       // Force the right vector for this test specifically
       const mockParams: ast.Parameter[] = [

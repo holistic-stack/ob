@@ -12,9 +12,9 @@ import type {
   EditorPosition,
   EditorSelection,
 } from '../../shared/types/common.types';
+import { operationUtils } from '../../shared/types/utils.js';
 import type { ASTNode } from '../openscad-parser/core/ast-types.js';
 import { createAppStore } from './app-store';
-import { operationUtils } from '../../shared/types/utils.js';
 
 let store: ReturnType<typeof createAppStore>;
 
@@ -180,9 +180,9 @@ describe('App Store', () => {
 
     it('should clear parsing state', () => {
       // First set some parsing state
-      store.getState().addParsingError(
-        operationUtils.createOperationError('TEST_ERROR', 'test error')
-      );
+      store
+        .getState()
+        .addParsingError(operationUtils.createOperationError('TEST_ERROR', 'test error'));
       expect(store.getState().parsing.errors).toHaveLength(1);
 
       // Then clear it
@@ -198,9 +198,7 @@ describe('App Store', () => {
 
     it('should add parsing error', () => {
       const error = 'Syntax error at line 1';
-      store.getState().addParsingError(
-        operationUtils.createOperationError('PARSING_ERROR', error)
-      );
+      store.getState().addParsingError(operationUtils.createOperationError('PARSING_ERROR', error));
 
       const state = store.getState();
       expect(state.parsing.errors).toContain(error);
@@ -208,12 +206,8 @@ describe('App Store', () => {
 
     it('should clear parsing errors', () => {
       // First add some errors
-      store.getState().addParsingError(
-        operationUtils.createOperationError('ERROR_1', 'error 1')
-      );
-      store.getState().addParsingError(
-        operationUtils.createOperationError('ERROR_2', 'error 2')
-      );
+      store.getState().addParsingError(operationUtils.createOperationError('ERROR_1', 'error 1'));
+      store.getState().addParsingError(operationUtils.createOperationError('ERROR_2', 'error 2'));
       expect(store.getState().parsing.errors).toHaveLength(2);
 
       // Then clear them

@@ -356,7 +356,7 @@ export const matrixFactory = {
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const rowData = data[row];
-        const value = rowData && rowData[col];
+        const value = rowData?.[col];
         result.set(row, col, value !== undefined ? value : 0);
       }
     }
@@ -424,7 +424,11 @@ export const matrixUtils = {
       for (let j = 0; j < 4; j++) {
         const mij = matrix[j * 4 + i]; // M[i,j] in column-major
         const mji = matrix[i * 4 + j]; // M[j,i] in column-major
-        if (mij !== undefined && mji !== undefined && Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision) {
+        if (
+          mij !== undefined &&
+          mji !== undefined &&
+          Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision
+        ) {
           return false;
         }
       }

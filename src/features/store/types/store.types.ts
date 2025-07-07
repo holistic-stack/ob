@@ -6,6 +6,7 @@
  */
 
 import type * as THREE from 'three';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AppConfig,
   CameraConfig,
@@ -14,15 +15,14 @@ import type {
   EditorSelection,
   EditorState,
 } from '../../../shared/types/common.types';
-import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type {
   AsyncOperationResult,
   OperationError,
-  OperationMetadata
+  OperationMetadata,
 } from '../../../shared/types/operations.types.js';
-import type { CoreNode } from '../../../shared/types/ast.types.js';
-import type { ParseOptions } from '../slices/parsing-slice.types.js';
+import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { ParseOptions } from '../slices/parsing-slice.types.js';
 
 /**
  * Parsing state for OpenSCAD AST processing
@@ -90,8 +90,14 @@ export interface EditorActions {
 export type EditorSlice = EditorState & EditorActions;
 
 export interface ParsingActions {
-  parseCode: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
-  parseAST: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+  parseCode: (
+    code: string,
+    options?: ParseOptions
+  ) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+  parseAST: (
+    code: string,
+    options?: ParseOptions
+  ) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
   clearParsingState: () => void;
   debouncedParse: (code: string, options?: ParseOptions) => void;
   addParsingError: (error: OperationError) => void;

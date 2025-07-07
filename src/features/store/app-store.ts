@@ -5,7 +5,7 @@
  * Result<T,E> error handling, and 300ms debouncing for OpenSCAD operations.
  */
 
-import { create, type StateCreator } from 'zustand';
+import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';

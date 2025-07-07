@@ -653,7 +653,7 @@ export function extractValue(
 
     case 'identifier':
       // If a variableScope is provided, try to resolve the identifier
-      if (variableScope && variableScope.has(valueNode.text)) {
+      if (variableScope?.has(valueNode.text)) {
         return variableScope.get(valueNode.text) as ast.Value;
       }
       return { type: 'identifier', value: valueNode.text };

@@ -191,7 +191,7 @@ function convertNodeToParameterValue(
   node: TSNode,
   errorHandler?: ErrorHandler,
   sourceCode: string = '',
-  variableScope?: Map<string, ast.ParameterValue>
+  _variableScope?: Map<string, ast.ParameterValue>
 ): ast.ParameterValue | undefined {
   // Use enhanced value extraction if error handler is available
   if (errorHandler) {
@@ -832,7 +832,7 @@ export function extractValue(
 function extractVectorLiteral(
   vectorNode: TSNode,
   sourceCode: string = '',
-  variableScope?: Map<string, ast.ParameterValue>
+  _variableScope?: Map<string, ast.ParameterValue>
 ): ast.VectorValue | null {
   const values: ast.Value[] = [];
 

@@ -235,8 +235,8 @@ describe('Simplified MatrixOperationsAPI', () => {
         // Check key elements (90 degree rotation around X) in gl-matrix format
         expect(matrix[0]).toBeCloseTo(1, 10); // m00 - X axis unchanged
         expect(matrix[5]).toBeCloseTo(0, 10); // m11 - cos(90°) = 0
-        expect(matrix[6]).toBeCloseTo(-1, 10); // m12 - -sin(90°) = -1
-        expect(matrix[9]).toBeCloseTo(1, 10); // m21 - sin(90°) = 1
+        expect(matrix[6]).toBeCloseTo(1, 10); // m12 - sin(90°) = 1
+        expect(matrix[9]).toBeCloseTo(-1, 10); // m21 - -sin(90°) = -1
         expect(matrix[10]).toBeCloseTo(0, 10); // m22 - cos(90°) = 0
 
         expect(result.data.executionTime).toBeGreaterThanOrEqual(0);
