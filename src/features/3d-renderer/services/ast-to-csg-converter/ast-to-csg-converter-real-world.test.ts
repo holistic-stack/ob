@@ -42,8 +42,8 @@ module box(size=[10,10,10], wall=2, center=false) {
     code: `
 function factorial(n) = n <= 1 ? 1 : n * factorial(n-1);
 `,
-    expectedNodeCount: 0, // Parser doesn't generate AST nodes for function definitions (non-3D constructs)
-    expectedNodeTypes: [],
+    expectedNodeCount: 1, // Parser generates AST node for function definitions
+    expectedNodeTypes: ['function_definition'],
     hasRenderableContent: false, // Function definition only
   },
 
@@ -57,7 +57,7 @@ rotate([0, 0, $t * 360]) {
 }
 `,
     expectedNodeCount: 1, // Rotate with nested translate and cube
-    expectedNodeTypes: ['function_call'], // Parser generates function_call for module instantiations
+    expectedNodeTypes: ['rotate'], // Parser generates 'rotate' for rotate transformations
     hasRenderableContent: true, // Contains 3D primitives that can be rendered
   },
 
@@ -74,8 +74,8 @@ for (i = [0:5]) {
     }
 }
 `,
-    expectedNodeCount: 0, // Parser doesn't generate AST nodes for for loops (non-3D constructs)
-    expectedNodeTypes: [],
+    expectedNodeCount: 1, // Parser generates AST node for the inner translate (for loops create AST nodes for their content)
+    expectedNodeTypes: ['translate'], // Parser generates the innermost renderable node
     hasRenderableContent: false, // For loops are control flow constructs, not directly renderable
   },
 
@@ -109,8 +109,8 @@ wall_thickness = 2;
 
 roundedBox([box_width, box_height, 20], wall_thickness, true);
 `,
-    expectedNodeCount: 1, // Parser only generates node for roundedBox instantiation (3D construct)
-    expectedNodeTypes: ['function_call'], // Module instantiation parsed as function_call
+    expectedNodeCount: 3, // Parser generates nodes for assignments and roundedBox instantiation
+    expectedNodeTypes: ['assign', 'assign', 'assign'], // Three assignment statements are parsed
     hasRenderableContent: true, // Contains roundedBox instantiation
   },
 };
@@ -183,7 +183,7 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
             conversionTime: number;
           }
           const successfulConversions = conversionResults.filter(
-            (r: { node: ASTNode; result: Result<Mesh3D, string>; }) => r.result.success
+            (r: { node: ASTNode; result: Result<Mesh3D, string> }) => r.result.success
           );
 
           // For real-world constructs, the converter may not yet support all features

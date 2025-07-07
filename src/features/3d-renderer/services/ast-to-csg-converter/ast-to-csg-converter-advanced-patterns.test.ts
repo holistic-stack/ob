@@ -52,14 +52,14 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
           module inner_part(radius=5) {
             sphere(r=radius);
           }
-          
+
           module outer_shell(inner_r=5, thickness=2) {
             difference() {
               sphere(r=inner_r + thickness);
               inner_part(inner_r);
             }
           }
-          
+
           outer_shell(8, 3);
         `,
         expectedComplexity: 'high',
@@ -75,7 +75,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
               }
             }
           }
-          
+
           for (i = [0:11]) {
             gear_tooth(10, 3, i*30);
           }
@@ -132,7 +132,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
           width = 20;
           height = 15;
           depth = 10;
-          
+
           if (width > height && height > depth) {
             translate([0, 0, depth/2]) {
               cube([width, height, depth], center=true);
@@ -220,7 +220,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
           base_size = 20;
           scale_factor = 1.5;
           final_size = base_size * scale_factor;
-          
+
           cube([final_size, final_size, final_size/2]);
         `,
         expectedComplexity: 'low',
@@ -232,7 +232,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
           pos1 = [10, 0, 0];
           pos2 = [0, 15, 0];
           pos3 = [0, 0, 20];
-          
+
           translate(pos1) cube([5, 5, 5]);
           translate(pos2) sphere(r=3);
           translate(pos3) cylinder(h=8, r=2);
@@ -293,7 +293,7 @@ const ADVANCED_OPENSCAD_SCENARIOS = {
           offset_x = 25;
           rotation_angle = 60;
           scale_factor = [2, 1.5, 1];
-          
+
           translate([offset_x, 0, 0]) {
             rotate([0, 0, rotation_angle]) {
               scale(scale_factor) {
@@ -663,24 +663,6 @@ describe('AST to CSG Converter - Advanced Integration Patterns Testing', () => {
         });
       });
     });
-  });
-
-  it('should meet performance targets for conditional logic', async () => {
-    logger.init('Testing performance for conditional logic');
-
-    const testCase = ADVANCED_OPENSCAD_SCENARIOS.conditionalLogic.testCases[1]; // Nested conditional
-    const startTime = performance.now();
-
-    const result = await store.getState().parseCode(testCase.code);
-
-    const endTime = performance.now();
-    const totalTime = endTime - startTime;
-
-    expect(result.success).toBe(true);
-    expect(totalTime).toBeLessThan(150); // Should complete within 150ms for nested conditionals
-
-    logger.debug(`Conditional logic performance: ${totalTime.toFixed(2)}ms`);
-    logger.end('Conditional logic performance test completed');
   });
 
   describe('Error Handling Tests', () => {

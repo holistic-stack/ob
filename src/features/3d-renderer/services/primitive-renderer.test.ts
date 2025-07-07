@@ -19,7 +19,8 @@ vi.mock('./ast-to-csg-converter/ast-to-csg-converter.js', () => ({
       cylinder: 'CylinderGeometry',
     };
 
-    const geometryType = geometryTypeMap[node.type as keyof typeof geometryTypeMap] || 'BoxGeometry';
+    const geometryType =
+      geometryTypeMap[node.type as keyof typeof geometryTypeMap] || 'BoxGeometry';
 
     return {
       success: true,

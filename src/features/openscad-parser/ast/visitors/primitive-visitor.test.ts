@@ -1326,1090 +1326,1090 @@ describe('PrimitiveVisitor', () => {
     });
 
     it('should create a cylinder node with different top and bottom diameters', () => {
-        // Create mock number nodes
-        const mockHeightNumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
+      // Create mock number nodes
+      const mockHeightNumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
 
-        const mockDiameter1NumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
+      const mockDiameter1NumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
 
-        const mockDiameter2NumberNode = {
-          type: 'number',
-          text: '6',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
+      const mockDiameter2NumberNode = {
+        type: 'number',
+        text: '6',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
 
-        // Create mock named_argument nodes
-        const mockHeightNamedArgumentNode = {
-          type: 'named_argument',
-          text: 'h=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockHeightNumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockHeightNumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      // Create mock named_argument nodes
+      const mockHeightNamedArgumentNode = {
+        type: 'named_argument',
+        text: 'h=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'h',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockHeightNumberNode,
-          ],
-        };
+            };
+          } else if (j === 2) {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'h',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'h',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockHeightNumberNode,
+        ],
+      };
 
-        const mockDiameter1NamedArgumentNode = {
-          type: 'named_argument',
-          text: 'd1=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'd1',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockDiameter1NumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'd1',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockDiameter1NumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      const mockDiameter1NamedArgumentNode = {
+        type: 'named_argument',
+        text: 'd1=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'd1',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter1NumberNode,
-          ],
-        };
+            };
+          } else if (j === 2) {
+            return mockDiameter1NumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'd1',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockDiameter1NumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'd1',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter1NumberNode,
+        ],
+      };
 
-        const mockDiameter2NamedArgumentNode = {
-          type: 'named_argument',
-          text: 'd2=6',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'd2',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockDiameter2NumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'd2',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockDiameter2NumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      const mockDiameter2NamedArgumentNode = {
+        type: 'named_argument',
+        text: 'd2=6',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'd2',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter2NumberNode,
-          ],
-        };
-
-        // Create a mock argument_list node
-        const mockArgumentListNode = {
-          type: 'argument_list',
-          text: '(h=10, d1=10, d2=6)',
-          childCount: 5,
-          child: (i: number) => {
-            if (i === 0) {
-              return mockHeightNamedArgumentNode;
-            } else if (i === 1) {
-              return {
-                type: 'comma',
-                text: ',',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (i === 2) {
-              return mockDiameter1NamedArgumentNode;
-            }
-            return null;
+            };
+          } else if (j === 2) {
+            return mockDiameter2NumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'd2',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockDiameter2NumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'd2',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: () => null,
-          namedChildren: [
-            mockHeightNamedArgumentNode,
-            {
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter2NumberNode,
+        ],
+      };
+
+      // Create a mock argument_list node
+      const mockArgumentListNode = {
+        type: 'argument_list',
+        text: '(h=10, d1=10, d2=6)',
+        childCount: 5,
+        child: (i: number) => {
+          if (i === 0) {
+            return mockHeightNamedArgumentNode;
+          } else if (i === 1) {
+            return {
               type: 'comma',
               text: ',',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter1NamedArgumentNode,
-            {
-              type: 'comma',
-              text: ',',
-              childCount: 0,
-              child: () => null,
-              childForFieldName: () => null,
-              namedChildren: [],
-            },
-            mockDiameter2NamedArgumentNode,
-          ],
-        };
+            };
+          } else if (i === 2) {
+            return mockDiameter1NamedArgumentNode;
+          }
+          return null;
+        },
+        childForFieldName: () => null,
+        namedChildren: [
+          mockHeightNamedArgumentNode,
+          {
+            type: 'comma',
+            text: ',',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter1NamedArgumentNode,
+          {
+            type: 'comma',
+            text: ',',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter2NamedArgumentNode,
+        ],
+      };
 
-        // Create a mock accessor_expression node
-        const mockAccessorExpressionNode = {
-          type: 'accessor_expression',
-          text: 'cylinder(h=10, d1=10, d2=6)',
-          childCount: 2,
-          child: (index: number) => {
-            if (index === 0) {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (index === 1) {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'function') {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'arguments' || name === 'argument_list') {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      // Create a mock accessor_expression node
+      const mockAccessorExpressionNode = {
+        type: 'accessor_expression',
+        text: 'cylinder(h=10, d1=10, d2=6)',
+        childCount: 2,
+        child: (index: number) => {
+          if (index === 0) {
+            return {
               type: 'identifier',
               text: 'cylinder',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockArgumentListNode,
-          ],
-        } as unknown as TSNode;
-
-        // Mock the createASTNodeForFunction method
-        const createASTNodeForFunctionSpy = vi
-          .spyOn(visitor, 'createASTNodeForFunction')
-          .mockReturnValue({
-            type: 'cylinder',
-            h: 10,
-            r1: 5,
-            r2: 3,
-            center: false,
-            location: {
-              start: { line: 0, column: 0 },
-              end: { line: 0, column: 0 },
-            },
-          });
-
-        // Visit the node
-        const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
-
-        // Verify the method was called
-        expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
-
-        // Verify the result
-        expect(result).not.toBeNull();
-        expect(result?.type).toBe('cylinder');
-        expect((result as ast.CylinderNode).h).toBe(10);
-        expect((result as ast.CylinderNode).r1).toBe(5);
-        expect((result as ast.CylinderNode).r2).toBe(3);
-        expect((result as ast.CylinderNode).center).toBe(false);
-
-        // Restore the original method
-        createASTNodeForFunctionSpy.mockRestore();
-      });
-
-      it('should create a cylinder node with diameter parameters', () => {
-        // Create mock number nodes
-        const mockHeightNumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        const mockDiameterNumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        // Create mock named_argument nodes
-        const mockHeightNamedArgumentNode = {
-          type: 'named_argument',
-          text: 'h=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockHeightNumberNode;
-            }
-            return null;
+            };
+          } else if (index === 1) {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'function') {
+            return {
+              type: 'identifier',
+              text: 'cylinder',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'arguments' || name === 'argument_list') {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'cylinder',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockHeightNumberNode;
-            }
-            return null;
+          mockArgumentListNode,
+        ],
+      } as unknown as TSNode;
+
+      // Mock the createASTNodeForFunction method
+      const createASTNodeForFunctionSpy = vi
+        .spyOn(visitor, 'createASTNodeForFunction')
+        .mockReturnValue({
+          type: 'cylinder',
+          h: 10,
+          r1: 5,
+          r2: 3,
+          center: false,
+          location: {
+            start: { line: 0, column: 0 },
+            end: { line: 0, column: 0 },
           },
-          namedChildren: [
-            {
+        });
+
+      // Visit the node
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
+
+      // Verify the method was called
+      expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
+
+      // Verify the result
+      expect(result).not.toBeNull();
+      expect(result?.type).toBe('cylinder');
+      expect((result as ast.CylinderNode).h).toBe(10);
+      expect((result as ast.CylinderNode).r1).toBe(5);
+      expect((result as ast.CylinderNode).r2).toBe(3);
+      expect((result as ast.CylinderNode).center).toBe(false);
+
+      // Restore the original method
+      createASTNodeForFunctionSpy.mockRestore();
+    });
+
+    it('should create a cylinder node with diameter parameters', () => {
+      // Create mock number nodes
+      const mockHeightNumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      const mockDiameterNumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      // Create mock named_argument nodes
+      const mockHeightNamedArgumentNode = {
+        type: 'named_argument',
+        text: 'h=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'h',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockHeightNumberNode,
-          ],
-        };
+            };
+          } else if (j === 2) {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'h',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'h',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockHeightNumberNode,
+        ],
+      };
 
-        const mockDiameterNamedArgumentNode = {
-          type: 'named_argument',
-          text: 'd=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'd',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockDiameterNumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'd',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockDiameterNumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      const mockDiameterNamedArgumentNode = {
+        type: 'named_argument',
+        text: 'd=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'd',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameterNumberNode,
-          ],
-        };
-
-        // Create a mock argument_list node
-        const mockArgumentListNode = {
-          type: 'argument_list',
-          text: '(h=10, d=10)',
-          childCount: 3,
-          child: (i: number) => {
-            if (i === 0) {
-              return mockHeightNamedArgumentNode;
-            } else if (i === 1) {
-              return {
-                type: 'comma',
-                text: ',',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (i === 2) {
-              return mockDiameterNamedArgumentNode;
-            }
-            return null;
+            };
+          } else if (j === 2) {
+            return mockDiameterNumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'd',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockDiameterNumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'd',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: () => null,
-          namedChildren: [
-            mockHeightNamedArgumentNode,
-            {
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameterNumberNode,
+        ],
+      };
+
+      // Create a mock argument_list node
+      const mockArgumentListNode = {
+        type: 'argument_list',
+        text: '(h=10, d=10)',
+        childCount: 3,
+        child: (i: number) => {
+          if (i === 0) {
+            return mockHeightNamedArgumentNode;
+          } else if (i === 1) {
+            return {
               type: 'comma',
               text: ',',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameterNamedArgumentNode,
-          ],
-        };
+            };
+          } else if (i === 2) {
+            return mockDiameterNamedArgumentNode;
+          }
+          return null;
+        },
+        childForFieldName: () => null,
+        namedChildren: [
+          mockHeightNamedArgumentNode,
+          {
+            type: 'comma',
+            text: ',',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameterNamedArgumentNode,
+        ],
+      };
 
-        // Create a mock accessor_expression node
-        const mockAccessorExpressionNode = {
-          type: 'accessor_expression',
-          text: 'cylinder(h=10, d=10)',
-          childCount: 2,
-          child: (index: number) => {
-            if (index === 0) {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (index === 1) {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'function') {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'arguments' || name === 'argument_list') {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      // Create a mock accessor_expression node
+      const mockAccessorExpressionNode = {
+        type: 'accessor_expression',
+        text: 'cylinder(h=10, d=10)',
+        childCount: 2,
+        child: (index: number) => {
+          if (index === 0) {
+            return {
               type: 'identifier',
               text: 'cylinder',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockArgumentListNode,
-          ],
-        } as unknown as TSNode;
-
-        // Mock the createASTNodeForFunction method
-        const createASTNodeForFunctionSpy = vi
-          .spyOn(visitor, 'createASTNodeForFunction')
-          .mockReturnValue({
-            type: 'cylinder',
-            height: 10,
-            radius1: 5,
-            radius2: 5,
-            center: false,
-            location: {
-              start: { line: 0, column: 0 },
-              end: { line: 0, column: 0 },
-            },
-          });
-
-        // Visit the node
-        const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
-
-        // Verify the method was called
-        expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
-
-        // Verify the result
-        expect(result).not.toBeNull();
-        expect(result?.type).toBe('cylinder');
-        expect((result as ast.CylinderNode).height).toBe(10);
-        expect((result as ast.CylinderNode).radius1).toBe(5);
-        expect((result as ast.CylinderNode).radius2).toBe(5);
-        expect((result as ast.CylinderNode).center).toBe(false);
-
-        // Restore the original method
-        createASTNodeForFunctionSpy.mockRestore();
-      });
-
-      it('should create a cylinder node with different top and bottom diameters', () => {
-        // Create mock number nodes
-        const mockHeightNumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        const mockDiameter1NumberNode = {
-          type: 'number',
-          text: '10',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        const mockDiameter2NumberNode = {
-          type: 'number',
-          text: '6',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        // Create mock named_argument nodes
-        const mockHeightNamedArgumentNode = {
-          type: 'named_argument',
-          text: 'h=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockHeightNumberNode;
-            }
-            return null;
+            };
+          } else if (index === 1) {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'function') {
+            return {
+              type: 'identifier',
+              text: 'cylinder',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'arguments' || name === 'argument_list') {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'cylinder',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'h',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockHeightNumberNode;
-            }
-            return null;
+          mockArgumentListNode,
+        ],
+      } as unknown as TSNode;
+
+      // Mock the createASTNodeForFunction method
+      const createASTNodeForFunctionSpy = vi
+        .spyOn(visitor, 'createASTNodeForFunction')
+        .mockReturnValue({
+          type: 'cylinder',
+          height: 10,
+          radius1: 5,
+          radius2: 5,
+          center: false,
+          location: {
+            start: { line: 0, column: 0 },
+            end: { line: 0, column: 0 },
           },
-          namedChildren: [
-            {
+        });
+
+      // Visit the node
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
+
+      // Verify the method was called
+      expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
+
+      // Verify the result
+      expect(result).not.toBeNull();
+      expect(result?.type).toBe('cylinder');
+      expect((result as ast.CylinderNode).height).toBe(10);
+      expect((result as ast.CylinderNode).radius1).toBe(5);
+      expect((result as ast.CylinderNode).radius2).toBe(5);
+      expect((result as ast.CylinderNode).center).toBe(false);
+
+      // Restore the original method
+      createASTNodeForFunctionSpy.mockRestore();
+    });
+
+    it('should create a cylinder node with different top and bottom diameters', () => {
+      // Create mock number nodes
+      const mockHeightNumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      const mockDiameter1NumberNode = {
+        type: 'number',
+        text: '10',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      const mockDiameter2NumberNode = {
+        type: 'number',
+        text: '6',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      // Create mock named_argument nodes
+      const mockHeightNamedArgumentNode = {
+        type: 'named_argument',
+        text: 'h=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'h',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockHeightNumberNode,
-          ],
-        };
+            };
+          } else if (j === 2) {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'h',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockHeightNumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'h',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockHeightNumberNode,
+        ],
+      };
 
-        const mockDiameter1NamedArgumentNode = {
-          type: 'named_argument',
-          text: 'd1=10',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'd1',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockDiameter1NumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'd1',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockDiameter1NumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      const mockDiameter1NamedArgumentNode = {
+        type: 'named_argument',
+        text: 'd1=10',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'd1',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter1NumberNode,
-          ],
-        };
+            };
+          } else if (j === 2) {
+            return mockDiameter1NumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'd1',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockDiameter1NumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'd1',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter1NumberNode,
+        ],
+      };
 
-        const mockDiameter2NamedArgumentNode = {
-          type: 'named_argument',
-          text: 'd2=6',
-          childCount: 3,
-          child: (j: number) => {
-            if (j === 0) {
-              return {
-                type: 'identifier',
-                text: 'd2',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 1) {
-              return {
-                type: 'equals',
-                text: '=',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (j === 2) {
-              return mockDiameter2NumberNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'name') {
-              return {
-                type: 'identifier',
-                text: 'd2',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'value') {
-              return mockDiameter2NumberNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      const mockDiameter2NamedArgumentNode = {
+        type: 'named_argument',
+        text: 'd2=6',
+        childCount: 3,
+        child: (j: number) => {
+          if (j === 0) {
+            return {
               type: 'identifier',
               text: 'd2',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            {
+            };
+          } else if (j === 1) {
+            return {
               type: 'equals',
               text: '=',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter2NumberNode,
-          ],
-        };
-
-        // Create a mock argument_list node
-        const mockArgumentListNode = {
-          type: 'argument_list',
-          text: '(h=10, d1=10, d2=6)',
-          childCount: 5,
-          child: (i: number) => {
-            if (i === 0) {
-              return mockHeightNamedArgumentNode;
-            } else if (i === 1) {
-              return {
-                type: 'comma',
-                text: ',',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (i === 2) {
-              return mockDiameter1NamedArgumentNode;
-            } else if (i === 3) {
-              return {
-                type: 'comma',
-                text: ',',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (i === 4) {
-              return mockDiameter2NamedArgumentNode;
-            }
-            return null;
+            };
+          } else if (j === 2) {
+            return mockDiameter2NumberNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'name') {
+            return {
+              type: 'identifier',
+              text: 'd2',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'value') {
+            return mockDiameter2NumberNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'd2',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: () => null,
-          namedChildren: [
-            mockHeightNamedArgumentNode,
-            {
+          {
+            type: 'equals',
+            text: '=',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter2NumberNode,
+        ],
+      };
+
+      // Create a mock argument_list node
+      const mockArgumentListNode = {
+        type: 'argument_list',
+        text: '(h=10, d1=10, d2=6)',
+        childCount: 5,
+        child: (i: number) => {
+          if (i === 0) {
+            return mockHeightNamedArgumentNode;
+          } else if (i === 1) {
+            return {
               type: 'comma',
               text: ',',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter1NamedArgumentNode,
-            {
+            };
+          } else if (i === 2) {
+            return mockDiameter1NamedArgumentNode;
+          } else if (i === 3) {
+            return {
               type: 'comma',
               text: ',',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockDiameter2NamedArgumentNode,
-          ],
-        };
+            };
+          } else if (i === 4) {
+            return mockDiameter2NamedArgumentNode;
+          }
+          return null;
+        },
+        childForFieldName: () => null,
+        namedChildren: [
+          mockHeightNamedArgumentNode,
+          {
+            type: 'comma',
+            text: ',',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter1NamedArgumentNode,
+          {
+            type: 'comma',
+            text: ',',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockDiameter2NamedArgumentNode,
+        ],
+      };
 
-        // Create a mock accessor_expression node
-        const mockAccessorExpressionNode = {
-          type: 'accessor_expression',
-          text: 'cylinder(h=10, d1=10, d2=6)',
-          childCount: 2,
-          child: (index: number) => {
-            if (index === 0) {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (index === 1) {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          childForFieldName: (name: string) => {
-            if (name === 'function') {
-              return {
-                type: 'identifier',
-                text: 'cylinder',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'arguments' || name === 'argument_list') {
-              return mockArgumentListNode;
-            }
-            return null;
-          },
-          namedChildren: [
-            {
+      // Create a mock accessor_expression node
+      const mockAccessorExpressionNode = {
+        type: 'accessor_expression',
+        text: 'cylinder(h=10, d1=10, d2=6)',
+        childCount: 2,
+        child: (index: number) => {
+          if (index === 0) {
+            return {
               type: 'identifier',
               text: 'cylinder',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockArgumentListNode,
-          ],
-        } as unknown as TSNode;
-
-        // Mock the createASTNodeForFunction method
-        // @ts-expect-error - Accessing protected method for testing
-        const createASTNodeForFunctionSpy = vi
-          .spyOn(visitor, 'createASTNodeForFunction')
-          .mockReturnValue({
-            type: 'cylinder',
-            h: 10,
-            r1: 5,
-            r2: 3,
-            center: false,
-            location: {
-              start: { line: 0, column: 0 },
-              end: { line: 0, column: 0 },
-            },
-          });
-
-        // Visit the node
-        const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
-
-        // Verify the method was called
-        expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
-
-        // Verify the result
-        expect(result).not.toBeNull();
-        expect(result?.type).toBe('cylinder');
-        const cylinderResult = result as ast.CylinderNode;
-        expect(cylinderResult.h).toBe(10);
-        expect(cylinderResult.r1).toBe(5);
-        expect(cylinderResult.r2).toBe(3);
-        expect(cylinderResult.center).toBe(false);
-
-        // Restore the original method
-        createASTNodeForFunctionSpy.mockRestore();
-      });
-
-      it('should return null for unsupported functions', () => {
-        // Create a mock argument_list node
-        const mockArgumentListNode = {
-          type: 'argument_list',
-          text: '()',
-          childCount: 0,
-          child: () => null,
-          childForFieldName: () => null,
-          namedChildren: [],
-        };
-
-        // Create a mock accessor_expression node
-        const mockAccessorExpressionNode = {
-          type: 'accessor_expression',
-          text: 'unknown_function()',
-          childCount: 2,
-          child: (index: number) => {
-            if (index === 0) {
-              return {
-                type: 'identifier',
-                text: 'unknown_function',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (index === 1) {
-              return mockArgumentListNode;
-            }
-            return null;
+            };
+          } else if (index === 1) {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'function') {
+            return {
+              type: 'identifier',
+              text: 'cylinder',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'arguments' || name === 'argument_list') {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'cylinder',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
           },
-          childForFieldName: (name: string) => {
-            if (name === 'function') {
-              return {
-                type: 'identifier',
-                text: 'unknown_function',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              };
-            } else if (name === 'arguments' || name === 'argument_list') {
-              return mockArgumentListNode;
-            }
-            return null;
+          mockArgumentListNode,
+        ],
+      } as unknown as TSNode;
+
+      // Mock the createASTNodeForFunction method
+      // @ts-expect-error - Accessing protected method for testing
+      const createASTNodeForFunctionSpy = vi
+        .spyOn(visitor, 'createASTNodeForFunction')
+        .mockReturnValue({
+          type: 'cylinder',
+          h: 10,
+          r1: 5,
+          r2: 3,
+          center: false,
+          location: {
+            start: { line: 0, column: 0 },
+            end: { line: 0, column: 0 },
           },
-          namedChildren: [
-            {
+        });
+
+      // Visit the node
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
+
+      // Verify the method was called
+      expect(createASTNodeForFunctionSpy).toHaveBeenCalled();
+
+      // Verify the result
+      expect(result).not.toBeNull();
+      expect(result?.type).toBe('cylinder');
+      const cylinderResult = result as ast.CylinderNode;
+      expect(cylinderResult.h).toBe(10);
+      expect(cylinderResult.r1).toBe(5);
+      expect(cylinderResult.r2).toBe(3);
+      expect(cylinderResult.center).toBe(false);
+
+      // Restore the original method
+      createASTNodeForFunctionSpy.mockRestore();
+    });
+
+    it('should return null for unsupported functions', () => {
+      // Create a mock argument_list node
+      const mockArgumentListNode = {
+        type: 'argument_list',
+        text: '()',
+        childCount: 0,
+        child: () => null,
+        childForFieldName: () => null,
+        namedChildren: [],
+      };
+
+      // Create a mock accessor_expression node
+      const mockAccessorExpressionNode = {
+        type: 'accessor_expression',
+        text: 'unknown_function()',
+        childCount: 2,
+        child: (index: number) => {
+          if (index === 0) {
+            return {
               type: 'identifier',
               text: 'unknown_function',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
-            },
-            mockArgumentListNode,
-          ],
-        } as unknown as TSNode;
+            };
+          } else if (index === 1) {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        childForFieldName: (name: string) => {
+          if (name === 'function') {
+            return {
+              type: 'identifier',
+              text: 'unknown_function',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (name === 'arguments' || name === 'argument_list') {
+            return mockArgumentListNode;
+          }
+          return null;
+        },
+        namedChildren: [
+          {
+            type: 'identifier',
+            text: 'unknown_function',
+            childCount: 0,
+            child: () => null,
+            childForFieldName: () => null,
+            namedChildren: [],
+          },
+          mockArgumentListNode,
+        ],
+      } as unknown as TSNode;
 
-        // Visit the node
-        const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
+      // Visit the node
+      const result = visitor.visitAccessorExpression(mockAccessorExpressionNode);
 
-        // Verify the result
-        expect(result).toBeNull();
-      });
+      // Verify the result
+      expect(result).toBeNull();
     });
   });
+});
 
-  // Helper function to find a node of a specific type
-  function _findNodeOfType(node: TSNode, type: string): TSNode | null {
-    if (node.type === type) {
-      return node;
-    }
-
-    // Special case for accessor_expression which might be a module_instantiation
-    if (node.type === 'accessor_expression' && type === 'module_instantiation') {
-      return node;
-    }
-
-    // Special case for expression_statement which might contain an accessor_expression
-    if (node.type === 'expression_statement' && type === 'module_instantiation') {
-      const expression = node.firstChild;
-      if (expression) {
-        const accessorExpression = findDescendantOfType(expression, 'accessor_expression');
-        if (accessorExpression) {
-          return accessorExpression;
-        }
-      }
-    }
-
-    // Special case for statement which might contain an expression_statement
-    if (node.type === 'statement' && type === 'module_instantiation') {
-      const expressionStatement = node.childForFieldName('expression_statement');
-      if (expressionStatement) {
-        return _findNodeOfType(expressionStatement, type);
-      }
-    }
-
-    for (let i = 0; i < node.childCount; i++) {
-      const child = node.child(i);
-      if (!child) continue;
-
-      const result = _findNodeOfType(child, type);
-      if (result) {
-        return result;
-      }
-    }
-
-    return null;
+// Helper function to find a node of a specific type
+function _findNodeOfType(node: TSNode, type: string): TSNode | null {
+  if (node.type === type) {
+    return node;
   }
+
+  // Special case for accessor_expression which might be a module_instantiation
+  if (node.type === 'accessor_expression' && type === 'module_instantiation') {
+    return node;
+  }
+
+  // Special case for expression_statement which might contain an accessor_expression
+  if (node.type === 'expression_statement' && type === 'module_instantiation') {
+    const expression = node.firstChild;
+    if (expression) {
+      const accessorExpression = findDescendantOfType(expression, 'accessor_expression');
+      if (accessorExpression) {
+        return accessorExpression;
+      }
+    }
+  }
+
+  // Special case for statement which might contain an expression_statement
+  if (node.type === 'statement' && type === 'module_instantiation') {
+    const expressionStatement = node.childForFieldName('expression_statement');
+    if (expressionStatement) {
+      return _findNodeOfType(expressionStatement, type);
+    }
+  }
+
+  for (let i = 0; i < node.childCount; i++) {
+    const child = node.child(i);
+    if (!child) continue;
+
+    const result = _findNodeOfType(child, type);
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+}

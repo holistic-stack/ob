@@ -14,8 +14,8 @@ import type { ErrorHandler } from '../../../error-handling/index.js'; // Added E
 import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
-import { ExpressionVisitor } from '../expression-visitor.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
+import { ExpressionVisitor } from '../expression-visitor.js';
 
 /**
  * Visitor for if-else statements

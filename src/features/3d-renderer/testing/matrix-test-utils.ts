@@ -113,10 +113,22 @@ export class MatrixTestDataGenerator {
     // This creates an upper triangular matrix with zeros on the diagonal
     // Using fromValues to be explicit about all matrix elements
     return mat4.fromValues(
-      0, 1, 2, 3, // Column 0: m00=0 (diagonal), m10=1, m20=2, m30=3
-      0, 0, 4, 5, // Column 1: m01=0, m11=0 (diagonal), m21=4, m31=5
-      0, 0, 0, 6, // Column 2: m02=0, m12=0, m22=0 (diagonal), m32=6
-      0, 0, 0, 0  // Column 3: m03=0, m13=0, m23=0, m33=0 (diagonal)
+      0,
+      1,
+      2,
+      3, // Column 0: m00=0 (diagonal), m10=1, m20=2, m30=3
+      0,
+      0,
+      4,
+      5, // Column 1: m01=0, m11=0 (diagonal), m21=4, m31=5
+      0,
+      0,
+      0,
+      6, // Column 2: m02=0, m12=0, m22=0 (diagonal), m32=6
+      0,
+      0,
+      0,
+      0 // Column 3: m03=0, m13=0, m23=0, m33=0 (diagonal)
     );
   }
 
@@ -157,52 +169,27 @@ export class MatrixTestDataGenerator {
     return [
       {
         name: 'Very large values',
-        matrix: mat4.fromValues(
-          1e10, 0, 0, 0,
-          0, 1e10, 0, 0,
-          0, 0, 1e10, 0,
-          0, 0, 0, 1e10
-        ),
+        matrix: mat4.fromValues(1e10, 0, 0, 0, 0, 1e10, 0, 0, 0, 0, 1e10, 0, 0, 0, 0, 1e10),
         expectedBehavior: 'warning',
       },
       {
         name: 'Very small values',
-        matrix: mat4.fromValues(
-          1e-10, 0, 0, 0,
-          0, 1e-10, 0, 0,
-          0, 0, 1e-10, 0,
-          0, 0, 0, 1e-10
-        ),
+        matrix: mat4.fromValues(1e-10, 0, 0, 0, 0, 1e-10, 0, 0, 0, 0, 1e-10, 0, 0, 0, 0, 1e-10),
         expectedBehavior: 'warning',
       },
       {
         name: 'Mixed scale values',
-        matrix: mat4.fromValues(
-          1e10, 0, 0, 0,
-          0, 1e-10, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1
-        ),
+        matrix: mat4.fromValues(1e10, 0, 0, 0, 0, 1e-10, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
         expectedBehavior: 'warning',
       },
       {
         name: 'Near-zero determinant',
-        matrix: mat4.fromValues(
-          1, 2, 3, 0,
-          2, 4, 6, 0,
-          3, 6, 9.000001, 0,
-          0, 0, 0, 1
-        ),
+        matrix: mat4.fromValues(1, 2, 3, 0, 2, 4, 6, 0, 3, 6, 9.000001, 0, 0, 0, 0, 1),
         expectedBehavior: 'warning',
       },
       {
         name: 'Exactly singular',
-        matrix: mat4.fromValues(
-          1, 2, 3, 0,
-          2, 4, 6, 0,
-          3, 6, 9, 0,
-          0, 0, 0, 0
-        ),
+        matrix: mat4.fromValues(1, 2, 3, 0, 2, 4, 6, 0, 3, 6, 9, 0, 0, 0, 0, 0),
         expectedBehavior: 'error',
       },
     ];

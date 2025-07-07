@@ -241,12 +241,13 @@ describe('Matrix Configuration', () => {
       expect(threadCount).toBeLessThanOrEqual(MATRIX_CONFIG.operations.workerThreads);
     });
 
-    it('should respect hardware concurrency limits', () => {
-      logger.debug('[DEBUG][MatrixConfigTest] Testing hardware concurrency limits');
+    it('should use default thread count without userAgent dependencies', () => {
+      logger.debug('[DEBUG][MatrixConfigTest] Testing default thread count');
 
       const threadCount = getWorkerThreadCount();
-      const hardwareConcurrency = navigator.hardwareConcurrency || 4;
-      expect(threadCount).toBeLessThanOrEqual(hardwareConcurrency);
+      const DEFAULT_THREAD_COUNT = 4;
+      expect(threadCount).toBeLessThanOrEqual(DEFAULT_THREAD_COUNT);
+      expect(threadCount).toBeGreaterThan(0);
     });
   });
 

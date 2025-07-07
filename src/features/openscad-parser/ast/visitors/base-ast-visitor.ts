@@ -20,7 +20,7 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import { ErrorHandler, type ErrorHandlerOptions } from '../../error-handling/error-handler.js';
+import type { ErrorHandler, ErrorHandlerOptions } from '../../error-handling/error-handler.js';
 import { Severity } from '../../error-handling/types/error-types.js';
 import type * as ast from '../ast-types.js';
 import { type ExtractedParameter, extractArguments } from '../extractors/argument-extractor.js';

@@ -600,7 +600,11 @@ function extractArgument(
  * @param valueNode The value node
  * @returns A value object or null if the value is invalid
  */
-export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Value | null {
+export function extractValue(
+  valueNode: TSNode,
+  sourceCode: string = '',
+  variableScope?: Map<string, ast.ParameterValue>
+): ast.Value | null {
   switch (valueNode.type) {
     case 'expression': {
       const expressionChild = valueNode.namedChild(0); // Or child(0) if expressions can be anonymous
@@ -653,7 +657,7 @@ export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Va
     case 'vector_literal': // Fallthrough
     case 'array_literal':
     case 'vector_expression': // Add support for vector_expression
-      return extractVectorLiteral(valueNode, sourceCode);
+      return extractVectorLiteral(valueNode, sourceCode, variableScope);
 
     case 'range_literal':
       return extractRangeLiteral(valueNode);
@@ -825,7 +829,11 @@ export function extractValue(valueNode: TSNode, sourceCode: string = ''): ast.Va
  * @param vectorNode The vector_literal node
  * @returns A vector value object or null if the vector is invalid
  */
-function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.VectorValue | null {
+function extractVectorLiteral(
+  vectorNode: TSNode,
+  sourceCode: string = '',
+  variableScope?: Map<string, ast.ParameterValue>
+): ast.VectorValue | null {
   const values: ast.Value[] = [];
 
   // Iterate over named children to skip syntax tokens like '[', ']', ','
@@ -833,7 +841,7 @@ function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.
     const elementNode = vectorNode.namedChild(i);
     if (elementNode) {
       // Ensure child exists
-      const value = extractValue(elementNode, sourceCode, variableScope);
+      const value = extractValue(elementNode, sourceCode);
       if (value) {
         values.push(value);
       }

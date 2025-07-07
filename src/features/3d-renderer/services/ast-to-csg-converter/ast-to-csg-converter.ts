@@ -45,6 +45,7 @@ import type {
 } from '../../../openscad-parser/ast/ast-types.js';
 import {
   evaluateBinaryExpression as astEvaluateBinaryExpression,
+  extractLiteralValue,
   isFunctionLiteral,
 } from '../../../openscad-parser/ast/utils/ast-evaluator.js';
 import type { MaterialConfig, Mesh3D, MeshMetadata } from '../../types/renderer.types.js';
@@ -81,6 +82,9 @@ import { createMaterial } from '../material.service.js';
 // Expression handlers are now internal functions
 import { moduleRegistry } from './module-registry.service.js';
 import { variableScope } from './variable-scope.service.js';
+
+// Initialize variable scope
+variableScope.reset();
 
 const logger = createLogger('ASTToCSGConverter');
 
@@ -793,7 +797,9 @@ const convertFunctionCallNode = async (
 /**
  * Extract parameters from a module instantiation node
  */
-const extractParametersFromModuleInstantiation = (node: ModuleInstantiationNode): Record<string, ParameterValue> => {
+const extractParametersFromModuleInstantiation = (
+  node: ModuleInstantiationNode
+): Record<string, ParameterValue> => {
   const params: Record<string, ParameterValue> = {};
 
   if (node.args && Array.isArray(node.args)) {
@@ -993,13 +999,29 @@ const convertModuleInstantiationNode = async (
 
     // Transformations
     case 'translate':
-      return await convertTranslateNode(moduleInstantiationToTranslateNode(node), material, convertASTNodeToMesh);
+      return await convertTranslateNode(
+        moduleInstantiationToTranslateNode(node),
+        material,
+        convertASTNodeToMesh
+      );
     case 'rotate':
-      return await convertRotateNode(moduleInstantiationToRotateNode(node), material, convertASTNodeToMesh);
+      return await convertRotateNode(
+        moduleInstantiationToRotateNode(node),
+        material,
+        convertASTNodeToMesh
+      );
     case 'scale':
-      return await convertScaleNode(moduleInstantiationToScaleNode(node), material, convertASTNodeToMesh);
+      return await convertScaleNode(
+        moduleInstantiationToScaleNode(node),
+        material,
+        convertASTNodeToMesh
+      );
     case 'mirror':
-      return await convertMirrorNode(moduleInstantiationToMirrorNode(node), material, convertASTNodeToMesh);
+      return await convertMirrorNode(
+        moduleInstantiationToMirrorNode(node),
+        material,
+        convertASTNodeToMesh
+      );
 
     // Extrusions
     case 'linear_extrude':
@@ -1017,7 +1039,11 @@ const convertModuleInstantiationNode = async (
 
     // Boolean operations
     case 'union':
-      return await convertUnionNode(moduleInstantiationToUnionNode(node), material, convertASTNodeToMesh);
+      return await convertUnionNode(
+        moduleInstantiationToUnionNode(node),
+        material,
+        convertASTNodeToMesh
+      );
     case 'intersection':
       return await convertIntersectionNode(
         moduleInstantiationToIntersectionNode(node),
@@ -1025,7 +1051,11 @@ const convertModuleInstantiationNode = async (
         convertASTNodeToMesh
       );
     case 'difference':
-      return await convertDifferenceNode(moduleInstantiationToDifferenceNode(node), material, convertASTNodeToMesh);
+      return await convertDifferenceNode(
+        moduleInstantiationToDifferenceNode(node),
+        material,
+        convertASTNodeToMesh
+      );
 
     // Import and other operations
     case 'import':
@@ -1088,11 +1118,39 @@ const convertModuleDefinitionNode = async (
 const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE.Mesh, string>> => {
   logger.debug(`Processing assignment: ${node.variable.name}`);
 
-  // For now, we'll store the raw AST node as the value
-  // In a full implementation, this would evaluate the expression
+  // Evaluate the expression to get the actual value
+  let value: any = node.value;
+
+  if (node.value.expressionType === 'literal') {
+    value = extractLiteralValue(node.value);
+    logger.debug(
+      `Evaluated literal value for ${node.variable.name}: ${value} (type: ${typeof value})`
+    );
+  } else if (
+    node.value.expressionType === 'binary' ||
+    node.value.expressionType === 'binary_expression'
+  ) {
+    const evalResult = astEvaluateBinaryExpression(node.value as BinaryExpressionNode);
+    if (evalResult.success) {
+      value = evalResult.value;
+      logger.debug(
+        `Evaluated binary expression for ${node.variable.name} to: ${value} (type: ${typeof value})`
+      );
+    } else {
+      logger.warn(
+        `Failed to evaluate binary expression for ${node.variable.name}: ${evalResult.error}`
+      );
+    }
+  } else {
+    logger.debug(
+      `Using raw value for ${node.variable.name}: ${JSON.stringify(value)} (expressionType: ${node.value.expressionType})`
+    );
+  }
+
+  // Store the evaluated value in the variable scope
   const assignmentResult = variableScope.defineVariable(
     node.variable.name,
-    node.value,
+    value,
     node.location
       ? {
           line: node.location.start.line,
@@ -1132,12 +1190,88 @@ const _convertConditionalExpressionNode = async (
 ): Promise<Result<THREE.Mesh, string>> => {
   logger.debug('Processing conditional expression');
 
-  // For now, we'll always take the true branch
-  // In a full implementation, this would evaluate the condition
-  // and choose the appropriate branch
-  const selectedBranch = node.thenBranch;
+  // Evaluate the condition
+  let conditionValue = false;
 
-  logger.debug('Evaluating true branch of conditional expression');
+  if (
+    node.condition.expressionType === 'binary' ||
+    node.condition.expressionType === 'binary_expression'
+  ) {
+    const binaryNode = node.condition as BinaryExpressionNode;
+
+    // Get left operand value
+    let leftValue: any = null;
+    if (binaryNode.left.expressionType === 'literal') {
+      leftValue = extractLiteralValue(binaryNode.left);
+    } else if (
+      binaryNode.left.expressionType === 'variable_reference' &&
+      'variable' in binaryNode.left
+    ) {
+      const varName = binaryNode.left.variable.name;
+      const varBinding = variableScope.resolveVariable(varName);
+      if (varBinding) {
+        leftValue = varBinding.value;
+      }
+    }
+
+    // Get right operand value
+    let rightValue: any = null;
+    if (binaryNode.right.expressionType === 'literal') {
+      rightValue = extractLiteralValue(binaryNode.right);
+    } else if (
+      binaryNode.right.expressionType === 'variable_reference' &&
+      'variable' in binaryNode.right
+    ) {
+      const varName = binaryNode.right.variable.name;
+      const varBinding = variableScope.resolveVariable(varName);
+      if (varBinding) {
+        rightValue = varBinding.value;
+      }
+    }
+
+    // Evaluate the condition if we have both values
+    if (leftValue !== null && rightValue !== null) {
+      try {
+        switch (binaryNode.operator) {
+          case '==':
+            conditionValue = leftValue == rightValue;
+            break;
+          case '!=':
+            conditionValue = leftValue != rightValue;
+            break;
+          case '<':
+            conditionValue = leftValue < rightValue;
+            break;
+          case '<=':
+            conditionValue = leftValue <= rightValue;
+            break;
+          case '>':
+            conditionValue = leftValue > rightValue;
+            break;
+          case '>=':
+            conditionValue = leftValue >= rightValue;
+            break;
+          case '&&':
+            conditionValue = Boolean(leftValue) && Boolean(rightValue);
+            break;
+          case '||':
+            conditionValue = Boolean(leftValue) || Boolean(rightValue);
+            break;
+          default:
+            conditionValue = false;
+        }
+      } catch (error) {
+        logger.warn(`Error evaluating condition: ${error}`);
+      }
+    }
+  }
+
+  // Select branch based on condition evaluation
+  const selectedBranch = conditionValue ? node.thenBranch : node.elseBranch;
+
+  logger.debug(
+    `Condition evaluated to ${conditionValue}, selecting ${conditionValue ? 'then' : 'else'} branch`
+  );
   return await convertASTNodeToMesh(selectedBranch, material);
 };
 
@@ -1154,17 +1288,152 @@ const convertIfStatementNode = async (
 ): Promise<Result<THREE.Mesh, string>> => {
   logger.debug('Processing if statement');
 
-  // For now, we'll evaluate the condition as true and execute the thenBranch
-  // In a full implementation, this would evaluate the condition based on variable values
-  logger.debug('Evaluating thenBranch of if statement');
-  if (node.thenBranch.length > 0) {
-    const firstStatement = node.thenBranch[0];
-    if (firstStatement) {
-      return await convertASTNodeToMesh(firstStatement, material);
+  // Evaluate the condition
+  let conditionValue = false;
+
+  if (
+    node.condition.expressionType === 'binary' ||
+    node.condition.expressionType === 'binary_expression'
+  ) {
+    const binaryNode = node.condition as BinaryExpressionNode;
+    logger.debug(`Evaluating binary condition with operator: ${binaryNode.operator}`);
+
+    // Get left operand value
+    let leftValue: any = null;
+    if (binaryNode.left.expressionType === 'literal') {
+      leftValue = extractLiteralValue(binaryNode.left);
+      logger.debug(`Left operand is literal with value: ${leftValue} (type: ${typeof leftValue})`);
+    } else if (
+      binaryNode.left.expressionType === 'variable_reference' &&
+      'variable' in binaryNode.left
+    ) {
+      const varName = binaryNode.left.variable.name;
+      logger.debug(`Left operand is variable reference: ${varName}`);
+      const varBinding = variableScope.resolveVariable(varName);
+      if (varBinding) {
+        leftValue = varBinding.value;
+        logger.debug(
+          `Resolved variable ${varName} to value: ${leftValue} (type: ${typeof leftValue})`
+        );
+      } else {
+        logger.warn(`Failed to resolve variable: ${varName}`);
+      }
+    } else {
+      logger.debug(
+        `Left operand has unsupported expressionType: ${binaryNode.left.expressionType}`
+      );
     }
+
+    // Get right operand value
+    let rightValue: any = null;
+    if (binaryNode.right.expressionType === 'literal') {
+      rightValue = extractLiteralValue(binaryNode.right);
+      logger.debug(
+        `Right operand is literal with value: ${rightValue} (type: ${typeof rightValue})`
+      );
+    } else if (
+      binaryNode.right.expressionType === 'variable_reference' &&
+      'variable' in binaryNode.right
+    ) {
+      const varName = binaryNode.right.variable.name;
+      logger.debug(`Right operand is variable reference: ${varName}`);
+      const varBinding = variableScope.resolveVariable(varName);
+      if (varBinding) {
+        rightValue = varBinding.value;
+        logger.debug(
+          `Resolved variable ${varName} to value: ${rightValue} (type: ${typeof rightValue})`
+        );
+      } else {
+        logger.warn(`Failed to resolve variable: ${varName}`);
+      }
+    } else {
+      logger.debug(
+        `Right operand has unsupported expressionType: ${binaryNode.right.expressionType}`
+      );
+    }
+
+    // Evaluate the condition if we have both values
+    if (leftValue !== null && rightValue !== null) {
+      try {
+        switch (binaryNode.operator) {
+          case '==':
+            conditionValue = leftValue == rightValue;
+            logger.debug(`Evaluating ${leftValue} == ${rightValue} = ${conditionValue}`);
+            break;
+          case '!=':
+            conditionValue = leftValue != rightValue;
+            logger.debug(`Evaluating ${leftValue} != ${rightValue} = ${conditionValue}`);
+            break;
+          case '<':
+            conditionValue = leftValue < rightValue;
+            logger.debug(`Evaluating ${leftValue} < ${rightValue} = ${conditionValue}`);
+            break;
+          case '<=':
+            conditionValue = leftValue <= rightValue;
+            logger.debug(`Evaluating ${leftValue} <= ${rightValue} = ${conditionValue}`);
+            break;
+          case '>':
+            conditionValue = leftValue > rightValue;
+            logger.debug(`Evaluating ${leftValue} > ${rightValue} = ${conditionValue}`);
+            break;
+          case '>=':
+            conditionValue = leftValue >= rightValue;
+            logger.debug(`Evaluating ${leftValue} >= ${rightValue} = ${conditionValue}`);
+            break;
+          case '&&':
+            conditionValue = Boolean(leftValue) && Boolean(rightValue);
+            logger.debug(
+              `Evaluating ${Boolean(leftValue)} && ${Boolean(rightValue)} = ${conditionValue}`
+            );
+            break;
+          case '||':
+            conditionValue = Boolean(leftValue) || Boolean(rightValue);
+            logger.debug(
+              `Evaluating ${Boolean(leftValue)} || ${Boolean(rightValue)} = ${conditionValue}`
+            );
+            break;
+          default:
+            conditionValue = false;
+            logger.warn(`Unsupported operator: ${binaryNode.operator}`);
+        }
+      } catch (error) {
+        logger.warn(`Error evaluating condition: ${error}`);
+      }
+    } else {
+      logger.warn(`Cannot evaluate condition: leftValue=${leftValue}, rightValue=${rightValue}`);
+    }
+  } else {
+    logger.debug(`Condition has unsupported expressionType: ${node.condition.expressionType}`);
   }
 
-  // Return empty mesh if no statements in then branch
+  logger.debug(
+    `Condition evaluated to ${conditionValue}, selecting ${conditionValue ? 'then' : 'else'} branch`
+  );
+
+  // Select branch based on condition evaluation
+  if (conditionValue && node.thenBranch.length > 0) {
+    const firstStatement = node.thenBranch[0];
+    if (firstStatement) {
+      logger.debug(`Executing 'then' branch with node type: ${firstStatement.type}`);
+      return await convertASTNodeToMesh(firstStatement, material);
+    } else {
+      logger.warn(`'then' branch is empty or first statement is undefined`);
+    }
+  } else if (!conditionValue && node.elseBranch && node.elseBranch.length > 0) {
+    const firstStatement = node.elseBranch[0];
+    if (firstStatement) {
+      logger.debug(`Executing 'else' branch with node type: ${firstStatement.type}`);
+      return await convertASTNodeToMesh(firstStatement, material);
+    } else {
+      logger.warn(`'else' branch is empty or first statement is undefined`);
+    }
+  } else {
+    logger.debug(
+      `No branch selected or branch is empty: conditionValue=${conditionValue}, thenBranchLength=${node.thenBranch.length}, elseBranchExists=${!!node.elseBranch}, elseBranchLength=${node.elseBranch?.length || 0}`
+    );
+  }
+
+  // Return empty mesh if no statements in selected branch
   const geometry = new THREE.BufferGeometry();
   const emptyMaterial = new THREE.MeshStandardMaterial({
     color: 0x00ff88,

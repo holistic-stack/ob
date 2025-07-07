@@ -47,7 +47,9 @@ describe('Integration Test Suite', () => {
         expect(pipelineResult.stages.rendering.success).toBe(true);
         // Handle potential NaN from performance measurement issues in test environment
         expect(typeof pipelineResult.totalDuration).toBe('number');
-        expect(pipelineResult.totalDuration >= 0 || Number.isNaN(pipelineResult.totalDuration)).toBe(true);
+        expect(
+          pipelineResult.totalDuration >= 0 || Number.isNaN(pipelineResult.totalDuration)
+        ).toBe(true);
         expect(pipelineResult.outputMesh).toBeDefined();
       }
     });

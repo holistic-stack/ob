@@ -404,7 +404,11 @@ export function extractParameters(node: ASTNode): Record<string, number | null> 
         let value: number | null = null;
 
         // param.defaultValue is ParameterValue, which can be ASTNode or primitive
-        if (typeof param.defaultValue === 'object' && param.defaultValue !== null && 'type' in param.defaultValue) {
+        if (
+          typeof param.defaultValue === 'object' &&
+          param.defaultValue !== null &&
+          'type' in param.defaultValue
+        ) {
           // It's an ASTNode
           value = extractValue(param.defaultValue as ASTNode);
         } else if (typeof param.defaultValue === 'number') {

@@ -125,7 +125,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     super(source, errorHandler, variableScope);
     // These sub-visitors will also need ErrorHandler in their constructors eventually
     this.ifElseVisitor = new IfElseVisitor(source, errorHandler, this.variableScope);
-    this.forLoopVisitor = new ForLoopVisitor(source, errorHandler);
+    this.forLoopVisitor = new ForLoopVisitor(source, errorHandler, this.variableScope);
     this.expressionVisitor = new ExpressionVisitor(source, errorHandler, this.variableScope);
   }
 

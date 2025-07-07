@@ -8,7 +8,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import { createTestParser } from '../../vitest-helpers/openscad-parser-test-utils';
+import type * as ast from './ast/ast-types.js';
 import type { OpenscadParser } from './openscad-parser.js';
 
 describe('Incremental Parsing', () => {

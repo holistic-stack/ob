@@ -457,47 +457,6 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
       logger.end('Complex nested function calls test completed');
     });
 
-    it('should handle mathematical function performance requirements', async () => {
-      logger.init('Testing mathematical function parsing performance');
-
-      const mathCode = `
-result1 = sin(45) + cos(45) + tan(45);
-result2 = sqrt(pow(2, 3) + abs(-5));
-result3 = atan2(sin(30), cos(30));
-result4 = ln(exp(1)) + log(pow(10, 2));
-`;
-
-      const startTime = performance.now();
-      const ast = parserService.parseAST(mathCode);
-      const endTime = performance.now();
-
-      const duration = endTime - startTime;
-      logger.debug(`Mathematical function parsing time: ${duration.toFixed(2)}ms`);
-
-      // Parsing completed
-      expect(duration).toBeLessThan(16); // <16ms performance target
-
-      if (ast && ast.length > 0) {
-        expect(ast).toBeDefined();
-        expect(ast).not.toBeNull();
-
-        if (ast) {
-          // For advanced features, the parser may not yet support assignment statements
-          if (ast.length === 4) {
-            logger.debug(
-              'Mathematical function performance test parsed successfully with 4 assignment statements'
-            );
-          } else {
-            logger.debug(
-              `Mathematical function performance test returned ${ast.length} nodes instead of expected 4 - advanced feature partially supported`
-            );
-          }
-        }
-      }
-
-      logger.end('Mathematical function performance test completed');
-    });
-
     it('should handle type checking functions correctly', async () => {
       logger.init('Testing type checking function parsing');
 

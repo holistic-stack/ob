@@ -254,9 +254,9 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
               // Map expected node types to actual AST node types
               const originalPattern = scenario.expectedNodeTypes[index];
               let regexPattern: string = originalPattern;
-              if (originalPattern === 'assignment_statement' as any) {
+              if (originalPattern === ('assignment_statement' as any)) {
                 regexPattern = 'assign';
-              } else if (originalPattern === 'module_definition' as any) {
+              } else if (originalPattern === ('module_definition' as any)) {
                 regexPattern = 'assign|module_definition|function_definition';
               }
 
@@ -305,7 +305,9 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
       // For specialVariables, we allow AST generation to fail due to Tree-sitter grammar issue
       // with "variableScope is not defined" - this is a known issue with the WASM grammar
       if (scenarioKey === 'specialVariables' && ast.length === 0) {
-        logger.end(`${scenario.name} CSG conversion test completed (skipped due to known Tree-sitter issue)`);
+        logger.end(
+          `${scenario.name} CSG conversion test completed (skipped due to known Tree-sitter issue)`
+        );
         return;
       }
 

@@ -251,7 +251,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
           const performanceData = {
             executionTime: 0,
             memoryUsed: 0,
-            cacheHit: false
+            cacheHit: false,
           }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
@@ -290,7 +290,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
           const performanceData = {
             executionTime: 0,
             memoryUsed: 0,
-            cacheHit: false
+            cacheHit: false,
           }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
@@ -332,7 +332,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
           const performanceData = {
             executionTime: 0,
             memoryUsed: 0,
-            cacheHit: false
+            cacheHit: false,
           }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
@@ -447,7 +447,10 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       // Convert ContainerHealthReport to HealthStatus
       const healthStatus: HealthStatus = {
         isHealthy: status.overall === 'healthy',
-        services: (Array.isArray(status.services) ? status.services as Array<{ service: string; healthy: boolean }> : []).reduce(
+        services: (Array.isArray(status.services)
+          ? (status.services as Array<{ service: string; healthy: boolean }>)
+          : []
+        ).reduce(
           (acc: Record<string, boolean>, service: { service: string; healthy: boolean }) => {
             acc[service.service] = service.healthy;
             return acc;

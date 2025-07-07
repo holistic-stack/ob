@@ -217,9 +217,11 @@ export const shouldUseParallel = (matrixSize: number): boolean => {
 
 /**
  * Get worker thread count for parallel operations
+ * Uses a fixed default of 4 threads to avoid userAgent dependencies
  */
 export const getWorkerThreadCount = (): number => {
-  return Math.min(MATRIX_CONFIG.operations.workerThreads, navigator.hardwareConcurrency || 4);
+  const DEFAULT_THREAD_COUNT = 4;
+  return Math.min(MATRIX_CONFIG.operations.workerThreads, DEFAULT_THREAD_COUNT);
 };
 
 /**

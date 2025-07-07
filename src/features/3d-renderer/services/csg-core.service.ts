@@ -85,12 +85,18 @@ export class CSGCoreService implements CSGData {
    */
   static fromGeometry(geom: BufferGeometry, objectIndex?: number): Result<CSGCoreService, string> {
     logger.debug('Creating CSG from BufferGeometry');
-    logger.debug(`Geometry attributes: position=${!!geom.attributes.position}, normal=${!!geom.attributes.normal}, uv=${!!geom.attributes.uv}, index=${!!geom.index}`);
+    logger.debug(
+      `Geometry attributes: position=${!!geom.attributes.position}, normal=${!!geom.attributes.normal}, uv=${!!geom.attributes.uv}, index=${!!geom.index}`
+    );
     if (geom.attributes.position) {
-      logger.debug(`Position attribute: count=${geom.attributes.position.count}, itemSize=${geom.attributes.position.itemSize}`);
+      logger.debug(
+        `Position attribute: count=${geom.attributes.position.count}, itemSize=${geom.attributes.position.itemSize}`
+      );
     }
     if (geom.attributes.normal) {
-      logger.debug(`Normal attribute: count=${geom.attributes.normal.count}, itemSize=${geom.attributes.normal.itemSize}`);
+      logger.debug(
+        `Normal attribute: count=${geom.attributes.normal.count}, itemSize=${geom.attributes.normal.itemSize}`
+      );
     }
 
     try {
@@ -137,7 +143,9 @@ export class CSGCoreService implements CSGData {
           const u = uvattr?.array?.[vt] ?? 0;
           const v = uvattr?.array?.[vt + 1] ?? 0;
 
-          logger.debug(`Vertex data: x=${x}, y=${y}, z=${z}, nx=${nx}, ny=${ny}, nz=${nz}, u=${u}, v=${v}`);
+          logger.debug(
+            `Vertex data: x=${x}, y=${y}, z=${z}, nx=${nx}, ny=${ny}, nz=${nz}, u=${u}, v=${v}`
+          );
 
           const color = colorattr?.array
             ? new Vector(colorattr.array[vp], colorattr.array[vp + 1], colorattr.array[vp + 2])

@@ -19,7 +19,8 @@ import {
 export function extractCubeNode(
   node: TSNode,
   errorHandler?: ErrorHandler,
-  sourceCode?: string
+  sourceCode?: string,
+  variableScope?: Map<string, ast.ParameterValue>
 ): ast.CubeNode | null {
   // Initialize parameters with default values
   let size: number | ast.Vector3D = 1; // Default size to 1
@@ -51,7 +52,7 @@ export function extractCubeNode(
     };
   }
 
-  const args = extractArguments(argsNode, errorHandler, sourceCode);
+  const args = extractArguments(argsNode, errorHandler, sourceCode, variableScope);
   // Process arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];

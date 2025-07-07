@@ -143,7 +143,7 @@ export class QueryVisitor extends BaseASTVisitor {
     private delegate: ASTVisitor,
     errorHandler: ErrorHandler
   ) {
-    super(source, errorHandler);
+    super(source, errorHandler, new Map());
     this.tree = tree;
     this.queryManager = new QueryManager(language);
   }

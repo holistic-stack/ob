@@ -56,8 +56,7 @@ translate([24,0,0]) {
     expect(parseResult.success).toBe(true);
 
     if (parseResult.success) {
-      const result = parseResult.data;
-      const ast = result.ast;
+      const ast = parseResult.data;
       logger.debug('AST parsing successful');
       logger.debug('Number of top-level nodes:', ast?.length || 0);
 
@@ -95,7 +94,7 @@ translate([24,0,0]) {
         logger.debug('No AST nodes found');
       }
     } else {
-      logger.error('AST parsing failed:', parseResult.error);
+      logger.error('AST parsing failed:', parseResult.success ? 'Unknown error' : 'Parse failed');
     }
   });
 
@@ -110,8 +109,8 @@ translate([24,0,0]) {
     expect(parseResult.success).toBe(true);
 
     if (parseResult.success) {
-      const result = parseResult.data;
-      logger.debug('Simple translate AST structure:', JSON.stringify(result.ast, null, 2));
+      const ast = parseResult.data;
+      logger.debug('Simple translate AST structure:', JSON.stringify(ast, null, 2));
     }
   });
 
@@ -127,11 +126,11 @@ translate([24,0,0]) {
     expect(parseResult.success).toBe(true);
 
     if (parseResult.success) {
-      const result = parseResult.data;
-      logger.debug('Simple union AST structure:', JSON.stringify(result.ast, null, 2));
+      const ast = parseResult.data;
+      logger.debug('Simple union AST structure:', JSON.stringify(ast, null, 2));
 
       // Check if union node has children
-      const unionNode = result.ast?.[0];
+      const unionNode = ast?.[0];
       if (unionNode && unionNode.type === 'union') {
         logger.debug('Union node children count:', unionNode.children?.length || 0);
         if (unionNode.children && unionNode.children.length > 0) {
@@ -160,8 +159,7 @@ translate([24,0,0]) {
     expect(parseResult.success).toBe(true);
 
     if (parseResult.success) {
-      const result = parseResult.data;
-      const rawAST = result.ast;
+      const rawAST = parseResult.data;
 
       logger.debug('Raw AST before restructuring:', JSON.stringify(rawAST, null, 2));
 
@@ -184,7 +182,10 @@ translate([24,0,0]) {
           );
         }
       } else {
-        logger.error('AST restructuring failed:', restructureResult.error);
+        logger.error(
+          'AST restructuring failed:',
+          restructureResult.success ? 'Unknown error' : 'Restructuring failed'
+        );
       }
     }
   });

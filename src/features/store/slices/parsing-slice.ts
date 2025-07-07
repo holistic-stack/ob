@@ -145,9 +145,9 @@ export const createParsingSlice = (
       void get().parseCode(code);
     },
 
-    addParsingError: (error: OperationError) => {
+    addParsingError: (error: string) => {
       set((state) => {
-        state.parsing.errors = [...state.parsing.errors, error.message];
+        state.parsing.errors = [...state.parsing.errors, error];
       });
     },
 

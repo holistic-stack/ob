@@ -91,7 +91,7 @@ export class RangeExpressionVisitor extends BaseASTVisitor {
    * @param errorHandler The error handler for logging and error management
    */
   constructor(parentVisitor: ExpressionVisitor, errorHandler: ErrorHandler) {
-    super('', errorHandler); // Source will be inherited from parent visitor
+    super('', errorHandler, new Map()); // Source will be inherited from parent visitor
     this.parentVisitor = parentVisitor;
   }
 

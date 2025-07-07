@@ -29,7 +29,7 @@ export class FunctionCallVisitor extends BaseASTVisitor {
     parentVisitorOrSource: IParentExpressionVisitor | string | null,
     protected override errorHandler: ErrorHandler
   ) {
-    super('', errorHandler); // Source is not needed for this visitor
+    super('', errorHandler, new Map()); // Source is not needed for this visitor
 
     if (typeof parentVisitorOrSource === 'string') {
       this.parentVisitor = null;

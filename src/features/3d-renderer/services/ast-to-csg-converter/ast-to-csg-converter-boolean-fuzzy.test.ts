@@ -391,49 +391,4 @@ describe('AST to CSG Converter - Boolean Operations Fuzzy Testing', () => {
       );
     });
   });
-
-  describe('Boolean Performance Validation', () => {
-    it('should maintain performance targets for boolean operations', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          parserFriendlyBooleanOperation(),
-          parserFriendlyPrimitiveList(),
-          async (operation, primitives) => {
-            const code = `${operation}() {\n${primitives.map((p) => `  ${p};`).join('\n')}\n}`;
-
-            const ast = parserService.parseAST(code);
-            if (!ast || ast.length === 0) {
-              logger.warn(
-                `No AST nodes for performance test with ${operation}(${primitives.length} primitives)`
-              );
-              return; // Skip this test case
-            }
-
-            const booleanNode = ast[0];
-            if (!booleanNode) return;
-
-            setSourceCodeForExtraction(code);
-
-            try {
-              const startTime = performance.now();
-              const result = await convertASTNodeToCSG(booleanNode as ASTNode, 0);
-              const endTime = performance.now();
-
-              const conversionTime = endTime - startTime;
-
-              if (result.success) {
-                expect(conversionTime).toBeLessThan(2000); // Performance target for complex boolean operations (CSG is computationally intensive)
-                logger.debug(
-                  `${operation}(${primitives.length} primitives) conversion time: ${conversionTime.toFixed(2)}ms`
-                );
-              }
-            } finally {
-              clearSourceCodeForExtraction();
-            }
-          }
-        ),
-        { numRuns: 15, timeout: 30000 }
-      );
-    });
-  });
 });

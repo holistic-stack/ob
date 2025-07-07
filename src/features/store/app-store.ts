@@ -108,38 +108,38 @@ export const createAppStore = (
     },
   }
 ) => {
+  const storeCreator = immer((set, get) => ({
+    ...(createInitialState(options) as AppStore),
+    ...createEditorSlice(set, get, {
+      parserService,
+      debounceConfig: options.debounceConfig,
+    }),
+    ...createParsingSlice(set, get, { parserService }),
+    ...createRenderingSlice(set, get),
+    ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
+  }));
+
+  const withPersistence = options.enablePersistence
+    ? persist(storeCreator, {
+        name: 'openscad-app-store',
+        partialize: (state) => ({
+          config: state.config,
+          editor: {
+            code: state.editor.code,
+            lastSaved: state.editor.lastSaved,
+          },
+          rendering: {
+            camera: state.rendering?.camera,
+          },
+        }),
+      })
+    : storeCreator;
+
   return create<AppStore>()(
-    devtools(
-      persist(
-        immer((set, get) => ({
-          ...(createInitialState(options) as AppStore),
-          ...createEditorSlice(set, get, {
-            parserService,
-            debounceConfig: options.debounceConfig,
-          }),
-          ...createParsingSlice(set, get, { parserService }),
-          ...createRenderingSlice(set, get),
-          ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
-        })),
-        {
-          name: 'openscad-app-store',
-          partialize: (state) => ({
-            config: state.config,
-            editor: {
-              code: state.editor.code,
-              lastSaved: state.editor.lastSaved,
-            },
-            rendering: {
-              camera: state.rendering?.camera ?? null,
-            },
-          }),
-        }
-      ),
-      {
-        enabled: options.enableDevtools,
-        name: 'OpenSCAD App Store',
-      }
-    )
+    devtools(withPersistence, {
+      enabled: options.enableDevtools,
+      name: 'OpenSCAD App Store',
+    })
   );
 };
 

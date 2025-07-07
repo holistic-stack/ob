@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { OpenscadParser } from './openscad-parser.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../shared/services/logger.service.js';
+import { OpenscadParser } from './openscad-parser.js';
 
 const logger = createLogger('SyntaxTest');
 

@@ -31,28 +31,6 @@ interface R3FSceneProps {
 }
 
 /**
- * Simple performance measurement utility
- */
-const _measureTime = <T,>(fn: () => T): { result: T; duration: number } => {
-  const start = performance.now();
-  const result = fn();
-  const end = performance.now();
-  return { result, duration: end - start };
-};
-
-/**
- * Async performance measurement utility
- */
-const measureTimeAsync = async <T,>(
-  fn: () => Promise<T>
-): Promise<{ result: T; duration: number }> => {
-  const start = performance.now();
-  const result = await fn();
-  const end = performance.now();
-  return { result, duration: end - start };
-};
-
-/**
  * R3F Scene component that renders AST nodes
  */
 export const R3FScene: React.FC<R3FSceneProps> = ({
@@ -73,60 +51,56 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       logger.debug(`Updating scene with ${astNodes.length} AST nodes`);
 
       try {
-        const { result: meshes, duration: _renderTime } = await measureTimeAsync(async () => {
-          // Clear existing meshes using proper disposal
-          meshesRef.current.forEach((mesh3D) => {
-            scene.remove(mesh3D.mesh);
-            mesh3D.dispose(); // Use the Mesh3D disposal method
-          });
-          meshesRef.current = [];
+        // Clear existing meshes using proper disposal
+        meshesRef.current.forEach((mesh3D) => {
+          scene.remove(mesh3D.mesh);
+          mesh3D.dispose(); // Use the Mesh3D disposal method
+        });
+        meshesRef.current = [];
 
-          // Create new meshes from AST nodes using proper service
-          const newMeshes: Mesh3D[] = [];
+        // Create new meshes from AST nodes using proper service
+        const newMeshes: Mesh3D[] = [];
 
-          // Process nodes sequentially to maintain order
-          for (let index = 0; index < astNodes.length; index++) {
-            const node = astNodes[index];
-            if (!node) {
-              logger.warn(`Skipping undefined node at index ${index}`);
-              continue;
-            }
-
-            try {
-              const result = await renderASTNode(node, index);
-              if (result.success) {
-                const mesh3D = result.data;
-
-                // Position meshes in a grid for multiple objects
-                const gridSize = Math.ceil(Math.sqrt(astNodes.length));
-                const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
-                const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-                (mesh3D.mesh as THREE.Mesh).position.set(x, 0, z);
-
-                scene.add(mesh3D.mesh);
-                newMeshes.push(mesh3D);
-
-                logger.debug(`Successfully created mesh for ${node.type} at index ${index}`);
-              } else {
-                // Type narrowing: result.success is false, so result.error exists
-                logger.error(`Failed to render AST node ${index} (${node.type}):`, result.error);
-                onRenderError?.({ message: result.error });
-              }
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
-              logger.error(`Failed to create mesh for node ${index} (${node.type}):`, errorMessage);
-              onRenderError?.({ message: errorMessage });
-            }
+        // Process nodes sequentially to maintain order
+        for (let index = 0; index < astNodes.length; index++) {
+          const node = astNodes[index];
+          if (!node) {
+            logger.warn(`Skipping undefined node at index ${index}`);
+            continue;
           }
 
-          return newMeshes;
-        });
+          try {
+            const result = await renderASTNode(node, index);
+            if (result.success) {
+              const mesh3D = result.data;
 
-        meshesRef.current = meshes;
+              // Position meshes in a grid for multiple objects
+              const gridSize = Math.ceil(Math.sqrt(astNodes.length));
+              const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
+              const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
+              (mesh3D.mesh as THREE.Mesh).position.set(x, 0, z);
+
+              scene.add(mesh3D.mesh);
+              newMeshes.push(mesh3D);
+
+              logger.debug(`Successfully created mesh for ${node.type} at index ${index}`);
+            } else {
+              // Type narrowing: result.success is false, so result.error exists
+              logger.error(`Failed to render AST node ${index} (${node.type}):`, result.error);
+              onRenderError?.({ message: result.error });
+            }
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.error(`Failed to create mesh for node ${index} (${node.type}):`, errorMessage);
+            onRenderError?.({ message: errorMessage });
+          }
+        }
+
+        meshesRef.current = newMeshes;
 
         // Report render completion
-        logger.debug(`Calling onRenderComplete with ${meshes.length} meshes`);
-        onRenderComplete?.(meshes);
+        logger.debug(`Calling onRenderComplete with ${newMeshes.length} meshes`);
+        onRenderComplete?.(newMeshes);
       } catch (error) {
         logger.error('Failed to update scene:', error);
         onRenderError?.({

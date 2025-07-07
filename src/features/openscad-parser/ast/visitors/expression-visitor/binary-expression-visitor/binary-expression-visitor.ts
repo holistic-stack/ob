@@ -10,7 +10,7 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
     protected parentVisitor: ExpressionVisitor,
     protected override errorHandler: ErrorHandler
   ) {
-    super('', errorHandler); // Use empty string for source since we get it from parent
+    super('', errorHandler, new Map()); // Use empty string for source since we get it from parent
   }
 
   // Implement the abstract method required by BaseASTVisitor

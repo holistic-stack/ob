@@ -29,7 +29,7 @@ sphere(r=1.23e-4);
 cylinder(h=5.67e2, r=8.9e-1);
 `,
     expectedNodeCount: 3, // Three function calls with scientific notation parameters
-    expectedNodeTypes: ['function_call', 'function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere', 'cylinder'],
     hasRenderableContent: true, // Contains 3D primitives that can be rendered
   },
 
@@ -46,7 +46,7 @@ cylinder(h=0, r=0);
 translate([-1000, -500, -250]) cube(10);
 `,
     expectedNodeCount: 4, // cube, sphere, cylinder, translate
-    expectedNodeTypes: ['function_call', 'function_call', 'function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere', 'cylinder', 'translate'],
     hasRenderableContent: true, // Contains 3D primitives that can be rendered
   },
 
@@ -61,7 +61,7 @@ sphere(r=sin(45)*cos(30));
 cylinder(h=2^3, r=sqrt(16));
 `,
     expectedNodeCount: 3, // cube, sphere, cylinder with complex expressions
-    expectedNodeTypes: ['function_call', 'function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere', 'cylinder'],
     hasRenderableContent: true, // Contains 3D primitives that can be rendered
   },
 
@@ -76,8 +76,8 @@ cylinder(h=10, r=5
 // Valid statement after error
 translate([1,2,3]) cube(2);
 `,
-    expectedNodeCount: 2, // Parser should recover and parse sphere and translate
-    expectedNodeTypes: ['function_call', 'function_call'],
+    expectedNodeCount: 2, // Parser should recover and parse cube and cylinder
+    expectedNodeTypes: ['cube', 'cylinder'],
     hasRenderableContent: true, // Contains valid 3D primitives
   },
 
@@ -93,7 +93,7 @@ cylinder(h=10, r=, d=5);
 translate([1,2,]) cube(1);
 `,
     expectedNodeCount: 4, // Parser generates nodes for all function calls despite syntax errors
-    expectedNodeTypes: ['function_call', 'function_call', 'function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere', 'cylinder', 'translate'],
     hasRenderableContent: true, // Contains function calls that can be processed
   },
 
@@ -107,7 +107,7 @@ cube(10); // This is a cube ∞ ∑ ∆
 sphere(5);
 `,
     expectedNodeCount: 2, // cube and sphere
-    expectedNodeTypes: ['function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere'],
     hasRenderableContent: true, // Contains 3D primitives
   },
 
@@ -124,14 +124,7 @@ cube([0, 1, 0]);
 cube([0, 0, 1]);
 `,
     expectedNodeCount: 6, // All function calls should be parsed
-    expectedNodeTypes: [
-      'function_call',
-      'function_call',
-      'function_call',
-      'function_call',
-      'function_call',
-      'function_call',
-    ],
+    expectedNodeTypes: ['cube', 'sphere', 'cylinder', 'cube', 'cube', 'cube'],
     hasRenderableContent: true, // Contains 3D primitives (even if zero-sized)
   },
 
@@ -149,7 +142,7 @@ translate([1,2,3]) {
 cylinder(h=10, r=2);
 `,
     expectedNodeCount: 1, // Parser generates one node despite syntax errors
-    expectedNodeTypes: ['function_call'],
+    expectedNodeTypes: ['translate'],
     hasRenderableContent: true, // Contains valid 3D primitives
   },
 
@@ -170,7 +163,7 @@ cylinder(h=10, r=2);
 
 `,
     expectedNodeCount: 3, // cube, sphere, translate
-    expectedNodeTypes: ['function_call', 'function_call', 'function_call'],
+    expectedNodeTypes: ['cube', 'sphere', 'translate'],
     hasRenderableContent: true, // Contains 3D primitives
   },
 
@@ -259,7 +252,7 @@ describe('AST to CSG Converter - Edge Cases and Error Recovery Integration', () 
             conversionTime: number;
           }
           const successfulConversions = conversionResults.filter(
-            (r: { node: ASTNode; result: Result<Mesh3D, string>; }) => r.result.success
+            (r: { node: ASTNode; result: Result<Mesh3D, string> }) => r.result.success
           );
 
           // For edge cases, the converter should handle errors gracefully

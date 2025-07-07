@@ -449,6 +449,45 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Visit an identifier node in the CST
+   * @param node The identifier node from the CST
+   * @returns A variable node for the AST or an error node if the identifier is a reserved keyword
+   */
+  visitIdentifier(node: TSNode): ast.VariableNode | ast.ErrorNode | null {
+    this.errorHandler.logInfo(
+      `[ExpressionVisitor.visitIdentifier] Processing identifier: ${node.text}`,
+      'ExpressionVisitor.visitIdentifier',
+      node
+    );
+
+    // Check if the identifier is a reserved keyword
+    const reservedKeywords = ['if', 'else', 'for', 'while', 'module', 'function', 'include', 'use'];
+    if (reservedKeywords.includes(node.text)) {
+      this.errorHandler.logError(
+        `[ExpressionVisitor.visitIdentifier] Reserved keyword '${node.text}' used as an identifier`,
+        'ExpressionVisitor.visitIdentifier',
+        node
+      );
+      return {
+        type: 'error',
+        errorCode: `RESERVED_KEYWORD_${node.text.toUpperCase()}`,
+        message: `Reserved keyword '${node.text}' cannot be used as a variable name`,
+        originalNodeType: node.type,
+        cstNodeText: node.text,
+        location: getLocation(node),
+      };
+    }
+
+    // Create a variable node directly from the identifier
+    return {
+      type: 'expression',
+      expressionType: 'variable',
+      name: node.text,
+      location: getLocation(node),
+    };
+  }
+
+  /**
    * Create an expression node from a CST node
    * @param node The CST node
    * @returns The expression AST node or null if the node cannot be processed
@@ -1208,16 +1247,13 @@ export class ExpressionVisitor extends BaseASTVisitor {
         'ExpressionVisitor.visitLetExpression',
         node
       );
-      const parserError = this.errorHandler.createParserError(
-        'No body found in let expression',
-        {
-          code: ErrorCode.LET_NO_ASSIGNMENTS_FOUND,
-          line: getLocation(node).start.line,
-          column: getLocation(node).start.column,
-          nodeType: node.type,
-          source: node.text,
-        }
-      );
+      const parserError = this.errorHandler.createParserError('No body found in let expression', {
+        code: ErrorCode.LET_NO_ASSIGNMENTS_FOUND,
+        line: getLocation(node).start.line,
+        column: getLocation(node).start.column,
+        nodeType: node.type,
+        source: node.text,
+      });
       return {
         type: 'error',
         errorCode: parserError.code,

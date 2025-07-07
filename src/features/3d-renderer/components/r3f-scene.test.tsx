@@ -124,7 +124,6 @@ vi.mock('three', () => ({
 
 describe('R3FScene', () => {
   const mockOnCameraChange = vi.fn();
-  const mockOnPerformanceUpdate = vi.fn();
   const mockOnRenderComplete = vi.fn();
   const mockOnRenderError = vi.fn();
 
@@ -142,7 +141,6 @@ describe('R3FScene', () => {
       autoRotateSpeed: 2,
     },
     onCameraChange: mockOnCameraChange,
-    onPerformanceUpdate: mockOnPerformanceUpdate,
     onRenderComplete: mockOnRenderComplete,
     onRenderError: mockOnRenderError,
   };
@@ -151,11 +149,6 @@ describe('R3FScene', () => {
     vi.clearAllMocks();
     mockScene.add.mockClear();
     mockScene.remove.mockClear();
-
-    // Mock performance.now() for consistent timing
-    vi.spyOn(performance, 'now')
-      .mockReturnValueOnce(0) // Start time
-      .mockReturnValueOnce(15.5); // End time (15.5ms duration)
   });
 
   afterEach(() => {
@@ -309,57 +302,6 @@ describe('R3FScene', () => {
 
       expect(mockScene.add).toHaveBeenCalledTimes(2);
       expect(mockOnRenderComplete).toHaveBeenCalled();
-    });
-  });
-
-  describe('Performance Monitoring', () => {
-    it('should call performance update callback', async () => {
-      render(
-        <Canvas>
-          <R3FScene {...defaultProps} />
-        </Canvas>
-      );
-
-      // Wait longer for effects to run and async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      expect(mockOnPerformanceUpdate).toHaveBeenCalled();
-
-      const performanceCall = mockOnPerformanceUpdate.mock.calls[0];
-      if (performanceCall?.[0]) {
-        const metrics = performanceCall[0];
-        expect(typeof metrics.renderTime).toBe('number');
-        expect(typeof metrics.parseTime).toBe('number');
-        expect(typeof metrics.memoryUsage).toBe('number');
-      }
-    });
-
-    it('should measure render time correctly', async () => {
-      const testAST: ASTNode[] = [
-        {
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          location: {
-            start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: 20, offset: 19 },
-          },
-        },
-      ];
-
-      render(
-        <Canvas>
-          <R3FScene {...defaultProps} astNodes={testAST} />
-        </Canvas>
-      );
-
-      // Wait longer for effects to run and async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      expect(mockOnPerformanceUpdate).toHaveBeenCalled();
-
-      const metrics = mockOnPerformanceUpdate.mock.calls[0][0];
-      expect(metrics.renderTime).toBe(15.5); // Based on our mock
     });
   });
 

@@ -74,7 +74,38 @@ describe('extractValue - Vector Literals Regression Tests', () => {
     const result = extractValue(arrayNode as TSNode, code);
     console.log(`[Test] Extracted result:`, result);
 
-    return result as Vector2D | Vector3D;
+    // Convert structured ast.Value result to simple array
+    if (result && typeof result === 'object' && 'type' in result && result.type === 'vector') {
+      const vectorValue = result.value;
+      if (Array.isArray(vectorValue)) {
+        const numericArray = vectorValue.map((item) => {
+          if (
+            typeof item === 'object' &&
+            item !== null &&
+            'type' in item &&
+            item.type === 'number'
+          ) {
+            const value = item.value;
+            if (typeof value === 'string') {
+              return parseFloat(value);
+            } else if (typeof value === 'number') {
+              return value;
+            }
+          }
+          return 0; // fallback for invalid values
+        });
+
+        if (numericArray.length === 2) {
+          return numericArray as Vector2D;
+        } else if (numericArray.length >= 3) {
+          return [numericArray[0], numericArray[1], numericArray[2]] as Vector3D;
+        } else if (numericArray.length === 0) {
+          return [] as Vector2D; // empty vector case
+        }
+      }
+    }
+
+    return undefined;
   }
 
   describe('Basic Vector Extraction', () => {
@@ -167,7 +198,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -205,7 +265,37 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(arrayNodes.length).toBeGreaterThanOrEqual(1);
 
       // Extract from the first array found
-      const result = extractValue(arrayNodes[0], code);
+      const rawResult = extractValue(arrayNodes[0], code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
+
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect((result as number[]).length).toBeGreaterThan(0);
@@ -252,7 +342,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -266,7 +385,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -280,7 +428,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -362,7 +539,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       expect(arrayNode).not.toBeNull();
 
       // Extract using both the node and source code to test getNodeText function
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -383,7 +589,36 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const arrayNode = findArrayLiteralNode(tree.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const result = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode as TSNode, code);
+
+      // Convert structured result to simple array
+      let result: number[] | undefined;
+      if (
+        rawResult &&
+        typeof rawResult === 'object' &&
+        'type' in rawResult &&
+        rawResult.type === 'vector'
+      ) {
+        const vectorValue = rawResult.value;
+        if (Array.isArray(vectorValue)) {
+          result = vectorValue.map((item) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'type' in item &&
+              item.type === 'number'
+            ) {
+              const value = item.value;
+              return typeof value === 'string'
+                ? parseFloat(value)
+                : typeof value === 'number'
+                  ? value
+                  : 0;
+            }
+            return 0;
+          });
+        }
+      }
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);

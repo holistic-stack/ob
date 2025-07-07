@@ -3,25 +3,104 @@
  *
  * Simplified tests that avoid complex mocking to prevent infinite loops.
  * Based on Zustand testing best practices and community recommendations.
+ * Enhanced with comprehensive browser environment mocking to remove userAgent dependencies.
  */
 
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 
 import type React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
+
+// Comprehensive browser environment mocking to remove userAgent dependencies
+beforeAll(() => {
+  // Mock WebGL context to avoid browser-specific checks
+  const mockWebGLContext = {
+    canvas: {},
+    drawingBufferWidth: 800,
+    drawingBufferHeight: 600,
+    getExtension: vi.fn(() => null),
+    getParameter: vi.fn(() => null),
+    getShaderPrecisionFormat: vi.fn(() => ({ precision: 23, rangeMin: 127, rangeMax: 127 })),
+    createShader: vi.fn(() => ({})),
+    shaderSource: vi.fn(),
+    compileShader: vi.fn(),
+    getShaderParameter: vi.fn(() => true),
+    createProgram: vi.fn(() => ({})),
+    attachShader: vi.fn(),
+    linkProgram: vi.fn(),
+    getProgramParameter: vi.fn(() => true),
+    useProgram: vi.fn(),
+    createBuffer: vi.fn(() => ({})),
+    bindBuffer: vi.fn(),
+    bufferData: vi.fn(),
+    enableVertexAttribArray: vi.fn(),
+    vertexAttribPointer: vi.fn(),
+    drawArrays: vi.fn(),
+    viewport: vi.fn(),
+    clearColor: vi.fn(),
+    clear: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+    depthFunc: vi.fn(),
+    blendFunc: vi.fn(),
+  };
+
+  // Mock HTMLCanvasElement.getContext to return our mock WebGL context
+  HTMLCanvasElement.prototype.getContext = vi.fn((contextType: string) => {
+    if (
+      contextType === 'webgl' ||
+      contextType === 'webgl2' ||
+      contextType === 'experimental-webgl'
+    ) {
+      return mockWebGLContext;
+    }
+    return null;
+  });
+
+  // Mock navigator to remove userAgent dependencies
+  Object.defineProperty(global, 'navigator', {
+    value: {
+      userAgent: 'test-environment',
+      platform: 'test',
+      vendor: 'test',
+      hardwareConcurrency: 4,
+      deviceMemory: 8,
+      webdriver: false,
+    },
+    writable: true,
+  });
+
+  // Mock window properties that might be checked
+  Object.defineProperty(global, 'window', {
+    value: {
+      innerWidth: 1024,
+      innerHeight: 768,
+      devicePixelRatio: 1,
+      WebGLRenderingContext: mockWebGLContext.constructor,
+      WebGL2RenderingContext: mockWebGLContext.constructor,
+    },
+    writable: true,
+  });
+});
 
 // Simple, stable mocks to prevent infinite loops
 vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="r3f-canvas">{children}</div>
   ),
+  useThree: vi.fn(() => ({
+    scene: { add: vi.fn(), remove: vi.fn(), children: [] },
+    camera: { position: { set: vi.fn() }, lookAt: vi.fn() },
+    gl: { domElement: document.createElement('canvas') },
+  })),
 }));
 
 vi.mock('@react-three/drei', () => ({
   Stats: () => <div data-testid="stats" />,
+  OrbitControls: () => <div data-testid="orbit-controls" />,
 }));
 
 vi.mock('./r3f-scene', () => ({
@@ -79,6 +158,10 @@ vi.mock('../../store', () => ({
 }));
 
 describe('StoreConnectedRenderer', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('should render without crashing', () => {
     render(<StoreConnectedRenderer />);
 
@@ -88,13 +171,13 @@ describe('StoreConnectedRenderer', () => {
   it('should render R3F canvas', () => {
     render(<StoreConnectedRenderer />);
 
-    expect(screen.getByTestId('r3f-canvas')).toBeInTheDocument();
+    expect(screen.getAllByTestId('r3f-canvas')).toHaveLength(1);
   });
 
   it('should render R3F scene component', () => {
     render(<StoreConnectedRenderer />);
 
-    expect(screen.getByTestId('r3f-scene')).toBeInTheDocument();
+    expect(screen.getAllByTestId('r3f-scene')).toHaveLength(1);
   });
 
   it('should apply custom props correctly', () => {
@@ -119,7 +202,7 @@ describe('StoreConnectedRenderer', () => {
 
     render(<StoreConnectedRenderer />);
 
-    expect(screen.getByTestId('stats')).toBeInTheDocument();
+    expect(screen.getAllByTestId('stats')).toHaveLength(1);
 
     process.env.NODE_ENV = originalEnv;
   });

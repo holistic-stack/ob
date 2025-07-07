@@ -14,11 +14,13 @@ import { extractCubeNode } from './cube-extractor.js';
 describe('Cube Extractor', () => {
   let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
+  let variableScope: Map<string, any>;
 
   beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
+    variableScope = new Map();
   });
 
   afterEach(() => {
@@ -50,10 +52,12 @@ describe('Cube Extractor', () => {
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
 
+    if (!tree) return;
+
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(5);
   });
@@ -62,6 +66,8 @@ describe('Cube Extractor', () => {
     const code = 'cube(2 + 3);';
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
+
+    if (!tree) return;
 
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
@@ -112,7 +118,7 @@ describe('Cube Extractor', () => {
     }
 
     // Extract the cube and check the result
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     console.log('Extracted cube AST:', JSON.stringify(cubeAST, null, 2));
     console.log('Error handler errors:', errorHandler.getErrors());
 
@@ -125,10 +131,12 @@ describe('Cube Extractor', () => {
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
 
+    if (!tree) return;
+
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(6); // 2 * 3 = 6
   });
@@ -138,10 +146,12 @@ describe('Cube Extractor', () => {
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
 
+    if (!tree) return;
+
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     expect(cubeAST).toBeDefined();
     expect(cubeAST?.size).toBe(7); // 1 + 2 * 3 = 7
   });
@@ -151,10 +161,12 @@ describe('Cube Extractor', () => {
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
 
+    if (!tree) return;
+
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     expect(cubeAST).toBeDefined();
     expect(Array.isArray(cubeAST?.size)).toBe(true);
     expect(cubeAST?.size).toEqual([10, 20, 30]);
@@ -165,10 +177,12 @@ describe('Cube Extractor', () => {
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
 
+    if (!tree) return;
+
     const cubeNode = findCubeNode(tree.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler);
+    const cubeAST = extractCubeNode(cubeNode as TSNode, errorHandler, code, variableScope);
     expect(cubeAST).toBeDefined();
     expect(Array.isArray(cubeAST?.size)).toBe(true);
     expect(cubeAST?.size).toEqual([10, 20, 30]); // [5+5, 10*2, 5*6]

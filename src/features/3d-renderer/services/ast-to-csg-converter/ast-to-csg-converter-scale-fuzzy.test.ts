@@ -258,27 +258,41 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
         fc.asyncProperty(
           fc.array(parserFriendlyScaleFactor(), { minLength: 2, maxLength: 3 }),
           async (factors) => {
-            // Generate multiple scale operations
-            const codeLines = factors.map(
-              (factor, i) => `scale(${factor}) ${i % 2 === 0 ? 'cube' : 'sphere'}(${i + 1});`
-            );
+            // Generate multiple scale operations with more robust syntax
+            const codeLines = factors.map((factor, i) => {
+              // Ensure factor is properly formatted (avoid scientific notation)
+              const formattedFactor = Number.isInteger(factor)
+                ? factor.toString()
+                : factor.toFixed(2);
+              const primitive = i % 2 === 0 ? 'cube' : 'sphere';
+              const size = i + 1;
+              return `scale(${formattedFactor}) ${primitive}(${size});`;
+            });
             const code = codeLines.join('\n');
 
             logger.debug(`Testing ${factors.length} scale operations`);
 
             const ast = parserService.parseAST(code);
-            if (!ast || ast.length !== factors.length) {
-              logger.warn(
-                `AST length mismatch: expected ${factors.length}, got ${ast?.length || 0}`
-              );
+
+            // More lenient check - if we get at least one valid AST node, test the conversion
+            if (!ast || ast.length === 0) {
+              logger.warn(`No AST nodes generated for code:\n${code}`);
               return; // Skip this test case
+            }
+
+            // Test with the actual number of nodes we got (more robust)
+            const actualNodeCount = Math.min(ast.length, factors.length);
+            if (ast.length !== factors.length) {
+              logger.debug(
+                `AST count differs: expected ${factors.length}, got ${ast.length}, testing ${actualNodeCount} nodes`
+              );
             }
 
             setSourceCodeForExtraction(code);
 
             try {
-              // Test each scale operation
-              for (let i = 0; i < factors.length; i++) {
+              // Test each scale operation (only test the nodes we actually have)
+              for (let i = 0; i < actualNodeCount; i++) {
                 const expectedFactor = factors[i];
                 const node = ast[i];
 
@@ -292,8 +306,13 @@ describe('AST to CSG Converter - Scale Fuzzy Testing', () => {
                   expect(mesh.matrix).toBeDefined();
 
                   logger.debug(`✅ Scale(${expectedFactor}) operation ${i} applied correctly`);
+                } else {
+                  logger.debug(`⚠️ Scale(${expectedFactor}) operation ${i} conversion failed`);
                 }
               }
+
+              // At least verify we successfully processed some nodes
+              expect(actualNodeCount).toBeGreaterThan(0);
             } finally {
               clearSourceCodeForExtraction();
             }

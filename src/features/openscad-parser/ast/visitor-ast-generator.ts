@@ -176,16 +176,25 @@ export class VisitorASTGenerator {
     const compositeVisitor = new CompositeVisitor([], this.errorHandler); // Added errorHandler
 
     // Order matters here - PrimitiveVisitor should be first to handle primitive shapes
-    const transformVisitor = new TransformVisitor(this.source, compositeVisitor, this.errorHandler, sharedVariableScope); // Added errorHandler, used this.source
+    const transformVisitor = new TransformVisitor(
+      this.source,
+      compositeVisitor,
+      this.errorHandler,
+      sharedVariableScope
+    ); // Added errorHandler, used this.source
 
     // Create expression visitor first since other visitors may depend on it
-    const expressionVisitor = new ExpressionVisitor(this.source, this.errorHandler, sharedVariableScope);
+    const expressionVisitor = new ExpressionVisitor(
+      this.source,
+      this.errorHandler,
+      sharedVariableScope
+    );
 
     // Add all visitors to the composite visitor
     // Order matters: definition visitors must come before instantiation visitors
     compositeVisitor.visitors = [
       new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
-      new AssertStatementVisitor(this.source, this.errorHandler),
+      new AssertStatementVisitor(this.source, this.errorHandler, sharedVariableScope),
       // Module and function definitions must be processed before instantiations
       new ModuleVisitor(this.source, this.errorHandler, sharedVariableScope), // Process module definitions first
       new FunctionVisitor(this.source, this.errorHandler, sharedVariableScope), // Process function definitions first

@@ -7,7 +7,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
-import { VariableScopeService } from './variable-scope.service.js';
+import { VariableScopeService } from './variable-scope.service';
 
 const logger = createLogger('VariableScopeServiceTest');
 

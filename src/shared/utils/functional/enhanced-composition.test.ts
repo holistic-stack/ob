@@ -222,7 +222,17 @@ describe('Enhanced Functional Composition', () => {
         .mockRejectedValueOnce(new Error('Second failure'))
         .mockResolvedValue('success');
 
-      const result = await retryWithLogging(failThenSucceed, 3, 10);
+      // Start the retry operation
+      const resultPromise = retryWithLogging(failThenSucceed, 3, 10);
+
+      // Advance timers to allow retry delays to complete
+      // First retry delay: 10ms, Second retry delay: 20ms
+      vi.advanceTimersByTime(10); // First retry delay
+      await vi.runOnlyPendingTimersAsync();
+      vi.advanceTimersByTime(20); // Second retry delay
+      await vi.runOnlyPendingTimersAsync();
+
+      const result = await resultPromise;
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -233,7 +243,16 @@ describe('Enhanced Functional Composition', () => {
 
     it('should fail after max retries', async () => {
       const alwaysFail = vi.fn().mockRejectedValue(new Error('Always fails'));
-      const result = await retryWithLogging(alwaysFail, 2, 10);
+
+      // Start the retry operation
+      const resultPromise = retryWithLogging(alwaysFail, 2, 10);
+
+      // Advance timers to allow retry delay to complete
+      // First retry delay: 10ms (only one retry for maxRetries=2)
+      vi.advanceTimersByTime(10);
+      await vi.runOnlyPendingTimersAsync();
+
+      const result = await resultPromise;
 
       expect(result.success).toBe(false);
       expect(alwaysFail).toHaveBeenCalledTimes(2);

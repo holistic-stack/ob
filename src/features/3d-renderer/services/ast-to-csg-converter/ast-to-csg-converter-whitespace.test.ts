@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
@@ -23,6 +23,13 @@ describe('AST to CSG Converter - Whitespace Handling', () => {
     parserService = new OpenscadParser();
 
     await parserService.init();
+  });
+
+  afterEach(async () => {
+    if (parserService) {
+      await parserService.dispose();
+      logger.end('Whitespace handling test environment cleaned up');
+    }
   });
 
   describe('Leading Whitespace Handling', () => {

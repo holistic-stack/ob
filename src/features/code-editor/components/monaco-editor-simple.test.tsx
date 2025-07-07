@@ -5,14 +5,15 @@
  * without complex Monaco dependencies for initial validation.
  */
 
+import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type * as monaco from 'monaco-editor';
-import React from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonacoEditorProps } from '../types/editor.types';
 
 // Simple mock component for TDD
-const MockMonacoEditor: React.FC<MonacoEditorProps> = ({
+const MockMonacoEditor: FC<MonacoEditorProps> = ({
   value,
   onChange,
   onMount,
@@ -22,14 +23,14 @@ const MockMonacoEditor: React.FC<MonacoEditorProps> = ({
   'data-testid': testId,
   readOnly = false,
 }) => {
-  const [editorValue, setEditorValue] = React.useState(value);
+  const [editorValue, setEditorValue] = useState(value);
 
   // Update internal state when value prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setEditorValue(value);
   }, [value]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (onMount) {
       const mockEditor = {
         getValue: () => editorValue,
