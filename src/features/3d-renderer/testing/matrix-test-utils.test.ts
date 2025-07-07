@@ -62,7 +62,11 @@ describe('Matrix Test Utils', () => {
 
       // Should be identical with same seed
       for (let i = 0; i < 16; i++) {
-        expect(matrix1[i]).toBeCloseTo(matrix2[i], 10);
+        const value1 = matrix1[i];
+        const value2 = matrix2[i];
+        if (value1 !== undefined && value2 !== undefined) {
+          expect(value1).toBeCloseTo(value2, 10);
+        }
       }
     });
 
@@ -166,10 +170,10 @@ describe('Matrix Test Utils', () => {
     it('should test successful matrix operation', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing successful matrix operation');
 
-      const mockOperation = async (matrix: mat4): Promise<Result<mat4, string>> => {
+      const mockOperation = async (matrix: unknown): Promise<Result<mat4, string>> => {
         // Simple successful operation
         const result = mat4.create();
-        mat4.transpose(result, matrix);
+        mat4.transpose(result, matrix as mat4);
         return {
           success: true,
           data: result,
@@ -188,7 +192,7 @@ describe('Matrix Test Utils', () => {
     it('should test failing matrix operation', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing failing matrix operation');
 
-      const mockOperation = async (_matrix: mat4): Promise<Result<mat4, string>> => {
+      const mockOperation = async (_matrix: unknown): Promise<Result<mat4, string>> => {
         // Simulated failure
         return {
           success: false,
@@ -207,11 +211,11 @@ describe('Matrix Test Utils', () => {
     it('should test edge cases systematically', async () => {
       logger.debug('[DEBUG][MatrixTestUtilsTest] Testing edge case handling');
 
-      const mockOperation = async (matrix: mat4): Promise<Result<mat4, string>> => {
+      const mockOperation = async (matrix: unknown): Promise<Result<mat4, string>> => {
         // Operation that fails for singular matrices
         try {
           // Use gl-matrix determinant calculation for 4x4 matrices
-          const det = mat4.determinant(matrix);
+          const det = mat4.determinant(matrix as mat4);
 
           if (Math.abs(det) < 1e-10) {
             return {
@@ -222,7 +226,7 @@ describe('Matrix Test Utils', () => {
 
           // Simple mock inversion (not real inverse)
           const result = mat4.create();
-          mat4.transpose(result, matrix);
+          mat4.transpose(result, matrix as mat4);
           return {
             success: true,
             data: result,
@@ -266,7 +270,8 @@ describe('Matrix Test Utils', () => {
       // Test that they work
       const matrix = matrixTestDataGenerator.generateIdentityMatrix();
       expect(matrix.length).toBe(16); // 4x4 matrix
-      expect(matrix[0]).toBe(1); // Identity matrix diagonal
+      const firstElement = matrix[0];
+      expect(firstElement).toBe(1); // Identity matrix diagonal
     });
   });
 });

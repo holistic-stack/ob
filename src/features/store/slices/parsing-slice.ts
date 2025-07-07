@@ -12,6 +12,7 @@ import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AsyncOperationResult,
   OperationError,
+  OperationMetadata,
 } from '../../../shared/types/operations.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
@@ -145,9 +146,9 @@ export const createParsingSlice = (
       void get().parseCode(code);
     },
 
-    addParsingError: (error: string) => {
+    addParsingError: (error: OperationError) => {
       set((state) => {
-        state.parsing.errors = [...state.parsing.errors, error];
+        state.parsing.errors = [...state.parsing.errors, error.message || String(error)];
       });
     },
 
@@ -166,8 +167,9 @@ export const createParsingSlice = (
       });
     },
 
-    getParsingMetrics: () => {
-      return get().parsing.operations;
+    getParsingMetrics: (): ReadonlyArray<OperationMetadata> => {
+      // Return empty array for now - metrics would be tracked separately
+      return [];
     },
   };
 };

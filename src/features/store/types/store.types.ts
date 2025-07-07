@@ -15,6 +15,13 @@ import type {
   EditorState,
 } from '../../../shared/types/common.types';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+  OperationMetadata
+} from '../../../shared/types/operations.types.js';
+import type { CoreNode } from '../../../shared/types/ast.types.js';
+import type { ParseOptions } from '../slices/parsing-slice.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 /**
@@ -83,12 +90,14 @@ export interface EditorActions {
 export type EditorSlice = EditorState & EditorActions;
 
 export interface ParsingActions {
-  parseCode: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
-  parseAST: (code: string) => AsyncResult<ReadonlyArray<ASTNode>, string>;
+  parseCode: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
+  parseAST: (code: string, options?: ParseOptions) => AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
   clearParsingState: () => void;
-  debouncedParse: (code: string) => void;
-  addParsingError: (error: string) => void;
+  debouncedParse: (code: string, options?: ParseOptions) => void;
+  addParsingError: (error: OperationError) => void;
   clearParsingErrors: () => void;
+  getParsingMetrics: () => ReadonlyArray<OperationMetadata>;
+  cancelParsing: (operationId: string) => void;
 }
 
 export type ParsingSlice = ParsingState & ParsingActions;

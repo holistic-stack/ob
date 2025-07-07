@@ -5,7 +5,7 @@
  * Result<T,E> error handling, and 300ms debouncing for OpenSCAD operations.
  */
 
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
@@ -108,7 +108,7 @@ export const createAppStore = (
     },
   }
 ) => {
-  const storeCreator = immer((set, get) => ({
+  const storeCreator = immer<AppStore>((set, get) => ({
     ...(createInitialState(options) as AppStore),
     ...createEditorSlice(set, get, {
       parserService,
@@ -122,7 +122,7 @@ export const createAppStore = (
   const withPersistence = options.enablePersistence
     ? persist(storeCreator, {
         name: 'openscad-app-store',
-        partialize: (state) => ({
+        partialize: (state: AppStore) => ({
           config: state.config,
           editor: {
             code: state.editor.code,
@@ -136,7 +136,7 @@ export const createAppStore = (
     : storeCreator;
 
   return create<AppStore>()(
-    devtools(withPersistence, {
+    devtools(withPersistence as any, {
       enabled: options.enableDevtools,
       name: 'OpenSCAD App Store',
     })

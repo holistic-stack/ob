@@ -32,7 +32,8 @@ export const fromThreeMatrix3 = (threeMatrix: Matrix3): Result<mat3, string> => 
 
     // Both Three.js Matrix3 and gl-matrix mat3 use column-major order
     for (let i = 0; i < 9; i++) {
-      result[i] = elements[i];
+      const value = elements[i];
+      result[i] = value !== undefined ? value : 0;
     }
 
     return success(result);
@@ -55,7 +56,8 @@ export const fromThreeMatrix4 = (threeMatrix: Matrix4): Result<mat4, string> => 
 
     // Both Three.js Matrix4 and gl-matrix mat4 use column-major order
     for (let i = 0; i < 16; i++) {
-      result[i] = elements[i];
+      const value = elements[i];
+      result[i] = value !== undefined ? value : 0;
     }
 
     return success(result);
@@ -237,7 +239,8 @@ export const fromQuaternion = (quaternion: Quaternion): Result<Matrix, string> =
     const result = new Matrix(3, 3);
     for (let col = 0; col < 3; col++) {
       for (let row = 0; row < 3; row++) {
-        result.set(row, col, elements[col * 3 + row]);
+        const value = elements[col * 3 + row];
+        result.set(row, col, value !== undefined ? value : 0);
       }
     }
 
@@ -265,7 +268,8 @@ export const fromEuler = (euler: Euler): Result<Matrix, string> => {
     const result = new Matrix(3, 3);
     for (let col = 0; col < 3; col++) {
       for (let row = 0; row < 3; row++) {
-        result.set(row, col, elements[col * 3 + row]);
+        const value = elements[col * 3 + row];
+        result.set(row, col, value !== undefined ? value : 0);
       }
     }
 
@@ -321,7 +325,8 @@ export const matrixFactory = {
     // Clear identity and set diagonal values
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        result.set(i, j, i === j ? values[i] : 0);
+        const value = values[i];
+        result.set(i, j, i === j ? (value !== undefined ? value : 0) : 0);
       }
     }
     return result;
@@ -350,7 +355,9 @@ export const matrixFactory = {
     // Set values from 2D array
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        result.set(row, col, data[row][col] || 0);
+        const rowData = data[row];
+        const value = rowData && rowData[col];
+        result.set(row, col, value !== undefined ? value : 0);
       }
     }
     return result;
@@ -417,7 +424,7 @@ export const matrixUtils = {
       for (let j = 0; j < 4; j++) {
         const mij = matrix[j * 4 + i]; // M[i,j] in column-major
         const mji = matrix[i * 4 + j]; // M[j,i] in column-major
-        if (Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision) {
+        if (mij !== undefined && mji !== undefined && Math.abs(mij - mji) > MATRIX_CONFIG.operations.precision) {
           return false;
         }
       }
@@ -478,7 +485,8 @@ export const matrixUtils = {
 
       // For raw mat4
       for (let i = 0; i < 4; i++) {
-        if (matrix[i * 4 + i] <= 0) return false;
+        const diagonalValue = matrix[i * 4 + i];
+        if (diagonalValue !== undefined && diagonalValue <= 0) return false;
       }
       return true;
     } catch {
@@ -556,7 +564,9 @@ export const matrixUtils = {
       if (a.length !== b.length) return false;
 
       for (let i = 0; i < a.length; i++) {
-        if (Math.abs(a[i] - b[i]) > tolerance) {
+        const aValue = a[i];
+        const bValue = b[i];
+        if (aValue !== undefined && bValue !== undefined && Math.abs(aValue - bValue) > tolerance) {
           return false;
         }
       }
@@ -661,7 +671,7 @@ export const createIdentityMatrix = matrixFactory.identity;
 export const createZeroMatrix = matrixFactory.zeros;
 export const createRandomMatrix = matrixFactory.random;
 
-export const validateMatrixDimensions = (matrix: mat4, expectedLength: number): boolean => {
+export const validateMatrixDimensions = (matrix: mat3 | mat4, expectedLength: number): boolean => {
   return matrix.length === expectedLength;
 };
 

@@ -98,7 +98,33 @@ export const createRenderingSlice = (
     updateCamera: (cameraUpdate: Partial<CameraConfig>) => {
       set((state) => {
         if (state.rendering) {
-          state.rendering.camera = { ...state.rendering.camera, ...cameraUpdate };
+          // Handle readonly array properties properly
+          const updatedCamera = { ...state.rendering.camera };
+
+          // Update non-array properties
+          Object.keys(cameraUpdate).forEach(key => {
+            if (key !== 'position' && key !== 'target') {
+              (updatedCamera as any)[key] = (cameraUpdate as any)[key];
+            }
+          });
+
+          // Handle array properties with proper mutable assignment
+          if (cameraUpdate.position) {
+            updatedCamera.position = [
+              cameraUpdate.position[0],
+              cameraUpdate.position[1],
+              cameraUpdate.position[2]
+            ];
+          }
+          if (cameraUpdate.target) {
+            updatedCamera.target = [
+              cameraUpdate.target[0],
+              cameraUpdate.target[1],
+              cameraUpdate.target[2]
+            ];
+          }
+
+          state.rendering.camera = updatedCamera;
         }
       });
     },

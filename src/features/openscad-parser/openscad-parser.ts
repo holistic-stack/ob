@@ -223,7 +223,7 @@ export class OpenscadParser {
       this.isInitialized = true;
     } catch (error) {
       const errorMessage = `Failed to initialize parser: ${error}`;
-      this.errorHandler.handleError(errorMessage);
+      this.errorHandler.handleError(new Error(errorMessage));
       throw new Error(errorMessage);
     }
   }
@@ -257,12 +257,12 @@ export class OpenscadParser {
       // Check for syntax errors
       if (tree && (this.hasErrorNodes(tree.rootNode) || this.hasMissingTokens(tree.rootNode))) {
         const errorDetails = this.formatSyntaxError(code, tree.rootNode);
-        this.errorHandler.handleError(errorDetails);
+        this.errorHandler.handleError(new Error(errorDetails));
       }
 
       return tree;
     } catch (error) {
-      this.errorHandler.handleError(`Failed to parse code: ${error}`);
+      this.errorHandler.handleError(new Error(`Failed to parse code: ${error}`));
       throw error;
     }
   }
@@ -303,7 +303,7 @@ export class OpenscadParser {
       return ast;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.errorHandler.handleError(`Failed to generate AST: ${errorMessage}`);
+      this.errorHandler.handleError(new Error(`Failed to generate AST: ${errorMessage}`));
       return [];
     }
   }
@@ -331,7 +331,7 @@ export class OpenscadParser {
       return { success: true, data: ast };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.errorHandler.handleError(`Failed to generate AST: ${errorMessage}`);
+      this.errorHandler.handleError(new Error(`Failed to generate AST: ${errorMessage}`));
       return { success: false, error: errorMessage };
     }
   }
@@ -412,7 +412,7 @@ export class OpenscadParser {
 
       return newTree;
     } catch (error) {
-      this.errorHandler.handleError(`Failed to update parse tree: ${error}`);
+      this.errorHandler.handleError(new Error(`Failed to update parse tree: ${error}`));
       throw error;
     }
   }
@@ -482,7 +482,7 @@ export class OpenscadParser {
       const ast = astGenerator.generate();
       return ast;
     } catch (error) {
-      this.errorHandler.handleError(`Failed to update AST: ${error}`);
+      this.errorHandler.handleError(new Error(`Failed to update AST: ${error}`));
       throw error;
     }
   }
@@ -571,7 +571,7 @@ export class OpenscadParser {
         (this.errorHandler as unknown as { clear: () => void }).clear();
       }
     } catch (error) {
-      this.errorHandler.handleError(`Error disposing parser: ${error}`);
+      this.errorHandler.handleError(new Error(`Error disposing parser: ${error}`));
     }
   }
 

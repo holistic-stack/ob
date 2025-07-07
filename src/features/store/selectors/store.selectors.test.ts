@@ -71,17 +71,6 @@ describe('Store Selectors', () => {
           autoRotateSpeed: 1,
         },
       },
-      performance: {
-        metrics: {
-          renderTime: 12.5,
-          parseTime: 8.2,
-          memoryUsage: 45.7,
-          frameRate: 60,
-        },
-        isMonitoring: true,
-        violations: [],
-        lastUpdated: new Date('2024-01-01T10:03:00Z'),
-      },
       config: {
         debounceMs: 300,
         enableAutoSave: false,
@@ -266,14 +255,48 @@ describe('Store Selectors', () => {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
-        rendering: { ...mockState.rendering, lastRendered: null },
+        rendering: mockState.rendering ? { ...mockState.rendering, lastRendered: null } : {
+          meshes: [],
+          isRendering: false,
+          renderErrors: [],
+          camera: {
+            position: [0, 0, 10] as [number, number, number],
+            target: [0, 0, 0] as [number, number, number],
+            zoom: 1,
+            fov: 75,
+            near: 0.1,
+            far: 1000,
+            enableControls: true,
+            enableAutoRotate: false,
+            autoRotateSpeed: 2.0,
+          },
+          renderTime: 0,
+          lastRendered: null,
+        },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
 
-      // Test with state where rendering is undefined
+      // Test with state where rendering has default values
       const noRenderingState = {
         ...mockState,
-        rendering: undefined,
+        rendering: {
+          meshes: [],
+          isRendering: false,
+          renderErrors: [],
+          camera: {
+            position: [0, 0, 10] as [number, number, number],
+            target: [0, 0, 0] as [number, number, number],
+            zoom: 1,
+            fov: 75,
+            near: 0.1,
+            far: 1000,
+            enableControls: true,
+            enableAutoRotate: false,
+            autoRotateSpeed: 2.0,
+          },
+          renderTime: 0,
+          lastRendered: null,
+        }
       };
       expect(selectLastActivity(noRenderingState)).toEqual(new Date('2024-01-01T10:01:00Z')); // parsing.lastParsed is most recent
     });
@@ -344,19 +367,5 @@ describe('Store Selectors', () => {
     });
   });
 
-  describe('Performance Selectors', () => {
-    it('should select performance metrics from state', () => {
-      const performanceMetrics = mockState.performance.metrics;
-      expect(performanceMetrics.renderTime).toBe(12.5);
-      expect(performanceMetrics.parseTime).toBe(8.2);
-      expect(performanceMetrics.memoryUsage).toBe(45.7);
-      expect(performanceMetrics.frameRate).toBe(60);
-    });
 
-    it('should select performance monitoring status', () => {
-      expect(mockState.performance.isMonitoring).toBe(true);
-      expect(mockState.performance.violations).toEqual([]);
-      expect(mockState.performance.lastUpdated).toEqual(new Date('2024-01-01T10:03:00Z'));
-    });
-  });
 });

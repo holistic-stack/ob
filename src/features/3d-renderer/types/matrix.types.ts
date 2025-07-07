@@ -70,7 +70,8 @@ export class Matrix {
   static fromMat4(matrix: mat4): Matrix {
     const result = new Matrix(4, 4);
     for (let i = 0; i < 16; i++) {
-      result.data[i] = matrix[i];
+      const value = matrix[i];
+      result.data[i] = value !== undefined ? value : 0;
     }
     return result;
   }
@@ -78,7 +79,8 @@ export class Matrix {
   static fromMat3(matrix: mat3): Matrix {
     const result = new Matrix(3, 3);
     for (let i = 0; i < 9; i++) {
-      result.data[i] = matrix[i];
+      const value = matrix[i];
+      result.data[i] = value !== undefined ? value : 0;
     }
     return result;
   }
@@ -89,7 +91,8 @@ export class Matrix {
     }
     const result = mat4.create();
     for (let i = 0; i < 16; i++) {
-      result[i] = this.data[i];
+      const value = this.data[i];
+      result[i] = value !== undefined ? value : 0;
     }
     return result;
   }
@@ -100,7 +103,8 @@ export class Matrix {
     }
     const result = mat3.create();
     for (let i = 0; i < 9; i++) {
-      result[i] = this.data[i];
+      const value = this.data[i];
+      result[i] = value !== undefined ? value : 0;
     }
     return result;
   }

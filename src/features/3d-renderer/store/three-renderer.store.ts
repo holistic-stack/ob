@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
 // OperationId removed
 import type { CameraConfig as SharedCameraConfig } from '../../../shared/types/common.types.js';
-import type { ASTNode } from '../../openscad-parser/types/ast.types.js';
+import type { ASTNode } from '../../openscad-parser/ast/ast-types.js';
 import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
 import type { Mesh3D, RenderingMetrics, Scene3DConfig } from '../types/renderer.types.js';
 

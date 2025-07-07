@@ -1119,31 +1119,41 @@ const convertAssignmentNode = async (node: AssignmentNode): Promise<Result<THREE
   logger.debug(`Processing assignment: ${node.variable.name}`);
 
   // Evaluate the expression to get the actual value
-  let value: any = node.value;
+  let value: ParameterValue = node.value;
 
-  if (node.value.expressionType === 'literal') {
-    value = extractLiteralValue(node.value);
-    logger.debug(
-      `Evaluated literal value for ${node.variable.name}: ${value} (type: ${typeof value})`
-    );
-  } else if (
-    node.value.expressionType === 'binary' ||
-    node.value.expressionType === 'binary_expression'
-  ) {
-    const evalResult = astEvaluateBinaryExpression(node.value as BinaryExpressionNode);
-    if (evalResult.success) {
-      value = evalResult.value;
+  // Check if node.value is an ExpressionNode with proper type guards
+  if (node.value && typeof node.value === 'object' && 'expressionType' in node.value) {
+    const expressionNode = node.value as ExpressionNode;
+
+    if (expressionNode.expressionType === 'literal') {
+      value = extractLiteralValue(expressionNode);
       logger.debug(
-        `Evaluated binary expression for ${node.variable.name} to: ${value} (type: ${typeof value})`
+        `Evaluated literal value for ${node.variable.name}: ${value} (type: ${typeof value})`
       );
+    } else if (
+      expressionNode.expressionType === 'binary' ||
+      expressionNode.expressionType === 'binary_expression'
+    ) {
+      const evalResult = astEvaluateBinaryExpression(expressionNode as BinaryExpressionNode);
+      if (evalResult.success) {
+        value = evalResult.value;
+        logger.debug(
+          `Evaluated binary expression for ${node.variable.name} to: ${value} (type: ${typeof value})`
+        );
+      } else {
+        logger.warn(
+          `Failed to evaluate binary expression for ${node.variable.name}: ${evalResult.error}`
+        );
+      }
     } else {
-      logger.warn(
-        `Failed to evaluate binary expression for ${node.variable.name}: ${evalResult.error}`
+      logger.debug(
+        `Using raw value for ${node.variable.name}: ${JSON.stringify(value)} (expressionType: ${expressionNode.expressionType})`
       );
     }
   } else {
+    // Handle primitive values (number, string, boolean, null, undefined)
     logger.debug(
-      `Using raw value for ${node.variable.name}: ${JSON.stringify(value)} (expressionType: ${node.value.expressionType})`
+      `Using primitive value for ${node.variable.name}: ${JSON.stringify(value)} (type: ${typeof value})`
     );
   }
 
@@ -1200,31 +1210,37 @@ const _convertConditionalExpressionNode = async (
     const binaryNode = node.condition as BinaryExpressionNode;
 
     // Get left operand value
-    let leftValue: any = null;
+    let leftValue: number | string | boolean | null = null;
     if (binaryNode.left.expressionType === 'literal') {
       leftValue = extractLiteralValue(binaryNode.left);
     } else if (
       binaryNode.left.expressionType === 'variable_reference' &&
-      'variable' in binaryNode.left
+      'variable' in binaryNode.left &&
+      typeof binaryNode.left.variable === 'object' &&
+      binaryNode.left.variable !== null &&
+      'name' in binaryNode.left.variable
     ) {
-      const varName = binaryNode.left.variable.name;
+      const varName = (binaryNode.left.variable as { name: string }).name;
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding) {
+      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
         leftValue = varBinding.value;
       }
     }
 
     // Get right operand value
-    let rightValue: any = null;
+    let rightValue: number | string | boolean | null = null;
     if (binaryNode.right.expressionType === 'literal') {
       rightValue = extractLiteralValue(binaryNode.right);
     } else if (
       binaryNode.right.expressionType === 'variable_reference' &&
-      'variable' in binaryNode.right
+      'variable' in binaryNode.right &&
+      typeof binaryNode.right.variable === 'object' &&
+      binaryNode.right.variable !== null &&
+      'name' in binaryNode.right.variable
     ) {
-      const varName = binaryNode.right.variable.name;
+      const varName = (binaryNode.right.variable as { name: string }).name;
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding) {
+      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
         rightValue = varBinding.value;
       }
     }
@@ -1234,10 +1250,10 @@ const _convertConditionalExpressionNode = async (
       try {
         switch (binaryNode.operator) {
           case '==':
-            conditionValue = leftValue == rightValue;
+            conditionValue = leftValue === rightValue;
             break;
           case '!=':
-            conditionValue = leftValue != rightValue;
+            conditionValue = leftValue !== rightValue;
             break;
           case '<':
             conditionValue = leftValue < rightValue;
@@ -1299,18 +1315,21 @@ const convertIfStatementNode = async (
     logger.debug(`Evaluating binary condition with operator: ${binaryNode.operator}`);
 
     // Get left operand value
-    let leftValue: any = null;
+    let leftValue: number | string | boolean | null = null;
     if (binaryNode.left.expressionType === 'literal') {
       leftValue = extractLiteralValue(binaryNode.left);
       logger.debug(`Left operand is literal with value: ${leftValue} (type: ${typeof leftValue})`);
     } else if (
       binaryNode.left.expressionType === 'variable_reference' &&
-      'variable' in binaryNode.left
+      'variable' in binaryNode.left &&
+      typeof binaryNode.left.variable === 'object' &&
+      binaryNode.left.variable !== null &&
+      'name' in binaryNode.left.variable
     ) {
-      const varName = binaryNode.left.variable.name;
+      const varName = (binaryNode.left.variable as { name: string }).name;
       logger.debug(`Left operand is variable reference: ${varName}`);
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding) {
+      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
         leftValue = varBinding.value;
         logger.debug(
           `Resolved variable ${varName} to value: ${leftValue} (type: ${typeof leftValue})`
@@ -1325,7 +1344,7 @@ const convertIfStatementNode = async (
     }
 
     // Get right operand value
-    let rightValue: any = null;
+    let rightValue: number | string | boolean | null = null;
     if (binaryNode.right.expressionType === 'literal') {
       rightValue = extractLiteralValue(binaryNode.right);
       logger.debug(
@@ -1333,12 +1352,15 @@ const convertIfStatementNode = async (
       );
     } else if (
       binaryNode.right.expressionType === 'variable_reference' &&
-      'variable' in binaryNode.right
+      'variable' in binaryNode.right &&
+      typeof binaryNode.right.variable === 'object' &&
+      binaryNode.right.variable !== null &&
+      'name' in binaryNode.right.variable
     ) {
-      const varName = binaryNode.right.variable.name;
+      const varName = (binaryNode.right.variable as { name: string }).name;
       logger.debug(`Right operand is variable reference: ${varName}`);
       const varBinding = variableScope.resolveVariable(varName);
-      if (varBinding) {
+      if (varBinding && (typeof varBinding.value === 'number' || typeof varBinding.value === 'string' || typeof varBinding.value === 'boolean')) {
         rightValue = varBinding.value;
         logger.debug(
           `Resolved variable ${varName} to value: ${rightValue} (type: ${typeof rightValue})`
@@ -1357,12 +1379,12 @@ const convertIfStatementNode = async (
       try {
         switch (binaryNode.operator) {
           case '==':
-            conditionValue = leftValue == rightValue;
-            logger.debug(`Evaluating ${leftValue} == ${rightValue} = ${conditionValue}`);
+            conditionValue = leftValue === rightValue;
+            logger.debug(`Evaluating ${leftValue} === ${rightValue} = ${conditionValue}`);
             break;
           case '!=':
-            conditionValue = leftValue != rightValue;
-            logger.debug(`Evaluating ${leftValue} != ${rightValue} = ${conditionValue}`);
+            conditionValue = leftValue !== rightValue;
+            logger.debug(`Evaluating ${leftValue} !== ${rightValue} = ${conditionValue}`);
             break;
           case '<':
             conditionValue = leftValue < rightValue;
