@@ -366,7 +366,7 @@ export function extractArguments(
       ) {
         // Handle direct value nodes (positional arguments)
         const _childText = getNodeText(child, sourceCode);
-        const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode, variableScope);
+        const value = convertNodeToParameterValue(child, errorHandler, sourceCode, variableScope);
         if (value !== undefined) {
           args.push({ name: undefined, value }); // Positional argument
         }

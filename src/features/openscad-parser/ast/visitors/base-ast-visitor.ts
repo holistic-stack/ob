@@ -203,34 +203,17 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
  */
 export abstract class BaseASTVisitor implements ASTVisitor {
   protected errorHandler: ErrorHandler;
-  /**
-   * Creates a new BaseASTVisitor instance.
-   *
-   * @param source - The original OpenSCAD source code being parsed
-   * @param errorHandler - Optional error handler for logging and error collection
-   *
-   * @example Basic usage
-   * ```typescript
-   * const visitor = new MyCustomVisitor(sourceCode);
-   * ```
-   *
-   * @example With error handling
-   * ```typescript
-   * const errorHandler = new SimpleErrorHandler();
-   * const visitor = new MyCustomVisitor(sourceCode, errorHandler);
-   * ```
-   */
+  protected source: string;
+  protected variableScope: Map<string, ast.ParameterValue> = new Map();
+
   constructor(
-    protected source: string,
-    providedErrorHandler?: ErrorHandler
+    source: string,
+    protected errorHandler: ErrorHandler,
+    protected variableScope: Map<string, ast.ParameterValue>
   ) {
-    if (providedErrorHandler) {
-      this.errorHandler = providedErrorHandler;
-    } else {
-      this.errorHandler = new ErrorHandler({
-        loggerOptions: { level: Severity.DEBUG },
-      } as ErrorHandlerOptions);
-    }
+    this.source = source;
+    this.errorHandler = errorHandler;
+    this.variableScope = variableScope;
   }
 
   /**

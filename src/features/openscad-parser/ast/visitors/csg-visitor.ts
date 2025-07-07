@@ -88,9 +88,10 @@ import { BaseASTVisitor } from './base-ast-visitor.js';
 export class CSGVisitor extends BaseASTVisitor {
   constructor(
     source: string,
-    protected override errorHandler: ErrorHandler
+    protected override errorHandler: ErrorHandler,
+    variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler); // BaseASTVisitor constructor takes source and errorHandler
+    super(source, errorHandler, variableScope);
   }
 
   /**

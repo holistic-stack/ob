@@ -163,13 +163,6 @@ export class VisitorASTGenerator {
     private language: unknown,
     private errorHandler: ErrorHandler // Added ErrorHandler
   ) {
-    // Create a composite visitor that delegates to specialized visitors
-    // Create the composite visitor first so we can pass it to visitors that need it
-    const compositeVisitor = new CompositeVisitor([], this.errorHandler); // Added errorHandler
-
-    // Order matters here - PrimitiveVisitor should be first to handle primitive shapes
-    const transformVisitor = new TransformVisitor(this.source, compositeVisitor, this.errorHandler); // Added errorHandler, used this.source
-
     // Create a shared variable scope that can be used by multiple visitors
     const sharedVariableScope = new Map<string, ast.ParameterValue>();
 
@@ -178,10 +171,15 @@ export class VisitorASTGenerator {
       throw new Error('Failed to create shared variable scope Map');
     }
 
+    // Create a composite visitor that delegates to specialized visitors
+    // Create the composite visitor first so we can pass it to visitors that need it
+    const compositeVisitor = new CompositeVisitor([], this.errorHandler); // Added errorHandler
+
+    // Order matters here - PrimitiveVisitor should be first to handle primitive shapes
+    const transformVisitor = new TransformVisitor(this.source, compositeVisitor, this.errorHandler, sharedVariableScope); // Added errorHandler, used this.source
+
     // Create expression visitor first since other visitors may depend on it
-    const expressionVisitor = new ExpressionVisitor(this.source, this.errorHandler);
-    // Set the shared scope on the expression visitor
-    expressionVisitor.variableScope = sharedVariableScope;
+    const expressionVisitor = new ExpressionVisitor(this.source, this.errorHandler, sharedVariableScope);
 
     // Add all visitors to the composite visitor
     // Order matters: definition visitors must come before instantiation visitors
@@ -189,17 +187,17 @@ export class VisitorASTGenerator {
       new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
       new AssertStatementVisitor(this.source, this.errorHandler),
       // Module and function definitions must be processed before instantiations
-      new ModuleVisitor(this.source, this.errorHandler), // Process module definitions first
-      new FunctionVisitor(this.source, this.errorHandler), // Process function definitions first
+      new ModuleVisitor(this.source, this.errorHandler, sharedVariableScope), // Process module definitions first
+      new FunctionVisitor(this.source, this.errorHandler, sharedVariableScope), // Process function definitions first
       // Specialized visitors for module instantiations come after definition visitors
-      new PrimitiveVisitor(this.source, this.errorHandler),
+      new PrimitiveVisitor(this.source, this.errorHandler, sharedVariableScope),
       transformVisitor, // transformVisitor instance already has errorHandler
-      new CSGVisitor(this.source, this.errorHandler),
-      new ControlStructureVisitor(this.source, this.errorHandler),
+      new CSGVisitor(this.source, this.errorHandler, sharedVariableScope),
+      new ControlStructureVisitor(this.source, this.errorHandler, sharedVariableScope),
       // General statement visitor comes after specialized visitors
-      new EchoStatementVisitor(this.source, this.errorHandler),
+      new EchoStatementVisitor(this.source, this.errorHandler, sharedVariableScope),
       expressionVisitor,
-      new VariableVisitor(this.source, this.errorHandler),
+      new VariableVisitor(this.source, this.errorHandler, sharedVariableScope),
     ];
 
     // Create a query visitor that uses the composite visitor

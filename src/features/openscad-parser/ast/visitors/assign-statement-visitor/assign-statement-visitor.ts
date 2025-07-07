@@ -104,7 +104,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     private variableScope: Map<string, ast.ParameterValue>
   ) {
-    super(sourceCode, errorHandler);
+    super(sourceCode, errorHandler, variableScope);
   }
 
   /**

@@ -162,11 +162,14 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   let literalValue: string | number | boolean = '';
   if (typeof value.value === 'string') {
     literalValue = value.value;
-  } else if (typeof value.value === 'number') {
+  }
+  else if (typeof value.value === 'number') {
     literalValue = value.value;
-  } else if (typeof value.value === 'boolean') {
+  }
+  else if (typeof value.value === 'boolean') {
     literalValue = value.value;
-  } else {
+  }
+  else {
     // Fallback for complex value.value types or if unhandled
     // This might occur if a 'vector' ast.Value.value (which is Value[]) reaches here.
     // Consider logging a warning or throwing an error for unhandled ast.Value subtypes.

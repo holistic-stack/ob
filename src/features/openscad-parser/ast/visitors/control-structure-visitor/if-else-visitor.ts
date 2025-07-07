@@ -15,23 +15,25 @@ import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
+import { BaseASTVisitor } from '../base-ast-visitor.js';
 
 /**
  * Visitor for if-else statements
  */
-export class IfElseVisitor {
+export class IfElseVisitor extends BaseASTVisitor {
   private expressionVisitor: ExpressionVisitor;
+  protected errorHandler: ErrorHandler;
+  protected variableScope: Map<string, ast.ParameterValue>;
 
-  /**
-   * Create a new IfElseVisitor
-   * @param source The source code (optional, defaults to empty string)
-   * @param errorHandler The error handler instance
-   */
   constructor(
-    source: string,
-    protected errorHandler: ErrorHandler
+    sourceCode: string,
+    errorHandler: ErrorHandler,
+    variableScope: Map<string, ast.ParameterValue>
   ) {
-    this.expressionVisitor = new ExpressionVisitor(source, errorHandler);
+    super(sourceCode, errorHandler, variableScope);
+    this.errorHandler = errorHandler;
+    this.variableScope = variableScope;
+    this.expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler, variableScope);
   }
 
   /**

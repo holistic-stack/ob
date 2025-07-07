@@ -46,8 +46,12 @@ export class EchoStatementVisitor extends BaseASTVisitor {
    * @param sourceCode The source code being parsed
    * @param errorHandler The error handler for reporting parsing errors
    */
-  constructor(sourceCode: string, errorHandler: ErrorHandler) {
-    super(sourceCode, errorHandler);
+  constructor(
+    sourceCode: string,
+    errorHandler: ErrorHandler,
+    protected override variableScope: Map<string, ast.ParameterValue>
+  ) {
+    super(sourceCode, errorHandler, variableScope);
     this.logger = new Logger({ level: Severity.DEBUG });
   }
 

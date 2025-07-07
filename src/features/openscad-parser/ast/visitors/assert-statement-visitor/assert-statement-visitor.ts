@@ -89,9 +89,12 @@ export class AssertStatementVisitor extends BaseASTVisitor {
    */
   constructor(
     sourceCode: string,
-    protected override errorHandler: ErrorHandler
+    errorHandler: ErrorHandler,
+    variableScope: Map<string, ast.ParameterValue>
   ) {
-    super(sourceCode, errorHandler);
+    super(sourceCode, errorHandler, variableScope);
+    this.errorHandler = errorHandler;
+    this.variableScope = variableScope;
   }
 
   /**

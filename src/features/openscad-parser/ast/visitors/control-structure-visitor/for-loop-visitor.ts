@@ -80,11 +80,11 @@ export class ForLoopVisitor extends BaseASTVisitor {
   private expressionVisitor: ExpressionVisitor;
 
   constructor(
-    source: string,
+    sourceCode: string,
     protected override errorHandler: ErrorHandler
   ) {
-    super(source, errorHandler);
-    this.expressionVisitor = new ExpressionVisitor(source, this.errorHandler);
+    super(sourceCode, errorHandler);
+    this.expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler);
   }
 
   override visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {

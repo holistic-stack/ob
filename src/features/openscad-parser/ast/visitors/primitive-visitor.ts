@@ -97,9 +97,10 @@ import { BaseASTVisitor } from './base-ast-visitor.js';
 export class PrimitiveVisitor extends BaseASTVisitor {
   constructor(
     source: string,
-    protected override errorHandler: ErrorHandler
+    protected override errorHandler: ErrorHandler,
+    variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source); // Assuming BaseASTVisitor constructor takes source
+    super(source, errorHandler, variableScope);
   }
 
   /**

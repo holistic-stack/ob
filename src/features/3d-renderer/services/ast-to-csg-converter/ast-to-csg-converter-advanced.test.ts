@@ -290,7 +290,7 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
       Object.entries(ADVANCED_CORPUS_SCENARIOS).filter(
         ([_, scenario]) => scenario.hasRenderableContent
       )
-    )('should convert %s to CSG meshes', async (_scenarioKey, scenario) => {
+    )('should convert %s to CSG meshes', async (scenarioKey, scenario) => {
       logger.init(`Testing ${scenario.name} CSG conversion`);
 
       // Step 1: Parse the code
@@ -304,7 +304,7 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
 
       // For specialVariables, we allow AST generation to fail due to Tree-sitter grammar issue
       // with "variableScope is not defined" - this is a known issue with the WASM grammar
-      if (scenario.name.includes('Special Variables') && ast.length === 0) {
+      if (scenarioKey === 'specialVariables' && ast.length === 0) {
         logger.end(`${scenario.name} CSG conversion test completed (skipped due to known Tree-sitter issue)`);
         return;
       }

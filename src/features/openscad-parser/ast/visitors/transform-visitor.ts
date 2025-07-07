@@ -104,9 +104,10 @@ export class TransformVisitor extends BaseASTVisitor {
   constructor(
     source: string,
     private compositeVisitor: ASTVisitor | undefined, // Made explicit undefined for clarity with optional errorHandler
-    protected override errorHandler: ErrorHandler
+    protected override errorHandler: ErrorHandler,
+    variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source);
+    super(source, errorHandler, variableScope);
   }
 
   /**
