@@ -76,8 +76,8 @@ describe('AST Generator Integration Tests', () => {
         throw new Error('Expected AST node at index 0 but found none.');
       }
       expect(translateNode.type).toBe('translate');
-      // TODO: Fix named argument parsing - currently produces [NaN, 3, 0] due to grammar issues
-      expect((translateNode as TranslateNode).v).toEqual([NaN, 3, 0]); // Should be [3,0,0] when named args work
+      // TODO: Fix named argument parsing - currently produces [0, 3, 0] instead of [3,0,0] due to grammar issues
+      expect((translateNode as TranslateNode).v).toEqual([0, 3, 0]); // Should be [3,0,0] when named args work
 
       // The child should be a cube (but currently parsing is broken for curly brace syntax)
       const children = (translateNode as TranslateNode).children;

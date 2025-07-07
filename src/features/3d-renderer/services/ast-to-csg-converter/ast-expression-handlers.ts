@@ -15,6 +15,7 @@ import type {
   FunctionCallNode,
   IdentifierExpressionNode,
   LiteralNode,
+  ModuleParameter,
   ParenthesizedExpressionNode,
   SpecialVariableNode,
   UnaryExpressionNode,
@@ -23,7 +24,7 @@ import type {
 
 const logger = createLogger('ASTExpressionHandlers');
 
-interface NodeWithParameters extends ASTNode {
+interface NodeWithParameters {
   parameters: ModuleParameter[];
 }
 
@@ -90,6 +91,10 @@ function isFunctionCallNode(node: ASTNode): node is FunctionCallNode {
 
 function isParameterNode(node: ASTNode): node is ASTNode & { name: string; value: ASTNode } {
   return 'name' in node && 'value' in node && typeof node.name === 'string';
+}
+
+function isModuleParameter(param: ModuleParameter): param is ModuleParameter {
+  return typeof param.name === 'string';
 }
 
 /**
@@ -394,20 +399,20 @@ export function extractParameters(node: ASTNode): Record<string, number | null> 
     const parameters = (node as NodeWithParameters).parameters; // Use the new interface
 
     for (const param of parameters) {
-      if (isParameterNode(param)) {
+      if (isModuleParameter(param)) {
         const name = param.name;
         let value: number | null = null;
 
-        // param.value is ParameterValue, which can be ASTNode or primitive
-        if (typeof param.value === 'object' && param.value !== null && 'type' in param.value) {
+        // param.defaultValue is ParameterValue, which can be ASTNode or primitive
+        if (typeof param.defaultValue === 'object' && param.defaultValue !== null && 'type' in param.defaultValue) {
           // It's an ASTNode
-          value = extractValue(param.value as ASTNode);
-        } else if (typeof param.value === 'number') {
-          value = param.value;
-        } else if (typeof param.value === 'boolean') {
-          value = param.value ? 1 : 0;
-        } else if (typeof param.value === 'string') {
-          const numValue = parseFloat(param.value);
+          value = extractValue(param.defaultValue as ASTNode);
+        } else if (typeof param.defaultValue === 'number') {
+          value = param.defaultValue;
+        } else if (typeof param.defaultValue === 'boolean') {
+          value = param.defaultValue ? 1 : 0;
+        } else if (typeof param.defaultValue === 'string') {
+          const numValue = parseFloat(param.defaultValue);
           if (!Number.isNaN(numValue)) {
             value = numValue;
           }

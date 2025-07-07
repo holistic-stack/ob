@@ -101,7 +101,8 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    */
   constructor(
     sourceCode: string,
-    protected override errorHandler: ErrorHandler
+    protected override errorHandler: ErrorHandler,
+    private variableScope: Map<string, ast.ParameterValue>
   ) {
     super(sourceCode, errorHandler);
   }
@@ -172,6 +173,10 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           location: getLocation(node), // Use the function call location
         };
         assignments.push(assignment);
+        // Add the assignment to the variable scope
+        if (arg.value) {
+          this.variableScope.set(variableIdentifierNode.name, arg.value);
+        }
       }
     }
 
@@ -924,6 +929,9 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       location: getLocation(node), // Location of the whole "x = val"
     };
 
+    // Add the assignment to the variable scope
+    this.variableScope.set(variableIdentifierNode.name, value.value);
+
     this.safeLog(
       'info',
       'Assignment node created successfully',
@@ -1045,6 +1053,9 @@ export class AssignStatementVisitor extends BaseASTVisitor {
         location: getLocation(node),
       };
     }
+
+    // Add the assignment to the variable scope
+    this.variableScope.set(variableIdentifierNode.name, value.value);
 
     return {
       type: 'assignment',

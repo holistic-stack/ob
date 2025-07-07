@@ -59,7 +59,7 @@ export interface ComponentLogger {
  */
 const defaultConfig: LoggerConfig = {
   name: 'OpenSCAD',
-  minLevel: 4, // Show INFO logs and above (INFO, WARN, ERROR, FATAL)
+  minLevel: 3, // Show DEBUG logs and above (DEBUG, INFO, WARN, ERROR, FATAL)
   pretty: import.meta.env.MODE !== 'production',
   hideLogPosition: import.meta.env.MODE === 'production',
 };

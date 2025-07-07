@@ -9,8 +9,10 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
+import type { Result } from '../../../../shared/types/result.types.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import type { Mesh3D } from '../../types/renderer.types.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
 const logger = createLogger('ASTToCSGConverterRealWorldTest');
@@ -181,7 +183,7 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
             conversionTime: number;
           }
           const successfulConversions = conversionResults.filter(
-            (r: ConversionResult) => r.result.success
+            (r: { node: ASTNode; result: Result<Mesh3D, string>; }) => r.result.success
           );
 
           // For real-world constructs, the converter may not yet support all features

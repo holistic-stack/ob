@@ -91,17 +91,19 @@ async function testIntegrationServiceConcurrency(): Promise<void> {
   }
 
   // Verify the instance can perform operations
-  try {
-    const healthStatus = await firstInstance.getHealthStatus();
-    if (!healthStatus || typeof healthStatus !== 'object') {
-      throw new Error('Integration service health status check failed');
+  if (firstInstance) {
+    try {
+      const healthStatus = await firstInstance.getHealthStatus();
+      if (!healthStatus || typeof healthStatus !== 'object') {
+        throw new Error('Integration service health status check failed');
+      }
+    } catch (error) {
+      logger.warn('Health status check failed (may be expected in test environment):', error);
     }
-  } catch (error) {
-    logger.warn('Health status check failed (may be expected in test environment):', error);
-  }
 
-  logger.info('✅ MatrixIntegrationService concurrent access test passed');
-  await firstInstance.shutdown();
+    logger.info('✅ MatrixIntegrationService concurrent access test passed');
+    await firstInstance.shutdown();
+  }
 }
 
 /**
@@ -143,7 +145,9 @@ async function testRaceConditionScenario(): Promise<void> {
   logger.info('✅ Race condition scenario test passed');
 
   // Cleanup
-  await firstIntegration.shutdown();
+  if (firstIntegration) {
+    await firstIntegration.shutdown();
+  }
 }
 
 /**

@@ -368,10 +368,25 @@ export class BSPTreeNode implements BSPNodeData {
   /**
    * Build a BSP tree from a list of polygons
    */
-  build(polygons: PolygonData[]): Result<void, string> {
-    bspNodeLogger.debug(`Building BSP tree from ${polygons.length} polygons`);
+  build(polygons: PolygonData[], depth: number = 0): Result<void, string> {
+    bspNodeLogger.debug(`Building BSP tree from ${polygons.length} polygons at depth ${depth}`);
 
     try {
+      // Prevent stack overflow with recursion depth limit
+      if (depth > BSP_CONFIG.MAX_RECURSION_DEPTH) {
+        bspNodeLogger.warn(
+          `Recursion depth limit reached (${BSP_CONFIG.MAX_RECURSION_DEPTH}) in build, returning original polygons`
+        );
+        this.polygons.push(...polygons);
+        return success(undefined);
+      }
+
+      // Handle large polygon sets iteratively to prevent memory issues
+      if (polygons.length > BSP_CONFIG.MAX_POLYGONS_PER_NODE) {
+        bspNodeLogger.warn(`Large polygon set (${polygons.length}) in build, processing in chunks`);
+        return this.buildIteratively(polygons, depth);
+      }
+
       if (polygons.length === 0) {
         return success(undefined);
       }
@@ -380,7 +395,7 @@ export class BSPTreeNode implements BSPNodeData {
       const validPolygons = polygons.filter(isValidPolygon);
       if (validPolygons.length !== polygons.length) {
         bspNodeLogger.warn(
-          `Filtered out ${polygons.length - validPolygons.length} invalid polygons`
+          `Filtered out ${polygons.length - validPolygons.length} invalid polygons during build`
         );
       }
 
@@ -398,7 +413,7 @@ export class BSPTreeNode implements BSPNodeData {
 
       for (const polygon of validPolygons) {
         if (!this.plane) {
-          bspNodeLogger.warn('No plane defined for split operation');
+          bspNodeLogger.warn('No plane defined for split operation during build');
           continue;
         }
 
@@ -411,15 +426,14 @@ export class BSPTreeNode implements BSPNodeData {
 
       if (front.length > 0) {
         this.front ??= new BSPTreeNode();
-        const frontBuildResult = this.front.build(front);
+        const frontBuildResult = this.front.build(front, depth + 1);
         if (!frontBuildResult.success) return frontBuildResult;
       }
 
       if (back.length > 0) {
         this.back ??= new BSPTreeNode();
         if (this.back) {
-          this.back ??= new BSPTreeNode();
-          const backBuildResult = this.back.build(back);
+          const backBuildResult = this.back.build(back, depth + 1);
           if (!backBuildResult.success) return backBuildResult;
         }
       }
@@ -431,6 +445,30 @@ export class BSPTreeNode implements BSPNodeData {
       bspNodeLogger.error(errorMessage);
       return error(errorMessage);
     }
+  }
+
+  /**
+   * Iterative build implementation to prevent stack overflow
+   */
+  private buildIteratively(polygons: PolygonData[], depth: number): Result<void, string> {
+    const chunkSize = Math.floor(BSP_CONFIG.MAX_POLYGONS_PER_NODE / 2);
+    const results: PolygonData[] = [];
+
+    for (let i = 0; i < polygons.length; i += chunkSize) {
+      const chunk = polygons.slice(i, i + chunkSize);
+      const chunkResult = this.build(chunk, depth);
+
+      if (!chunkResult.success) {
+        return chunkResult;
+      }
+
+      // Collect polygons from the current node after building the chunk
+      results.push(...this.polygons);
+      this.polygons = []; // Clear polygons from current node after collecting
+    }
+
+    this.polygons = results; // Assign collected polygons back to the node
+    return success(undefined);
   }
 }
 

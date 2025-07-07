@@ -17,7 +17,6 @@ import { tryCatch } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   Mesh3D,
-  MeshMetadata,
   RendererProps,
   RenderingError,
   Scene3DConfig,

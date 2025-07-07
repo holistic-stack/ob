@@ -246,9 +246,13 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         );
 
         if (result.success && result.data) {
-          // Extract result and performance from enhanced matrix result
-          const resultData = result.data.result;
-          const performanceData = result.data.performance;
+          // The result.data is directly the mat4 matrix, not an enhanced result
+          const resultData = result.data;
+          const performanceData = {
+            executionTime: 0,
+            memoryUsed: 0,
+            cacheHit: false
+          }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
@@ -280,9 +284,14 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         const result = await matrixIntegrationRef.current.performRobustInversion(matrix);
 
         if (result.success && result.data) {
-          // Extract result and performance from enhanced matrix result
-          const resultData = result.data.result;
-          const performanceData = result.data.performance;
+          // Convert Matrix to mat4 for compatibility
+          const matrix = result.data;
+          const resultData = matrix.toArray() as mat4;
+          const performanceData = {
+            executionTime: 0,
+            memoryUsed: 0,
+            cacheHit: false
+          }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
           const errorMessage = result.success ? 'Matrix inversion failed' : result.error;
@@ -318,9 +327,13 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         );
 
         if (result.success && result.data) {
-          // Extract result and performance from enhanced matrix result
-          const resultData = result.data.result;
-          const performanceData = result.data.performance;
+          // The result.data is directly the Matrix3, not an enhanced result
+          const resultData = result.data;
+          const performanceData = {
+            executionTime: 0,
+            memoryUsed: 0,
+            cacheHit: false
+          }; // Default performance data
           return createSuccessState(resultData, performanceData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
@@ -355,7 +368,9 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
         );
 
         if (result.success) {
-          return createSuccessState(result.data);
+          // Ensure result.data is properly typed as EnhancedMatrixResult<T>[]
+          const resultData = (result.data || []) as EnhancedMatrixResult<T>[];
+          return createSuccessState(resultData);
         } else {
           return createErrorState(result.error ?? 'Unknown matrix operation error');
         }
@@ -391,21 +406,18 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
 
     const report = matrixIntegrationRef.current.getPerformanceReport();
 
-    // Extract data from the service report structure with proper type assertions
-    const telemetryData = (report?.telemetry as Record<string, unknown>) ?? {};
-    const cacheData = (report?.cache as Record<string, unknown>) ?? {};
-
+    // The report has the structure: { totalOperations, averageTime, cacheHitRate }
     return {
-      operationCount: (telemetryData.operationCount as number) ?? 0,
-      averageExecutionTime: (telemetryData.averageExecutionTime as number) ?? 0,
-      errorRate: (telemetryData.errorRate as number) ?? 0,
-      memoryUsage: (telemetryData.memoryUsage as number) ?? 0,
-      totalOperations: (telemetryData.totalOperations as number) ?? 0,
-      successfulOperations: (telemetryData.successfulOperations as number) ?? 0,
-      failedOperations: (telemetryData.failedOperations as number) ?? 0,
-      totalExecutionTime: (telemetryData.totalExecutionTime as number) ?? 0,
-      cacheHitRate: (cacheData.hitRate as number) ?? 0,
-      lastOperationTime: (telemetryData.lastOperationTime as number) ?? 0,
+      operationCount: report.totalOperations ?? 0,
+      averageExecutionTime: report.averageTime ?? 0,
+      errorRate: 0, // Not available in stub service
+      memoryUsage: 0, // Not available in stub service
+      totalOperations: report.totalOperations ?? 0,
+      successfulOperations: report.totalOperations ?? 0, // Assume all successful in stub
+      failedOperations: 0, // Not available in stub service
+      totalExecutionTime: (report.averageTime ?? 0) * (report.totalOperations ?? 0),
+      cacheHitRate: report.cacheHitRate ?? 0,
+      lastOperationTime: 0, // Not available in stub service
     };
   }, []);
 
@@ -435,7 +447,7 @@ export const useMatrixOperations = (): UseMatrixOperationsReturn => {
       // Convert ContainerHealthReport to HealthStatus
       const healthStatus: HealthStatus = {
         isHealthy: status.overall === 'healthy',
-        services: status.services.reduce(
+        services: (Array.isArray(status.services) ? status.services as Array<{ service: string; healthy: boolean }> : []).reduce(
           (acc: Record<string, boolean>, service: { service: string; healthy: boolean }) => {
             acc[service.service] = service.healthy;
             return acc;

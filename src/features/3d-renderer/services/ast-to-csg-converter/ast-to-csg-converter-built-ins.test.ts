@@ -262,18 +262,19 @@ describe('AST to CSG Converter - Built-ins Corpus Integration', () => {
             expect(node).toBeDefined();
             if (scenario.expectedNodeTypes[index]) {
               // Map expected node types to actual AST node types
-              let expectedPattern = scenario.expectedNodeTypes[index];
-              if (expectedPattern === 'assignment_statement') {
-                expectedPattern = 'assign';
-              } else if (expectedPattern === 'echo_statement') {
-                expectedPattern = 'echo';
-              } else if (expectedPattern === 'assert_statement') {
-                expectedPattern = 'assert';
+              const originalPattern = scenario.expectedNodeTypes[index];
+              let regexPattern: string = originalPattern;
+              if (originalPattern === 'assignment_statement') {
+                regexPattern = 'assign';
+              } else if (originalPattern === 'echo_statement') {
+                regexPattern = 'echo';
+              } else if (originalPattern === 'assert_statement') {
+                regexPattern = 'assert';
               }
 
               // Tree Sitter may parse some constructs as function_call or other statement types
               expect(node?.type).toMatch(
-                new RegExp(`${expectedPattern}|function_call|function_definition|module_definition`)
+                new RegExp(`${regexPattern}|function_call|function_definition|module_definition`)
               );
             }
           });

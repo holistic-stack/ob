@@ -18,6 +18,7 @@ import * as TreeSitter from 'web-tree-sitter';
 import type { Result } from '../../shared/types/result.types.js';
 import type { ASTNode } from './ast/ast-types.js';
 import { VisitorASTGenerator } from './ast/index.js';
+
 import { ErrorHandler } from './error-handling/index.js';
 import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-error-handler.js';
 
@@ -94,7 +95,8 @@ export class OpenscadParser {
   private parser: TreeSitter.Parser | null = null;
   private language: TreeSitter.Language | null = null;
   private previousTree: TreeSitter.Tree | null = null;
-  private errorHandler: IErrorHandler;
+  private errorHandler: ErrorHandler;
+  private simpleErrorHandler: SimpleErrorHandler;
   private astGenerators: Set<import('./ast/visitor-ast-generator.js').VisitorASTGenerator> =
     new Set();
   public isInitialized = false;
@@ -151,7 +153,25 @@ export class OpenscadParser {
    * @since 0.1.0
    */
   constructor(errorHandler?: IErrorHandler) {
-    this.errorHandler = errorHandler ?? new SimpleErrorHandler();
+    this.simpleErrorHandler = (errorHandler ?? new SimpleErrorHandler()) as SimpleErrorHandler;
+
+    this.errorHandler = new ErrorHandler({
+      throwErrors: false,
+      attemptRecovery: false,
+    });
+
+    // Override the logging methods to delegate to our SimpleErrorHandler
+    this.errorHandler.logInfo = (message: string) => {
+      this.simpleErrorHandler.logInfo(message);
+    };
+
+    this.errorHandler.logWarning = (message: string) => {
+      this.simpleErrorHandler.logWarning(message);
+    };
+
+    this.errorHandler.handleError = (error: Error) => {
+      this.simpleErrorHandler.handleError(error);
+    };
   }
 
   /**
@@ -270,12 +290,10 @@ export class OpenscadParser {
         return [];
       }
 
-      // Create visitor-based AST generator with adapter
-      const errorHandlerAdapter = this.createErrorHandlerAdapter();
       if (!this.language) {
         throw new Error('Parser language not initialized');
       }
-      const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
+      const astGenerator = new VisitorASTGenerator(cst, code, this.language, this.errorHandler);
 
       // Track the AST generator for proper cleanup
       this.astGenerators.add(astGenerator);
@@ -300,12 +318,10 @@ export class OpenscadParser {
         return { success: false, error: 'Failed to generate CST' };
       }
 
-      // Create visitor-based AST generator with adapter
-      const errorHandlerAdapter = this.createErrorHandlerAdapter();
       if (!this.language) {
         return { success: false, error: 'Parser language not initialized' };
       }
-      const astGenerator = new VisitorASTGenerator(cst, code, this.language, errorHandlerAdapter);
+      const astGenerator = new VisitorASTGenerator(cst, code, this.language, this.errorHandler);
 
       // Track the AST generator for proper cleanup
       this.astGenerators.add(astGenerator);
@@ -453,12 +469,11 @@ export class OpenscadParser {
       }
 
       // Generate new AST from updated CST
-      const errorHandlerAdapter = this.createErrorHandlerAdapter();
       const astGenerator = new VisitorASTGenerator(
         updatedTree,
         newCode,
         this.language,
-        errorHandlerAdapter
+        this.errorHandler as any
       );
 
       // Track the AST generator for proper cleanup
@@ -595,8 +610,8 @@ export class OpenscadParser {
    *
    * @since 0.1.0
    */
-  getErrorHandler(): IErrorHandler {
-    return this.errorHandler;
+  getErrorHandler(): SimpleErrorHandler {
+    return this.simpleErrorHandler;
   }
 
   /**
@@ -765,38 +780,5 @@ export class OpenscadParser {
     }
 
     return { row, column };
-  }
-
-  /**
-   * Create an ErrorHandler adapter from IErrorHandler
-   * This allows the enhanced parser to work with the visitor system
-   */
-  private createErrorHandlerAdapter(): ErrorHandler {
-    const adapter = new ErrorHandler({
-      throwErrors: false,
-      attemptRecovery: false,
-    });
-
-    // Override the logging methods to delegate to our IErrorHandler
-    const originalLogInfo = adapter.logInfo.bind(adapter);
-    const originalLogWarning = adapter.logWarning.bind(adapter);
-    const originalHandleError = adapter.handleError.bind(adapter);
-
-    adapter.logInfo = (message: string) => {
-      this.errorHandler.logInfo(message);
-      originalLogInfo(message);
-    };
-
-    adapter.logWarning = (message: string) => {
-      this.errorHandler.logWarning(message);
-      originalLogWarning(message);
-    };
-
-    adapter.handleError = (error: Error) => {
-      this.errorHandler.handleError(error);
-      originalHandleError(error);
-    };
-
-    return adapter;
   }
 }

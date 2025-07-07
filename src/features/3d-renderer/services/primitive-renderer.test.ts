@@ -19,7 +19,7 @@ vi.mock('./ast-to-csg-converter/ast-to-csg-converter.js', () => ({
       cylinder: 'CylinderGeometry',
     };
 
-    const geometryType = geometryTypeMap[node.type] || 'BoxGeometry';
+    const geometryType = geometryTypeMap[node.type as keyof typeof geometryTypeMap] || 'BoxGeometry';
 
     return {
       success: true,
@@ -149,7 +149,7 @@ vi.mock('three', async () => {
     return geometry;
   }
 
-  function mockMeshBasicMaterial(params = {}) {
+  function mockMeshBasicMaterial(params: any = {}) {
     const material = Object.create(threeModule.Material.prototype);
     Object.defineProperties(material, {
       type: { value: 'MeshBasicMaterial', enumerable: true, configurable: true },
@@ -171,7 +171,7 @@ vi.mock('three', async () => {
     return material;
   }
 
-  function mockMeshStandardMaterial(params = {}) {
+  function mockMeshStandardMaterial(params: any = {}) {
     const material = Object.create(threeModule.Material.prototype);
     Object.defineProperties(material, {
       type: { value: 'MeshStandardMaterial', enumerable: true, configurable: true },
@@ -302,7 +302,7 @@ vi.mock('three', async () => {
       getCenter: vi.fn().mockReturnValue({ x: 0.5, y: 0.5, z: 0.5 }),
     })),
     MathUtils: {
-      degToRad: (degrees) => degrees * (Math.PI / 180),
+      degToRad: (degrees: number) => degrees * (Math.PI / 180),
     },
     FrontSide: 0,
     DoubleSide: 2,
@@ -672,7 +672,7 @@ describe('Primitive Renderer Service', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh.geometry.type).toBe('BoxGeometry');
-        expect(result.data.mesh.material.type).toBe('MeshStandardMaterial');
+        expect((result.data.mesh.material as any).type).toBe('MeshStandardMaterial');
         expect(result.data.metadata.nodeType).toBe('cube');
         expect(result.data.metadata.triangleCount).toBeGreaterThan(0);
         expect(result.data.metadata.vertexCount).toBeGreaterThan(0);

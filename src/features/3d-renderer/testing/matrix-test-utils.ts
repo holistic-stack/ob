@@ -5,7 +5,7 @@
  * and numerical accuracy testing following bulletproof-react architecture.
  */
 
-import { Matrix, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 import { Matrix4 } from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
@@ -109,25 +109,15 @@ export class MatrixTestDataGenerator {
    * Generate singular matrix (determinant = 0)
    */
   generateSingularMatrix(): mat4 {
-    const result = mat4.create();
-    // Create matrix with zero determinant by making rows dependent
-    result[0] = 1;
-    result[4] = 2;
-    result[8] = 3;
-    result[12] = 4;
-    result[1] = 2;
-    result[5] = 4;
-    result[9] = 6;
-    result[13] = 8;
-    result[2] = 0;
-    result[6] = 0;
-    result[10] = 0;
-    result[14] = 0;
-    result[3] = 0;
-    result[7] = 0;
-    result[11] = 0;
-    result[15] = 1;
-    return result;
+    // Create matrix with zero determinant by setting diagonal elements to 0
+    // This creates an upper triangular matrix with zeros on the diagonal
+    // Using fromValues to be explicit about all matrix elements
+    return mat4.fromValues(
+      0, 1, 2, 3, // Column 0: m00=0 (diagonal), m10=1, m20=2, m30=3
+      0, 0, 4, 5, // Column 1: m01=0, m11=0 (diagonal), m21=4, m31=5
+      0, 0, 0, 6, // Column 2: m02=0, m12=0, m22=0 (diagonal), m32=6
+      0, 0, 0, 0  // Column 3: m03=0, m13=0, m23=0, m33=0 (diagonal)
+    );
   }
 
   /**
@@ -157,7 +147,7 @@ export class MatrixTestDataGenerator {
    */
   generateEdgeCases(): {
     name: string;
-    matrix: Matrix;
+    matrix: mat4;
     expectedBehavior: 'success' | 'warning' | 'error';
   }[] {
     if (!this.config.includeEdgeCases) {
@@ -167,39 +157,52 @@ export class MatrixTestDataGenerator {
     return [
       {
         name: 'Very large values',
-        matrix: Matrix.ones(3, 3).mul(1e10),
+        matrix: mat4.fromValues(
+          1e10, 0, 0, 0,
+          0, 1e10, 0, 0,
+          0, 0, 1e10, 0,
+          0, 0, 0, 1e10
+        ),
         expectedBehavior: 'warning',
       },
       {
         name: 'Very small values',
-        matrix: Matrix.ones(3, 3).mul(1e-10),
+        matrix: mat4.fromValues(
+          1e-10, 0, 0, 0,
+          0, 1e-10, 0, 0,
+          0, 0, 1e-10, 0,
+          0, 0, 0, 1e-10
+        ),
         expectedBehavior: 'warning',
       },
       {
         name: 'Mixed scale values',
-        matrix: new Matrix([
-          [1e10, 1, 1],
-          [1, 1e-10, 1],
-          [1, 1, 1],
-        ]),
+        matrix: mat4.fromValues(
+          1e10, 0, 0, 0,
+          0, 1e-10, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1
+        ),
         expectedBehavior: 'warning',
       },
       {
         name: 'Near-zero determinant',
-        matrix: new Matrix([
-          [1, 2, 3],
-          [2, 4, 6],
-          [3, 6, 9.000001],
-        ]),
+        matrix: mat4.fromValues(
+          1, 2, 3, 0,
+          2, 4, 6, 0,
+          3, 6, 9.000001, 0,
+          0, 0, 0, 1
+        ),
         expectedBehavior: 'warning',
       },
       {
         name: 'Exactly singular',
-        matrix: new Matrix([
-          [1, 2, 3],
-          [2, 4, 6],
-          [3, 6, 9],
-        ]),
+        matrix: mat4.fromValues(
+          1, 2, 3, 0,
+          2, 4, 6, 0,
+          3, 6, 9, 0,
+          0, 0, 0, 0
+        ),
         expectedBehavior: 'error',
       },
     ];

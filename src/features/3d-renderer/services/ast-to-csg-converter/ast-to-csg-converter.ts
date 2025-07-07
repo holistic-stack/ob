@@ -33,6 +33,7 @@ import type {
   MirrorNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
+  ParameterValue,
   ParenthesizedExpressionNode,
   RotateExtrudeNode,
   RotateNode,
@@ -790,6 +791,160 @@ const convertFunctionCallNode = async (
 };
 
 /**
+ * Extract parameters from a module instantiation node
+ */
+const extractParametersFromModuleInstantiation = (node: ModuleInstantiationNode): Record<string, ParameterValue> => {
+  const params: Record<string, ParameterValue> = {};
+
+  if (node.args && Array.isArray(node.args)) {
+    for (const arg of node.args) {
+      if (arg.name && arg.value !== undefined) {
+        // Named parameter: name=value
+        params[arg.name] = arg.value;
+      } else if (arg.value !== undefined) {
+        // Positional parameter - use first one for simple cases
+        if (!params._firstParam) {
+          params._firstParam = arg.value;
+        }
+      }
+    }
+  }
+
+  return params;
+};
+
+/**
+ * Convert ModuleInstantiationNode to CubeNode structure
+ */
+const moduleInstantiationToCubeNode = (node: ModuleInstantiationNode): CubeNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'cube',
+    size: params.size || params._firstParam || 1,
+    center: Boolean(params.center),
+    location: node.location,
+  } as CubeNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to SphereNode structure
+ */
+const moduleInstantiationToSphereNode = (node: ModuleInstantiationNode): SphereNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'sphere',
+    radius: Number(params.r || params.radius || params._firstParam || 1),
+    diameter: Number(params.d || params.diameter),
+    location: node.location,
+  } as SphereNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to CylinderNode structure
+ */
+const moduleInstantiationToCylinderNode = (node: ModuleInstantiationNode): CylinderNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'cylinder',
+    h: Number(params.h || params.height || params._firstParam || 1),
+    r: Number(params.r || params.radius),
+    r1: Number(params.r1),
+    r2: Number(params.r2),
+    d: Number(params.d || params.diameter),
+    d1: Number(params.d1),
+    d2: Number(params.d2),
+    center: Boolean(params.center),
+    location: node.location,
+  } as CylinderNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to TranslateNode structure
+ */
+const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): TranslateNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'translate',
+    v: params.v || params.vector || params._firstParam || [0, 0, 0],
+    children: node.children || [],
+    location: node.location,
+  } as TranslateNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to RotateNode structure
+ */
+const moduleInstantiationToRotateNode = (node: ModuleInstantiationNode): RotateNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'rotate',
+    a: params.a || params.angle || params._firstParam || 0,
+    v: params.v || params.vector || [0, 0, 1],
+    children: node.children || [],
+    location: node.location,
+  } as RotateNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to ScaleNode structure
+ */
+const moduleInstantiationToScaleNode = (node: ModuleInstantiationNode): ScaleNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'scale',
+    v: params.v || params.factor || params._firstParam || 1,
+    children: node.children || [],
+    location: node.location,
+  } as ScaleNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to MirrorNode structure
+ */
+const moduleInstantiationToMirrorNode = (node: ModuleInstantiationNode): MirrorNode => {
+  const params = extractParametersFromModuleInstantiation(node);
+  return {
+    type: 'mirror',
+    v: params.v || params.vector || params._firstParam || [1, 0, 0],
+    children: node.children || [],
+    location: node.location,
+  } as MirrorNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to UnionNode structure
+ */
+const moduleInstantiationToUnionNode = (node: ModuleInstantiationNode): UnionNode => {
+  return {
+    type: 'union',
+    children: node.children || [],
+    location: node.location,
+  } as UnionNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to IntersectionNode structure
+ */
+const moduleInstantiationToIntersectionNode = (node: ModuleInstantiationNode): IntersectionNode => {
+  return {
+    type: 'intersection',
+    children: node.children || [],
+    location: node.location,
+  } as IntersectionNode;
+};
+
+/**
+ * Convert ModuleInstantiationNode to DifferenceNode structure
+ */
+const moduleInstantiationToDifferenceNode = (node: ModuleInstantiationNode): DifferenceNode => {
+  return {
+    type: 'difference',
+    children: node.children || [],
+    location: node.location,
+  } as DifferenceNode;
+};
+
+/**
  * Convert module instantiation node by extracting module name and routing to appropriate converter
  */
 const convertModuleInstantiationNode = async (
@@ -820,11 +975,11 @@ const convertModuleInstantiationNode = async (
   switch (moduleName) {
     // 3D primitives
     case 'cube':
-      return convertCubeToMesh(node as CubeNode, material);
+      return convertCubeToMesh(moduleInstantiationToCubeNode(node), material);
     case 'sphere':
-      return convertSphereToMesh(node as SphereNode, material);
+      return convertSphereToMesh(moduleInstantiationToSphereNode(node), material);
     case 'cylinder':
-      return convertCylinderToMesh(node as CylinderNode, material);
+      return convertCylinderToMesh(moduleInstantiationToCylinderNode(node), material);
 
     // 2D primitives
     case 'circle':
@@ -838,39 +993,39 @@ const convertModuleInstantiationNode = async (
 
     // Transformations
     case 'translate':
-      return await convertTranslateNode(node as TranslateNode, material, convertASTNodeToMesh);
+      return await convertTranslateNode(moduleInstantiationToTranslateNode(node), material, convertASTNodeToMesh);
     case 'rotate':
-      return await convertRotateNode(node as RotateNode, material, convertASTNodeToMesh);
+      return await convertRotateNode(moduleInstantiationToRotateNode(node), material, convertASTNodeToMesh);
     case 'scale':
-      return await convertScaleNode(node as ScaleNode, material, convertASTNodeToMesh);
+      return await convertScaleNode(moduleInstantiationToScaleNode(node), material, convertASTNodeToMesh);
     case 'mirror':
-      return await convertMirrorNode(node as MirrorNode, material, convertASTNodeToMesh);
+      return await convertMirrorNode(moduleInstantiationToMirrorNode(node), material, convertASTNodeToMesh);
 
     // Extrusions
     case 'linear_extrude':
       return await convertLinearExtrudeNode(
-        node as LinearExtrudeNode,
+        node, // ExtrusionNode type accepts ModuleInstantiationNode
         material,
         convertASTNodeToMesh
       );
     case 'rotate_extrude':
       return await convertRotateExtrudeNodeFromConverter(
-        node as RotateExtrudeNode,
+        node, // ExtrusionNode type accepts ModuleInstantiationNode
         material,
         convertASTNodeToMesh
       );
 
     // Boolean operations
     case 'union':
-      return await convertUnionNode(node as UnionNode, material, convertASTNodeToMesh);
+      return await convertUnionNode(moduleInstantiationToUnionNode(node), material, convertASTNodeToMesh);
     case 'intersection':
       return await convertIntersectionNode(
-        node as IntersectionNode,
+        moduleInstantiationToIntersectionNode(node),
         material,
         convertASTNodeToMesh
       );
     case 'difference':
-      return await convertDifferenceNode(node as DifferenceNode, material, convertASTNodeToMesh);
+      return await convertDifferenceNode(moduleInstantiationToDifferenceNode(node), material, convertASTNodeToMesh);
 
     // Import and other operations
     case 'import':
@@ -1324,7 +1479,6 @@ const convertASTNodeToMesh = async (
     case 'function_definition':
     case 'specialVariableAssignment':
     case 'children':
-    case 'function_call':
     case 'error': {
       // For now, create a placeholder empty mesh for unsupported node types
       logger.warn(`Node type '${node.type}' not fully supported for CSG conversion`);
@@ -1392,7 +1546,7 @@ export const convertASTNodeToCSG = async (
               nodeId: createNodeId(`csg-${node.type}-${index}`),
               nodeType: createNodeType(node.type),
               depth: 0,
-              parentId: createNodeId('root') as NodeId | undefined,
+              parentId: createNodeId('root'),
               childrenIds: [],
               size: 1,
               complexity: 1,
@@ -1551,7 +1705,7 @@ export const convertASTNodesToCSGUnion = async (
         nodeId: createNodeId(`csg-union-${Date.now()}`),
         nodeType: createNodeType('union'),
         depth: 0,
-        parentId: undefined as NodeId | undefined,
+        parentId: createNodeId('root'),
         childrenIds: [],
         size: 1,
         complexity: 1,

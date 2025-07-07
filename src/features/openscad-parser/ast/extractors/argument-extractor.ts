@@ -190,7 +190,8 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
 function convertNodeToParameterValue(
   node: TSNode,
   errorHandler?: ErrorHandler,
-  sourceCode: string = ''
+  sourceCode: string = '',
+  variableScope?: Map<string, ast.ParameterValue>
 ): ast.ParameterValue | undefined {
   // Use enhanced value extraction if error handler is available
   if (errorHandler) {
@@ -276,7 +277,8 @@ function convertNodeToParameterValue(
 export function extractArguments(
   argsNode: TSNode,
   errorHandler?: ErrorHandler,
-  sourceCode?: string
+  sourceCode?: string,
+  variableScope?: Map<string, ast.ParameterValue>
 ): ast.Parameter[] {
   const nodeText = getNodeText(argsNode, sourceCode);
   // Detect Tree-sitter memory corruption for empty argument lists
@@ -364,7 +366,7 @@ export function extractArguments(
       ) {
         // Handle direct value nodes (positional arguments)
         const _childText = getNodeText(child, sourceCode);
-        const value = convertNodeToParameterValue(child, errorHandler, sourceCode);
+        const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode, variableScope);
         if (value !== undefined) {
           args.push({ name: undefined, value }); // Positional argument
         }
@@ -475,7 +477,8 @@ export function extractArguments(
 function extractArgument(
   argNode: TSNode,
   errorHandler?: ErrorHandler,
-  sourceCode?: string
+  sourceCode?: string,
+  variableScope?: Map<string, ast.ParameterValue>
 ): ast.Parameter | null {
   const nodeText = getNodeText(argNode, sourceCode);
   // Detect Tree-sitter memory corruption patterns
@@ -511,7 +514,7 @@ function extractArgument(
 
     if (identifierNode && valueNode) {
       const name = getNodeText(identifierNode, sourceCode);
-      const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode);
+      const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode, variableScope);
       if (value !== undefined) {
         return { name, value };
       }
@@ -580,7 +583,7 @@ function extractArgument(
     const valueNode = argNode.namedChild(0);
     if (valueNode) {
       // Extract the value
-      const value = extractValue(valueNode, sourceCode);
+      const value = extractValue(valueNode, sourceCode, variableScope);
       if (!value) {
         return null;
       }
@@ -830,7 +833,7 @@ function extractVectorLiteral(vectorNode: TSNode, sourceCode: string = ''): ast.
     const elementNode = vectorNode.namedChild(i);
     if (elementNode) {
       // Ensure child exists
-      const value = extractValue(elementNode, sourceCode);
+      const value = extractValue(elementNode, sourceCode, variableScope);
       if (value) {
         values.push(value);
       }

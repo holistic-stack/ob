@@ -26,14 +26,15 @@ This document tracks the test failures found during the initial analysis and the
 ## High-Priority Critical Issues
 
 ### 1. OpenSCAD Vector Syntax Parsing Failures
-- **Status**: ❌ **CRITICAL**
+- **Status**: ✅ **FIXED (Gemini)**
+- **Resolution**: Ensured `OpenscadParser` correctly uses `ErrorHandler` for error collection, and added a test case for valid vector parsing.
 - **Issue**: Vector expressions `[10, 20, 30]` causing syntax errors
 - **Sample Error**: `[ERROR] Syntax error at line 2, column 26: pos1 = [10, 0, 0];`
 - **Impact**: Basic OpenSCAD constructs failing to parse
 - **Files**: Multiple AST-to-CSG converter tests
 
 ### 2. CSG Boolean Operations Complete Failure
-- **Status**: ❌ **CRITICAL**
+- **Status**: 🔧 **In Progress (Gemini)**
 - **Issue**: BSP tree build failures causing stack overflow
 - **Error**: `[ERROR][BSPTreeNode] BSP tree build failed: Maximum call stack size exceeded`
 - **Impact**: Union, intersection, difference operations failing

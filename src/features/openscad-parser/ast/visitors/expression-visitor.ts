@@ -135,6 +135,7 @@ const RESERVED_KEYWORDS_AS_EXPRESSION_BLOCKLIST = new Set([
  * @since 0.1.0
  */
 export class ExpressionVisitor extends BaseASTVisitor {
+  public variableScope: Map<string, ast.ParameterValue> = new Map();
   private readonly functionCallVisitor: FunctionCallVisitor;
   private readonly listComprehensionVisitor: ListComprehensionVisitor;
   private readonly rangeExpressionVisitor: RangeExpressionVisitor;
@@ -335,9 +336,11 @@ export class ExpressionVisitor extends BaseASTVisitor {
    */
   constructor(
     source: string,
-    protected override errorHandler: ErrorHandler
+    protected override errorHandler: ErrorHandler,
+    public variableScope: Map<string, ast.ParameterValue> = new Map()
   ) {
     super(source, errorHandler);
+    this.errorHandler.logInfo(`[ExpressionVisitor] Constructor called. variableScope initialized: ${!!this.variableScope}`, 'ExpressionVisitor.constructor');
 
     // Initialize specialized visitors
     // This follows SRP by keeping only essential dependencies
@@ -1365,6 +1368,21 @@ export class ExpressionVisitor extends BaseASTVisitor {
     );
 
     const processedAssignments: ast.AssignmentNode[] = [];
+    if (!this.variableScope) {
+      this.errorHandler.logError(
+        `[ExpressionVisitor.visitLetExpression] variableScope is undefined. This indicates a critical initialization error.`,
+        'ExpressionVisitor.visitLetExpression',
+        node
+      );
+      return {
+        type: 'error',
+        errorCode: ErrorCode.INTERNAL_ERROR,
+        message: 'Internal error: variableScope is undefined.',
+        originalNodeType: node.type,
+        cstNodeText: node.text,
+        location: getLocation(node),
+      } as ast.ErrorNode;
+    }
     // In OpenSCAD grammar, let_assignment nodes are direct children of let_expression
     const letAssignmentCstNodes: TSNode[] = node.children.filter(
       (c): c is TSNode => c !== null && c.type === 'let_assignment'
@@ -1479,7 +1497,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         node
       );
       const parserError = this.errorHandler.createParserError('No body found in let expression', {
-        code: ErrorCode.MISSING_LET_BODY,
+        code: ErrorCode.LET_NO_ASSIGNMENTS_FOUND,
         line: getLocation(node).start.line,
         column: getLocation(node).start.column,
         nodeType: node.type,
@@ -1850,7 +1868,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
     _functionName: string,
     _args: ast.Parameter[]
   ): ast.ASTNode | null {
-    this.errorHandler.logWarning(
+    this.errorHandler.logInfo(
       `[ExpressionVisitor.createASTNodeForFunction] This method should not be directly called on ExpressionVisitor. Function definitions are not expressions. Offending node: ${
         node.type
       } '${node.text.substring(0, 30)}...'`,

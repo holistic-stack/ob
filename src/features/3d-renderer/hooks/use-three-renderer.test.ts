@@ -119,15 +119,22 @@ const mockThreeRendererStore = {
   error: null,
   meshes: [],
   metrics: {
+    // PerformanceMetrics
+    fps: 60,
+    frameTime: 16.67,
     renderTime: 0,
-    parseTime: 0,
     memoryUsage: 0,
-    peakMemoryUsage: 0,
-    throughput: 0,
-    meshCount: 0,
     triangleCount: 0,
-    vertexCount: 0,
     drawCalls: 0,
+    // OperationMetrics
+    executionTime: 0,
+    cpuTime: 0,
+    throughput: 0,
+    errorRate: 0,
+    cacheHitRate: 0,
+    // RenderingMetrics specific
+    meshCount: 0,
+    vertexCount: 0,
     textureMemory: 0,
     bufferMemory: 0,
   },
@@ -135,6 +142,7 @@ const mockThreeRendererStore = {
   renderAST: vi.fn(),
   clearScene: vi.fn(),
   updateCamera: vi.fn(),
+  updateCameraFromShared: vi.fn(),
   resetCamera: vi.fn(),
   takeScreenshot: vi.fn().mockResolvedValue('data:image/png;base64,mock-image-data'),
   updateMetrics: vi.fn(),
@@ -280,25 +288,24 @@ describe('useThreeRenderer Hook (Memory-Optimized)', () => {
       expect(result.current.error).toBeNull();
       expect(result.current.meshes).toEqual([]);
       expect(result.current.metrics).toEqual({
+        // PerformanceMetrics
+        fps: 60,
+        frameTime: 16.67,
         renderTime: 0,
-        parseTime: 0,
         memoryUsage: 0,
-        frameRate: 60,
-        meshCount: 0,
         triangleCount: 0,
-        vertexCount: 0,
         drawCalls: 0,
+        // OperationMetrics
+        executionTime: 0,
+        cpuTime: 0,
+        throughput: 0,
+        errorRate: 0,
+        cacheHitRate: 0,
+        // RenderingMetrics specific
+        meshCount: 0,
+        vertexCount: 0,
         textureMemory: 0,
         bufferMemory: 0,
-        cacheHits: 0,
-        cacheMisses: 0,
-        cpuTime: 0,
-        errorRate: 0,
-        ioOperations: 0,
-        networkRequests: 0,
-        operationId: 'initial',
-        peakMemoryUsage: 0,
-        throughput: 0,
       });
       expect(result.current.actions).toBeDefined();
     });

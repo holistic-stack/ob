@@ -348,7 +348,7 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
           `${params.type}-${Date.now()}` as import('../../../shared/types/ast.types.js').NodeId,
         nodeType: params.type as import('../../../shared/types/ast.types.js').NodeType,
         depth: 0,
-        parentId: undefined,
+        parentId: 'root' as import('../../../shared/types/ast.types.js').NodeId,
         childrenIds: [],
         size: 1,
         complexity: 1,

@@ -84,7 +84,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
   const cameraConfig = useAppStore(selectRenderingCamera) ?? DEFAULT_CAMERA;
   const config = DEFAULT_CONFIG;
 
-  const updateStoreCamera = useAppStore((state) => state.updateCamera);
+  const updateAppStoreCamera = useAppStore((state) => state.updateCamera);
 
   /**
    * Initialize Three.js renderer using Zustand store
@@ -126,9 +126,9 @@ export const useThreeRenderer = (): UseRendererReturn => {
   const updateCamera = useCallback(
     (newCamera: CameraConfig) => {
       storeUpdateCameraFromShared(newCamera);
-      updateStoreCamera(newCamera);
+      updateAppStoreCamera(newCamera);
     },
-    [storeUpdateCameraFromShared, updateStoreCamera] // store functions are stable from Zustand
+    [storeUpdateCameraFromShared, updateAppStoreCamera] // store functions are stable from Zustand
   );
 
   /**
@@ -136,8 +136,8 @@ export const useThreeRenderer = (): UseRendererReturn => {
    */
   const resetCamera = useCallback(() => {
     storeResetCamera();
-    updateStoreCamera(DEFAULT_CAMERA);
-  }, [storeResetCamera, updateStoreCamera]); // store functions are stable from Zustand
+    updateAppStoreCamera(DEFAULT_CAMERA);
+  }, [storeResetCamera, updateAppStoreCamera]); // store functions are stable from Zustand
 
   /**
    * Take screenshot using Zustand store
@@ -194,20 +194,23 @@ export const useThreeRenderer = (): UseRendererReturn => {
 
   /**
    * Use render loop for continuous updates (replaces complex useEffect patterns)
+   * Only initialize the frame loop when all Three.js objects are available
    */
-  useThreeFrame(scene || null, threeCamera || null, renderer || null, (_state, delta) => {
-    // Continuous render loop - no dependencies needed
-    // This replaces useEffect-based rendering logic
-    if (scene && threeCamera && renderer && meshes.length > 0) {
-      // Optional: Add mesh animations here
-      meshes.forEach((meshWrapper) => {
-        if (meshWrapper.mesh.rotation) {
-          // Example: subtle rotation animation
-          meshWrapper.mesh.rotation.y += delta * 0.1;
-        }
-      });
-    }
-  });
+  if (scene && threeCamera && renderer) {
+    useThreeFrame(scene, threeCamera, renderer, (_state, delta) => {
+      // Continuous render loop - no dependencies needed
+      // This replaces useEffect-based rendering logic
+      if (meshes.length > 0) {
+        // Optional: Add mesh animations here
+        meshes.forEach((meshWrapper) => {
+          if (meshWrapper.mesh.rotation) {
+            // Example: subtle rotation animation
+            meshWrapper.mesh.rotation.y += delta * 0.1;
+          }
+        });
+      }
+    });
+  }
 
   return {
     sceneRef,

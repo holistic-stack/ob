@@ -1323,8 +1323,9 @@ describe('PrimitiveVisitor', () => {
       expect((result as ast.CylinderNode).radius1).toBe(5);
       expect((result as ast.CylinderNode).radius2).toBe(5);
       expect((result as ast.CylinderNode).center).toBe(false);
+    });
 
-      it('should create a cylinder node with different top and bottom diameters', () => {
+    it('should create a cylinder node with different top and bottom diameters', () => {
         // Create mock number nodes
         const mockHeightNumberNode = {
           type: 'number',
@@ -2412,4 +2413,3 @@ describe('PrimitiveVisitor', () => {
 
     return null;
   }
-});

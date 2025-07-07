@@ -85,6 +85,13 @@ export class CSGCoreService implements CSGData {
    */
   static fromGeometry(geom: BufferGeometry, objectIndex?: number): Result<CSGCoreService, string> {
     logger.debug('Creating CSG from BufferGeometry');
+    logger.debug(`Geometry attributes: position=${!!geom.attributes.position}, normal=${!!geom.attributes.normal}, uv=${!!geom.attributes.uv}, index=${!!geom.index}`);
+    if (geom.attributes.position) {
+      logger.debug(`Position attribute: count=${geom.attributes.position.count}, itemSize=${geom.attributes.position.itemSize}`);
+    }
+    if (geom.attributes.normal) {
+      logger.debug(`Normal attribute: count=${geom.attributes.normal.count}, itemSize=${geom.attributes.normal.itemSize}`);
+    }
 
     try {
       const polys: PolygonData[] = [];
@@ -129,6 +136,8 @@ export class CSGCoreService implements CSGData {
           const nz = normalattr.array[vp + 2];
           const u = uvattr?.array?.[vt] ?? 0;
           const v = uvattr?.array?.[vt + 1] ?? 0;
+
+          logger.debug(`Vertex data: x=${x}, y=${y}, z=${z}, nx=${nx}, ny=${ny}, nz=${nz}, u=${u}, v=${v}`);
 
           const color = colorattr?.array
             ? new Vector(colorattr.array[vp], colorattr.array[vp + 1], colorattr.array[vp + 2])
@@ -196,14 +205,10 @@ export class CSGCoreService implements CSGData {
           `Matrix validation failed, using identity matrix: ${matrixValidationResult.error}`
         );
         mesh.matrix.identity();
-      } else if (matrixValidationResult.data.validation?.warnings.length) {
-        // Only log warnings if they're critical
-        const criticalWarnings = matrixValidationResult.data.validation.warnings.filter(
-          (warning: string) => !warning.includes('near-singular')
-        );
-        if (criticalWarnings.length > 0) {
-          logger.warn('Critical matrix validation warnings:', criticalWarnings);
-        }
+      } else if (matrixValidationResult.data) {
+        // Matrix validation successful - gl-matrix doesn't provide validation warnings
+        // Just log that validation passed
+        logger.debug('Matrix validation passed successfully');
       }
 
       const csgResult = CSGCoreService.fromGeometry(mesh.geometry, objectIndex);
@@ -225,8 +230,8 @@ export class CSGCoreService implements CSGData {
         );
 
         if (normalMatrixResult.success && normalMatrixResult.data) {
-          // Extract result from enhanced matrix result
-          const matrixData = normalMatrixResult.data.result;
+          // Use the matrix data directly - gl-matrix doesn't wrap in .result
+          const matrixData = normalMatrixResult.data;
           tmpm3.copy(matrixData);
         } else {
           // Use standard Three.js normal matrix computation as fallback
@@ -277,6 +282,7 @@ export class CSGCoreService implements CSGData {
     toMatrix: Matrix4
   ): Promise<Result<BufferGeometry, string>> {
     logger.debug('Converting CSG to BufferGeometry with enhanced matrix operations');
+    logger.debug(`CSG polygons count: ${csg.polygons.length}`);
 
     try {
       let triCount = 0;
@@ -395,7 +401,7 @@ export class CSGCoreService implements CSGData {
       }
 
       // Extract matrix data from enhanced result
-      const matrixData = inversionResult.data.result;
+      const matrixData = inversionResult.data;
       const robustInversionResult = await matrixIntegration.performRobustInversion(matrixData);
 
       if (!robustInversionResult.success) {
@@ -403,8 +409,8 @@ export class CSGCoreService implements CSGData {
       }
 
       // Convert back to Three.js Matrix4
-      const conversionService = matrixServiceContainer.getService('conversion');
-      const robustMatrixData = robustInversionResult.data.result;
+      const conversionService = matrixServiceContainer.getService('conversion') as any;
+      const robustMatrixData = robustInversionResult.data;
       const matrix4Result = await conversionService.convertMLMatrixToMatrix4(robustMatrixData, {
         useCache: true,
         validateInput: true,
@@ -414,7 +420,7 @@ export class CSGCoreService implements CSGData {
         return error(`Matrix4 conversion failed: ${matrix4Result.error}`);
       }
 
-      const inv = matrix4Result.data.result;
+      const inv = matrix4Result.data;
       geom.applyMatrix4(inv);
       geom.computeBoundingSphere();
       geom.computeBoundingBox();

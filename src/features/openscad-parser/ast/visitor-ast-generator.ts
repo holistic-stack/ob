@@ -170,13 +170,23 @@ export class VisitorASTGenerator {
     // Order matters here - PrimitiveVisitor should be first to handle primitive shapes
     const transformVisitor = new TransformVisitor(this.source, compositeVisitor, this.errorHandler); // Added errorHandler, used this.source
 
+    // Create a shared variable scope that can be used by multiple visitors
+    const sharedVariableScope = new Map<string, ast.ParameterValue>();
+
+    // Verify that the Map was created successfully
+    if (!sharedVariableScope || typeof sharedVariableScope.set !== 'function') {
+      throw new Error('Failed to create shared variable scope Map');
+    }
+
     // Create expression visitor first since other visitors may depend on it
     const expressionVisitor = new ExpressionVisitor(this.source, this.errorHandler);
+    // Set the shared scope on the expression visitor
+    expressionVisitor.variableScope = sharedVariableScope;
 
     // Add all visitors to the composite visitor
     // Order matters: definition visitors must come before instantiation visitors
     compositeVisitor.visitors = [
-      new AssignStatementVisitor(this.source, this.errorHandler), // Handle assign statements first
+      new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
       new AssertStatementVisitor(this.source, this.errorHandler),
       // Module and function definitions must be processed before instantiations
       new ModuleVisitor(this.source, this.errorHandler), // Process module definitions first
