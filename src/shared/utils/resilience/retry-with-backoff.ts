@@ -7,7 +7,7 @@
 
 import { createLogger } from '../../services/logger.service.js';
 import type { Result } from '../../types/result.types.js';
-import { error, success } from '../functional/result.js';
+import { error as createError, success } from '../functional/result.js';
 
 const logger = createLogger('RetryWithBackoff');
 
@@ -238,7 +238,7 @@ export async function retryWithBackoff<T>(
 
   // Check circuit breaker
   if (!checkCircuitBreaker(operationKey, finalConfig)) {
-    return error(`Circuit breaker is open for operation: ${operationName}`);
+    return createError(`Circuit breaker is open for operation: ${operationName}`);
   }
 
   let lastError: Error | null = null;
@@ -247,7 +247,7 @@ export async function retryWithBackoff<T>(
     try {
       // Check abort signal before each attempt
       if (config.abortSignal?.aborted) {
-        return error('Operation aborted');
+        return createError('Operation aborted');
       }
 
       logger.debug(
@@ -309,7 +309,7 @@ export async function retryWithBackoff<T>(
         await sleep(delay, config.abortSignal);
       } catch (_sleepError) {
         // Sleep was aborted
-        return error('Operation aborted during retry delay');
+        return createError('Operation aborted during retry delay');
       }
     }
   }
@@ -318,7 +318,7 @@ export async function retryWithBackoff<T>(
     ? `Operation ${operationName} failed: ${lastError.message}`
     : `Operation ${operationName} failed with unknown error`;
 
-  return error(errorMessage);
+  return createError(errorMessage);
 }
 
 /**

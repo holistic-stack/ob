@@ -155,7 +155,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
         this.errorHandler.logWarning(
           `[ForLoopVisitor.visitForStatement] Encountered unexpected child type '${child?.type}' in for_statement. Text: ${child?.text}`,
           'ForLoopVisitor.visitForStatement: unexpected_child_type',
-          child
+          child || undefined
         );
       }
     }
@@ -313,7 +313,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
           iteratorCstNode
         );
         return createErrorNodeInternal(
-          iteratorCstNode,
+          iteratorCstNode as TSNode,
           'Failed to visit iterator AST node.',
           'E_FOR_VISIT_FAIL_ITERATOR',
           iteratorCstNode?.type,
@@ -327,7 +327,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
           rangeCstNode
         );
         return createErrorNodeInternal(
-          rangeCstNode,
+          rangeCstNode as TSNode,
           'Failed to visit range AST node.',
           'E_FOR_VISIT_FAIL_RANGE',
           rangeCstNode?.type,
@@ -344,7 +344,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
           iteratorCstNode
         );
         return createErrorNodeInternal(
-          iteratorCstNode,
+          iteratorCstNode as TSNode,
           `Expected variable, got ${iteratorAstNode.type}`,
           'E_FOR_INVALID_ITERATOR_TYPE',
           iteratorAstNode.type,
@@ -361,7 +361,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
           rangeCstNode
         );
         return createErrorNodeInternal(
-          rangeCstNode,
+          rangeCstNode as TSNode,
           `Expected expression, got ${rangeAstNode.type}`,
           'E_FOR_INVALID_RANGE_TYPE',
           rangeAstNode.type,
@@ -539,7 +539,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
     for (let i = 0; i < blockNode.namedChildCount; i++) {
       const child = blockNode.namedChild(i);
       if (child) {
-        const statement = this.processStatement(child);
+        const statement = this.processStatement(child as TSNode | undefined);
         if (statement) {
           statements.push(statement);
         }
@@ -554,7 +554,11 @@ export class ForLoopVisitor extends BaseASTVisitor {
    * @param statementNode The statement CST node
    * @returns AST statement node or null
    */
-  private processStatement(statementNode: TSNode): ast.ASTNode | null {
+  private processStatement(statementNode: TSNode | null | undefined): ast.ASTNode | null {
+    if (!statementNode) {
+      return null;
+    }
+
     // Handle different types of statements that can appear in for loop bodies
     switch (statementNode.type) {
       case 'statement':
@@ -573,9 +577,16 @@ export class ForLoopVisitor extends BaseASTVisitor {
         const nameNode = statementNode.childForFieldName('name');
         const functionName = nameNode ? nameNode.text : 'unknown';
 
+        const identifierNode: ast.IdentifierNode = {
+          type: 'expression',
+          expressionType: 'identifier',
+          name: functionName,
+          location: getLocation(statementNode),
+        };
+
         return {
           type: 'module_instantiation',
-          name: functionName,
+          name: identifierNode,
           args: [], // Simplified for now
           children: [], // Simplified for now
           location: getLocation(statementNode),
@@ -677,7 +688,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
             arg.name !== null &&
             'cstNode' in arg.name &&
             (arg.name as ast.VariableNode & { cstNode?: TSNode }).cstNode
-            ? (arg.name as ast.VariableNode & { cstNode?: TSNode }).cstNode
+            ? (arg.name as ast.VariableNode & { cstNode?: TSNode }).cstNode || null
             : node, // Try to get more specific CST node
           `Invalid parameter name type: ${argNameType}`,
           'E_INVALID_PARAM_NAME_TYPE',

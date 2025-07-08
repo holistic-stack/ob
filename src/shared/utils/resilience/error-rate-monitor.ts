@@ -222,7 +222,8 @@ export class ErrorRateMonitor {
     // Remove error events for this operation type
     const _now = Date.now();
     for (let i = this.errorEvents.length - 1; i >= 0; i--) {
-      if (this.errorEvents[i].operationType === operationType) {
+      const event = this.errorEvents[i];
+      if (event && event.operationType === operationType) {
         this.errorEvents.splice(i, 1);
       }
     }
@@ -351,7 +352,8 @@ export class ErrorRateMonitor {
 
     // Remove old events
     for (let i = this.errorEvents.length - 1; i >= 0; i--) {
-      if (this.errorEvents[i].timestamp < cutoff) {
+      const event = this.errorEvents[i];
+      if (event && event.timestamp < cutoff) {
         this.errorEvents.splice(i, 1);
       }
     }

@@ -22,18 +22,25 @@ import { ExpressionVisitor } from '../expression-visitor.js';
  */
 export class IfElseVisitor extends BaseASTVisitor {
   private expressionVisitor: ExpressionVisitor;
-  protected errorHandler: ErrorHandler;
-  protected variableScope: Map<string, ast.ParameterValue>;
 
   constructor(
     sourceCode: string,
-    errorHandler: ErrorHandler,
-    variableScope: Map<string, ast.ParameterValue>
+    override errorHandler: ErrorHandler,
+    protected override variableScope: Map<string, ast.ParameterValue>
   ) {
     super(sourceCode, errorHandler, variableScope);
-    this.errorHandler = errorHandler;
-    this.variableScope = variableScope;
     this.expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler, variableScope);
+  }
+
+  protected createASTNodeForFunction(
+    node: TSNode,
+    functionName: string,
+    args: ast.Parameter[]
+  ): ast.ASTNode | null {
+    if (functionName === 'if') {
+      return this.createIfNode(node, args);
+    }
+    return null;
   }
 
   /**
@@ -41,7 +48,7 @@ export class IfElseVisitor extends BaseASTVisitor {
    * @param node The if statement node to visit
    * @returns The if AST node or null if the node cannot be processed
    */
-  visitIfStatement(node: TSNode): ast.IfNode | null {
+  override visitIfStatement(node: TSNode): ast.IfNode | null {
     // Extract condition
     const conditionNode = node.childForFieldName('condition');
     if (!conditionNode) {
@@ -159,7 +166,7 @@ export class IfElseVisitor extends BaseASTVisitor {
    * @param node The block node to visit
    * @returns An array of AST nodes representing the block's children
    */
-  private visitBlock(node: TSNode): ast.ASTNode[] {
+  public override visitBlock(node: TSNode): ast.ASTNode[] {
     const result: ast.ASTNode[] = [];
 
     // Process each child of the block

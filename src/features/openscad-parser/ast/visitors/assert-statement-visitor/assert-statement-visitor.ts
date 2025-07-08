@@ -130,21 +130,21 @@ export class AssertStatementVisitor extends BaseASTVisitor {
     level: 'info' | 'debug' | 'warning' | 'error',
     message: string,
     context?: string,
-    node?: unknown
+    node?: TSNode | ast.ASTNode
   ): void {
     if (this.errorHandler) {
       switch (level) {
         case 'info':
-          this.errorHandler.logInfo(message, context, node);
+          this.errorHandler.logInfo(message, context, node as unknown as TSNode);
           break;
         case 'debug':
-          this.errorHandler.logDebug(message, context, node);
+          this.errorHandler.logDebug(message, context, node as unknown as TSNode);
           break;
         case 'warning':
-          this.errorHandler.logWarning(message, context, node);
+          this.errorHandler.logWarning(message, context, node as unknown as TSNode);
           break;
         case 'error':
-          this.errorHandler.logError(message, context, node);
+          this.errorHandler.logError(message, context, node as unknown as TSNode);
           break;
       }
     }

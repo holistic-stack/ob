@@ -13,6 +13,7 @@ import { Logger } from '../../../error-handling/logger.js';
 import { Severity } from '../../../error-handling/types/error-types.js';
 import type * as ast from '../../ast-types.js';
 import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
+import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 
@@ -820,7 +821,14 @@ export class EchoStatementVisitor extends BaseASTVisitor {
   private extractCallArguments(node: TSNode): ast.ExpressionNode[] {
     // For now, return a simple representation
     // In a full implementation, this would parse the arguments properly
-    return [node.text];
+    return [
+      {
+        type: 'expression',
+        expressionType: 'literal',
+        value: node.text,
+        location: getLocation(node),
+      } as ast.LiteralNode,
+    ];
   }
 
   /**

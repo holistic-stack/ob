@@ -29,7 +29,7 @@ export interface BasePosition {
 export interface BaseSourceLocation {
   readonly start: BasePosition;
   readonly end: BasePosition;
-  readonly text?: string;
+  readonly text?: string | undefined;
 }
 
 /**

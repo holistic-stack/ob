@@ -201,9 +201,7 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
  * @category Visitors
  */
 export abstract class BaseASTVisitor implements ASTVisitor {
-  protected errorHandler: ErrorHandler;
   protected source: string;
-  protected variableScope: Map<string, ast.ParameterValue> = new Map();
 
   constructor(
     source: string,
@@ -211,8 +209,6 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     protected variableScope: Map<string, ast.ParameterValue>
   ) {
     this.source = source;
-    this.errorHandler = errorHandler;
-    this.variableScope = variableScope;
   }
 
   /**
@@ -352,9 +348,16 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         }
       }
 
+      const identifierNode: ast.IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: functionName,
+        location: getLocation(nameFieldNode),
+      };
+
       astNode = {
         type: 'module_instantiation',
-        name: functionName,
+        name: identifierNode,
         args: args, // These are the ast.Parameter[] converted earlier
         children: childrenNodes,
         location: getLocation(node),

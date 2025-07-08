@@ -257,14 +257,14 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
     const safeExpectedType = expectedType ?? '';
     const safeFound = found ?? '';
     if (this.canConvert(safeFound, safeExpectedType)) {
-      const safeValue = value ?? '';
+      const safeValue = typeof value === 'string' ? value : String(value ?? '');
       const convertedValue = this.convertValue(safeValue, safeFound, safeExpectedType);
       if (convertedValue !== null) {
         return this.replaceAtPosition(
           code,
           location.line,
           location.column,
-          safeValue,
+          String(safeValue),
           convertedValue
         );
       }
@@ -290,9 +290,11 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
     const convertRight = this.canConvert(rightType, commonType) && rightValue;
 
     if (convertLeft || convertRight) {
-      const left = convertLeft ? this.convertValue(leftValue, leftType, commonType) : leftValue;
+      const left = convertLeft
+        ? this.convertValue(String(leftValue), leftType, commonType)
+        : leftValue;
       const right = convertRight
-        ? this.convertValue(rightValue, rightType, commonType)
+        ? this.convertValue(String(rightValue), rightType, commonType)
         : rightValue;
 
       if (left !== null && right !== null) {
@@ -322,14 +324,14 @@ export class TypeMismatchStrategy extends BaseRecoveryStrategy {
     const safeExpectedType = expectedType ?? '';
     const safeFound = found ?? '';
     if (this.canConvert(safeFound, safeExpectedType)) {
-      const safeValue = value ?? '';
+      const safeValue = typeof value === 'string' ? value : String(value ?? '');
       const convertedValue = this.convertValue(safeValue, safeFound, safeExpectedType);
       if (convertedValue !== null) {
         return this.replaceAtPosition(
           code,
           location.line,
           location.column,
-          safeValue,
+          String(safeValue),
           convertedValue
         );
       }

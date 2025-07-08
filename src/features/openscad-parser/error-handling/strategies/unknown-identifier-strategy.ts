@@ -289,7 +289,7 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
     const scopesToCheck = [scopeKey, ''];
 
     for (const scope of scopesToCheck) {
-      const identifiers = this.scopedIdentifiers.get(scope) ?? [];
+      const identifiers = this.scopedIdentifiers.get(scope) ?? new Set<string>();
 
       for (const id of identifiers) {
         const parts = id.split(':', 2);

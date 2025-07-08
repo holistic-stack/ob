@@ -33,7 +33,7 @@
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-import { extractValue as extractParameterValue, extractValueEnhanced } from './value-extractor.js';
+import { extractValue as extractValueFromNode } from './value-extractor.js';
 
 /**
  * Extract text from source code using node position information.
@@ -193,13 +193,15 @@ function convertNodeToParameterValue(
   sourceCode: string = '',
   _variableScope?: Map<string, ast.ParameterValue>
 ): ast.ParameterValue | undefined {
-  // Use enhanced value extraction if error handler is available
-  if (errorHandler) {
-    return extractValueEnhanced(node, errorHandler, sourceCode);
+  // Extract value using the standard extraction function
+  const value = extractValueFromNode(node, sourceCode, _variableScope);
+
+  // Convert Value to ParameterValue
+  if (value) {
+    return convertValueToParameterValue(value);
   }
 
-  // Fall back to the original value-extractor function
-  return extractParameterValue(node, sourceCode);
+  return undefined;
 }
 
 /**

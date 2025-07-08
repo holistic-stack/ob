@@ -320,7 +320,11 @@ export class IntegrationTestSuite {
       }
 
       // Convert the first AST node (for simplicity in testing)
-      const result = await convertASTNodeToCSG(astNodes[0], 0);
+      const firstAstNode = astNodes[0];
+      if (!firstAstNode) {
+        return error('No valid AST node to convert');
+      }
+      const result = await convertASTNodeToCSG(firstAstNode, 0);
       return result;
     } catch (err) {
       return error(`CSG conversion failed: ${err instanceof Error ? err.message : String(err)}`);

@@ -1,4 +1,4 @@
-import type { TreeCursor } from 'web-tree-sitter';
+import type { Node, TreeCursor } from 'web-tree-sitter';
 
 /**
  * Represents a position in the source code.
@@ -209,8 +209,8 @@ export function findFirstChildOfType(cursor: TreeCursor, type: string): boolean 
  * @param cursor - The tree-sitter cursor
  * @returns Array of child nodes
  */
-export function getChildren(cursor: TreeCursor): TSNode[] {
-  const children: TSNode[] = [];
+export function getChildren(cursor: TreeCursor): Node[] {
+  const children: Node[] = [];
 
   if (!cursor.gotoFirstChild()) {
     cursor.gotoParent();

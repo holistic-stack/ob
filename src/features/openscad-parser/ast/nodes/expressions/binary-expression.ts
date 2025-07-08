@@ -1,4 +1,4 @@
-import type { NodeLocation } from '../../../../node-location.js';
+import type { NodeLocation } from '../../../node-location.js';
 import { Expression } from '../expression.js';
 
 type BinaryOperator =

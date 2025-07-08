@@ -100,7 +100,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler, variableScope);
+    super(source, errorHandler, variableScope ?? new Map());
   }
 
   /**
@@ -805,7 +805,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @returns The square node
    */
   private createSquareNode(node: TSNode, args: ast.Parameter[]): ast.SquareNode {
-    let size: ast.Vector2D | number = 1; // Default size
+    let size: number | ast.Vector2D = 1; // Default size
     let center = false; // Default center
 
     // Handle size parameter
@@ -816,7 +816,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (Array.isArray(sizeValue)) {
           if (sizeValue.length >= 2) {
             size = [sizeValue[0], sizeValue[1]] as ast.Vector2D;
-          } else if (sizeValue.length === 1) {
+          } else if (sizeValue.length === 1 && sizeValue[0] !== undefined) {
             size = sizeValue[0];
           }
         } else {
@@ -830,7 +830,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (Array.isArray(sizeValue)) {
           if (sizeValue.length >= 2) {
             size = [sizeValue[0], sizeValue[1]] as ast.Vector2D;
-          } else if (sizeValue.length === 1) {
+          } else if (sizeValue.length === 1 && sizeValue[0] !== undefined) {
             size = sizeValue[0];
           }
         } else {
@@ -912,10 +912,10 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     let text = ''; // Default text
     let size = 10; // Default size
     let font = 'Liberation Sans'; // Default font
-    let halign = 'left'; // Default horizontal alignment
-    let valign = 'baseline'; // Default vertical alignment
+    let halign: 'left' | 'center' | 'right' = 'left'; // Default horizontal alignment
+    let valign: 'top' | 'center' | 'baseline' | 'bottom' = 'baseline'; // Default vertical alignment
     let spacing = 1; // Default spacing
-    let direction = 'ltr'; // Default direction
+    let direction: 'ltr' | 'rtl' | 'ttb' | 'btt' = 'ltr'; // Default direction
     let language = 'en'; // Default language
     let script = 'latin'; // Default script
     let fn: number | undefined;
@@ -955,14 +955,14 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     const halignParam = args.find((arg) => arg.name === 'halign');
     if (halignParam) {
       if (typeof halignParam.value === 'string') {
-        halign = halignParam.value;
+        halign = halignParam.value as 'left' | 'center' | 'right';
       }
     }
 
     const valignParam = args.find((arg) => arg.name === 'valign');
     if (valignParam) {
       if (typeof valignParam.value === 'string') {
-        valign = valignParam.value;
+        valign = valignParam.value as 'top' | 'center' | 'baseline' | 'bottom';
       }
     }
 
@@ -977,7 +977,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     const directionParam = args.find((arg) => arg.name === 'direction');
     if (directionParam) {
       if (typeof directionParam.value === 'string') {
-        direction = directionParam.value;
+        direction = directionParam.value as 'ltr' | 'rtl' | 'ttb' | 'btt';
       }
     }
 

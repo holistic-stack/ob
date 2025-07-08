@@ -107,7 +107,7 @@ export class TransformVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler, variableScope);
+    super(source, errorHandler, variableScope ?? new Map());
   }
 
   /**
@@ -444,9 +444,29 @@ export class TransformVisitor extends BaseASTVisitor {
           const argValue = args[0]?.value;
 
           // Handle expression objects that wrap the actual value
-          let actualValue = argValue;
+          let actualValue:
+            | string
+            | number
+            | boolean
+            | ast.Vector2D
+            | ast.Vector3D
+            | ast.ExpressionNode
+            | ast.ErrorNode
+            | undefined = argValue;
           if (typeof argValue === 'object' && argValue !== null && 'value' in argValue) {
-            actualValue = (argValue as { value: unknown }).value;
+            actualValue = (
+              argValue as {
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | ast.Vector2D
+                  | ast.Vector3D
+                  | ast.ExpressionNode
+                  | ast.ErrorNode
+                  | undefined;
+              }
+            ).value;
           }
 
           if (typeof actualValue === 'string') {
@@ -486,7 +506,7 @@ export class TransformVisitor extends BaseASTVisitor {
 
         return {
           type: 'color',
-          c: colorValue, // Use 'c' instead of 'color' to match the interface definition
+          c: colorValue,
           children: [],
           location: getLocation(node),
         };
@@ -712,7 +732,12 @@ export class TransformVisitor extends BaseASTVisitor {
 
         return {
           type: 'module_instantiation',
-          name: 'import',
+          name: {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: 'import',
+            location: getLocation(node),
+          },
           args,
           children: [],
           location: getLocation(node),
@@ -751,7 +776,12 @@ export class TransformVisitor extends BaseASTVisitor {
 
         return {
           type: 'module_instantiation',
-          name: 'surface',
+          name: {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: 'surface',
+            location: getLocation(node),
+          },
           args,
           children: [],
           location: getLocation(node),
@@ -769,7 +799,12 @@ export class TransformVisitor extends BaseASTVisitor {
 
         return {
           type: 'module_instantiation',
-          name: 'projection',
+          name: {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: 'projection',
+            location: getLocation(node),
+          },
           args,
           children: [],
           location: getLocation(node),

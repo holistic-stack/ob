@@ -114,7 +114,7 @@ export class VariableVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler, variableScope);
+    super(source, errorHandler, variableScope ?? new Map());
   }
 
   /**
@@ -236,21 +236,27 @@ export class VariableVisitor extends BaseASTVisitor {
     level: 'info' | 'debug' | 'warning' | 'error',
     message: string,
     context?: string,
-    node?: unknown
+    node?: TSNode | ast.ASTNode
   ): void {
     if (this.errorHandler) {
+      // Filter to only pass TSNode to logging methods
+      const tsNode =
+        node && 'type' in node && typeof node.type === 'string' && 'text' in node
+          ? (node as TSNode)
+          : undefined;
+
       switch (level) {
         case 'info':
-          this.errorHandler.logInfo(message, context, node);
+          this.errorHandler.logInfo(message, context, tsNode);
           break;
         case 'debug':
-          this.errorHandler.logDebug(message, context, node);
+          this.errorHandler.logDebug(message, context, tsNode);
           break;
         case 'warning':
-          this.errorHandler.logWarning(message, context, node);
+          this.errorHandler.logWarning(message, context, tsNode);
           break;
         case 'error':
-          this.errorHandler.logError(message, context, node);
+          this.errorHandler.logError(message, context, tsNode);
           break;
       }
     }

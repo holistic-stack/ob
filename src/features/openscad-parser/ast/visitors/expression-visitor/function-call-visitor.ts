@@ -12,6 +12,7 @@ import type { ErrorHandler } from '../../../error-handling/index.js';
 import { ErrorCode } from '../../../error-handling/types/error-types.js';
 import type * as ast from '../../ast-types.js';
 import { extractArguments } from '../../extractors/argument-extractor.js';
+import { createErrorNodeInternal } from '../../utils/ast-error-utils.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import type { IParentExpressionVisitor } from './i-parent-expression-visitor.js';

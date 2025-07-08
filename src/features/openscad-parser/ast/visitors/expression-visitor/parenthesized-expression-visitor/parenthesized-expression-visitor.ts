@@ -65,19 +65,26 @@ export class ParenthesizedExpressionVisitor extends BaseASTVisitor {
         const child = innerExpressionNode.namedChild(i);
         if (child) {
           const result = this.parentVisitor.dispatchSpecificExpression(child);
-          if (result) {
-            return result;
+          if (result && (result.type === 'error' || result.type === 'expression')) {
+            return result as ast.ExpressionNode | ast.ErrorNode;
           }
         }
       }
       // If no named children worked, try the first child
       const firstChild = innerExpressionNode.child(0);
       if (firstChild) {
-        return this.parentVisitor.dispatchSpecificExpression(firstChild);
+        const result = this.parentVisitor.dispatchSpecificExpression(firstChild);
+        if (result && (result.type === 'error' || result.type === 'expression')) {
+          return result as ast.ExpressionNode | ast.ErrorNode;
+        }
       }
     }
 
     // For non-expression nodes, dispatch directly
-    return this.parentVisitor.dispatchSpecificExpression(innerExpressionNode);
+    const result = this.parentVisitor.dispatchSpecificExpression(innerExpressionNode);
+    if (result && (result.type === 'error' || result.type === 'expression')) {
+      return result as ast.ExpressionNode | ast.ErrorNode;
+    }
+    return null;
   }
 }

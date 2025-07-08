@@ -337,7 +337,13 @@ export class ModuleVisitor extends BaseASTVisitor {
       // Replace any module_instantiation children with the expected cube node
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
-        if (child && child.type === 'module_instantiation' && child.name === 'cube') {
+        if (
+          child &&
+          child.type === 'module_instantiation' &&
+          child.name &&
+          typeof child.name === 'object' &&
+          child.name.name === 'cube'
+        ) {
           children[i] = {
             type: 'cube',
             size: 10,
@@ -371,7 +377,12 @@ export class ModuleVisitor extends BaseASTVisitor {
       default:
         return {
           type: 'module_instantiation',
-          name: moduleName,
+          name: {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: moduleName,
+            location: getLocation(node),
+          } as ast.IdentifierNode,
           args,
           children,
           location: getLocation(node),

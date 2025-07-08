@@ -331,7 +331,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     this.errorHandler.logInfo(
       `[ListComprehensionVisitor.parseOpenScadStyle] Extracted forClause. Variable: ${forClause.variable}, Range CST: ${forClauseCstNode?.childForFieldName('range')?.text?.substring(0, 50)}, Range AST type: ${forClause.range.type}, Range AST expressionType: ${'expressionType' in forClause.range ? forClause.range.expressionType : 'N/A'}, Range AST errorCode: ${'errorCode' in forClause.range ? forClause.range.errorCode : 'N/A'}`,
       'parseOpenScadStyle.forClauseResult',
-      forClause.range
+      forClauseCstNode
     );
 
     // Validate forClause.range (Error propagation)
@@ -376,45 +376,57 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
       };
     }
 
-    const bodyExpressionAstNode =
-      this.parentVisitor.dispatchSpecificExpression(bodyExpressionCstNode);
+    const bodyExpressionAstNode = this.parentVisitor.dispatchSpecificExpression(
+      bodyExpressionCstNode
+    ) as ast.ExpressionNode | ast.ErrorNode | null;
     this.errorHandler.logInfo(
       `[ListComprehensionVisitor.parseOpenScadStyle] Parsed bodyExpression. Body CST: ${bodyExpressionCstNode?.text?.substring(0, 50)}, Body AST type: ${bodyExpressionAstNode?.type}, Body AST expressionType: ${bodyExpressionAstNode && 'expressionType' in bodyExpressionAstNode ? bodyExpressionAstNode.expressionType : 'N/A'}, Body AST errorCode: ${bodyExpressionAstNode && 'errorCode' in bodyExpressionAstNode ? bodyExpressionAstNode.errorCode : 'N/A'}`,
       'parseOpenScadStyle.bodyExpressionResult',
-      bodyExpressionAstNode
+      bodyExpressionCstNode
     );
 
     // Validate body expression result (Error propagation)
-    if (!bodyExpressionAstNode) {
+    if (
+      bodyExpressionAstNode &&
+      (bodyExpressionAstNode.type === 'error' || bodyExpressionAstNode.type === 'expression')
+    ) {
+      this.errorHandler.logInfo(
+        `[ListComprehensionVisitor.parseOpenScadStyle] Parsed bodyExpression. Body CST: ${bodyExpressionCstNode?.text?.substring(0, 50)}, Body AST type: ${bodyExpressionAstNode?.type}, Body AST expressionType: ${bodyExpressionAstNode && 'expressionType' in bodyExpressionAstNode ? bodyExpressionAstNode.expressionType : 'N/A'}, Body AST errorCode: ${bodyExpressionAstNode && 'errorCode' in bodyExpressionAstNode ? bodyExpressionAstNode.errorCode : 'N/A'}`,
+        'parseOpenScadStyle.bodyExpressionResult',
+        bodyExpressionCstNode
+      );
+    } else {
+      this.errorHandler.logInfo(
+        `[ListComprehensionVisitor.parseOpenScadStyle] dispatchSpecificExpression for body returned null for CST: ${bodyExpressionCstNode?.text?.substring(
+          0,
+          100
+        )}.`,
+        'visitLetExpression.bodyDispatchResult',
+        bodyExpressionCstNode
+      );
+    }
+
+    // Validate body expression result (Error propagation)
+    if (!bodyExpressionAstNode || bodyExpressionAstNode.type === 'error') {
       this.errorHandler.logError(
-        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to parse body expression (visitor returned null). CST: ${bodyExpressionCstNode?.text.substring(0, 80)}. ErrorCode: LC_BODY_EXPRESSION_UNPARSABLE_NULL`,
+        `[ListComprehensionVisitor.parseOpenScadStyle] Failed to parse body expression (visitor returned null or error). CST: ${bodyExpressionCstNode?.text.substring(0, 80)}. ErrorCode: LC_BODY_EXPRESSION_UNPARSABLE_NULL`,
         'LC_BODY_EXPRESSION_UNPARSABLE_NULL'
       );
-      return {
+      const errorNode: ast.ErrorNode = {
         type: 'error' as const,
         errorCode: 'LC_BODY_EXPRESSION_UNPARSABLE_NULL',
-        message: 'Failed to parse body expression (visitor returned null).',
+        message: 'Failed to parse body expression (visitor returned null or error).',
         location: getLocation(bodyExpressionCstNode),
         originalNodeType: bodyExpressionCstNode?.type,
         cstNodeText: bodyExpressionCstNode?.text,
       };
-    }
-    // The `if (bodyExpressionAstNode.type === 'error')` check that follows this block
-    // will now correctly reference bodyExpressionAstNode in the proper scope.
-    if (bodyExpressionAstNode.type === 'error') {
-      this.errorHandler.logError(
-        `[ListComprehensionVisitor.parseOpenScadStyle] Error in body expression. Propagating. CST: ${bodyExpressionCstNode.text.substring(0, 80)}. ErrorCode: LC_BODY_EXPRESSION_ERROR_PROP`,
-        'LC_BODY_EXPRESSION_ERROR_PROP'
-      );
-      return {
-        type: 'error' as const,
-        errorCode: 'LC_BODY_EXPRESSION_ERROR_PROP',
-        message: 'Error parsing body expression.',
-        location: getLocation(bodyExpressionCstNode),
-        originalNodeType: bodyExpressionCstNode.type,
-        cstNodeText: bodyExpressionCstNode.text,
-        cause: bodyExpressionAstNode,
-      };
+
+      // Only add cause if it's an actual ErrorNode
+      if (bodyExpressionAstNode && bodyExpressionAstNode.type === 'error') {
+        (errorNode as any).cause = bodyExpressionAstNode;
+      }
+
+      return errorNode;
     }
 
     // Parse condition field (optional)

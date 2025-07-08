@@ -101,8 +101,8 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    */
   constructor(
     sourceCode: string,
-    protected override errorHandler: ErrorHandler,
-    private variableScope: Map<string, ast.ParameterValue>
+    override errorHandler: ErrorHandler,
+    protected override variableScope: Map<string, ast.ParameterValue>
   ) {
     super(sourceCode, errorHandler, variableScope);
   }
@@ -255,9 +255,15 @@ export class AssignStatementVisitor extends BaseASTVisitor {
         node
       );
       // For assign statements without a body, create an empty module instantiation
+      const emptyIdentifier: ast.IdentifierNode = {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'empty',
+        location: getLocation(node),
+      };
       body = {
         type: 'module_instantiation',
-        name: 'empty',
+        name: emptyIdentifier,
         args: [],
         children: [],
         location: getLocation(node),
@@ -296,21 +302,21 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     level: 'info' | 'debug' | 'warning' | 'error',
     message: string,
     context?: string,
-    node?: unknown
+    node?: TSNode | ast.ASTNode
   ): void {
     if (this.errorHandler) {
       switch (level) {
         case 'info':
-          this.errorHandler.logInfo(message, context, node);
+          this.errorHandler.logInfo(message, context, node as unknown as TSNode);
           break;
         case 'debug':
-          this.errorHandler.logDebug(message, context, node);
+          this.errorHandler.logDebug(message, context, node as unknown as TSNode);
           break;
         case 'warning':
-          this.errorHandler.logWarning(message, context, node);
+          this.errorHandler.logWarning(message, context, node as unknown as TSNode);
           break;
         case 'error':
-          this.errorHandler.logError(message, context, node);
+          this.errorHandler.logError(message, context, node as unknown as TSNode);
           break;
       }
     }
@@ -930,7 +936,9 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     };
 
     // Add the assignment to the variable scope
-    this.variableScope.set(variableIdentifierNode.name, value.value);
+    if (value && 'value' in value) {
+      this.variableScope.set(variableIdentifierNode.name, value.value);
+    }
 
     this.safeLog(
       'info',
@@ -1167,64 +1175,168 @@ export class AssignStatementVisitor extends BaseASTVisitor {
   private convertExtractedValueToExpression(
     extractedValue: ast.ParameterValue
   ): ast.ExpressionNode | null {
-    if (!extractedValue || typeof extractedValue !== 'object') {
+    if (!extractedValue) {
       return null;
     }
 
-    // Handle different types of extracted values
-    switch (extractedValue.type) {
-      case 'number':
+    // Handle Vector2D and Vector3D explicitly
+    if (Array.isArray(extractedValue)) {
+      if (extractedValue.length === 2) {
         return {
           type: 'expression',
-          expressionType: 'literal',
-          value: extractedValue.value,
+          expressionType: 'vector',
+          elements: [
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: extractedValue[0],
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            } as ast.LiteralNode,
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: extractedValue[1],
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            } as ast.LiteralNode,
+          ],
           location: {
             start: { line: 0, column: 0, offset: 0 },
             end: { line: 0, column: 0, offset: 0 },
-          }, // Default location
-        };
-      case 'string':
+          },
+        } as ast.VectorExpressionNode;
+      } else if (extractedValue.length >= 3) {
         return {
           type: 'expression',
-          expressionType: 'literal',
-          value: extractedValue.value,
+          expressionType: 'vector',
+          elements: [
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: extractedValue[0],
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            } as ast.LiteralNode,
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: extractedValue[1],
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            } as ast.LiteralNode,
+            {
+              type: 'expression',
+              expressionType: 'literal',
+              value: extractedValue[2],
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            } as ast.LiteralNode,
+          ],
           location: {
             start: { line: 0, column: 0, offset: 0 },
             end: { line: 0, column: 0, offset: 0 },
-          }, // Default location
-        };
-      case 'boolean':
-        return {
-          type: 'expression',
-          expressionType: 'literal',
-          value: extractedValue.value,
-          location: {
-            start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 0, offset: 0 },
-          }, // Default location
-        };
-      case 'identifier':
-        return {
-          type: 'expression',
-          expressionType: 'variable',
-          name: extractedValue.value,
-          location: {
-            start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 0, offset: 0 },
-          }, // Default location
-        };
-      default:
-        // For unknown types, create a generic literal expression
-        return {
-          type: 'expression',
-          expressionType: 'literal',
-          value: extractedValue.value || extractedValue,
-          location: {
-            start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 0, offset: 0 },
-          }, // Default location
-        };
+          },
+        } as ast.VectorExpressionNode;
+      }
     }
+
+    if (typeof extractedValue !== 'object' || extractedValue === null) {
+      return null;
+    }
+
+    // Handle Vector3D (tuple type)
+    if (
+      Array.isArray(extractedValue) &&
+      extractedValue.length === 3 &&
+      extractedValue.every((v) => typeof v === 'number')
+    ) {
+      return {
+        type: 'expression',
+        expressionType: 'vector',
+        items: extractedValue.map(
+          (v) =>
+            ({
+              type: 'expression',
+              expressionType: 'literal',
+              value: v,
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
+              },
+            }) as ast.ExpressionNode
+        ),
+        location: {
+          start: { line: 0, column: 0, offset: 0 },
+          end: { line: 0, column: 0, offset: 0 },
+        },
+      } as ast.VectorExpressionNode;
+    }
+
+    // Handle primitive types
+    if (typeof extractedValue === 'number') {
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: extractedValue,
+        location: {
+          start: { line: 0, column: 0, offset: 0 },
+          end: { line: 0, column: 0, offset: 0 },
+        },
+      } as ast.LiteralExpressionNode;
+    }
+
+    if (typeof extractedValue === 'string') {
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: extractedValue,
+        location: {
+          start: { line: 0, column: 0, offset: 0 },
+          end: { line: 0, column: 0, offset: 0 },
+        },
+      } as ast.LiteralExpressionNode;
+    }
+
+    if (typeof extractedValue === 'boolean') {
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: extractedValue,
+        location: {
+          start: { line: 0, column: 0, offset: 0 },
+          end: { line: 0, column: 0, offset: 0 },
+        },
+      } as ast.LiteralExpressionNode;
+    }
+
+    // Handle ExpressionNode and ErrorNode (objects with type property)
+    if ('type' in extractedValue) {
+      switch (extractedValue.type) {
+        case 'expression':
+          // Already an ExpressionNode, return as-is
+          return extractedValue as ast.ExpressionNode;
+        case 'error':
+          // ErrorNode - convert to error expression or return null
+          return null;
+        default:
+          // For unknown types, return null
+          return null;
+      }
+    }
+
+    // If we get here, the extractedValue is not a recognized type
+    return null;
   }
 
   /**
@@ -1235,40 +1347,45 @@ export class AssignStatementVisitor extends BaseASTVisitor {
    * @private
    */
   private convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
-    if (value.type === 'number') {
-      return parseFloat(value.value as string);
-    } else if (value.type === 'boolean') {
-      return value.value === 'true';
-    } else if (value.type === 'string') {
-      return value.value as string;
-    } else if (value.type === 'identifier') {
-      return {
-        type: 'expression',
-        expressionType: 'variable',
-        name: value.value as string,
-        location: {
-          start: { line: 0, column: 0, offset: 0 },
-          end: { line: 0, column: 0, offset: 0 },
-        },
-      } as ast.VariableNode;
-    } else if (value.type === 'vector') {
-      const vectorValues = (value.value as ast.Value[]).map((v) => {
-        if (v.type === 'number') {
-          return parseFloat(v.value as string);
-        }
-        return 0; // Default for non-numeric elements
-      });
+    if (typeof value === 'object' && value !== null && 'type' in value) {
+      if (value.type === 'number') {
+        return parseFloat(value.value as string);
+      } else if (value.type === 'boolean') {
+        return value.value === 'true';
+      } else if (value.type === 'string') {
+        return value.value as string;
+      } else if (value.type === 'identifier') {
+        return {
+          type: 'expression',
+          expressionType: 'variable',
+          name: value.value as string,
+          location: {
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
+          },
+        } as ast.VariableNode;
+      } else if (value.type === 'vector') {
+        const vectorValues = (value.value as ast.Value[]).map((v) => {
+          if ('type' in v && v.type === 'number') {
+            return parseFloat(v.value as string);
+          }
+          return 0; // Default for non-numeric elements
+        });
 
-      if (vectorValues.length === 2) {
-        return vectorValues as ast.Vector2D;
-      } else if (vectorValues.length >= 3) {
-        return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+        if (vectorValues.length === 2) {
+          return vectorValues as ast.Vector2D;
+        } else if (vectorValues.length >= 3) {
+          return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+        }
+        return [0, 0, 0] as ast.Vector3D; // Default fallback
       }
-      return [0, 0, 0] as ast.Vector3D; // Default fallback
     }
 
     // Default fallback - return as string
-    return (value.value as string) || '';
+    if ('value' in value) {
+      return (value.value as string) || '';
+    }
+    return '';
   }
 
   /**

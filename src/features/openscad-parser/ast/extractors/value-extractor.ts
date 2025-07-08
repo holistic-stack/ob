@@ -33,7 +33,8 @@
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-import { extractValue as extractParameterValue, extractValueEnhanced } from './value-extractor.js';
+
+// Note: Removed circular import - extractValue is defined in this file
 
 /**
  * Extract text from source code using node position information.
@@ -66,8 +67,10 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
  * @param value The Value object to convert
  * @returns A ParameterValue object
  */
-function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
-  if (value.type === 'number') {
+function convertValueToParameterValue(value: ast.Value | ast.ErrorNode): ast.ParameterValue {
+  if (value.type === 'error') {
+    return value as ast.ErrorNode;
+  } else if (value.type === 'number') {
     // Ensure we have a valid numeric value before parsing
     const numericValue = value.value;
     if (numericValue === null || numericValue === undefined) {
@@ -155,6 +158,9 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
       } as ast.LiteralNode;
     }
     return rangeNode;
+  } else if (value.type === 'expression') {
+    // Handle ExpressionNode directly
+    return value as ast.ExpressionNode;
   }
 
   // Default fallback - create a literal expression for unrecognized ast.Value types
@@ -193,13 +199,15 @@ function convertNodeToParameterValue(
   sourceCode: string = '',
   variableScope?: Map<string, ast.ParameterValue>
 ): ast.ParameterValue | undefined {
-  // Use enhanced value extraction if error handler is available
-  if (errorHandler) {
-    return extractValueEnhanced(node, errorHandler, sourceCode, variableScope);
+  // Extract value using the standard extraction function
+  const value = extractValue(node, sourceCode, variableScope);
+
+  // Convert Value to ParameterValue
+  if (value) {
+    return convertValueToParameterValue(value);
   }
 
-  // Fall back to the original value-extractor function
-  return extractParameterValue(node, sourceCode);
+  return undefined;
 }
 
 /**
@@ -654,7 +662,58 @@ export function extractValue(
     case 'identifier':
       // If a variableScope is provided, try to resolve the identifier
       if (variableScope?.has(valueNode.text)) {
-        return variableScope.get(valueNode.text) as ast.Value;
+        const value = variableScope.get(valueNode.text);
+
+        // Handle ErrorNode
+        if (
+          value &&
+          typeof value === 'object' &&
+          value !== null &&
+          'type' in value &&
+          value.type === 'error'
+        ) {
+          return null; // Or handle the error appropriately
+        }
+
+        // Handle ExpressionNode - convert to appropriate Value type
+        if (
+          value &&
+          typeof value === 'object' &&
+          value !== null &&
+          'type' in value &&
+          value.type === 'expression'
+        ) {
+          const expr = value as ast.ExpressionNode;
+          if (expr.expressionType === 'literal' && 'value' in expr) {
+            const literalValue = expr.value;
+            if (typeof literalValue === 'string') {
+              return { type: 'string', value: literalValue };
+            } else if (typeof literalValue === 'number') {
+              return { type: 'number', value: literalValue };
+            } else if (typeof literalValue === 'boolean') {
+              return { type: 'boolean', value: literalValue };
+            }
+          }
+          // For other expression types, return as identifier
+          return { type: 'identifier', value: valueNode.text };
+        }
+
+        // Handle primitive values
+        if (typeof value === 'string') {
+          return { type: 'string', value: value };
+        } else if (typeof value === 'number') {
+          return { type: 'number', value: value };
+        } else if (typeof value === 'boolean') {
+          return { type: 'boolean', value: value };
+        }
+
+        // Handle Vector types
+        if (Array.isArray(value)) {
+          return {
+            type: 'vector',
+            value: value.map((v) => ({ type: 'number', value: v }) as ast.Value),
+          };
+        }
       }
       return { type: 'identifier', value: valueNode.text };
 

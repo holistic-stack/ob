@@ -133,29 +133,48 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
       return rightAST;
     }
 
-    if (!leftAST || !rightAST) {
-      // Errors in sub-expressions should have been handled by the parentVisitor
-      // or its delegates. If they return null, it means a parsing error occurred.
-      const error = this.errorHandler.createParserError(
-        `Failed to parse operands in binary expression. Left node: ${leftNode.type} "${leftNode.text}" -> ${leftAST}, Right node: ${rightNode.type} "${rightNode.text}" -> ${rightAST}`,
-        {
-          line: getLocation(node).start.line,
-          column: getLocation(node).start.column,
-          nodeType: node.type,
-          leftType: leftNode.type,
-          rightType: rightNode.type,
-        }
-      );
+    if (!leftAST || leftAST.type !== 'expression') {
+      const errorMessage = `Left operand is not an expression node. Type: ${(leftAST as any)?.type || 'null'}`;
+      const error = this.errorHandler.createParserError(errorMessage, {
+        line: getLocation(node).start.line,
+        column: getLocation(node).start.column,
+        nodeType: node.type,
+      });
       this.errorHandler.report(error);
-      return null;
+      return {
+        type: 'error',
+        errorCode: 'INVALID_LEFT_OPERAND',
+        message: errorMessage,
+        location: getLocation(node),
+        originalNodeType: node.type,
+        cstNodeText: node.text,
+      } as ast.ErrorNode;
+    }
+
+    if (!rightAST || rightAST.type !== 'expression') {
+      const errorMessage = `Right operand is not an expression node. Type: ${(rightAST as any)?.type || 'null'}`;
+      const error = this.errorHandler.createParserError(errorMessage, {
+        line: getLocation(node).start.line,
+        column: getLocation(node).start.column,
+        nodeType: node.type,
+      });
+      this.errorHandler.report(error);
+      return {
+        type: 'error',
+        errorCode: 'INVALID_RIGHT_OPERAND',
+        message: errorMessage,
+        location: getLocation(node),
+        originalNodeType: node.type,
+        cstNodeText: node.text,
+      } as ast.ErrorNode;
     }
 
     return {
       type: 'expression',
       expressionType: 'binary', // Use 'binary' to match test expectations in expression-visitor.test.ts
       operator: operator as ast.BinaryOperator, // Cast, assuming grammar aligns with ast.BinaryOperator
-      left: leftAST, // Cast is safe due to checks above
-      right: rightAST, // Cast is safe due to checks above
+      left: leftAST as ast.ExpressionNode, // Cast is safe due to checks above
+      right: rightAST as ast.ExpressionNode, // Cast is safe due to checks above
       location: getLocation(node),
     };
   }

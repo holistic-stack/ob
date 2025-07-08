@@ -91,7 +91,7 @@ export class CSGVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler, variableScope);
+    super(source, errorHandler, variableScope ?? new Map());
   }
 
   /**

@@ -1,5 +1,4 @@
-import type Parser from 'web-tree-sitter';
-import type { TreeCursor } from 'web-tree-sitter';
+import type { Tree, TreeCursor } from 'web-tree-sitter';
 
 /**
  * Walks a Tree-sitter CST (concrete syntax tree) using a TreeCursor and logs its structure.
@@ -12,7 +11,7 @@ import type { TreeCursor } from 'web-tree-sitter';
  * @returns The accumulated log lines if depth is 0, otherwise void.
  */
 export function cstTreeCursorWalkLog(
-  initialTreeOrCursor: Parser.Tree | TreeCursor | null | undefined,
+  initialTreeOrCursor: Tree | TreeCursor | null | undefined,
   code: string,
   depth = 0,
   output: string[] = [],
@@ -82,4 +81,5 @@ export function cstTreeCursorWalkLog(
   if (depth === 0) {
     return output;
   }
+  return undefined;
 }

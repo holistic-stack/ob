@@ -9,7 +9,9 @@ import { OrbitControls } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import type * as React from 'react';
 import { useMemo, useRef } from 'react';
+import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service';
+import type { NodeId, NodeType } from '../../../shared/types/ast.types';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { Mesh3D } from '../types/renderer.types';
@@ -99,10 +101,22 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
             /* Mock implementation for testing */
           },
           metadata: {
-            nodeType: node.type as any, // Cast to avoid type error for now
-            nodeIndex: index,
-            createdAt: Date.now(),
-            lastModified: Date.now(),
+            nodeId: `node-${index}` as NodeId,
+            nodeType: node.type as NodeType,
+            depth: 0,
+            childrenIds: [],
+            size: 1,
+            complexity: 1,
+            isOptimized: false,
+            lastAccessed: new Date(),
+            meshId: `mesh-${index}`,
+            triangleCount: 12, // Cube has 12 triangles
+            vertexCount: 8, // Cube has 8 vertices
+            boundingBox: new THREE.Box3(),
+            material: 'MeshStandardMaterial',
+            color: '#00ff88',
+            opacity: 1,
+            visible: true,
           },
         };
 

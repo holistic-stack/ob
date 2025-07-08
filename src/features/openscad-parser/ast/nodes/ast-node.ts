@@ -1,4 +1,4 @@
-import type { NodeLocation } from '../../../node-location.js';
+import type { NodeLocation } from '../../node-location.js';
 
 export abstract class AstNode {
   constructor(public readonly location: NodeLocation) {}

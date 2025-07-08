@@ -29,12 +29,13 @@ export class QueryManager {
   private parser: Parser;
   private language: Language; // Tree-sitter Language
   private queryDir: string;
-  private tree?: Tree;
+  private tree: Tree | undefined;
 
   constructor(parser: Parser, language: Language, queryDir: string) {
     this.parser = parser;
     this.language = language;
     this.queryDir = queryDir;
+    this.tree = undefined;
   }
 
   /**

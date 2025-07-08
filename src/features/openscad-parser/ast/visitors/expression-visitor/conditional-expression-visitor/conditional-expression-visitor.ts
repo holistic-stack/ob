@@ -78,59 +78,74 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
     if (conditionAST && conditionAST.type === 'error') {
       return conditionAST;
     }
-    if (!conditionAST) {
-      const error = this.errorHandler.createParserError(
-        `Failed to parse condition in conditional expression.`,
-        {
-          line: getLocation(conditionNode).start.line,
-          column: getLocation(conditionNode).start.column,
-          nodeType: conditionNode.type,
-        }
-      );
+    if (!conditionAST || conditionAST.type !== 'expression') {
+      const errorMessage = `Failed to parse condition in conditional expression.`;
+      const error = this.errorHandler.createParserError(errorMessage, {
+        line: getLocation(conditionNode).start.line,
+        column: getLocation(conditionNode).start.column,
+        nodeType: conditionNode.type,
+      });
       this.errorHandler.report(error);
-      return null;
+      return {
+        type: 'error',
+        errorCode: 'INVALID_CONDITION',
+        message: errorMessage,
+        location: getLocation(conditionNode),
+        originalNodeType: conditionNode.type,
+        cstNodeText: conditionNode.text,
+      } as ast.ErrorNode;
     }
 
     const consequenceAST = this.parentVisitor.dispatchSpecificExpression(consequenceNode);
     if (consequenceAST && consequenceAST.type === 'error') {
       return consequenceAST;
     }
-    if (!consequenceAST) {
-      const error = this.errorHandler.createParserError(
-        `Failed to parse consequence in conditional expression.`,
-        {
-          line: getLocation(consequenceNode).start.line,
-          column: getLocation(consequenceNode).start.column,
-          nodeType: consequenceNode.type,
-        }
-      );
+    if (!consequenceAST || consequenceAST.type !== 'expression') {
+      const errorMessage = `Failed to parse consequence in conditional expression.`;
+      const error = this.errorHandler.createParserError(errorMessage, {
+        line: getLocation(consequenceNode).start.line,
+        column: getLocation(consequenceNode).start.column,
+        nodeType: consequenceNode.type,
+      });
       this.errorHandler.report(error);
-      return null;
+      return {
+        type: 'error',
+        errorCode: 'INVALID_CONSEQUENCE',
+        message: errorMessage,
+        location: getLocation(consequenceNode),
+        originalNodeType: consequenceNode.type,
+        cstNodeText: consequenceNode.text,
+      } as ast.ErrorNode;
     }
 
     const alternativeAST = this.parentVisitor.dispatchSpecificExpression(alternativeNode);
     if (alternativeAST && alternativeAST.type === 'error') {
       return alternativeAST;
     }
-    if (!alternativeAST) {
-      const error = this.errorHandler.createParserError(
-        `Failed to parse alternative in conditional expression.`,
-        {
-          line: getLocation(alternativeNode).start.line,
-          column: getLocation(alternativeNode).start.column,
-          nodeType: alternativeNode.type,
-        }
-      );
+    if (!alternativeAST || alternativeAST.type !== 'expression') {
+      const errorMessage = `Failed to parse alternative in conditional expression.`;
+      const error = this.errorHandler.createParserError(errorMessage, {
+        line: getLocation(alternativeNode).start.line,
+        column: getLocation(alternativeNode).start.column,
+        nodeType: alternativeNode.type,
+      });
       this.errorHandler.report(error);
-      return null;
+      return {
+        type: 'error',
+        errorCode: 'INVALID_ALTERNATIVE',
+        message: errorMessage,
+        location: getLocation(alternativeNode),
+        originalNodeType: alternativeNode.type,
+        cstNodeText: alternativeNode.text,
+      } as ast.ErrorNode;
     }
 
     return {
       type: 'expression',
       expressionType: 'conditional_expression',
-      condition: conditionAST,
-      thenBranch: consequenceAST,
-      elseBranch: alternativeAST,
+      condition: conditionAST as ast.ExpressionNode,
+      thenBranch: consequenceAST as ast.ExpressionNode,
+      elseBranch: alternativeAST as ast.ExpressionNode,
       location: getLocation(node),
     };
   }

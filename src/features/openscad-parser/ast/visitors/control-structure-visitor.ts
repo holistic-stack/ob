@@ -122,11 +122,15 @@ export class ControlStructureVisitor extends BaseASTVisitor {
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
-    super(source, errorHandler, variableScope);
+    super(source, errorHandler, variableScope ?? new Map());
     // These sub-visitors will also need ErrorHandler in their constructors eventually
-    this.ifElseVisitor = new IfElseVisitor(source, errorHandler, this.variableScope);
-    this.forLoopVisitor = new ForLoopVisitor(source, errorHandler, this.variableScope);
-    this.expressionVisitor = new ExpressionVisitor(source, errorHandler, this.variableScope);
+    this.ifElseVisitor = new IfElseVisitor(source, errorHandler, this.variableScope ?? new Map());
+    this.forLoopVisitor = new ForLoopVisitor(source, errorHandler, this.variableScope ?? new Map());
+    this.expressionVisitor = new ExpressionVisitor(
+      source,
+      errorHandler,
+      this.variableScope ?? new Map()
+    );
   }
 
   /**

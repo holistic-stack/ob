@@ -86,7 +86,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
     const operandAST = this.parentVisitor.dispatchSpecificExpression(operandNode);
 
     // If operand parsing failed (returned null) or resulted in an error node, propagate it.
-    if (!operandAST) {
+    if (!operandAST || operandAST.type === 'error') {
       const error = this.errorHandler.createParserError(
         `Failed to parse operand in unary expression: dispatchSpecificExpression returned null.`,
         {
@@ -107,24 +107,12 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
       } as ast.ErrorNode;
     }
 
-    // Check if the dispatched expression itself is an ErrorNode
-    if (operandAST.type === 'error') {
-      // Propagate the ErrorNode directly
-      // Optionally, wrap it or add context if needed, but direct propagation is simplest for now
-      this.errorHandler.logWarning(
-        `[UnaryExpressionVisitor] Operand parsing resulted in an ErrorNode. Propagating error. Node: "${operandNode.text}"`,
-        'UnaryExpressionVisitor.visit',
-        operandAST
-      );
-      return operandAST;
-    }
-
     // At this point, operandAST should be a valid ExpressionNode (not null and not ErrorNode)
     return {
       type: 'expression',
       expressionType: 'unary_expression',
       operator: operator as ast.UnaryOperator, // Cast, assuming grammar aligns
-      operand: operandAST, // operandAST is now guaranteed to be a valid ExpressionNode
+      operand: operandAST as ast.ExpressionNode, // operandAST is now guaranteed to be a valid ExpressionNode
       prefix: true, // OpenSCAD unary operators are always prefix
       location: getLocation(node),
     } as ast.UnaryExpressionNode;

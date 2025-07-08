@@ -40,6 +40,7 @@
  * @since 0.1.0
  */
 
+import type { Node as TSNode } from 'web-tree-sitter';
 import { Logger, type LoggerOptions } from './logger.js';
 import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 import {
