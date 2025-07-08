@@ -76,6 +76,49 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock ResizeObserver for React Three Fiber Canvas components
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: vi.fn().mockImplementation((callback) => ({
+    observe: vi.fn((element) => {
+      // Simulate a resize event immediately
+      setTimeout(() => {
+        callback([{
+          target: element,
+          contentRect: {
+            width: 800,
+            height: 600,
+            top: 0,
+            left: 0,
+            bottom: 600,
+            right: 800,
+          },
+          borderBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          contentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          devicePixelContentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+        }], this);
+      }, 0);
+    }),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+});
+
+// Mock performance.now() for consistent timing in tests
+Object.defineProperty(performance, 'now', {
+  writable: true,
+  value: vi.fn(() => {
+    // Return a consistent timestamp that increments slightly each call
+    // This prevents NaN values in performance measurements
+    const baseTime = 1000; // Start at 1000ms
+    const increment = 0.1; // Small increment per call
+    const callCount = (performance.now as any).__callCount || 0;
+    (performance.now as any).__callCount = callCount + 1;
+    return baseTime + (callCount * increment);
+  }),
+});
+
 // Mock window addEventListener and removeEventListener for react-use-measure
 Object.defineProperty(window, 'addEventListener', {
   writable: true,
@@ -572,10 +615,23 @@ export function forceGarbageCollection(): void {
 }
 
 /**
+ * Reset performance.now() mock for clean test isolation
+ */
+export function resetPerformanceMock(): void {
+  // Reset the call counter for performance.now()
+  if (performance.now && typeof performance.now === 'function') {
+    (performance.now as any).__callCount = 0;
+  }
+}
+
+/**
  * Clear test memory and force garbage collection
  */
 export function clearTestMemory(): void {
   logger.debug('Clearing test memory');
+
+  // Reset performance mock for clean isolation
+  resetPerformanceMock();
 
   // Force garbage collection
   forceGarbageCollection();

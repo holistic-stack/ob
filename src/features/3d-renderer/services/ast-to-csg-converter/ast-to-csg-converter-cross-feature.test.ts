@@ -317,12 +317,12 @@ describe('AST to CSG Converter - Cross-Feature Integration', () => {
       const parseResult = await store.getState().parseCode(invalidCode);
 
       // Wait for any async operations to complete and parsing state to settle
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Wait for isLoading to become false
       let attempts = 0;
       while (store.getState().parsing.isLoading && attempts < 10) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         attempts++;
       }
 

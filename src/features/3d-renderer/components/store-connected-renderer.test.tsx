@@ -14,6 +14,34 @@ import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
 
+// Mock ResizeObserver before any imports that might use it
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  value: vi.fn().mockImplementation((callback) => ({
+    observe: vi.fn((element) => {
+      // Simulate a resize event immediately
+      setTimeout(() => {
+        callback([{
+          target: element,
+          contentRect: {
+            width: 800,
+            height: 600,
+            top: 0,
+            left: 0,
+            bottom: 600,
+            right: 800,
+          },
+          borderBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          contentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          devicePixelContentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+        }], this);
+      }, 0);
+    }),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+});
+
 // Comprehensive browser environment mocking to remove userAgent dependencies
 beforeAll(() => {
   // Mock WebGL context to avoid browser-specific checks

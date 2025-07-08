@@ -176,12 +176,6 @@ describe('AST to CSG Converter - Real-World Corpus Integration', () => {
           expect(conversionResults.length).toBeGreaterThan(0);
 
           // Verify CSG conversion behavior (may succeed or fail depending on converter support)
-          interface ConversionResult {
-            nodeIndex: number;
-            nodeType: string;
-            result: { success: boolean };
-            conversionTime: number;
-          }
           const successfulConversions = conversionResults.filter(
             (r: { node: ASTNode; result: Result<Mesh3D, string> }) => r.result.success
           );

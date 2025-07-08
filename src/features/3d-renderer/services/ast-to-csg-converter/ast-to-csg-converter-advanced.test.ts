@@ -254,9 +254,9 @@ describe('AST to CSG Converter - Advanced Corpus Integration', () => {
               // Map expected node types to actual AST node types
               const originalPattern = scenario.expectedNodeTypes[index];
               let regexPattern: string = originalPattern;
-              if (originalPattern === ('assignment_statement' as any)) {
+              if (originalPattern === 'assignment_statement') {
                 regexPattern = 'assign';
-              } else if (originalPattern === ('module_definition' as any)) {
+              } else if (originalPattern === 'module_definition') {
                 regexPattern = 'assign|module_definition|function_definition';
               }
 

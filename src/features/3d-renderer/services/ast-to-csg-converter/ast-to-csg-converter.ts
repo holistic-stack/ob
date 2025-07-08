@@ -19,6 +19,7 @@ import {
 import type {
   ASTNode,
   AssignmentNode,
+  AssignStatementNode,
   BinaryExpressionNode,
   ConditionalExpressionNode,
   CubeNode,
@@ -1739,6 +1740,36 @@ const convertASTNodeToMesh = async (
     case 'assignment':
       return await convertAssignmentNode(node as AssignmentNode);
 
+    case 'assign': {
+      // Handle assign statements (AssignStatementNode) which contain multiple assignments
+      const assignNode = node as AssignStatementNode;
+      logger.debug(`Processing assign statement with ${assignNode.assignments.length} assignments`);
+
+      // Process all assignments in the assign statement
+      for (const assignment of assignNode.assignments) {
+        const assignmentResult = await convertAssignmentNode(assignment);
+        if (isError(assignmentResult)) {
+          logger.warn(
+            `Failed to process assignment in assign statement: ${assignmentResult.error}`
+          );
+        }
+      }
+
+      // Process the body of the assign statement
+      if (assignNode.body) {
+        return await convertASTNodeToMesh(assignNode.body, material);
+      }
+
+      // If no body, return an empty mesh (assignments don't produce geometry)
+      const geometry = new THREE.BufferGeometry();
+      const emptyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x00ff88,
+        transparent: true,
+        opacity: 0,
+      });
+      return success(new THREE.Mesh(geometry, emptyMaterial));
+    }
+
     case 'if':
       return await convertIfStatementNode(node as IfNode, material, convertASTNodeToMesh);
 
@@ -1782,7 +1813,6 @@ const convertASTNodeToMesh = async (
     case 'each':
     case 'assert':
     case 'echo':
-    case 'assign':
     case 'multmatrix':
     case 'color':
     case 'hull':

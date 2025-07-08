@@ -816,6 +816,33 @@ export function extractValue(
       };
     }
 
+    case 'special_variable': {
+      // Handle special variables like $t, $fa, $fs, $fn, etc.
+      // For now, return them as identifiers that can be evaluated later
+      // Special variables typically have numeric values (0 for most, time-based for $t)
+      const variableName = valueNode.text;
+      console.log(`[extractValue] Processing special variable: '${variableName}'`);
+
+      // Return as identifier type so it can be handled by expression evaluators
+      return {
+        type: 'identifier',
+        value: variableName,
+      };
+    }
+
+    case 'member_expression': {
+      // Handle member expressions like size.x, size.y, size.z
+      // These are property access expressions on objects/vectors
+      console.log(`[extractValue] Processing member expression: '${valueNode.text}'`);
+
+      // For now, return as string representation
+      // TODO: Implement proper member access evaluation with variable scope
+      return {
+        type: 'string',
+        value: valueNode.text,
+      };
+    }
+
     default:
       console.log(
         `[extractValue] Unhandled node type: '${valueNode.type}', text: '${valueNode.text}'`

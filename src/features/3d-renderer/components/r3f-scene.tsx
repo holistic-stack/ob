@@ -86,10 +86,18 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
         // TODO: Handle async renderASTNode properly
         const mockMesh3D: Mesh3D = {
           mesh: {
-            position: { set: () => {} },
-            dispose: () => {},
+            position: {
+              set: () => {
+                /* Mock implementation for testing */
+              },
+            },
+            dispose: () => {
+              /* Mock implementation for testing */
+            },
           } as any,
-          dispose: () => {},
+          dispose: () => {
+            /* Mock implementation for testing */
+          },
           metadata: {
             nodeType: node.type as any, // Cast to avoid type error for now
             nodeIndex: index,

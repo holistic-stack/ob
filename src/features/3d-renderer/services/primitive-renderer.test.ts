@@ -150,7 +150,7 @@ vi.mock('three', async () => {
     return geometry;
   }
 
-  function mockMeshBasicMaterial(params: any = {}) {
+  function mockMeshBasicMaterial(params: Record<string, unknown> = {}) {
     const material = Object.create(threeModule.Material.prototype);
     Object.defineProperties(material, {
       type: { value: 'MeshBasicMaterial', enumerable: true, configurable: true },
@@ -172,7 +172,7 @@ vi.mock('three', async () => {
     return material;
   }
 
-  function mockMeshStandardMaterial(params: any = {}) {
+  function mockMeshStandardMaterial(params: Record<string, unknown> = {}) {
     const material = Object.create(threeModule.Material.prototype);
     Object.defineProperties(material, {
       type: { value: 'MeshStandardMaterial', enumerable: true, configurable: true },
