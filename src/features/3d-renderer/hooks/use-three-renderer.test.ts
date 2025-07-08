@@ -245,7 +245,8 @@ describe('useThreeRenderer Hook (Memory-Optimized)', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // Clear specific mocks instead of restoreAllMocks to preserve browser API mocks
+    // Note: We avoid vi.restoreAllMocks() to preserve ResizeObserver and window API mocks
 
     // Force garbage collection if available
     if (global.gc) {

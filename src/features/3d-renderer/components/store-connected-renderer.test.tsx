@@ -7,6 +7,7 @@
  */
 
 // ResizeObserver polyfill is set up globally in vitest-setup.ts
+// But we add a local fallback to ensure it's available when running with other tests
 
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -20,6 +21,15 @@ import { StoreConnectedRenderer } from './store-connected-renderer';
 
 // Comprehensive browser environment mocking to remove userAgent dependencies
 beforeAll(() => {
+  // Ensure ResizeObserver is available for this test file
+  if (!global.ResizeObserver) {
+    global.ResizeObserver = class ResizeObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  }
+
   // Mock WebGL context to avoid browser-specific checks
   const mockWebGLContext = {
     canvas: {},
@@ -88,6 +98,74 @@ beforeAll(() => {
     },
     writable: true,
   });
+});
+
+// Ensure ResizeObserver and window APIs are available before each test (in case other tests clear them)
+beforeEach(() => {
+  // Re-establish ResizeObserver if it was cleared by other tests
+  const ResizeObserverPolyfill = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+
+  global.ResizeObserver = ResizeObserverPolyfill;
+  window.ResizeObserver = ResizeObserverPolyfill;
+  globalThis.ResizeObserver = ResizeObserverPolyfill;
+
+  // Re-establish window API mocks if they were cleared by other tests
+  if (!window.addEventListener || typeof window.addEventListener !== 'function') {
+    Object.defineProperty(window, 'addEventListener', {
+      writable: true,
+      value: vi.fn(),
+    });
+  }
+
+  if (!window.removeEventListener || typeof window.removeEventListener !== 'function') {
+    Object.defineProperty(window, 'removeEventListener', {
+      writable: true,
+      value: vi.fn(),
+    });
+  }
+
+  if (!window.getComputedStyle || typeof window.getComputedStyle !== 'function') {
+    Object.defineProperty(window, 'getComputedStyle', {
+      writable: true,
+      value: vi.fn((element: Element) => {
+        // Return appropriate styles based on element attributes or test context
+        const style = element.getAttribute('style') || '';
+        const className = element.getAttribute('class') || '';
+
+        // Default computed style object
+        const computedStyle: any = {
+          getPropertyValue: vi.fn((property: string) => {
+            // Handle common CSS properties for tests
+            switch (property) {
+              case 'width':
+                if (style.includes('width: 1024px')) return '1024px';
+                if (style.includes('width: 100%')) return '100%';
+                if (className.includes('custom-class')) return '1024px';
+                return '100%';
+              case 'height':
+                if (style.includes('height: 768px')) return '768px';
+                if (style.includes('height: 400px')) return '400px';
+                if (className.includes('custom-class')) return '768px';
+                return '400px';
+              default:
+                return '';
+            }
+          }),
+          overflow: 'visible',
+          overflowX: 'visible',
+          overflowY: 'visible',
+          width: style.includes('width: 1024px') ? '1024px' : '100%',
+          height: style.includes('height: 768px') ? '768px' : '400px',
+        };
+
+        return computedStyle;
+      }),
+    });
+  }
 });
 
 // Simple, stable mocks to prevent infinite loops

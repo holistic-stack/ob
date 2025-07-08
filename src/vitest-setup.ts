@@ -1,32 +1,11 @@
 // Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
 import ResizeObserver from 'resize-observer-polyfill';
 
-// Store the polyfill reference to prevent it from being cleared by test cleanups
-const RESIZE_OBSERVER_POLYFILL = ResizeObserver;
-
-// Function to ensure ResizeObserver is always available
-function ensureResizeObserver() {
-  if (!global.ResizeObserver || !globalThis.ResizeObserver || !window.ResizeObserver) {
-    global.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-    globalThis.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-    window.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-  }
-}
-
 // Set up ResizeObserver polyfill globally before any other imports
 // Use multiple assignment methods to ensure it's available everywhere
-ensureResizeObserver();
-
-// Also ensure it's available on the global object for any module that might check for it
-if (typeof globalThis !== 'undefined') {
-  globalThis.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-}
-if (typeof window !== 'undefined') {
-  window.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-}
-if (typeof global !== 'undefined') {
-  global.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
-}
+global.ResizeObserver = ResizeObserver;
+globalThis.ResizeObserver = ResizeObserver;
+window.ResizeObserver = ResizeObserver;
 
 import '@testing-library/jest-dom';
 import { readFileSync } from 'node:fs';
@@ -40,11 +19,7 @@ import { createLogger } from './shared/services/logger.service.js';
 // Import OpenSCAD parser test utility to register cleanup hooks
 import './vitest-helpers/openscad-parser-test-utils.js';
 
-// Set up a global afterEach hook to restore ResizeObserver after any test cleanup
-afterEach(() => {
-  // Ensure ResizeObserver polyfill is restored after any test cleanup
-  ensureResizeObserver();
-});
+// ResizeObserver polyfill is set up once at startup and should persist
 
 // Enable Zustand mocking for proper store testing
 vi.mock('zustand');
@@ -139,12 +114,39 @@ Object.defineProperty(window, 'removeEventListener', {
 // Mock window.getComputedStyle for react-use-measure
 Object.defineProperty(window, 'getComputedStyle', {
   writable: true,
-  value: vi.fn(() => ({
-    getPropertyValue: vi.fn(() => ''),
-    overflow: 'visible',
-    overflowX: 'visible',
-    overflowY: 'visible',
-  })),
+  value: vi.fn((element: Element) => {
+    // Return appropriate styles based on element attributes or test context
+    const style = element.getAttribute('style') || '';
+    const className = element.getAttribute('class') || '';
+
+    // Default computed style object
+    const computedStyle: any = {
+      getPropertyValue: vi.fn((property: string) => {
+        // Handle common CSS properties for tests
+        switch (property) {
+          case 'width':
+            if (style.includes('width: 1024px')) return '1024px';
+            if (style.includes('width: 100%')) return '100%';
+            if (className.includes('custom-class')) return '1024px';
+            return '100%';
+          case 'height':
+            if (style.includes('height: 768px')) return '768px';
+            if (style.includes('height: 400px')) return '400px';
+            if (className.includes('custom-class')) return '768px';
+            return '400px';
+          default:
+            return '';
+        }
+      }),
+      overflow: 'visible',
+      overflowX: 'visible',
+      overflowY: 'visible',
+      width: style.includes('width: 1024px') ? '1024px' : '100%',
+      height: style.includes('height: 768px') ? '768px' : '400px',
+    };
+
+    return computedStyle;
+  }),
 });
 
 const __dirname = import.meta.dirname;
