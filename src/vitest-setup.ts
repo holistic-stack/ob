@@ -1,3 +1,33 @@
+// Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
+import ResizeObserver from 'resize-observer-polyfill';
+
+// Store the polyfill reference to prevent it from being cleared by test cleanups
+const RESIZE_OBSERVER_POLYFILL = ResizeObserver;
+
+// Function to ensure ResizeObserver is always available
+function ensureResizeObserver() {
+  if (!global.ResizeObserver || !globalThis.ResizeObserver || !window.ResizeObserver) {
+    global.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+    globalThis.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+    window.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+  }
+}
+
+// Set up ResizeObserver polyfill globally before any other imports
+// Use multiple assignment methods to ensure it's available everywhere
+ensureResizeObserver();
+
+// Also ensure it's available on the global object for any module that might check for it
+if (typeof globalThis !== 'undefined') {
+  globalThis.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+}
+if (typeof window !== 'undefined') {
+  window.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+}
+if (typeof global !== 'undefined') {
+  global.ResizeObserver = RESIZE_OBSERVER_POLYFILL;
+}
+
 import '@testing-library/jest-dom';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -9,6 +39,12 @@ import createFetchMock from 'vitest-fetch-mock';
 import { createLogger } from './shared/services/logger.service.js';
 // Import OpenSCAD parser test utility to register cleanup hooks
 import './vitest-helpers/openscad-parser-test-utils.js';
+
+// Set up a global afterEach hook to restore ResizeObserver after any test cleanup
+afterEach(() => {
+  // Ensure ResizeObserver polyfill is restored after any test cleanup
+  ensureResizeObserver();
+});
 
 // Enable Zustand mocking for proper store testing
 vi.mock('zustand');
@@ -62,44 +98,14 @@ Object.defineProperty(document, 'createElementNS', {
   }),
 });
 
-// Mock ResizeObserver for responsive components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// ResizeObserver polyfill is already set up at the top of this file
 
 // Mock IntersectionObserver for visibility-based components
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
-
-// Mock ResizeObserver for React Three Fiber Canvas components
-Object.defineProperty(global, 'ResizeObserver', {
+Object.defineProperty(global, 'IntersectionObserver', {
   writable: true,
   configurable: true,
-  value: vi.fn().mockImplementation((callback) => ({
-    observe: vi.fn((element) => {
-      // Simulate a resize event immediately
-      setTimeout(() => {
-        callback([{
-          target: element,
-          contentRect: {
-            width: 800,
-            height: 600,
-            top: 0,
-            left: 0,
-            bottom: 600,
-            right: 800,
-          },
-          borderBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-          contentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-          devicePixelContentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-        }], this);
-      }, 0);
-    }),
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
     unobserve: vi.fn(),
     disconnect: vi.fn(),
   })),
@@ -128,6 +134,17 @@ Object.defineProperty(window, 'addEventListener', {
 Object.defineProperty(window, 'removeEventListener', {
   writable: true,
   value: vi.fn(),
+});
+
+// Mock window.getComputedStyle for react-use-measure
+Object.defineProperty(window, 'getComputedStyle', {
+  writable: true,
+  value: vi.fn(() => ({
+    getPropertyValue: vi.fn(() => ''),
+    overflow: 'visible',
+    overflowX: 'visible',
+    overflowY: 'visible',
+  })),
 });
 
 const __dirname = import.meta.dirname;

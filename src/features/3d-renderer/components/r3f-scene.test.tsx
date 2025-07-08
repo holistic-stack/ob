@@ -16,16 +16,8 @@ import type {
 
 import { R3FScene } from './r3f-scene';
 
-// Mock ResizeObserver for test environment
-class MockResizeObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
-global.ResizeObserver = MockResizeObserver;
-
-// Use real primitive renderer service - no mocks except Three.js WebGL components
+// ResizeObserver polyfill is set up globally in vitest-setup.ts
+// No need for additional mocking here
 
 // Use real primitive renderer service - no mocks except Three.js WebGL components
 

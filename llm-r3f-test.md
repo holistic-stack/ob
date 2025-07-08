@@ -1,8 +1,168 @@
 # Testing @react-three/fiber Components
 
-Testing `@react-three/fiber` (R3F) components requires a specific approach due to their reliance on a WebGL canvas. This guide outlines the recommended strategies for unit/integration testing and end-to-end testing, adhering to the project's guidelines.
+Testing `@react-three/fiber` (R3F) components requires a specific approach due to their reliance on a WebGL canvas and browser APIs. This guide outlines the recommended strategies for unit/integration testing and end-to-end testing, including solutions for common issues like ResizeObserver and @react-three/drei dependencies.
 
-## 1. Unit & Integration Testing with `@react-three/test-renderer`
+## Common Issues and Solutions
+
+### ResizeObserver Polyfill
+
+React Three Fiber's Canvas component uses `react-use-measure` internally, which depends on ResizeObserver. This API is not available in test environments (jsdom/vitest), causing the error:
+
+```
+Error: This browser does not support ResizeObserver out of the box. See: https://github.com/react-spring/react-use-measure/#resize-observer-polyfills
+```
+
+**Solution: Install and configure resize-observer-polyfill**
+
+```bash
+pnpm add -D resize-observer-polyfill
+```
+
+Add to your vitest setup file (e.g., `src/vitest-setup.ts`):
+
+```typescript
+// Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
+import ResizeObserver from 'resize-observer-polyfill';
+
+// Set up ResizeObserver polyfill globally before any other imports
+global.ResizeObserver = ResizeObserver;
+
+// ... rest of your setup
+```
+
+**Important:** The polyfill import must be at the very top of your setup file, before any other imports that might use ResizeObserver.
+
+**Note on Test Isolation Issues:** When running multiple test files together, there can be module loading order issues where `@react-three/fiber` is imported before the polyfill is applied. In such cases, individual test files may need to mock the Canvas component instead of relying on the global polyfill.
+
+### Testing @react-three/drei Components
+
+@react-three/drei components often have dependencies that need special handling in tests:
+
+#### Stats Component
+The Stats component uses `detect-gpu` internally, which can cause issues in test environments.
+
+**Solution: Mock the Stats component**
+
+```typescript
+vi.mock('@react-three/drei', () => ({
+  Stats: () => <div data-testid="stats" />,
+  OrbitControls: () => <div data-testid="orbit-controls" />,
+  // Add other drei components as needed
+}));
+```
+
+#### OrbitControls Component
+OrbitControls works well with mocking but may need camera context.
+
+**Solution: Provide mock camera context**
+
+```typescript
+const mockCamera = {
+  position: { set: vi.fn(), x: 5, y: 5, z: 5 },
+  lookAt: vi.fn(),
+  updateProjectionMatrix: vi.fn(),
+};
+
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="r3f-canvas">{children}</div>
+  ),
+  useThree: vi.fn(() => ({
+    scene: { add: vi.fn(), remove: vi.fn(), children: [] },
+    camera: mockCamera,
+    gl: { domElement: document.createElement('canvas') },
+  })),
+}));
+```
+
+## Testing Strategies Overview
+
+There are three main approaches for testing R3F components:
+
+1. **Component Mocking** - Mock R3F components for integration tests
+2. **@react-three/test-renderer** - Use dedicated R3F test renderer for unit tests
+3. **End-to-End Testing** - Use Playwright for visual and interaction testing
+
+### When to Use Each Approach
+
+- **Component Mocking**: Best for testing React components that use R3F Canvas, focusing on component logic and state management
+- **@react-three/test-renderer**: Best for testing R3F scene components and 3D logic in isolation
+- **End-to-End Testing**: Best for visual regression testing and complex user interactions
+
+## 1. Component Mocking Strategy
+
+This approach mocks the R3F Canvas and drei components to test React component integration without WebGL complexity.
+
+### Example: Testing a Store-Connected R3F Component
+
+```typescript
+// src/components/my-3d-component.test.tsx
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { MyR3FComponent } from './my-3d-component';
+
+// Mock R3F Canvas component
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="r3f-canvas">{children}</div>
+  ),
+  useThree: vi.fn(() => ({
+    scene: { add: vi.fn(), remove: vi.fn(), children: [] },
+    camera: { position: { set: vi.fn() }, lookAt: vi.fn() },
+    gl: { domElement: document.createElement('canvas') },
+  })),
+}));
+
+// Mock drei components
+vi.mock('@react-three/drei', () => ({
+  Stats: () => <div data-testid="stats" />,
+  OrbitControls: () => <div data-testid="orbit-controls" />,
+}));
+
+describe('MyR3FComponent', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('should render Canvas and scene components', () => {
+    render(<MyR3FComponent />);
+
+    expect(screen.getByTestId('r3f-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('stats')).toBeInTheDocument();
+    expect(screen.getByTestId('orbit-controls')).toBeInTheDocument();
+  });
+
+  it('should handle props correctly', () => {
+    render(<MyR3FComponent width={800} height={600} />);
+
+    const component = screen.getByTestId('my-component');
+    expect(component).toHaveStyle({ width: '800px', height: '600px' });
+  });
+});
+```
+
+### Handling Store Integration
+
+When testing components connected to Zustand or other state management:
+
+```typescript
+// Mock your store
+vi.mock('../../store/app-store', () => ({
+  useAppStore: vi.fn((selector) => {
+    // Return stable mock values based on selector
+    if (typeof selector === 'function') {
+      const selectorStr = selector.toString();
+      if (selectorStr.includes('selectAST')) return [];
+      if (selectorStr.includes('selectCamera')) return mockCamera;
+      // Return no-op functions for actions
+      return () => {};
+    }
+    return [];
+  }),
+}));
+```
+
+## 2. Unit & Integration Testing with `@react-three/test-renderer`
 
 For testing the logic, props, and structure of your R3F components without a full browser environment, `@react-three/test-renderer` is the tool of choice. It renders your component tree into a JSON-like object, allowing you to inspect the scene graph and its elements. This approach aligns with the project guideline of *not mocking* the core Three.js environment, as it uses a dedicated renderer.
 
@@ -406,11 +566,132 @@ test.describe('3D Scene Rendering', () => {
 - **Mocking APIs:** For complex scenarios, you can mock network requests in Playwright to control data fetched by your R3F components (e.g., `page.route('**/model.gltf', route => route.fulfill({ path: './tests/fixtures/mock-model.gltf' }))`).
 - **Visual Regression:** Playwright's `toHaveScreenshot()` is powerful. Store golden screenshots and compare against them in CI/CD pipelines.
 
-## 3. Hybrid Testing Strategy (Recommended)
+## 4. Troubleshooting Common Issues
+
+### ResizeObserver Errors
+**Problem**: `Error: This browser does not support ResizeObserver out of the box`
+
+**Solution**: Install and configure resize-observer-polyfill as shown in the "Common Issues" section above.
+
+### detect-gpu Errors
+**Problem**: Tests fail with userAgent or GPU detection errors from @react-three/drei components
+
+**Solution**: Mock the drei components that use detect-gpu:
+```typescript
+vi.mock('@react-three/drei', () => ({
+  Stats: () => <div data-testid="stats" />,
+  // Mock other components that use detect-gpu
+}));
+```
+
+### Canvas Context Errors
+**Problem**: WebGL context errors in tests
+
+**Solution**: Mock HTMLCanvasElement.getContext:
+```typescript
+beforeAll(() => {
+  HTMLCanvasElement.prototype.getContext = vi.fn((contextType: string) => {
+    if (contextType === 'webgl' || contextType === 'webgl2') {
+      return {
+        // Mock WebGL context properties
+        canvas: {},
+        drawingBufferWidth: 800,
+        drawingBufferHeight: 600,
+        // Add other WebGL methods as needed
+      };
+    }
+    return null;
+  });
+});
+```
+
+### Module Import Errors
+**Problem**: ESM import issues with Three.js or R3F modules
+
+**Solution**: Configure Vite to optimize dependencies:
+```typescript
+// vite.config.ts
+export default defineConfig({
+  optimizeDeps: {
+    include: [
+      '@react-three/fiber',
+      '@react-three/drei',
+      'three',
+    ],
+  },
+});
+```
+
+### Performance Issues in Tests
+**Problem**: Tests are slow or hang
+
+**Solution**: Use mocking strategy instead of @react-three/test-renderer for integration tests, and reserve test-renderer for pure 3D logic testing.
+
+## 5. Best Practices Summary
+
+### Do's
+- ✅ Use resize-observer-polyfill for ResizeObserver support
+- ✅ Mock @react-three/drei components that use browser APIs
+- ✅ Use component mocking for integration tests
+- ✅ Use @react-three/test-renderer for pure 3D logic
+- ✅ Use Playwright for visual regression testing
+- ✅ Mock store/state management appropriately
+- ✅ Set up global mocks in vitest setup file
+
+### Don'ts
+- ❌ Don't try to run real WebGL in unit tests
+- ❌ Don't mock Three.js core objects unless necessary
+- ❌ Don't use detect-gpu in test environments
+- ❌ Don't forget to clean up after tests
+- ❌ Don't mix testing strategies in the same test file
+
+## 6. Hybrid Testing Strategy (Recommended)
 
 For most R3F projects, a hybrid approach is best:
 
-- **Unit/Integration Tests (`@react-three/test-renderer`):** Use for isolated component logic, prop validation, and scene graph structure. These are fast and run in a Node.js environment.
-- **E2E Tests (Playwright):** Use for critical visual checks, complex user interactions, and full application flow testing in a real browser. These are slower but provide high confidence.
+- **Component Mocking**: Use for React component integration tests, focusing on component logic and state management
+- **@react-three/test-renderer**: Use for isolated 3D scene logic, prop validation, and scene graph structure
+- **E2E Tests (Playwright)**: Use for critical visual checks, complex user interactions, and full application flow testing in a real browser
 
-By combining these strategies, you can achieve comprehensive test coverage for your `@react-three/fiber` applications.
+This approach provides:
+- Fast feedback for component logic (mocking)
+- Reliable 3D logic testing (test-renderer)
+- High confidence visual testing (E2E)
+
+By combining these strategies, you can achieve comprehensive test coverage for your `@react-three/fiber` applications while maintaining fast test execution and reliable results.
+
+## ResizeObserver Investigation Results
+
+### Root Cause Analysis
+The ResizeObserver issues in React Three Fiber tests were caused by:
+
+1. **Module Loading Order**: When running multiple test files together, `@react-three/fiber` modules were being imported before the ResizeObserver polyfill could be applied.
+
+2. **Mock Restoration Conflicts**: Test files using `vi.restoreAllMocks()` were clearing the ResizeObserver polyfill along with other mocks, causing failures in subsequent tests.
+
+3. **Missing Window APIs**: The `react-use-measure` library (used by R3F) requires not only ResizeObserver but also `window.getComputedStyle` and `window.addEventListener`.
+
+### Working Solution
+The final working solution involves:
+
+1. **Enhanced Global Polyfill Setup** in `vitest-setup.ts`:
+   - ResizeObserver polyfill with preservation mechanism
+   - Complete window API mocking (getComputedStyle, addEventListener, removeEventListener)
+   - Automatic restoration after test cleanups
+
+2. **Consistent Mock Management**:
+   - Removed conflicting ResizeObserver mocks from individual test files
+   - Ensured all test files rely on the global setup
+
+3. **Test Isolation Improvements**:
+   - Individual tests work perfectly with the global polyfill
+   - Full test suite has remaining issues due to mock restoration conflicts
+
+### Current Status
+- ✅ Individual React Three Fiber component tests pass
+- ✅ ResizeObserver polyfill working correctly
+- ✅ Window API mocking in place
+- ⚠️ Full test suite still has some failures due to `vi.restoreAllMocks()` conflicts
+
+### Summary
+The ResizeObserver polyfill approach provides a robust solution for testing React Three Fiber components, with the main challenge being test isolation when running multiple test files together due to mock restoration conflicts.

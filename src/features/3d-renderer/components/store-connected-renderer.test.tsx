@@ -6,6 +6,8 @@
  * Enhanced with comprehensive browser environment mocking to remove userAgent dependencies.
  */
 
+// ResizeObserver polyfill is set up globally in vitest-setup.ts
+
 import { cleanup, render, screen } from '@testing-library/react';
 
 import type React from 'react';
@@ -14,33 +16,7 @@ import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 
 import { StoreConnectedRenderer } from './store-connected-renderer';
 
-// Mock ResizeObserver before any imports that might use it
-Object.defineProperty(global, 'ResizeObserver', {
-  writable: true,
-  value: vi.fn().mockImplementation((callback) => ({
-    observe: vi.fn((element) => {
-      // Simulate a resize event immediately
-      setTimeout(() => {
-        callback([{
-          target: element,
-          contentRect: {
-            width: 800,
-            height: 600,
-            top: 0,
-            left: 0,
-            bottom: 600,
-            right: 800,
-          },
-          borderBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-          contentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-          devicePixelContentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
-        }], this);
-      }, 0);
-    }),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })),
-});
+// ResizeObserver is now mocked globally in vitest-setup.ts
 
 // Comprehensive browser environment mocking to remove userAgent dependencies
 beforeAll(() => {

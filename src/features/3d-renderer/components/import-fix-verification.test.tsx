@@ -163,9 +163,13 @@ describe('Import Fix Verification', () => {
     it('should handle missing ResizeObserver gracefully', () => {
       // Test that the application handles missing browser APIs gracefully
       const originalResizeObserver = global.ResizeObserver;
+      const originalGlobalThisResizeObserver = globalThis.ResizeObserver;
+      const originalWindowResizeObserver = window.ResizeObserver;
 
-      // Temporarily remove ResizeObserver
+      // Temporarily remove ResizeObserver from all global objects
       (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver = undefined;
+      (global as unknown as { ResizeObserver?: unknown }).ResizeObserver = undefined;
+      (window as unknown as { ResizeObserver?: unknown }).ResizeObserver = undefined;
 
       // The application should not crash
       expect(() => {
@@ -178,8 +182,10 @@ describe('Import Fix Verification', () => {
         expect(mockObserver).toBeDefined();
       }).not.toThrow();
 
-      // Restore ResizeObserver
+      // Restore ResizeObserver to all global objects
       global.ResizeObserver = originalResizeObserver;
+      globalThis.ResizeObserver = originalGlobalThisResizeObserver;
+      window.ResizeObserver = originalWindowResizeObserver;
     });
   });
 
