@@ -48,6 +48,10 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
 }) => {
   logger.init('Initializing store-connected Monaco Editor');
 
+  // Convert numeric values to CSS pixel values
+  const heightStyle = typeof height === 'number' ? `${height}px` : height;
+  const widthStyle = typeof width === 'number' ? `${width}px` : width;
+
   // Store selectors - all data comes from Zustand
   const code = useAppStore(selectEditorCode);
   const selection = useAppStore(selectEditorSelection);
@@ -140,7 +144,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     <div
       className={`store-connected-editor ${className}`}
       data-testid={testId}
-      style={{ height, width }}
+      style={{ height: heightStyle, width: widthStyle }}
     >
       {/* Editor Status Bar */}
       <div className="editor-status-bar bg-gray-800 text-white px-4 py-2 text-sm flex justify-between items-center">

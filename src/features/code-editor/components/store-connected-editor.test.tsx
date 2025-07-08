@@ -29,12 +29,14 @@ vi.mock('./monaco-editor', () => ({
       <div data-testid="monaco-editor-mock" {...props}>
         <textarea
           data-testid="monaco-textarea"
-          value={value}
-          onChange={(e) => onChange?.({ value: e.target.value, changes: [], versionId: 1 })}
-          onFocus={() =>
-            onCursorPositionChange?.({ position: { line: 1, column: 1 }, secondaryPositions: [] })
-          }
-          onSelect={() =>
+          value={value || ''}
+          onChange={(e) => {
+            onChange?.({ value: e.target.value, changes: [], versionId: 1 });
+          }}
+          onFocus={() => {
+            onCursorPositionChange?.({ position: { line: 1, column: 1 }, secondaryPositions: [] });
+          }}
+          onSelect={() => {
             onSelectionChange?.({
               selection: {
                 startLineNumber: 1,
@@ -43,8 +45,8 @@ vi.mock('./monaco-editor', () => ({
                 endColumn: 5,
               },
               secondarySelections: [],
-            })
-          }
+            });
+          }}
         />
       </div>
     );
@@ -98,8 +100,16 @@ vi.mock('../../store/app-store', () => ({
 
 describe('StoreConnectedEditor', () => {
   beforeEach(() => {
+    // Reset modules to ensure clean mock state
+    vi.resetModules();
+
+    // Comprehensive cleanup before each test
     cleanup();
     vi.clearAllMocks();
+
+    // Ensure clean DOM state
+    document.body.innerHTML = '';
+
     // Reset mock store state
     mockStoreState.editor.code = '';
     mockStoreState.editor.selection = null;
@@ -107,11 +117,56 @@ describe('StoreConnectedEditor', () => {
     mockStoreState.parsing.errors = [];
     mockStoreState.parsing.warnings = [];
     mockStoreState.config.enableRealTimeParsing = true;
+
+    // Ensure ResizeObserver is available
+    if (!global.ResizeObserver) {
+      global.ResizeObserver = class ResizeObserver {
+        observe() {
+          /* Mock implementation */
+        }
+        unobserve() {
+          /* Mock implementation */
+        }
+        disconnect() {
+          /* Mock implementation */
+        }
+      };
+    }
+
+    // Ensure window APIs are available for waitFor
+    if (!window.addEventListener || typeof window.addEventListener !== 'function') {
+      Object.defineProperty(window, 'addEventListener', {
+        writable: true,
+        value: vi.fn(),
+      });
+    }
+
+    if (!window.removeEventListener || typeof window.removeEventListener !== 'function') {
+      Object.defineProperty(window, 'removeEventListener', {
+        writable: true,
+        value: vi.fn(),
+      });
+    }
   });
 
   afterEach(() => {
+    // Comprehensive cleanup after each test
     vi.clearAllMocks();
     cleanup();
+
+    // Additional DOM cleanup
+    document.body.innerHTML = '';
+
+    // Clear any remaining timers
+    vi.clearAllTimers();
+
+    // Reset mock store state to prevent leakage
+    mockStoreState.editor.code = '';
+    mockStoreState.editor.selection = null;
+    mockStoreState.editor.isDirty = false;
+    mockStoreState.parsing.errors = [];
+    mockStoreState.parsing.warnings = [];
+    mockStoreState.config.enableRealTimeParsing = true;
   });
 
   describe('Component Rendering', () => {
@@ -195,45 +250,54 @@ describe('StoreConnectedEditor', () => {
 
   describe('Store Actions', () => {
     it('should call store actions when code changes', async () => {
-      render(<StoreConnectedEditor />);
+      const { container } = render(<StoreConnectedEditor />);
 
       const textarea = screen.getByTestId('monaco-textarea');
       fireEvent.change(textarea, { target: { value: 'cube([2,2,2]);' } });
 
-      await waitFor(() => {
-        expect(mockStoreActions.updateCode).toHaveBeenCalledWith('cube([2,2,2]);');
-        expect(mockStoreActions.markDirty).toHaveBeenCalled();
-      });
+      await waitFor(
+        () => {
+          expect(mockStoreActions.updateCode).toHaveBeenCalledWith('cube([2,2,2]);');
+          expect(mockStoreActions.markDirty).toHaveBeenCalled();
+        },
+        { container }
+      );
     });
 
     it('should call store actions when cursor position changes', async () => {
-      render(<StoreConnectedEditor />);
+      const { container } = render(<StoreConnectedEditor />);
 
       const textarea = screen.getByTestId('monaco-textarea');
       fireEvent.focus(textarea);
 
-      await waitFor(() => {
-        expect(mockStoreActions.updateCursorPosition).toHaveBeenCalledWith({
-          line: 1,
-          column: 1,
-        });
-      });
+      await waitFor(
+        () => {
+          expect(mockStoreActions.updateCursorPosition).toHaveBeenCalledWith({
+            line: 1,
+            column: 1,
+          });
+        },
+        { container }
+      );
     });
 
     it('should call store actions when selection changes', async () => {
-      render(<StoreConnectedEditor />);
+      const { container } = render(<StoreConnectedEditor />);
 
       const textarea = screen.getByTestId('monaco-textarea');
       fireEvent.select(textarea);
 
-      await waitFor(() => {
-        expect(mockStoreActions.updateSelection).toHaveBeenCalledWith({
-          startLineNumber: 1,
-          startColumn: 1,
-          endLineNumber: 1,
-          endColumn: 5,
-        });
-      });
+      await waitFor(
+        () => {
+          expect(mockStoreActions.updateSelection).toHaveBeenCalledWith({
+            startLineNumber: 1,
+            startColumn: 1,
+            endLineNumber: 1,
+            endColumn: 5,
+          });
+        },
+        { container }
+      );
     });
   });
 

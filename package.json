@@ -16,6 +16,7 @@
     "test:glob": "glob \"src/**/*.test.{ts,tsx}\"",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "test:code-editor": "echo 'Running code-editor tests individually to avoid isolation issues...' && vitest run src/features/code-editor/components/monaco-editor-simple.test.tsx --reporter=verbose && vitest run src/features/code-editor/components/store-connected-editor.test.tsx --reporter=verbose",
     "biome:check": "biome check --write .",
     "biome:lint": "biome lint .",
     "biome:format": "biome format --write .",

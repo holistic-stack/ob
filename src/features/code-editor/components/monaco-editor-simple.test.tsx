@@ -6,10 +6,10 @@
  */
 
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type * as monaco from 'monaco-editor';
 import { type FC, useEffect, useState } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonacoEditorProps } from '../types/editor.types';
 
 // Simple mock component for TDD
@@ -76,6 +76,42 @@ const MockMonacoEditor: FC<MonacoEditorProps> = ({
 
 describe('Monaco Editor Component (Simple)', () => {
   beforeEach(() => {
+    // Reset modules to ensure clean mock state
+    vi.resetModules();
+
+    // Clear all mocks before each test
+    vi.clearAllMocks();
+
+    // Ensure clean DOM state
+    document.body.innerHTML = '';
+
+    // Reset any global test state that might interfere
+    if (global.ResizeObserver) {
+      global.ResizeObserver = class ResizeObserver {
+        observe() {
+          /* Mock implementation */
+        }
+        unobserve() {
+          /* Mock implementation */
+        }
+        disconnect() {
+          /* Mock implementation */
+        }
+      };
+    }
+  });
+
+  afterEach(() => {
+    // Comprehensive cleanup after each test
+    cleanup();
+
+    // Additional DOM cleanup to prevent interference
+    document.body.innerHTML = '';
+
+    // Clear any remaining timers or async operations
+    vi.clearAllTimers();
+
+    // Reset mock call counts
     vi.clearAllMocks();
   });
 

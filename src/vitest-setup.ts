@@ -96,7 +96,7 @@ Object.defineProperty(performance, 'now', {
     const increment = 0.1; // Small increment per call
     const callCount = (performance.now as any).__callCount || 0;
     (performance.now as any).__callCount = callCount + 1;
-    return baseTime + (callCount * increment);
+    return baseTime + callCount * increment;
   }),
 });
 
@@ -111,6 +111,33 @@ Object.defineProperty(window, 'removeEventListener', {
   value: vi.fn(),
 });
 
+// Mock IE-specific event methods for React DOM compatibility
+Object.defineProperty(window, 'attachEvent', {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(window, 'detachEvent', {
+  writable: true,
+  value: vi.fn(),
+});
+
+// Mock these methods on all DOM elements to prevent React DOM errors
+const originalCreateElement = document.createElement;
+document.createElement = function (tagName: string, options?: ElementCreationOptions) {
+  const element = originalCreateElement.call(this, tagName, options);
+
+  // Add IE-specific event methods to all elements
+  if (!(element as any).attachEvent) {
+    (element as any).attachEvent = vi.fn();
+  }
+  if (!(element as any).detachEvent) {
+    (element as any).detachEvent = vi.fn();
+  }
+
+  return element;
+};
+
 // Mock window.getComputedStyle for react-use-measure
 Object.defineProperty(window, 'getComputedStyle', {
   writable: true,
@@ -119,17 +146,29 @@ Object.defineProperty(window, 'getComputedStyle', {
     const style = element.getAttribute('style') || '';
     const className = element.getAttribute('class') || '';
 
+    // Parse inline styles to extract width and height
+    const parseInlineStyle = (styleAttr: string, property: string): string => {
+      const regex = new RegExp(`${property}:\\s*([^;]+)`, 'i');
+      const match = styleAttr.match(regex);
+      return match ? match[1]?.trim() || '' : '';
+    };
+
+    const inlineWidth = parseInlineStyle(style, 'width');
+    const inlineHeight = parseInlineStyle(style, 'height');
+
     // Default computed style object
     const computedStyle: any = {
       getPropertyValue: vi.fn((property: string) => {
         // Handle common CSS properties for tests
         switch (property) {
           case 'width':
+            if (inlineWidth) return inlineWidth;
             if (style.includes('width: 1024px')) return '1024px';
             if (style.includes('width: 100%')) return '100%';
             if (className.includes('custom-class')) return '1024px';
             return '100%';
           case 'height':
+            if (inlineHeight) return inlineHeight;
             if (style.includes('height: 768px')) return '768px';
             if (style.includes('height: 400px')) return '400px';
             if (className.includes('custom-class')) return '768px';
@@ -141,8 +180,8 @@ Object.defineProperty(window, 'getComputedStyle', {
       overflow: 'visible',
       overflowX: 'visible',
       overflowY: 'visible',
-      width: style.includes('width: 1024px') ? '1024px' : '100%',
-      height: style.includes('height: 768px') ? '768px' : '400px',
+      width: inlineWidth || (style.includes('width: 1024px') ? '1024px' : '100%'),
+      height: inlineHeight || (style.includes('height: 768px') ? '768px' : '400px'),
     };
 
     return computedStyle;
