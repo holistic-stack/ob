@@ -262,13 +262,46 @@ const renderer = await ReactThreeTestRenderer.create(<Box color="blue" />);
 - **Documentation:** JSDoc comments for all public APIs
 - **Accessibility:** Full keyboard navigation and screen reader support
 
-## 11. Key Reference Documentation
+## 11. Debugging Standards
+
+### Debugging Methodology
+- **Headless-First Approach:** Prioritize CLI-based and testing-based debugging over browser DevTools
+- **Structured Logging:** Use tslog with component-specific loggers following `[INIT]/[DEBUG]/[ERROR]/[WARN]/[END][ComponentName]` patterns
+- **Result<T,E> Integration:** Debug functional error handling patterns with comprehensive error context
+- **Performance-Aware Debugging:** Monitor debugging impact on <16ms render targets
+
+### Debugging Workflow Integration
+- **TDD Debugging Cycle:** Red-Green-Refactor with debug logging at each stage
+- **Feature-Based Debugging:** Debug individual features (openscad-parser, 3d-renderer, code-editor) in isolation
+- **CI/CD Compatibility:** All debugging techniques must work in headless environments and CI pipelines
+- **Production Debugging:** Structured error monitoring and performance metrics collection
+
+### Essential Debugging Commands
+```bash
+# Core debugging workflow
+pnpm test --reporter=verbose                    # Verbose test output
+pnpm tsc --noEmit --extendedDiagnostics        # TypeScript debugging
+pnpm biome check --verbose                     # Static analysis debugging
+DEBUG=component:name pnpm dev                  # Component-specific debugging
+NODE_OPTIONS="--inspect" pnpm test             # Node.js debugging
+LOG_LEVEL=DEBUG pnpm dev                       # Enhanced logging
+```
+
+### Component-Specific Debugging Patterns
+- **OpenSCAD Parser:** `OPENSCAD_DEBUG=true pnpm test parser-tests`
+- **React Three Fiber:** `THREE_DEBUG=true pnpm test 3d-renderer`
+- **CSG Operations:** `CSG_DEBUG=true pnpm test csg-operations`
+- **Zustand Store:** State change subscription debugging with middleware
+- **Monaco Editor:** `MONACO_DEBUG=true pnpm dev`
+
+## 12. Key Reference Documentation
 
 ### Primary Documentation
 - **Architecture:** `docs/bulletproof-react-structure.md`
 - **TypeScript:** `docs/typescript-guidelines.md`
 - **Store Design:** `docs/zustand-store-architecture.md`
 - **Testing:** `llm-r3f-test.md`
+- **Debugging:** `docs/how-to-debug.md`
 - **Development:** This file (`.augment-guidelines`)
 
 ### Implementation Guides
@@ -276,5 +309,11 @@ const renderer = await ReactThreeTestRenderer.create(<Box color="blue" />);
 - **Monaco Editor:** `docs/monaco-editor-integration.md`
 - **React Three Fiber:** `docs/react-three-fiber-integration.md`
 - **OpenSCAD Parser:** `docs/openscad-parser-integration.md`
+
+### Debugging & Quality Assurance
+- **Comprehensive Debugging:** `docs/how-to-debug.md`
+- **Test Failure Analysis:** `DEBUG_CONFIG.md`
+- **Logging Integration:** `docs/logging/tslog-integration.md`
+- **Logging Quick Reference:** `docs/logging/tslog-quick-reference.md`
 
 This guide provides everything needed for a new developer to understand and contribute to the OpenSCAD Babylon project effectively.

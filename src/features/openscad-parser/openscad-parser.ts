@@ -602,8 +602,8 @@ export class OpenscadParser {
           const primitiveType = primitiveMatch[1];
           const primitiveStart = line.indexOf(primitiveType);
 
-          // Create synthetic primitive node
-          return this.createSyntheticPrimitive(primitiveType, startLine + i, primitiveStart);
+          // Create synthetic primitive node with actual parameters from source code
+          return this.createSyntheticPrimitive(primitiveType, startLine + i, primitiveStart, line);
         }
       }
 
@@ -615,9 +615,9 @@ export class OpenscadParser {
   }
 
   /**
-   * Create a synthetic primitive node for workarounds.
+   * Create a synthetic primitive node for workarounds with actual parameters from source code.
    */
-  private createSyntheticPrimitive(primitiveType: string, line: number, column: number): ASTNode {
+  private createSyntheticPrimitive(primitiveType: string, line: number, column: number, sourceLine?: string): ASTNode {
     const location = {
       start: { line, column, offset: 0 },
       end: { line, column: column + primitiveType.length, offset: primitiveType.length },
@@ -625,33 +625,183 @@ export class OpenscadParser {
 
     switch (primitiveType) {
       case 'cube':
-        return {
-          type: 'cube',
-          size: 10,
-          center: false,
-          location,
-        };
+        return this.createSyntheticCube(location, sourceLine);
       case 'sphere':
-        return {
-          type: 'sphere',
-          radius: 5,
-          location,
-        };
+        return this.createSyntheticSphere(location, sourceLine);
       case 'cylinder':
-        return {
-          type: 'cylinder',
-          h: 10,
-          r1: 5,
-          r2: 5,
-          center: false,
-          location,
-        };
+        return this.createSyntheticCylinder(location, sourceLine);
       default:
         return {
           type: primitiveType as any,
           location,
         };
     }
+  }
+
+  /**
+   * Create a synthetic cube node with parameters extracted from source code.
+   */
+  private createSyntheticCube(location: any, sourceLine?: string): ASTNode {
+    let size: number | [number, number, number] = 1; // default (OpenSCAD standard)
+    let center = false; // default
+
+    if (sourceLine) {
+      try {
+        // Extract cube parameters from source line
+        // Pattern: cube(size, center=true/false) or cube([x,y,z], center=true/false)
+        // Updated regex to handle vector syntax with brackets and commas
+        const cubeMatch = sourceLine.match(/cube\s*\(\s*(\[[^\]]+\]|[^,)]+)(?:\s*,\s*center\s*=\s*(true|false))?\s*\)/);
+
+        if (cubeMatch) {
+          const sizeParam = cubeMatch[1].trim();
+          const centerParam = cubeMatch[2];
+
+
+
+          // Parse size parameter
+          if (sizeParam.startsWith('[') && sizeParam.endsWith(']')) {
+            // Vector size: [x, y, z]
+            const vectorContent = sizeParam.slice(1, -1); // Remove [ and ]
+            const components = vectorContent.split(',').map(s => s.trim());
+            if (components.length === 3) {
+              const x = parseFloat(components[0] || '0');
+              const y = parseFloat(components[1] || '0');
+              const z = parseFloat(components[2] || '0');
+              if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                size = [x, y, z];
+
+              }
+            }
+          } else {
+            // Scalar size
+            const scalarSize = parseFloat(sizeParam);
+            if (!isNaN(scalarSize)) {
+              size = scalarSize;
+            } else {
+            }
+          }
+
+          // Parse center parameter
+          if (centerParam) {
+            center = centerParam === 'true';
+          }
+        }
+      } catch (error) {
+        console.error('[ERROR][OpenscadParser] Failed to parse cube parameters from source line:', error);
+      }
+    }
+
+    return {
+      type: 'cube',
+      size,
+      center,
+      location,
+    };
+  }
+
+  /**
+   * Create a synthetic sphere node with parameters extracted from source code.
+   */
+  private createSyntheticSphere(location: any, sourceLine?: string): ASTNode {
+    let radius = 5; // default
+
+    if (sourceLine) {
+      try {
+        // Extract sphere parameters from source line
+        // Pattern: sphere(radius) or sphere(r=radius)
+        const sphereMatch = sourceLine.match(/sphere\s*\(\s*(?:r\s*=\s*)?([^,)]+)\s*\)/);
+
+        if (sphereMatch && sphereMatch[1]) {
+          const radiusParam = sphereMatch[1].trim();
+          const parsedRadius = parseFloat(radiusParam);
+          if (!isNaN(parsedRadius)) {
+            radius = parsedRadius;
+          }
+        }
+      } catch (error) {
+        console.error('[ERROR][OpenscadParser] Failed to parse sphere parameters from source line:', error);
+      }
+    }
+
+    return {
+      type: 'sphere',
+      radius,
+      location,
+    };
+  }
+
+  /**
+   * Create a synthetic cylinder node with parameters extracted from source code.
+   */
+  private createSyntheticCylinder(location: any, sourceLine?: string): ASTNode {
+    let h = 10; // default height
+    let r1 = 5; // default bottom radius
+    let r2 = 5; // default top radius
+    let center = false; // default
+
+    if (sourceLine) {
+      try {
+        // Extract cylinder parameters from source line
+        // Pattern: cylinder(h=height, r=radius) or cylinder(h=height, r1=r1, r2=r2, center=true/false)
+        const cylinderMatch = sourceLine.match(/cylinder\s*\(([^)]+)\)/);
+
+        if (cylinderMatch && cylinderMatch[1]) {
+          const params = cylinderMatch[1];
+
+          // Parse height
+          const hMatch = params.match(/h\s*=\s*([^,)]+)/);
+          if (hMatch && hMatch[1]) {
+            const parsedH = parseFloat(hMatch[1].trim());
+            if (!isNaN(parsedH)) {
+              h = parsedH;
+            }
+          }
+
+          // Parse radius (single radius)
+          const rMatch = params.match(/(?:^|,)\s*r\s*=\s*([^,)]+)/);
+          if (rMatch && rMatch[1]) {
+            const parsedR = parseFloat(rMatch[1].trim());
+            if (!isNaN(parsedR)) {
+              r1 = r2 = parsedR;
+            }
+          } else {
+            // Parse r1 and r2 separately
+            const r1Match = params.match(/r1\s*=\s*([^,)]+)/);
+            if (r1Match && r1Match[1]) {
+              const parsedR1 = parseFloat(r1Match[1].trim());
+              if (!isNaN(parsedR1)) {
+                r1 = parsedR1;
+              }
+            }
+
+            const r2Match = params.match(/r2\s*=\s*([^,)]+)/);
+            if (r2Match && r2Match[1]) {
+              const parsedR2 = parseFloat(r2Match[1].trim());
+              if (!isNaN(parsedR2)) {
+                r2 = parsedR2;
+              }
+            }
+          }
+
+          // Parse center parameter
+          const centerMatch = params.match(/center\s*=\s*(true|false)/);
+          if (centerMatch && centerMatch[1]) {
+            center = centerMatch[1] === 'true';
+          }
+        }
+      } catch (error) {
+        console.error('[ERROR][OpenscadParser] Failed to parse cylinder parameters from source line:', error);
+      }
+    }
+
+    return {
+      type: 'cylinder',
+      h,
+      r1,
+      r2,
+      center,
+      location,
+    };
   }
 
   /**
@@ -717,23 +867,38 @@ export class OpenscadParser {
       }
 
       // Check if the line contains both transform and primitive (e.g., "translate([10,0,0]) sphere(10);")
-      const primitiveMatch = transformLine.match(
-        /\)\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
-      );
-      if (primitiveMatch) {
-        const primitiveType = primitiveMatch[1];
+      // We need to find the primitive that comes AFTER the transform, not any primitive in the line
+      const transformMatch = transformLine.match(/(translate|rotate|scale|mirror)\s*\([^)]+\)/);
+      if (transformMatch) {
+        const transformEnd = transformMatch.index! + transformMatch[0].length;
+        const afterTransform = transformLine.substring(transformEnd);
 
-        // Extract the primitive part and parse it separately
-        const primitiveStart = transformLine.indexOf(primitiveType);
-        const primitivePart = transformLine.substring(primitiveStart);
+        const primitiveMatch = afterTransform.match(
+          /\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+        );
+        if (primitiveMatch) {
+          const primitiveType = primitiveMatch[1];
+          if (!primitiveType) {
+            return transformNode;
+          }
 
-        // Parse the primitive part to get its AST
-        const primitiveAST = this.parsePrimitivePart(primitivePart);
-        if (primitiveAST.length > 0) {
-          // Add the primitive as a child of the transform
+          // Extract the primitive part that comes after the transform
+          const primitiveStart = transformEnd + afterTransform.indexOf(primitiveType);
+          const primitivePart = transformLine.substring(primitiveStart);
+
+          // Instead of parsing the primitive part with Tree-sitter (which can fail),
+          // use the synthetic primitive creation approach that works reliably
+          const syntheticPrimitive = this.createSyntheticPrimitive(
+            primitiveType,
+            transformNode.location?.start.line || 0,
+            primitiveStart,
+            primitivePart
+          );
+
+          // Add the synthetic primitive as a child of the transform
           const enhancedTransform = { ...transformNode };
           if ('children' in enhancedTransform && Array.isArray(enhancedTransform.children)) {
-            enhancedTransform.children = [...primitiveAST];
+            enhancedTransform.children = [syntheticPrimitive];
           }
           return enhancedTransform;
         }
@@ -747,43 +912,7 @@ export class OpenscadParser {
     return transformNode;
   }
 
-  /**
-   * Parse a primitive part of the code (e.g., "sphere(10);") to get its AST.
-   *
-   * @param primitivePart - The primitive code to parse
-   * @returns Array of AST nodes representing the primitive
-   */
-  private parsePrimitivePart(primitivePart: string): ASTNode[] {
-    try {
-      // Clean up the primitive part
-      const cleanPrimitive = primitivePart.trim();
-      if (!cleanPrimitive.endsWith(';')) {
-        // Add semicolon if missing
-        return this.parseAST(cleanPrimitive + ';');
-      }
 
-      // Parse the primitive part directly
-      // Note: We need to be careful about recursion here
-      const cst = this.parseCST(cleanPrimitive);
-      if (!cst || !this.language) {
-        return [];
-      }
-
-      const astGenerator = new VisitorASTGenerator(
-        cst,
-        cleanPrimitive,
-        this.language,
-        this.errorHandler
-      );
-      const primitiveAST = astGenerator.generate();
-
-      // Return the primitive AST without applying workarounds again (to avoid recursion)
-      return primitiveAST;
-    } catch (error) {
-      this.errorHandler.handleError(new Error(`Failed to parse primitive part: ${error}`));
-      return [];
-    }
-  }
 
   /**
    * Parse OpenSCAD code and return a Result type for better error handling

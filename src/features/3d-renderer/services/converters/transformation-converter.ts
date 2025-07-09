@@ -139,25 +139,22 @@ export const convertTranslateNode = async (
     logger.error(`🔍 TRANSLATE VECTOR: Using translation vector [${x}, ${y}, ${z}] from node.v:`, node.v);
     logger.error(`🔍 TRANSLATE NODE: Full translate node:`, JSON.stringify(node, null, 2));
 
-    // Apply translation to geometry (required for CSG operations)
+    // Apply translation to mesh position (proper Three.js behavior)
     // Three.js coordinate system: X=right, Y=up, Z=forward (towards viewer)
     // OpenSCAD coordinate system: X=right, Y=forward, Z=up
     // For now, use direct mapping and verify with test case
 
-    // For CSG operations, we need to translate the geometry, not just the mesh position
-    // This ensures the translation is baked into the vertices before CSG operations
+    logger.debug(`🔧 TRANSLATE POSITION FIX: Applying translation [${x}, ${y}, ${z}] to mesh position`);
 
-    logger.error(`🔧 TRANSLATE GEOMETRY FIX: Applying translation [${x}, ${y}, ${z}] to geometry instead of mesh position`);
+    // Apply translation to mesh position (proper Three.js approach)
+    mesh.position.set(x, y, z);
 
-    // Apply translation directly to the geometry
-    mesh.geometry.translate(x, y, z);
-
-    logger.error(`✅ TRANSLATE APPLIED: Geometry translated by [${x}, ${y}, ${z}]`);
-    logger.error(`🔍 TRANSLATE FINAL: Translation applied to geometry for CSG compatibility`);
-    logger.error(`🔍 TRANSLATE POSITION: Mesh position remains at [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`);
+    logger.debug(`✅ TRANSLATE APPLIED: Mesh position set to [${x}, ${y}, ${z}]`);
+    logger.debug(`🔍 TRANSLATE FINAL: Translation applied to mesh position for proper Three.js behavior`);
+    logger.debug(`🔍 TRANSLATE POSITION: Mesh position is now [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`);
 
     mesh.updateMatrix();
-    logger.error(`✅ TRANSLATE COMPLETE: Geometry translation applied and matrix updated`);
+    logger.debug(`✅ TRANSLATE COMPLETE: Mesh position applied and matrix updated`);
 
     return mesh;
   });

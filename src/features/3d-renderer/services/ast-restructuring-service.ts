@@ -778,7 +778,7 @@ const createSyntheticPrimitiveNode = (
     case 'cube':
       return {
         type: 'cube',
-        size: 10, // Default size
+        size: 1, // Default size (OpenSCAD standard)
         center: false,
         location,
       };
