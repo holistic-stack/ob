@@ -13,6 +13,30 @@ import type {
 const logger = createLogger('TransformationConverter');
 
 /**
+ * Get current source code from Monaco Editor for vector parsing workaround
+ */
+function getCurrentSourceCode(): string | null {
+  try {
+    // Try to get source code from Monaco Editor
+    const codeElement = document.querySelector('.monaco-editor textarea');
+    if (codeElement && 'value' in codeElement) {
+      return (codeElement as HTMLTextAreaElement).value;
+    }
+
+    // Fallback: try to get from Monaco Editor content
+    const monacoContent = document.querySelector('.monaco-editor .view-lines');
+    if (monacoContent) {
+      return monacoContent.textContent || null;
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('Failed to get current source code:', error);
+    return null;
+  }
+}
+
+/**
  * Convert translate node to mesh by processing children and applying transformation
  */
 export const convertTranslateNode = async (
@@ -72,8 +96,43 @@ export const convertTranslateNode = async (
 
     // Apply translation - extract vector from TranslateNode
     // The TranslateNode should have a 'v' property with [x, y, z] vector
-    const translationVector: [number, number, number] =
-      Array.isArray(node.v) && node.v.length === 3 ? [node.v[0], node.v[1], node.v[2]] : [0, 0, 0];
+    logger.error(`🔍 TRANSLATE RAW: Raw node.v received:`, node.v);
+    logger.error(`🔍 TRANSLATE RAW: node.v type:`, typeof node.v);
+    logger.error(`🔍 TRANSLATE RAW: node.v isArray:`, Array.isArray(node.v));
+    logger.error(`🔍 TRANSLATE RAW: node.v length:`, Array.isArray(node.v) ? node.v.length : 'not array');
+    logger.error(`🔍 TRANSLATE RAW: node.v values:`, Array.isArray(node.v) ? node.v.map((v, i) => `[${i}]=${v} (${typeof v})`) : 'not array');
+
+    // Extract translation vector with Tree-sitter workaround
+    let translationVector: [number, number, number] = [0, 0, 0];
+
+    if (Array.isArray(node.v) && node.v.length === 3) {
+      translationVector = [node.v[0], node.v[1], node.v[2]];
+      logger.error(`✅ TRANSLATE TREE-SITTER: Successfully extracted vector from Tree-sitter: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
+    } else {
+      // Tree-sitter vector parsing failed - apply text-based workaround
+      logger.error(`🔧 TRANSLATE WORKAROUND: Tree-sitter vector parsing failed, applying text-based extraction`);
+
+      // Try to extract from source code using text-based parsing
+      const sourceCode = getCurrentSourceCode();
+      if (sourceCode) {
+        const vectorMatch = sourceCode.match(/translate\s*\(\s*\[([^\]]+)\]/);
+        if (vectorMatch?.[1]) {
+          const vectorContent = vectorMatch[1];
+          const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+          if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
+            translationVector = [numbers[0] ?? 0, numbers[1] ?? 0, numbers[2] ?? 0];
+            logger.error(`✅ TRANSLATE WORKAROUND: Successfully extracted vector from source code: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
+          } else {
+            logger.error(`❌ TRANSLATE WORKAROUND: Failed to parse vector from source code: "${vectorContent}"`);
+          }
+        } else {
+          logger.error(`❌ TRANSLATE WORKAROUND: No translate vector pattern found in source code`);
+        }
+      } else {
+        logger.error(`❌ TRANSLATE WORKAROUND: No source code available for text-based extraction`);
+      }
+    }
 
     const [x, y, z] = translationVector;
 
@@ -87,7 +146,6 @@ export const convertTranslateNode = async (
 
     // For CSG operations, we need to translate the geometry, not just the mesh position
     // This ensures the translation is baked into the vertices before CSG operations
-    const originalPos = [mesh.position.x, mesh.position.y, mesh.position.z];
 
     logger.error(`🔧 TRANSLATE GEOMETRY FIX: Applying translation [${x}, ${y}, ${z}] to geometry instead of mesh position`);
 

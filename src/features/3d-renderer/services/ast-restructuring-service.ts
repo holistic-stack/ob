@@ -355,17 +355,40 @@ const findNextPrimitiveAfterTransform = (
     const nodeStartLine = node.location.start.line;
     const nodeStartColumn = node.location.start.column;
 
+    if (config.enableLogging) {
+      logger.debug(
+        `Checking primitive ${node.type} at line ${nodeStartLine}, col ${nodeStartColumn} vs transform end at line ${transformEndLine}, col ${transformEndColumn}`
+      );
+    }
+
     // For single-line format: primitive must appear AFTER the transform on the same line
     // For multi-line format: primitive must appear on a later line
 
     if (nodeStartLine === transformEndLine) {
       // Same line: check column position to ensure primitive comes after transform
-      return nodeStartColumn > transformEndColumn;
+      const isAfterTransform = nodeStartColumn > transformEndColumn;
+      if (config.enableLogging) {
+        logger.debug(
+          `Same line check: ${node.type} ${isAfterTransform ? 'AFTER' : 'BEFORE'} transform (${nodeStartColumn} > ${transformEndColumn})`
+        );
+      }
+      return isAfterTransform;
     } else if (nodeStartLine > transformEndLine) {
       // Later line: allow primitives within reasonable distance
-      return nodeStartLine <= transformEndLine + 2;
+      const isWithinDistance = nodeStartLine <= transformEndLine + 2;
+      if (config.enableLogging) {
+        logger.debug(
+          `Later line check: ${node.type} ${isWithinDistance ? 'WITHIN' : 'OUTSIDE'} distance (line ${nodeStartLine} <= ${transformEndLine + 2})`
+        );
+      }
+      return isWithinDistance;
     } else {
       // Earlier line: not a valid child
+      if (config.enableLogging) {
+        logger.debug(
+          `Earlier line check: ${node.type} BEFORE transform (line ${nodeStartLine} < ${transformEndLine}) - REJECTED`
+        );
+      }
       return false;
     }
   });
@@ -375,7 +398,16 @@ const findNextPrimitiveAfterTransform = (
       `Found ${candidateNodes.length} candidate primitives after transform ${transformNode.type}`
     );
     candidateNodes.forEach((node) => {
-      logger.debug(`Candidate: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
+      logger.debug(`✅ CANDIDATE: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
+    });
+
+    // Also log rejected nodes for debugging
+    const rejectedNodes = allNodes.filter((node) => {
+      return node !== transformNode && isPrimitiveNode(node) && node.location && !candidateNodes.includes(node);
+    });
+    logger.debug(`Found ${rejectedNodes.length} rejected primitives:`);
+    rejectedNodes.forEach((node) => {
+      logger.debug(`❌ REJECTED: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
     });
   }
 

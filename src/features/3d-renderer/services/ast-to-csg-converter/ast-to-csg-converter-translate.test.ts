@@ -53,6 +53,30 @@ describe('AST to CSG Converter - Translate Node Handling', () => {
       logger.debug('✅ All translate parameter extraction tests passed');
     });
 
+    it('should handle Tree-sitter vector parsing workaround for complex vectors', () => {
+      // Test case for the specific bug we fixed: translate([100,20,30]) was being parsed as [10, 0, 0]
+      const complexVectorCases = [
+        { code: 'cube(5, center=true);translate([100,20,30])sphere(10);', expected: [100, 20, 30] },
+        { code: 'translate([150,250,350])cube(5);', expected: [150, 250, 350] },
+        { code: 'translate([999,888,777])sphere(r=15);', expected: [999, 888, 777] },
+        { code: 'translate([12.5,34.7,56.9])cylinder(h=10, r=3);', expected: [12.5, 34.7, 56.9] },
+      ];
+
+      complexVectorCases.forEach(({ code, expected }) => {
+        const extracted = extractTranslateParameters(code);
+        expect(extracted).not.toBeNull();
+        if (extracted) {
+          expect(extracted).toHaveLength(3);
+          expect(extracted[0]).toBeCloseTo(expected[0], 5);
+          expect(extracted[1]).toBeCloseTo(expected[1], 5);
+          expect(extracted[2]).toBeCloseTo(expected[2], 5);
+          logger.debug(`✅ Complex vector extraction: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}] from: ${code}`);
+        }
+      });
+
+      logger.debug('✅ All Tree-sitter vector parsing workaround tests passed');
+    });
+
     it('should return null for invalid translate syntax', () => {
       const invalidCases = [
         'translate() sphere(5);',

@@ -10,7 +10,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
-import { OpenscadParser } from '../openscad-parser/openscad-parser.js';
+import { getParserInitializationService } from '../openscad-parser/services/parser-initialization.service.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
@@ -57,9 +57,10 @@ export const DEFAULT_CAMERA: CameraConfig = {
 export const DEFAULT_OPENSCAD_CODE = '';
 
 /**
- * Shared parser service instance
+ * Parser initialization is now handled by the parser initialization service
+ * in the parsing slice. This ensures proper singleton pattern and prevents
+ * multiple initialization calls that could cause import hangs.
  */
-const parserService = new OpenscadParser();
 
 /**
  * Initial application state
@@ -111,10 +112,9 @@ export const createAppStore = (
   const storeCreator = immer<AppStore>((set, get) => ({
     ...(createInitialState(options) as AppStore),
     ...createEditorSlice(set, get, {
-      parserService,
       debounceConfig: options.debounceConfig,
     }),
-    ...createParsingSlice(set, get, { parserService }),
+    ...createParsingSlice(set, get),
     ...createRenderingSlice(set, get),
     ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
   }));
@@ -199,10 +199,9 @@ export const useAppStore = create<AppStore>()(
         const store = {
           ...createInitialState(defaultStoreOptions),
           ...createEditorSlice(set, get, {
-            parserService,
             debounceConfig: defaultStoreOptions.debounceConfig,
           }),
-          ...createParsingSlice(set, get, { parserService }),
+          ...createParsingSlice(set, get),
           ...createRenderingSlice(set, get),
           ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
         };

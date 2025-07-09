@@ -18,16 +18,14 @@ import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 import type { AppStore, EditorSlice } from '../types/store.types.js';
 
 interface EditorSliceConfig {
-  parserService: OpenscadParser;
   debounceConfig: DebounceConfig;
 }
 
 export const createEditorSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
-  { parserService: _parserService, debounceConfig }: EditorSliceConfig
+  { debounceConfig }: EditorSliceConfig
 ): Omit<EditorSlice, keyof AppStore['editor']> => {
-  // Note: parserService is passed for consistency with other slices but not used directly
   // Editor slice delegates parsing to the parsing slice via store.parseCode()
   // Debounced functions
   const debouncedParseInternal = debounce((code: string) => {

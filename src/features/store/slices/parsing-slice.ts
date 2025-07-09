@@ -22,19 +22,20 @@ import {
   setSourceCodeForRestructuring,
 } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
+import { initializeParser, getInitializedParser, isParserReady } from '../../openscad-parser/services/parser-initialization.service.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
 
 interface ParsingSliceConfig {
-  parserService: OpenscadParser;
+  // No longer need parserService parameter - using initialization service
 }
 
 export const createParsingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
-  { parserService }: ParsingSliceConfig
+  _config?: ParsingSliceConfig
 ): ParsingActions => {
   return {
     parseCode: async (
@@ -56,11 +57,41 @@ export const createParsingSlice = (
       try {
         logger.debug(`Starting parse of ${code.length} characters`);
 
-        // Ensure parser is initialized
-        await parserService.init();
+        // Ensure parser is initialized using singleton service
+        const initResult = await initializeParser();
+        if (!initResult.success) {
+          const errorMessage = `Parser initialization failed: ${initResult.error}`;
 
-        // Use unified parser service
-        const parseResult = parserService.parseASTWithResult(code);
+          set((state: WritableDraft<AppStore>) => {
+            state.parsing.isLoading = false;
+            state.parsing.errors = [errorMessage];
+          });
+
+          logger.error(errorMessage);
+          const operationError = operationUtils.createOperationError('INIT_ERROR', errorMessage, {
+            recoverable: true,
+          });
+          return operationUtils.createError(operationError, metadata);
+        }
+
+        const parser = getInitializedParser();
+        if (!parser) {
+          const errorMessage = 'Parser not available after initialization';
+
+          set((state: WritableDraft<AppStore>) => {
+            state.parsing.isLoading = false;
+            state.parsing.errors = [errorMessage];
+          });
+
+          logger.error(errorMessage);
+          const operationError = operationUtils.createOperationError('PARSER_ERROR', errorMessage, {
+            recoverable: true,
+          });
+          return operationUtils.createError(operationError, metadata);
+        }
+
+        // Use the initialized parser
+        const parseResult = parser.parseASTWithResult(code);
 
         if (!isSuccess(parseResult)) {
           const errorMessage = `Parse failed: ${parseResult.error}`;
