@@ -1,0 +1,8 @@
+{
+  "project_name": "openscad-babylon",
+  "language": "typescript",
+  "framework": "react",
+  "testing_framework": "vitest",
+  "source_directory": "src",
+  "component_directory": "src/shared/components"
+}

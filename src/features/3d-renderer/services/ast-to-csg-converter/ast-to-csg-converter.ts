@@ -592,6 +592,7 @@ const convertFunctionCallNode = async (
     material: THREE.Material
   ) => Promise<Result<THREE.Mesh, string>>
 ): Promise<Result<THREE.Mesh, string>> => {
+  logger.debug('[convertFunctionCallNode] Converting function call node:', node);
   logger.debug(`Converting function_call node:`, node);
 
   // Extract function name from function_call node
@@ -693,6 +694,7 @@ const convertFunctionCallNode = async (
 
     // Transformations
     case 'translate':
+      logger.debug('[convertFunctionCallNode] Calling convertTranslateNode for:', typedNode);
       return await convertTranslateNode(typedNode as TranslateNode, material, convertASTNodeToMesh);
     case 'rotate':
       return await convertRotateNode(typedNode as RotateNode, material, convertASTNodeToMesh);
@@ -831,20 +833,49 @@ const extractParametersFromModuleInstantiation = (
 ): Record<string, ParameterValue> => {
   const params: Record<string, ParameterValue> = {};
 
+  logger.debug(`🔍 PARAMETER EXTRACTION DEBUG:`, {
+    nodeName: 'name' in node ? node.name : 'no name',
+    nodeArgs: node.args,
+    argsLength: node.args ? node.args.length : 0
+  });
+
   if (node.args && Array.isArray(node.args)) {
-    for (const arg of node.args) {
+    for (let i = 0; i < node.args.length; i++) {
+      const arg = node.args[i];
+
+      logger.debug(`Processing arg ${i}:`, {
+        name: arg.name,
+        value: arg.value,
+        hasName: !!arg.name,
+        hasValue: arg.value !== undefined
+      });
+
       if (arg.name && arg.value !== undefined) {
         // Named parameter: name=value
         params[arg.name] = arg.value;
+        logger.debug(`Added named parameter: ${arg.name} = ${arg.value}`);
       } else if (arg.value !== undefined) {
-        // Positional parameter - use first one for simple cases
-        if (!params._firstParam) {
+        // Positional parameter - store all positional parameters
+        if (i === 0) {
           params._firstParam = arg.value;
+          // For cube, the first parameter is typically 'size'
+          if (!params.size) {
+            params.size = arg.value;
+          }
+          logger.debug(`Added first positional parameter as size: ${arg.value}`);
+        } else if (i === 1) {
+          params._secondParam = arg.value;
+          // For cube, the second parameter is typically 'center'
+          if (!params.center) {
+            params.center = arg.value;
+          }
+          logger.debug(`Added second positional parameter as center: ${arg.value}`);
         }
       }
     }
   }
 
+  logger.debug(`Final extracted parameters:`, params);
   return params;
 };
 
@@ -853,12 +884,46 @@ const extractParametersFromModuleInstantiation = (
  */
 const moduleInstantiationToCubeNode = (node: ModuleInstantiationNode): CubeNode => {
   const params = extractParametersFromModuleInstantiation(node);
-  return {
+
+  logger.debug(`🔍 CUBE CONVERSION DEBUG:`, {
+    nodeName: 'name' in node ? node.name : 'no name',
+    extractedParams: params,
+    sizeParam: params.size,
+    firstParam: params._firstParam,
+    centerParam: params.center,
+    secondParam: params._secondParam
+  });
+
+  // Determine size - prioritize explicit size parameter, then first positional parameter
+  let size: number | [number, number, number] = 1;
+  if (params.size !== undefined) {
+    size = params.size;
+  } else if (params._firstParam !== undefined) {
+    size = params._firstParam;
+  }
+
+  // Determine center - prioritize explicit center parameter, then second positional parameter
+  let center = false;
+  if (params.center !== undefined) {
+    center = Boolean(params.center);
+  } else if (params._secondParam !== undefined) {
+    center = Boolean(params._secondParam);
+  }
+
+  const cubeNode = {
     type: 'cube',
-    size: params.size || params._firstParam || 1,
-    center: Boolean(params.center),
+    size,
+    center,
     location: node.location,
   } as CubeNode;
+
+  logger.debug(`Created CubeNode:`, {
+    size: cubeNode.size,
+    center: cubeNode.center,
+    type: cubeNode.type
+  });
+
+  return cubeNode;
 };
 
 /**
@@ -1921,6 +1986,9 @@ export const convertASTNodeToCSG = async (
   index: number,
   config: Partial<CSGConversionConfig> = {}
 ): Promise<Result<Mesh3D, string>> => {
+  console.log('--- ast-to-csg-converter.ts ---');
+  console.log('node', node);
+
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
   logger.init(`Converting AST node ${index} (${node.type}) to CSG`);
