@@ -796,6 +796,34 @@ const convertFunctionCallNode = async (
 };
 
 /**
+ * Get source code for parameter extraction (fallback method)
+ */
+const getSourceCodeForExtraction = (): string | null => {
+  try {
+    // Try to get source code from the current parsing context
+    // This is a fallback method when Tree-sitter parsing doesn't extract parameters correctly
+    const codeElement = document.querySelector('.monaco-editor textarea');
+    if (codeElement && 'value' in codeElement) {
+      return codeElement.value as string;
+    }
+
+    // Alternative: try to get from Monaco editor
+    const monacoElement = document.querySelector('.monaco-editor');
+    if (monacoElement) {
+      const textContent = monacoElement.textContent;
+      if (textContent && textContent.includes('translate')) {
+        return textContent;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logger.debug('Failed to get source code for parameter extraction:', error);
+    return null;
+  }
+};
+
+/**
  * Extract parameters from a module instantiation node
  */
 const extractParametersFromModuleInstantiation = (
@@ -870,9 +898,52 @@ const moduleInstantiationToCylinderNode = (node: ModuleInstantiationNode): Cylin
  */
 const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): TranslateNode => {
   const params = extractParametersFromModuleInstantiation(node);
+
+  logger.debug(`🔍 TRANSLATE CONVERSION DEBUG:`, {
+    nodeName: 'name' in node ? node.name : 'no name',
+    extractedParams: params,
+    paramV: params.v,
+    paramVector: params.vector,
+    paramFirstParam: params._firstParam,
+    nodeArgs: node.args,
+    nodeText: 'text' in node ? node.text : 'no text'
+  });
+
+  // Try to extract vector from source code if parameters are not properly parsed
+  let translationVector = params.v || params.vector || params._firstParam || [0, 0, 0];
+
+  logger.error(`🔍 TRANSLATE PARAMS: Initial params:`, {
+    paramsV: params.v,
+    paramsVector: params.vector,
+    paramsFirstParam: params._firstParam,
+    initialTranslationVector: translationVector,
+    fullParams: JSON.stringify(params, null, 2)
+  });
+
+  // If we got a default value, try to extract from source code
+  if (Array.isArray(translationVector) && translationVector.every(v => v === 0)) {
+    logger.error(`🔍 TRANSLATE FALLBACK: Translation vector is [0,0,0], trying source code extraction`);
+    const sourceCode = getSourceCodeForExtraction();
+    logger.error(`🔍 TRANSLATE SOURCE: Source code for extraction:`, sourceCode);
+    if (sourceCode) {
+      const extracted = extractTranslateParameters(sourceCode);
+      logger.error(`🔍 TRANSLATE EXTRACTED: Extracted from source:`, extracted);
+      if (extracted) {
+        translationVector = extracted;
+        logger.error(`✅ TRANSLATE SUCCESS: Extracted translation vector from source: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}]`);
+      } else {
+        logger.error(`❌ TRANSLATE FAILED: Could not extract translation vector from source code`);
+      }
+    } else {
+      logger.error(`❌ TRANSLATE NO SOURCE: No source code available for extraction`);
+    }
+  } else {
+    logger.error(`✅ TRANSLATE DIRECT: Using translation vector from params: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
+  }
+
   return {
     type: 'translate',
-    v: params.v || params.vector || params._firstParam || [0, 0, 0],
+    v: translationVector,
     children: node.children || [],
     location: node.location,
   } as TranslateNode;
@@ -1853,6 +1924,18 @@ export const convertASTNodeToCSG = async (
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
   logger.init(`Converting AST node ${index} (${node.type}) to CSG`);
+
+  // Debug translate nodes specifically
+  if (node.type === 'translate' || (node.type === 'function_call' && 'name' in node && node.name === 'translate')) {
+    logger.debug(`🔍 TRANSLATE NODE DEBUG:`, {
+      type: node.type,
+      hasChildren: 'children' in node ? (node.children?.length || 0) : 'no children property',
+      childrenTypes: 'children' in node ? node.children?.map(child => child.type) : 'no children',
+      hasV: 'v' in node ? 'yes' : 'no',
+      vValue: 'v' in node ? node.v : 'no v property',
+      fullStructure: JSON.stringify(node, null, 2)
+    });
+  }
 
   // Add timeout protection for CSG operations
   return new Promise((resolve) => {

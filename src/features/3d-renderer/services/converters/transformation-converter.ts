@@ -25,6 +25,10 @@ export const convertTranslateNode = async (
 ): Promise<Result<THREE.Mesh, string>> => {
   return tryCatchAsync(async () => {
     logger.debug(`Converting translate node:`, node);
+    logger.debug(`Translate node children count:`, node.children?.length || 0);
+    logger.debug(`Translate node children types:`, node.children?.map(child => child.type) || []);
+    logger.debug(`Translate node vector (v):`, node.v);
+    logger.debug(`Full translate node structure:`, JSON.stringify(node, null, 2));
 
     // Check if TranslateNode has children and a vector parameter
     if (!node.children || node.children.length === 0) {
@@ -52,12 +56,19 @@ export const convertTranslateNode = async (
     if (!firstChild) {
       throw new Error('Translate node first child is undefined');
     }
+
+    logger.debug(`🔍 TRANSLATE CHILD: Converting child node:`, {
+      childType: firstChild.type,
+      childData: JSON.stringify(firstChild, null, 2)
+    });
+
     const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
       throw new Error(`Failed to convert translate child: ${childResult.error}`);
     }
 
     const mesh = childResult.data;
+    logger.debug(`✅ TRANSLATE CHILD SUCCESS: Child mesh created for ${firstChild.type}`);
 
     // Apply translation - extract vector from TranslateNode
     // The TranslateNode should have a 'v' property with [x, y, z] vector
@@ -66,21 +77,29 @@ export const convertTranslateNode = async (
 
     const [x, y, z] = translationVector;
 
-    // Apply translation to mesh position
+    logger.error(`🔍 TRANSLATE VECTOR: Using translation vector [${x}, ${y}, ${z}] from node.v:`, node.v);
+    logger.error(`🔍 TRANSLATE NODE: Full translate node:`, JSON.stringify(node, null, 2));
+
+    // Apply translation to geometry (required for CSG operations)
     // Three.js coordinate system: X=right, Y=up, Z=forward (towards viewer)
     // OpenSCAD coordinate system: X=right, Y=forward, Z=up
     // For now, use direct mapping and verify with test case
-    mesh.position.set(x, y, z);
 
-    logger.debug(`Applied translation [${x}, ${y}, ${z}] to mesh`);
-    logger.debug(`Mesh position after translation:`, {
-      x: mesh.position.x,
-      y: mesh.position.y,
-      z: mesh.position.z,
-    });
+    // For CSG operations, we need to translate the geometry, not just the mesh position
+    // This ensures the translation is baked into the vertices before CSG operations
+    const originalPos = [mesh.position.x, mesh.position.y, mesh.position.z];
+
+    logger.error(`🔧 TRANSLATE GEOMETRY FIX: Applying translation [${x}, ${y}, ${z}] to geometry instead of mesh position`);
+
+    // Apply translation directly to the geometry
+    mesh.geometry.translate(x, y, z);
+
+    logger.error(`✅ TRANSLATE APPLIED: Geometry translated by [${x}, ${y}, ${z}]`);
+    logger.error(`🔍 TRANSLATE FINAL: Translation applied to geometry for CSG compatibility`);
+    logger.error(`🔍 TRANSLATE POSITION: Mesh position remains at [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`);
 
     mesh.updateMatrix();
-    logger.debug(`Applied translation to mesh`);
+    logger.error(`✅ TRANSLATE COMPLETE: Geometry translation applied and matrix updated`);
 
     return mesh;
   });

@@ -1,5 +1,6 @@
 import { beforeEach, describe, it } from 'vitest';
 import type { Node as SyntaxNode } from 'web-tree-sitter';
+import { printNodeStructure } from '@/features/openscad-parser/ast/utils/debug-utils';
 import type { OpenscadParser } from '@/features/openscad-parser/openscad-parser';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 
@@ -11,17 +12,17 @@ describe('Debug Tree-sitter Parsing', () => {
     await parser.init();
   });
 
-  it('should debug Tree-sitter CST output for linear_extrude', () => {
-    console.log('=== Debug Tree-sitter CST Output ===');
+  it('should debug Tree-sitter CST output for transform statements', () => {
+    console.log('=== Debug Tree-sitter CST Output for Transform Statements ===');
 
     const testCases = [
       'cube(10);',
-      'square(5);',
+      'sphere(5);',
+      'translate([10,0,0]) sphere(10);',
       'translate([1,2,3]) cube(10);',
+      'translate([10,0,0]) { sphere(10); }',
       'linear_extrude(height=10) square(5);',
-      'import("model.stl");',
-      'surface(file="heightmap.png");',
-      'projection(cut=true) cube(10);',
+      'cube(5, center=true);\ntranslate([10,0,0])\n  sphere(10);',
     ];
 
     for (const code of testCases) {
@@ -32,6 +33,10 @@ describe('Debug Tree-sitter Parsing', () => {
         if (tree) {
           console.log('Tree-sitter CST:');
           console.log(tree.rootNode.toString());
+
+          // Print detailed node structure
+          console.log('\n--- Detailed CST Structure ---');
+          printNodeStructure(tree.rootNode, 0, 4, 10);
 
           // Check if there are any syntax errors
           if (tree.rootNode.hasError) {

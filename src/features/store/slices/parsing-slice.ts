@@ -16,7 +16,11 @@ import type {
 } from '../../../shared/types/operations.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
-import { restructureAST } from '../../3d-renderer/services/ast-restructuring-service.js';
+import {
+  clearSourceCodeForRestructuring,
+  restructureAST,
+  setSourceCodeForRestructuring,
+} from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
@@ -76,10 +80,17 @@ export const createParsingSlice = (
         if (parseResult.data.length > 0) {
           // Apply AST restructuring to fix hierarchical relationships
           logger.debug(`Restructuring AST with ${parseResult.data.length} nodes`);
+
+          // Set source code for Tree-sitter grammar workarounds
+          setSourceCodeForRestructuring(code);
+
           const restructureResult = restructureAST(parseResult.data, {
             enableLogging: true,
             enableSourceLocationAnalysis: true,
           });
+
+          // Clear source code after restructuring
+          clearSourceCodeForRestructuring();
 
           if (!restructureResult.success) {
             logger.warn(`AST restructuring failed: ${restructureResult.error}, using original AST`);

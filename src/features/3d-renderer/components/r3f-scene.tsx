@@ -8,12 +8,13 @@
 import { OrbitControls } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import type * as React from 'react';
-import { useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { NodeId, NodeType } from '../../../shared/types/ast.types';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D } from '../types/renderer.types';
 
 // Create logger instance for this component
@@ -42,111 +43,91 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 }) => {
   const { scene } = useThree();
   const meshesRef = useRef<Mesh3D[]>([]);
+  const [isRendering, setIsRendering] = useState(false);
 
   /**
-   * Derive meshes from AST nodes instead of using useEffect
-   * This follows Kent C. Dodds' principle: "don't sync state, derive it"
+   * Effect to render AST nodes asynchronously using real renderASTNode function
    */
-  const _meshes = useMemo(() => {
-    logger.debug(`Deriving meshes from ${astNodes.length} AST nodes`);
+  useEffect(() => {
+    const renderMeshes = async () => {
+      logger.debug(`Rendering meshes from ${astNodes.length} AST nodes`);
+      setIsRendering(true);
 
-    // Clear existing meshes using proper disposal
-    meshesRef.current.forEach((mesh3D) => {
-      scene.remove(mesh3D.mesh);
-      mesh3D.dispose(); // Use the Mesh3D disposal method
-    });
-    meshesRef.current = [];
+      // Clear existing meshes using proper disposal
+      meshesRef.current.forEach((mesh3D) => {
+        scene.remove(mesh3D.mesh);
+        mesh3D.dispose(); // Use the Mesh3D disposal method
+      });
+      meshesRef.current = [];
 
-    // For empty astNodes, return empty array immediately
-    if (astNodes.length === 0) {
-      onRenderComplete?.([]);
-      return [];
-    }
-
-    // Create new meshes from AST nodes using proper service
-    const newMeshes: Mesh3D[] = [];
-    let hasErrors = false;
-
-    // Process nodes synchronously for now (we'll handle async later)
-    for (let index = 0; index < astNodes.length; index++) {
-      const node = astNodes[index];
-      if (!node) {
-        logger.warn(`Skipping undefined node at index ${index}`);
-        continue;
+      // For empty astNodes, complete immediately
+      if (astNodes.length === 0) {
+        setIsRendering(false);
+        onRenderComplete?.([]);
+        return;
       }
 
-      try {
-        // Check if the node type is supported
-        const supportedTypes = ['cube', 'sphere', 'cylinder'];
-        if (!supportedTypes.includes(node.type)) {
-          throw new Error(
-            `Failed to create mesh for node ${index} (${node.type}): Unsupported node type`
-          );
+      // Create new meshes from AST nodes using real renderASTNode function
+      const newMeshes: Mesh3D[] = [];
+      let hasErrors = false;
+
+      // Process nodes asynchronously
+      for (let index = 0; index < astNodes.length; index++) {
+        const node = astNodes[index];
+        if (!node) {
+          logger.warn(`Skipping undefined node at index ${index}`);
+          continue;
         }
 
-        // For supported types, create a simple mock mesh to make tests pass
-        // TODO: Handle async renderASTNode properly
-        const mockMesh3D: Mesh3D = {
-          mesh: {
-            position: {
-              set: () => {
-                /* Mock implementation for testing */
-              },
-            },
-            dispose: () => {
-              /* Mock implementation for testing */
-            },
-          } as any,
-          dispose: () => {
-            /* Mock implementation for testing */
-          },
-          metadata: {
-            nodeId: `node-${index}` as NodeId,
-            nodeType: node.type as NodeType,
-            depth: 0,
-            childrenIds: [],
-            size: 1,
-            complexity: 1,
-            isOptimized: false,
-            lastAccessed: new Date(),
-            meshId: `mesh-${index}`,
-            triangleCount: 12, // Cube has 12 triangles
-            vertexCount: 8, // Cube has 8 vertices
-            boundingBox: new THREE.Box3(),
-            material: 'MeshStandardMaterial',
-            color: '#00ff88',
-            opacity: 1,
-            visible: true,
-          },
-        };
+        try {
+          logger.debug(`Rendering AST node ${index}: ${node.type}`);
 
-        // Position meshes in a grid for multiple objects
-        const gridSize = Math.ceil(Math.sqrt(astNodes.length));
-        const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
-        const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
-        mockMesh3D.mesh.position.set(x, 0, z);
+          // Use the real renderASTNode function
+          const meshResult = await renderASTNode(node, index);
 
-        scene.add(mockMesh3D.mesh);
-        newMeshes.push(mockMesh3D);
+          if (meshResult.success) {
+            const mesh3D = meshResult.data;
 
-        logger.debug(`Successfully created mesh for ${node.type} at index ${index}`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error(`Failed to create mesh for node ${index} (${node.type}):`, errorMessage);
-        onRenderError?.({ message: errorMessage });
-        hasErrors = true;
+            // Position meshes in a grid for multiple objects
+            const gridSize = Math.ceil(Math.sqrt(astNodes.length));
+            const x = (index % gridSize) * 2.5 - (gridSize - 1) * 1.25;
+            const z = Math.floor(index / gridSize) * 2.5 - (gridSize - 1) * 1.25;
+            mesh3D.mesh.position.set(x, 0, z);
+
+            // Add the real THREE.Mesh to the scene
+            scene.add(mesh3D.mesh);
+            newMeshes.push(mesh3D);
+
+            logger.debug(`Successfully created mesh for ${node.type} at index ${index}`);
+          } else {
+            throw new Error(meshResult.error);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error(`Failed to create mesh for node ${index} (${node.type}):`, errorMessage);
+          onRenderError?.({ message: errorMessage });
+          hasErrors = true;
+        }
       }
-    }
 
-    meshesRef.current = newMeshes;
+      // Update meshes reference and complete rendering
+      meshesRef.current = newMeshes;
+      setIsRendering(false);
 
-    // Report render completion
-    if (!hasErrors) {
-      logger.debug(`Calling onRenderComplete with ${newMeshes.length} meshes`);
-      onRenderComplete?.(newMeshes);
-    }
+      // Report render completion
+      if (!hasErrors) {
+        logger.debug(`Calling onRenderComplete with ${newMeshes.length} meshes`);
+        onRenderComplete?.(newMeshes);
+      }
+    };
 
-    return newMeshes;
+    // Call the async render function
+    renderMeshes().catch((error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to render meshes:', errorMessage);
+      setIsRendering(false);
+      onRenderError?.({ message: errorMessage });
+    });
   }, [astNodes, scene, onRenderComplete, onRenderError]);
 
   return (

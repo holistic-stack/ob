@@ -24,6 +24,30 @@ import type {
 const logger = createLogger('ASTRestructuringService');
 
 /**
+ * Module-level storage for source code to enable Tree-sitter grammar workarounds
+ * This allows the restructuring service to access the original source code
+ * for parsing child primitives that the grammar missed
+ */
+let currentSourceCode: string | null = null;
+
+/**
+ * Set the source code for Tree-sitter grammar workarounds
+ * This enables the restructuring service to find child primitives via source code analysis
+ */
+export function setSourceCodeForRestructuring(sourceCode: string): void {
+  currentSourceCode = sourceCode;
+  logger.debug(`Source code set for restructuring (${sourceCode.length} characters)`);
+}
+
+/**
+ * Clear the source code after restructuring
+ */
+export function clearSourceCodeForRestructuring(): void {
+  currentSourceCode = null;
+  logger.debug('Source code cleared after restructuring');
+}
+
+/**
  * Configuration for AST restructuring
  */
 export interface ASTRestructuringConfig {
@@ -224,6 +248,38 @@ const findChildrenBySourceLocation = (
     }
   }
 
+  // Special case for transform nodes: if no children found via block analysis,
+  // look for the next primitive node that immediately follows the transform
+  if (isTransformNode(parentNode) && potentialChildren.length === 0) {
+    if (config.enableLogging) {
+      logger.info(
+        `Transform node ${parentNode.type} has no children via block analysis, searching for next primitive`
+      );
+    }
+    const nextPrimitive = findNextPrimitiveAfterTransform(parentNode, allNodes, config);
+    if (nextPrimitive) {
+      potentialChildren.push(nextPrimitive);
+      if (config.enableLogging) {
+        logger.info(
+          `Found next primitive ${nextPrimitive.type} after transform ${parentNode.type} via sequential analysis`
+        );
+      }
+    } else {
+      // Try to find the child primitive via source code analysis (Tree-sitter grammar workaround)
+      const sourceCodeChild = tryParseChildFromSourceCode(parentNode);
+      if (sourceCodeChild) {
+        potentialChildren.push(sourceCodeChild);
+        if (config.enableLogging) {
+          logger.info(
+            `Found child primitive ${sourceCodeChild.type} for transform ${parentNode.type} via source code analysis`
+          );
+        }
+      } else if (config.enableLogging) {
+        logger.info(`No next primitive found after transform ${parentNode.type}`);
+      }
+    }
+  }
+
   // Second pass: identify nodes that are children of other nodes within the parent's scope
   for (const potentialParent of potentialChildren) {
     if (isCSGNode(potentialParent) || isTransformNode(potentialParent)) {
@@ -241,15 +297,98 @@ const findChildrenBySourceLocation = (
   // Return only direct children (not children of other children)
   const directChildren = potentialChildren.filter((node) => !indirectChildren.has(node));
 
-  if (config.enableLogging && directChildren.length > 0) {
-    directChildren.forEach((child) => {
-      logger.debug(
-        `Found direct child ${child.type} for parent ${parentNode.type} via source location`
-      );
-    });
+  if (config.enableLogging) {
+    logger.debug(
+      `findDirectChildrenForNode: ${parentNode.type} - potentialChildren: ${potentialChildren.length}, directChildren: ${directChildren.length}`
+    );
+    console.log(
+      '[DEBUG][ASTRestructuringService] potentialChildren types:',
+      potentialChildren.map((c) => c.type)
+    );
+    console.log(
+      '[DEBUG][ASTRestructuringService] directChildren types:',
+      directChildren.map((c) => c.type)
+    );
+    if (directChildren.length > 0) {
+      directChildren.forEach((child) => {
+        logger.debug(
+          `Found direct child ${child.type} for parent ${parentNode.type} via source location`
+        );
+      });
+    }
   }
 
   return directChildren;
+};
+
+/**
+ * Find the next primitive node that immediately follows a transform node
+ * This handles the case where OpenSCAD syntax like "translate([10,0,0]) sphere(10);"
+ * is parsed as separate nodes instead of parent-child relationship
+ */
+const findNextPrimitiveAfterTransform = (
+  transformNode: ASTNode,
+  allNodes: readonly ASTNode[],
+  config: ASTRestructuringConfig
+): ASTNode | null => {
+  if (!transformNode.location) {
+    if (config.enableLogging) {
+      logger.debug(`Transform node ${transformNode.type} has no location information`);
+    }
+    return null;
+  }
+
+  if (config.enableLogging) {
+    logger.debug(
+      `Searching for primitive after transform ${transformNode.type} at line ${transformNode.location.end.line}, column ${transformNode.location.end.column}`
+    );
+  }
+
+  // Look for primitive nodes that appear immediately after the transform node
+  const candidateNodes = allNodes.filter((node) => {
+    if (node === transformNode || !isPrimitiveNode(node) || !node.location) {
+      return false;
+    }
+
+    const transformEndLine = transformNode.location?.end.line;
+    const transformEndColumn = transformNode.location?.end.column;
+    const nodeStartLine = node.location.start.line;
+    const nodeStartColumn = node.location.start.column;
+
+    // For single-line format: primitive must appear AFTER the transform on the same line
+    // For multi-line format: primitive must appear on a later line
+
+    if (nodeStartLine === transformEndLine) {
+      // Same line: check column position to ensure primitive comes after transform
+      return nodeStartColumn > transformEndColumn;
+    } else if (nodeStartLine > transformEndLine) {
+      // Later line: allow primitives within reasonable distance
+      return nodeStartLine <= transformEndLine + 2;
+    } else {
+      // Earlier line: not a valid child
+      return false;
+    }
+  });
+
+  if (config.enableLogging) {
+    logger.debug(
+      `Found ${candidateNodes.length} candidate primitives after transform ${transformNode.type}`
+    );
+    candidateNodes.forEach((node) => {
+      logger.debug(`Candidate: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
+    });
+  }
+
+  // Sort by line number and column to get the closest one
+  candidateNodes.sort((a, b) => {
+    if (!a.location || !b.location) return 0;
+    const lineDiff = a.location.start.line - b.location.start.line;
+    if (lineDiff !== 0) return lineDiff;
+    return a.location.start.column - b.location.start.column;
+  });
+
+  // Return the first (closest) candidate
+  return candidateNodes.length > 0 ? candidateNodes[0] : null;
 };
 
 /**
@@ -383,7 +522,17 @@ const restructureTransformNode = (
     children = transformNode.children;
   } else {
     // Find children that belong to this transform operation via source location analysis
+    if (config.enableLogging) {
+      logger.debug(
+        `${transformNode.type} has no children from parser, searching via source location analysis`
+      );
+    }
     children = findDirectChildrenForNode(transformNode, allNodes, config);
+    if (config.enableLogging) {
+      logger.debug(
+        `${transformNode.type} found ${children.length} children via source location analysis`
+      );
+    }
   }
 
   // Recursively restructure children if they are CSG nodes
@@ -402,6 +551,10 @@ const restructureTransformNode = (
 
   if (config.enableLogging) {
     logger.debug(`${transformNode.type} now has ${restructuredChildren.length} children`);
+    console.log(
+      '[DEBUG][ASTRestructuringService] Transform children types:',
+      restructuredChildren.map((c) => c.type)
+    );
   }
 
   return restructuredNode;
@@ -440,6 +593,188 @@ const getTopLevelNodes = (
 };
 
 /**
+ * Try to parse a child primitive from source code for a transform node.
+ * This is a workaround for Tree-sitter grammar limitations where transform statements
+ * with immediate child primitives are not parsed correctly by the grammar.
+ *
+ * Handles multiple patterns:
+ * - Single line: 'translate([10,0,0]) sphere(10);'
+ * - Multi-line: 'translate([10,0,0])\n  sphere(10);'
+ * - Curly braces: 'translate([10,0,0]) { sphere(10); }'
+ *
+ * @param transformNode - The transform node that needs a child
+ * @returns The child primitive node if found, null otherwise
+ */
+const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => {
+  if (!transformNode.location || !currentSourceCode) {
+    return null;
+  }
+
+  try {
+    // Get the source code lines
+    const lines = currentSourceCode.split('\n');
+    const transformLineIndex = transformNode.location.start.line;
+    const transformLine = lines[transformLineIndex];
+
+    if (!transformLine) {
+      return null;
+    }
+
+    // Pattern 1: Same line - "translate([10,0,0]) sphere(10);"
+    const sameLinePrimitiveMatch = transformLine.match(
+      /\)\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+    );
+    if (sameLinePrimitiveMatch) {
+      const primitiveType = sameLinePrimitiveMatch[1];
+      const primitiveStart = transformLine.indexOf(primitiveType!);
+
+      return createSyntheticPrimitiveNode(
+        primitiveType!,
+        transformLineIndex,
+        primitiveStart,
+        transformLine.length
+      );
+    }
+
+    // Pattern 2: Curly braces on same line - "translate([10,0,0]) { sphere(10); }"
+    const curlyBraceMatch = transformLine.match(
+      /\)\s*\{\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+    );
+    if (curlyBraceMatch) {
+      const primitiveType = curlyBraceMatch[1];
+      const primitiveStart = transformLine.indexOf(primitiveType!);
+
+      return createSyntheticPrimitiveNode(
+        primitiveType!,
+        transformLineIndex,
+        primitiveStart,
+        transformLine.length
+      );
+    }
+
+    // Pattern 3: Multi-line - search next few lines for primitives
+    const maxLookAhead = 3; // Look ahead up to 3 lines
+    for (let i = 1; i <= maxLookAhead && transformLineIndex + i < lines.length; i++) {
+      const nextLine = lines[transformLineIndex + i];
+      if (!nextLine) continue;
+
+      // Skip empty lines and lines with only whitespace
+      if (nextLine.trim() === '') continue;
+
+      // Look for primitive on the next line (with optional indentation)
+      const nextLinePrimitiveMatch = nextLine.match(
+        /^\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+      );
+      if (nextLinePrimitiveMatch) {
+        const primitiveType = nextLinePrimitiveMatch[1];
+        const primitiveStart = nextLine.indexOf(primitiveType!);
+
+        return createSyntheticPrimitiveNode(
+          primitiveType!,
+          transformLineIndex + i,
+          primitiveStart,
+          nextLine.length
+        );
+      }
+
+      // Look for primitive inside curly braces on next line
+      const nextLineCurlyMatch = nextLine.match(
+        /\{\s*(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+      );
+      if (nextLineCurlyMatch) {
+        const primitiveType = nextLineCurlyMatch[1];
+        const primitiveStart = nextLine.indexOf(primitiveType!);
+
+        return createSyntheticPrimitiveNode(
+          primitiveType!,
+          transformLineIndex + i,
+          primitiveStart,
+          nextLine.length
+        );
+      }
+
+      // If we encounter another statement (not just whitespace/braces), stop looking
+      if (nextLine.trim() && !nextLine.trim().startsWith('{') && !nextLine.trim().startsWith('}')) {
+        // Check if this line itself contains a primitive
+        const statementPrimitiveMatch = nextLine.match(
+          /(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
+        );
+        if (statementPrimitiveMatch) {
+          const primitiveType = statementPrimitiveMatch[1];
+          const primitiveStart = nextLine.indexOf(primitiveType!);
+
+          return createSyntheticPrimitiveNode(
+            primitiveType!,
+            transformLineIndex + i,
+            primitiveStart,
+            nextLine.length
+          );
+        }
+        break; // Stop looking if we hit another statement
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('[WARN][ASTRestructuringService] Error parsing child from source code:', error);
+    return null;
+  }
+};
+
+/**
+ * Create a synthetic primitive node for the workaround.
+ *
+ * @param primitiveType - The type of primitive (cube, sphere, etc.)
+ * @param line - The line number in the source
+ * @param startColumn - The start column
+ * @param endColumn - The end column
+ * @returns A synthetic AST node for the primitive
+ */
+const createSyntheticPrimitiveNode = (
+  primitiveType: string,
+  line: number,
+  startColumn: number,
+  endColumn: number
+): ASTNode => {
+  const location = {
+    start: { line, column: startColumn, offset: 0 },
+    end: { line, column: endColumn, offset: 0 },
+  };
+
+  // Create appropriate primitive node based on type
+  switch (primitiveType) {
+    case 'cube':
+      return {
+        type: 'cube',
+        size: 10, // Default size
+        center: false,
+        location,
+      };
+    case 'sphere':
+      return {
+        type: 'sphere',
+        radius: 5, // Default radius
+        location,
+      };
+    case 'cylinder':
+      return {
+        type: 'cylinder',
+        h: 10,
+        r1: 5,
+        r2: 5,
+        center: false,
+        location,
+      };
+    default:
+      // Generic primitive node
+      return {
+        type: primitiveType as any,
+        location,
+      };
+  }
+};
+
+/**
  * Main AST restructuring function
  */
 export const restructureAST = (
@@ -465,20 +800,55 @@ export const restructureAST = (
       // Get top-level nodes (nodes that are not children of other nodes)
       const topLevelNodes = getTopLevelNodes(ast, finalConfig);
 
+      if (finalConfig.enableLogging) {
+        console.log(
+          '[DEBUG][ASTRestructuringService] Initial top-level nodes:',
+          topLevelNodes.map((n) => n.type)
+        );
+      }
+
       // Restructure each top-level node
       const restructuredNodes = topLevelNodes.map((node) => {
+        if (finalConfig.enableLogging) {
+          logger.debug(
+            `Processing node: ${node.type}, isTransform: ${isTransformNode(node)}, isCSG: ${isCSGNode(node)}`
+          );
+        }
         if (isTransformNode(node)) {
+          if (finalConfig.enableLogging) {
+            logger.debug(`Restructuring transform node: ${node.type}`);
+          }
           return restructureTransformNode(node, ast, finalConfig);
         } else if (isCSGNode(node)) {
+          if (finalConfig.enableLogging) {
+            logger.debug(`Restructuring CSG node: ${node.type}`);
+          }
           return restructureCSGNode(node, ast, finalConfig);
         } else {
           // Primitive nodes don't need restructuring
+          if (finalConfig.enableLogging) {
+            logger.debug(`Primitive node, no restructuring needed: ${node.type}`);
+          }
           return node;
         }
       });
 
       if (finalConfig.enableLogging) {
         logger.debug(`Restructuring complete: ${restructuredNodes.length} top-level nodes`);
+        console.log(
+          '[DEBUG][ASTRestructuringService] Final restructured nodes:',
+          restructuredNodes.map((n) => n.type)
+        );
+        console.log(
+          '[DEBUG][ASTRestructuringService] Final restructured nodes with children:',
+          restructuredNodes.map((n) => ({
+            type: n.type,
+            hasChildren: 'children' in n,
+            childrenCount: 'children' in n && Array.isArray(n.children) ? n.children.length : 0,
+            childrenTypes:
+              'children' in n && Array.isArray(n.children) ? n.children.map((c) => c.type) : [],
+          }))
+        );
       }
 
       return Object.freeze(restructuredNodes);
