@@ -24,6 +24,20 @@ export const createRenderingSlice = (
     updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => {
       set((state) => {
         if (state.rendering) {
+          // Dispose of old meshes to prevent memory leaks
+          state.rendering.meshes.forEach((mesh) => {
+            if (mesh.geometry) {
+              mesh.geometry.dispose();
+            }
+            if (mesh.material) {
+              if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((material) => material.dispose());
+              } else {
+                mesh.material.dispose();
+              }
+            }
+          });
+
           state.rendering.meshes = [...meshes];
           state.rendering.lastRendered = new Date();
         }
@@ -104,6 +118,20 @@ export const createRenderingSlice = (
     clearScene: () => {
       set((state) => {
         if (state.rendering) {
+          // Properly dispose of Three.js meshes to prevent memory leaks
+          state.rendering.meshes.forEach((mesh) => {
+            if (mesh.geometry) {
+              mesh.geometry.dispose();
+            }
+            if (mesh.material) {
+              if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((material) => material.dispose());
+              } else {
+                mesh.material.dispose();
+              }
+            }
+          });
+
           state.rendering.meshes = [];
           state.rendering.renderErrors = [];
           state.rendering.lastRendered = null;

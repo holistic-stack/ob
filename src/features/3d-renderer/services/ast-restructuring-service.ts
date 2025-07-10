@@ -882,10 +882,30 @@ export const restructureAST = (
         logger.init(`Restructuring AST with ${ast.length} nodes`);
       }
 
-      // If AST is empty or has only one node, no restructuring needed
+      // Performance optimization: Skip restructuring for simple cases
       if (ast.length <= 1) {
         if (finalConfig.enableLogging) {
           logger.debug(`AST too small for restructuring, returning as-is`);
+        }
+        return ast;
+      }
+
+      // Skip restructuring if all nodes are simple primitives (no transformations)
+      const hasComplexNodes = ast.some(node =>
+        node.type === 'translate' ||
+        node.type === 'rotate' ||
+        node.type === 'scale' ||
+        node.type === 'mirror' ||
+        node.type === 'union' ||
+        node.type === 'difference' ||
+        node.type === 'intersection' ||
+        node.type === 'hull' ||
+        node.type === 'minkowski'
+      );
+
+      if (!hasComplexNodes) {
+        if (finalConfig.enableLogging) {
+          logger.debug(`AST contains only simple primitives, skipping restructuring`);
         }
         return ast;
       }

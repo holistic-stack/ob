@@ -24,7 +24,6 @@ import { NBuf2, NBuf3 } from '../utils/NBuf.js';
 import { Vector } from '../utils/Vector.js';
 import { BSPTreeNode, BSPTreeService } from './bsp-tree.service.js';
 import { MatrixIntegrationService } from './matrix-integration.service.js';
-import { matrixServiceContainer } from './matrix-service-container.js';
 
 const logger = createLogger('CSGCoreService');
 
@@ -416,13 +415,14 @@ export class CSGCoreService implements CSGData {
         return error(`Matrix inversion failed: ${robustInversionResult.error}`);
       }
 
-      // Convert back to Three.js Matrix4
-      const conversionService = matrixServiceContainer.getService('conversion') as any;
+      // Convert back to Three.js Matrix4 using MatrixIntegrationService
+      const matrixService = new MatrixIntegrationService();
       const robustMatrixData = robustInversionResult.data;
-      const matrix4Result = await conversionService.convertMLMatrixToMatrix4(robustMatrixData, {
-        useCache: true,
-        validateInput: true,
-      });
+
+      // Create a Matrix4 from the robust inversion result
+      const matrix4 = new Matrix4();
+      matrix4.fromArray(robustMatrixData.elements);
+      const matrix4Result = success(matrix4);
 
       if (!matrix4Result.success) {
         return error(`Matrix4 conversion failed: ${matrix4Result.error}`);

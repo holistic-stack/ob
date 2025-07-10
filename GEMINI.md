@@ -1,310 +1,319 @@
-# Gemini Code Assistant - Project Guidelines
+# OpenSCAD Babylon Project - Developer Onboarding Guide
 
-This document provides guidelines for the Gemini code assistant to ensure its contributions align with the project's standards, architecture, and conventions.
+Welcome to the OpenSCAD Babylon project! This guide provides everything you need to get up to speed quickly.
 
-## 1. Core Principles
+## 1. Project Overview
 
-- **Functional Programming**: Prioritize pure functions, immutable data structures, and function composition. Avoid side effects in utility functions and data transformations. Enforce immutability and use higher-order functions. Compose functions and use declarative programming. Handle nullable values with option/maybe types.
-- **Immutability**: All state managed by Zustand and all data structures should be treated as immutable. Use `Object.freeze()` for static objects and `Readonly<T>` for types.
-- **Type Safety**: Adhere to the strict TypeScript configuration. Avoid `any` and use `unknown` for type-safe handling of unpredictable data. Use the `Result<T, E>` type for all operations that can fail. Leverage advanced types (unions, intersections, generics). Prefer interfaces for APIs and readonly for immutable data. Use type guards instead of type assertions. Utilize utility types and discriminated unions. Always use `.js` extensions in imports.
-- **TDD (Test-Driven Development)**: All new features or bug fixes must be accompanied by comprehensive tests. Follow the Red-Green-Refactor cycle. Implement changes incrementally with files under 500 lines.
-- **Co-location**: Tests, styles, and types should be co-located with their corresponding components or modules. Each SRP file must have its own folder and its tests should be in the same folder.
-- **DRY, KISS, SRP**: Always use DRY (Don't Repeat Yourself) and KISS (Keep It Simple, Stupid) rules. Apply SRP (Single Responsibility Principle) for any function and utilities. Split the code into smaller and manageable parts.
-- **TypeScript First**: This project is TypeScript-first; no JavaScript is allowed.
-- **No Mocks for OpenscadParser**: Do not use mocks for `OpenscadParser`. Use real parser instances for testing.
-- **Performance**: Optimize for readability first, then performance. Profile to identify actual bottlenecks. Use appropriate data structures and memoization. Minimize DOM manipulations and optimize 3D operations.
-- **Error Handling**: Use structured error handling with specific types. Provide meaningful error messages with context. Handle edge cases explicitly and validate input data. Use `Result<T, E>` for operations that can fail, and traditional `try...catch` blocks only when necessary in business logic.
-- **Code Readability**: Prioritize readability over clever code.
-- **Incremental Changes**: Make small incremental changes.
-- **Verification**: Always run tests, TypeScript checks, and linting after changes.
-- **E2E Tests**: Must create e2e tests for features using the latest Playwright best practices.
-- **Debugging**: When debugging code or tests, add log checkpoints (e.g., `[INIT]`, `[DEBUG]`, `[ERROR]`, `[WARN]`, `[END]`).
-- **Contextual Search**: Always search online for updated context information and reason multiple approaches, focusing on TypeScript best practices.
-- **Documentation**: Add documentation comments in the edited files explaining the reason behind the edit. Remove old comments if you refactored the previous edit. Document why code works a certain way, not just what it does. Include architectural decisions, limitations, and edge cases. Use JSDoc comments for all code elements with descriptions and examples.
-- **Code Review**: Provide constructive feedback focused on code, not the developer.
-- **Continuous Integration**: Use feature branches and maintain a clean commit history.
+**OpenSCAD Babylon** is a production-ready, web-based 3D model editor that uses OpenSCAD syntax for real-time 3D visualization. The project is **95% complete** with 441 comprehensive tests, 99% coverage, and achieved performance targets of <16ms render times.
+
+**Core Features:**
+- Real-time OpenSCAD code editing with Monaco Editor
+- Live AST parsing with 300ms debouncing
+- 3D visualization using React Three Fiber + Three.js
+- Enhanced CSG operations with three-csg-ts integration
+- Interactive 3D scene with camera controls
+- Comprehensive error handling and recovery
+
+**Architecture Overview**
+
+```mermaid
+graph TD
+    A[Monaco Editor - OpenSCAD Code] --> B[Zustand Store];
+    B --> C[Debounced Parser - 300ms];
+    C --> D[AST Generation];
+    D --> B;
+    B --> E[AST-to-CSG Converter];
+    E --> F[Three.js Meshes];
+    F --> G[React Three Fiber Scene];
+    G --> H[Interactive 3D Visualization];
+    B --> H;
+```
 
 ## 2. Technology Stack
 
-- **Frontend**: React 19, TypeScript 5.8, Vite
-- **State Management**: Zustand 5
-- **3D Rendering**: React Three Fiber, three.js, a custom CSG utility, and `gl-matrix` for optimized matrix operations.
-- **Code Editor**: Monaco Editor
-- **Parsing**: `@holistic-stack/openscad-parser`
-- **Styling**: Tailwind CSS v4 with a custom Glass Morphism design system.
-- **Testing**: Vitest for unit/integration tests, Playwright for E2E tests.
+**Core Framework (React 19 Ecosystem)**
+- **React 19.0.0** - Latest React with concurrent features
+- **TypeScript 5.8.3** - Strict mode with branded types and Result<T,E> patterns
+- **Vite 6.0.0** - Ultra-fast development with HMR (<100ms hot reload)
 
-## 3. Project Structure (Bulletproof-React)
+**3D Rendering & Visualization**
+- **React Three Fiber 9.1.2** - React renderer for Three.js
+- **Three.js 0.177.0** - 3D graphics library with WebGL2
+- **@react-three/drei 10.3.0** - Three.js helpers and components
+- **three-csg-ts 3.2.0** - CSG operations with real BSP tree algorithms
+- **gl-matrix 3.4.3** - High-performance matrix operations
 
-- `src/features`: Self-contained feature modules (e.g., `code-editor`, `3d-renderer`).
-- `src/shared`: Reusable components, hooks, types, and utils.
-- `src/app`: Application-level setup (providers, layout).
-- `src/test`: Testing utilities and fixtures.
+**Code Editor & Parsing**
+- **Monaco Editor 0.52.2** - VS Code editor engine with OpenSCAD syntax
+- **@monaco-editor/react 4.7.0** - React integration
+- **web-tree-sitter 0.25.3** - Parser generator
+- **@holistic-stack/openscad-parser** - OpenSCAD AST parsing
 
-## 4. Coding Conventions
+**State Management & Data Flow**
+- **Zustand 5.0.5** - Lightweight state management with middleware
+- **Immer 10.1.1** - Immutable state updates
+- **Reselect 5.1.1** - Memoized state selectors
 
-- **File Naming**: `kebab-case.ts` for services/utils, `kebab-case.tsx` for components, `use-kebab-case.ts` for hooks. Test files are named `*.test.ts` or `*.test.tsx`.
-- **Component Style**: Use functional components with React Hooks. Props interfaces should be `readonly`.
-- **Error Handling**: Use the `Result<T, E>` type for functions that can fail. Avoid traditional `try...catch` blocks in business logic where `Result` is more appropriate.
-- **Imports**: Use absolute paths (`@/`) for imports within the `src` directory.
+**Development & Quality Tools**
+- **Biome 2.0.6** - Fast linter and formatter (replacing ESLint/Prettier)
+- **Vitest 1.6.1** - Fast unit testing framework
+- **Playwright 1.53.0** - E2E testing and visual regression
+- **Storybook 9.0.12** - Component development environment
+- **tslog 4.9.3** - Structured logging
 
-## 5. Commit Messages
+**Styling & UI**
+- **Tailwind CSS 4.1.10** - Utility-first CSS framework
+- **class-variance-authority 0.7.1** - Component variant management
 
-Follow the Conventional Commits specification. Example: `feat(renderer): add support for sphere primitive`.
+## 3. Key Project Rules & Conventions
 
-## 6. How to Approach Common Tasks
+- **TypeScript First:** This is a TypeScript-only project. No JavaScript is allowed.
+- **Immutability:** All data structures, especially state managed by Zustand, must be immutable. Use `readonly` and `Object.freeze()`.
+- **Functional Programming:** We prefer pure functions, function composition, and avoiding side effects.
+- **Error Handling:** Use the custom `Result<T, E>` type for any operation that might fail. Avoid `try...catch` in business logic where `Result` is more appropriate.
+- **TDD is Mandatory:** Write tests *before* you write implementation code.
+- **No Mocks for the Parser:** When testing anything that involves the OpenSCAD parser, use a *real* instance of the parser, not a mock.
+- **Co-location:** Tests, types, and styles are located in the same directory as the component or module they belong to.
+- **File Naming:** `kebab-case.ts` (e.g., `my-utility.ts`), `kebab-case.tsx` for components, `use-kebab-case.ts` for hooks.
+- **Logging:** Use the structured logger (`[INIT]`, `[DEBUG]`, etc.). See `docs/logging/tslog-integration.md`.
 
-- **Adding a new feature**:
-    1. Create a new directory under `src/features`.
-    2. Define the feature's state and actions in a new Zustand slice (or extend an existing one).
-    3. Write failing tests for the new functionality.
-    4. Implement the components, hooks, and services.
-    5. Ensure all tests pass and linting rules are met.
-- **Fixing a bug**:
-    1. Write a failing test that reproduces the bug.
-    2. Fix the bug.
-    3. Ensure all tests pass.
-- **Refactoring**:
-    1. Ensure existing tests cover the code to be refactored.
-    2. Perform the refactoring.
-    3. Verify that all tests still pass.
+## 4. Project Structure (`bulletproof-react`)
 
-SRC\FEATURES\OPENSCAD-PARSER
-│   argument-debug.test.ts
-│   debug-accessor.test.ts
-│   debug-cst.test.ts
-│   GEMINI.md
-│   incremental-parsing.test.ts
-│   index.ts
-│   node-types-debug.test.ts
-│   node-types.test.ts
-│   openscad-ast.test.ts
-│   openscad-parser-error-handling.test.ts
-│   openscad-parser-visitor.test.ts
-│   openscad-parser.test.ts
-│   openscad-parser.ts
-│
-├───ast
-│   │   ast-generator.integration.test.ts
-│   │   ast-types.ts
-│   │   index.ts
-│   │   visitor-ast-generator.test.ts
-│   │   visitor-ast-generator.ts
-│   │
-│   ├───changes
-│   │       change-tracker.test.ts
-│   │       change-tracker.ts
-│   │
-│   ├───errors
-│   │       index.ts
-│   │       parser-error.test.ts
-│   │       parser-error.ts
-│   │       recovery-strategy.test.ts
-│   │       recovery-strategy.ts
-│   │       semantic-error.ts
-│   │       syntax-error.test.ts
-│   │       syntax-error.ts
-│   │
-│   ├───evaluation
-│   │   │   binary-expression-evaluator.ts
-│   │   │   expression-evaluation-context.ts
-│   │   │   expression-evaluation.test.ts
-│   │   │   expression-evaluator-registry.ts
-│   │   │   expression-evaluator.ts
-│   │   │
-│   │   └───binary-expression-evaluator
-│   │           binary-expression-evaluator-cube.test.ts
-│   │           binary-expression-evaluator.test.ts
-│   │           binary-expression-evaluator.ts
-│   │
-│   ├───extractors
-│   │       argument-extractor.ts
-│   │       color-extractor.ts
-│   │       cube-extractor.test.ts
-│   │       cube-extractor.ts
-│   │       cylinder-extractor.ts
-│   │       direct-binary-expression-test.ts
-│   │       index.ts
-│   │       minimal-cube-test.ts
-│   │       module-parameter-extractor.test.ts
-│   │       module-parameter-extractor.ts
-│   │       offset-extractor.ts
-│   │       parameter-extractor.ts
-│   │       sphere-extractor.ts
-│   │       value-extractor.ts
-│   │       vector-extractor.ts
-│   │
-│   ├───nodes
-│   │   │   ast-node.ts
-│   │   │   expression.ts
-│   │   │
-│   │   └───expressions
-│   │           binary-expression.ts
-│   │
-│   ├───query
-│   │       index.ts
-│   │       lru-query-cache.test.ts
-│   │       lru-query-cache.ts
-│   │       query-cache.test.ts
-│   │       query-cache.ts
-│   │       query-manager.test.ts
-│   │       query-manager.ts
-│   │
-│   ├───registry
-│   │       default-node-handler-registry.ts
-│   │       index.ts
-│   │       node-handler-registry-factory.ts
-│   │       node-handler-registry.test.ts
-│   │       node-handler-registry.ts
-│   │
-│   ├───test-utils
-│   │       real-node-generator.test.ts
-│   │       real-node-generator.ts
-│   │
-│   ├───tests
-│   │       control-structures.test.ts
-│   │       cube-extractor.test.ts
-│   │       cube.test.ts
-│   │       cylinder-extractor.test.ts
-│   │       difference.test.ts
-│   │       intersection.test.ts
-│   │       minkowski.test.ts
-│   │       module-function.test.ts
-│   │       primitive-visitor.test.ts
-│   │       rotate.test.ts
-│   │       scale.test.ts
-│   │       sphere-extractor.test.ts
-│   │       sphere.test.ts
-│   │       transformations.test.ts
-│   │       union.test.ts
-│   │
-│   ├───utils
-│   │       ast-error-utils.ts
-│   │       debug-utils.ts
-│   │       index.ts
-│   │       location-utils.ts
-│   │       node-utils.ts
-│   │       variable-utils.ts
-│   │       vector-utils.ts
-│   │
-│   └───visitors
-│       │   ast-visitor.ts
-│       │   base-ast-visitor.test.ts
-│       │   base-ast-visitor.ts
-│       │   composite-visitor-real.test.ts
-│       │   composite-visitor.test.ts
-│       │   composite-visitor.ts
-│       │   control-structure-visitor.test.ts
-│       │   control-structure-visitor.ts
-│       │   csg-visitor.test.ts
-│       │   csg-visitor.ts
-│       │   expression-visitor.debug.test.ts
-│       │   expression-visitor.integration.test.ts
-│       │   expression-visitor.simple.test.ts
-│       │   expression-visitor.test.ts
-│       │   expression-visitor.ts
-│       │   function-visitor.test.ts
-│       │   function-visitor.ts
-│       │   index.ts
-│       │   module-visitor.test.ts
-│       │   module-visitor.ts
-│       │   primitive-visitor.test.ts
-│       │   primitive-visitor.ts
-│       │   query-visitor.test.ts
-│       │   query-visitor.ts
-│       │   transform-visitor.test.ts
-│       │   transform-visitor.ts
-│       │   variable-visitor.ts
-│       │
-│       ├───assert-statement-visitor
-│       │       assert-statement-visitor.test.ts
-│       │       assert-statement-visitor.ts
-│       │
-│       ├───assign-statement-visitor
-│       │       assign-statement-visitor.test.ts
-│       │       assign-statement-visitor.ts
-│       │
-│       ├───binary-expression-visitor
-│       │       binary-expression-visitor.test.ts
-│       │
-│       ├───control-structure-visitor
-│       │       for-loop-visitor.test.ts
-│       │       for-loop-visitor.ts
-│       │       if-else-visitor.test.ts
-│       │       if-else-visitor.ts
-│       │
-│       ├───echo-statement-visitor
-│       │       echo-statement-visitor.test.ts
-│       │       echo-statement-visitor.ts
-│       │
-│       └───expression-visitor
-│           │   function-call-visitor.test.ts
-│           │   function-call-visitor.ts
-│           │   i-parent-expression-visitor.ts
-│           │   index.ts
-│           │
-│           ├───binary-expression-visitor
-│           │       binary-expression-visitor.test.ts
-│           │       binary-expression-visitor.ts
-│           │       simple-binary.test.ts
-│           │
-│           ├───conditional-expression-visitor
-│           │       conditional-expression-visitor.test.ts
-│           │       conditional-expression-visitor.ts
-│           │
-│           ├───list-comprehension-visitor
-│           │       list-comprehension-visitor.test.ts
-│           │       list-comprehension-visitor.ts
-│           │
-│           ├───parenthesized-expression-visitor
-│           │       parenthesized-expression-visitor.test.ts
-│           │       parenthesized-expression-visitor.ts
-│           │
-│           ├───range-expression-visitor
-│           │       range-expression-visitor.test.ts
-│           │       range-expression-visitor.ts
-│           │
-│           └───unary-expression-visitor
-│                   unary-expression-visitor.test.ts
-│                   unary-expression-visitor.ts
-│
-├───cst
-│   │   query-utils.test.ts
-│   │   query-utils.ts
-│   │
-│   ├───cursor-utils
-│   │       cstTreeCursorWalkLog.test.ts
-│   │       cstTreeCursorWalkLog.ts
-│   │       cursor-utils.integration.test.ts
-│   │       cursor-utils.test.ts
-│   │       cursor-utils.ts
-│   │       README.md
-│   │
-│   └───queries
-│           dependencies.scm
-│           find-function-calls.scm
-│           highlights.scm
-│
-└───error-handling
-    │   error-handler.ts
-    │   error-handling-integration.test.ts
-    │   index.ts
-    │   logger.ts
-    │   recovery-strategy-registry.ts
-    │   simple-error-handler.ts
-    │
-    ├───strategies
-    │       missing-semicolon-strategy.test.ts
-    │       missing-semicolon-strategy.ts
-    │       recovery-strategy.ts
-    │       type-mismatch-strategy.test.ts
-    │       type-mismatch-strategy.ts
-    │       unclosed-bracket-strategy.test.ts
-    │       unclosed-bracket-strategy.ts
-    │       unknown-identifier-strategy.test.ts
-    │       unknown-identifier-strategy.ts
-    │
-    ├───types
-    │       error-types.ts
-    │
-    └───utils
+The project follows the "bulletproof-react" architecture with feature-based organization:
+
+```
+src/
+├── features/                    # Feature-based modules (382 tests)
+│   ├── code-editor/            # Monaco editor integration (91 tests)
+│   ├── 3d-renderer/            # React Three Fiber + CSG (69 tests)
+│   ├── openscad-parser/        # AST parsing integration (24 tests)
+│   ├── store/                  # Zustand state management (64 tests)
+│   └── ui-components/          # Reusable UI components
+├── shared/                     # Shared utilities and components (146 tests)
+│   ├── components/             # Reusable UI components
+│   ├── hooks/                  # Custom React hooks
+│   ├── types/                  # Shared TypeScript types (Result<T,E>)
+│   ├── utils/                  # Pure utility functions
+│   └── services/               # Application services
+├── app/                        # Application-level configuration
+│   ├── providers/              # Context providers
+│   └── layout/                 # Layout components
+└── test/                       # Test utilities and setup
+```
+
+- `src/features`: Contains self-contained modules like the `code-editor` or `3d-renderer`. This is where most of the work happens.
+- `src/shared`: Contains code that is reused across multiple features, like UI components, hooks, and utility functions.
+- `src/app`: Contains application-wide setup, like layout and context providers.
+- `src/test`: Contains testing utilities and mock data.
+
+## 5. How to Get Started
+
+**1. Install Dependencies:**
+```bash
+pnpm install
+```
+
+**2. Run the Development Server:**
+```bash
+pnpm dev
+```
+
+**3. Run Tests:**
+```bash
+pnpm test
+```
+
+**4. Run Linting and Type Checking:**
+This is a mandatory step before committing code.
+```bash
+pnpm type-check
+pnpm biome:check
+```
+
+## 6. The Core Workflow (A Day in the Life)
+
+A typical task, like adding a new feature, looks like this:
+
+1.  **Create a new feature directory:** `src/features/new-feature`.
+2.  **Define state (if needed):** Add a new "slice" to the Zustand store (`src/features/store/slices`).
+3.  **Write a failing test:** Create `new-feature.test.ts` and write a test that describes what the feature should do. It will fail.
+4.  **Implement the feature:** Write the code for the components, hooks, and services for your new feature.
+5.  **Make the test pass:** Run `pnpm test` until your new test (and all others) pass.
+6.  **Verify:** Run `pnpm type-check` and `pnpm biome:check` to ensure code quality.
+7.  **Commit:** Use the Conventional Commits format (e.g., `feat(new-feature): add support for XYZ`).
+
+## 7. Key Concepts to Understand
+
+### Zustand-Centric Architecture
+- **Zustand Store (`src/features/store`):** This is the single source of truth for the application state. It's divided into "slices" for each feature (editor, parsing, rendering, etc.). All state changes happen through actions, and components subscribe to only the state they need for performance.
+
+### Data Flow Pipeline
+```
+Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() → Three.js rendering
+```
+
+### Core Components
+- **Code Editor (`src/features/code-editor`):** Monaco Editor integration with OpenSCAD syntax highlighting. The `StoreConnectedEditor` component syncs editor content with the Zustand store.
+
+- **OpenSCAD Parser (`src/features/openscad-parser`):** Takes raw OpenSCAD code and converts it into an AST using `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar.
+
+- **3D Renderer (`src/features/3d-renderer`):** React Three Fiber-based component that takes AST from the store and renders 3D scenes. The `StoreConnectedRenderer` ensures all data flows through the store.
+
+### Rendering Pipeline
+1. `StoreConnectedRenderer` gets the latest AST from the store
+2. AST passed to `R3FScene` component
+3. `R3FScene` uses `primitive-renderer` and `csg-operations` services
+4. Each AST node converted to `three.js` mesh
+5. Resulting meshes rendered to screen
+
+### CSG Operations
+- **Enhanced CSG Operations:** Production-ready boolean operations (union, difference, intersection) with `three-csg-ts`
+- **Real BSP Tree Algorithms:** 92% test success rate with comprehensive CSG validation
+- **Performance Optimization:** <16ms render targets achieved (3.94ms average)
+
+## 8. Development Standards & Quality Requirements
+
+### Code Quality Requirements
+- **Zero TypeScript Errors:** Mandatory strict mode compliance
+- **Zero Biome Violations:** Automated code quality enforcement
+- **95% Test Coverage:** Comprehensive unit and integration testing
+- **TDD Methodology:** Red-Green-Refactor cycle mandatory
+
+### Functional Programming Patterns
+- **Immutable Data:** All state uses `readonly` and `Object.freeze()`
+- **Pure Functions:** No side effects in business logic
+- **Result<T,E> Error Handling:** Avoid try/catch in favor of Result types
+- **Function Composition:** Pipe and compose utilities for complex operations
+
+### Logging Standards
+Structured logging with specific patterns:
+```typescript
+// Component lifecycle
+logger.init('[INIT][ComponentName] Initializing...');
+logger.debug('[DEBUG][ComponentName] State updated');
+logger.error('[ERROR][ComponentName] Operation failed');
+logger.end('[END][ComponentName] Cleanup complete');
+```
+
+### Performance Requirements
+- **Render Performance:** <16ms frame times
+- **Memory Management:** Automatic cleanup and disposal
+- **Bundle Optimization:** Manual chunk splitting for optimal loading
+- **Real-time Operations:** 300ms debouncing for parsing
+
+## 9. Testing Strategy & Quality Assurance
+
+### Multi-layered Testing Approach
+
+#### Unit Testing (Vitest)
+- **Framework:** Vitest with jsdom environment
+- **Coverage:** 95% minimum requirement (currently 99%)
+- **Real Implementations:** Use actual parser instances, avoid mocking
+- **Co-located Tests:** Tests alongside implementation files
+
+#### Integration Testing
+- **Parser Integration:** Real OpenSCAD parser with actual syntax
+- **Store Integration:** Full Zustand store with real state management
+- **Pipeline Testing:** End-to-end OpenSCAD → AST → 3D rendering
+
+#### React Three Fiber Testing
+Special handling for 3D components:
+```typescript
+// Component mocking for integration tests
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }) => <div data-testid="r3f-canvas">{children}</div>
+}));
+
+// @react-three/test-renderer for 3D logic
+const renderer = await ReactThreeTestRenderer.create(<Box color="blue" />);
+```
+
+#### E2E Testing (Playwright)
+- **Visual Regression:** Screenshot comparison for 3D scenes
+- **User Interactions:** Camera controls, code editing
+- **Performance Testing:** Render time measurements
+- **Cross-browser:** Chrome, Firefox, Safari compatibility
+
+### Quality Gates
+- **TypeScript:** Zero errors in strict mode
+- **Biome:** Zero linting violations
+- **Tests:** 95% coverage minimum
+- **Performance:** <16ms render times
+- **Accessibility:** WCAG 2.1 AA compliance
+
+## 10. Critical Development Constraints
+
+### Mandatory Patterns
+1. **TDD Methodology:** Write failing tests first, then implement
+2. **Real Implementations:** No mocking except Three.js WebGL components
+3. **Immutable State:** All data structures must be readonly
+4. **Result<T,E> Patterns:** Functional error handling over exceptions
+5. **Zustand-Only Data Flow:** All state changes through store actions
+
+### Performance Requirements
+- **Render Times:** <16ms target (achieved: 3.94ms average)
+- **Memory Management:** Automatic cleanup and disposal
+- **Bundle Size:** Optimized chunk splitting for fast loading
+- **Real-time Updates:** 300ms debouncing for smooth interactions
+
+### Quality Standards
+- **Zero Tolerance:** No TypeScript errors or Biome violations
+- **Test Coverage:** 95% minimum across all features
+- **Documentation:** JSDoc comments for all public APIs
+- **Accessibility:** Full keyboard navigation and screen reader support
+
+## 11. Debugging Standards
+
+### Debugging Methodology
+- **Headless-First Approach:** Prioritize CLI-based and testing-based debugging over browser DevTools
+- **Structured Logging:** Use tslog with component-specific loggers following `[INIT]/[DEBUG]/[ERROR]/[WARN]/[END][ComponentName]` patterns
+- **Result<T,E> Integration:** Debug functional error handling patterns with comprehensive error context
+- **Performance-Aware Debugging:** Monitor debugging impact on <16ms render targets
+
+### Debugging Workflow Integration
+- **TDD Debugging Cycle:** Red-Green-Refactor with debug logging at each stage
+- **Feature-Based Debugging:** Debug individual features (openscad-parser, 3d-renderer, code-editor) in isolation
+- **CI/CD Compatibility:** All debugging techniques must work in headless environments and CI pipelines
+- **Production Debugging:** Structured error monitoring and performance metrics collection
+
+### Essential Debugging Commands
+```bash
+# Core debugging workflow
+pnpm test --reporter=verbose                    # Verbose test output
+pnpm tsc --noEmit --extendedDiagnostics        # TypeScript debugging
+pnpm biome check --verbose                     # Static analysis debugging
+DEBUG=component:name pnpm dev                  # Component-specific debugging
+NODE_OPTIONS="--inspect" pnpm test             # Node.js debugging
+LOG_LEVEL=DEBUG pnpm dev                       # Enhanced logging
+```
+
+### Component-Specific Debugging Patterns
+- **OpenSCAD Parser:** `OPENSCAD_DEBUG=true pnpm test parser-tests`
+- **React Three Fiber:** `THREE_DEBUG=true pnpm test 3d-renderer`
+- **CSG Operations:** `CSG_DEBUG=true pnpm test csg-operations`
+- **Zustand Store:** State change subscription debugging with middleware
+- **Monaco Editor:** `MONACO_DEBUG=true pnpm dev`
+
+## 12. Key Reference Documentation
+
+### Primary Documentation
+- **Architecture:** `docs/bulletproof-react-structure.md`
+- **TypeScript:** `docs/typescript-guidelines.md`
+- **Store Design:** `docs/zustand-store-architecture.md`
+- **Testing:** `llm-r3f-test.md`
+- **Debugging:** `docs/how-to-debug.md`
+- **Development:** This file (`.augment-guidelines`)
+
+### Implementation Guides
+- **CSG Integration:** `docs/csg-integration-guide.md`
+- **Monaco Editor:** `docs/monaco-editor-integration.md`
+- **React Three Fiber:** `docs/react-three-fiber-integration.md`
+- **OpenSCAD Parser:** `docs/openscad-parser-integration.md`
+
+### Debugging & Quality Assurance
+- **Comprehensive Debugging:** `docs/how-to-debug.md`
+- **Test Failure Analysis:** `DEBUG_CONFIG.md`
+- **Logging Integration:** `docs/logging/tslog-integration.md`
+- **Logging Quick Reference:** `docs/logging/tslog-quick-reference.md`
+
+This guide provides everything needed for a new developer to understand and contribute to the OpenSCAD Babylon project effectively.

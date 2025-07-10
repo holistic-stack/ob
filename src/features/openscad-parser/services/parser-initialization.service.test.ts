@@ -111,7 +111,7 @@ describe('ParserInitializationService', () => {
         retryAttempts: 2,
         retryDelayMs: 10, // Short delay for testing
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Parser initialization failed after 2 attempts');
       expect(mockParser.init).toHaveBeenCalledTimes(2); // Should retry
@@ -122,15 +122,15 @@ describe('ParserInitializationService', () => {
     it('should handle timeout during initialization', async () => {
       // Mock parser init to hang (never resolve)
       mockParser.init.mockImplementation(() => new Promise(() => {}));
-      
+
       const result = await initializeParser({
         timeoutMs: 100, // Short timeout for testing
         retryAttempts: 1,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('timed out after 100ms');
-      
+
       logger.debug('✅ Timeout handling working correctly');
     });
 
@@ -139,15 +139,15 @@ describe('ParserInitializationService', () => {
         wasmPath: '/custom/tree-sitter-openscad.wasm',
         treeSitterWasmPath: '/custom/tree-sitter.wasm',
       };
-      
+
       const result = await initializeParser(customConfig);
-      
+
       expect(result.success).toBe(true);
       expect(mockParser.init).toHaveBeenCalledWith(
         customConfig.wasmPath,
         customConfig.treeSitterWasmPath
       );
-      
+
       logger.debug('✅ Custom configuration applied correctly');
     });
   });

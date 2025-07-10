@@ -3,6 +3,11 @@
  *
  * Optimized selectors for Zustand store to prevent unnecessary re-renders
  * following functional programming patterns and memoization.
+ *
+ * Performance optimizations:
+ * - Granular selectors to minimize re-renders
+ * - Memoized complex computations with createSelector
+ * - Shallow equality checks for object comparisons
  */
 
 import { createSelector } from 'reselect';
@@ -218,5 +223,92 @@ export const selectDebugInfo = createSelector(
     applicationStatus,
     lastActivity,
     featureFlags,
+  })
+);
+
+/**
+ * Performance-optimized selectors for specific use cases
+ * These selectors are designed to minimize re-renders by being highly granular
+ */
+
+// Optimized selector for code editor performance
+export const selectCodeEditorProps = createSelector(
+  [selectEditorCode, selectEditorCursorPosition, selectEditorSelection, selectEditorIsDirty],
+  (code, cursorPosition, selection, isDirty) => ({
+    code,
+    cursorPosition,
+    selection,
+    isDirty,
+  })
+);
+
+// Optimized selector for 3D viewer performance
+export const selectViewerProps = createSelector(
+  [
+    (state: AppState) => state.rendering?.meshes,
+    (state: AppState) => state.rendering?.isRendering,
+    (state: AppState) => state.rendering?.camera,
+  ],
+  (meshes, isRendering, camera) => ({
+    meshes: meshes ?? [],
+    isRendering: isRendering ?? false,
+    camera,
+  })
+);
+
+// Optimized selector for parsing status
+export const selectParsingStatus = createSelector(
+  [selectParsingIsLoading, selectParsingHasErrors, selectParsingTime],
+  (isLoading, hasErrors, parseTime) => ({
+    isLoading,
+    hasErrors,
+    parseTime,
+  })
+);
+
+// Optimized selector for rendering status
+export const selectRenderingStatus = createSelector(
+  [
+    (state: AppState) => state.rendering?.isRendering ?? false,
+    selectRenderingHasErrors,
+    (state: AppState) => state.rendering?.renderTime ?? 0,
+  ],
+  (isRendering, hasErrors, renderTime) => ({
+    isRendering,
+    hasErrors,
+    renderTime,
+  })
+);
+
+// Optimized selector for performance metrics
+export const selectPerformanceMetrics = createSelector(
+  [selectParsingTime, (state: AppState) => state.rendering?.renderTime ?? 0],
+  (parseTime, renderTime) => ({
+    parseTime,
+    renderTime,
+    totalTime: parseTime + renderTime,
+    isPerformant: parseTime + renderTime < 50, // Under 50ms is considered performant
+  })
+);
+
+// Optimized selector for error summary
+export const selectErrorSummary = createSelector(
+  [selectParsingErrors, (state: AppState) => state.rendering?.renderErrors ?? []],
+  (parsingErrors, renderingErrors) => ({
+    parsingErrorCount: parsingErrors.length,
+    renderingErrorCount: renderingErrors.length,
+    totalErrorCount: parsingErrors.length + renderingErrors.length,
+    hasAnyErrors: parsingErrors.length > 0 || renderingErrors.length > 0,
+  })
+);
+
+// Optimized selector for UI state
+export const selectUIState = createSelector(
+  [selectIsProcessing, selectHasAnyErrors, selectApplicationStatus],
+  (isProcessing, hasErrors, status) => ({
+    isProcessing,
+    hasErrors,
+    status,
+    canInteract: !isProcessing && status !== 'error',
   })
 );

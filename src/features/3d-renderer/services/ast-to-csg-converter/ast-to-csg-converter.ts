@@ -3,6 +3,11 @@
  *
  * Service for converting OpenSCAD AST nodes to three-csg-ts operations
  * with support for primitives, transformations, and boolean operations.
+ *
+ * Performance optimizations:
+ * - Node caching to avoid reprocessing identical nodes
+ * - Material reuse to reduce memory allocation
+ * - Early exit for simple cases
  */
 
 import * as THREE from 'three';
@@ -88,6 +93,85 @@ import { variableScope } from './variable-scope.service.js';
 variableScope.reset();
 
 const logger = createLogger('ASTToCSGConverter');
+
+/**
+ * Performance optimization: Cache for converted meshes
+ * Key: JSON.stringify(node) + material hash
+ * Value: THREE.Mesh (cloned for reuse)
+ */
+const meshCache = new Map<string, THREE.Mesh>();
+const materialCache = new Map<string, THREE.Material>();
+
+/**
+ * Generate cache key for a node and material configuration
+ */
+function generateCacheKey(node: ASTNode, materialConfig: any): string {
+  // Create a simplified node representation for caching
+  const nodeKey = {
+    type: node.type,
+    // Include only relevant properties for each node type
+    ...(node.type === 'cube' && 'size' in node ? { size: node.size } : {}),
+    ...(node.type === 'sphere' && 'r' in node ? { r: node.r } : {}),
+    ...(node.type === 'cylinder' && 'h' in node && 'r1' in node && 'r2' in node ? { h: node.h, r1: node.r1, r2: node.r2 } : {}),
+  };
+
+  const materialKey = {
+    color: materialConfig.color,
+    metalness: materialConfig.metalness,
+    roughness: materialConfig.roughness,
+    wireframe: materialConfig.wireframe,
+  };
+
+  return JSON.stringify({ node: nodeKey, material: materialKey });
+}
+
+/**
+ * Get or create a cached material with the given properties
+ */
+function getCachedMaterial(config: {
+  color: number;
+  metalness: number;
+  roughness: number;
+  wireframe: boolean;
+}): THREE.Material {
+  const materialKey = JSON.stringify(config);
+
+  let material = materialCache.get(materialKey);
+  if (!material) {
+    material = new THREE.MeshStandardMaterial({
+      color: config.color,
+      metalness: config.metalness,
+      roughness: config.roughness,
+      wireframe: config.wireframe,
+    });
+    materialCache.set(materialKey, material);
+    logger.debug(`Created and cached new material: ${materialKey}`);
+  }
+
+  return material;
+}
+
+/**
+ * Clear the mesh cache (useful for memory management)
+ */
+export function clearMeshCache(): void {
+  // Dispose of cached meshes
+  meshCache.forEach((mesh) => {
+    if (mesh.geometry) mesh.geometry.dispose();
+    if (mesh.material && 'dispose' in mesh.material) {
+      (mesh.material as any).dispose();
+    }
+  });
+  meshCache.clear();
+
+  // Dispose of cached materials
+  materialCache.forEach((material) => {
+    if ('dispose' in material) {
+      (material as any).dispose();
+    }
+  });
+  materialCache.clear();
+}
 
 /**
  * Helper functions to create branded types
@@ -1769,17 +1853,86 @@ const convertASTNodeToMesh = async (
   node: ASTNode,
   material: THREE.Material
 ): Promise<Result<THREE.Mesh, string>> => {
+  // Performance optimization: Check cache first for primitive nodes
+  const isPrimitive = ['cube', 'sphere', 'cylinder'].includes(node.type);
+  if (isPrimitive) {
+    const cacheKey = generateCacheKey(node, {
+      color: (material as any).color?.getHex?.() || 0x00ff88,
+      metalness: (material as any).metalness || 0.1,
+      roughness: (material as any).roughness || 0.8,
+      wireframe: (material as any).wireframe || false,
+    });
+
+    const cachedMesh = meshCache.get(cacheKey);
+    if (cachedMesh) {
+      logger.debug(`Cache hit for ${node.type} node`);
+      // Clone the cached mesh to avoid shared references
+      const clonedMesh = cachedMesh.clone();
+      clonedMesh.geometry = cachedMesh.geometry.clone();
+      clonedMesh.material = cachedMesh.material;
+      return success(clonedMesh);
+    }
+  }
+
   logger.debug(`Converting AST node type: ${node.type}`);
 
   switch (node.type) {
-    case 'cube':
-      return convertCubeToMesh(node, material);
+    case 'cube': {
+      const result = convertCubeToMesh(node, material);
+      // Cache primitive result if successful
+      if (result.success && isPrimitive) {
+        const cacheKey = generateCacheKey(node, {
+          color: (material as any).color?.getHex?.() || 0x00ff88,
+          metalness: (material as any).metalness || 0.1,
+          roughness: (material as any).roughness || 0.8,
+          wireframe: (material as any).wireframe || false,
+        });
+        const meshToCache = result.data.clone();
+        meshToCache.geometry = result.data.geometry.clone();
+        meshToCache.material = result.data.material;
+        meshCache.set(cacheKey, meshToCache);
+        logger.debug(`Cached cube node for future reuse`);
+      }
+      return result;
+    }
 
-    case 'sphere':
-      return convertSphereToMesh(node, material);
+    case 'sphere': {
+      const result = convertSphereToMesh(node, material);
+      // Cache primitive result if successful
+      if (result.success && isPrimitive) {
+        const cacheKey = generateCacheKey(node, {
+          color: (material as any).color?.getHex?.() || 0x00ff88,
+          metalness: (material as any).metalness || 0.1,
+          roughness: (material as any).roughness || 0.8,
+          wireframe: (material as any).wireframe || false,
+        });
+        const meshToCache = result.data.clone();
+        meshToCache.geometry = result.data.geometry.clone();
+        meshToCache.material = result.data.material;
+        meshCache.set(cacheKey, meshToCache);
+        logger.debug(`Cached sphere node for future reuse`);
+      }
+      return result;
+    }
 
-    case 'cylinder':
-      return convertCylinderToMesh(node, material);
+    case 'cylinder': {
+      const result = convertCylinderToMesh(node, material);
+      // Cache primitive result if successful
+      if (result.success && isPrimitive) {
+        const cacheKey = generateCacheKey(node, {
+          color: (material as any).color?.getHex?.() || 0x00ff88,
+          metalness: (material as any).metalness || 0.1,
+          roughness: (material as any).roughness || 0.8,
+          wireframe: (material as any).wireframe || false,
+        });
+        const meshToCache = result.data.clone();
+        meshToCache.geometry = result.data.geometry.clone();
+        meshToCache.material = result.data.material;
+        meshCache.set(cacheKey, meshToCache);
+        logger.debug(`Cached cylinder node for future reuse`);
+      }
+      return result;
+    }
 
     case 'translate':
       return await convertTranslateNode(node, material, convertASTNodeToMesh);
@@ -1988,6 +2141,7 @@ export const convertASTNodeToCSG = async (
 ): Promise<Result<Mesh3D, string>> => {
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
+  const startTime = performance.now();
   logger.init(`Converting AST node ${index} (${node.type}) to CSG`);
 
   // Debug translate nodes specifically
@@ -2083,10 +2237,23 @@ export const convertASTNodeToCSG = async (
     performConversion()
       .then((result) => {
         clearTimeout(timeoutId);
+        const conversionTime = performance.now() - startTime;
+
+        // Log performance metrics
+        if (conversionTime > 10) { // Only log if conversion took more than 10ms
+          logger.debug(`Performance: ${node.type} conversion took ${conversionTime.toFixed(2)}ms`);
+        }
+
+        if (conversionTime > 50) { // Warn for slow conversions
+          logger.warn(`Slow conversion detected: ${node.type} took ${conversionTime.toFixed(2)}ms`);
+        }
+
         resolve(result);
       })
       .catch((err) => {
         clearTimeout(timeoutId);
+        const conversionTime = performance.now() - startTime;
+        logger.error(`Failed conversion: ${node.type} failed after ${conversionTime.toFixed(2)}ms`);
         resolve(error(`CSG conversion error: ${err instanceof Error ? err.message : String(err)}`));
       });
   });
