@@ -99,11 +99,15 @@ export const convertTranslateNode = async (
 
     // Extract translation vector with Tree-sitter workaround
     let translationVector: [number, number, number] = [0, 0, 0];
+    let useWorkaround = false;
 
     if (Array.isArray(node.v) && node.v.length === 3) {
       translationVector = [node.v[0], node.v[1], node.v[2]];
+
+      // Note: Vector verification is now handled at the parser level in transform-visitor.ts
     } else {
-      // Tree-sitter vector parsing failed - apply text-based workaround
+      // Tree-sitter vector parsing failed completely - apply text-based workaround
+      useWorkaround = true;
 
       // Try to extract from source code using text-based parsing
       const sourceCode = getCurrentSourceCode();

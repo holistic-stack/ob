@@ -301,14 +301,7 @@ const findChildrenBySourceLocation = (
     logger.debug(
       `findDirectChildrenForNode: ${parentNode.type} - potentialChildren: ${potentialChildren.length}, directChildren: ${directChildren.length}`
     );
-    console.log(
-      '[DEBUG][ASTRestructuringService] potentialChildren types:',
-      potentialChildren.map((c) => c.type)
-    );
-    console.log(
-      '[DEBUG][ASTRestructuringService] directChildren types:',
-      directChildren.map((c) => c.type)
-    );
+
     if (directChildren.length > 0) {
       directChildren.forEach((child) => {
         logger.debug(
@@ -583,10 +576,7 @@ const restructureTransformNode = (
 
   if (config.enableLogging) {
     logger.debug(`${transformNode.type} now has ${restructuredChildren.length} children`);
-    console.log(
-      '[DEBUG][ASTRestructuringService] Transform children types:',
-      restructuredChildren.map((c) => c.type)
-    );
+
   }
 
   return restructuredNode;
@@ -882,13 +872,7 @@ export const restructureAST = (
         logger.init(`Restructuring AST with ${ast.length} nodes`);
       }
 
-      // Performance optimization: Skip restructuring for simple cases
-      if (ast.length <= 1) {
-        if (finalConfig.enableLogging) {
-          logger.debug(`AST too small for restructuring, returning as-is`);
-        }
-        return ast;
-      }
+      // Note: Don't skip restructuring for single nodes as they might need child relationships established
 
       // Skip restructuring if all nodes are simple primitives (no transformations)
       const hasComplexNodes = ast.some(node =>
@@ -914,10 +898,7 @@ export const restructureAST = (
       const topLevelNodes = getTopLevelNodes(ast, finalConfig);
 
       if (finalConfig.enableLogging) {
-        console.log(
-          '[DEBUG][ASTRestructuringService] Initial top-level nodes:',
-          topLevelNodes.map((n) => n.type)
-        );
+
       }
 
       // Restructure each top-level node
@@ -948,20 +929,7 @@ export const restructureAST = (
 
       if (finalConfig.enableLogging) {
         logger.debug(`Restructuring complete: ${restructuredNodes.length} top-level nodes`);
-        console.log(
-          '[DEBUG][ASTRestructuringService] Final restructured nodes:',
-          restructuredNodes.map((n) => n.type)
-        );
-        console.log(
-          '[DEBUG][ASTRestructuringService] Final restructured nodes with children:',
-          restructuredNodes.map((n) => ({
-            type: n.type,
-            hasChildren: 'children' in n,
-            childrenCount: 'children' in n && Array.isArray(n.children) ? n.children.length : 0,
-            childrenTypes:
-              'children' in n && Array.isArray(n.children) ? n.children.map((c) => c.type) : [],
-          }))
-        );
+
       }
 
       return Object.freeze(restructuredNodes);

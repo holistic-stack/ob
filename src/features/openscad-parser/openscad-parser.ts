@@ -325,24 +325,18 @@ export class OpenscadParser {
    */
   private applyGrammarWorkarounds(code: string, initialAST: ASTNode[]): ASTNode[] {
     try {
-      console.log(
-        '[DEBUG][OpenscadParser] Applying grammar workarounds, initial AST length:',
-        initialAST.length
-      );
+
 
       // Check if Tree-sitter has truncated the input by comparing expected vs actual statements
       const expectedStatements = this.countExpectedStatements(code);
       const actualStatements = initialAST.length;
       const hasTruncatedParsing = actualStatements < expectedStatements;
 
-      console.log('[DEBUG][OpenscadParser] Expected statements:', expectedStatements);
-      console.log('[DEBUG][OpenscadParser] Actual statements:', actualStatements);
-      console.log('[DEBUG][OpenscadParser] Has truncated parsing:', hasTruncatedParsing);
+
 
       // If Tree-sitter truncated the input, use line-by-line parsing fallback
       if (hasTruncatedParsing) {
-        console.log('[DEBUG][OpenscadParser] Applying line-by-line parsing fallback');
-        return this.parseLineByLineFallback(code);
+        return this.parseLineByLineFallbackWithStandalonePrimitives(code, initialAST);
       }
 
       // Check if we need to apply workarounds by looking for incomplete transform nodes
@@ -354,16 +348,12 @@ export class OpenscadParser {
           node.children.length === 0
       );
 
-      console.log('[DEBUG][OpenscadParser] Has incomplete transforms:', hasIncompleteTransforms);
-
       if (!hasIncompleteTransforms) {
         // No workarounds needed
-        console.log('[DEBUG][OpenscadParser] No workarounds needed');
         return initialAST;
       }
 
       // Apply the transform-primitive association workaround
-      console.log('[DEBUG][OpenscadParser] Applying transform-primitive association workaround');
       return this.associateTransformsWithPrimitives(code, initialAST);
     } catch (error) {
       // If workarounds fail, return the original AST
@@ -388,37 +378,30 @@ export class OpenscadParser {
    */
   private countExpectedStatements(code: string): number {
     try {
-      console.log('[DEBUG][OpenscadParser] Counting expected statements for code:', JSON.stringify(code));
-
       // Split by lines and count statements
       const lines = code.split('\n');
       let statementCount = 0;
 
       for (const line of lines) {
         const trimmedLine = line.trim();
-        console.log('[DEBUG][OpenscadParser] Processing line:', JSON.stringify(trimmedLine));
 
         // Skip empty lines and comments
         if (!trimmedLine || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*')) {
-          console.log('[DEBUG][OpenscadParser] Skipping empty/comment line');
           continue;
         }
 
         // Count statements ending with semicolon
         if (trimmedLine.endsWith(';')) {
           statementCount++;
-          console.log('[DEBUG][OpenscadParser] Found semicolon statement, count:', statementCount);
         }
 
         // Count transform statements (even without semicolon)
         if (trimmedLine.match(/^(translate|rotate|scale|mirror|multmatrix|color|offset)\s*\(/)) {
           statementCount++;
-          console.log('[DEBUG][OpenscadParser] Found transform statement, count:', statementCount);
         }
       }
 
       const finalCount = Math.max(statementCount, 1);
-      console.log('[DEBUG][OpenscadParser] Final expected statement count:', finalCount);
       return finalCount; // At least 1 statement expected
     } catch (error) {
       console.warn('[WARN][OpenscadParser] Failed to count expected statements:', error);
@@ -432,7 +415,6 @@ export class OpenscadParser {
    */
   private parseLineByLineFallback(code: string): ASTNode[] {
     try {
-      console.log('[DEBUG][OpenscadParser] Starting line-by-line fallback parsing');
 
       const lines = code.split('\n');
       const allNodes: ASTNode[] = [];
@@ -481,6 +463,76 @@ export class OpenscadParser {
       return allNodes;
     } catch (error) {
       console.error('[ERROR][OpenscadParser] Line-by-line fallback failed:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse code line by line as a fallback when Tree-sitter fails to parse the full code.
+   * Preserves standalone primitives from the initial parsing.
+   */
+  private parseLineByLineFallbackWithStandalonePrimitives(code: string, initialAST: ASTNode[]): ASTNode[] {
+    try {
+      // First, collect standalone primitives from the initial AST
+      const standalonePrimitives = initialAST.filter(node =>
+        this.isPrimitiveNode(node) && !this.isTransformNode(node)
+      );
+
+      const lines = code.split('\n');
+      const allNodes: ASTNode[] = [];
+      let currentStatement = '';
+      let lineNumber = 0;
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        lineNumber++;
+
+        // Skip empty lines and comments
+        if (!trimmedLine || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*')) {
+          continue;
+        }
+
+        // Accumulate multi-line statements
+        currentStatement += (currentStatement ? '\n' : '') + line;
+
+        // Check if statement is complete
+        if (this.isStatementComplete(currentStatement)) {
+          // Parse this individual statement
+          const statementNodes = this.parseIndividualStatement(currentStatement, lineNumber - 1);
+
+          // If this statement failed to parse but looks like a standalone primitive,
+          // try to find it in the initial AST
+          if (statementNodes.length === 0 && this.looksLikeStandalonePrimitive(currentStatement)) {
+            const matchingPrimitive = this.findMatchingPrimitive(currentStatement, standalonePrimitives);
+            if (matchingPrimitive) {
+              allNodes.push(matchingPrimitive);
+            }
+          } else {
+            allNodes.push(...statementNodes);
+          }
+
+          // Reset for next statement
+          currentStatement = '';
+        }
+      }
+
+      // Handle any remaining incomplete statement
+      if (currentStatement.trim()) {
+        const statementNodes = this.parseIndividualStatement(currentStatement, lineNumber);
+
+        // Check for standalone primitive in final statement too
+        if (statementNodes.length === 0 && this.looksLikeStandalonePrimitive(currentStatement)) {
+          const matchingPrimitive = this.findMatchingPrimitive(currentStatement, standalonePrimitives);
+          if (matchingPrimitive) {
+            allNodes.push(matchingPrimitive);
+          }
+        } else {
+          allNodes.push(...statementNodes);
+        }
+      }
+      return allNodes;
+    } catch (error) {
+      console.error('[ERROR][OpenscadParser] Line-by-line fallback with standalone primitives failed:', error);
       return [];
     }
   }
@@ -934,7 +986,10 @@ export class OpenscadParser {
 
       // Generate AST using visitor pattern
       const ast = astGenerator.generate();
-      return { success: true, data: ast };
+
+      // Apply workaround for Tree-sitter grammar limitations
+      const workaroundAST = this.applyGrammarWorkarounds(code, ast);
+      return { success: true, data: workaroundAST };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.errorHandler.handleError(new Error(`Failed to generate AST: ${errorMessage}`));
@@ -1386,5 +1441,54 @@ export class OpenscadParser {
     }
 
     return { row, column };
+  }
+
+  /**
+   * Check if a statement looks like a standalone primitive (sphere, cube, etc.)
+   */
+  private looksLikeStandalonePrimitive(statement: string): boolean {
+    const trimmed = statement.trim();
+    const primitivePattern = /^(sphere|cube|cylinder|polyhedron|circle|square|polygon|text|linear_extrude|rotate_extrude|hull|minkowski|offset|projection|surface|import)\s*\(/;
+    return primitivePattern.test(trimmed);
+  }
+
+  /**
+   * Find a matching primitive in the standalone primitives list
+   */
+  private findMatchingPrimitive(statement: string, standalonePrimitives: ASTNode[]): ASTNode | null {
+    const trimmed = statement.trim();
+
+    // Extract the primitive type from the statement
+    const primitiveMatch = trimmed.match(/^(\w+)\s*\(/);
+    if (!primitiveMatch) {
+      return null;
+    }
+
+    const primitiveType = primitiveMatch[1];
+
+    // Find a matching primitive in the list
+    return standalonePrimitives.find(node => node.type === primitiveType) || null;
+  }
+
+  /**
+   * Check if a node is a primitive node
+   */
+  private isPrimitiveNode(node: ASTNode): boolean {
+    const primitiveTypes = [
+      'sphere', 'cube', 'cylinder', 'polyhedron',
+      'circle', 'square', 'polygon', 'text',
+      'linear_extrude', 'rotate_extrude',
+      'hull', 'minkowski', 'offset', 'projection',
+      'surface', 'import'
+    ];
+    return primitiveTypes.includes(node.type);
+  }
+
+  /**
+   * Check if a node is a transform node
+   */
+  private isTransformNode(node: ASTNode): boolean {
+    const transformTypes = ['translate', 'rotate', 'scale', 'mirror', 'multmatrix', 'color', 'resize'];
+    return transformTypes.includes(node.type);
   }
 }

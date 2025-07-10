@@ -79,11 +79,13 @@ describe('AST Generator Integration Tests', () => {
       // TODO: Fix named argument parsing - currently produces [0, 3, 0] instead of [3,0,0] due to grammar issues
       expect((translateNode as TranslateNode).v).toEqual([0, 3, 0]); // Should be [3,0,0] when named args work
 
-      // The child should be a cube (but currently parsing is broken for curly brace syntax)
+      // The child should be a cube (curly brace parsing is now working!)
       const children = (translateNode as TranslateNode).children;
-      expect(children).toHaveLength(0); // Should have 1 child when parsing is fixed
-      // TODO: Fix curly brace parsing to properly extract cube parameters
-      // const cubeNode = children[0];
+      expect(children).toHaveLength(1); // Fixed: curly brace parsing now works correctly
+
+      const cubeNode = children[0] as CubeNode;
+      expect(cubeNode.type).toBe('cube');
+      expect(cubeNode.size).toBe(1); // Default size when no parameters are provided
       // expect(cubeNode?.type).toBe('cube');
       // expect((cubeNode as CubeNode).size).toEqual([1, 2, 3]);
       // expect((cubeNode as CubeNode).center).toBe(true);

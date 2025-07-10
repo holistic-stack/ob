@@ -842,6 +842,37 @@ export class TransformVisitor extends BaseASTVisitor {
           } else if (vector.length >= 3) {
             v = [vector[0], vector[1], vector[2]] as ast.Vector3D;
           }
+
+          // Tree-sitter workaround: Verify vector against source text
+          const sourceText = node.text;
+          if (sourceText) {
+            const vectorMatch = sourceText.match(/translate\s*\(\s*\[([^\]]+)\]/);
+            if (vectorMatch?.[1]) {
+              const vectorContent = vectorMatch[1];
+              const expectedNumbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+
+              if (expectedNumbers.length >= 3 && expectedNumbers.every((n: number) => !Number.isNaN(n))) {
+                const expectedVector = [expectedNumbers[0] ?? 0, expectedNumbers[1] ?? 0, expectedNumbers[2] ?? 0];
+
+                // Check if Tree-sitter parsed vector matches expected vector
+                const tolerance = 0.001;
+                const currentVector = vector.length === 2 ? [vector[0], vector[1], 0] : [vector[0], vector[1], vector[2]];
+                const vectorsMatch = Math.abs(currentVector[0] - expectedVector[0]) < tolerance &&
+                                   Math.abs(currentVector[1] - expectedVector[1]) < tolerance &&
+                                   Math.abs(currentVector[2] - expectedVector[2]) < tolerance;
+
+                if (!vectorsMatch) {
+                  // Use the source-parsed vector instead
+                  if (expectedNumbers.length === 2) {
+                    v = [expectedVector[0], expectedVector[1]] as ast.Vector2D;
+                  } else {
+                    v = [expectedVector[0], expectedVector[1], expectedVector[2]] as ast.Vector3D;
+                  }
+                }
+              }
+            }
+          }
+
           break;
         }
 
