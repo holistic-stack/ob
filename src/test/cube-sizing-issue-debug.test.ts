@@ -7,16 +7,16 @@
  * allowing for a focused debugging effort.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { createLogger } from '../shared/services/logger.service';
-import type { ASTNode } from '../features/openscad-parser/core/ast-types';
-import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  clearSourceCodeForExtraction,
   convertASTNodeToCSG,
   setSourceCodeForExtraction,
-  clearSourceCodeForExtraction,
 } from '../features/3d-renderer/services/ast-to-csg-converter/ast-to-csg-converter';
+import type { ASTNode } from '../features/openscad-parser/core/ast-types';
+import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import { createLogger } from '../shared/services/logger.service';
 
 const logger = createLogger('CubeSizingIssueDebugTest');
 
@@ -28,7 +28,7 @@ describe('Debugging Cube Sizing Issue', () => {
     parserService = new OpenscadParser();
     await parserService.init();
   });
-    
+
   it('should produce two cubes of the same size', async () => {
     const code = 'cube(5, center=true);translate([10,10,0])cube(5, center=true);';
     logger.debug(`Testing code: "${code}"`);
@@ -47,12 +47,12 @@ describe('Debugging Cube Sizing Issue', () => {
     logger.debug('First node:', {
       type: firstNode.type,
       size: 'size' in firstNode ? firstNode.size : 'N/A',
-      center: 'center' in firstNode ? firstNode.center : 'N/A'
+      center: 'center' in firstNode ? firstNode.center : 'N/A',
     });
     logger.debug('Second node:', {
       type: secondNode.type,
       v: 'v' in secondNode ? secondNode.v : 'N/A',
-      children: 'children' in secondNode ? secondNode.children?.length : 'N/A'
+      children: 'children' in secondNode ? secondNode.children?.length : 'N/A',
     });
 
     // Adjust expectations based on actual parser output

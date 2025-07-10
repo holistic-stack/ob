@@ -152,7 +152,7 @@ cylinder(h=1, r=2);`;
       expect(updatedAST.length).toBeGreaterThanOrEqual(2); // Should have at least 2 nodes (cube, translate, cylinder)
 
       // Check that we have different node types
-      const nodeTypes = updatedAST.map(node => node.type);
+      const nodeTypes = updatedAST.map((node) => node.type);
       expect(nodeTypes).toContain('cube');
       expect(nodeTypes).toContain('translate');
 

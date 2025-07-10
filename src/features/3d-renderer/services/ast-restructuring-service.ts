@@ -391,16 +391,25 @@ const findNextPrimitiveAfterTransform = (
       `Found ${candidateNodes.length} candidate primitives after transform ${transformNode.type}`
     );
     candidateNodes.forEach((node) => {
-      logger.debug(`✅ CANDIDATE: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
+      logger.debug(
+        `✅ CANDIDATE: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
+      );
     });
 
     // Also log rejected nodes for debugging
     const rejectedNodes = allNodes.filter((node) => {
-      return node !== transformNode && isPrimitiveNode(node) && node.location && !candidateNodes.includes(node);
+      return (
+        node !== transformNode &&
+        isPrimitiveNode(node) &&
+        node.location &&
+        !candidateNodes.includes(node)
+      );
     });
     logger.debug(`Found ${rejectedNodes.length} rejected primitives:`);
     rejectedNodes.forEach((node) => {
-      logger.debug(`❌ REJECTED: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`);
+      logger.debug(
+        `❌ REJECTED: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
+      );
     });
   }
 
@@ -576,7 +585,6 @@ const restructureTransformNode = (
 
   if (config.enableLogging) {
     logger.debug(`${transformNode.type} now has ${restructuredChildren.length} children`);
-
   }
 
   return restructuredNode;
@@ -649,7 +657,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => 
     if (sameLinePrimitiveMatch) {
       const primitiveType = sameLinePrimitiveMatch[1];
       // Use the match index to find the correct primitive position
-      const matchIndex = sameLinePrimitiveMatch.index! + sameLinePrimitiveMatch[0].indexOf(primitiveType!);
+      const matchIndex =
+        sameLinePrimitiveMatch.index! + sameLinePrimitiveMatch[0].indexOf(primitiveType!);
 
       return createSyntheticPrimitiveNode(
         primitiveType!,
@@ -767,7 +776,7 @@ const createSyntheticPrimitiveNode = (
 
   // Create appropriate primitive node based on type
   switch (primitiveType) {
-    case 'cube':
+    case 'cube': {
       // Parse actual cube parameters from source code if available
       let size: number | [number, number, number] = 1;
       let center = false;
@@ -794,8 +803,8 @@ const createSyntheticPrimitiveNode = (
               // Check if it's a vector [x,y,z]
               const vectorMatch = sizeStr.match(/\[([^\]]+)\]/);
               if (vectorMatch?.[1]) {
-                const numbers = vectorMatch[1].split(',').map(s => parseFloat(s.trim()));
-                if (numbers.length >= 3 && numbers.every(n => !Number.isNaN(n))) {
+                const numbers = vectorMatch[1].split(',').map((s) => parseFloat(s.trim()));
+                if (numbers.length >= 3 && numbers.every((n) => !Number.isNaN(n))) {
                   size = [numbers[0]!, numbers[1]!, numbers[2]!];
                 } else if (numbers.length >= 1 && !Number.isNaN(numbers[0]!)) {
                   size = numbers[0]!;
@@ -833,6 +842,7 @@ const createSyntheticPrimitiveNode = (
         center,
         location,
       };
+    }
     case 'sphere':
       return {
         type: 'sphere',
@@ -875,16 +885,17 @@ export const restructureAST = (
       // Note: Don't skip restructuring for single nodes as they might need child relationships established
 
       // Skip restructuring if all nodes are simple primitives (no transformations)
-      const hasComplexNodes = ast.some(node =>
-        node.type === 'translate' ||
-        node.type === 'rotate' ||
-        node.type === 'scale' ||
-        node.type === 'mirror' ||
-        node.type === 'union' ||
-        node.type === 'difference' ||
-        node.type === 'intersection' ||
-        node.type === 'hull' ||
-        node.type === 'minkowski'
+      const hasComplexNodes = ast.some(
+        (node) =>
+          node.type === 'translate' ||
+          node.type === 'rotate' ||
+          node.type === 'scale' ||
+          node.type === 'mirror' ||
+          node.type === 'union' ||
+          node.type === 'difference' ||
+          node.type === 'intersection' ||
+          node.type === 'hull' ||
+          node.type === 'minkowski'
       );
 
       if (!hasComplexNodes) {
@@ -898,7 +909,6 @@ export const restructureAST = (
       const topLevelNodes = getTopLevelNodes(ast, finalConfig);
 
       if (finalConfig.enableLogging) {
-
       }
 
       // Restructure each top-level node
@@ -929,7 +939,6 @@ export const restructureAST = (
 
       if (finalConfig.enableLogging) {
         logger.debug(`Restructuring complete: ${restructuredNodes.length} top-level nodes`);
-
       }
 
       return Object.freeze(restructuredNodes);

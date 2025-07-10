@@ -325,14 +325,10 @@ export class OpenscadParser {
    */
   private applyGrammarWorkarounds(code: string, initialAST: ASTNode[]): ASTNode[] {
     try {
-
-
       // Check if Tree-sitter has truncated the input by comparing expected vs actual statements
       const expectedStatements = this.countExpectedStatements(code);
       const actualStatements = initialAST.length;
       const hasTruncatedParsing = actualStatements < expectedStatements;
-
-
 
       // If Tree-sitter truncated the input, use line-by-line parsing fallback
       if (hasTruncatedParsing) {
@@ -415,7 +411,6 @@ export class OpenscadParser {
    */
   private parseLineByLineFallback(code: string): ASTNode[] {
     try {
-
       const lines = code.split('\n');
       const allNodes: ASTNode[] = [];
       let currentStatement = '';
@@ -471,11 +466,14 @@ export class OpenscadParser {
    * Parse code line by line as a fallback when Tree-sitter fails to parse the full code.
    * Preserves standalone primitives from the initial parsing.
    */
-  private parseLineByLineFallbackWithStandalonePrimitives(code: string, initialAST: ASTNode[]): ASTNode[] {
+  private parseLineByLineFallbackWithStandalonePrimitives(
+    code: string,
+    initialAST: ASTNode[]
+  ): ASTNode[] {
     try {
       // First, collect standalone primitives from the initial AST
-      const standalonePrimitives = initialAST.filter(node =>
-        this.isPrimitiveNode(node) && !this.isTransformNode(node)
+      const standalonePrimitives = initialAST.filter(
+        (node) => this.isPrimitiveNode(node) && !this.isTransformNode(node)
       );
 
       const lines = code.split('\n');
@@ -503,7 +501,10 @@ export class OpenscadParser {
           // If this statement failed to parse but looks like a standalone primitive,
           // try to find it in the initial AST
           if (statementNodes.length === 0 && this.looksLikeStandalonePrimitive(currentStatement)) {
-            const matchingPrimitive = this.findMatchingPrimitive(currentStatement, standalonePrimitives);
+            const matchingPrimitive = this.findMatchingPrimitive(
+              currentStatement,
+              standalonePrimitives
+            );
             if (matchingPrimitive) {
               allNodes.push(matchingPrimitive);
             }
@@ -522,7 +523,10 @@ export class OpenscadParser {
 
         // Check for standalone primitive in final statement too
         if (statementNodes.length === 0 && this.looksLikeStandalonePrimitive(currentStatement)) {
-          const matchingPrimitive = this.findMatchingPrimitive(currentStatement, standalonePrimitives);
+          const matchingPrimitive = this.findMatchingPrimitive(
+            currentStatement,
+            standalonePrimitives
+          );
           if (matchingPrimitive) {
             allNodes.push(matchingPrimitive);
           }
@@ -532,7 +536,10 @@ export class OpenscadParser {
       }
       return allNodes;
     } catch (error) {
-      console.error('[ERROR][OpenscadParser] Line-by-line fallback with standalone primitives failed:', error);
+      console.error(
+        '[ERROR][OpenscadParser] Line-by-line fallback with standalone primitives failed:',
+        error
+      );
       return [];
     }
   }
@@ -669,7 +676,12 @@ export class OpenscadParser {
   /**
    * Create a synthetic primitive node for workarounds with actual parameters from source code.
    */
-  private createSyntheticPrimitive(primitiveType: string, line: number, column: number, sourceLine?: string): ASTNode {
+  private createSyntheticPrimitive(
+    primitiveType: string,
+    line: number,
+    column: number,
+    sourceLine?: string
+  ): ASTNode {
     const location = {
       start: { line, column, offset: 0 },
       end: { line, column: column + primitiveType.length, offset: primitiveType.length },
@@ -702,26 +714,25 @@ export class OpenscadParser {
         // Extract cube parameters from source line
         // Pattern: cube(size, center=true/false) or cube([x,y,z], center=true/false)
         // Updated regex to handle vector syntax with brackets and commas
-        const cubeMatch = sourceLine.match(/cube\s*\(\s*(\[[^\]]+\]|[^,)]+)(?:\s*,\s*center\s*=\s*(true|false))?\s*\)/);
+        const cubeMatch = sourceLine.match(
+          /cube\s*\(\s*(\[[^\]]+\]|[^,)]+)(?:\s*,\s*center\s*=\s*(true|false))?\s*\)/
+        );
 
         if (cubeMatch) {
           const sizeParam = cubeMatch[1].trim();
           const centerParam = cubeMatch[2];
 
-
-
           // Parse size parameter
           if (sizeParam.startsWith('[') && sizeParam.endsWith(']')) {
             // Vector size: [x, y, z]
             const vectorContent = sizeParam.slice(1, -1); // Remove [ and ]
-            const components = vectorContent.split(',').map(s => s.trim());
+            const components = vectorContent.split(',').map((s) => s.trim());
             if (components.length === 3) {
               const x = parseFloat(components[0] || '0');
               const y = parseFloat(components[1] || '0');
               const z = parseFloat(components[2] || '0');
               if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
                 size = [x, y, z];
-
               }
             }
           } else {
@@ -739,7 +750,10 @@ export class OpenscadParser {
           }
         }
       } catch (error) {
-        console.error('[ERROR][OpenscadParser] Failed to parse cube parameters from source line:', error);
+        console.error(
+          '[ERROR][OpenscadParser] Failed to parse cube parameters from source line:',
+          error
+        );
       }
     }
 
@@ -771,7 +785,10 @@ export class OpenscadParser {
           }
         }
       } catch (error) {
-        console.error('[ERROR][OpenscadParser] Failed to parse sphere parameters from source line:', error);
+        console.error(
+          '[ERROR][OpenscadParser] Failed to parse sphere parameters from source line:',
+          error
+        );
       }
     }
 
@@ -842,7 +859,10 @@ export class OpenscadParser {
           }
         }
       } catch (error) {
-        console.error('[ERROR][OpenscadParser] Failed to parse cylinder parameters from source line:', error);
+        console.error(
+          '[ERROR][OpenscadParser] Failed to parse cylinder parameters from source line:',
+          error
+        );
       }
     }
 
@@ -963,8 +983,6 @@ export class OpenscadParser {
 
     return transformNode;
   }
-
-
 
   /**
    * Parse OpenSCAD code and return a Result type for better error handling
@@ -1448,14 +1466,18 @@ export class OpenscadParser {
    */
   private looksLikeStandalonePrimitive(statement: string): boolean {
     const trimmed = statement.trim();
-    const primitivePattern = /^(sphere|cube|cylinder|polyhedron|circle|square|polygon|text|linear_extrude|rotate_extrude|hull|minkowski|offset|projection|surface|import)\s*\(/;
+    const primitivePattern =
+      /^(sphere|cube|cylinder|polyhedron|circle|square|polygon|text|linear_extrude|rotate_extrude|hull|minkowski|offset|projection|surface|import)\s*\(/;
     return primitivePattern.test(trimmed);
   }
 
   /**
    * Find a matching primitive in the standalone primitives list
    */
-  private findMatchingPrimitive(statement: string, standalonePrimitives: ASTNode[]): ASTNode | null {
+  private findMatchingPrimitive(
+    statement: string,
+    standalonePrimitives: ASTNode[]
+  ): ASTNode | null {
     const trimmed = statement.trim();
 
     // Extract the primitive type from the statement
@@ -1467,7 +1489,7 @@ export class OpenscadParser {
     const primitiveType = primitiveMatch[1];
 
     // Find a matching primitive in the list
-    return standalonePrimitives.find(node => node.type === primitiveType) || null;
+    return standalonePrimitives.find((node) => node.type === primitiveType) || null;
   }
 
   /**
@@ -1475,11 +1497,22 @@ export class OpenscadParser {
    */
   private isPrimitiveNode(node: ASTNode): boolean {
     const primitiveTypes = [
-      'sphere', 'cube', 'cylinder', 'polyhedron',
-      'circle', 'square', 'polygon', 'text',
-      'linear_extrude', 'rotate_extrude',
-      'hull', 'minkowski', 'offset', 'projection',
-      'surface', 'import'
+      'sphere',
+      'cube',
+      'cylinder',
+      'polyhedron',
+      'circle',
+      'square',
+      'polygon',
+      'text',
+      'linear_extrude',
+      'rotate_extrude',
+      'hull',
+      'minkowski',
+      'offset',
+      'projection',
+      'surface',
+      'import',
     ];
     return primitiveTypes.includes(node.type);
   }
@@ -1488,7 +1521,15 @@ export class OpenscadParser {
    * Check if a node is a transform node
    */
   private isTransformNode(node: ASTNode): boolean {
-    const transformTypes = ['translate', 'rotate', 'scale', 'mirror', 'multmatrix', 'color', 'resize'];
+    const transformTypes = [
+      'translate',
+      'rotate',
+      'scale',
+      'mirror',
+      'multmatrix',
+      'color',
+      'resize',
+    ];
     return transformTypes.includes(node.type);
   }
 }

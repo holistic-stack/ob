@@ -1,9 +1,9 @@
 /**
  * Parser Initialization Service
- * 
+ *
  * Handles proper initialization of the OpenSCAD parser with singleton pattern,
  * preventing multiple initialization calls and ensuring thread-safe initialization.
- * 
+ *
  * This service addresses the potential import hang issues by:
  * 1. Ensuring parser is initialized only once
  * 2. Providing proper error handling and recovery
@@ -12,19 +12,15 @@
  */
 
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../openscad-parser.js';
 import type { Result } from '../../../shared/types/result.types.js';
+import { OpenscadParser } from '../openscad-parser.js';
 
 const logger = createLogger('ParserInitializationService');
 
 /**
  * Parser initialization state
  */
-type InitializationState = 
-  | 'not-initialized'
-  | 'initializing' 
-  | 'initialized'
-  | 'failed';
+type InitializationState = 'not-initialized' | 'initializing' | 'initialized' | 'failed';
 
 /**
  * Parser initialization configuration
@@ -97,7 +93,9 @@ class ParserInitializationService {
   /**
    * Initialize the parser with proper error handling and timeout protection
    */
-  public async initialize(config?: Partial<ParserInitConfig>): Promise<Result<OpenscadParser, string>> {
+  public async initialize(
+    config?: Partial<ParserInitConfig>
+  ): Promise<Result<OpenscadParser, string>> {
     // If already initialized, return the existing parser
     if (this.state === 'initialized' && this.parser) {
       logger.debug('Parser already initialized, returning existing instance');
@@ -173,10 +171,14 @@ class ParserInitializationService {
   private async initializeWithTimeout(parser: OpenscadParser): Promise<Result<void, string>> {
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
-        resolve({ success: false, error: `Parser initialization timed out after ${this.config.timeoutMs}ms` });
+        resolve({
+          success: false,
+          error: `Parser initialization timed out after ${this.config.timeoutMs}ms`,
+        });
       }, this.config.timeoutMs);
 
-      parser.init(this.config.wasmPath, this.config.treeSitterWasmPath)
+      parser
+        .init(this.config.wasmPath, this.config.treeSitterWasmPath)
         .then(() => {
           clearTimeout(timeoutId);
           resolve({ success: true, data: undefined });
@@ -194,7 +196,7 @@ class ParserInitializationService {
    */
   public reset(): void {
     logger.debug('Resetting parser initialization service');
-    
+
     if (this.parser) {
       try {
         this.parser.dispose();
@@ -220,14 +222,16 @@ class ParserInitializationService {
    * Utility method for delays
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
 /**
  * Get the singleton parser initialization service instance
  */
-export const getParserInitializationService = (config?: ParserInitConfig): ParserInitializationService => {
+export const getParserInitializationService = (
+  config?: ParserInitConfig
+): ParserInitializationService => {
   return ParserInitializationService.getInstance(config);
 };
 
@@ -235,7 +239,9 @@ export const getParserInitializationService = (config?: ParserInitConfig): Parse
  * Initialize the parser with proper error handling
  * This is the main function that should be used throughout the application
  */
-export const initializeParser = async (config?: ParserInitConfig): Promise<Result<OpenscadParser, string>> => {
+export const initializeParser = async (
+  config?: ParserInitConfig
+): Promise<Result<OpenscadParser, string>> => {
   const service = getParserInitializationService(config);
   return service.initialize();
 };

@@ -345,14 +345,16 @@ export class TransformVisitor extends BaseASTVisitor {
         }
       } else if (bodyNode.type === 'statement') {
         // Handle single statement: translate([10, 0, 0]) cube();
-        const visitedChild = this.compositeVisitor
-          ? this.compositeVisitor.visitNode(bodyNode)
-          : this.visitNode(bodyNode);
-        if (visitedChild) {
-          children.push(visitedChild);
+        // Extract module_instantiation from within the statement
+        const moduleInstantiation = this.findModuleInstantiationInStatement(bodyNode);
+        if (moduleInstantiation) {
+          const visitedChild = this.compositeVisitor
+            ? this.compositeVisitor.visitNode(moduleInstantiation)
+            : this.visitNode(moduleInstantiation);
+          if (visitedChild) {
+            children.push(visitedChild);
+          }
         }
-      } else {
-        // No-op: This block was for debugging and had an empty statement.
       }
     } else {
       // No body field found - look for direct child statements or blocks
@@ -374,12 +376,15 @@ export class TransformVisitor extends BaseASTVisitor {
               }
             }
           } else {
-            // Handle single statement
-            const visitedChild = this.compositeVisitor
-              ? this.compositeVisitor.visitNode(child)
-              : this.visitNode(child);
-            if (visitedChild) {
-              children.push(visitedChild);
+            // Handle single statement - extract module_instantiation from within
+            const moduleInstantiation = this.findModuleInstantiationInStatement(child);
+            if (moduleInstantiation) {
+              const visitedChild = this.compositeVisitor
+                ? this.compositeVisitor.visitNode(moduleInstantiation)
+                : this.visitNode(moduleInstantiation);
+              if (visitedChild) {
+                children.push(visitedChild);
+              }
             }
           }
         }
@@ -849,17 +854,30 @@ export class TransformVisitor extends BaseASTVisitor {
             const vectorMatch = sourceText.match(/translate\s*\(\s*\[([^\]]+)\]/);
             if (vectorMatch?.[1]) {
               const vectorContent = vectorMatch[1];
-              const expectedNumbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
+              const expectedNumbers = vectorContent
+                .split(',')
+                .map((s: string) => parseFloat(s.trim()));
 
-              if (expectedNumbers.length >= 3 && expectedNumbers.every((n: number) => !Number.isNaN(n))) {
-                const expectedVector = [expectedNumbers[0] ?? 0, expectedNumbers[1] ?? 0, expectedNumbers[2] ?? 0];
+              if (
+                expectedNumbers.length >= 3 &&
+                expectedNumbers.every((n: number) => !Number.isNaN(n))
+              ) {
+                const expectedVector = [
+                  expectedNumbers[0] ?? 0,
+                  expectedNumbers[1] ?? 0,
+                  expectedNumbers[2] ?? 0,
+                ];
 
                 // Check if Tree-sitter parsed vector matches expected vector
                 const tolerance = 0.001;
-                const currentVector = vector.length === 2 ? [vector[0], vector[1], 0] : [vector[0], vector[1], vector[2]];
-                const vectorsMatch = Math.abs(currentVector[0] - expectedVector[0]) < tolerance &&
-                                   Math.abs(currentVector[1] - expectedVector[1]) < tolerance &&
-                                   Math.abs(currentVector[2] - expectedVector[2]) < tolerance;
+                const currentVector =
+                  vector.length === 2
+                    ? [vector[0], vector[1], 0]
+                    : [vector[0], vector[1], vector[2]];
+                const vectorsMatch =
+                  Math.abs(currentVector[0] - expectedVector[0]) < tolerance &&
+                  Math.abs(currentVector[1] - expectedVector[1]) < tolerance &&
+                  Math.abs(currentVector[2] - expectedVector[2]) < tolerance;
 
                 if (!vectorsMatch) {
                   // Use the source-parsed vector instead
@@ -1054,6 +1072,21 @@ export class TransformVisitor extends BaseASTVisitor {
     }
 
     // Return null for non-transform functions (will be handled by other visitors)
+    return null;
+  }
+
+  /**
+   * Find a module_instantiation node within a statement
+   * @param statementNode The statement node to search
+   * @returns The module_instantiation node or null if not found
+   */
+  private findModuleInstantiationInStatement(statementNode: TSNode): TSNode | null {
+    for (let i = 0; i < statementNode.childCount; i++) {
+      const child = statementNode.child(i);
+      if (child && child.type === 'module_instantiation') {
+        return child;
+      }
+    }
     return null;
   }
 }

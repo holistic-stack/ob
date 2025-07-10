@@ -3,21 +3,21 @@
  *
  * This test file focuses on the specific cube sizing issue that was reported:
  * "cube(5, center=true);translate([10,10,0])cube(5, center=true);" rendering two cubes of different sizes.
- * 
+ *
  * These tests verify that our fix works correctly for the specific scenarios that were problematic.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
-import * as THREE from 'three';
 import fc from 'fast-check';
-import { createLogger } from '../shared/services/logger.service';
-import type { ASTNode } from '../features/openscad-parser/core/ast-types';
-import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import * as THREE from 'three';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  clearSourceCodeForExtraction,
   convertASTNodeToCSG,
   setSourceCodeForExtraction,
-  clearSourceCodeForExtraction,
 } from '../features/3d-renderer/services/ast-to-csg-converter/ast-to-csg-converter';
+import type { ASTNode } from '../features/openscad-parser/core/ast-types';
+import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import { createLogger } from '../shared/services/logger.service';
 
 const logger = createLogger('CubeSizingFocusedTest');
 
@@ -33,7 +33,7 @@ describe('Focused Cube Sizing Tests', () => {
   describe('Original Issue Reproduction', () => {
     it('should render identical cubes for the original problematic code', async () => {
       const code = 'cube(5, center=true);translate([10,10,0])cube(5, center=true);';
-      
+
       setSourceCodeForExtraction(code);
       const ast = parserService.parseAST(code);
       expect(ast).toBeDefined();
@@ -261,9 +261,14 @@ describe('Focused Cube Sizing Tests', () => {
               expect(params2.height).toBe(size);
               expect(params2.depth).toBe(size);
 
-              logger.debug(`✅ Property test passed: cube(${size}, center=${center}) with translate([${tx},${ty},${tz}])`);
+              logger.debug(
+                `✅ Property test passed: cube(${size}, center=${center}) with translate([${tx},${ty},${tz}])`
+              );
             } catch (error) {
-              logger.error(`❌ Property test failed for cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]):`, error);
+              logger.error(
+                `❌ Property test failed for cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]):`,
+                error
+              );
               throw error;
             }
           }

@@ -76,6 +76,7 @@ import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
+import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
@@ -88,10 +89,19 @@ import { BaseASTVisitor } from './base-ast-visitor.js';
 export class CSGVisitor extends BaseASTVisitor {
   constructor(
     source: string,
+    private compositeVisitor: ASTVisitor | undefined,
     protected override errorHandler: ErrorHandler,
     variableScope?: Map<string, ast.ParameterValue>
   ) {
     super(source, errorHandler, variableScope ?? new Map());
+  }
+
+  /**
+   * Set the composite visitor for delegating child node processing
+   * This is needed to resolve circular dependency issues during visitor creation
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
   }
 
   /**
@@ -366,8 +376,20 @@ export class CSGVisitor extends BaseASTVisitor {
    * @returns The union AST node
    */
   private createUnionNode(node: TSNode, _args: ast.Parameter[]): ast.UnionNode | null {
-    // Extract children
-    const bodyNode = node.childForFieldName('body');
+    // Extract children - look for block node in different ways
+    let bodyNode = node.childForFieldName('body');
+
+    // If no body field, look for a block node among the children
+    if (!bodyNode) {
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child && child.type === 'block') {
+          bodyNode = child;
+          break;
+        }
+      }
+    }
+
     const children: ast.ASTNode[] = [];
 
     if (bodyNode) {
@@ -377,8 +399,10 @@ export class CSGVisitor extends BaseASTVisitor {
         for (let i = 0; i < bodyNode.namedChildCount; i++) {
           const childNode = bodyNode.namedChild(i);
           if (!childNode) continue;
-          // Visit the child node
-          const childAst = this.visitNode(childNode);
+          // Visit the child node using composite visitor for delegation
+          const childAst = this.compositeVisitor
+            ? this.compositeVisitor.visitNode(childNode)
+            : this.visitNode(childNode);
           if (childAst) {
             children.push(childAst);
           }
@@ -389,6 +413,7 @@ export class CSGVisitor extends BaseASTVisitor {
         children.push(...blockChildren);
       }
     }
+
     return {
       type: 'union',
       children,
@@ -403,8 +428,20 @@ export class CSGVisitor extends BaseASTVisitor {
    * @returns The difference AST node
    */
   private createDifferenceNode(node: TSNode, _args: ast.Parameter[]): ast.DifferenceNode | null {
-    // Extract children
-    const bodyNode = node.childForFieldName('body');
+    // Extract children - look for block node in different ways
+    let bodyNode = node.childForFieldName('body');
+
+    // If no body field, look for a block node among the children
+    if (!bodyNode) {
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child && child.type === 'block') {
+          bodyNode = child;
+          break;
+        }
+      }
+    }
+
     const children: ast.ASTNode[] = [];
 
     if (bodyNode) {
@@ -414,8 +451,10 @@ export class CSGVisitor extends BaseASTVisitor {
         for (let i = 0; i < bodyNode.namedChildCount; i++) {
           const childNode = bodyNode.namedChild(i);
           if (!childNode) continue;
-          // Visit the child node
-          const childAst = this.visitNode(childNode);
+          // Visit the child node using composite visitor for delegation
+          const childAst = this.compositeVisitor
+            ? this.compositeVisitor.visitNode(childNode)
+            : this.visitNode(childNode);
           if (childAst) {
             children.push(childAst);
           }
@@ -443,8 +482,20 @@ export class CSGVisitor extends BaseASTVisitor {
     node: TSNode,
     _args: ast.Parameter[]
   ): ast.IntersectionNode | null {
-    // Extract children
-    const bodyNode = node.childForFieldName('body');
+    // Extract children - look for block node in different ways
+    let bodyNode = node.childForFieldName('body');
+
+    // If no body field, look for a block node among the children
+    if (!bodyNode) {
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child && child.type === 'block') {
+          bodyNode = child;
+          break;
+        }
+      }
+    }
+
     const children: ast.ASTNode[] = [];
 
     if (bodyNode) {
@@ -454,8 +505,10 @@ export class CSGVisitor extends BaseASTVisitor {
         for (let i = 0; i < bodyNode.namedChildCount; i++) {
           const childNode = bodyNode.namedChild(i);
           if (!childNode) continue;
-          // Visit the child node
-          const childAst = this.visitNode(childNode);
+          // Visit the child node using composite visitor for delegation
+          const childAst = this.compositeVisitor
+            ? this.compositeVisitor.visitNode(childNode)
+            : this.visitNode(childNode);
           if (childAst) {
             children.push(childAst);
           }

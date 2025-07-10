@@ -499,12 +499,7 @@ function extractArgument(
 
     if (nameNode && valueNode) {
       const name = getNodeText(nameNode, sourceCode);
-      const value = convertNodeToParameterValue(
-        valueNode,
-        errorHandler,
-        sourceCode,
-        variableScope
-      );
+      const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode, variableScope);
       if (value !== undefined) {
         return { name, value };
       }
@@ -604,7 +599,13 @@ function extractArgument(
     // Look for the first child that contains the actual value (not punctuation)
     for (let i = 0; i < argNode.childCount; i++) {
       const child = argNode.child(i);
-      if (child && child.type !== '(' && child.type !== ')' && child.type !== ',' && child.type !== ';') {
+      if (
+        child &&
+        child.type !== '(' &&
+        child.type !== ')' &&
+        child.type !== ',' &&
+        child.type !== ';'
+      ) {
         valueNode = child;
         break;
       }

@@ -80,7 +80,9 @@ export const convertSphereToMesh = (
       const mesh = new THREE.Mesh(geometry, material);
 
       mesh.updateMatrix();
-      logger.debug(`✅ SPHERE CREATED: radius=${radius}, position=[${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`);
+      logger.debug(
+        `✅ SPHERE CREATED: radius=${radius}, position=[${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`
+      );
 
       return mesh;
     },

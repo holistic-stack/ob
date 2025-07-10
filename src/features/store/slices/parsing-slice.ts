@@ -22,15 +22,17 @@ import {
   setSourceCodeForRestructuring,
 } from '../../3d-renderer/services/ast-restructuring-service.js';
 import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
-import { initializeParser, getInitializedParser, isParserReady } from '../../openscad-parser/services/parser-initialization.service.js';
+import {
+  getInitializedParser,
+  initializeParser,
+  isParserReady,
+} from '../../openscad-parser/services/parser-initialization.service.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
 
-interface ParsingSliceConfig {
-  // No longer need parserService parameter - using initialization service
-}
+type ParsingSliceConfig = {};
 
 export const createParsingSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],

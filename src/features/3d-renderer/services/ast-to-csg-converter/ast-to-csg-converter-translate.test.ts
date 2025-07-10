@@ -70,7 +70,9 @@ describe('AST to CSG Converter - Translate Node Handling', () => {
           expect(extracted[0]).toBeCloseTo(expected[0], 5);
           expect(extracted[1]).toBeCloseTo(expected[1], 5);
           expect(extracted[2]).toBeCloseTo(expected[2], 5);
-          logger.debug(`✅ Complex vector extraction: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}] from: ${code}`);
+          logger.debug(
+            `✅ Complex vector extraction: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}] from: ${code}`
+          );
         }
       });
 

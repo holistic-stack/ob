@@ -1,15 +1,19 @@
 /**
  * Cube Sizing Fix Test
- * 
+ *
  * Tests the fix for the issue where:
  * `cube(5, center=true);translate([0,0,0])cube(5, center=true);`
  * was generating 2 cubes with different sizes.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
+import type {
+  CubeNode,
+  ModuleInstantiationNode,
+  TranslateNode,
+} from '../../../openscad-parser/core/ast-types.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
-import type { CubeNode, TranslateNode, ModuleInstantiationNode } from '../../../openscad-parser/core/ast-types.js';
 
 const logger = createLogger('CubeSizingFixTest');
 
@@ -27,8 +31,8 @@ describe('Cube Sizing Fix', () => {
         center: true,
         location: {
           start: { line: 1, column: 1, offset: 0 },
-          end: { line: 1, column: 23, offset: 22 }
-        }
+          end: { line: 1, column: 23, offset: 22 },
+        },
       };
 
       // Create a ModuleInstantiationNode that represents a cube (like the second cube)
@@ -37,13 +41,13 @@ describe('Cube Sizing Fix', () => {
         name: 'cube',
         args: [
           { value: 5 }, // First positional parameter: size
-          { name: 'center', value: true } // Named parameter: center
+          { name: 'center', value: true }, // Named parameter: center
         ],
         children: [],
         location: {
           start: { line: 1, column: 40, offset: 39 },
-          end: { line: 1, column: 62, offset: 61 }
-        }
+          end: { line: 1, column: 62, offset: 61 },
+        },
       };
 
       // Convert both to meshes
@@ -81,7 +85,7 @@ describe('Cube Sizing Fix', () => {
 
     it('should handle the exact problematic case', async () => {
       // Simulate the exact AST structure from: cube(5, center=true);translate([0,0,0])cube(5, center=true);
-      
+
       // First cube: direct CubeNode
       const firstCube: CubeNode = {
         type: 'cube',
@@ -89,8 +93,8 @@ describe('Cube Sizing Fix', () => {
         center: true,
         location: {
           start: { line: 1, column: 1, offset: 0 },
-          end: { line: 1, column: 23, offset: 22 }
-        }
+          end: { line: 1, column: 23, offset: 22 },
+        },
       };
 
       // Second cube: inside a translate transform (ModuleInstantiationNode)
@@ -103,19 +107,19 @@ describe('Cube Sizing Fix', () => {
             name: 'cube',
             args: [
               { value: 5 }, // size parameter
-              { name: 'center', value: true } // center parameter
+              { name: 'center', value: true }, // center parameter
             ],
             children: [],
             location: {
               start: { line: 1, column: 40, offset: 39 },
-              end: { line: 1, column: 62, offset: 61 }
-            }
-          } as ModuleInstantiationNode
+              end: { line: 1, column: 62, offset: 61 },
+            },
+          } as ModuleInstantiationNode,
         ],
         location: {
           start: { line: 1, column: 24, offset: 23 },
-          end: { line: 1, column: 62, offset: 61 }
-        }
+          end: { line: 1, column: 62, offset: 61 },
+        },
       };
 
       // Convert both
@@ -131,12 +135,12 @@ describe('Cube Sizing Fix', () => {
 
         logger.debug('First cube mesh:', {
           type: firstMesh.geometry.type,
-          params: firstMesh.geometry.parameters
+          params: firstMesh.geometry.parameters,
         });
 
         logger.debug('Translate mesh:', {
           type: translateMesh.geometry.type,
-          params: translateMesh.geometry.parameters
+          params: translateMesh.geometry.parameters,
         });
 
         // Both should have the same geometry type
@@ -171,13 +175,16 @@ describe('Cube Sizing Fix', () => {
             name: 'cube',
             args: [
               { value: 10 }, // size
-              { value: true } // center
+              { value: true }, // center
             ],
             children: [],
-            location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 20, offset: 19 } }
+            location: {
+              start: { line: 1, column: 1, offset: 0 },
+              end: { line: 1, column: 20, offset: 19 },
+            },
           } as ModuleInstantiationNode,
           expectedSize: 10,
-          expectedCenter: true
+          expectedCenter: true,
         },
         {
           description: 'Named parameters only',
@@ -186,13 +193,16 @@ describe('Cube Sizing Fix', () => {
             name: 'cube',
             args: [
               { name: 'size', value: 7 },
-              { name: 'center', value: false }
+              { name: 'center', value: false },
             ],
             children: [],
-            location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 30, offset: 29 } }
+            location: {
+              start: { line: 1, column: 1, offset: 0 },
+              end: { line: 1, column: 30, offset: 29 },
+            },
           } as ModuleInstantiationNode,
           expectedSize: 7,
-          expectedCenter: false
+          expectedCenter: false,
         },
         {
           description: 'Mixed parameters',
@@ -201,19 +211,22 @@ describe('Cube Sizing Fix', () => {
             name: 'cube',
             args: [
               { value: 3 }, // positional size
-              { name: 'center', value: true } // named center
+              { name: 'center', value: true }, // named center
             ],
             children: [],
-            location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 25, offset: 24 } }
+            location: {
+              start: { line: 1, column: 1, offset: 0 },
+              end: { line: 1, column: 25, offset: 24 },
+            },
           } as ModuleInstantiationNode,
           expectedSize: 3,
-          expectedCenter: true
-        }
+          expectedCenter: true,
+        },
       ];
 
       for (const testCase of testCases) {
         logger.debug(`Testing: ${testCase.description}`);
-        
+
         const result = await convertASTNodeToCSG(testCase.node, 1);
         expect(result.success).toBe(true);
 
@@ -225,7 +238,9 @@ describe('Cube Sizing Fix', () => {
           expect(params.height).toBe(testCase.expectedSize);
           expect(params.depth).toBe(testCase.expectedSize);
 
-          logger.debug(`✅ ${testCase.description}: ${testCase.expectedSize}x${testCase.expectedSize}x${testCase.expectedSize} cube created`);
+          logger.debug(
+            `✅ ${testCase.description}: ${testCase.expectedSize}x${testCase.expectedSize}x${testCase.expectedSize} cube created`
+          );
         }
       }
     });
@@ -237,7 +252,10 @@ describe('Cube Sizing Fix', () => {
         name: 'cube',
         args: [],
         children: [],
-        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 7, offset: 6 } }
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 7, offset: 6 },
+        },
       };
 
       const result = await convertASTNodeToCSG(defaultCubeNode, 1);
@@ -265,27 +283,37 @@ describe('Cube Sizing Fix', () => {
           type: 'cube',
           size: 8,
           center: true,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 20, offset: 19 } }
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 },
+          },
         } as CubeNode,
         {
           type: 'module_instantiation',
           name: 'cube',
           args: [{ value: 8 }, { name: 'center', value: true }],
           children: [],
-          location: { start: { line: 2, column: 1, offset: 21 }, end: { line: 2, column: 25, offset: 45 } }
+          location: {
+            start: { line: 2, column: 1, offset: 21 },
+            end: { line: 2, column: 25, offset: 45 },
+          },
         } as ModuleInstantiationNode,
         {
           type: 'module_instantiation',
           name: 'cube',
-          args: [{ name: 'size', value: 8 }, { name: 'center', value: true }],
+          args: [
+            { name: 'size', value: 8 },
+            { name: 'center', value: true },
+          ],
           children: [],
-          location: { start: { line: 3, column: 1, offset: 47 }, end: { line: 3, column: 35, offset: 81 } }
-        } as ModuleInstantiationNode
+          location: {
+            start: { line: 3, column: 1, offset: 47 },
+            end: { line: 3, column: 35, offset: 81 },
+          },
+        } as ModuleInstantiationNode,
       ];
 
-      const results = await Promise.all(
-        cubeNodes.map(node => convertASTNodeToCSG(node, 1))
-      );
+      const results = await Promise.all(cubeNodes.map((node) => convertASTNodeToCSG(node, 1)));
 
       // All conversions should succeed
       results.forEach((result, i) => {
@@ -294,7 +322,7 @@ describe('Cube Sizing Fix', () => {
       });
 
       // All cubes should have identical dimensions
-      const meshes = results.map(r => r.success ? r.data.mesh : null).filter(Boolean);
+      const meshes = results.map((r) => (r.success ? r.data.mesh : null)).filter(Boolean);
       expect(meshes).toHaveLength(3);
 
       const firstParams = meshes[0]!.geometry.parameters;
@@ -303,7 +331,7 @@ describe('Cube Sizing Fix', () => {
         expect(params.width).toBe(firstParams.width);
         expect(params.height).toBe(firstParams.height);
         expect(params.depth).toBe(firstParams.depth);
-        
+
         // All should be 8x8x8 cubes
         expect(params.width).toBe(8);
         expect(params.height).toBe(8);

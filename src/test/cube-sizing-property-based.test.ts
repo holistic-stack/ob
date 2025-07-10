@@ -8,17 +8,17 @@
  * 4. CSG operations maintain size consistency
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
-import * as THREE from 'three';
 import fc from 'fast-check';
-import { createLogger } from '../shared/services/logger.service';
-import type { ASTNode } from '../features/openscad-parser/core/ast-types';
-import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import * as THREE from 'three';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  clearSourceCodeForExtraction,
   convertASTNodeToCSG,
   setSourceCodeForExtraction,
-  clearSourceCodeForExtraction,
 } from '../features/3d-renderer/services/ast-to-csg-converter/ast-to-csg-converter';
+import type { ASTNode } from '../features/openscad-parser/core/ast-types';
+import { OpenscadParser } from '../features/openscad-parser/openscad-parser';
+import { createLogger } from '../shared/services/logger.service';
 
 const logger = createLogger('CubeSizingPropertyBasedTest');
 
@@ -37,7 +37,11 @@ describe('Property-Based Cube Sizing Tests', () => {
         fc.asyncProperty(
           fc.float({ min: Math.fround(0.1), max: Math.fround(100) }), // cube size
           fc.boolean(), // center parameter
-          fc.tuple(fc.float({ min: Math.fround(-100), max: Math.fround(100) }), fc.float({ min: Math.fround(-100), max: Math.fround(100) }), fc.float({ min: Math.fround(-100), max: Math.fround(100) })), // translation vector
+          fc.tuple(
+            fc.float({ min: Math.fround(-100), max: Math.fround(100) }),
+            fc.float({ min: Math.fround(-100), max: Math.fround(100) }),
+            fc.float({ min: Math.fround(-100), max: Math.fround(100) })
+          ), // translation vector
           async (size, center, [tx, ty, tz]) => {
             // Create two identical cubes, one translated and one not
             const code1 = `cube(${size}, center=${center});`;
@@ -95,9 +99,14 @@ describe('Property-Based Cube Sizing Tests', () => {
                 expect(mesh2.position.z).toBeCloseTo(tz, 5);
               }
 
-              logger.debug(`✅ Cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]) maintains size consistency`);
+              logger.debug(
+                `✅ Cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]) maintains size consistency`
+              );
             } catch (error) {
-              logger.error(`❌ Property test failed for cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]):`, error);
+              logger.error(
+                `❌ Property test failed for cube(${size}, center=${center}) with translate([${tx},${ty},${tz}]):`,
+                error
+              );
               throw error;
             }
           }
@@ -115,7 +124,11 @@ describe('Property-Based Cube Sizing Tests', () => {
             fc.float({ min: Math.fround(0.1), max: Math.fround(50) })
           ), // cube size vector [x, y, z]
           fc.boolean(), // center parameter
-          fc.tuple(fc.float({ min: Math.fround(-50), max: Math.fround(50) }), fc.float({ min: Math.fround(-50), max: Math.fround(50) }), fc.float({ min: Math.fround(-50), max: Math.fround(50) })), // translation vector
+          fc.tuple(
+            fc.float({ min: Math.fround(-50), max: Math.fround(50) }),
+            fc.float({ min: Math.fround(-50), max: Math.fround(50) }),
+            fc.float({ min: Math.fround(-50), max: Math.fround(50) })
+          ), // translation vector
           async ([sx, sy, sz], center, [tx, ty, tz]) => {
             // Create two identical vector cubes, one translated and one not
             const code1 = `cube([${sx}, ${sy}, ${sz}], center=${center});`;
@@ -166,9 +179,14 @@ describe('Property-Based Cube Sizing Tests', () => {
               expect(params1.height).toBeCloseTo(sy, 5);
               expect(params1.depth).toBeCloseTo(sz, 5);
 
-              logger.debug(`✅ Vector cube([${sx},${sy},${sz}], center=${center}) with translate([${tx},${ty},${tz}]) maintains size consistency`);
+              logger.debug(
+                `✅ Vector cube([${sx},${sy},${sz}], center=${center}) with translate([${tx},${ty},${tz}]) maintains size consistency`
+              );
             } catch (error) {
-              logger.error(`❌ Vector cube property test failed for cube([${sx},${sy},${sz}], center=${center}) with translate([${tx},${ty},${tz}]):`, error);
+              logger.error(
+                `❌ Vector cube property test failed for cube([${sx},${sy},${sz}], center=${center}) with translate([${tx},${ty},${tz}]):`,
+                error
+              );
               throw error;
             }
           }
@@ -251,8 +269,16 @@ describe('Property-Based Cube Sizing Tests', () => {
         fc.asyncProperty(
           fc.float({ min: Math.fround(1), max: Math.fround(20) }), // cube size
           fc.boolean(), // center parameter
-          fc.tuple(fc.float({ min: Math.fround(-20), max: Math.fround(20) }), fc.float({ min: Math.fround(-20), max: Math.fround(20) }), fc.float({ min: Math.fround(-20), max: Math.fround(20) })), // first translation
-          fc.tuple(fc.float({ min: Math.fround(-20), max: Math.fround(20) }), fc.float({ min: Math.fround(-20), max: Math.fround(20) }), fc.float({ min: Math.fround(-20), max: Math.fround(20) })), // second translation
+          fc.tuple(
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) }),
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) }),
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) })
+          ), // first translation
+          fc.tuple(
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) }),
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) }),
+            fc.float({ min: Math.fround(-20), max: Math.fround(20) })
+          ), // second translation
           async (size, center, [tx1, ty1, tz1], [tx2, ty2, tz2]) => {
             // Create cubes with nested transformations
             const code1 = `cube(${size}, center=${center});`;
@@ -303,9 +329,14 @@ describe('Property-Based Cube Sizing Tests', () => {
               expect(params1.height).toBeCloseTo(size, 5);
               expect(params1.depth).toBeCloseTo(size, 5);
 
-              logger.debug(`✅ Multiple transformations maintain cube(${size}, center=${center}) size consistency`);
+              logger.debug(
+                `✅ Multiple transformations maintain cube(${size}, center=${center}) size consistency`
+              );
             } catch (error) {
-              logger.error(`❌ Multiple transformation test failed for cube(${size}, center=${center}):`, error);
+              logger.error(
+                `❌ Multiple transformation test failed for cube(${size}, center=${center}):`,
+                error
+              );
               throw error;
             }
           }

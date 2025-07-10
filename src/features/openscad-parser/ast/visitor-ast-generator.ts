@@ -42,7 +42,7 @@
  * @since 0.1.0
  */
 
-import type { Tree } from 'web-tree-sitter'; // TSNode is not used in this file after removing findChildOfType
+import type { Tree, Node as TSNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../error-handling/index.js';
 import type * as ast from './ast-types.js';
 import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';
@@ -185,6 +185,14 @@ export class VisitorASTGenerator {
       sharedVariableScope
     ); // Added errorHandler, used this.source
 
+    // Create CSG visitor that will be added to composite visitor later
+    const csgVisitor = new CSGVisitor(
+      this.source,
+      undefined,
+      this.errorHandler,
+      sharedVariableScope
+    );
+
     const compositeVisitor = new CompositeVisitor(
       [
         new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
@@ -195,7 +203,7 @@ export class VisitorASTGenerator {
         // Specialized visitors for module instantiations come after definition visitors
         new PrimitiveVisitor(this.source, this.errorHandler, sharedVariableScope),
         transformVisitor, // transformVisitor instance already has errorHandler
-        new CSGVisitor(this.source, this.errorHandler, sharedVariableScope),
+        csgVisitor, // Use the pre-created CSG visitor
         new ControlStructureVisitor(this.source, this.errorHandler, sharedVariableScope),
         // General statement visitor comes after specialized visitors
         new EchoStatementVisitor(this.source, this.errorHandler, sharedVariableScope),
@@ -204,6 +212,9 @@ export class VisitorASTGenerator {
       ],
       this.errorHandler
     ); // Added errorHandler
+
+    // Set the composite visitor on the CSG visitor to enable child delegation
+    csgVisitor.setCompositeVisitor(compositeVisitor);
 
     // Create a query visitor that uses the composite visitor
     this.queryVisitor = new QueryVisitor(
@@ -259,10 +270,10 @@ export class VisitorASTGenerator {
       return [];
     }
 
-    // Visit all children of the root node to build the AST
+    // Visit all named children of the root node to build the AST
     const statements: ast.ASTNode[] = [];
-    for (let i = 0; i < rootNode.childCount; i++) {
-      const child = rootNode.child(i);
+    for (let i = 0; i < rootNode.namedChildCount; i++) {
+      const child = rootNode.namedChild(i);
       if (!child) continue;
 
       // Use the visitor to process the child node

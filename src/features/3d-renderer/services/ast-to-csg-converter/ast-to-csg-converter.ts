@@ -836,7 +836,7 @@ const extractParametersFromModuleInstantiation = (
   logger.debug(`🔍 PARAMETER EXTRACTION DEBUG:`, {
     nodeName: 'name' in node ? node.name : 'no name',
     nodeArgs: node.args,
-    argsLength: node.args ? node.args.length : 0
+    argsLength: node.args ? node.args.length : 0,
   });
 
   if (node.args && Array.isArray(node.args)) {
@@ -847,7 +847,7 @@ const extractParametersFromModuleInstantiation = (
         name: arg.name,
         value: arg.value,
         hasName: !!arg.name,
-        hasValue: arg.value !== undefined
+        hasValue: arg.value !== undefined,
       });
 
       if (arg.name && arg.value !== undefined) {
@@ -891,7 +891,7 @@ const moduleInstantiationToCubeNode = (node: ModuleInstantiationNode): CubeNode 
     sizeParam: params.size,
     firstParam: params._firstParam,
     centerParam: params.center,
-    secondParam: params._secondParam
+    secondParam: params._secondParam,
   });
 
   // Determine size - prioritize explicit size parameter, then first positional parameter
@@ -920,7 +920,7 @@ const moduleInstantiationToCubeNode = (node: ModuleInstantiationNode): CubeNode 
   logger.debug(`Created CubeNode:`, {
     size: cubeNode.size,
     center: cubeNode.center,
-    type: cubeNode.type
+    type: cubeNode.type,
   });
 
   return cubeNode;
@@ -971,7 +971,7 @@ const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): Tran
     paramVector: params.vector,
     paramFirstParam: params._firstParam,
     nodeArgs: node.args,
-    nodeText: 'text' in node ? node.text : 'no text'
+    nodeText: 'text' in node ? node.text : 'no text',
   });
 
   // Try to extract vector from source code if parameters are not properly parsed
@@ -982,12 +982,14 @@ const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): Tran
     paramsVector: params.vector,
     paramsFirstParam: params._firstParam,
     initialTranslationVector: translationVector,
-    fullParams: JSON.stringify(params, null, 2)
+    fullParams: JSON.stringify(params, null, 2),
   });
 
   // If we got a default value, try to extract from source code
-  if (Array.isArray(translationVector) && translationVector.every(v => v === 0)) {
-    logger.error(`🔍 TRANSLATE FALLBACK: Translation vector is [0,0,0], trying source code extraction`);
+  if (Array.isArray(translationVector) && translationVector.every((v) => v === 0)) {
+    logger.error(
+      `🔍 TRANSLATE FALLBACK: Translation vector is [0,0,0], trying source code extraction`
+    );
     const sourceCode = getSourceCodeForExtraction();
     logger.error(`🔍 TRANSLATE SOURCE: Source code for extraction:`, sourceCode);
     if (sourceCode) {
@@ -995,7 +997,9 @@ const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): Tran
       logger.error(`🔍 TRANSLATE EXTRACTED: Extracted from source:`, extracted);
       if (extracted) {
         translationVector = extracted;
-        logger.error(`✅ TRANSLATE SUCCESS: Extracted translation vector from source: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}]`);
+        logger.error(
+          `✅ TRANSLATE SUCCESS: Extracted translation vector from source: [${extracted[0]}, ${extracted[1]}, ${extracted[2]}]`
+        );
       } else {
         logger.error(`❌ TRANSLATE FAILED: Could not extract translation vector from source code`);
       }
@@ -1003,7 +1007,9 @@ const moduleInstantiationToTranslateNode = (node: ModuleInstantiationNode): Tran
       logger.error(`❌ TRANSLATE NO SOURCE: No source code available for extraction`);
     }
   } else {
-    logger.error(`✅ TRANSLATE DIRECT: Using translation vector from params: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
+    logger.error(
+      `✅ TRANSLATE DIRECT: Using translation vector from params: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`
+    );
   }
 
   return {
@@ -1991,14 +1997,17 @@ export const convertASTNodeToCSG = async (
   logger.init(`Converting AST node ${index} (${node.type}) to CSG`);
 
   // Debug translate nodes specifically
-  if (node.type === 'translate' || (node.type === 'function_call' && 'name' in node && node.name === 'translate')) {
+  if (
+    node.type === 'translate' ||
+    (node.type === 'function_call' && 'name' in node && node.name === 'translate')
+  ) {
     logger.debug(`🔍 TRANSLATE NODE DEBUG:`, {
       type: node.type,
-      hasChildren: 'children' in node ? (node.children?.length || 0) : 'no children property',
-      childrenTypes: 'children' in node ? node.children?.map(child => child.type) : 'no children',
+      hasChildren: 'children' in node ? node.children?.length || 0 : 'no children property',
+      childrenTypes: 'children' in node ? node.children?.map((child) => child.type) : 'no children',
       hasV: 'v' in node ? 'yes' : 'no',
       vValue: 'v' in node ? node.v : 'no v property',
-      fullStructure: JSON.stringify(node, null, 2)
+      fullStructure: JSON.stringify(node, null, 2),
     });
   }
 

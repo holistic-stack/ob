@@ -1,13 +1,13 @@
 /**
  * Cube Sizing Integration Test
- * 
+ *
  * End-to-end test to validate that the cube sizing fix works correctly
  * for the specific case: cube(5, center=true);translate([0,0,0])cube(5, center=true);
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createLogger } from '../shared/services/logger.service.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convertASTNodeToCSG } from '../features/3d-renderer/services/ast-to-csg-converter/ast-to-csg-converter.js';
+import { createLogger } from '../shared/services/logger.service.js';
 
 const logger = createLogger('CubeSizingIntegration');
 
@@ -15,16 +15,16 @@ const logger = createLogger('CubeSizingIntegration');
 vi.mock('three', () => ({
   BoxGeometry: vi.fn().mockImplementation((width, height, depth) => ({
     type: 'BoxGeometry',
-    parameters: { width, height, depth }
+    parameters: { width, height, depth },
   })),
   Mesh: vi.fn().mockImplementation((geometry, material) => ({
     geometry,
     material,
     position: { set: vi.fn(), x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
-    updateMatrix: vi.fn()
+    updateMatrix: vi.fn(),
   })),
-  MeshStandardMaterial: vi.fn().mockImplementation(() => ({}))
+  MeshStandardMaterial: vi.fn().mockImplementation(() => ({})),
 }));
 
 describe('Cube Sizing Integration Test', () => {
@@ -34,7 +34,9 @@ describe('Cube Sizing Integration Test', () => {
 
   describe('Real-world Scenario', () => {
     it('should fix the reported cube sizing issue', async () => {
-      logger.debug('Testing the exact reported issue: cube(5, center=true);translate([0,0,0])cube(5, center=true);');
+      logger.debug(
+        'Testing the exact reported issue: cube(5, center=true);translate([0,0,0])cube(5, center=true);'
+      );
 
       // Simulate the AST that would be generated from the problematic OpenSCAD code
       const simulatedAST = [
@@ -45,8 +47,8 @@ describe('Cube Sizing Integration Test', () => {
           center: true,
           location: {
             start: { line: 1, column: 1, offset: 0 },
-            end: { line: 1, column: 23, offset: 22 }
-          }
+            end: { line: 1, column: 23, offset: 22 },
+          },
         },
         // Second cube: translate([0,0,0])cube(5, center=true);
         {
@@ -58,20 +60,20 @@ describe('Cube Sizing Integration Test', () => {
               name: 'cube',
               args: [
                 { value: 5 }, // size parameter
-                { name: 'center', value: true } // center parameter
+                { name: 'center', value: true }, // center parameter
               ],
               children: [],
               location: {
                 start: { line: 1, column: 40, offset: 39 },
-                end: { line: 1, column: 62, offset: 61 }
-              }
-            }
+                end: { line: 1, column: 62, offset: 61 },
+              },
+            },
           ],
           location: {
             start: { line: 1, column: 24, offset: 23 },
-            end: { line: 1, column: 62, offset: 61 }
-          }
-        }
+            end: { line: 1, column: 62, offset: 61 },
+          },
+        },
       ];
 
       // Convert both AST nodes to CSG
@@ -88,12 +90,12 @@ describe('Cube Sizing Integration Test', () => {
 
         logger.debug('First cube mesh geometry:', {
           type: firstCubeMesh.geometry.type,
-          parameters: firstCubeMesh.geometry.parameters
+          parameters: firstCubeMesh.geometry.parameters,
         });
 
         logger.debug('Translate mesh geometry:', {
           type: translateMesh.geometry.type,
-          parameters: translateMesh.geometry.parameters
+          parameters: translateMesh.geometry.parameters,
         });
 
         // Both should be BoxGeometry
@@ -141,18 +143,21 @@ describe('Cube Sizing Integration Test', () => {
           type: 'cube',
           size,
           center: true,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 20, offset: 19 } }
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 },
+          },
         };
 
         const moduleInstantiationCube = {
           type: 'module_instantiation',
           name: 'cube',
-          args: [
-            { value: size },
-            { name: 'center', value: true }
-          ],
+          args: [{ value: size }, { name: 'center', value: true }],
           children: [],
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 25, offset: 24 } }
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 25, offset: 24 },
+          },
         };
 
         const directResult = await convertASTNodeToCSG(directCube, 1);
@@ -185,7 +190,7 @@ describe('Cube Sizing Integration Test', () => {
     it('should handle center parameter correctly', async () => {
       const testCases = [
         { center: true, description: 'centered cube' },
-        { center: false, description: 'non-centered cube' }
+        { center: false, description: 'non-centered cube' },
       ];
 
       for (const testCase of testCases) {
@@ -195,18 +200,21 @@ describe('Cube Sizing Integration Test', () => {
           type: 'cube',
           size: 6,
           center: testCase.center,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 20, offset: 19 } }
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 20, offset: 19 },
+          },
         };
 
         const moduleInstantiationCube = {
           type: 'module_instantiation',
           name: 'cube',
-          args: [
-            { value: 6 },
-            { name: 'center', value: testCase.center }
-          ],
+          args: [{ value: 6 }, { name: 'center', value: testCase.center }],
           children: [],
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 30, offset: 29 } }
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 30, offset: 29 },
+          },
         };
 
         const directResult = await convertASTNodeToCSG(directCube, 1);
@@ -247,12 +255,12 @@ describe('Cube Sizing Integration Test', () => {
         const cubeNode = {
           type: 'module_instantiation',
           name: 'cube',
-          args: [
-            { value: 4 },
-            { name: 'center', value: true }
-          ],
+          args: [{ value: 4 }, { name: 'center', value: true }],
           children: [],
-          location: { start: { line: i, column: 1, offset: i * 25 }, end: { line: i, column: 25, offset: (i + 1) * 25 - 1 } }
+          location: {
+            start: { line: i, column: 1, offset: i * 25 },
+            end: { line: i, column: 25, offset: (i + 1) * 25 - 1 },
+          },
         };
 
         cubePromises.push(convertASTNodeToCSG(cubeNode, 1));
@@ -274,7 +282,7 @@ describe('Cube Sizing Integration Test', () => {
 
       const duration = endTime - startTime;
       logger.debug(`✅ Converted 50 cubes in ${duration}ms (${duration / 50}ms per cube)`);
-      
+
       // Performance should be reasonable (less than 10ms per cube on average)
       expect(duration / 50).toBeLessThan(10);
     });

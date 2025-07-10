@@ -50,7 +50,7 @@ export const convertTranslateNode = async (
   return tryCatchAsync(async () => {
     logger.debug(`Converting translate node:`, node);
     logger.debug(`Translate node children count:`, node.children?.length || 0);
-    logger.debug(`Translate node children types:`, node.children?.map(child => child.type) || []);
+    logger.debug(`Translate node children types:`, node.children?.map((child) => child.type) || []);
     logger.debug(`Translate node vector (v):`, node.v);
     logger.debug(`Full translate node structure:`, JSON.stringify(node, null, 2));
 
@@ -83,7 +83,7 @@ export const convertTranslateNode = async (
 
     logger.debug(`🔍 TRANSLATE CHILD: Converting child node:`, {
       childType: firstChild.type,
-      childData: JSON.stringify(firstChild, null, 2)
+      childData: JSON.stringify(firstChild, null, 2),
     });
 
     const childResult = await convertASTNodeToMesh(firstChild, material);
@@ -119,9 +119,13 @@ export const convertTranslateNode = async (
 
           if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
             translationVector = [numbers[0] ?? 0, numbers[1] ?? 0, numbers[2] ?? 0];
-            logger.error(`✅ TRANSLATE WORKAROUND: Successfully extracted vector from source code: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
+            logger.error(
+              `✅ TRANSLATE WORKAROUND: Successfully extracted vector from source code: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`
+            );
           } else {
-            logger.error(`❌ TRANSLATE WORKAROUND: Failed to parse vector from source code: "${vectorContent}"`);
+            logger.error(
+              `❌ TRANSLATE WORKAROUND: Failed to parse vector from source code: "${vectorContent}"`
+            );
           }
         } else {
           logger.error(`❌ TRANSLATE WORKAROUND: No translate vector pattern found in source code`);
@@ -138,14 +142,20 @@ export const convertTranslateNode = async (
     // OpenSCAD coordinate system: X=right, Y=forward, Z=up
     // For now, use direct mapping and verify with test case
 
-    logger.debug(`🔧 TRANSLATE POSITION FIX: Applying translation [${x}, ${y}, ${z}] to mesh position`);
+    logger.debug(
+      `🔧 TRANSLATE POSITION FIX: Applying translation [${x}, ${y}, ${z}] to mesh position`
+    );
 
     // Apply translation to mesh position (proper Three.js approach)
     mesh.position.set(x, y, z);
 
     logger.debug(`✅ TRANSLATE APPLIED: Mesh position set to [${x}, ${y}, ${z}]`);
-    logger.debug(`🔍 TRANSLATE FINAL: Translation applied to mesh position for proper Three.js behavior`);
-    logger.debug(`🔍 TRANSLATE POSITION: Mesh position is now [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`);
+    logger.debug(
+      `🔍 TRANSLATE FINAL: Translation applied to mesh position for proper Three.js behavior`
+    );
+    logger.debug(
+      `🔍 TRANSLATE POSITION: Mesh position is now [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`
+    );
 
     mesh.updateMatrix();
     logger.debug(`✅ TRANSLATE COMPLETE: Mesh position applied and matrix updated`);
