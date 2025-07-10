@@ -658,12 +658,13 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => 
     );
     if (sameLinePrimitiveMatch) {
       const primitiveType = sameLinePrimitiveMatch[1];
-      const primitiveStart = transformLine.indexOf(primitiveType!);
+      // Use the match index to find the correct primitive position
+      const matchIndex = sameLinePrimitiveMatch.index! + sameLinePrimitiveMatch[0].indexOf(primitiveType!);
 
       return createSyntheticPrimitiveNode(
         primitiveType!,
         transformLineIndex,
-        primitiveStart,
+        matchIndex,
         transformLine.length
       );
     }
@@ -674,12 +675,13 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => 
     );
     if (curlyBraceMatch) {
       const primitiveType = curlyBraceMatch[1];
-      const primitiveStart = transformLine.indexOf(primitiveType!);
+      // Use the match index to find the correct primitive position
+      const matchIndex = curlyBraceMatch.index! + curlyBraceMatch[0].indexOf(primitiveType!);
 
       return createSyntheticPrimitiveNode(
         primitiveType!,
         transformLineIndex,
-        primitiveStart,
+        matchIndex,
         transformLine.length
       );
     }
@@ -776,10 +778,69 @@ const createSyntheticPrimitiveNode = (
   // Create appropriate primitive node based on type
   switch (primitiveType) {
     case 'cube':
+      // Parse actual cube parameters from source code if available
+      let size: number | [number, number, number] = 1;
+      let center = false;
+
+      if (currentSourceCode) {
+        const lines = currentSourceCode.split('\n');
+        const sourceLine = lines[line];
+        if (sourceLine) {
+          // Find the cube that appears at or after the specified column position
+          // This ensures we get the correct cube when multiple cubes are on the same line
+          const lineFromColumn = sourceLine.substring(startColumn);
+
+          // Extract cube parameters from the line starting at the specified column
+          const cubeMatch = lineFromColumn.match(/cube\s*\(\s*([^)]+)\s*\)/);
+
+          if (cubeMatch?.[1]) {
+            const params = cubeMatch[1];
+
+            // Parse size parameter (first parameter or named 'size')
+            const sizeMatch = params.match(/(?:size\s*=\s*)?([^,)]+)/);
+            if (sizeMatch?.[1]) {
+              const sizeStr = sizeMatch[1].trim();
+
+              // Check if it's a vector [x,y,z]
+              const vectorMatch = sizeStr.match(/\[([^\]]+)\]/);
+              if (vectorMatch?.[1]) {
+                const numbers = vectorMatch[1].split(',').map(s => parseFloat(s.trim()));
+                if (numbers.length >= 3 && numbers.every(n => !Number.isNaN(n))) {
+                  size = [numbers[0]!, numbers[1]!, numbers[2]!];
+                } else if (numbers.length >= 1 && !Number.isNaN(numbers[0]!)) {
+                  size = numbers[0]!;
+                }
+              } else {
+                // Single number
+                const num = parseFloat(sizeStr);
+                if (!Number.isNaN(num)) {
+                  size = num;
+                }
+              }
+            }
+
+            // Parse center parameter
+            const centerMatch = params.match(/center\s*=\s*(true|false)/);
+            if (centerMatch?.[1]) {
+              center = centerMatch[1] === 'true';
+            } else {
+              // Check if center is the second positional parameter
+              const parts = params.split(',');
+              if (parts.length >= 2) {
+                const secondParam = parts[1]?.trim();
+                if (secondParam === 'true' || secondParam === 'false') {
+                  center = secondParam === 'true';
+                }
+              }
+            }
+          }
+        }
+      }
+
       return {
         type: 'cube',
-        size: 1, // Default size (OpenSCAD standard)
-        center: false,
+        size,
+        center,
         location,
       };
     case 'sphere':

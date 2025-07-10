@@ -494,33 +494,49 @@ function extractArgument(
 
   // Handle named_argument nodes directly
   if (argNode.type === 'named_argument') {
-    // For named_argument nodes, look for identifier and value children
-    let identifierNode: TSNode | null = null;
-    let valueNode: TSNode | null = null;
+    const nameNode = argNode.childForFieldName('name');
+    const valueNode = argNode.childForFieldName('value');
 
+    if (nameNode && valueNode) {
+      const name = getNodeText(nameNode, sourceCode);
+      const value = convertNodeToParameterValue(
+        valueNode,
+        errorHandler,
+        sourceCode,
+        variableScope
+      );
+      if (value !== undefined) {
+        return { name, value };
+      }
+      return null;
+    }
+
+    // Fallback for grammars where named_argument does not have named fields
+    let identifierNode: TSNode | null = null;
+    let expressionNode: TSNode | null = null;
     for (let i = 0; i < argNode.childCount; i++) {
       const child = argNode.child(i);
       if (!child) continue;
-
       if (child.type === 'identifier' && !identifierNode) {
         identifierNode = child;
-      } else if (
-        child.type !== '=' &&
-        child.type !== 'equals' &&
-        child.type !== 'identifier' &&
-        !valueNode
-      ) {
-        valueNode = child;
+      } else if (child.type !== '=') {
+        expressionNode = child;
       }
     }
 
-    if (identifierNode && valueNode) {
+    if (identifierNode && expressionNode) {
       const name = getNodeText(identifierNode, sourceCode);
-      const value = convertNodeToParameterValue(valueNode, errorHandler, sourceCode, variableScope);
+      const value = convertNodeToParameterValue(
+        expressionNode,
+        errorHandler,
+        sourceCode,
+        variableScope
+      );
       if (value !== undefined) {
         return { name, value };
       }
     }
+
     return null;
   }
 
@@ -580,21 +596,32 @@ function extractArgument(
     // Convert Value to ParameterValue
     const paramValue = convertValueToParameterValue(value);
     return { name, value: paramValue };
-  } else if (argNode.namedChildCount === 1 && argNode.namedChild(0)) {
+  } else {
     // This is a positional argument
-    const valueNode = argNode.namedChild(0);
-    if (valueNode) {
-      // Extract the value
-      const value = extractValue(valueNode, sourceCode, variableScope);
-      if (!value) {
-        return null;
+    // For positional arguments, we need to find the actual value node within the argument node
+    let valueNode: TSNode | null = null;
+
+    // Look for the first child that contains the actual value (not punctuation)
+    for (let i = 0; i < argNode.childCount; i++) {
+      const child = argNode.child(i);
+      if (child && child.type !== '(' && child.type !== ')' && child.type !== ',' && child.type !== ';') {
+        valueNode = child;
+        break;
       }
-      // Convert Value to ParameterValue
-      const paramValue = convertValueToParameterValue(value);
-      return { name: undefined, value: paramValue };
     }
+
+    // If no suitable child found, try the argument node itself as fallback
+    if (!valueNode) {
+      valueNode = argNode;
+    }
+
+    const value = extractValue(valueNode, sourceCode, variableScope);
+    if (!value) {
+      return null;
+    }
+    const paramValue = convertValueToParameterValue(value);
+    return { name: undefined, value: paramValue };
   }
-  return null;
 }
 
 /**

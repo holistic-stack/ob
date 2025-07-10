@@ -73,18 +73,7 @@ export const convertSphereToMesh = (
         throw new Error('Material is null or undefined');
       }
 
-      logger.error(`🔍 SPHERE DEBUG: Converting sphere node:`, {
-        nodeType: node.type,
-        nodeRadius: node.radius,
-        nodeR: 'r' in node ? node.r : 'no r property',
-        nodeD: 'd' in node ? node.d : 'no d property',
-        nodeDiameter: 'diameter' in node ? node.diameter : 'no diameter property',
-        fullNode: JSON.stringify(node, null, 2)
-      });
-
       const radius = Number(node.radius) || 1;
-
-      logger.error(`✅ SPHERE CALCULATION: Using radius=${radius} from node.radius=${node.radius}`);
 
       // Create sphere geometry with reasonable detail
       const geometry = new THREE.SphereGeometry(radius, 32, 16);

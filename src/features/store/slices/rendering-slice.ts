@@ -46,23 +46,39 @@ export const createRenderingSlice = (
         async () => {
           logger.debug(`Processing ${ast.length} AST nodes for rendering`);
 
-          // For now, we'll let the R3FScene handle the actual mesh creation
-          // This function primarily manages the store state
-          await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate processing time
+          // Import renderASTNode dynamically to avoid circular dependencies
+          const { renderASTNode } = await import('../../3d-renderer/services/primitive-renderer');
 
-          // The actual meshes are created by R3FScene component
-          // We'll return an empty array here and let the R3FScene update the store
+          // Create meshes directly using the same logic as R3FScene
           const meshes: THREE.Mesh[] = [];
+
+          for (let i = 0; i < ast.length; i++) {
+            const node = ast[i];
+            if (node) {
+              try {
+                const meshResult = await renderASTNode(node, i);
+                if (meshResult.success) {
+                  meshes.push(meshResult.data.mesh);
+                } else {
+                  logger.error(`Failed to render node ${i} (${node.type}):`, meshResult.error);
+                }
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.error(`Exception rendering node ${i} (${node.type}):`, errorMessage);
+              }
+            }
+          }
 
           set((state) => {
             if (state.rendering) {
               state.rendering.isRendering = false;
               state.rendering.lastRendered = new Date();
-              // Don't update meshes here - let R3FScene handle that
+              // Update meshes directly
+              state.rendering.meshes = [...meshes];
             }
           });
 
-          logger.debug(`renderFromAST completed`);
+          logger.debug(`renderFromAST completed with ${meshes.length} meshes`);
           return meshes;
         },
         (err) => {

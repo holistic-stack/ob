@@ -1986,9 +1986,6 @@ export const convertASTNodeToCSG = async (
   index: number,
   config: Partial<CSGConversionConfig> = {}
 ): Promise<Result<Mesh3D, string>> => {
-  console.log('--- ast-to-csg-converter.ts ---');
-  console.log('node', node);
-
   const finalConfig = { ...DEFAULT_CSG_CONFIG, ...config };
 
   logger.init(`Converting AST node ${index} (${node.type}) to CSG`);

@@ -91,13 +91,10 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
             // DO NOT apply grid positioning - let OpenSCAD transformations handle positioning
             // The geometry translation fix already applies transformations to the geometry vertices
             // Grid positioning would override OpenSCAD translate() operations
-            logger.error(`🔧 R3F SCENE FIX: Skipping grid positioning for ${node.type} to preserve OpenSCAD transformations`);
 
             // Add the real THREE.Mesh to the scene (without overriding position)
             scene.add(mesh3D.mesh);
             newMeshes.push(mesh3D);
-
-            logger.error(`✅ R3F SCENE: Successfully added mesh for ${node.type} at index ${index} with preserved transformations`);
           } else {
             throw new Error(meshResult.error);
           }

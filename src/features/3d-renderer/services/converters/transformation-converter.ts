@@ -96,21 +96,14 @@ export const convertTranslateNode = async (
 
     // Apply translation - extract vector from TranslateNode
     // The TranslateNode should have a 'v' property with [x, y, z] vector
-    logger.error(`🔍 TRANSLATE RAW: Raw node.v received:`, node.v);
-    logger.error(`🔍 TRANSLATE RAW: node.v type:`, typeof node.v);
-    logger.error(`🔍 TRANSLATE RAW: node.v isArray:`, Array.isArray(node.v));
-    logger.error(`🔍 TRANSLATE RAW: node.v length:`, Array.isArray(node.v) ? node.v.length : 'not array');
-    logger.error(`🔍 TRANSLATE RAW: node.v values:`, Array.isArray(node.v) ? node.v.map((v, i) => `[${i}]=${v} (${typeof v})`) : 'not array');
 
     // Extract translation vector with Tree-sitter workaround
     let translationVector: [number, number, number] = [0, 0, 0];
 
     if (Array.isArray(node.v) && node.v.length === 3) {
       translationVector = [node.v[0], node.v[1], node.v[2]];
-      logger.error(`✅ TRANSLATE TREE-SITTER: Successfully extracted vector from Tree-sitter: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`);
     } else {
       // Tree-sitter vector parsing failed - apply text-based workaround
-      logger.error(`🔧 TRANSLATE WORKAROUND: Tree-sitter vector parsing failed, applying text-based extraction`);
 
       // Try to extract from source code using text-based parsing
       const sourceCode = getCurrentSourceCode();
@@ -135,9 +128,6 @@ export const convertTranslateNode = async (
     }
 
     const [x, y, z] = translationVector;
-
-    logger.error(`🔍 TRANSLATE VECTOR: Using translation vector [${x}, ${y}, ${z}] from node.v:`, node.v);
-    logger.error(`🔍 TRANSLATE NODE: Full translate node:`, JSON.stringify(node, null, 2));
 
     // Apply translation to mesh position (proper Three.js behavior)
     // Three.js coordinate system: X=right, Y=up, Z=forward (towards viewer)

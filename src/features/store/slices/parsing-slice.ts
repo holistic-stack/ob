@@ -140,6 +140,14 @@ export const createParsingSlice = (
           logger.debug(
             `Parsed ${parseResult.data.length} raw AST nodes, restructured to ${ast.length} nodes`
           );
+
+          // Trigger 3D rendering if enabled
+          const { config } = get();
+          if (config.enableRealTimeRendering && ast.length > 0) {
+            logger.debug('Triggering real-time rendering after parsing');
+            void get().renderFromAST(ast);
+          }
+
           return operationUtils.createSuccess(ast as ReadonlyArray<CoreNode>, metadata);
         } else {
           // No AST nodes were parsed
