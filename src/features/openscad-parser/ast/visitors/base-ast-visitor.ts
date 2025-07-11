@@ -81,7 +81,7 @@ function convertExtractedValueToParameterValue(
   }
 
   // Handle Value objects
-  if ('type' in value) {
+  if (value && typeof value === 'object' && 'type' in value) {
     return convertValueToParameterValue(value);
   }
 

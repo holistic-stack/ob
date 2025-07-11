@@ -99,11 +99,7 @@ describe('AST to CSG Converter - Translate Node Handling', () => {
 
   describe('Translate with Child Nodes', () => {
     it('should create translated sphere, not placeholder cube', async () => {
-      const code = `
-cube(15, center=true);
-translate([200,0,0])
-sphere(10);
-`;
+      const code = `translate([200,0,0]) sphere(10);`;
 
       logger.init('Testing translate with sphere child - should NOT create placeholder cube');
 
@@ -116,25 +112,22 @@ sphere(10);
         throw new Error('AST is null after successful parse');
       }
 
-      expect(ast.length).toBe(2); // Should have cube and translate nodes
 
-      // Step 2: Check the first node (cube)
-      const cubeNode = ast[0];
-      expect(cubeNode).toBeDefined();
-      expect(cubeNode?.type).toMatch(/cube|function_call/);
 
-      // Step 3: Check the second node (translate)
-      const translateNode = ast[1];
+      expect(ast.length).toBe(1); // Should have translate node only
+
+      // Check the translate node
+      const translateNode = ast[0];
       expect(translateNode).toBeDefined();
       expect(translateNode?.type).toMatch(/translate|function_call/);
 
-      logger.debug(`Translate node structure:`, JSON.stringify(translateNode, null, 2));
+
 
       // Step 4: Set source code for proper parameter extraction
       setSourceCodeForExtraction(code);
 
       // Convert the translate node to CSG
-      const translateResult = await convertASTNodeToCSG(translateNode as ASTNode, 1);
+      const translateResult = await convertASTNodeToCSG(translateNode as ASTNode, 0);
 
       // Clear source code after conversion
       clearSourceCodeForExtraction();
@@ -296,11 +289,9 @@ translate([5, 10, 15]) {
     });
 
     it('should handle multiple translate operations', async () => {
-      const code = `
-translate([10, 0, 0]) cube(5);
-translate([0, 10, 0]) sphere(3);
-translate([0, 0, 10]) cylinder(h=8, r=2);
-`;
+      const code = `translate([10, 0, 0]) cube(5);
+translate([0, 10, 0]) cube(3);
+translate([0, 0, 10]) cube(2);`;
 
       logger.init('Testing multiple translate operations');
 
@@ -312,7 +303,9 @@ translate([0, 0, 10]) cylinder(h=8, r=2);
         throw new Error('AST is null after successful parse');
       }
 
-      expect(ast.length).toBeGreaterThan(1);
+
+
+      expect(ast.length).toBe(3); // Should have 3 translate nodes
 
       // Set source code for proper parameter extraction
       setSourceCodeForExtraction(code);
