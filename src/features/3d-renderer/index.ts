@@ -1,7 +1,7 @@
 /**
  * 3D Renderer Feature - Enhanced Exports
  *
- * React Three Fiber integration with three-csg-ts for OpenSCAD
+ * React Three Fiber integration with Manifold for OpenSCAD
  * 3D visualization, CSG operations, WebGL2 optimization, and
  * enhanced matrix operations with React integration.
  */

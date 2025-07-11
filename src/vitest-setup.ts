@@ -14,7 +14,7 @@ import { findUpSync } from 'find-up';
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
 import { afterEach, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
+
 import { createLogger } from './shared/services/logger.service.js';
 // Import OpenSCAD parser test utility to register cleanup hooks
 import './vitest-helpers/openscad-parser-test-utils.js';
@@ -191,9 +191,8 @@ Object.defineProperty(window, 'getComputedStyle', {
 const __dirname = import.meta.dirname;
 const projectRoot = join(__dirname, '..');
 
-// Initialize vitest-fetch-mock properly
-const fetchMocker = createFetchMock(vi);
-fetchMocker.enableMocks();
+// Initialize fetch mock for WASM files
+vi.stubGlobal('fetch', vi.fn());
 
 /**
  * Create a minimal mock WASM file for testing purposes
@@ -400,7 +399,7 @@ export function resolveWasmPath(urlPath: string): string {
   );
 }
 
-// Configure vitest-fetch-mock to handle WASM files with better URL handling
+// Configure fetch mock to handle WASM files with better URL handling
 vi.mocked(fetch).mockImplementation((url) => {
   logger.debug('using local fetch mock', url);
   logger.debug('URL type:', typeof url, 'URL constructor:', url.constructor.name);
