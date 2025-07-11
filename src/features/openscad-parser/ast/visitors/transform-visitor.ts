@@ -174,45 +174,7 @@ export class TransformVisitor extends BaseASTVisitor {
     const nameNode = node.childForFieldName('name');
     let functionName = nameNode?.text || '';
 
-    // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-    const truncatedNameMap: { [key: string]: string } = {
-      sphe: 'sphere',
-      cyli: 'cylinder',
-      tran: 'translate',
-      trans: 'translate',
-      transl: 'translate',
-      transla: 'translate',
-      translat: 'translate',
-      unio: 'union',
-      diff: 'difference',
-      diffe: 'difference',
-      differen: 'difference',
-      inte: 'intersection',
-      intersec: 'intersection',
-      intersecti: 'intersection',
-      rota: 'rotate',
-      rotat: 'rotate',
-      scal: 'scale',
-      mirr: 'mirror',
-      mirro: 'mirror',
-      colo: 'color',
-      mult: 'multmatrix',
-      multm: 'multmatrix',
-      multma: 'multmatrix',
-      multmat: 'multmatrix',
-      multmatr: 'multmatrix',
-      multmatri: 'multmatrix',
-      multmatrix: 'multmatrix',
-      offs: 'offset',
-      offse: 'offset',
-    };
 
-    if (functionName && truncatedNameMap[functionName]) {
-      const correctedName = truncatedNameMap[functionName];
-      if (correctedName) {
-        functionName = correctedName;
-      }
-    }
 
     return functionName;
   }
@@ -258,30 +220,7 @@ export class TransformVisitor extends BaseASTVisitor {
       if (firstChild) {
         functionName = firstChild.text;
 
-        // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-        const truncatedNameMap: { [key: string]: string } = {
-          sphe: 'sphere',
-          cyli: 'cylinder',
-          tran: 'translate',
-          unio: 'union',
-          diff: 'difference',
-          inte: 'intersection',
-          rota: 'rotate',
-          scal: 'scale',
-          mirr: 'mirror',
-          colo: 'color',
-          mult: 'multmatrix',
-        };
 
-        if (functionName && truncatedNameMap[functionName]) {
-          console.log(
-            `[TransformVisitor.visitAccessorExpression] WORKAROUND: Detected truncated function name "${functionName}", correcting to "${truncatedNameMap[functionName]}"`
-          );
-          const mappedName = truncatedNameMap[functionName];
-          if (mappedName) {
-            functionName = mappedName;
-          }
-        }
       }
     }
 
@@ -1053,13 +992,7 @@ export class TransformVisitor extends BaseASTVisitor {
       }
     }
 
-    // WORKAROUND: For testing purposes, hardcode some values based on the node text
-    // This addresses Tree-sitter memory management issues causing argument extraction failures
-    if (node.text.includes('v=[0, 1, 0]')) {
-      v = [0, 1, 0];
-    } else if (node.text.includes('[1, 1]')) {
-      v = [1, 1, 0]; // 2D vector converted to 3D
-    }
+
 
     return {
       type: 'mirror',

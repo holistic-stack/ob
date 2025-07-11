@@ -290,8 +290,8 @@ translate([5, 10, 15]) {
 
     it('should handle multiple translate operations', async () => {
       const code = `translate([10, 0, 0]) cube(5);
-translate([0, 10, 0]) cube(3);
-translate([0, 0, 10]) cube(2);`;
+translate([0, 10, 0]) sphere(3);
+translate([0, 0, 10]) cylinder(h=8, r=2);`;
 
       logger.init('Testing multiple translate operations');
 
@@ -316,6 +316,11 @@ translate([0, 0, 10]) cube(2);`;
         if (!node) continue;
 
         const result = await convertASTNodeToCSG(node as ASTNode, i);
+        if (!result.success) {
+          console.log(`Node ${i} failed:`, result.error);
+          console.log(`Node ${i} type:`, node?.type);
+          console.log(`Node ${i} details:`, JSON.stringify(node, null, 2));
+        }
         expect(result.success).toBe(true);
 
         if (result.success) {

@@ -153,41 +153,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
-    let functionName = nameNode?.text || '';
-
-    // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-    const truncatedNameMap: { [key: string]: string } = {
-      sphe: 'sphere',
-      spher: 'sphere',
-      cyli: 'cylinder',
-      cylin: 'cylinder',
-      cylind: 'cylinder',
-      cylinde: 'cylinder',
-      cub: 'cube',
-      cube: 'cube',
-      poly: 'polyhedron',
-      polyh: 'polyhedron',
-      polyhe: 'polyhedron',
-      polyhed: 'polyhedron',
-      polyhedr: 'polyhedron',
-      polyhedro: 'polyhedron',
-      squa: 'square',
-      squar: 'square',
-      circ: 'circle',
-      circl: 'circle',
-      polyg: 'polygon',
-      polygo: 'polygon',
-      polygon: 'polygon',
-      tex: 'text',
-      text: 'text',
-    };
-
-    if (functionName && truncatedNameMap[functionName]) {
-      const correctedName = truncatedNameMap[functionName];
-      if (correctedName) {
-        functionName = correctedName;
-      }
-    }
+    const functionName = nameNode?.text || '';
 
     return functionName;
   }
@@ -311,29 +277,6 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           const identifierNode = findDescendantOfType(functionChild, 'identifier');
           if (identifierNode) {
             functionName = identifierNode.text;
-
-            // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-            // This is a temporary fix until the root cause is resolved
-            const truncatedNameMap: { [key: string]: string } = {
-              sphe: 'sphere',
-              cyli: 'cylinder',
-              tran: 'translate',
-              unio: 'union',
-              diff: 'difference',
-              inte: 'intersection',
-              rota: 'rotate',
-              scal: 'scale',
-              mirr: 'mirror',
-              colo: 'color',
-              mult: 'multmatrix',
-            };
-
-            if (functionName && truncatedNameMap[functionName]) {
-              console.log(
-                `[PrimitiveVisitor.visitAccessorExpression] WORKAROUND: Detected truncated function name "${functionName}", correcting to "${truncatedNameMap[functionName]}"`
-              );
-              functionName = truncatedNameMap[functionName] ?? functionName;
-            }
           }
         }
         break;

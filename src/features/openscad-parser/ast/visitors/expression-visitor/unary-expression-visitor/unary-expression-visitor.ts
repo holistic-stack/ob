@@ -41,13 +41,13 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
     const operandNode = node.childForFieldName('operand');
 
     if (!operatorNode || !operandNode) {
-      // WORKAROUND: Check if this is actually a single expression wrapped in a unary expression node
+      // Check if this is actually a single expression wrapped in a unary expression node
       // This can happen when the grammar creates nested expression hierarchies for precedence
       if (node.namedChildCount === 1) {
         const child = node.namedChild(0);
         if (child) {
           this.errorHandler.logWarning(
-            `[UnaryExpressionVisitor] Detected single expression wrapped as unary expression. Delegating to parent visitor. Node: "${node.text}", Child: "${child.type}"`,
+            `[UnaryExpressionVisitor] Single expression wrapped as unary expression. Delegating to parent visitor. Node: "${node.text}", Child: "${child.type}"`,
             'UnaryExpressionVisitor.visit',
             node
           );

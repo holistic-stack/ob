@@ -81,10 +81,7 @@ export const convertTranslateNode = async (
       throw new Error('Translate node first child is undefined');
     }
 
-    logger.debug(`🔍 TRANSLATE CHILD: Converting child node:`, {
-      childType: firstChild.type,
-      childData: JSON.stringify(firstChild, null, 2),
-    });
+    logger.debug(`Converting translate child node: ${firstChild.type}`);
 
     const childResult = await convertASTNodeToMesh(firstChild, material);
     if (!childResult.success) {
@@ -92,47 +89,16 @@ export const convertTranslateNode = async (
     }
 
     const mesh = childResult.data;
-    logger.debug(`✅ TRANSLATE CHILD SUCCESS: Child mesh created for ${firstChild.type}`);
+    logger.debug(`Child mesh created for ${firstChild.type}`);
 
     // Apply translation - extract vector from TranslateNode
     // The TranslateNode should have a 'v' property with [x, y, z] vector
 
-    // Extract translation vector with Tree-sitter workaround
+    // Extract translation vector
     let translationVector: [number, number, number] = [0, 0, 0];
-    let useWorkaround = false;
 
     if (Array.isArray(node.v) && node.v.length === 3) {
       translationVector = [node.v[0], node.v[1], node.v[2]];
-
-      // Note: Vector verification is now handled at the parser level in transform-visitor.ts
-    } else {
-      // Tree-sitter vector parsing failed completely - apply text-based workaround
-      useWorkaround = true;
-
-      // Try to extract from source code using text-based parsing
-      const sourceCode = getCurrentSourceCode();
-      if (sourceCode) {
-        const vectorMatch = sourceCode.match(/translate\s*\(\s*\[([^\]]+)\]/);
-        if (vectorMatch?.[1]) {
-          const vectorContent = vectorMatch[1];
-          const numbers = vectorContent.split(',').map((s: string) => parseFloat(s.trim()));
-
-          if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
-            translationVector = [numbers[0] ?? 0, numbers[1] ?? 0, numbers[2] ?? 0];
-            logger.error(
-              `✅ TRANSLATE WORKAROUND: Successfully extracted vector from source code: [${translationVector[0]}, ${translationVector[1]}, ${translationVector[2]}]`
-            );
-          } else {
-            logger.error(
-              `❌ TRANSLATE WORKAROUND: Failed to parse vector from source code: "${vectorContent}"`
-            );
-          }
-        } else {
-          logger.error(`❌ TRANSLATE WORKAROUND: No translate vector pattern found in source code`);
-        }
-      } else {
-        logger.error(`❌ TRANSLATE WORKAROUND: No source code available for text-based extraction`);
-      }
     }
 
     const [x, y, z] = translationVector;
@@ -142,23 +108,13 @@ export const convertTranslateNode = async (
     // OpenSCAD coordinate system: X=right, Y=forward, Z=up
     // For now, use direct mapping and verify with test case
 
-    logger.debug(
-      `🔧 TRANSLATE POSITION FIX: Applying translation [${x}, ${y}, ${z}] to mesh position`
-    );
-
-    // Apply translation to mesh position (proper Three.js approach)
+    // Apply translation to mesh position
     mesh.position.set(x, y, z);
 
-    logger.debug(`✅ TRANSLATE APPLIED: Mesh position set to [${x}, ${y}, ${z}]`);
-    logger.debug(
-      `🔍 TRANSLATE FINAL: Translation applied to mesh position for proper Three.js behavior`
-    );
-    logger.debug(
-      `🔍 TRANSLATE POSITION: Mesh position is now [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`
-    );
+    logger.debug(`Applied translation [${x}, ${y}, ${z}] to mesh`);
 
     mesh.updateMatrix();
-    logger.debug(`✅ TRANSLATE COMPLETE: Mesh position applied and matrix updated`);
+    logger.debug(`Translation complete, matrix updated`);
 
     return mesh;
   });

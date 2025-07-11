@@ -153,68 +153,8 @@ export class CSGVisitor extends BaseASTVisitor {
     const nameNode = node.childForFieldName('name');
     let functionName = nameNode?.text || '';
 
-    // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-    const truncatedNameMap: { [key: string]: string } = {
-      sphe: 'sphere',
-      spher: 'sphere',
-      cyli: 'cylinder',
-      cylin: 'cylinder',
-      cylind: 'cylinder',
-      cylinde: 'cylinder',
-      tran: 'translate',
-      trans: 'translate',
-      transl: 'translate',
-      transla: 'translate',
-      translat: 'translate',
-      unio: 'union',
-      union: 'union',
-      diff: 'difference',
-      diffe: 'difference',
-      differ: 'difference',
-      differe: 'difference',
-      differen: 'difference',
-      differenc: 'difference',
-      difference: 'difference',
-      inte: 'intersection',
-      inter: 'intersection',
-      inters: 'intersection',
-      interse: 'intersection',
-      intersec: 'intersection',
-      intersect: 'intersection',
-      intersecti: 'intersection',
-      intersectio: 'intersection',
-      intersection: 'intersection',
-      hull: 'hull',
-      mink: 'minkowski',
-      minko: 'minkowski',
-      minkow: 'minkowski',
-      minkows: 'minkowski',
-      minkowsk: 'minkowski',
-      minkowski: 'minkowski',
-      rota: 'rotate',
-      rotat: 'rotate',
-      scal: 'scale',
-      scale: 'scale',
-      mirr: 'mirror',
-      mirro: 'mirror',
-      mirror: 'mirror',
-      colo: 'color',
-      color: 'color',
-      mult: 'multmatrix',
-      multm: 'multmatrix',
-      multma: 'multmatrix',
-      multmat: 'multmatrix',
-      multmatr: 'multmatrix',
-      multmatri: 'multmatrix',
-      multmatrix: 'multmatrix',
-    };
 
-    if (functionName && truncatedNameMap[functionName]) {
-      const correctedName = truncatedNameMap[functionName];
-      if (correctedName) {
-        functionName = correctedName;
-      }
-    }
+
 
     return functionName;
   }
@@ -281,30 +221,7 @@ export class CSGVisitor extends BaseASTVisitor {
     // Get the function name from the identifier node
     let functionName = functionNode.text;
 
-    // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-    const truncatedNameMap: { [key: string]: string } = {
-      sphe: 'sphere',
-      cyli: 'cylinder',
-      tran: 'translate',
-      unio: 'union',
-      diff: 'difference',
-      inte: 'intersection',
-      rota: 'rotate',
-      scal: 'scale',
-      mirr: 'mirror',
-      colo: 'color',
-      mult: 'multmatrix',
-    };
 
-    if (functionName && truncatedNameMap[functionName]) {
-      const correctedName = truncatedNameMap[functionName];
-      if (correctedName) {
-        console.log(
-          `[CSGVisitor.visitAccessorExpression] WORKAROUND: Detected truncated function name "${functionName}", correcting to "${correctedName}"`
-        );
-        functionName = correctedName;
-      }
-    }
 
     if (!functionName) {
       return null;
@@ -612,30 +529,7 @@ export class CSGVisitor extends BaseASTVisitor {
 
     let functionName = functionNode.text;
 
-    // WORKAROUND: Fix truncated function names due to Tree-sitter memory management issues
-    const truncatedNameMap: { [key: string]: string } = {
-      sphe: 'sphere',
-      cyli: 'cylinder',
-      tran: 'translate',
-      unio: 'union',
-      diff: 'difference',
-      inte: 'intersection',
-      rota: 'rotate',
-      scal: 'scale',
-      mirr: 'mirror',
-      colo: 'color',
-      mult: 'multmatrix',
-    };
 
-    if (functionName && truncatedNameMap[functionName]) {
-      const correctedName = truncatedNameMap[functionName];
-      if (correctedName) {
-        console.log(
-          `[CSGVisitor.visitCallExpression] WORKAROUND: Detected truncated function name "${functionName}", correcting to "${correctedName}"`
-        );
-        functionName = correctedName;
-      }
-    }
 
     if (!functionName) return null;
 

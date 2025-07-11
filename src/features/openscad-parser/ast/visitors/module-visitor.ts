@@ -141,10 +141,12 @@ export class ModuleVisitor extends BaseASTVisitor {
       return null;
     }
 
-    const functionName = nameFieldNode.text;
+    let functionName = nameFieldNode.text;
     if (!functionName) {
       return null;
     }
+
+
 
     // Only handle specific module types that ModuleVisitor should process
     // Primitive functions (cube, sphere, cylinder, etc.) should be handled by PrimitiveVisitor
@@ -199,10 +201,14 @@ export class ModuleVisitor extends BaseASTVisitor {
     let nameAstIdentifierNode: ast.IdentifierNode;
 
     if (nameCSTNode) {
+      let moduleName = nameCSTNode.text;
+
+
+
       nameAstIdentifierNode = {
         type: 'expression', // Corrected: IdentifierNode is a type of ExpressionNode
         expressionType: 'identifier',
-        name: nameCSTNode.text,
+        name: moduleName,
         location: getLocation(nameCSTNode),
       };
     } else {

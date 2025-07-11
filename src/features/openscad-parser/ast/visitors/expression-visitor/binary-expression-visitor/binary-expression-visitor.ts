@@ -65,13 +65,13 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
     }
 
     if (!leftNode || !operatorNode || !rightNode) {
-      // WORKAROUND: Check if this is actually a single expression wrapped in a binary expression node
+      // Check if this is actually a single expression wrapped in a binary expression node
       // This can happen when the grammar creates nested expression hierarchies for precedence
       if (node.namedChildCount === 1) {
         const child = node.namedChild(0);
         if (child) {
           this.errorHandler.logWarning(
-            `[BinaryExpressionVisitor] Detected single expression wrapped as binary expression. Delegating to parent visitor. Node: "${node.text}", Child: "${child.type}"`,
+            `[BinaryExpressionVisitor] Single expression wrapped as binary expression. Delegating to parent visitor. Node: "${node.text}", Child: "${child.type}"`,
             'BinaryExpressionVisitor.visit',
             node
           );
