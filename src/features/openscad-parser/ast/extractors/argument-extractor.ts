@@ -36,28 +36,24 @@ import type * as ast from '../ast-types.js';
 import { extractValue as extractValueFromNode } from './value-extractor.js';
 
 /**
- * Extract text from source code using node position information.
- * This is a workaround for Tree-sitter memory management issues that can cause
- * node.text to be truncated.
+ * Extract text from a Tree-sitter node.
  *
  * @param node - The Tree-sitter node
- * @param sourceCode - The original source code
- * @returns The correct text for the node, or node.text as fallback
+ * @param sourceCode - The original source code (optional)
+ * @returns The text for the node
  */
 function getNodeText(node: TSNode, sourceCode?: string): string {
   if (sourceCode && node.startIndex !== undefined && node.endIndex !== undefined) {
     try {
       const extractedText = sourceCode.slice(node.startIndex, node.endIndex);
-      // Only use extracted text if it's not empty and seems reasonable
       if (extractedText.length > 0 && extractedText.length <= 1000) {
         return extractedText;
       }
     } catch (_error) {
-      // Intentionally empty, as per design, to handle potential Tree-sitter memory issues gracefully.
+      // Handle extraction errors gracefully
     }
   }
 
-  // Fallback to node.text
   return node.text || '';
 }
 
@@ -222,13 +218,11 @@ function convertNodeToParameterValue(
  * - `argument`: Individual argument nodes
  * - `named_argument`: Explicitly named arguments
  *
- * **Memory Management Workaround**: This function includes workarounds for Tree-sitter
- * memory management issues that can cause `node.text` to be truncated. When possible,
- * it uses the source code directly with node position information to extract correct text.
+ * This function extracts arguments from CST nodes and converts them to typed parameters.
  *
  * @param argsNode - The CST node containing the arguments to extract
  * @param errorHandler - Optional error handler for enhanced expression evaluation and error reporting
- * @param sourceCode - Optional source code string for extracting correct text when node.text is truncated
+ * @param sourceCode - Optional source code string for text extraction
  * @returns Array of Parameter objects with optional names and typed values
  *
  * @example Extracting positional arguments
@@ -473,7 +467,7 @@ export function extractArguments(
  * Extract a parameter from an argument node
  * @param argNode The argument node
  * @param errorHandler Optional error handler for enhanced expression evaluation
- * @param sourceCode Optional source code for extracting correct text when node.text is truncated
+ * @param sourceCode Optional source code for text extraction
  * @returns A parameter object or null if the argument is invalid
  */
 function extractArgument(
@@ -483,12 +477,9 @@ function extractArgument(
   variableScope?: Map<string, ast.ParameterValue>
 ): ast.Parameter | null {
   const nodeText = getNodeText(argNode, sourceCode);
-  // Detect Tree-sitter memory corruption patterns
-  // If we see patterns like ');' or ')' as argument text, it's likely corruption
+  // Check for invalid argument patterns
   if (nodeText.match(/^\s*\)[\s;]*$/)) {
-    console.log(
-      `[extractArgument] Detected Tree-sitter memory corruption in argument: '${nodeText}'. Skipping.`
-    );
+    console.log(`[extractArgument] Invalid argument pattern: '${nodeText}'. Skipping.`);
     return null;
   }
 

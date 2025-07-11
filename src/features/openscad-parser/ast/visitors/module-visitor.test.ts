@@ -6,8 +6,7 @@ describe('ModuleVisitor', () => {
   let parser: OpenscadParser;
   let errorHandler: ErrorHandler;
 
-  // FIX: Use beforeEach/afterEach for proper test isolation
-  // This prevents Tree-sitter memory corruption between tests
+  // Use beforeEach/afterEach for proper test isolation
   beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();

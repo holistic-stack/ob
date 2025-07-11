@@ -24,14 +24,14 @@ import type {
 const logger = createLogger('ASTRestructuringService');
 
 /**
- * Module-level storage for source code to enable Tree-sitter grammar workarounds
+ * Module-level storage for source code to enable AST restructuring
  * This allows the restructuring service to access the original source code
- * for parsing child primitives that the grammar missed
+ * for parsing child primitives
  */
 let currentSourceCode: string | null = null;
 
 /**
- * Set the source code for Tree-sitter grammar workarounds
+ * Set the source code for AST restructuring
  * This enables the restructuring service to find child primitives via source code analysis
  */
 export function setSourceCodeForRestructuring(sourceCode: string): void {
