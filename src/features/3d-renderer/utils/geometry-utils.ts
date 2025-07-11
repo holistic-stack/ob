@@ -8,7 +8,7 @@
  * - Vertex operations (creation, cloning, interpolation)
  * - Plane operations (creation, validation, transformation)
  * - Polygon operations (creation, validation, splitting)
- * - BSP classification and spatial operations
+ * - Spatial operations and geometric calculations
  * - Geometric validation utilities
  *
  * All functions are pure (no side effects) and follow functional programming principles.
@@ -20,13 +20,7 @@
  */
 
 import { GEOMETRY_CONFIG } from '../config/geometry-config';
-import type {
-  BSPClassification,
-  PlaneData,
-  PolygonData,
-  SharedData,
-  VertexData,
-} from '../types/geometry.types';
+import type { PlaneData, PolygonData, SharedData, VertexData } from '../types/geometry.types';
 import { Vector } from './Vector';
 
 // ============================================================================
@@ -106,7 +100,7 @@ export const interpolateVertex = (
  * Plane utility functions
  *
  * Pure functions for creating, manipulating, and validating plane data.
- * Planes are used for BSP tree operations and spatial partitioning.
+ * Planes are used for spatial partitioning and geometric calculations.
  */
 export const createPlane = (normal: Vector, w: number): PlaneData => ({
   normal: normal.clone(),
@@ -169,153 +163,14 @@ export const flipPolygon = (polygon: PolygonData): PolygonData => ({
 });
 
 // ============================================================================
-// BSP CLASSIFICATION OPERATIONS
+// GEOMETRIC VALIDATION OPERATIONS
 // ============================================================================
 
 /**
- * BSP classification utility functions
+ * Geometric validation utility functions
  *
- * Pure functions for Binary Space Partitioning operations including
- * point-to-plane classification and polygon splitting algorithms.
+ * Pure functions for validating geometric data and ensuring numerical stability.
  */
-export const classifyPointToPlane = (point: Vector, plane: PlaneData): BSPClassification => {
-  const { epsilon } = GEOMETRY_CONFIG.precision;
-  const { coplanar: _coplanar, front: _front, back: _back } = GEOMETRY_CONFIG.bsp;
-
-  const t = plane.normal.dot(point) - plane.w;
-
-  if (t < -epsilon) return 'back';
-  if (t > epsilon) return 'front';
-  return 'coplanar';
-};
-
-export const classifyPolygonToPlane = (
-  polygon: PolygonData,
-  plane: PlaneData
-): BSPClassification => {
-  const { coplanar, front, back, spanning: _spanning } = GEOMETRY_CONFIG.bsp;
-
-  let polygonType = 0;
-  const types: number[] = [];
-
-  for (const vertex of polygon.vertices) {
-    const classification = classifyPointToPlane(vertex.pos, plane);
-    let type: number;
-
-    switch (classification) {
-      case 'back':
-        type = back;
-        break;
-      case 'front':
-        type = front;
-        break;
-      case 'coplanar':
-        type = coplanar;
-        break;
-      default:
-        type = coplanar;
-    }
-
-    polygonType |= type;
-    types.push(type);
-  }
-
-  if (polygonType === coplanar) return 'coplanar';
-  if (polygonType === front) return 'front';
-  if (polygonType === back) return 'back';
-  return 'spanning';
-};
-
-/**
- * Polygon splitting utility function
- */
-export const splitPolygonByPlane = (
-  polygon: PolygonData,
-  plane: PlaneData
-): {
-  coplanarFront: PolygonData[];
-  coplanarBack: PolygonData[];
-  front: PolygonData[];
-  back: PolygonData[];
-} => {
-  const { coplanar, front, back, spanning } = GEOMETRY_CONFIG.bsp;
-  const { epsilon } = GEOMETRY_CONFIG.precision;
-
-  const coplanarFront: PolygonData[] = [];
-  const coplanarBack: PolygonData[] = [];
-  const frontPolygons: PolygonData[] = [];
-  const backPolygons: PolygonData[] = [];
-
-  // Classify each point
-  let polygonType = 0;
-  const types: number[] = [];
-
-  for (const vertex of polygon.vertices) {
-    const t = plane.normal.dot(vertex.pos) - plane.w;
-    const type = t < -epsilon ? back : t > epsilon ? front : coplanar;
-    polygonType |= type;
-    types.push(type);
-  }
-
-  // Handle different cases
-  switch (polygonType) {
-    case coplanar: {
-      const targetArray = plane.normal.dot(polygon.plane.normal) > 0 ? coplanarFront : coplanarBack;
-      targetArray.push(polygon);
-      break;
-    }
-
-    case front:
-      frontPolygons.push(polygon);
-      break;
-
-    case back:
-      backPolygons.push(polygon);
-      break;
-
-    case spanning: {
-      const f: VertexData[] = [];
-      const b: VertexData[] = [];
-
-      for (let i = 0; i < polygon.vertices.length; i++) {
-        const j = (i + 1) % polygon.vertices.length;
-        const ti = types[i];
-        const tj = types[j];
-        const vi = polygon.vertices[i];
-        const vj = polygon.vertices[j];
-
-        if (!vi || !vj || ti === undefined || tj === undefined) continue;
-
-        if (ti !== back) f.push(vi);
-        if (ti !== front) b.push(ti !== back ? cloneVertex(vi) : vi);
-
-        if ((ti | tj) === spanning) {
-          const t =
-            (plane.w - plane.normal.dot(vi.pos)) /
-            plane.normal.dot(new Vector().copy(vj.pos).sub(vi.pos));
-          const v = interpolateVertex(vi, vj, t);
-          f.push(v);
-          b.push(cloneVertex(v));
-        }
-      }
-
-      if (f.length >= 3) {
-        frontPolygons.push(createPolygon(f, polygon.shared));
-      }
-      if (b.length >= 3) {
-        backPolygons.push(createPolygon(b, polygon.shared));
-      }
-      break;
-    }
-  }
-
-  return {
-    coplanarFront,
-    coplanarBack,
-    front: frontPolygons,
-    back: backPolygons,
-  };
-};
 
 // ============================================================================
 // VALIDATION UTILITIES

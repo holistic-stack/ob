@@ -9,9 +9,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service';
-import type { NodeId, NodeType } from '../../../shared/types/ast.types';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { renderASTNode } from '../services/primitive-renderer';
@@ -43,7 +41,7 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 }) => {
   const { scene } = useThree();
   const meshesRef = useRef<Mesh3D[]>([]);
-  const [isRendering, setIsRendering] = useState(false);
+  const [_isRendering, setIsRendering] = useState(false);
 
   /**
    * Effect to render AST nodes asynchronously using real renderASTNode function

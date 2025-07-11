@@ -7,6 +7,9 @@
 
 import { afterEach } from 'vitest';
 import { OpenscadParser } from '@/features/openscad-parser/openscad-parser';
+import { createLogger } from '@/shared/services/logger.service';
+
+const logger = createLogger('ParserTestUtils');
 
 // Track all parser instances for global cleanup
 const parserInstances = new Set<OpenscadParser>();
@@ -37,7 +40,7 @@ afterEach(() => {
         parser.dispose();
       }
     } catch (error) {
-      console.warn('Failed to dispose parser:', error);
+      logger.error('[ERROR][ParserTestUtils] Failed to dispose parser:', error);
     }
   }
 

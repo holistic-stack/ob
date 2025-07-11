@@ -112,17 +112,6 @@ vi.mock('@react-three/fiber', () => ({
   extend: vi.fn(),
 }));
 
-// Mock three-csg-ts
-vi.mock('three-csg-ts', () => ({
-  CSG: {
-    fromMesh: vi.fn(() => ({
-      union: vi.fn(() => ({ toMesh: vi.fn(() => mockMesh) })),
-      subtract: vi.fn(() => ({ toMesh: vi.fn(() => mockMesh) })),
-      intersect: vi.fn(() => ({ toMesh: vi.fn(() => mockMesh) })),
-    })),
-  },
-}));
-
 // Mock component for TDD (will be replaced with real implementation)
 const MockThreeRenderer: React.FC<RendererProps> = ({
   ast,

@@ -10,9 +10,8 @@
  * - Performance optimization with memoization
  */
 
-import { useFrame } from '@react-three/fiber';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BufferGeometry, Float32BufferAttribute, Mesh, Uint32BufferAttribute } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Uint32BufferAttribute } from 'three';
 import { logger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import {
@@ -104,17 +103,23 @@ function setCachedResult(cacheKey: string, result: CSGOperationResult): void {
   // Clean up expired entries
   const now = Date.now();
   Object.keys(csgOperationCache).forEach((key) => {
-    if (now - csgOperationCache[key].timestamp > CACHE_EXPIRY_MS) {
+    const entry = csgOperationCache[key];
+    if (entry && now - entry.timestamp > CACHE_EXPIRY_MS) {
       delete csgOperationCache[key];
     }
   });
 
   // Remove oldest entries if cache is full
   if (Object.keys(csgOperationCache).length >= MAX_CACHE_SIZE) {
-    const oldestKey = Object.keys(csgOperationCache).sort(
-      (a, b) => csgOperationCache[a].timestamp - csgOperationCache[b].timestamp
-    )[0];
-    delete csgOperationCache[oldestKey];
+    const oldestKey = Object.keys(csgOperationCache).sort((a, b) => {
+      const entryA = csgOperationCache[a];
+      const entryB = csgOperationCache[b];
+      if (!entryA || !entryB) return 0;
+      return entryA.timestamp - entryB.timestamp;
+    })[0];
+    if (oldestKey) {
+      delete csgOperationCache[oldestKey];
+    }
   }
 
   csgOperationCache[cacheKey] = {
@@ -147,10 +152,16 @@ export function getCSGCacheStats(): {
   const keys = Object.keys(csgOperationCache);
   const now = Date.now();
 
-  const totalHits = keys.reduce((sum, key) => sum + csgOperationCache[key].hitCount, 0);
+  const totalHits = keys.reduce((sum, key) => {
+    const entry = csgOperationCache[key];
+    return sum + (entry?.hitCount ?? 0);
+  }, 0);
   const averageAge =
     keys.length > 0
-      ? keys.reduce((sum, key) => sum + (now - csgOperationCache[key].timestamp), 0) / keys.length
+      ? keys.reduce((sum, key) => {
+          const entry = csgOperationCache[key];
+          return sum + (entry ? now - entry.timestamp : 0);
+        }, 0) / keys.length
       : 0;
 
   return {
@@ -215,7 +226,7 @@ export function useManifoldCSG(materialManager: MaterialIDManager) {
         csgOperations.dispose();
       }
     };
-  }, [materialManager]);
+  }, [materialManager, csgOperations]);
 
   const performUnion = useCallback(
     async (
@@ -376,7 +387,7 @@ function extractGeometriesFromChildren(children: React.ReactNode): BufferGeometr
  * Optimized with memoization and caching for improved performance
  */
 export const CSGUnion = React.memo(function CSGUnion({
-  materialManager,
+  materialManager: _materialManager,
   preserveMaterials = false,
   optimizeResult = false,
   enableCaching = true,
@@ -496,14 +507,14 @@ export const CSGUnion = React.memo(function CSGUnion({
  * Optimized with memoization and caching for improved performance
  */
 export const CSGSubtract = React.memo(function CSGSubtract({
-  materialManager,
+  materialManager: _materialManager,
   preserveMaterials = false,
   optimizeResult = false,
-  enableCaching = true,
-  cacheKey,
+  enableCaching: _enableCaching = true,
+  cacheKey: _cacheKey,
   onOperationComplete,
   onError,
-  onProgress,
+  onProgress: _onProgress,
   children,
 }: CSGComponentProps) {
   const [resultGeometry, setResultGeometry] = useState<BufferGeometry | null>(null);
@@ -530,8 +541,18 @@ export const CSGSubtract = React.memo(function CSGSubtract({
         // First geometry is base, others are subtracted
         let result = childGeometries[0];
 
+        if (!result) {
+          if (mounted) {
+            onError?.('No base geometry for subtraction operation');
+          }
+          return;
+        }
+
         for (let i = 1; i < childGeometries.length; i++) {
-          const subtractResult = await performSubtraction(result, childGeometries[i], options);
+          const childGeometry = childGeometries[i];
+          if (!childGeometry) continue;
+
+          const subtractResult = await performSubtraction(result, childGeometry, options);
 
           if (!subtractResult.success) {
             if (mounted) {
@@ -543,14 +564,15 @@ export const CSGSubtract = React.memo(function CSGSubtract({
           result = subtractResult.data.geometry;
         }
 
-        if (!mounted) return;
+        if (!mounted || !result) return;
 
         setResultGeometry(result);
+        const indexCount = result.getIndex()?.count ?? 0;
         onOperationComplete?.({
           geometry: result,
           operationTime: 0,
           vertexCount: result.getAttribute('position').count,
-          triangleCount: result.getIndex()?.count ? result.getIndex()!.count / 3 : 0,
+          triangleCount: indexCount / 3,
         });
         logger.debug('[DEBUG][CSGSubtract] Subtract operation completed successfully');
       } catch (error) {
@@ -591,14 +613,14 @@ export const CSGSubtract = React.memo(function CSGSubtract({
  * Optimized with memoization and caching for improved performance
  */
 export const CSGIntersect = React.memo(function CSGIntersect({
-  materialManager,
+  materialManager: _materialManager,
   preserveMaterials = false,
   optimizeResult = false,
-  enableCaching = true,
-  cacheKey,
+  enableCaching: _enableCaching = true,
+  cacheKey: _cacheKey,
   onOperationComplete,
   onError,
-  onProgress,
+  onProgress: _onProgress,
   children,
 }: CSGComponentProps) {
   const [resultGeometry, setResultGeometry] = useState<BufferGeometry | null>(null);

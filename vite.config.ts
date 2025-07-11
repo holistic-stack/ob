@@ -42,8 +42,8 @@ export default defineConfig(({ mode: _mode }) => {
             monaco: ['monaco-editor', '@monaco-editor/react'],
             // Three.js ecosystem - 3D rendering (excluding @types packages)
             three: ['three', '@react-three/fiber', '@react-three/drei'],
-            // CSG and parsing libraries
-            parsing: ['web-tree-sitter', 'three-csg-ts'],
+            // Parsing libraries
+            parsing: ['web-tree-sitter'],
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities

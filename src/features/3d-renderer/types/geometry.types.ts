@@ -82,29 +82,6 @@ export interface PolygonOperations {
 }
 
 /**
- * BSP Tree Node data interface
- * Extracted from Node.ts class definition
- */
-export interface BSPNodeData {
-  readonly polygons: PolygonData[];
-  readonly plane?: PlaneData;
-  readonly front?: BSPNodeData;
-  readonly back?: BSPNodeData;
-}
-
-/**
- * BSP Tree Node operations interface
- */
-export interface BSPNodeOperations {
-  clone(): BSPNodeData;
-  invert(): void;
-  clipPolygons(polygons: PolygonData[]): PolygonData[];
-  clipTo(bsp: BSPNodeData): void;
-  allPolygons(): PolygonData[];
-  build(polygons: PolygonData[]): void;
-}
-
-/**
  * Buffer data interfaces for NBuf utilities
  */
 export interface BufferData3D {
@@ -129,38 +106,14 @@ export interface BufferOperations2D {
 }
 
 /**
- * CSG polygon collection interface
- */
-export interface CSGData {
-  readonly polygons: PolygonData[];
-}
-
-/**
- * CSG operations interface
- */
-export interface CSGOperations {
-  clone(): CSGData;
-  toPolygons(): PolygonData[];
-  union(csg: CSGData): CSGData;
-  subtract(csg: CSGData): CSGData;
-  intersect(csg: CSGData): CSGData;
-  inverse(): CSGData;
-}
-
-/**
  * Geometric primitive types
  */
-export type GeometricPrimitive = VertexData | PlaneData | PolygonData | BSPNodeData;
+export type GeometricPrimitive = VertexData | PlaneData | PolygonData;
 
 /**
  * Buffer types
  */
 export type BufferType = BufferData3D | BufferData2D;
-
-/**
- * Classification types for BSP operations
- */
-export type BSPClassification = 'coplanar' | 'front' | 'back' | 'spanning';
 
 /**
  * Type guards for geometric primitives

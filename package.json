@@ -8,7 +8,6 @@
     "dev": "vite",
     "build": "tsc --project tsconfig.lib.json && vite build",
     "test": "vitest run",
-    "test:run": "vitest run",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
     "validate:pipeline": "vitest run src/features/openscad-pipeline --reporter=verbose",
     "validate:r3f": "vitest run src/features/r3f-renderer --reporter=verbose",
@@ -31,20 +30,18 @@
     "test-ct": "playwright test -c playwright-ct.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:all": "npx tsx scripts/test-runner.ts",
+
     "test:unit": "vitest run",
-    "test:unit:memory-safe": "node --expose-gc scripts/run-tests-with-memory-management.js",
     "test:integration": "vitest run",
     "test:visual": "playwright test --config playwright-ct.config.ts",
-    "test:pipeline": "tsx scripts/test-runner.ts --suite=integration",
-    "test:ci": "tsx scripts/test-runner.ts --ci --skip-optional",
+
     "test:watch": "vitest",
     "test:watch:integration": "vitest",
-    "test:coverage:all": "tsx scripts/test-runner.ts --coverage",
+
     "test:ast-service": "vitest run src/features/ui-components/editor/code-editor/openscad-ast-service.test.ts",
     "test:error-boundary": "vitest run src/features/ui-components/shared/error-boundary/openscad-error-boundary.test.tsx",
     "test:r3f-visual": "playwright test src/features/r3f-renderer/components/r3f-renderer/r3f-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots",
-    "validate:shared-utilities": "node scripts/validate-shared-utilities.js",
+
     "validate:types": "tsc --noEmit --strict",
     "validate:quality": "npm run lint && npm run validate:types && npm run validate:shared-utilities",
     "validate:all": "npm run validate:quality && npm run test:unit && npm run test:coverage",
@@ -68,7 +65,6 @@
     "react-error-boundary": "^6.0.0",
     "reselect": "^5.1.1",
     "three": "^0.177.0",
-    "three-csg-ts": "^3.2.0",
     "tslog": "^4.9.3",
     "web-tree-sitter": "0.25.3",
     "zustand": "^5.0.5"

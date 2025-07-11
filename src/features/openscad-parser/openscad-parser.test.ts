@@ -78,7 +78,6 @@ describe('OpenSCADParser', () => {
   it('should parse simple OpenSCAD code correctly', async () => {
     // Parse the sample code
     const result = parser.parse(SAMPLE_OPENSCAD_CODE);
-    console.log('result', JSON.stringify(result));
 
     // Check that the result is valid
     expect(result).toBeDefined();
@@ -95,7 +94,6 @@ describe('OpenSCADParser', () => {
   it('should parse complex OpenSCAD code correctly', async () => {
     // Parse the complex code
     const result = parser.parseCST(COMPLEX_OPENSCAD_CODE);
-    console.log('result', JSON.stringify(result));
 
     // Check that the result is valid
     expect(result).toBeDefined();

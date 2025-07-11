@@ -12,7 +12,7 @@
 
 import { Canvas } from '@react-three/fiber';
 import { act, render, screen } from '@testing-library/react';
-import { BufferGeometry, Float32BufferAttribute, Uint32BufferAttribute } from 'three';
+import { BufferGeometry } from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MaterialIDManager } from '../../services/manifold-material-manager/manifold-material-manager';
 import {
@@ -244,7 +244,7 @@ describe('R3F CSG Components', () => {
 
       render(<TestComponent />);
 
-      if (hookResult && hookResult.isInitialized) {
+      if (hookResult?.isInitialized) {
         // Create test geometries
         const geometry1 = new BufferGeometry();
         const geometry2 = new BufferGeometry();
