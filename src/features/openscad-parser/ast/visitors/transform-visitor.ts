@@ -809,7 +809,14 @@ export class TransformVisitor extends BaseASTVisitor {
           // Tree-sitter workaround: Verify vector against source text
           const sourceText = node.text;
           if (sourceText) {
-            const vectorMatch = sourceText.match(/translate\s*\(\s*\[([^\]]+)\]/);
+            // Try to match both positional and named parameter patterns
+            // Pattern 1: translate([1,2,3]) - positional parameter
+            let vectorMatch = sourceText.match(/translate\s*\(\s*\[([^\]]+)\]/);
+            // Pattern 2: translate(v=[1,2,3]) - named parameter
+            if (!vectorMatch) {
+              vectorMatch = sourceText.match(/translate\s*\(\s*v\s*=\s*\[([^\]]+)\]/);
+            }
+
             if (vectorMatch?.[1]) {
               const vectorContent = vectorMatch[1];
               const expectedNumbers = vectorContent
@@ -817,7 +824,7 @@ export class TransformVisitor extends BaseASTVisitor {
                 .map((s: string) => parseFloat(s.trim()));
 
               if (
-                expectedNumbers.length >= 3 &&
+                expectedNumbers.length >= 2 &&
                 expectedNumbers.every((n: number) => !Number.isNaN(n))
               ) {
                 const expectedVector = [
@@ -844,6 +851,12 @@ export class TransformVisitor extends BaseASTVisitor {
                   } else {
                     v = [expectedVector[0], expectedVector[1], expectedVector[2]] as ast.Vector3D;
                   }
+
+                  this.errorHandler.logInfo(
+                    `[TransformVisitor.createTranslateNode] Applied Tree-sitter workaround for vector parsing. Expected: [${expectedVector.join(', ')}], Tree-sitter parsed: [${currentVector.join(', ')}]`,
+                    'TransformVisitor.createTranslateNode',
+                    node
+                  );
                 }
               }
             }

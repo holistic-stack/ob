@@ -1,17 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { OpenscadParser } from '../openscad-parser.js';
-import {
-  getInitializedParser,
-  getParserInitializationService,
-  getParserState,
-  initializeParser,
-  isParserReady,
-} from './parser-initialization.service.js';
 
 const logger = createLogger('ParserInitializationServiceTest');
 
-// Mock the OpenscadParser
+// Mock the OpenscadParser at the module level
 vi.mock('../openscad-parser.js', () => ({
   OpenscadParser: vi.fn().mockImplementation(() => ({
     init: vi.fn(),
@@ -21,10 +13,18 @@ vi.mock('../openscad-parser.js', () => ({
 
 describe('ParserInitializationService', () => {
   let mockParser: any;
+  let OpenscadParser: any;
+  let getInitializedParser: any;
+  let getParserInitializationService: any;
+  let getParserState: any;
+  let initializeParser: any;
+  let isParserReady: any;
+  let ParserInitializationService: any;
 
-  beforeEach(() => {
-    // Reset all mocks
+  beforeEach(async () => {
+    // Reset all mocks and modules for clean state
     vi.clearAllMocks();
+    vi.resetModules();
 
     // Create mock parser instance
     mockParser = {
@@ -32,21 +32,48 @@ describe('ParserInitializationService', () => {
       dispose: vi.fn(),
     };
 
+    // Re-import the mocked OpenscadParser
+    const openscadParserModule = await import('../openscad-parser.js');
+    OpenscadParser = openscadParserModule.OpenscadParser;
+
     // Mock the OpenscadParser constructor
     (OpenscadParser as any).mockImplementation(() => mockParser);
 
-    // Reset the singleton instance
-    (getParserInitializationService as any).instance = null;
+    // Re-import the service module to get fresh instances
+    const serviceModule = await import('./parser-initialization.service.js');
+    getInitializedParser = serviceModule.getInitializedParser;
+    getParserInitializationService = serviceModule.getParserInitializationService;
+    getParserState = serviceModule.getParserState;
+    initializeParser = serviceModule.initializeParser;
+    isParserReady = serviceModule.isParserReady;
+    ParserInitializationService = serviceModule.ParserInitializationService;
+
+    // Reset the singleton instance properly
+    if (ParserInitializationService) {
+      (ParserInitializationService as any).instance = null;
+    }
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Clean up any existing service instance
     try {
-      const service = getParserInitializationService();
-      service.dispose();
+      if (getParserInitializationService) {
+        const service = getParserInitializationService();
+        if (service && typeof service.dispose === 'function') {
+          service.dispose();
+        }
+      }
     } catch {
       // Ignore cleanup errors
     }
+
+    // Reset singleton instance
+    if (ParserInitializationService) {
+      (ParserInitializationService as any).instance = null;
+    }
+
+    // Reset modules to ensure clean state for next test
+    vi.resetModules();
   });
 
   describe('Singleton Pattern', () => {

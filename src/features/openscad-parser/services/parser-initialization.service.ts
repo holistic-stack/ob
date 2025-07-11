@@ -272,3 +272,6 @@ export const getParserState = (): InitializationState => {
 };
 
 export type { ParserInitConfig, InitializationState };
+
+// Export the class for testing purposes
+export { ParserInitializationService };
