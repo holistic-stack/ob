@@ -141,24 +141,45 @@ export class ModuleVisitor extends BaseASTVisitor {
       return null;
     }
 
-    let functionName = nameFieldNode.text;
+    const functionName = nameFieldNode.text;
     if (!functionName) {
       return null;
     }
-
-
 
     // Only handle specific module types that ModuleVisitor should process
     // Primitive functions (cube, sphere, cylinder, etc.) should be handled by PrimitiveVisitor
     // Transform functions (translate, rotate, scale, etc.) should be handled by TransformVisitor
     // CSG functions (union, difference, intersection) should be handled by CSGVisitor
 
-    const primitives = ['cube', 'sphere', 'cylinder', 'polyhedron', 'polygon', 'circle', 'square', 'text'];
-    const transforms = ['translate', 'rotate', 'scale', 'mirror', 'multmatrix', 'color', 'offset', 'linear_extrude', 'rotate_extrude'];
+    const primitives = [
+      'cube',
+      'sphere',
+      'cylinder',
+      'polyhedron',
+      'polygon',
+      'circle',
+      'square',
+      'text',
+    ];
+    const transforms = [
+      'translate',
+      'rotate',
+      'scale',
+      'mirror',
+      'multmatrix',
+      'color',
+      'offset',
+      'linear_extrude',
+      'rotate_extrude',
+    ];
     const csgOperations = ['union', 'difference', 'intersection', 'hull', 'minkowski'];
 
     // Don't handle primitives, transforms, or CSG operations - let specialized visitors handle them
-    if (primitives.includes(functionName) || transforms.includes(functionName) || csgOperations.includes(functionName)) {
+    if (
+      primitives.includes(functionName) ||
+      transforms.includes(functionName) ||
+      csgOperations.includes(functionName)
+    ) {
       return null;
     }
     // For user-defined modules, delegate to the base implementation
@@ -201,9 +222,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     let nameAstIdentifierNode: ast.IdentifierNode;
 
     if (nameCSTNode) {
-      let moduleName = nameCSTNode.text;
-
-
+      const moduleName = nameCSTNode.text;
 
       nameAstIdentifierNode = {
         type: 'expression', // Corrected: IdentifierNode is a type of ExpressionNode

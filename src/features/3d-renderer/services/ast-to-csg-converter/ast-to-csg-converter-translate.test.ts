@@ -112,16 +112,12 @@ describe('AST to CSG Converter - Translate Node Handling', () => {
         throw new Error('AST is null after successful parse');
       }
 
-
-
       expect(ast.length).toBe(1); // Should have translate node only
 
       // Check the translate node
       const translateNode = ast[0];
       expect(translateNode).toBeDefined();
       expect(translateNode?.type).toMatch(/translate|function_call/);
-
-
 
       // Step 4: Set source code for proper parameter extraction
       setSourceCodeForExtraction(code);
@@ -302,8 +298,6 @@ translate([0, 0, 10]) cylinder(h=8, r=2);`;
       if (!ast) {
         throw new Error('AST is null after successful parse');
       }
-
-
 
       expect(ast.length).toBe(3); // Should have 3 translate nodes
 

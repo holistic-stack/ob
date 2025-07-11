@@ -1,7 +1,7 @@
 /**
  * @file React Three Fiber CSG Components Tests
  * Task 3.1: Create R3F CSG Components (Red Phase)
- * 
+ *
  * Tests for declarative CSG components in React Three Fiber
  * Following project guidelines:
  * - Use real implementations (no mocks except Three.js WebGL components)
@@ -10,22 +10,22 @@
  * - React Three Fiber integration with declarative CSG operations
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
 import { Canvas } from '@react-three/fiber';
+import { act, render, screen } from '@testing-library/react';
 import { BufferGeometry, Float32BufferAttribute, Uint32BufferAttribute } from 'three';
-import { 
-  CSGUnion,
-  CSGSubtract,
-  CSGIntersect,
-  useManifoldCSG,
-  type CSGComponentProps
-} from './csg-components';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MaterialIDManager } from '../../services/manifold-material-manager/manifold-material-manager';
-import { 
+import {
+  clearAllResources,
   getMemoryStats,
-  clearAllResources 
 } from '../../services/manifold-memory-manager/manifold-memory-manager';
+import {
+  type CSGComponentProps,
+  CSGIntersect,
+  CSGSubtract,
+  CSGUnion,
+  useManifoldCSG,
+} from './csg-components';
 
 // Mock Canvas for integration tests
 vi.mock('@react-three/fiber', async () => {
@@ -34,7 +34,7 @@ vi.mock('@react-three/fiber', async () => {
     ...actual,
     Canvas: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="r3f-canvas">{children}</div>
-    )
+    ),
   };
 });
 
@@ -47,7 +47,7 @@ describe('R3F CSG Components', () => {
   beforeEach(async () => {
     // Clear memory for clean test state
     clearAllResources();
-    
+
     // Initialize material manager
     materialManager = new MaterialIDManager();
     await materialManager.initialize();
@@ -58,7 +58,7 @@ describe('R3F CSG Components', () => {
     if (materialManager) {
       materialManager.dispose();
     }
-    
+
     // Verify no memory leaks
     const stats = getMemoryStats();
     expect(stats.activeResources).toBe(0);
@@ -99,10 +99,7 @@ describe('R3F CSG Components', () => {
       // Test material preservation props interface
       const TestApp = () => (
         <Canvas data-testid="r3f-canvas">
-          <CSGUnion
-            materialManager={materialManager}
-            preserveMaterials={true}
-          >
+          <CSGUnion materialManager={materialManager} preserveMaterials={true}>
             <mesh>
               <boxGeometry args={[5, 5, 5]} />
               <meshStandardMaterial color="red" />
@@ -219,14 +216,14 @@ describe('R3F CSG Components', () => {
     it('should provide CSG operations through React hook', () => {
       // Test useManifoldCSG hook (this will fail in Red phase)
       let hookResult: any;
-      
+
       const TestComponent = () => {
         hookResult = useManifoldCSG(materialManager);
         return null;
       };
 
       render(<TestComponent />);
-      
+
       // Verify hook returns expected interface
       expect(hookResult).toBeDefined();
       expect(typeof hookResult.performUnion).toBe('function');
@@ -239,19 +236,19 @@ describe('R3F CSG Components', () => {
     it('should handle CSG operations with React state management', async () => {
       // Test hook with state management
       let hookResult: any;
-      
+
       const TestComponent = () => {
         hookResult = useManifoldCSG(materialManager);
         return null;
       };
 
       render(<TestComponent />);
-      
+
       if (hookResult && hookResult.isInitialized) {
         // Create test geometries
         const geometry1 = new BufferGeometry();
         const geometry2 = new BufferGeometry();
-        
+
         // Test union operation through hook
         const unionResult = await hookResult.performUnion([geometry1, geometry2]);
         expect(unionResult).toBeDefined();
@@ -279,7 +276,7 @@ describe('R3F CSG Components', () => {
       );
 
       render(<TestApp />);
-      
+
       // Verify Canvas is rendered
       const canvas = screen.getByTestId('r3f-canvas');
       expect(canvas).toBeInTheDocument();
@@ -325,7 +322,7 @@ describe('R3F CSG Components', () => {
         preserveMaterials: true,
         optimizeResult: true,
         onOperationComplete: vi.fn(),
-        onError: vi.fn()
+        onError: vi.fn(),
       };
 
       const TestApp = () => (

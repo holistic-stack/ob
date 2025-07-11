@@ -504,7 +504,9 @@ export class CSGCoreService implements CSGData {
    */
   union(csg: CSGCoreService): Result<CSGCoreService, string> {
     logger.warn('Union operation called on deprecated BSP-based CSGCoreService');
-    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
+    return error(
+      'BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.'
+    );
   }
 
   /**
@@ -537,7 +539,9 @@ export class CSGCoreService implements CSGData {
    */
   subtract(csg: CSGCoreService): Result<CSGCoreService, string> {
     logger.warn('Subtract operation called on deprecated BSP-based CSGCoreService');
-    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
+    return error(
+      'BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.'
+    );
   }
 
   /**
@@ -570,7 +574,9 @@ export class CSGCoreService implements CSGData {
    */
   intersect(csg: CSGCoreService): Result<CSGCoreService, string> {
     logger.warn('Intersect operation called on deprecated BSP-based CSGCoreService');
-    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
+    return error(
+      'BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.'
+    );
   }
 
   /**

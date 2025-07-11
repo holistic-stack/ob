@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import init from 'manifold-3d';
+import { describe, expect, it } from 'vitest';
 
 describe('Manifold CSG Service', () => {
   it('should import and instantiate the Manifold module', async () => {
@@ -9,7 +9,7 @@ describe('Manifold CSG Service', () => {
     expect(Module.Manifold).toBeDefined();
 
     // Create a simple cube to instantiate a Manifold object.
-    const manifold = Module._Cube({x: 1, y: 1, z: 1}, false);
+    const manifold = Module._Cube({ x: 1, y: 1, z: 1 }, false);
     expect(manifold).toBeInstanceOf(Module.Manifold);
   });
 });

@@ -1,7 +1,7 @@
 /**
  * @file Manifold CSG Operations Service
  * Task 2.4: Create CSG Operations Service (Green Phase)
- * 
+ *
  * Implements CSG operations using Manifold library with BabylonJS-inspired patterns
  * Following project guidelines:
  * - BabylonJS-inspired simple CSG operations (union, subtract, intersect)
@@ -10,67 +10,67 @@
  * - Direct Manifold calls with automatic resource disposal
  */
 
-import { BufferGeometry } from 'three';
-import type { Result } from '../../../../shared/types/result.types';
+import type { BufferGeometry } from 'three';
 import { logger } from '../../../../shared/services/logger.service';
-import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
-import { 
-  convertThreeToManifold,
-  convertManifoldToThree,
-  type IManifoldMesh 
-} from '../manifold-mesh-converter/manifold-mesh-converter';
-import { 
+import type { Result } from '../../../../shared/types/result.types';
+import type {
   MaterialIDManager,
-  type MaterialMapping 
+  MaterialMapping,
 } from '../manifold-material-manager/manifold-material-manager';
-import { 
-  createManagedResource, 
+import {
+  createManagedResource,
   disposeManagedResource,
-  getMemoryStats 
+  getMemoryStats,
 } from '../manifold-memory-manager/manifold-memory-manager';
+import {
+  convertManifoldToThree,
+  convertThreeToManifold,
+  type IManifoldMesh,
+} from '../manifold-mesh-converter/manifold-mesh-converter';
+import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 
 /**
  * CSG operation options for customizing behavior
  */
 export interface CSGOperationOptions {
-  preserveMaterials?: boolean;        // Whether to preserve material information
+  preserveMaterials?: boolean; // Whether to preserve material information
   materialMapping?: MaterialIDManager; // Material ID manager for multi-material support
-  optimizeResult?: boolean;           // Whether to optimize the resulting geometry
-  validateInput?: boolean;            // Whether to validate input geometries
-  timeout?: number;                   // Operation timeout in milliseconds
-  enableBatching?: boolean;           // Whether to use batch operations for performance
-  memoryLimit?: number;               // Memory limit in MB for operations
-  precision?: number;                 // Precision for floating point operations
+  optimizeResult?: boolean; // Whether to optimize the resulting geometry
+  validateInput?: boolean; // Whether to validate input geometries
+  timeout?: number; // Operation timeout in milliseconds
+  enableBatching?: boolean; // Whether to use batch operations for performance
+  memoryLimit?: number; // Memory limit in MB for operations
+  precision?: number; // Precision for floating point operations
 }
 
 /**
  * CSG operation performance metrics
  */
 export interface CSGPerformanceMetrics {
-  totalOperations: number;            // Total number of operations performed
-  averageOperationTime: number;       // Average operation time in milliseconds
-  totalProcessingTime: number;        // Total processing time across all operations
-  memoryUsage: number;                // Current memory usage in MB
-  cacheHitRate: number;               // Cache hit rate for repeated operations
+  totalOperations: number; // Total number of operations performed
+  averageOperationTime: number; // Average operation time in milliseconds
+  totalProcessingTime: number; // Total processing time across all operations
+  memoryUsage: number; // Current memory usage in MB
+  cacheHitRate: number; // Cache hit rate for repeated operations
 }
 
 /**
  * CSG operation result with performance metrics
  */
 export interface CSGOperationResult {
-  geometry: BufferGeometry;           // Resulting geometry
-  operationTime: number;              // Time taken for operation (ms)
-  vertexCount: number;                // Number of vertices in result
-  triangleCount: number;              // Number of triangles in result
-  materialGroups?: number;            // Number of material groups preserved
+  geometry: BufferGeometry; // Resulting geometry
+  operationTime: number; // Time taken for operation (ms)
+  vertexCount: number; // Number of vertices in result
+  triangleCount: number; // Number of triangles in result
+  materialGroups?: number; // Number of material groups preserved
 }
 
 /**
  * Perform union operation on multiple geometries
- * 
+ *
  * Combines multiple geometries into a single unified mesh using Manifold's union operation.
  * Follows BabylonJS-inspired simple pattern with direct Manifold calls.
- * 
+ *
  * @param geometries - Array of BufferGeometry objects to union
  * @param options - Operation options
  * @returns Result<CSGOperationResult, string> with union result
@@ -80,25 +80,25 @@ export async function performUnion(
   options: CSGOperationOptions = {}
 ): Promise<Result<CSGOperationResult, string>> {
   const startTime = performance.now();
-  
+
   try {
-    logger.debug('[DEBUG][ManifoldCSGOperations] Starting union operation', { 
-      geometryCount: geometries.length 
+    logger.debug('[DEBUG][ManifoldCSGOperations] Starting union operation', {
+      geometryCount: geometries.length,
     });
-    
+
     // Validate input
     if (!geometries || geometries.length === 0) {
-      return { 
-        success: false, 
-        error: 'Invalid input: At least one geometry required for union operation' 
+      return {
+        success: false,
+        error: 'Invalid input: At least one geometry required for union operation',
       };
     }
-    
+
     if (geometries.length === 1) {
       // Single geometry - return as-is with metrics
       const geometry = geometries[0];
       const endTime = performance.now();
-      
+
       return {
         success: true,
         data: {
@@ -106,90 +106,88 @@ export async function performUnion(
           operationTime: endTime - startTime,
           vertexCount: geometry.getAttribute('position').count,
           triangleCount: geometry.getIndex()?.count ? geometry.getIndex()!.count / 3 : 0,
-          materialGroups: geometry.groups.length
-        }
+          materialGroups: geometry.groups.length,
+        },
       };
     }
-    
+
     // Load Manifold WASM module
     const loader = new ManifoldWasmLoader();
     const manifoldModule = await loader.load();
     if (!manifoldModule) {
-      return { 
-        success: false, 
-        error: 'Failed to load Manifold WASM module for union operation' 
+      return {
+        success: false,
+        error: 'Failed to load Manifold WASM module for union operation',
       };
     }
-    
+
     // Convert geometries to Manifold meshes
     const manifoldMeshes: IManifoldMesh[] = [];
     for (const geometry of geometries) {
       const conversionResult = convertThreeToManifold(geometry);
       if (!conversionResult.success) {
-        return { 
-          success: false, 
-          error: `Failed to convert geometry to Manifold: ${conversionResult.error}` 
+        return {
+          success: false,
+          error: `Failed to convert geometry to Manifold: ${conversionResult.error}`,
         };
       }
       manifoldMeshes.push(conversionResult.data);
     }
-    
+
     // Perform union operation using Manifold
     let resultMesh = manifoldMeshes[0];
-    
+
     for (let i = 1; i < manifoldMeshes.length; i++) {
       try {
         // Create Manifold objects from mesh data
         const manifold1 = new manifoldModule.Manifold(resultMesh);
         const manifold2 = new manifoldModule.Manifold(manifoldMeshes[i]);
-        
+
         // Perform union
         const unionManifold = manifold1.add(manifold2);
-        
+
         // Get result mesh
         resultMesh = unionManifold.getMesh();
-        
+
         // Clean up intermediate objects
         manifold1.delete();
         manifold2.delete();
         unionManifold.delete();
-        
       } catch (error) {
-        return { 
-          success: false, 
-          error: `Manifold union operation failed: ${error instanceof Error ? error.message : String(error)}` 
+        return {
+          success: false,
+          error: `Manifold union operation failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     }
-    
+
     // Convert result back to Three.js
     const threeResult = convertManifoldToThree(resultMesh, {
       preserveGroups: options.preserveMaterials,
-      optimizeGeometry: options.optimizeResult
+      optimizeGeometry: options.optimizeResult,
     });
-    
+
     if (!threeResult.success) {
-      return { 
-        success: false, 
-        error: `Failed to convert result to Three.js: ${threeResult.error}` 
+      return {
+        success: false,
+        error: `Failed to convert result to Three.js: ${threeResult.error}`,
       };
     }
-    
+
     const endTime = performance.now();
     const resultGeometry = threeResult.data;
-    
+
     const result: CSGOperationResult = {
       geometry: resultGeometry,
       operationTime: endTime - startTime,
       vertexCount: resultGeometry.getAttribute('position').count,
       triangleCount: resultGeometry.getIndex()?.count ? resultGeometry.getIndex()!.count / 3 : 0,
-      materialGroups: resultGeometry.groups.length
+      materialGroups: resultGeometry.groups.length,
     };
-    
+
     logger.debug('[DEBUG][ManifoldCSGOperations] Union operation completed', result);
-    
+
     return { success: true, data: result };
-    
   } catch (error) {
     const errorMessage = `Union operation failed: ${error instanceof Error ? error.message : String(error)}`;
     logger.error('[ERROR][ManifoldCSGOperations] Union operation error', { error: errorMessage });
@@ -199,9 +197,9 @@ export async function performUnion(
 
 /**
  * Perform subtraction operation (difference) between two geometries
- * 
+ *
  * Subtracts the second geometry from the first using Manifold's subtract operation.
- * 
+ *
  * @param baseGeometry - Base geometry to subtract from
  * @param subtractGeometry - Geometry to subtract
  * @param options - Operation options
@@ -213,99 +211,99 @@ export async function performSubtraction(
   options: CSGOperationOptions = {}
 ): Promise<Result<CSGOperationResult, string>> {
   const startTime = performance.now();
-  
+
   try {
     logger.debug('[DEBUG][ManifoldCSGOperations] Starting subtraction operation');
-    
+
     // Validate input
     if (!baseGeometry || !subtractGeometry) {
-      return { 
-        success: false, 
-        error: 'Invalid input: Both base and subtract geometries required' 
+      return {
+        success: false,
+        error: 'Invalid input: Both base and subtract geometries required',
       };
     }
-    
+
     // Load Manifold WASM module
     const loader = new ManifoldWasmLoader();
     const manifoldModule = await loader.load();
     if (!manifoldModule) {
-      return { 
-        success: false, 
-        error: 'Failed to load Manifold WASM module for subtraction operation' 
+      return {
+        success: false,
+        error: 'Failed to load Manifold WASM module for subtraction operation',
       };
     }
-    
+
     // Convert geometries to Manifold meshes
     const baseResult = convertThreeToManifold(baseGeometry);
     if (!baseResult.success) {
-      return { 
-        success: false, 
-        error: `Failed to convert base geometry: ${baseResult.error}` 
+      return {
+        success: false,
+        error: `Failed to convert base geometry: ${baseResult.error}`,
       };
     }
-    
+
     const subtractResult = convertThreeToManifold(subtractGeometry);
     if (!subtractResult.success) {
-      return { 
-        success: false, 
-        error: `Failed to convert subtract geometry: ${subtractResult.error}` 
+      return {
+        success: false,
+        error: `Failed to convert subtract geometry: ${subtractResult.error}`,
       };
     }
-    
+
     try {
       // Create Manifold objects
       const baseManifold = new manifoldModule.Manifold(baseResult.data);
       const subtractManifold = new manifoldModule.Manifold(subtractResult.data);
-      
+
       // Perform subtraction
       const differenceManifold = baseManifold.subtract(subtractManifold);
-      
+
       // Get result mesh
       const resultMesh = differenceManifold.getMesh();
-      
+
       // Clean up
       baseManifold.delete();
       subtractManifold.delete();
       differenceManifold.delete();
-      
+
       // Convert result back to Three.js
       const threeResult = convertManifoldToThree(resultMesh, {
         preserveGroups: options.preserveMaterials,
-        optimizeGeometry: options.optimizeResult
+        optimizeGeometry: options.optimizeResult,
       });
-      
+
       if (!threeResult.success) {
-        return { 
-          success: false, 
-          error: `Failed to convert result to Three.js: ${threeResult.error}` 
+        return {
+          success: false,
+          error: `Failed to convert result to Three.js: ${threeResult.error}`,
         };
       }
-      
+
       const endTime = performance.now();
       const resultGeometry = threeResult.data;
-      
+
       const result: CSGOperationResult = {
         geometry: resultGeometry,
         operationTime: endTime - startTime,
         vertexCount: resultGeometry.getAttribute('position').count,
         triangleCount: resultGeometry.getIndex()?.count ? resultGeometry.getIndex()!.count / 3 : 0,
-        materialGroups: resultGeometry.groups.length
+        materialGroups: resultGeometry.groups.length,
       };
-      
+
       logger.debug('[DEBUG][ManifoldCSGOperations] Subtraction operation completed', result);
-      
+
       return { success: true, data: result };
-      
     } catch (error) {
-      return { 
-        success: false, 
-        error: `Manifold subtraction operation failed: ${error instanceof Error ? error.message : String(error)}` 
+      return {
+        success: false,
+        error: `Manifold subtraction operation failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
-    
   } catch (error) {
     const errorMessage = `Subtraction operation failed: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldCSGOperations] Subtraction operation error', { error: errorMessage });
+    logger.error('[ERROR][ManifoldCSGOperations] Subtraction operation error', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -327,7 +325,7 @@ export class ManifoldCSGOperations {
     averageOperationTime: 0,
     totalProcessingTime: 0,
     memoryUsage: 0,
-    cacheHitRate: 0
+    cacheHitRate: 0,
   };
   private readonly maxCacheSize = 50;
 
@@ -356,7 +354,7 @@ export class ManifoldCSGOperations {
       if (!this.manifoldModule) {
         return {
           success: false,
-          error: 'Failed to load Manifold WASM module for CSG operations'
+          error: 'Failed to load Manifold WASM module for CSG operations',
         };
       }
 
@@ -368,7 +366,6 @@ export class ManifoldCSGOperations {
       logger.debug('[DEBUG][ManifoldCSGOperations] Initialized successfully');
 
       return { success: true, data: undefined };
-
     } catch (error) {
       const errorMessage = `Failed to initialize ManifoldCSGOperations: ${error instanceof Error ? error.message : String(error)}`;
       logger.error('[ERROR][ManifoldCSGOperations] Initialization failed', { error: errorMessage });
@@ -390,14 +387,14 @@ export class ManifoldCSGOperations {
     if (!this.isInitialized) {
       return {
         success: false,
-        error: 'ManifoldCSGOperations not initialized. Call initialize() first.'
+        error: 'ManifoldCSGOperations not initialized. Call initialize() first.',
       };
     }
 
     // Use material manager if not provided in options
     const enhancedOptions = {
       ...options,
-      materialMapping: options.materialMapping || this.materialManager
+      materialMapping: options.materialMapping || this.materialManager,
     };
 
     return performUnion(geometries, enhancedOptions);
@@ -419,14 +416,14 @@ export class ManifoldCSGOperations {
     if (!this.isInitialized) {
       return {
         success: false,
-        error: 'ManifoldCSGOperations not initialized. Call initialize() first.'
+        error: 'ManifoldCSGOperations not initialized. Call initialize() first.',
       };
     }
 
     // Use material manager if not provided in options
     const enhancedOptions = {
       ...options,
-      materialMapping: options.materialMapping || this.materialManager
+      materialMapping: options.materialMapping || this.materialManager,
     };
 
     return performSubtraction(baseGeometry, subtractGeometry, enhancedOptions);
@@ -446,14 +443,14 @@ export class ManifoldCSGOperations {
     if (!this.isInitialized) {
       return {
         success: false,
-        error: 'ManifoldCSGOperations not initialized. Call initialize() first.'
+        error: 'ManifoldCSGOperations not initialized. Call initialize() first.',
       };
     }
 
     // Use material manager if not provided in options
     const enhancedOptions = {
       ...options,
-      materialMapping: options.materialMapping || this.materialManager
+      materialMapping: options.materialMapping || this.materialManager,
     };
 
     return performIntersection(geometries, enhancedOptions);
@@ -480,7 +477,7 @@ export class ManifoldCSGOperations {
       memoryStats: getMemoryStats(),
       performanceMetrics: this.performanceMetrics,
       cacheSize: this.operationCache.size,
-      cacheHitRate: totalCacheAccess > 0 ? cacheHits / totalCacheAccess : 0
+      cacheHitRate: totalCacheAccess > 0 ? cacheHits / totalCacheAccess : 0,
     };
   }
 
@@ -495,7 +492,7 @@ export class ManifoldCSGOperations {
       averageOperationTime: 0,
       totalProcessingTime: 0,
       memoryUsage: 0,
-      cacheHitRate: 0
+      cacheHitRate: 0,
     };
 
     logger.debug('[DEBUG][ManifoldCSGOperations] Cache and metrics cleared');
@@ -505,13 +502,19 @@ export class ManifoldCSGOperations {
    * Generate cache key for operation caching
    * Private helper method for performance optimization
    */
-  private generateCacheKey(operation: string, geometries: BufferGeometry[], options: CSGOperationOptions): string {
+  private generateCacheKey(
+    operation: string,
+    geometries: BufferGeometry[],
+    options: CSGOperationOptions
+  ): string {
     // Create a simple hash based on operation type, geometry vertex counts, and key options
-    const geometryHashes = geometries.map(geo => {
-      const positions = geo.getAttribute('position');
-      const indices = geo.getIndex();
-      return `${positions?.count || 0}-${indices?.count || 0}`;
-    }).join(',');
+    const geometryHashes = geometries
+      .map((geo) => {
+        const positions = geo.getAttribute('position');
+        const indices = geo.getIndex();
+        return `${positions?.count || 0}-${indices?.count || 0}`;
+      })
+      .join(',');
 
     const optionsHash = `${options.preserveMaterials || false}-${options.optimizeResult || false}`;
 
@@ -561,7 +564,7 @@ export class ManifoldCSGOperations {
 
       logger.debug('[DEBUG][ManifoldCSGOperations] Cache optimized', {
         removedEntries: entriesToRemove,
-        currentSize: this.operationCache.size
+        currentSize: this.operationCache.size,
       });
     }
   }
@@ -587,7 +590,6 @@ export class ManifoldCSGOperations {
       logger.debug('[DEBUG][ManifoldCSGOperations] Disposed successfully');
 
       return { success: true, data: undefined };
-
     } catch (error) {
       const errorMessage = `Failed to dispose ManifoldCSGOperations: ${error instanceof Error ? error.message : String(error)}`;
       logger.error('[ERROR][ManifoldCSGOperations] Disposal failed', { error: errorMessage });
@@ -598,9 +600,9 @@ export class ManifoldCSGOperations {
 
 /**
  * Perform intersection operation on multiple geometries
- * 
+ *
  * Finds the intersection of multiple geometries using Manifold's intersect operation.
- * 
+ *
  * @param geometries - Array of BufferGeometry objects to intersect
  * @param options - Operation options
  * @returns Result<CSGOperationResult, string> with intersection result
@@ -610,102 +612,102 @@ export async function performIntersection(
   options: CSGOperationOptions = {}
 ): Promise<Result<CSGOperationResult, string>> {
   const startTime = performance.now();
-  
+
   try {
-    logger.debug('[DEBUG][ManifoldCSGOperations] Starting intersection operation', { 
-      geometryCount: geometries.length 
+    logger.debug('[DEBUG][ManifoldCSGOperations] Starting intersection operation', {
+      geometryCount: geometries.length,
     });
-    
+
     // Validate input
     if (!geometries || geometries.length < 2) {
-      return { 
-        success: false, 
-        error: 'Invalid input: At least two geometries required for intersection operation' 
+      return {
+        success: false,
+        error: 'Invalid input: At least two geometries required for intersection operation',
       };
     }
-    
+
     // Load Manifold WASM module
     const loader = new ManifoldWasmLoader();
     const manifoldModule = await loader.load();
     if (!manifoldModule) {
-      return { 
-        success: false, 
-        error: 'Failed to load Manifold WASM module for intersection operation' 
+      return {
+        success: false,
+        error: 'Failed to load Manifold WASM module for intersection operation',
       };
     }
-    
+
     // Convert geometries to Manifold meshes
     const manifoldMeshes: IManifoldMesh[] = [];
     for (const geometry of geometries) {
       const conversionResult = convertThreeToManifold(geometry);
       if (!conversionResult.success) {
-        return { 
-          success: false, 
-          error: `Failed to convert geometry to Manifold: ${conversionResult.error}` 
+        return {
+          success: false,
+          error: `Failed to convert geometry to Manifold: ${conversionResult.error}`,
         };
       }
       manifoldMeshes.push(conversionResult.data);
     }
-    
+
     // Perform intersection operation using Manifold
     let resultMesh = manifoldMeshes[0];
-    
+
     for (let i = 1; i < manifoldMeshes.length; i++) {
       try {
         // Create Manifold objects from mesh data
         const manifold1 = new manifoldModule.Manifold(resultMesh);
         const manifold2 = new manifoldModule.Manifold(manifoldMeshes[i]);
-        
+
         // Perform intersection
         const intersectManifold = manifold1.intersect(manifold2);
-        
+
         // Get result mesh
         resultMesh = intersectManifold.getMesh();
-        
+
         // Clean up intermediate objects
         manifold1.delete();
         manifold2.delete();
         intersectManifold.delete();
-        
       } catch (error) {
-        return { 
-          success: false, 
-          error: `Manifold intersection operation failed: ${error instanceof Error ? error.message : String(error)}` 
+        return {
+          success: false,
+          error: `Manifold intersection operation failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     }
-    
+
     // Convert result back to Three.js
     const threeResult = convertManifoldToThree(resultMesh, {
       preserveGroups: options.preserveMaterials,
-      optimizeGeometry: options.optimizeResult
+      optimizeGeometry: options.optimizeResult,
     });
-    
+
     if (!threeResult.success) {
-      return { 
-        success: false, 
-        error: `Failed to convert result to Three.js: ${threeResult.error}` 
+      return {
+        success: false,
+        error: `Failed to convert result to Three.js: ${threeResult.error}`,
       };
     }
-    
+
     const endTime = performance.now();
     const resultGeometry = threeResult.data;
-    
+
     const result: CSGOperationResult = {
       geometry: resultGeometry,
       operationTime: endTime - startTime,
       vertexCount: resultGeometry.getAttribute('position').count,
       triangleCount: resultGeometry.getIndex()?.count ? resultGeometry.getIndex()!.count / 3 : 0,
-      materialGroups: resultGeometry.groups.length
+      materialGroups: resultGeometry.groups.length,
     };
-    
+
     logger.debug('[DEBUG][ManifoldCSGOperations] Intersection operation completed', result);
-    
+
     return { success: true, data: result };
-    
   } catch (error) {
     const errorMessage = `Intersection operation failed: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldCSGOperations] Intersection operation error', { error: errorMessage });
+    logger.error('[ERROR][ManifoldCSGOperations] Intersection operation error', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -732,13 +734,13 @@ export async function performBatchCSGOperations(
 
   try {
     logger.debug('[DEBUG][ManifoldCSGOperations] Starting batch CSG operations', {
-      operationCount: operations.length
+      operationCount: operations.length,
     });
 
     if (!operations || operations.length === 0) {
       return {
         success: false,
-        error: 'Invalid input: At least one operation required for batch processing'
+        error: 'Invalid input: At least one operation required for batch processing',
       };
     }
 
@@ -757,10 +759,14 @@ export async function performBatchCSGOperations(
           if (!operation.baseGeometry) {
             return {
               success: false,
-              error: `Batch operation ${i}: Subtract operation requires baseGeometry`
+              error: `Batch operation ${i}: Subtract operation requires baseGeometry`,
             };
           }
-          result = await performSubtraction(operation.baseGeometry, operation.geometries[0], options);
+          result = await performSubtraction(
+            operation.baseGeometry,
+            operation.geometries[0],
+            options
+          );
           break;
         case 'intersect':
           result = await performIntersection(operation.geometries, options);
@@ -768,14 +774,14 @@ export async function performBatchCSGOperations(
         default:
           return {
             success: false,
-            error: `Batch operation ${i}: Unknown operation type '${operation.type}'`
+            error: `Batch operation ${i}: Unknown operation type '${operation.type}'`,
           };
       }
 
       if (!result.success) {
         return {
           success: false,
-          error: `Batch operation ${i} failed: ${result.error}`
+          error: `Batch operation ${i} failed: ${result.error}`,
         };
       }
 
@@ -788,11 +794,10 @@ export async function performBatchCSGOperations(
     logger.debug('[DEBUG][ManifoldCSGOperations] Batch CSG operations completed', {
       operationCount: operations.length,
       totalTime,
-      averageTimePerOperation: totalTime / operations.length
+      averageTimePerOperation: totalTime / operations.length,
     });
 
     return { success: true, data: results };
-
   } catch (error) {
     const errorMessage = `Batch CSG operations failed: ${error instanceof Error ? error.message : String(error)}`;
     logger.error('[ERROR][ManifoldCSGOperations] Batch operations error', { error: errorMessage });

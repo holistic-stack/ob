@@ -1,7 +1,7 @@
 /**
  * @file Manifold Integration Test Utilities
  * Task 1.8: Setup Testing with Real OpenscadParser (Green Phase)
- * 
+ *
  * Test utilities for Manifold + OpenSCAD parser integration testing
  * Following project guidelines:
  * - Use real OpenscadParser instances (no mocks)
@@ -10,13 +10,13 @@
  */
 
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
-import { 
-  clearAllResources,
-  getMemoryStats 
-} from '../manifold-memory-manager/manifold-memory-manager';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import type { Result } from '../../../../shared/types/result.types';
+import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+import {
+  clearAllResources,
+  getMemoryStats,
+} from '../manifold-memory-manager/manifold-memory-manager';
+import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 
 /**
  * Integration test context for Manifold + OpenSCAD testing
@@ -31,10 +31,9 @@ export interface ManifoldIntegrationTestContext {
  * Create a test context for Manifold + OpenSCAD integration testing
  * This function handles the complex initialization and cleanup with optimized patterns
  */
-export async function createManifoldIntegrationTestContext(options: {
-  enableWASM?: boolean;
-  timeout?: number;
-} = {}): Promise<Result<ManifoldIntegrationTestContext, string>> {
+export async function createManifoldIntegrationTestContext(
+  options: { enableWASM?: boolean; timeout?: number } = {}
+): Promise<Result<ManifoldIntegrationTestContext, string>> {
   const { enableWASM = false, timeout = 3000 } = options;
 
   try {
@@ -49,7 +48,7 @@ export async function createManifoldIntegrationTestContext(options: {
     } catch (error) {
       return {
         success: false,
-        error: `Parser initialization failed: ${error instanceof Error ? error.message : String(error)}`
+        error: `Parser initialization failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
 
@@ -71,7 +70,7 @@ export async function createManifoldIntegrationTestContext(options: {
         manifoldModule = null;
       }
     }
-    
+
     // Create cleanup function
     const cleanup = async (): Promise<void> => {
       try {
@@ -79,26 +78,28 @@ export async function createManifoldIntegrationTestContext(options: {
         if (parser && typeof parser.dispose === 'function') {
           parser.dispose();
         }
-        
+
         // Clear all Manifold resources
         clearAllResources();
-        
+
         // Verify cleanup
         const stats = getMemoryStats();
         if (stats.activeResources > 0) {
-          console.warn(`Memory leak detected: ${stats.activeResources} active resources after cleanup`);
+          console.warn(
+            `Memory leak detected: ${stats.activeResources} active resources after cleanup`
+          );
         }
       } catch (error) {
         console.error('Cleanup error:', error);
       }
     };
-    
+
     const context: ManifoldIntegrationTestContext = {
       parser,
       manifoldModule,
-      cleanup
+      cleanup,
     };
-    
+
     return { success: true, data: context };
   } catch (error) {
     const errorMessage = `Failed to create integration test context: ${error instanceof Error ? error.message : String(error)}`;
@@ -116,7 +117,7 @@ export function parseOpenSCADSafely(parser: OpenscadParser, code: string): Resul
     if (!ast) {
       return { success: false, error: 'Parser returned null/undefined AST' };
     }
-    
+
     return { success: true, data: ast };
   } catch (error) {
     const errorMessage = `OpenSCAD parsing failed: ${error instanceof Error ? error.message : String(error)}`;
@@ -128,21 +129,23 @@ export function parseOpenSCADSafely(parser: OpenscadParser, code: string): Resul
  * Extract primitive information from AST node
  * Helper function to analyze parsed OpenSCAD primitives
  */
-export function extractPrimitiveInfo(astNode: any): Result<{ type: string; parameters: any }, string> {
+export function extractPrimitiveInfo(
+  astNode: any
+): Result<{ type: string; parameters: any }, string> {
   try {
     if (!astNode || typeof astNode !== 'object') {
       return { success: false, error: 'Invalid AST node' };
     }
-    
+
     if (astNode.type !== 'function_call') {
       return { success: false, error: `Expected function_call, got ${astNode.type}` };
     }
-    
+
     const primitiveInfo = {
       type: astNode.name || 'unknown',
-      parameters: astNode.arguments || []
+      parameters: astNode.arguments || [],
     };
-    
+
     return { success: true, data: primitiveInfo };
   } catch (error) {
     const errorMessage = `Failed to extract primitive info: ${error instanceof Error ? error.message : String(error)}`;
@@ -158,13 +161,13 @@ export function validateMemoryState(): Result<{ isClean: boolean; stats: any }, 
   try {
     const stats = getMemoryStats();
     const isClean = stats.activeResources === 0;
-    
-    return { 
-      success: true, 
-      data: { 
-        isClean, 
-        stats 
-      } 
+
+    return {
+      success: true,
+      data: {
+        isClean,
+        stats,
+      },
     };
   } catch (error) {
     const errorMessage = `Failed to validate memory state: ${error instanceof Error ? error.message : String(error)}`;
@@ -176,7 +179,9 @@ export function validateMemoryState(): Result<{ isClean: boolean; stats: any }, 
  * Create a lightweight test context for basic testing (no WASM loading)
  * This is useful for tests that don't need full Manifold integration
  */
-export async function createLightweightTestContext(): Promise<Result<{ parser: OpenscadParser; cleanup: () => Promise<void> }, string>> {
+export async function createLightweightTestContext(): Promise<
+  Result<{ parser: OpenscadParser; cleanup: () => Promise<void> }, string>
+> {
   try {
     clearAllResources();
 
@@ -204,7 +209,10 @@ export async function createLightweightTestContext(): Promise<Result<{ parser: O
 /**
  * Benchmark utility for performance testing
  */
-export function benchmarkOperation<T>(operation: () => T, name: string): { result: T; duration: number } {
+export function benchmarkOperation<T>(
+  operation: () => T,
+  name: string
+): { result: T; duration: number } {
   const startTime = performance.now();
   const result = operation();
   const endTime = performance.now();
@@ -248,5 +256,5 @@ export const TEST_OPENSCAD_SAMPLES = {
       }
       cylinder(h=25, r=3);
     }
-  `
+  `,
 } as const;

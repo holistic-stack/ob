@@ -151,10 +151,7 @@ export class CSGVisitor extends BaseASTVisitor {
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
-    let functionName = nameNode?.text || '';
-
-
-
+    const functionName = nameNode?.text || '';
 
     return functionName;
   }
@@ -219,9 +216,7 @@ export class CSGVisitor extends BaseASTVisitor {
     }
 
     // Get the function name from the identifier node
-    let functionName = functionNode.text;
-
-
+    const functionName = functionNode.text;
 
     if (!functionName) {
       return null;
@@ -527,9 +522,7 @@ export class CSGVisitor extends BaseASTVisitor {
     const functionNode = findDescendantOfType(node, 'identifier');
     if (!functionNode) return null;
 
-    let functionName = functionNode.text;
-
-
+    const functionName = functionNode.text;
 
     if (!functionName) return null;
 

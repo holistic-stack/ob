@@ -1,22 +1,22 @@
 /**
  * @file Manifold Integration Foundation Test
  * Task 1.8: Setup Testing with Real OpenscadParser (Green Phase - Foundation)
- * 
+ *
  * This test establishes the foundation for Manifold + OpenSCAD integration
  * without complex parser initialization that might cause hanging
  */
 
-import { describe, it, expect } from 'vitest';
-import { 
-  parseOpenSCADSafely,
-  extractPrimitiveInfo,
-  validateMemoryState,
-  TEST_OPENSCAD_SAMPLES
-} from './manifold-integration-test-utils';
-import { 
+import { describe, expect, it } from 'vitest';
+import {
+  clearAllResources,
   getMemoryStats,
-  clearAllResources 
 } from '../manifold-memory-manager/manifold-memory-manager';
+import {
+  extractPrimitiveInfo,
+  parseOpenSCADSafely,
+  TEST_OPENSCAD_SAMPLES,
+  validateMemoryState,
+} from './manifold-integration-test-utils';
 
 /**
  * Foundation test for Manifold integration utilities
@@ -27,7 +27,7 @@ describe('Manifold Integration Foundation', () => {
     expect(typeof parseOpenSCADSafely).toBe('function');
     expect(typeof extractPrimitiveInfo).toBe('function');
     expect(typeof validateMemoryState).toBe('function');
-    
+
     // Verify test samples are available
     expect(TEST_OPENSCAD_SAMPLES.simpleCube).toBe('cube([10, 20, 30]);');
     expect(TEST_OPENSCAD_SAMPLES.simpleSphere).toBe('sphere(5);');
@@ -37,11 +37,11 @@ describe('Manifold Integration Foundation', () => {
   it('should validate memory state correctly', () => {
     // Clear resources first
     clearAllResources();
-    
+
     // Test memory validation utility
     const validationResult = validateMemoryState();
     expect(validationResult.success).toBe(true);
-    
+
     if (validationResult.success) {
       expect(validationResult.data.isClean).toBe(true);
       expect(validationResult.data.stats.activeResources).toBe(0);
@@ -53,12 +53,12 @@ describe('Manifold Integration Foundation', () => {
     const mockCubeNode = {
       type: 'function_call',
       name: 'cube',
-      arguments: [[10, 20, 30]]
+      arguments: [[10, 20, 30]],
     };
-    
+
     const extractResult = extractPrimitiveInfo(mockCubeNode);
     expect(extractResult.success).toBe(true);
-    
+
     if (extractResult.success) {
       expect(extractResult.data.type).toBe('cube');
       expect(extractResult.data.parameters).toEqual([[10, 20, 30]]);
@@ -76,15 +76,15 @@ describe('Manifold Integration Foundation', () => {
   it('should establish the expected interface for OpenSCAD parsing', () => {
     // This test establishes the expected interface without actually parsing
     // The actual parsing will be tested once the parser initialization issue is resolved
-    
+
     const expectedParsingInterface = {
       parseCode: 'function that takes OpenSCAD code string',
       returnResult: 'Result<AST, string> with success/error pattern',
       handleErrors: 'graceful error handling for invalid syntax',
       extractPrimitives: 'ability to extract primitive information from AST',
-      memoryTracking: 'track memory usage during parsing operations'
+      memoryTracking: 'track memory usage during parsing operations',
     };
-    
+
     expect(expectedParsingInterface.parseCode).toBeDefined();
     expect(expectedParsingInterface.returnResult).toBeDefined();
     expect(expectedParsingInterface.handleErrors).toBeDefined();
@@ -95,15 +95,15 @@ describe('Manifold Integration Foundation', () => {
   it('should establish the expected interface for Manifold integration', () => {
     // This test establishes the expected interface for Manifold operations
     // The actual Manifold operations will be implemented in subsequent tasks
-    
+
     const expectedManifoldInterface = {
       loadWASM: 'function to load Manifold WASM module',
       createPrimitives: 'functions to create Manifold primitives from AST',
       performCSG: 'functions for union, difference, intersection operations',
       memoryManagement: 'RAII patterns for Manifold resource management',
-      errorHandling: 'Result<T,E> patterns for all operations'
+      errorHandling: 'Result<T,E> patterns for all operations',
     };
-    
+
     expect(expectedManifoldInterface.loadWASM).toBeDefined();
     expect(expectedManifoldInterface.createPrimitives).toBeDefined();
     expect(expectedManifoldInterface.performCSG).toBeDefined();
@@ -115,10 +115,10 @@ describe('Manifold Integration Foundation', () => {
     // Test that memory management functions work correctly
     const initialStats = getMemoryStats();
     expect(initialStats.activeResources).toBe(0);
-    
+
     // Clear resources (should be idempotent)
     clearAllResources();
-    
+
     const finalStats = getMemoryStats();
     expect(finalStats.activeResources).toBe(0);
     expect(finalStats.totalAllocated).toBe(initialStats.totalAllocated);
@@ -127,20 +127,20 @@ describe('Manifold Integration Foundation', () => {
   it('should provide comprehensive test samples for different scenarios', () => {
     // Verify we have test samples for all major scenarios
     const samples = TEST_OPENSCAD_SAMPLES;
-    
+
     // Basic primitives
     expect(samples.simpleCube).toContain('cube');
     expect(samples.simpleSphere).toContain('sphere');
     expect(samples.simpleCylinder).toContain('cylinder');
-    
+
     // Error cases
     expect(samples.invalidSyntax).toBeDefined();
-    
+
     // Multiple shapes
     expect(samples.multipleShapes).toContain('cube');
     expect(samples.multipleShapes).toContain('sphere');
     expect(samples.multipleShapes).toContain('cylinder');
-    
+
     // CSG operations
     expect(samples.unionOperation).toContain('union');
     expect(samples.differenceOperation).toContain('difference');

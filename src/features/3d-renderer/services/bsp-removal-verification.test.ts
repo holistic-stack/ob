@@ -4,7 +4,7 @@
  * Part of Manifold CSG migration - Task 1.5
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { CSGCoreService } from './csg-core.service';
 
 describe('BSP Service Removal Verification', () => {
@@ -26,15 +26,15 @@ describe('BSP Service Removal Verification', () => {
     it('should not export BSPTreeNode from utils index', async () => {
       // This test will fail until we clean up the utils index exports
       let importError: Error | null = null;
-      
+
       try {
         const utilsModule = await import('../utils/index');
-        
+
         // Check if BSPTreeNode is still exported
         if ('BSPTreeNode' in utilsModule) {
           expect.fail('BSPTreeNode should not be exported from utils/index after BSP removal');
         }
-        
+
         // If we reach here without BSPTreeNode, the cleanup was successful
         expect(utilsModule).toBeDefined();
       } catch (error) {
@@ -87,17 +87,15 @@ describe('BSP Service Removal Verification', () => {
       // This test will fail until we clean up BSP types
       try {
         const geometryTypes = await import('../types/geometry.types');
-        
+
         // Check the module exports - should not contain BSP-related types
         const moduleKeys = Object.keys(geometryTypes);
-        const bspRelatedKeys = moduleKeys.filter(key => 
-          key.toLowerCase().includes('bsp') || 
-          key.includes('BSP')
+        const bspRelatedKeys = moduleKeys.filter(
+          (key) => key.toLowerCase().includes('bsp') || key.includes('BSP')
         );
-        
+
         // After BSP removal, there should be no BSP-related exports
         expect(bspRelatedKeys).toHaveLength(0);
-        
       } catch (error) {
         // If there's an import error, it should be related to BSP cleanup
         const importError = error as Error;
@@ -111,10 +109,10 @@ describe('BSP Service Removal Verification', () => {
       // This is a placeholder test for documentation cleanup
       // In a real implementation, we would check that documentation
       // no longer references BSP operations
-      
+
       // For now, we'll just verify the test structure is in place
       expect(true).toBe(true);
-      
+
       // TODO: Add actual documentation verification once files are updated
       // This could include checking that:
       // - API documentation doesn't mention BSP
@@ -127,10 +125,10 @@ describe('BSP Service Removal Verification', () => {
     it('should verify BSP-related memory allocations are eliminated', () => {
       // This test verifies that BSP-related objects are no longer created
       // which should reduce memory usage
-      
+
       // For now, this is a placeholder
       expect(true).toBe(true);
-      
+
       // TODO: Add memory usage verification
       // This could include:
       // - Checking that BSP tree nodes are not allocated

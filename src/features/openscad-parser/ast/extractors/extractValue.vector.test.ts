@@ -528,8 +528,6 @@ describe('extractValue - Vector Literals Regression Tests', () => {
     });
   });
 
-
-
   describe('Vector Type Validation', () => {
     it('should correctly identify Vector2D types', () => {
       const vectorCode = '[10, 20]';

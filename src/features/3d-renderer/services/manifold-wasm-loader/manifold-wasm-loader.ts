@@ -1,4 +1,3 @@
-
 import init, { type ManifoldModule } from 'manifold-3d';
 
 /**
@@ -26,7 +25,10 @@ export class ManifoldWasmLoader {
     try {
       return await init();
     } catch (error) {
-      console.warn('Failed to load Manifold module from local source, trying CDN fallback...', error);
+      console.warn(
+        'Failed to load Manifold module from local source, trying CDN fallback...',
+        error
+      );
       try {
         // @ts-ignore
         return await import('https://cdn.jsdelivr.net/npm/manifold-3d@latest/manifold.js');

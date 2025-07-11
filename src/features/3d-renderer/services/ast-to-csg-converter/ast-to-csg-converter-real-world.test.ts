@@ -93,7 +93,12 @@ module conditional_shape(type="cube", size=10) {
 }
 `,
     expectedNodeCount: 4, // Tree-sitter parses conditional statements as multiple module definitions
-    expectedNodeTypes: ['module_definition', 'module_definition', 'module_definition', 'module_definition'],
+    expectedNodeTypes: [
+      'module_definition',
+      'module_definition',
+      'module_definition',
+      'module_definition',
+    ],
     hasRenderableContent: false, // Module definition only, no instantiation
   },
 

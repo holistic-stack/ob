@@ -3,26 +3,26 @@
  * Tests strict TypeScript integration with branded types and interfaces
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { Result } from '../../../../shared/types/result.types';
 import type {
-  ManifoldMesh,
-  ManifoldResult,
-  ManifoldOperation,
-  ManifoldResource,
+  CSGOperationType,
   ManifoldConfig,
   ManifoldError,
-  ManifoldValidationResult,
-  CSGOperationType,
+  ManifoldMesh,
+  ManifoldOperation,
   ManifoldPrimitive,
-  ManifoldTransform
+  ManifoldResource,
+  ManifoldResult,
+  ManifoldTransform,
+  ManifoldValidationResult,
 } from './manifold-types';
 import {
-  createManifoldSuccess,
   createManifoldError,
+  createManifoldSuccess,
+  isManifoldError,
   isManifoldSuccess,
-  isManifoldError
 } from './manifold-types';
-import type { Result } from '../../../../shared/types/result.types';
 
 describe('Manifold TypeScript Types', () => {
   describe('Branded Types', () => {
@@ -33,7 +33,7 @@ describe('Manifold TypeScript Types', () => {
         return {
           vertices,
           indices,
-          __brand: 'ManifoldMesh' as const
+          __brand: 'ManifoldMesh' as const,
         } as ManifoldMesh;
       };
 
@@ -52,7 +52,7 @@ describe('Manifold TypeScript Types', () => {
         return {
           resource,
           disposed: false,
-          __brand: 'ManifoldResource' as const
+          __brand: 'ManifoldResource' as const,
         } as ManifoldResource<T>;
       };
 
@@ -76,7 +76,7 @@ describe('Manifold TypeScript Types', () => {
       const errorResult = createManifoldError<string>({
         code: 'WASM_INIT_FAILED',
         message: 'Failed to initialize WASM module',
-        context: { module: 'manifold-3d' }
+        context: { module: 'manifold-3d' },
       });
       expect(errorResult.success).toBe(false);
       expect(isManifoldError(errorResult)).toBe(true);
@@ -90,7 +90,7 @@ describe('Manifold TypeScript Types', () => {
     it('should provide strict CSG operation typing', () => {
       // This test will fail until we implement CSGOperationType
       const operations: CSGOperationType[] = ['union', 'difference', 'intersection'];
-      
+
       expect(operations).toContain('union');
       expect(operations).toContain('difference');
       expect(operations).toContain('intersection');
@@ -107,8 +107,8 @@ describe('Manifold TypeScript Types', () => {
         config: {
           enableOptimization: true,
           maxComplexity: 10000,
-          memoryLimit: 100 * 1024 * 1024 // 100MB
-        }
+          memoryLimit: 100 * 1024 * 1024, // 100MB
+        },
       };
 
       expect(operation.type).toBe('union');
@@ -121,20 +121,20 @@ describe('Manifold TypeScript Types', () => {
       // This test will fail until we implement ManifoldPrimitive
       const cube: ManifoldPrimitive = {
         type: 'cube',
-        size: [1, 1, 1]
+        size: [1, 1, 1],
       };
 
       const sphere: ManifoldPrimitive = {
         type: 'sphere',
         radius: 0.5,
-        segments: 32
+        segments: 32,
       };
 
       const cylinder: ManifoldPrimitive = {
         type: 'cylinder',
         radius: 0.5,
         height: 2,
-        segments: 32
+        segments: 32,
       };
 
       expect(cube.type).toBe('cube');
@@ -150,7 +150,7 @@ describe('Manifold TypeScript Types', () => {
         translate: [1, 2, 3],
         rotate: [0, 0, Math.PI / 4],
         scale: [1, 1, 1],
-        matrix: new Float32Array(16) // 4x4 matrix
+        matrix: new Float32Array(16), // 4x4 matrix
       };
 
       expect(transform.translate).toEqual([1, 2, 3]);
@@ -166,7 +166,7 @@ describe('Manifold TypeScript Types', () => {
         isManifold: true,
         isWatertight: true,
         errors: [],
-        warnings: []
+        warnings: [],
       };
 
       const invalidResult: ManifoldValidationResult = {
@@ -174,7 +174,7 @@ describe('Manifold TypeScript Types', () => {
         isManifold: false,
         isWatertight: false,
         errors: ['Non-manifold edges detected'],
-        warnings: ['High triangle count may impact performance']
+        warnings: ['High triangle count may impact performance'],
       };
 
       expect(validResult.isValid).toBe(true);

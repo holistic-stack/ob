@@ -5,17 +5,17 @@
  */
 
 import { logger } from '../../../../shared/services/logger.service';
-import type { 
-  ManifoldResource, 
-  ManifoldMemoryStats,
-  ManifoldError 
-} from '../manifold-types/manifold-types';
-import { 
-  createManifoldSuccess, 
-  createManifoldError,
-  createManifoldResource 
-} from '../manifold-types/manifold-types';
 import type { Result } from '../../../../shared/types/result.types';
+import type {
+  ManifoldError,
+  ManifoldMemoryStats,
+  ManifoldResource,
+} from '../manifold-types/manifold-types';
+import {
+  createManifoldError,
+  createManifoldResource,
+  createManifoldSuccess,
+} from '../manifold-types/manifold-types';
 
 /**
  * Global memory statistics (mutable for internal updates)
@@ -25,7 +25,7 @@ let memoryStats = {
   totalFreed: 0,
   currentUsage: 0,
   peakUsage: 0,
-  activeResources: 0
+  activeResources: 0,
 };
 
 /**
@@ -36,7 +36,10 @@ const activeResources = new Set<ManifoldResource<any>>();
 /**
  * Map to track resource metadata and disposal state
  */
-const resourceMetadata = new WeakMap<object, { id: number; allocated: number; disposed: boolean }>();
+const resourceMetadata = new WeakMap<
+  object,
+  { id: number; allocated: number; disposed: boolean }
+>();
 
 /**
  * Memory leak detection state
@@ -69,15 +72,21 @@ export class ManifoldMemoryManager {
    */
   clearAll(): void {
     logger.debug('[MEMORY][ManifoldMemoryManager] Clearing all resources');
-    
+
     // Dispose all active resources
     for (const resource of activeResources) {
       try {
-        if (!resource.disposed && resource.resource && typeof resource.resource.delete === 'function') {
+        if (
+          !resource.disposed &&
+          resource.resource &&
+          typeof resource.resource.delete === 'function'
+        ) {
           resource.resource.delete();
         }
       } catch (error) {
-        logger.error(`[MEMORY][ManifoldMemoryManager] Error disposing resource during clearAll: ${error}`);
+        logger.error(
+          `[MEMORY][ManifoldMemoryManager] Error disposing resource during clearAll: ${error}`
+        );
       }
     }
 
@@ -88,7 +97,7 @@ export class ManifoldMemoryManager {
       totalFreed: 0,
       currentUsage: 0,
       peakUsage: 0,
-      activeResources: 0
+      activeResources: 0,
     };
   }
 
@@ -130,26 +139,28 @@ export function createManagedResource<T extends { delete(): void }>(
     resourceMetadata.set(wasmObject, {
       id: resourceId,
       allocated: Date.now(),
-      disposed: false
+      disposed: false,
     });
 
     // Register with enhanced FinalizationRegistry for automatic cleanup
     enhancedFinalizationRegistry.register(managedResource, {
       resource: wasmObject,
       id: resourceId,
-      resourceType: wasmObject.constructor?.name || 'Unknown'
+      resourceType: wasmObject.constructor?.name || 'Unknown',
     });
 
     // Update memory statistics
     memoryStats.totalAllocated++;
     memoryStats.currentUsage++;
     memoryStats.activeResources++;
-    
+
     if (memoryStats.currentUsage > memoryStats.peakUsage) {
       memoryStats.peakUsage = memoryStats.currentUsage;
     }
 
-    logger.debug(`[MEMORY][createManagedResource] Created resource ${resourceId}, active: ${memoryStats.activeResources}`);
+    logger.debug(
+      `[MEMORY][createManagedResource] Created resource ${resourceId}, active: ${memoryStats.activeResources}`
+    );
 
     // Check for memory pressure
     checkMemoryPressure();
@@ -206,7 +217,9 @@ export function disposeManagedResource<T extends { delete(): void }>(
     memoryStats.currentUsage--;
     memoryStats.activeResources--;
 
-    logger.debug(`[MEMORY][disposeManagedResource] Disposed resource ${resourceId}, active: ${memoryStats.activeResources}`);
+    logger.debug(
+      `[MEMORY][disposeManagedResource] Disposed resource ${resourceId}, active: ${memoryStats.activeResources}`
+    );
 
     return { success: true, data: undefined };
   } catch (error) {
@@ -225,7 +238,7 @@ export function getMemoryStats(): ManifoldMemoryStats {
     totalFreed: memoryStats.totalFreed,
     currentUsage: memoryStats.currentUsage,
     peakUsage: memoryStats.peakUsage,
-    activeResources: memoryStats.activeResources
+    activeResources: memoryStats.activeResources,
   };
 }
 
@@ -259,14 +272,16 @@ export function disableMemoryLeakDetection(): void {
 export function checkForMemoryLeaks(): ManifoldMemoryStats & { leaksDetected: boolean } {
   const stats = getMemoryStats();
   const leaksDetected = memoryLeakDetectionEnabled && stats.activeResources > 0;
-  
+
   if (leaksDetected) {
-    logger.warn(`[MEMORY][checkForMemoryLeaks] Potential memory leaks detected: ${stats.activeResources} active resources`);
+    logger.warn(
+      `[MEMORY][checkForMemoryLeaks] Potential memory leaks detected: ${stats.activeResources} active resources`
+    );
   }
 
   return {
     ...stats,
-    leaksDetected
+    leaksDetected,
   };
 }
 
@@ -283,7 +298,7 @@ export function getActiveResourcesInfo(): Array<{ id: number; allocated: number;
       info.push({
         id: metadata.id,
         allocated: metadata.allocated,
-        age: now - metadata.allocated
+        age: now - metadata.allocated,
       });
     }
   }
@@ -299,7 +314,9 @@ const enhancedFinalizationRegistry = new FinalizationRegistry<{
   id: number;
   resourceType: string;
 }>((heldValue) => {
-  logger.warn(`[MEMORY][FinalizationRegistry] Auto-cleaning up ${heldValue.resourceType} resource ${heldValue.id}`);
+  logger.warn(
+    `[MEMORY][FinalizationRegistry] Auto-cleaning up ${heldValue.resourceType} resource ${heldValue.id}`
+  );
 
   try {
     // Validate resource before cleanup
@@ -307,16 +324,22 @@ const enhancedFinalizationRegistry = new FinalizationRegistry<{
       // Check if resource is still valid (not already deleted)
       try {
         heldValue.resource.delete();
-        logger.debug(`[MEMORY][FinalizationRegistry] Successfully auto-cleaned resource ${heldValue.id}`);
+        logger.debug(
+          `[MEMORY][FinalizationRegistry] Successfully auto-cleaned resource ${heldValue.id}`
+        );
       } catch (deleteError) {
         // Resource might already be deleted, which is fine
-        logger.debug(`[MEMORY][FinalizationRegistry] Resource ${heldValue.id} already cleaned or invalid: ${deleteError}`);
+        logger.debug(
+          `[MEMORY][FinalizationRegistry] Resource ${heldValue.id} already cleaned or invalid: ${deleteError}`
+        );
       }
     } else {
       logger.warn(`[MEMORY][FinalizationRegistry] Resource ${heldValue.id} has no delete method`);
     }
   } catch (error) {
-    logger.error(`[MEMORY][FinalizationRegistry] Failed to auto-cleanup resource ${heldValue.id}: ${error}`);
+    logger.error(
+      `[MEMORY][FinalizationRegistry] Failed to auto-cleanup resource ${heldValue.id}: ${error}`
+    );
   }
 });
 
@@ -343,7 +366,9 @@ export function setMemoryPressureMonitoring(
  */
 function checkMemoryPressure(): void {
   if (memoryPressureCallback && memoryStats.activeResources >= memoryPressureThreshold) {
-    logger.warn(`[MEMORY][checkMemoryPressure] Memory pressure detected: ${memoryStats.activeResources} >= ${memoryPressureThreshold}`);
+    logger.warn(
+      `[MEMORY][checkMemoryPressure] Memory pressure detected: ${memoryStats.activeResources} >= ${memoryPressureThreshold}`
+    );
     try {
       memoryPressureCallback(getMemoryStats());
     } catch (error) {
@@ -407,24 +432,30 @@ export function getMemoryHealthReport(): {
   // Check for high resource count
   if (stats.activeResources > 500) {
     health = 'critical';
-    recommendations.push('High number of active resources detected. Consider disposing unused resources.');
+    recommendations.push(
+      'High number of active resources detected. Consider disposing unused resources.'
+    );
   } else if (stats.activeResources > 100) {
     health = 'warning';
     recommendations.push('Moderate number of active resources. Monitor for potential leaks.');
   }
 
   // Check for old resources (potential leaks)
-  const oldResources = activeResourcesInfo.filter(r => r.age > 60000); // 1 minute
+  const oldResources = activeResourcesInfo.filter((r) => r.age > 60000); // 1 minute
   if (oldResources.length > 10) {
     health = health === 'good' ? 'warning' : 'critical';
-    recommendations.push(`${oldResources.length} resources older than 1 minute detected. Check for memory leaks.`);
+    recommendations.push(
+      `${oldResources.length} resources older than 1 minute detected. Check for memory leaks.`
+    );
   }
 
   // Check memory efficiency
   const efficiency = stats.totalFreed / Math.max(stats.totalAllocated, 1);
   if (efficiency < 0.8 && stats.totalAllocated > 10) {
     health = health === 'good' ? 'warning' : health;
-    recommendations.push(`Low disposal efficiency (${(efficiency * 100).toFixed(1)}%). Ensure proper resource cleanup.`);
+    recommendations.push(
+      `Low disposal efficiency (${(efficiency * 100).toFixed(1)}%). Ensure proper resource cleanup.`
+    );
   }
 
   if (recommendations.length === 0) {

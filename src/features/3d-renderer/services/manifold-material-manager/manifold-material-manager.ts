@@ -1,7 +1,7 @@
 /**
  * @file Manifold Material Manager
  * Task 2.3: Add Material ID Reservation System (Green Phase)
- * 
+ *
  * Manages material IDs for Manifold CSG operations using BabylonJS-inspired patterns
  * Following project guidelines:
  * - BabylonJS-inspired material ID reservation with `Manifold.reserveIDs()`
@@ -10,38 +10,42 @@
  * - Prevention of material ID conflicts in multi-material CSG operations
  */
 
-import type { Result } from '../../../../shared/types/result.types';
 import { logger } from '../../../../shared/services/logger.service';
+import type { Result } from '../../../../shared/types/result.types';
+import {
+  createManagedResource,
+  disposeManagedResource,
+} from '../manifold-memory-manager/manifold-memory-manager';
 import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
-import { createManagedResource, disposeManagedResource } from '../manifold-memory-manager/manifold-memory-manager';
 
 /**
  * Material ID range reservation information
  */
 export interface MaterialIDRange {
-  startID: number;           // Starting material ID
-  endID: number;             // Ending material ID (inclusive)
-  count: number;             // Number of IDs in range
-  reservedAt: number;        // Timestamp when reserved
+  startID: number; // Starting material ID
+  endID: number; // Ending material ID (inclusive)
+  count: number; // Number of IDs in range
+  reservedAt: number; // Timestamp when reserved
 }
 
 /**
  * Material mapping between Three.js and Manifold
  */
 export interface MaterialMapping {
-  threeToManifold: Record<string, number>;    // Three.js material ID -> Manifold material ID
-  manifoldToThree: Record<number, string>;    // Manifold material ID -> Three.js material ID
-  reservedRange: MaterialIDRange;             // Reserved ID range
-  nextAvailableID: number;                    // Next available ID in range
+  threeToManifold: Record<string, number>; // Three.js material ID -> Manifold material ID
+  manifoldToThree: Record<number, string>; // Manifold material ID -> Three.js material ID
+  reservedRange: MaterialIDRange; // Reserved ID range
+  nextAvailableID: number; // Next available ID in range
 }
 
 /**
  * Material ID validation result
  */
 export interface MaterialIDValidation {
-  hasConflicts: boolean;                      // Whether conflicts were found
-  totalReserved: number;                      // Total number of reserved IDs
-  conflicts: Array<{                          // Conflict details
+  hasConflicts: boolean; // Whether conflicts were found
+  totalReserved: number; // Total number of reserved IDs
+  conflicts: Array<{
+    // Conflict details
     range1: MaterialIDRange;
     range2: MaterialIDRange;
     overlapStart: number;
@@ -53,31 +57,31 @@ export interface MaterialIDValidation {
  * MaterialIDManager configuration options
  */
 export interface MaterialIDManagerOptions {
-  maxMaterials?: number;                      // Maximum number of materials to support
-  reservationSize?: number;                   // Size of ID reservation (default: 65536)
-  autoExpand?: boolean;                       // Whether to auto-expand when running out of IDs
-  cacheSize?: number;                         // Size of material lookup cache (default: 100)
-  enableMetrics?: boolean;                    // Whether to collect performance metrics (default: false)
+  maxMaterials?: number; // Maximum number of materials to support
+  reservationSize?: number; // Size of ID reservation (default: 65536)
+  autoExpand?: boolean; // Whether to auto-expand when running out of IDs
+  cacheSize?: number; // Size of material lookup cache (default: 100)
+  enableMetrics?: boolean; // Whether to collect performance metrics (default: false)
 }
 
 /**
  * Material ID performance metrics
  */
 export interface MaterialIDMetrics {
-  totalReservations: number;                  // Total number of reservations made
-  totalMappings: number;                      // Total number of material mappings created
-  cacheHits: number;                          // Number of cache hits
-  cacheMisses: number;                        // Number of cache misses
-  averageReservationTime: number;             // Average time to reserve IDs (ms)
-  averageMappingTime: number;                 // Average time to create mappings (ms)
+  totalReservations: number; // Total number of reservations made
+  totalMappings: number; // Total number of material mappings created
+  cacheHits: number; // Number of cache hits
+  cacheMisses: number; // Number of cache misses
+  averageReservationTime: number; // Average time to reserve IDs (ms)
+  averageMappingTime: number; // Average time to create mappings (ms)
 }
 
 /**
  * Reserve material IDs using Manifold.reserveIDs() pattern
- * 
+ *
  * This function implements the BabylonJS-inspired material ID reservation
  * to prevent conflicts in multi-material CSG operations.
- * 
+ *
  * @param count - Number of material IDs to reserve
  * @param manifoldModule - Optional pre-loaded Manifold WASM module
  * @returns Result<MaterialIDRange, string> with reservation details
@@ -88,22 +92,22 @@ export async function reserveManifoldMaterialIDs(
 ): Promise<Result<MaterialIDRange, string>> {
   try {
     logger.debug('[DEBUG][ManifoldMaterialManager] Reserving material IDs', { count });
-    
+
     // Validate input
     if (count <= 0) {
-      return { 
-        success: false, 
-        error: 'Invalid count: Must reserve at least 1 material ID' 
+      return {
+        success: false,
+        error: 'Invalid count: Must reserve at least 1 material ID',
       };
     }
-    
+
     if (count > 1000000) {
-      return { 
-        success: false, 
-        error: `Invalid count: Cannot reserve more than 1,000,000 IDs, requested ${count}` 
+      return {
+        success: false,
+        error: `Invalid count: Cannot reserve more than 1,000,000 IDs, requested ${count}`,
       };
     }
-    
+
     // Load Manifold module if not provided
     if (!manifoldModule) {
       const loader = new ManifoldWasmLoader();
@@ -114,35 +118,41 @@ export async function reserveManifoldMaterialIDs(
       }
       manifoldModule = loadResult;
     }
-    
+
     // Use Manifold.reserveIDs() if available
     if (manifoldModule && typeof manifoldModule.reserveIDs === 'function') {
       try {
         const startID = manifoldModule.reserveIDs(count);
-        
+
         const reservation: MaterialIDRange = {
           startID,
           endID: startID + count - 1,
           count,
-          reservedAt: Date.now()
+          reservedAt: Date.now(),
         };
-        
-        logger.debug('[DEBUG][ManifoldMaterialManager] Material IDs reserved successfully', reservation);
-        
+
+        logger.debug(
+          '[DEBUG][ManifoldMaterialManager] Material IDs reserved successfully',
+          reservation
+        );
+
         return { success: true, data: reservation };
-        
       } catch (error) {
-        logger.warn('[WARN][ManifoldMaterialManager] Manifold.reserveIDs() failed, using fallback', { error });
+        logger.warn(
+          '[WARN][ManifoldMaterialManager] Manifold.reserveIDs() failed, using fallback',
+          { error }
+        );
         return createLocalMaterialIDReservation(count);
       }
     } else {
       // Fallback when reserveIDs is not available
       return createLocalMaterialIDReservation(count);
     }
-    
   } catch (error) {
     const errorMessage = `Failed to reserve material IDs: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMaterialManager] Material ID reservation failed', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMaterialManager] Material ID reservation failed', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -157,21 +167,23 @@ function createLocalMaterialIDReservation(count: number): Result<MaterialIDRange
   try {
     const startID = nextLocalID;
     const endID = startID + count - 1;
-    
+
     // Update next available ID
     nextLocalID = endID + 1;
-    
+
     const reservation: MaterialIDRange = {
       startID,
       endID,
       count,
-      reservedAt: Date.now()
+      reservedAt: Date.now(),
     };
-    
-    logger.debug('[DEBUG][ManifoldMaterialManager] Local material ID reservation created', reservation);
-    
+
+    logger.debug(
+      '[DEBUG][ManifoldMaterialManager] Local material ID reservation created',
+      reservation
+    );
+
     return { success: true, data: reservation };
-    
   } catch (error) {
     const errorMessage = `Failed to create local material ID reservation: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -180,10 +192,10 @@ function createLocalMaterialIDReservation(count: number): Result<MaterialIDRange
 
 /**
  * Create material mapping for Three.js materials
- * 
+ *
  * Maps Three.js material identifiers to reserved Manifold material IDs
  * to ensure consistent material handling in CSG operations.
- * 
+ *
  * @param materials - Array of Three.js materials to map
  * @param reservedRange - Reserved material ID range
  * @param existingMapping - Optional existing mapping to update
@@ -195,119 +207,125 @@ export function createMaterialMapping(
   existingMapping?: MaterialMapping
 ): Result<MaterialMapping, string> {
   try {
-    logger.debug('[DEBUG][ManifoldMaterialManager] Creating material mapping', { 
+    logger.debug('[DEBUG][ManifoldMaterialManager] Creating material mapping', {
       materialCount: materials.length,
-      reservedRange 
+      reservedRange,
     });
-    
+
     // Initialize mapping
     const threeToManifold: Record<string, number> = existingMapping?.threeToManifold || {};
     const manifoldToThree: Record<number, string> = existingMapping?.manifoldToThree || {};
     let nextAvailableID = existingMapping?.nextAvailableID || reservedRange.startID;
-    
+
     // Map new materials
     for (const material of materials) {
       if (!threeToManifold[material.id]) {
         // Check if we have available IDs
         if (nextAvailableID > reservedRange.endID) {
-          return { 
-            success: false, 
-            error: `Insufficient reserved material IDs: Need ${materials.length} but only have ${reservedRange.count} reserved` 
+          return {
+            success: false,
+            error: `Insufficient reserved material IDs: Need ${materials.length} but only have ${reservedRange.count} reserved`,
           };
         }
-        
+
         // Assign new ID
         const manifoldID = nextAvailableID++;
         threeToManifold[material.id] = manifoldID;
         manifoldToThree[manifoldID] = material.id;
-        
-        logger.debug('[DEBUG][ManifoldMaterialManager] Mapped material', { 
-          threeID: material.id, 
+
+        logger.debug('[DEBUG][ManifoldMaterialManager] Mapped material', {
+          threeID: material.id,
           manifoldID,
-          name: material.name 
+          name: material.name,
         });
       }
     }
-    
+
     const mapping: MaterialMapping = {
       threeToManifold,
       manifoldToThree,
       reservedRange,
-      nextAvailableID
+      nextAvailableID,
     };
-    
+
     logger.debug('[DEBUG][ManifoldMaterialManager] Material mapping created successfully', {
       mappedCount: Object.keys(threeToManifold).length,
-      nextAvailableID
+      nextAvailableID,
     });
-    
+
     return { success: true, data: mapping };
-    
   } catch (error) {
     const errorMessage = `Failed to create material mapping: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMaterialManager] Material mapping failed', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMaterialManager] Material mapping failed', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
 
 /**
  * Validate material ID ranges for conflicts
- * 
+ *
  * Checks multiple material ID ranges to ensure no overlaps or conflicts
  * that could cause issues in CSG operations.
- * 
+ *
  * @param ranges - Array of material ID ranges to validate
  * @returns Result<MaterialIDValidation, string> with validation results
  */
-export function validateMaterialIDs(ranges: MaterialIDRange[]): Result<MaterialIDValidation, string> {
+export function validateMaterialIDs(
+  ranges: MaterialIDRange[]
+): Result<MaterialIDValidation, string> {
   try {
-    logger.debug('[DEBUG][ManifoldMaterialManager] Validating material ID ranges', { rangeCount: ranges.length });
-    
+    logger.debug('[DEBUG][ManifoldMaterialManager] Validating material ID ranges', {
+      rangeCount: ranges.length,
+    });
+
     const conflicts: MaterialIDValidation['conflicts'] = [];
     let totalReserved = 0;
-    
+
     // Check each range against all others
     for (let i = 0; i < ranges.length; i++) {
       const range1 = ranges[i];
       totalReserved += range1.count;
-      
+
       for (let j = i + 1; j < ranges.length; j++) {
         const range2 = ranges[j];
-        
+
         // Check for overlap
         const overlapStart = Math.max(range1.startID, range2.startID);
         const overlapEnd = Math.min(range1.endID, range2.endID);
-        
+
         if (overlapStart <= overlapEnd) {
           conflicts.push({
             range1,
             range2,
             overlapStart,
-            overlapEnd
+            overlapEnd,
           });
         }
       }
     }
-    
+
     const validation: MaterialIDValidation = {
       hasConflicts: conflicts.length > 0,
       totalReserved,
-      conflicts
+      conflicts,
     };
-    
+
     if (validation.hasConflicts) {
-      logger.warn('[WARN][ManifoldMaterialManager] Material ID conflicts detected', { 
-        conflictCount: conflicts.length 
+      logger.warn('[WARN][ManifoldMaterialManager] Material ID conflicts detected', {
+        conflictCount: conflicts.length,
       });
     } else {
       logger.debug('[DEBUG][ManifoldMaterialManager] No material ID conflicts found');
     }
-    
+
     return { success: true, data: validation };
-    
   } catch (error) {
     const errorMessage = `Failed to validate material IDs: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMaterialManager] Material ID validation failed', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMaterialManager] Material ID validation failed', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -331,7 +349,7 @@ export class MaterialIDManager {
     cacheHits: 0,
     cacheMisses: 0,
     averageReservationTime: 0,
-    averageMappingTime: 0
+    averageMappingTime: 0,
   };
 
   constructor(options: MaterialIDManagerOptions = {}) {
@@ -340,7 +358,7 @@ export class MaterialIDManager {
       reservationSize: options.reservationSize || 65536,
       autoExpand: options.autoExpand !== false,
       cacheSize: options.cacheSize || 100,
-      enableMetrics: options.enableMetrics || false
+      enableMetrics: options.enableMetrics || false,
     };
 
     logger.debug('[DEBUG][MaterialIDManager] Created with options', this.options);
@@ -361,7 +379,10 @@ export class MaterialIDManager {
       // Reserve material IDs
       const reservationResult = await reserveManifoldMaterialIDs(this.options.reservationSize);
       if (!reservationResult.success) {
-        return { success: false, error: `Failed to reserve material IDs: ${reservationResult.error}` };
+        return {
+          success: false,
+          error: `Failed to reserve material IDs: ${reservationResult.error}`,
+        };
       }
 
       this.reservation = reservationResult.data;
@@ -369,7 +390,10 @@ export class MaterialIDManager {
       // Create initial empty mapping
       const mappingResult = createMaterialMapping([], this.reservation);
       if (!mappingResult.success) {
-        return { success: false, error: `Failed to create material mapping: ${mappingResult.error}` };
+        return {
+          success: false,
+          error: `Failed to create material mapping: ${mappingResult.error}`,
+        };
       }
 
       this.mapping = mappingResult.data;
@@ -381,11 +405,10 @@ export class MaterialIDManager {
 
       logger.debug('[DEBUG][MaterialIDManager] Initialized successfully', {
         reservedRange: this.reservation,
-        reservationSize: this.options.reservationSize
+        reservationSize: this.options.reservationSize,
       });
 
       return { success: true, data: undefined };
-
     } catch (error) {
       const errorMessage = `Failed to initialize MaterialIDManager: ${error instanceof Error ? error.message : String(error)}`;
       logger.error('[ERROR][MaterialIDManager] Initialization failed', { error: errorMessage });
@@ -461,7 +484,7 @@ export class MaterialIDManager {
 
     logger.debug('[DEBUG][MaterialIDManager] Created new material mapping', {
       threeJSMaterialID,
-      manifoldID
+      manifoldID,
     });
 
     return manifoldID;
@@ -502,7 +525,7 @@ export class MaterialIDManager {
         isInitialized: false,
         cacheSize: 0,
         cacheHitRate: 0,
-        metrics: this.options.enableMetrics ? this.metrics : undefined
+        metrics: this.options.enableMetrics ? this.metrics : undefined,
       };
     }
 
@@ -518,7 +541,7 @@ export class MaterialIDManager {
       isInitialized: this.isInitialized,
       cacheSize: this.materialCache.size,
       cacheHitRate,
-      metrics: this.options.enableMetrics ? this.metrics : undefined
+      metrics: this.options.enableMetrics ? this.metrics : undefined,
     };
   }
 
@@ -544,7 +567,6 @@ export class MaterialIDManager {
       logger.debug('[DEBUG][MaterialIDManager] Disposed successfully');
 
       return { success: true, data: undefined };
-
     } catch (error) {
       const errorMessage = `Failed to dispose MaterialIDManager: ${error instanceof Error ? error.message : String(error)}`;
       logger.error('[ERROR][MaterialIDManager] Disposal failed', { error: errorMessage });
@@ -596,7 +618,7 @@ export class MaterialIDManager {
       cacheHits: 0,
       cacheMisses: 0,
       averageReservationTime: 0,
-      averageMappingTime: 0
+      averageMappingTime: 0,
     };
 
     logger.debug('[DEBUG][MaterialIDManager] Metrics cleared');
@@ -620,7 +642,7 @@ export class MaterialIDManager {
 
     logger.debug('[DEBUG][MaterialIDManager] Cache optimized', {
       cacheSize: this.materialCache.size,
-      validMappings: validIDs.size
+      validMappings: validIDs.size,
     });
   }
 }

@@ -1,14 +1,14 @@
 /**
  * @file Simple Manifold Integration Test
  * Task 1.8: Setup Testing with Real OpenscadParser (Red Phase - Simplified)
- * 
+ *
  * Simplified test to establish basic integration patterns
  */
 
-import { describe, it, expect } from 'vitest';
-import { 
+import { describe, expect, it } from 'vitest';
+import {
+  clearAllResources,
   getMemoryStats,
-  clearAllResources 
 } from '../manifold-memory-manager/manifold-memory-manager';
 
 /**
@@ -19,7 +19,7 @@ describe('Simple Manifold Integration Test', () => {
     // Test that we can access the memory management functions
     expect(typeof getMemoryStats).toBe('function');
     expect(typeof clearAllResources).toBe('function');
-    
+
     // Test basic memory stats
     const stats = getMemoryStats();
     expect(stats).toHaveProperty('activeResources');
@@ -42,9 +42,9 @@ describe('Simple Manifold Integration Test', () => {
       extractASTNodes: true,
       convertToManifold: true,
       trackMemoryUsage: true,
-      handleErrors: true
+      handleErrors: true,
     };
-    
+
     expect(expectedTestStructure.parseOpenSCADCode).toBe(true);
     expect(expectedTestStructure.extractASTNodes).toBe(true);
     expect(expectedTestStructure.convertToManifold).toBe(true);

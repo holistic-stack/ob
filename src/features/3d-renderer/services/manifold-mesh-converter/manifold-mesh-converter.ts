@@ -1,7 +1,7 @@
 /**
  * @file Manifold Mesh Converter
  * Task 2.1: Create Three.js to Manifold Converter (Green Phase)
- * 
+ *
  * Converts Three.js BufferGeometry to BabylonJS-inspired IManifoldMesh format
  * Following project guidelines:
  * - BabylonJS-inspired mesh conversion with triangle winding reversal
@@ -11,9 +11,9 @@
  * - World matrix transformation during conversion
  */
 
-import { BufferGeometry, Matrix4, Float32BufferAttribute, Uint32BufferAttribute } from 'three';
-import type { Result } from '../../../../shared/types/result.types';
+import { BufferGeometry, Float32BufferAttribute, Matrix4, Uint32BufferAttribute } from 'three';
 import { logger } from '../../../../shared/services/logger.service';
+import type { Result } from '../../../../shared/types/result.types';
 import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 
 /**
@@ -21,24 +21,24 @@ import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader
  * Based on BabylonJS CSG2 implementation analysis
  */
 export interface IManifoldMesh {
-  numProp: number;           // Vertex property count (positions + normals + UVs + colors)
-  vertProperties: Float32Array;  // Interleaved vertex data
-  triVerts: Uint32Array;     // Triangle indices (REVERSED winding order!)
-  runIndex: Uint32Array;     // Material run starts
+  numProp: number; // Vertex property count (positions + normals + UVs + colors)
+  vertProperties: Float32Array; // Interleaved vertex data
+  triVerts: Uint32Array; // Triangle indices (REVERSED winding order!)
+  runIndex: Uint32Array; // Material run starts
   runOriginalID: Uint32Array; // Material IDs
-  numRun: number;            // Number of material runs
+  numRun: number; // Number of material runs
 }
 
 /**
  * Conversion options for Three.js to Manifold conversion
  */
 export interface ConversionOptions {
-  worldMatrix?: number[] | Matrix4;  // World transformation matrix
-  materialId?: number;               // Material ID for this mesh
-  reverseWinding?: boolean;          // Whether to reverse triangle winding (default: false - official Manifold pattern)
-  optimizeVertices?: boolean;        // Whether to optimize vertex data (default: false)
-  validateInput?: boolean;           // Whether to perform extensive input validation (default: true)
-  useOfficialMesh?: boolean;         // Whether to return official Module.Mesh (default: false for compatibility)
+  worldMatrix?: number[] | Matrix4; // World transformation matrix
+  materialId?: number; // Material ID for this mesh
+  reverseWinding?: boolean; // Whether to reverse triangle winding (default: false - official Manifold pattern)
+  optimizeVertices?: boolean; // Whether to optimize vertex data (default: false)
+  validateInput?: boolean; // Whether to perform extensive input validation (default: true)
+  useOfficialMesh?: boolean; // Whether to return official Module.Mesh (default: false for compatibility)
 }
 
 /**
@@ -55,13 +55,13 @@ export interface ConversionStats {
 
 /**
  * Convert Three.js BufferGeometry to BabylonJS-inspired IManifoldMesh
- * 
+ *
  * This function implements the core conversion logic following BabylonJS patterns:
  * 1. Triangle winding reversal (critical for Manifold integration)
  * 2. Structured vertex properties with numProp system
  * 3. Material run handling for multi-material support
  * 4. World matrix transformation during conversion
- * 
+ *
  * @param geometry - Three.js BufferGeometry to convert
  * @param options - Conversion options including world matrix and material ID
  * @returns Result<IManifoldMesh, string> with success/error pattern
@@ -79,10 +79,10 @@ export function convertThreeToManifold(
     const {
       worldMatrix,
       materialId = 0,
-      reverseWinding = false,  // Official Manifold pattern: no winding reversal needed
+      reverseWinding = false, // Official Manifold pattern: no winding reversal needed
       optimizeVertices = false,
       validateInput = true,
-      useOfficialMesh = false
+      useOfficialMesh = false,
     } = options;
 
     // Validate input geometry (optional for performance)
@@ -94,59 +94,73 @@ export function convertThreeToManifold(
     } else if (!geometry || !(geometry instanceof BufferGeometry)) {
       return {
         success: false,
-        error: 'Invalid geometry: Expected Three.js BufferGeometry instance'
+        error: 'Invalid geometry: Expected Three.js BufferGeometry instance',
       };
     }
-    
+
     // Get position attribute (required)
     const positionAttribute = geometry.getAttribute('position');
     if (!positionAttribute) {
-      return { 
-        success: false, 
-        error: 'Invalid geometry: Missing position attribute' 
+      return {
+        success: false,
+        error: 'Invalid geometry: Missing position attribute',
       };
     }
-    
+
     // Validate position data
     if (positionAttribute.count === 0) {
-      return { 
-        success: false, 
-        error: 'Invalid geometry: Empty position data' 
+      return {
+        success: false,
+        error: 'Invalid geometry: Empty position data',
       };
     }
-    
+
     if (positionAttribute.itemSize !== 3) {
-      return { 
-        success: false, 
-        error: `Invalid geometry: Position attribute must have itemSize 3, got ${positionAttribute.itemSize}` 
+      return {
+        success: false,
+        error: `Invalid geometry: Position attribute must have itemSize 3, got ${positionAttribute.itemSize}`,
       };
     }
-    
+
     // Get optional attributes
     const normalAttribute = geometry.getAttribute('normal');
     const uvAttribute = geometry.getAttribute('uv');
     const colorAttribute = geometry.getAttribute('color');
-    
+
     // Calculate numProp (vertex property count)
     let numProp = 3; // Always have positions (x, y, z)
     if (normalAttribute) numProp += 3; // Add normals (nx, ny, nz)
-    if (uvAttribute) numProp += 2;     // Add UVs (u, v)
-    if (colorAttribute) numProp += 3;  // Add colors (r, g, b)
-    
+    if (uvAttribute) numProp += 2; // Add UVs (u, v)
+    if (colorAttribute) numProp += 3; // Add colors (r, g, b)
+
     const vertexCount = positionAttribute.count;
-    
+
     // Create interleaved vertex properties array
     const vertProperties = new Float32Array(vertexCount * numProp);
-    
+
     // Fill interleaved vertex data (optimized for performance)
     if (optimizeVertices) {
-      fillVertexPropertiesOptimized(vertProperties, numProp, vertexCount,
-                                   positionAttribute, normalAttribute, uvAttribute, colorAttribute);
+      fillVertexPropertiesOptimized(
+        vertProperties,
+        numProp,
+        vertexCount,
+        positionAttribute,
+        normalAttribute,
+        uvAttribute,
+        colorAttribute
+      );
     } else {
-      fillVertexPropertiesStandard(vertProperties, numProp, vertexCount,
-                                  positionAttribute, normalAttribute, uvAttribute, colorAttribute);
+      fillVertexPropertiesStandard(
+        vertProperties,
+        numProp,
+        vertexCount,
+        positionAttribute,
+        normalAttribute,
+        uvAttribute,
+        colorAttribute
+      );
     }
-    
+
     // Apply world matrix transformation if provided
     if (options.worldMatrix) {
       const result = applyWorldMatrixTransformation(vertProperties, numProp, options.worldMatrix);
@@ -154,34 +168,37 @@ export function convertThreeToManifold(
         return result;
       }
     }
-    
+
     // Handle triangle indices (official Manifold pattern: preserve Three.js CCW winding)
     const indexResult = processTriangleIndices(geometry, reverseWinding);
     if (!indexResult.success) {
       return indexResult;
     }
-    
+
     const triVerts = indexResult.data;
-    
+
     // Create material runs (single material for now)
     const runIndex = new Uint32Array([0]);
     const runOriginalID = new Uint32Array([materialId]);
     const numRun = 1;
-    
+
     const manifoldMesh: IManifoldMesh = {
       numProp,
       vertProperties,
       triVerts,
       runIndex,
       runOriginalID,
-      numRun
+      numRun,
     };
-    
+
     // Calculate performance statistics
     const endTime = performance.now();
     const processingTimeMs = endTime - startTime;
-    const memoryUsageBytes = vertProperties.byteLength + triVerts.byteLength +
-                            runIndex.byteLength + runOriginalID.byteLength;
+    const memoryUsageBytes =
+      vertProperties.byteLength +
+      triVerts.byteLength +
+      runIndex.byteLength +
+      runOriginalID.byteLength;
 
     const stats: ConversionStats = {
       vertexCount,
@@ -189,13 +206,12 @@ export function convertThreeToManifold(
       numProp,
       materialId,
       processingTimeMs,
-      memoryUsageBytes
+      memoryUsageBytes,
     };
 
     logger.debug('[DEBUG][ManifoldMeshConverter] Conversion completed successfully', stats);
 
     return { success: true, data: manifoldMesh };
-
   } catch (error) {
     const errorMessage = `Three.js to Manifold conversion failed: ${error instanceof Error ? error.message : String(error)}`;
     logger.error('[ERROR][ManifoldMeshConverter] Conversion error', { error: errorMessage });
@@ -209,13 +225,13 @@ export function convertThreeToManifold(
  * Winding reversal only needed for special cases or compatibility with other systems
  */
 function processTriangleIndices(
-  geometry: BufferGeometry, 
+  geometry: BufferGeometry,
   reverseWinding: boolean
 ): Result<Uint32Array, string> {
   try {
     const indexAttribute = geometry.getIndex();
     let indices: Uint32Array;
-    
+
     if (indexAttribute) {
       // Indexed geometry - use existing indices
       indices = new Uint32Array(indexAttribute.array);
@@ -223,18 +239,18 @@ function processTriangleIndices(
       // Non-indexed geometry - generate indices
       const vertexCount = geometry.getAttribute('position').count;
       if (vertexCount % 3 !== 0) {
-        return { 
-          success: false, 
-          error: `Non-indexed geometry must have vertex count divisible by 3, got ${vertexCount}` 
+        return {
+          success: false,
+          error: `Non-indexed geometry must have vertex count divisible by 3, got ${vertexCount}`,
         };
       }
-      
+
       indices = new Uint32Array(vertexCount);
       for (let i = 0; i < vertexCount; i++) {
         indices[i] = i;
       }
     }
-    
+
     // Apply triangle winding reversal (only when explicitly requested)
     // Official Manifold pattern: preserve Three.js CCW winding (reverseWinding = false)
     if (reverseWinding) {
@@ -245,9 +261,8 @@ function processTriangleIndices(
         indices[i + 2] = temp;
       }
     }
-    
+
     return { success: true, data: indices };
-    
   } catch (error) {
     const errorMessage = `Triangle index processing failed: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -271,43 +286,43 @@ function applyWorldMatrixTransformation(
     } else {
       matrix = worldMatrix;
     }
-    
+
     const vertexCount = vertProperties.length / numProp;
-    
+
     // Transform each vertex
     for (let i = 0; i < vertexCount; i++) {
       const offset = i * numProp;
-      
+
       // Transform position (first 3 components)
       const x = vertProperties[offset];
       const y = vertProperties[offset + 1];
       const z = vertProperties[offset + 2];
-      
+
       // Apply matrix transformation
       const transformed = matrix.multiplyVector3({ x, y, z } as any);
-      
+
       vertProperties[offset] = transformed.x;
       vertProperties[offset + 1] = transformed.y;
       vertProperties[offset + 2] = transformed.z;
-      
+
       // Transform normals if present (assuming normals start at offset 3)
-      if (numProp >= 6) { // positions + normals
+      if (numProp >= 6) {
+        // positions + normals
         const nx = vertProperties[offset + 3];
         const ny = vertProperties[offset + 4];
         const nz = vertProperties[offset + 5];
-        
+
         // Transform normal (use normal matrix - upper 3x3 of inverse transpose)
         const normalMatrix = matrix.clone().invert().transpose();
         const transformedNormal = normalMatrix.multiplyVector3({ x: nx, y: ny, z: nz } as any);
-        
+
         vertProperties[offset + 3] = transformedNormal.x;
         vertProperties[offset + 4] = transformedNormal.y;
         vertProperties[offset + 5] = transformedNormal.z;
       }
     }
-    
+
     return { success: true, data: undefined };
-    
   } catch (error) {
     const errorMessage = `World matrix transformation failed: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -322,7 +337,7 @@ function validateGeometry(geometry: BufferGeometry): Result<void, string> {
   if (!geometry || !(geometry instanceof BufferGeometry)) {
     return {
       success: false,
-      error: 'Invalid geometry: Expected Three.js BufferGeometry instance'
+      error: 'Invalid geometry: Expected Three.js BufferGeometry instance',
     };
   }
 
@@ -330,21 +345,21 @@ function validateGeometry(geometry: BufferGeometry): Result<void, string> {
   if (!positionAttribute) {
     return {
       success: false,
-      error: 'Invalid geometry: Missing position attribute'
+      error: 'Invalid geometry: Missing position attribute',
     };
   }
 
   if (positionAttribute.count === 0) {
     return {
       success: false,
-      error: 'Invalid geometry: Empty position data'
+      error: 'Invalid geometry: Empty position data',
     };
   }
 
   if (positionAttribute.itemSize !== 3) {
     return {
       success: false,
-      error: `Invalid geometry: Position attribute must have itemSize 3, got ${positionAttribute.itemSize}`
+      error: `Invalid geometry: Position attribute must have itemSize 3, got ${positionAttribute.itemSize}`,
     };
   }
 
@@ -475,7 +490,7 @@ export async function createOfficialManifoldMesh(
       triVerts: meshData.triVerts,
       runIndex: meshData.runIndex,
       runOriginalID: meshData.runOriginalID,
-      numRun: meshData.numRun
+      numRun: meshData.numRun,
     });
 
     // Call merge() as shown in official example for manifold reconstruction
@@ -485,14 +500,15 @@ export async function createOfficialManifoldMesh(
       numProp: meshData.numProp,
       vertexCount: meshData.vertProperties.length / meshData.numProp,
       triangleCount: meshData.triVerts.length / 3,
-      materialRuns: meshData.numRun
+      materialRuns: meshData.numRun,
     });
 
     return { success: true, data: mesh };
-
   } catch (error) {
     const errorMessage = `Failed to create official Manifold mesh: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMeshConverter] Official mesh creation failed', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMeshConverter] Official mesh creation failed', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -519,16 +535,20 @@ export async function convertThreeToOfficialManifold(
     }
 
     // Create official Manifold mesh
-    const officialMeshResult = await createOfficialManifoldMesh(meshDataResult.data, manifoldModule);
+    const officialMeshResult = await createOfficialManifoldMesh(
+      meshDataResult.data,
+      manifoldModule
+    );
     if (!officialMeshResult.success) {
       return officialMeshResult;
     }
 
     return { success: true, data: officialMeshResult.data };
-
   } catch (error) {
     const errorMessage = `Failed to convert Three.js to official Manifold: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMeshConverter] Direct conversion failed', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMeshConverter] Direct conversion failed', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -537,10 +557,10 @@ export async function convertThreeToOfficialManifold(
  * Conversion options for Manifold to Three.js conversion
  */
 export interface ManifoldToThreeOptions {
-  preserveGroups?: boolean;        // Whether to create geometry groups from material runs (default: true)
-  computeNormals?: boolean;        // Whether to compute normals if missing (default: false)
-  optimizeGeometry?: boolean;      // Whether to optimize the resulting geometry (default: false)
-  validateOutput?: boolean;        // Whether to validate the output geometry (default: true)
+  preserveGroups?: boolean; // Whether to create geometry groups from material runs (default: true)
+  computeNormals?: boolean; // Whether to compute normals if missing (default: false)
+  optimizeGeometry?: boolean; // Whether to optimize the resulting geometry (default: false)
+  validateOutput?: boolean; // Whether to validate the output geometry (default: true)
 }
 
 /**
@@ -572,35 +592,35 @@ export function convertManifoldToThree(
       preserveGroups = true,
       computeNormals = false,
       optimizeGeometry = false,
-      validateOutput = true
+      validateOutput = true,
     } = options;
 
     // Validate input mesh data
     if (!meshData || typeof meshData !== 'object') {
       return {
         success: false,
-        error: 'Invalid mesh data: Expected IManifoldMesh object'
+        error: 'Invalid mesh data: Expected IManifoldMesh object',
       };
     }
 
     if (!meshData.vertProperties || meshData.vertProperties.length === 0) {
       return {
         success: false,
-        error: 'Invalid mesh data: Empty or missing vertex properties'
+        error: 'Invalid mesh data: Empty or missing vertex properties',
       };
     }
 
     if (!meshData.triVerts || meshData.triVerts.length === 0) {
       return {
         success: false,
-        error: 'Invalid mesh data: Empty or missing triangle vertices'
+        error: 'Invalid mesh data: Empty or missing triangle vertices',
       };
     }
 
     if (meshData.numProp <= 0) {
       return {
         success: false,
-        error: 'Invalid mesh data: numProp must be greater than 0'
+        error: 'Invalid mesh data: numProp must be greater than 0',
       };
     }
 
@@ -608,7 +628,7 @@ export function convertManifoldToThree(
     if (vertexCount !== Math.floor(vertexCount)) {
       return {
         success: false,
-        error: `Invalid mesh data: Vertex properties length (${meshData.vertProperties.length}) not divisible by numProp (${meshData.numProp})`
+        error: `Invalid mesh data: Vertex properties length (${meshData.vertProperties.length}) not divisible by numProp (${meshData.numProp})`,
       };
     }
 
@@ -651,7 +671,9 @@ export function convertManifoldToThree(
     if (preserveGroups && meshData.numRun > 1) {
       const groupResult = createGeometryGroups(geometry, meshData);
       if (!groupResult.success) {
-        logger.warn('[WARN][ManifoldMeshConverter] Failed to create geometry groups', { error: groupResult.error });
+        logger.warn('[WARN][ManifoldMeshConverter] Failed to create geometry groups', {
+          error: groupResult.error,
+        });
         // Continue without groups rather than failing
       }
     }
@@ -667,7 +689,9 @@ export function convertManifoldToThree(
     if (validateOutput) {
       const validationResult = validateGeometryOutput(geometry);
       if (!validationResult.success) {
-        logger.warn('[WARN][ManifoldMeshConverter] Geometry validation failed', { error: validationResult.error });
+        logger.warn('[WARN][ManifoldMeshConverter] Geometry validation failed', {
+          error: validationResult.error,
+        });
         // Continue with warning rather than failing
       }
     }
@@ -684,11 +708,10 @@ export function convertManifoldToThree(
       processingTimeMs,
       hasNormals: !!normals,
       hasUVs: !!uvs,
-      hasColors: !!colors
+      hasColors: !!colors,
     });
 
     return { success: true, data: geometry };
-
   } catch (error) {
     const errorMessage = `Manifold to Three.js conversion failed: ${error instanceof Error ? error.message : String(error)}`;
     logger.error('[ERROR][ManifoldMeshConverter] Conversion error', { error: errorMessage });
@@ -703,12 +726,15 @@ export function convertManifoldToThree(
 function extractVertexAttributes(
   meshData: IManifoldMesh,
   vertexCount: number
-): Result<{
-  positions: Float32Array;
-  normals?: Float32Array;
-  uvs?: Float32Array;
-  colors?: Float32Array;
-}, string> {
+): Result<
+  {
+    positions: Float32Array;
+    normals?: Float32Array;
+    uvs?: Float32Array;
+    colors?: Float32Array;
+  },
+  string
+> {
   try {
     const { vertProperties, numProp } = meshData;
 
@@ -788,10 +814,9 @@ function extractVertexAttributes(
         positions,
         normals,
         uvs,
-        colors
-      }
+        colors,
+      },
     };
-
   } catch (error) {
     const errorMessage = `Failed to extract vertex attributes: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -825,7 +850,6 @@ function createGeometryGroups(
     }
 
     return { success: true, data: undefined };
-
   } catch (error) {
     const errorMessage = `Failed to create geometry groups: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -852,7 +876,10 @@ function validateGeometryOutput(geometry: BufferGeometry): Result<void, string> 
 
     // Verify triangle count is valid
     if (indexAttribute.count % 3 !== 0) {
-      return { success: false, error: `Invalid triangle count: ${indexAttribute.count} indices not divisible by 3` };
+      return {
+        success: false,
+        error: `Invalid triangle count: ${indexAttribute.count} indices not divisible by 3`,
+      };
     }
 
     // Check for valid bounding box
@@ -862,7 +889,6 @@ function validateGeometryOutput(geometry: BufferGeometry): Result<void, string> 
     }
 
     return { success: true, data: undefined };
-
   } catch (error) {
     const errorMessage = `Geometry validation failed: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, error: errorMessage };
@@ -887,22 +913,29 @@ export function roundTripConversion(
     // Convert to Manifold
     const manifoldResult = convertThreeToManifold(originalGeometry, threeToManifoldOptions);
     if (!manifoldResult.success) {
-      return { success: false, error: `Three.js to Manifold conversion failed: ${manifoldResult.error}` };
+      return {
+        success: false,
+        error: `Three.js to Manifold conversion failed: ${manifoldResult.error}`,
+      };
     }
 
     // Convert back to Three.js
     const threeResult = convertManifoldToThree(manifoldResult.data, manifoldToThreeOptions);
     if (!threeResult.success) {
-      return { success: false, error: `Manifold to Three.js conversion failed: ${threeResult.error}` };
+      return {
+        success: false,
+        error: `Manifold to Three.js conversion failed: ${threeResult.error}`,
+      };
     }
 
     logger.debug('[DEBUG][ManifoldMeshConverter] Round-trip conversion completed successfully');
 
     return { success: true, data: threeResult.data };
-
   } catch (error) {
     const errorMessage = `Round-trip conversion failed: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error('[ERROR][ManifoldMeshConverter] Round-trip conversion error', { error: errorMessage });
+    logger.error('[ERROR][ManifoldMeshConverter] Round-trip conversion error', {
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }

@@ -85,7 +85,7 @@ export interface ManifoldOperation {
 /**
  * Discriminated union for Manifold primitives
  */
-export type ManifoldPrimitive = 
+export type ManifoldPrimitive =
   | ManifoldCube
   | ManifoldSphere
   | ManifoldCylinder
@@ -214,8 +214,10 @@ export type PrimitiveType<T extends ManifoldPrimitive> = T['type'];
 /**
  * Utility type for primitive parameters
  */
-export type PrimitiveParams<T extends PrimitiveType<ManifoldPrimitive>> = 
-  Extract<ManifoldPrimitive, { type: T }>;
+export type PrimitiveParams<T extends PrimitiveType<ManifoldPrimitive>> = Extract<
+  ManifoldPrimitive,
+  { type: T }
+>;
 
 /**
  * Type guard for ManifoldMesh
@@ -281,7 +283,7 @@ export const createManifoldMesh = (
     indices,
     normals,
     uvs,
-    __brand: 'ManifoldMesh' as const
+    __brand: 'ManifoldMesh' as const,
   });
 };
 
@@ -294,7 +296,7 @@ export const createManifoldResource = <T extends { delete(): void }>(
   return Object.freeze({
     resource,
     disposed: false,
-    __brand: 'ManifoldResource' as const
+    __brand: 'ManifoldResource' as const,
   });
 };
 

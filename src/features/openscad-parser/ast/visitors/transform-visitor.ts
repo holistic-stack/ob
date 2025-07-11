@@ -172,9 +172,7 @@ export class TransformVisitor extends BaseASTVisitor {
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
-    let functionName = nameNode?.text || '';
-
-
+    const functionName = nameNode?.text || '';
 
     return functionName;
   }
@@ -219,8 +217,6 @@ export class TransformVisitor extends BaseASTVisitor {
       const firstChild = node.child(0);
       if (firstChild) {
         functionName = firstChild.text;
-
-
       }
     }
 
@@ -1004,8 +1000,6 @@ export class TransformVisitor extends BaseASTVisitor {
         }
       }
     }
-
-
 
     return {
       type: 'mirror',

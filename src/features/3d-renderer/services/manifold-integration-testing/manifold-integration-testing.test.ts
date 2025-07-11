@@ -10,15 +10,15 @@
  * - Comprehensive test coverage with real parser integration
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { ManifoldIntegrationTestContext } from './manifold-integration-test-utils';
 import {
   createManifoldIntegrationTestContext,
-  parseOpenSCADSafely,
   extractPrimitiveInfo,
+  parseOpenSCADSafely,
+  TEST_OPENSCAD_SAMPLES,
   validateMemoryState,
-  TEST_OPENSCAD_SAMPLES
 } from './manifold-integration-test-utils';
-import type { ManifoldIntegrationTestContext } from './manifold-integration-test-utils';
 
 /**
  * Integration test suite for Manifold + OpenSCAD Parser
@@ -84,7 +84,10 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
       }
 
       // Test with invalid OpenSCAD syntax using test utilities
-      const parseResult = parseOpenSCADSafely(testContext.parser, TEST_OPENSCAD_SAMPLES.invalidSyntax);
+      const parseResult = parseOpenSCADSafely(
+        testContext.parser,
+        TEST_OPENSCAD_SAMPLES.invalidSyntax
+      );
 
       // Parser should handle errors gracefully
       // Note: The parser might still return a result with error nodes, or fail completely
@@ -103,7 +106,7 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
       const expectedInterface = {
         createManagedResource: expect.any(Function),
         disposeManagedResource: expect.any(Function),
-        getMemoryStats: expect.any(Function)
+        getMemoryStats: expect.any(Function),
       };
 
       expect(typeof createManagedResource).toBe('function');
@@ -121,16 +124,16 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
     it('should process cube primitive from AST to Manifold mesh', async () => {
       // Test complete pipeline: OpenSCAD → AST → Manifold
       const openscadCode = 'cube([5, 5, 5]);';
-      
+
       // Parse with real OpenscadParser
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
-      
+
       // Extract cube parameters from AST
       const cubeNode = ast.children[0];
       expect(cubeNode.type).toBe('function_call');
       expect(cubeNode.name).toBe('cube');
-      
+
       // This will be implemented in Green phase
       // For now, establish the expected interface
       const expectedDimensions = [5, 5, 5];
@@ -144,14 +147,14 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
         sphere(5);
         cylinder(h=20, r=3);
       `;
-      
+
       // Parse with real OpenscadParser
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
       expect(ast.children).toHaveLength(3);
-      
+
       // Verify each primitive type
-      const primitives = ast.children.map(child => child.name);
+      const primitives = ast.children.map((child) => child.name);
       expect(primitives).toContain('cube');
       expect(primitives).toContain('sphere');
       expect(primitives).toContain('cylinder');
@@ -165,16 +168,16 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
           sphere(8);
         }
       `;
-      
+
       // Parse with real OpenscadParser
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
-      
+
       // Verify union structure
       const unionNode = ast.children[0];
       expect(unionNode.type).toBe('function_call');
       expect(unionNode.name).toBe('union');
-      
+
       // Verify children in union block
       expect(unionNode.children).toBeDefined();
     });
@@ -185,16 +188,16 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
       // Test memory tracking with multiple resources
       const initialStats = getMemoryStats();
       expect(initialStats.totalAllocated).toBe(0);
-      
+
       // This test establishes the expected memory tracking behavior
       // Implementation will be completed in Green phase
       const expectedBehavior = {
         trackResourceCreation: true,
         trackResourceDisposal: true,
         preventMemoryLeaks: true,
-        provideStatistics: true
+        provideStatistics: true,
       };
-      
+
       expect(expectedBehavior.trackResourceCreation).toBe(true);
     });
 
@@ -205,9 +208,9 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
         // Simulate WASM loading error (will be implemented in Green phase)
         const errorResult: Result<any, string> = {
           success: false,
-          error: 'WASM module failed to load'
+          error: 'WASM module failed to load',
         };
-        
+
         expect(errorResult.success).toBe(false);
         expect(errorResult.error).toContain('WASM');
       } catch (error) {
@@ -220,15 +223,16 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
   describe('Performance and Reliability', () => {
     it('should handle large OpenSCAD files without memory leaks', async () => {
       // Test with larger OpenSCAD code
-      const largeOpenscadCode = Array(100).fill(0).map((_, i) => 
-        `translate([${i}, 0, 0]) cube([1, 1, 1]);`
-      ).join('\n');
-      
+      const largeOpenscadCode = Array(100)
+        .fill(0)
+        .map((_, i) => `translate([${i}, 0, 0]) cube([1, 1, 1]);`)
+        .join('\n');
+
       // Parse with real OpenscadParser
       const ast = parser.parseAST(largeOpenscadCode);
       expect(ast).toBeDefined();
       expect(ast.children).toHaveLength(100);
-      
+
       // Memory should remain stable
       const stats = getMemoryStats();
       expect(stats.activeResources).toBe(0); // No Manifold resources created yet
@@ -237,20 +241,20 @@ describe('Manifold Integration Testing with Real OpenscadParser', () => {
     it('should provide comprehensive error context for debugging', async () => {
       // Test error reporting and debugging capabilities
       const problematicCode = 'cube([10, 20, "invalid"]);'; // Invalid parameter type
-      
+
       // Parse with real OpenscadParser
       const ast = parser.parseAST(problematicCode);
       expect(ast).toBeDefined();
-      
+
       // Error handling will be enhanced in Green phase
       // This establishes the expected debugging interface
       const expectedErrorContext = {
         lineNumber: expect.any(Number),
         columnNumber: expect.any(Number),
         errorType: expect.any(String),
-        suggestion: expect.any(String)
+        suggestion: expect.any(String),
       };
-      
+
       expect(typeof expectedErrorContext.lineNumber).toBe('number');
     });
   });

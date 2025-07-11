@@ -4,23 +4,23 @@
  * Part of Manifold CSG migration - Task 1.6
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { 
-  ManifoldResource, 
-  ManifoldMemoryStats,
-  ManifoldError 
-} from '../manifold-types/manifold-types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Result } from '../../../../shared/types/result.types';
+import type {
+  ManifoldError,
+  ManifoldMemoryStats,
+  ManifoldResource,
+} from '../manifold-types/manifold-types';
 
 // Import the memory manager (will fail until implemented)
-import { 
-  ManifoldMemoryManager,
-  createManagedResource,
-  disposeManagedResource,
-  getMemoryStats,
+import {
   clearAllResources,
+  createManagedResource,
+  disableMemoryLeakDetection,
+  disposeManagedResource,
   enableMemoryLeakDetection,
-  disableMemoryLeakDetection
+  getMemoryStats,
+  ManifoldMemoryManager,
 } from './manifold-memory-manager';
 
 // Mock WASM object for testing
@@ -35,7 +35,7 @@ const createMockWasmObject = (id: number): MockWasmObject => ({
   deleted: false,
   delete() {
     this.deleted = true;
-  }
+  },
 });
 
 describe('Manifold Memory Manager', () => {
@@ -46,7 +46,7 @@ describe('Manifold Memory Manager', () => {
     // This will fail until we implement the memory manager
     memoryManager = new ManifoldMemoryManager();
     mockWasmObjects = [];
-    
+
     // Clear any existing resources
     clearAllResources();
   });
@@ -54,7 +54,7 @@ describe('Manifold Memory Manager', () => {
   afterEach(() => {
     // Clean up all resources after each test
     clearAllResources();
-    mockWasmObjects.forEach(obj => {
+    mockWasmObjects.forEach((obj) => {
       if (!obj.deleted) {
         obj.delete();
       }
@@ -105,7 +105,7 @@ describe('Manifold Memory Manager', () => {
 
       if (managedResult.success) {
         const managed = managedResult.data;
-        
+
         const disposeResult = disposeManagedResource(managed);
         expect(disposeResult.success).toBe(true);
         expect(mockWasm.deleted).toBe(true);
@@ -126,7 +126,7 @@ describe('Manifold Memory Manager', () => {
 
       if (managedResult.success) {
         const managed = managedResult.data;
-        
+
         // First disposal should succeed
         const firstDispose = disposeManagedResource(managed);
         expect(firstDispose.success).toBe(true);
@@ -155,7 +155,7 @@ describe('Manifold Memory Manager', () => {
       if (managedResult.success) {
         const managed = managedResult.data;
         expect(managed.resource).toBe(mockWasm);
-        
+
         // The memory manager should have internal tracking
         const stats = getMemoryStats();
         expect(stats.activeResources).toBe(1);
@@ -173,11 +173,11 @@ describe('Manifold Memory Manager', () => {
 
       if (managedResult.success) {
         const managed = managedResult.data;
-        
+
         // Dispose properly
         const disposeResult = disposeManagedResource(managed);
         expect(disposeResult.success).toBe(true);
-        
+
         // FinalizationRegistry should not cause issues
         // (This is more of a integration test)
         expect(mockWasm.deleted).toBe(true);
@@ -197,14 +197,14 @@ describe('Manifold Memory Manager', () => {
       // Create resources but don't dispose them
       const managed1 = createManagedResource(mockWasm1);
       const managed2 = createManagedResource(mockWasm2);
-      
+
       expect(managed1.success).toBe(true);
       expect(managed2.success).toBe(true);
 
       // Check for leaks
       const stats = getMemoryStats();
       expect(stats.activeResources).toBe(2);
-      
+
       // Memory leak detection should be active
       // (Implementation will track undisposed resources)
       expect(stats.activeResources).toBeGreaterThan(0);
@@ -222,7 +222,7 @@ describe('Manifold Memory Manager', () => {
 
       if (managedResult.success) {
         const managed = managedResult.data;
-        
+
         // Properly dispose
         const disposeResult = disposeManagedResource(managed);
         expect(disposeResult.success).toBe(true);
@@ -236,15 +236,15 @@ describe('Manifold Memory Manager', () => {
     it('should allow disabling leak detection', () => {
       // This test will fail until we implement leak detection toggle
       enableMemoryLeakDetection();
-      
+
       const mockWasm = createMockWasmObject(1);
       mockWasmObjects.push(mockWasm);
-      
+
       createManagedResource(mockWasm);
-      
+
       // Disable leak detection
       disableMemoryLeakDetection();
-      
+
       // Should still track resources but not actively monitor for leaks
       const stats = getMemoryStats();
       expect(stats.activeResources).toBe(1);
@@ -260,7 +260,7 @@ describe('Manifold Memory Manager', () => {
         totalFreed: 0,
         currentUsage: 0,
         peakUsage: 0,
-        activeResources: 0
+        activeResources: 0,
       });
 
       // Allocate some resources
@@ -309,7 +309,7 @@ describe('Manifold Memory Manager', () => {
       const invalidResource = {
         resource: null,
         disposed: true,
-        __brand: 'ManifoldResource' as const
+        __brand: 'ManifoldResource' as const,
       } as ManifoldResource<MockWasmObject>;
 
       const disposeResult = disposeManagedResource(invalidResource);
@@ -326,7 +326,7 @@ describe('Manifold Memory Manager', () => {
         deleted: false,
         delete() {
           throw new Error('WASM deletion failed');
-        }
+        },
       };
 
       const managedResult = createManagedResource(faultyWasm);
@@ -334,7 +334,7 @@ describe('Manifold Memory Manager', () => {
 
       if (managedResult.success) {
         const managed = managedResult.data;
-        
+
         const disposeResult = disposeManagedResource(managed);
         expect(disposeResult.success).toBe(false);
         if (!disposeResult.success) {
