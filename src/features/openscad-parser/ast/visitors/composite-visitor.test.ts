@@ -102,6 +102,10 @@ describe('CompositeVisitor', () => {
     const csgVisitor = new CSGVisitor('', errorHandler);
 
     visitor = new CompositeVisitor([primitiveVisitor, transformVisitor, csgVisitor], errorHandler);
+
+    // Set the composite visitor on visitors that need it for delegation
+    transformVisitor.setCompositeVisitor(visitor);
+    csgVisitor.setCompositeVisitor(visitor);
   });
 
   afterEach(() => {

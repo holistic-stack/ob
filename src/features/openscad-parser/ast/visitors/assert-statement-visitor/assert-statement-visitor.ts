@@ -117,6 +117,42 @@ export class AssertStatementVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Override visitModuleInstantiation to only handle assert modules
+   * This prevents the AssertStatementVisitor from creating generic ModuleInstantiationNodes
+   * for non-assert functions like cube, sphere, etc.
+   *
+   * @param node - The module instantiation node to visit
+   * @returns AssertStatementNode if this is an assert module, null otherwise
+   */
+  override visitModuleInstantiation(node: TSNode): ast.AssertStatementNode | null {
+    // Extract module name
+    const nameFieldNode = node.childForFieldName('name');
+    if (!nameFieldNode) {
+      return null;
+    }
+
+    const functionName = nameFieldNode.text;
+
+    // Only handle assert modules
+    if (functionName !== 'assert') {
+      return null;
+    }
+
+    // For assert modules, delegate to the base implementation
+    // which will call createASTNodeForFunction (returns null) and then create a generic node
+    // But since we only want to handle assert statements, we should look for assert_statement
+    // within the module instantiation structure
+
+    // Look for assert_statement within this module instantiation
+    const assertStatement = findDescendantOfType(node, 'assert_statement');
+    if (assertStatement) {
+      return this.visitAssertStatement(assertStatement);
+    }
+
+    return null;
+  }
+
+  /**
    * Safe logging helper that checks if errorHandler exists
    *
    * @param level - The log level

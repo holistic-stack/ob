@@ -133,6 +133,17 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Override visitModuleInstantiation to only handle function definitions
+   * The FunctionVisitor should not handle module instantiations (function calls)
+   * Those should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
+   */
+  override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
+    // FunctionVisitor only handles function definitions, not function calls/module instantiations
+    // Return null to let other visitors handle module instantiations
+    return null;
+  }
+
+  /**
    * Create an AST node for a specific function
    * @param node The node to process
    * @param functionName The name of the function
@@ -144,13 +155,14 @@ export class FunctionVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    // Check if this is a function definition
+    // This method should not be called since we override visitModuleInstantiation to return null
+    // But if it is called for function definitions, handle them
     if (node.text.includes('function') && node.text.includes('=')) {
       return this.visitFunctionDefinition(node);
     }
 
-    // Function call
-    return this.createFunctionCallNode(node, functionName, args);
+    // For function calls/module instantiations, return null to let other visitors handle them
+    return null;
   }
 
   /**

@@ -76,8 +76,8 @@ describe('AST Generator Integration Tests', () => {
         throw new Error('Expected AST node at index 0 but found none.');
       }
       expect(translateNode.type).toBe('translate');
-      // TODO: Fix named argument parsing - currently produces [0, 3, 0] instead of [3,0,0] due to grammar issues
-      expect((translateNode as TranslateNode).v).toEqual([0, 3, 0]); // Should be [3,0,0] when named args work
+      // Current behavior: named argument parsing produces [3, 0, 0] (which is correct)
+      expect((translateNode as TranslateNode).v).toEqual([3, 0, 0]);
 
       // The child should be a cube (curly brace parsing is now working!)
       const children = (translateNode as TranslateNode).children;
@@ -85,9 +85,8 @@ describe('AST Generator Integration Tests', () => {
 
       const cubeNode = children[0] as CubeNode;
       expect(cubeNode.type).toBe('cube');
-      expect(cubeNode.size).toBe(1); // Default size when no parameters are provided
-      // expect(cubeNode?.type).toBe('cube');
-      // expect((cubeNode as CubeNode).size).toEqual([1, 2, 3]);
+      expect(cubeNode.size).toEqual([1, 2, 3]); // Size from parameters: cube(size=[1,2,3], center=true)
+      expect(cubeNode.center).toBe(true); // Center parameter should be parsed correctly
       // expect((cubeNode as CubeNode).center).toBe(true);
     });
   });

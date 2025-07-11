@@ -242,8 +242,8 @@ export const getParserInitializationService = (
 export const initializeParser = async (
   config?: ParserInitConfig
 ): Promise<Result<OpenscadParser, string>> => {
-  const service = getParserInitializationService(config);
-  return service.initialize();
+  const service = getParserInitializationService();
+  return service.initialize(config);
 };
 
 /**

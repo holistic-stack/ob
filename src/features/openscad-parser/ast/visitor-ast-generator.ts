@@ -216,6 +216,9 @@ export class VisitorASTGenerator {
     // Set the composite visitor on the CSG visitor to enable child delegation
     csgVisitor.setCompositeVisitor(compositeVisitor);
 
+    // Set the composite visitor on the Transform visitor to enable child delegation
+    transformVisitor.setCompositeVisitor(compositeVisitor);
+
     // Create a query visitor that uses the composite visitor
     this.queryVisitor = new QueryVisitor(
       this.source,

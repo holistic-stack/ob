@@ -130,6 +130,40 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Override visitModuleInstantiation to only handle user-defined modules
+   * This prevents the ModuleVisitor from creating generic ModuleInstantiationNodes
+   * for primitive, transform, or CSG functions
+   */
+  override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
+    // Extract function name
+    const nameFieldNode = node.childForFieldName('name');
+    if (!nameFieldNode) {
+      return null;
+    }
+
+    const functionName = nameFieldNode.text;
+    if (!functionName) {
+      return null;
+    }
+
+    // Only handle specific module types that ModuleVisitor should process
+    // Primitive functions (cube, sphere, cylinder, etc.) should be handled by PrimitiveVisitor
+    // Transform functions (translate, rotate, scale, etc.) should be handled by TransformVisitor
+    // CSG functions (union, difference, intersection) should be handled by CSGVisitor
+
+    const primitives = ['cube', 'sphere', 'cylinder', 'polyhedron', 'polygon', 'circle', 'square', 'text'];
+    const transforms = ['translate', 'rotate', 'scale', 'mirror', 'multmatrix', 'color', 'offset', 'linear_extrude', 'rotate_extrude'];
+    const csgOperations = ['union', 'difference', 'intersection', 'hull', 'minkowski'];
+
+    // Don't handle primitives, transforms, or CSG operations - let specialized visitors handle them
+    if (primitives.includes(functionName) || transforms.includes(functionName) || csgOperations.includes(functionName)) {
+      return null;
+    }
+    // For user-defined modules, delegate to the base implementation
+    return super.visitModuleInstantiation(node);
+  }
+
+  /**
    * Create an AST node for a specific function
    * @param node The node to process
    * @param functionName The name of the function
@@ -141,7 +175,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     functionName: string,
     args: ast.Parameter[]
   ): ast.ASTNode | null {
-    // Module instantiation
+    // Handle user-defined modules and other module instantiations
     return this.createModuleInstantiationNode(node, functionName, args);
   }
 

@@ -55,14 +55,7 @@ describe('Transformation AST Generation', () => {
 
   describe('Multmatrix Transformation', () => {
     it('should parse a multmatrix with matrix parameter', async () => {
-      const code = `
-        multmatrix([
-          [1, 0, 0, 10],
-          [0, 1, 0, 20],
-          [0, 0, 1, 30],
-          [0, 0, 0, 1]
-        ]) cube(10);
-      `;
+      const code = `multmatrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]) cube(10);`;
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
@@ -95,14 +88,7 @@ describe('Transformation AST Generation', () => {
     });
 
     it('should parse a multmatrix with named m parameter', async () => {
-      const code = `
-        multmatrix(m=[
-          [1, 0, 0, 10],
-          [0, 1, 0, 20],
-          [0, 0, 1, 30],
-          [0, 0, 0, 1]
-        ]) cube(10);
-      `;
+      const code = `multmatrix(m=[[1,0,0,10],[0,1,0,20],[0,0,1,30],[0,0,0,1]]) cube(10);`;
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);

@@ -111,6 +111,14 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Set the composite visitor for delegating child node processing
+   * This is needed to resolve circular dependency issues during visitor creation
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
+  }
+
+  /**
    * Override visitStatement to only handle transform-related statements
    * This prevents the TransformVisitor from interfering with other statement types
    * that should be handled by specialized visitors (PrimitiveVisitor, CSGVisitor, etc.)
@@ -329,6 +337,7 @@ export class TransformVisitor extends BaseASTVisitor {
 
     // First, try to find a body field (for block syntax)
     const bodyNode = node.childForFieldName('body');
+
     if (bodyNode) {
       if (bodyNode.type === 'block') {
         // Handle block with multiple statements: translate([10, 0, 0]) { cube(); sphere(); }
@@ -357,11 +366,12 @@ export class TransformVisitor extends BaseASTVisitor {
         }
       }
     } else {
-      // No body field found - look for direct child statements or blocks
+      // No body field found - look for direct child statements, blocks, or module_instantiations
       // This handles the grammar pattern: name arguments statement
+      // Also handles direct module_instantiation children (for recursive extraction)
       for (let i = 0; i < node.namedChildCount; i++) {
         const child = node.namedChild(i);
-        if (child && (child.type === 'statement' || child.type === 'block')) {
+        if (child) {
           if (child.type === 'block') {
             // Handle block with multiple statements
             for (let j = 0; j < child.namedChildCount; j++) {
@@ -375,7 +385,7 @@ export class TransformVisitor extends BaseASTVisitor {
                 }
               }
             }
-          } else {
+          } else if (child.type === 'statement') {
             // Handle single statement - extract module_instantiation from within
             const moduleInstantiation = this.findModuleInstantiationInStatement(child);
             if (moduleInstantiation) {
@@ -385,6 +395,15 @@ export class TransformVisitor extends BaseASTVisitor {
               if (visitedChild) {
                 children.push(visitedChild);
               }
+            }
+          } else if (child.type === 'module_instantiation') {
+            // Handle direct module_instantiation children (this is the key fix for recursive extraction)
+            // This handles cases like: translate([1,2,3]) cube(10) where cube is a direct child
+            const visitedChild = this.compositeVisitor
+              ? this.compositeVisitor.visitNode(child)
+              : this.visitNode(child);
+            if (visitedChild) {
+              children.push(visitedChild);
             }
           }
         }
