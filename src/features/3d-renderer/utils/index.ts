@@ -27,9 +27,5 @@ export * from './NBuf';
 // Pure utility exports
 export * from './Vector';
 
-// Legacy class exports - these will be removed in future versions
-// Use the new service-based approach instead
-
-// @deprecated - These classes have been moved to services
-// Use the new service-based approach instead
-export { BSPTreeNode } from '../services/bsp-tree.service';
+// Legacy class exports have been removed as part of Manifold CSG migration
+// BSP-related exports removed in favor of Manifold 3D implementation

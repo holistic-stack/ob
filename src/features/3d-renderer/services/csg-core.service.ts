@@ -22,7 +22,8 @@ import {
 } from '../utils/geometry-utils.js';
 import { NBuf2, NBuf3 } from '../utils/NBuf.js';
 import { Vector } from '../utils/Vector.js';
-import { BSPTreeNode, BSPTreeService } from './bsp-tree.service.js';
+// BSP imports removed as part of Manifold CSG migration
+// TODO: Replace with Manifold-based implementation in Phase 3
 import { MatrixIntegrationService } from './matrix-integration.service.js';
 
 const logger = createLogger('CSGCoreService');
@@ -33,13 +34,14 @@ const logger = createLogger('CSGCoreService');
  */
 export class CSGCoreService implements CSGData {
   private _polygons: PolygonData[] = [];
-  private readonly bspService: BSPTreeService;
   private readonly matrixIntegration: MatrixIntegrationService;
 
   constructor(matrixIntegration?: MatrixIntegrationService) {
-    logger.init('Initializing enhanced CSG core service');
-    this.bspService = new BSPTreeService();
+    logger.init('Initializing CSG core service (BSP removed, Manifold migration in progress)');
     this.matrixIntegration = matrixIntegration ?? MatrixIntegrationService.getInstanceSync();
+
+    // BSP service removed as part of Manifold migration
+    // CSG operations will be replaced with Manifold implementation in Phase 3
   }
 
   /**
@@ -498,29 +500,11 @@ export class CSGCoreService implements CSGData {
 
   /**
    * Union operation with another CSG
+   * @deprecated BSP implementation removed. Use Manifold-based CSG operations instead.
    */
   union(csg: CSGCoreService): Result<CSGCoreService, string> {
-    logger.debug('Performing union operation');
-
-    try {
-      const cloneResult = this.clone();
-      if (!cloneResult.success) return cloneResult;
-
-      const otherCloneResult = csg.clone();
-      if (!otherCloneResult.success) return otherCloneResult;
-
-      const thisTree = new BSPTreeNode(cloneResult.data.polygons);
-      const otherTree = new BSPTreeNode(otherCloneResult.data.polygons);
-
-      const unionResult = this.bspService.union(thisTree, otherTree);
-      if (!unionResult.success) return unionResult;
-
-      return CSGCoreService.fromPolygons(unionResult.data.allPolygons());
-    } catch (err) {
-      const errorMessage = `Union operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      logger.error(errorMessage);
-      return error(errorMessage);
-    }
+    logger.warn('Union operation called on deprecated BSP-based CSGCoreService');
+    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
   }
 
   /**
@@ -549,30 +533,11 @@ export class CSGCoreService implements CSGData {
 
   /**
    * Subtract operation with another CSG
+   * @deprecated BSP implementation removed. Use Manifold-based CSG operations instead.
    */
   subtract(csg: CSGCoreService): Result<CSGCoreService, string> {
-    logger.debug('Performing subtract operation');
-
-    try {
-      const cloneResult = this.clone();
-      if (!cloneResult.success) return error(`Failed to clone this CSG: ${cloneResult.error}`);
-
-      const otherCloneResult = csg.clone();
-      if (!otherCloneResult.success)
-        return error(`Failed to clone other CSG: ${otherCloneResult.error}`);
-
-      const thisTree = new BSPTreeNode(cloneResult.data.polygons);
-      const otherTree = new BSPTreeNode(otherCloneResult.data.polygons);
-
-      const subtractResult = this.bspService.subtract(thisTree, otherTree);
-      if (!subtractResult.success) return error(`BSP subtract failed: ${subtractResult.error}`);
-
-      return CSGCoreService.fromPolygons(subtractResult.data.allPolygons());
-    } catch (err) {
-      const errorMessage = `Subtract operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      logger.error(errorMessage);
-      return error(errorMessage);
-    }
+    logger.warn('Subtract operation called on deprecated BSP-based CSGCoreService');
+    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
   }
 
   /**
@@ -601,30 +566,11 @@ export class CSGCoreService implements CSGData {
 
   /**
    * Intersect operation with another CSG
+   * @deprecated BSP implementation removed. Use Manifold-based CSG operations instead.
    */
   intersect(csg: CSGCoreService): Result<CSGCoreService, string> {
-    logger.debug('Performing intersect operation');
-
-    try {
-      const cloneResult = this.clone();
-      if (!cloneResult.success) return error(`Failed to clone this CSG: ${cloneResult.error}`);
-
-      const otherCloneResult = csg.clone();
-      if (!otherCloneResult.success)
-        return error(`Failed to clone other CSG: ${otherCloneResult.error}`);
-
-      const thisTree = new BSPTreeNode(cloneResult.data.polygons);
-      const otherTree = new BSPTreeNode(otherCloneResult.data.polygons);
-
-      const intersectResult = this.bspService.intersect(thisTree, otherTree);
-      if (!intersectResult.success) return error(`BSP intersect failed: ${intersectResult.error}`);
-
-      return CSGCoreService.fromPolygons(intersectResult.data.allPolygons());
-    } catch (err) {
-      const errorMessage = `Intersect operation failed: ${err instanceof Error ? err.message : String(err)}`;
-      logger.error(errorMessage);
-      return error(errorMessage);
-    }
+    logger.warn('Intersect operation called on deprecated BSP-based CSGCoreService');
+    return error('BSP-based CSG operations have been removed. Please use Manifold-based CSG operations instead.');
   }
 
   /**
@@ -883,7 +829,7 @@ export class Polygon {
 
 /**
  * Legacy Node class for backward compatibility
- * @deprecated Use BSPTreeNode service instead
+ * @deprecated BSP implementation removed. Use Manifold-based CSG operations instead.
  */
 export class Node {
   public polygons: Polygon[] = [];
@@ -891,64 +837,18 @@ export class Node {
   public front?: Node;
   public back?: Node;
 
-  private bspNode: BSPTreeNode;
-
   constructor(polygons?: Polygon[]) {
     if (polygons) {
-      const polygonData = polygons.map((p) => ({
-        vertices: p.vertices.map((v) => {
-          const vertexData: VertexData = {
-            pos: v.pos,
-            normal: v.normal,
-            uv: v.uv,
-          };
-          if (v.color) {
-            (vertexData as VertexData & { color?: unknown }).color = v.color;
-          }
-          return vertexData;
-        }),
-        shared: p.shared,
-        plane: { normal: p.plane.normal, w: p.plane.w },
-      }));
-
-      this.bspNode = new BSPTreeNode(polygonData);
-      this.syncFromBSPNode();
-    } else {
-      this.bspNode = new BSPTreeNode();
-    }
-  }
-
-  private syncFromBSPNode(): void {
-    this.polygons = this.bspNode.polygons.map(
-      (p) =>
-        new Polygon(
-          p.vertices.map((v) => new Vertex(v.pos, v.normal, v.uv, v.color)),
-          p.shared
-        )
-    );
-
-    if (this.bspNode.plane) {
-      this.plane = new Plane(this.bspNode.plane.normal, this.bspNode.plane.w);
-    }
-
-    if (this.bspNode.front) {
-      this.front = new Node();
-      this.front.bspNode = this.bspNode.front;
-      this.front.syncFromBSPNode();
-    }
-
-    if (this.bspNode.back) {
-      this.back = new Node();
-      this.back.bspNode = this.bspNode.back;
-      this.back.syncFromBSPNode();
+      this.polygons = polygons;
+      // BSP functionality removed as part of Manifold migration
+      logger.warn('Node class is deprecated. BSP functionality has been removed.');
     }
   }
 
   clone(): Node {
-    const cloned = this.bspNode.clone();
-    const node = new Node();
-    node.bspNode = cloned;
-    node.syncFromBSPNode();
+    const node = new Node(this.polygons);
+    // BSP-based cloning removed as part of Manifold migration
+    logger.warn('Node.clone() is deprecated. BSP functionality has been removed.');
     return node;
   }
 

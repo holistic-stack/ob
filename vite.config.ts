@@ -26,6 +26,7 @@ export default defineConfig(({ mode: _mode }) => {
         'tslog',
         'gl-matrix',
       ],
+      exclude: ['manifold-3d'],
     },
     build: {
       outDir: 'dist',
@@ -47,6 +48,8 @@ export default defineConfig(({ mode: _mode }) => {
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
             utils: ['zustand', 'clsx', 'class-variance-authority', 'tslog', 'gl-matrix'],
+            // Manifold 3D WASM module
+            'manifold-wasm': ['manifold-3d'],
           },
         },
       },
