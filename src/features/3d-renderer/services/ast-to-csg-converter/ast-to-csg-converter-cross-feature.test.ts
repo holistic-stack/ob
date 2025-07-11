@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../../shared/services/logger.service.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types.js';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import { getParserInitializationService } from '../../../openscad-parser/services/parser-initialization.service.js';
 import { createAppStore } from '../../../store/app-store.js';
 import { convertASTNodeToCSG } from './ast-to-csg-converter.js';
 
@@ -45,7 +46,7 @@ const CROSS_FEATURE_SCENARIOS = {
     code: 'cube([10, 10, 10]); sphere(r=5); cylinder(h=15, r=3);',
     expectedNodeCount: 3, // Parser correctly parses 3 separate function calls
     expectedNodeTypes: ['cube', 'sphere', 'cylinder'],
-    expectedStoreNodeCount: 1, // Store restructuring combines into single program node
+    expectedStoreNodeCount: 3, // Store integration should also return 3 nodes (fixed expectation)
     hasRenderableContent: true,
     description: 'Tests multiple objects through complete pipeline',
   },
@@ -88,10 +89,17 @@ describe('AST to CSG Converter - Cross-Feature Integration', () => {
   beforeEach(async () => {
     logger.init('Setting up cross-feature integration test environment');
 
+    // Reset parser initialization service to ensure clean state
+    const parserInitService = getParserInitializationService();
+    parserInitService.reset();
+
     // Initialize parser service
     parserService = new OpenscadParser();
-
     await parserService.init();
+
+    // Pre-initialize the parser initialization service with the same parser instance
+    // This ensures both direct parser tests and store integration tests use the same parser
+    await parserInitService.initialize();
 
     // Initialize store with test configuration
     store = createAppStore({

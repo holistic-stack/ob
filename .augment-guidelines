@@ -317,3 +317,50 @@ LOG_LEVEL=DEBUG pnpm dev                       # Enhanced logging
 - **Logging Quick Reference:** `docs/logging/tslog-quick-reference.md`
 
 This guide provides everything needed for a new developer to understand and contribute to the OpenSCAD Babylon project effectively.
+
+
+## Reasoning Protocol
+Before implementing any solution, follow this structured reasoning process:
+
+1. **Initial Assessment**
+   - Break down the requirements and constraints
+   - Identify the core problem
+   - Acknowledge any ambiguities
+
+2. **Explore Multiple Approaches**
+   - Formulate at least two distinct solutions
+   - Give equal initial consideration (50-50 weighting)
+   - Document the core logic of each approach
+
+3. **Comparative Analysis**
+   - Evaluate approaches based on verifiable facts
+   - Consider efficiency, simplicity, and requirement alignment
+   - Avoid assumptions, focus on evidence
+
+4. **Solution Selection**
+   - Determine the superior approach based on analysis
+   - Explain why it's better using factual evidence
+   - If no clear winner, explain trade-offs
+
+5. **Implementation Planning**
+   - Outline clear, actionable steps
+   - Identify necessary code structures
+   - Plan component interactions
+
+## Output Format
+For each task, provide:
+
+1. **Context Summary**
+   - Brief task overview
+   - Key considerations
+   - Actionable next steps
+
+2. **Code Implementation**
+   - Clean, minimal, efficient code
+   - Clear, purposeful comments
+   - Proper type definitions
+
+3. **Test Documentation**
+   - Test cases covering normal and edge scenarios
+   - Evidence that tests pass
+   - Documentation of the TDD process
