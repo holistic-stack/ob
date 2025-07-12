@@ -27,7 +27,6 @@ import {
   initializeParser,
   isParserReady,
 } from '../../openscad-parser/services/parser-initialization.service.js';
-import { normalizeWhitespace, hasProblematicWhitespace } from '../../openscad-parser/utils/whitespace-normalizer.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
@@ -193,20 +192,13 @@ export const createParsingSlice = (
           return operationUtils.createError(operationError, metadata);
         }
 
-        // Normalize whitespace to prevent Tree-sitter grammar bugs
-        let normalizedCode = code;
-        if (hasProblematicWhitespace(code)) {
-          logger.debug('Detected problematic whitespace patterns, normalizing code');
-          normalizedCode = normalizeWhitespace(code);
-        }
-
         // Use the initialized parser with enhanced error recovery strategy
-        let parseResult = parser.parseASTWithResult(normalizedCode);
+        let parseResult = parser.parseASTWithResult(code);
 
         // Check if parsing succeeded despite Tree-sitter syntax warnings
         const parseSucceeded = isSuccess(parseResult) && parseResult.data.length > 0;
 
-        if (parseSucceeded) {
+        if (parseSucceeded && parseResult.success) {
           // Parsing succeeded - suppress any Tree-sitter syntax warnings in console
           // These are often false positives from the Tree-sitter OpenSCAD grammar
           logger.debug(`Parse succeeded with ${parseResult.data.length} AST nodes, ignoring any Tree-sitter warnings`);
@@ -218,10 +210,10 @@ export const createParsingSlice = (
           logger.warn(`Initial parse failed: ${errorMessage}`);
 
           // Check if this might be a spurious error due to parser state issues
-          if (isLikelySpuriousError(normalizedCode, errorMessage)) {
+          if (isLikelySpuriousError(code, errorMessage)) {
             logger.debug('Detected likely spurious error, attempting parser recovery');
 
-            const recoveryResult = await attemptParserRecovery(parser, normalizedCode);
+            const recoveryResult = await attemptParserRecovery(parser, code);
             if (recoveryResult.success) {
               logger.debug('Parser recovery successful, using recovered AST');
               parseResult = { success: true, data: recoveryResult.data };
@@ -254,7 +246,7 @@ export const createParsingSlice = (
           logger.debug(`Restructuring AST with ${parseResult.data.length} nodes`);
 
           // Set source code for Tree-sitter grammar workarounds
-          setSourceCodeForRestructuring(normalizedCode);
+          setSourceCodeForRestructuring(code);
 
           const restructureResult = restructureAST(parseResult.data, {
             enableLogging: true,

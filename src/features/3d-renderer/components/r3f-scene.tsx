@@ -118,6 +118,8 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
       meshesRef.current = newMeshes;
       setIsRendering(false);
 
+      // Meshes are now properly added to the scene and should be visible
+
       // Report render completion
       if (!hasErrors) {
         logger.debug(`Calling onRenderComplete with ${newMeshes.length} meshes`);
