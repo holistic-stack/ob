@@ -23,7 +23,23 @@ import type {
 
 const logger = createLogger('ASTRestructuringService');
 
+/**
+ * Set the source code for restructuring operations
+ * @deprecated This function is kept for backward compatibility but is no longer used.
+ * Source code is now passed directly to restructuring functions.
+ */
+export const setSourceCodeForRestructuring = (_sourceCode: string): void => {
+  // No-op: sourceCode is now passed directly to functions
+};
 
+/**
+ * Clear the source code for restructuring operations
+ * @deprecated This function is kept for backward compatibility but is no longer used.
+ * Source code is now passed directly to restructuring functions.
+ */
+export const clearSourceCodeForRestructuring = (): void => {
+  // No-op: sourceCode is now passed directly to functions
+};
 
 /**
  * Configuration for AST restructuring
@@ -640,13 +656,13 @@ const getTopLevelNodes = (
  * @returns The child primitive node if found, null otherwise
  */
 const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string): ASTNode | null => {
-  if (!transformNode.location || !currentSourceCode) {
+  if (!transformNode.location || !sourceCode) {
     return null;
   }
 
   try {
     // Get the source code lines
-    const lines = currentSourceCode.split('\n');
+    const lines = sourceCode.split('\n');
     const transformLineIndex = transformNode.location.start.line;
     const transformLine = lines[transformLineIndex];
 
@@ -668,7 +684,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string)
         primitiveType!,
         transformLineIndex,
         matchIndex,
-        transformLine.length
+        transformLine.length,
+        sourceCode
       );
     }
 
@@ -685,7 +702,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string)
         primitiveType!,
         transformLineIndex,
         matchIndex,
-        transformLine.length
+        transformLine.length,
+        sourceCode
       );
     }
 
@@ -711,7 +729,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string)
           primitiveType!,
           transformLineIndex + i,
           primitiveStart,
-          nextLine.length
+          nextLine.length,
+          sourceCode
         );
       }
 
@@ -727,7 +746,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string)
           primitiveType!,
           transformLineIndex + i,
           primitiveStart,
-          nextLine.length
+          nextLine.length,
+          sourceCode
         );
       }
 
@@ -745,7 +765,8 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string)
             primitiveType!,
             transformLineIndex + i,
             primitiveStart,
-            nextLine.length
+            nextLine.length,
+            sourceCode
           );
         }
         break; // Stop looking if we hit another statement
@@ -772,7 +793,8 @@ const createSyntheticPrimitiveNode = (
   primitiveType: string,
   line: number,
   startColumn: number,
-  endColumn: number
+  endColumn: number,
+  sourceCode?: string
 ): ASTNode => {
   const location = {
     start: { line, column: startColumn, offset: 0 },
@@ -786,8 +808,8 @@ const createSyntheticPrimitiveNode = (
       let size: number | [number, number, number] = 1;
       let center = false;
 
-      if (currentSourceCode) {
-        const lines = currentSourceCode.split('\n');
+      if (sourceCode) {
+        const lines = sourceCode.split('\n');
         const sourceLine = lines[line];
         if (sourceLine) {
           // Find the cube that appears at or after the specified column position
@@ -808,8 +830,8 @@ const createSyntheticPrimitiveNode = (
               // Check if it's a vector [x,y,z]
               const vectorMatch = sizeStr.match(/\[([^\]]+)\]/);
               if (vectorMatch?.[1]) {
-                const numbers = vectorMatch[1].split(',').map((s) => parseFloat(s.trim()));
-                if (numbers.length >= 3 && numbers.every((n) => !Number.isNaN(n))) {
+                const numbers = vectorMatch[1].split(',').map((s: string) => parseFloat(s.trim()));
+                if (numbers.length >= 3 && numbers.every((n: number) => !Number.isNaN(n))) {
                   size = [numbers[0]!, numbers[1]!, numbers[2]!];
                 } else if (numbers.length >= 1 && !Number.isNaN(numbers[0]!)) {
                   size = numbers[0]!;
@@ -960,7 +982,7 @@ export const createASTRestructuringService = (config?: Partial<ASTRestructuringC
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
   return {
-    restructure: (ast: readonly ASTNode[]) => restructureAST(ast, finalConfig),
+    restructure: (ast: readonly ASTNode[], sourceCode: string) => restructureAST(ast, sourceCode, finalConfig),
     config: finalConfig,
   };
 };

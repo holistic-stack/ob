@@ -12,6 +12,7 @@ import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AsyncOperationResult,
   OperationError,
+  OperationMetadata,
 } from '../../../shared/types/operations.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
@@ -78,14 +79,14 @@ export const createParsingSlice = (
         return operationUtils.createSuccess(ast, metadata);
       } else {
         // Handle parsing failure
-        const errorMessage = parseResult.error.message;
+        const errorMessage = parseResult.error.error?.message || 'Unknown parsing error';
         set((state: WritableDraft<AppStore>) => {
           state.parsing.isLoading = false;
           state.parsing.errors = [errorMessage];
           state.parsing.lastParsedCode = null; // Invalidate cache
         });
         logger.error(`Unified parsing failed: ${errorMessage}`);
-        return operationUtils.createError(parseResult.error, metadata);
+        return operationUtils.createError(parseResult.error.error, metadata);
       }
     },
 

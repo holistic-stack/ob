@@ -1,7 +1,8 @@
+import React from 'react';
 import { vi } from 'vitest';
 
 vi.mock('./features/code-editor/components/monaco-editor.tsx', () => ({
-  MonacoEditorComponent: () => <div data-testid="monaco-editor-mock">Monaco Editor Mock</div>,
+  MonacoEditorComponent: () => React.createElement('div', { 'data-testid': 'monaco-editor-mock' }, 'Monaco Editor Mock'),
 }));
 
 // Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
@@ -19,7 +20,7 @@ import { dirname, join } from 'node:path';
 import { findUpSync } from 'find-up';
 // Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
-import { afterEach, vi } from 'vitest';
+import { afterEach } from 'vitest';
 
 import { createLogger } from './shared/services/logger.service.js';
 // Import OpenSCAD parser test utility to register cleanup hooks

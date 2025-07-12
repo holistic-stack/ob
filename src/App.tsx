@@ -162,7 +162,6 @@ export function App(): React.JSX.Element {
           </div>
           <div className="panel-content flex-1 relative">
             <StoreConnectedRenderer
-              key={lastParsed instanceof Date ? lastParsed.getTime() : 'initial'} // Add the key prop here
               className="h-full w-full"
               data-testid="main-renderer"
             />

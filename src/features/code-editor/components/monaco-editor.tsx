@@ -79,7 +79,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
     debounce((event: EditorChangeEvent) => {
       onChange?.(event);
     }, 300),
-    []
+    [onChange]
   );
 
   /**
