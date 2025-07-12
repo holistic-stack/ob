@@ -200,7 +200,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     useThreeFrame(scene, threeCamera, renderer, (_state, delta) => {
       // Continuous render loop - no dependencies needed
       // This replaces useEffect-based rendering logic
-      if (meshes.length > 0) {
+      if (meshes && Array.isArray(meshes) && meshes.length > 0) {
         // Optional: Add mesh animations here
         meshes.forEach((meshWrapper) => {
           if (meshWrapper.mesh.rotation) {

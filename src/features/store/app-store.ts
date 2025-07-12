@@ -79,6 +79,7 @@ const createInitialState = (options?: StoreOptions): AppState => ({
     warnings: [],
     isLoading: false,
     lastParsed: null,
+    lastParsedCode: null,
     parseTime: 0,
   },
   rendering: {

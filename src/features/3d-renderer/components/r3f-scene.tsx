@@ -48,14 +48,24 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
    */
   useEffect(() => {
     const renderMeshes = async () => {
+      // Safety check for astNodes
+      if (!astNodes || !Array.isArray(astNodes)) {
+        logger.warn('astNodes is undefined or not an array, skipping render');
+        setIsRendering(false);
+        onRenderComplete?.([]);
+        return;
+      }
+
       logger.debug(`Rendering meshes from ${astNodes.length} AST nodes`);
       setIsRendering(true);
 
       // Clear existing meshes using proper disposal
-      meshesRef.current.forEach((mesh3D) => {
-        scene.remove(mesh3D.mesh);
-        mesh3D.dispose(); // Use the Mesh3D disposal method
-      });
+      if (meshesRef.current && Array.isArray(meshesRef.current)) {
+        meshesRef.current.forEach((mesh3D) => {
+          scene.remove(mesh3D.mesh);
+          mesh3D.dispose(); // Use the Mesh3D disposal method
+        });
+      }
       meshesRef.current = [];
 
       // For empty astNodes, complete immediately

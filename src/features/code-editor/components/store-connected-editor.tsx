@@ -74,15 +74,20 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     (event: EditorChangeEvent) => {
       logger.debug('Code changed, updating store');
 
-      // Update code in store (this will trigger debounced parsing if enabled)
-      updateCode(event.value);
+      // Only update if the code has actually changed
+      if (event.value !== code) {
+        // Update code in store (this will trigger debounced parsing if enabled)
+        updateCode(event.value);
 
-      // Mark as dirty for save state tracking
-      markDirty();
+        // Mark as dirty for save state tracking
+        markDirty();
 
-      logger.debug(`Code updated: ${event.value.length} characters`);
+        logger.debug(`Code updated: ${event.value.length} characters`);
+      } else {
+        logger.debug('Code content unchanged, skipping update');
+      }
     },
-    [updateCode, markDirty]
+    [updateCode, markDirty, code]
   );
 
   /**

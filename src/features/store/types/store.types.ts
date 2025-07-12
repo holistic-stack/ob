@@ -33,6 +33,7 @@ export interface ParsingState {
   readonly warnings: ReadonlyArray<string>;
   readonly isLoading: boolean;
   readonly lastParsed: Date | null;
+  readonly lastParsedCode: string | null; // Track last parsed code to avoid redundant parsing
   readonly parseTime: number; // parsing time in milliseconds
 }
 

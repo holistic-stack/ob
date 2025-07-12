@@ -297,11 +297,12 @@ export function useManifoldCSG(materialManager: MaterialIDManager) {
 function extractGeometriesFromChildren(children: React.ReactNode): BufferGeometry[] {
   const geometries: BufferGeometry[] = [];
 
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child)) {
-      // For now, create simple test geometries
-      // In a real implementation, this would extract geometries from mesh children
-      const geometry = new BufferGeometry();
+  if (children) {
+    React.Children.forEach(children, (child) => {
+      if (React.isValidElement(child)) {
+        // For now, create simple test geometries
+        // In a real implementation, this would extract geometries from mesh children
+        const geometry = new BufferGeometry();
 
       // Create a simple cube geometry for testing
       const vertices = new Float32Array([
@@ -374,8 +375,9 @@ function extractGeometriesFromChildren(children: React.ReactNode): BufferGeometr
       geometry.setIndex(new Uint32BufferAttribute(indices, 1));
 
       geometries.push(geometry);
-    }
-  });
+      }
+    });
+  }
 
   return geometries;
 }

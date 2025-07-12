@@ -339,36 +339,42 @@ export const createOpenSCADCompletionProvider = (): monaco.languages.CompletionI
     });
 
     // Add builtin function suggestions
-    OPENSCAD_LANGUAGE_CONFIG.builtinFunctions.forEach((func) => {
-      suggestions.push({
-        label: func,
-        kind: monaco.languages.CompletionItemKind.Function,
-        insertText: `${func}()`,
-        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range,
+    if (OPENSCAD_LANGUAGE_CONFIG.builtinFunctions && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinFunctions)) {
+      OPENSCAD_LANGUAGE_CONFIG.builtinFunctions.forEach((func) => {
+        suggestions.push({
+          label: func,
+          kind: monaco.languages.CompletionItemKind.Function,
+          insertText: `${func}()`,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          range,
+        });
       });
-    });
+    }
 
     // Add builtin module suggestions
-    OPENSCAD_LANGUAGE_CONFIG.builtinModules.forEach((module) => {
-      suggestions.push({
-        label: module,
-        kind: monaco.languages.CompletionItemKind.Module,
-        insertText: `${module}()`,
-        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        range,
+    if (OPENSCAD_LANGUAGE_CONFIG.builtinModules && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinModules)) {
+      OPENSCAD_LANGUAGE_CONFIG.builtinModules.forEach((module) => {
+        suggestions.push({
+          label: module,
+          kind: monaco.languages.CompletionItemKind.Module,
+          insertText: `${module}()`,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          range,
+        });
       });
-    });
+    }
 
     // Add constant suggestions
-    OPENSCAD_LANGUAGE_CONFIG.constants.forEach((constant) => {
-      suggestions.push({
-        label: constant,
-        kind: monaco.languages.CompletionItemKind.Constant,
-        insertText: constant,
-        range,
+    if (OPENSCAD_LANGUAGE_CONFIG.constants && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.constants)) {
+      OPENSCAD_LANGUAGE_CONFIG.constants.forEach((constant) => {
+        suggestions.push({
+          label: constant,
+          kind: monaco.languages.CompletionItemKind.Constant,
+          insertText: constant,
+          range,
+        });
       });
-    });
+    }
 
     return { suggestions };
   },

@@ -236,10 +236,12 @@ const SceneContent: React.FC<{
     const start = performance.now();
 
     // Clear existing meshes
-    meshes.forEach((meshWrapper) => {
-      scene.remove(meshWrapper.mesh);
-      meshWrapper.dispose();
-    });
+    if (meshes && Array.isArray(meshes)) {
+      meshes.forEach((meshWrapper) => {
+        scene.remove(meshWrapper.mesh);
+        meshWrapper.dispose();
+      });
+    }
 
     // Render new meshes
     const newMeshes: Mesh3D[] = [];

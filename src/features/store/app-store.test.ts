@@ -49,6 +49,7 @@ describe('App Store', () => {
       expect(state.parsing.warnings).toEqual([]);
       expect(state.parsing.isLoading).toBe(false);
       expect(state.parsing.lastParsed).toBeNull();
+      expect(state.parsing.lastParsedCode).toBeNull();
     });
 
     it('should have correct initial rendering state', () => {
@@ -194,6 +195,7 @@ describe('App Store', () => {
       expect(state.parsing.warnings).toEqual([]);
       expect(state.parsing.isLoading).toBe(false);
       expect(state.parsing.lastParsed).toBeNull();
+      expect(state.parsing.lastParsedCode).toBeNull();
     });
 
     it('should add parsing error', () => {

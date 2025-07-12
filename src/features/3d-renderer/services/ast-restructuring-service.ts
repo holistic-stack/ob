@@ -368,8 +368,9 @@ const findNextPrimitiveAfterTransform = (
       return isAfterTransform;
     } else if (nodeStartLine > (transformEndLine ?? 0)) {
       // Later line: allow primitives within reasonable distance
+      // Increased from 2 to 10 to handle empty lines and whitespace better
       const endLine = transformEndLine ?? 0;
-      const isWithinDistance = nodeStartLine <= endLine + 2;
+      const isWithinDistance = nodeStartLine <= endLine + 10;
       if (config.enableLogging) {
         logger.debug(
           `Later line check: ${node.type} ${isWithinDistance ? 'WITHIN' : 'OUTSIDE'} distance (line ${nodeStartLine} <= ${endLine + 2})`
@@ -477,9 +478,11 @@ const findChildrenByProximity = (
     selectedChildren.length > 0
   ) {
     selectedChildren.forEach((child) => {
-      logger.debug(
-        `Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
-      );
+      if (child && child.type) {
+        logger.debug(
+          `Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
+        );
+      }
     });
   }
 
@@ -617,7 +620,11 @@ const getTopLevelNodes = (
     if (isCSGNode(parentNode) || isTransformNode(parentNode)) {
       const children = findDirectChildrenForNode(parentNode, allNodes, config);
       if (children && Array.isArray(children)) {
-        children.forEach((child) => childNodes.add(child));
+        children.forEach((child) => {
+          if (child) {
+            childNodes.add(child);
+          }
+        });
       }
     }
   }
@@ -700,12 +707,13 @@ const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => 
     }
 
     // Pattern 3: Multi-line - search next few lines for primitives
-    const maxLookAhead = 3; // Look ahead up to 3 lines
+    // Increased from 3 to 10 to handle empty lines and whitespace better
+    const maxLookAhead = 10; // Look ahead up to 10 lines
     for (let i = 1; i <= maxLookAhead && transformLineIndex + i < lines.length; i++) {
       const nextLine = lines[transformLineIndex + i];
       if (!nextLine) continue;
 
-      // Skip empty lines and lines with only whitespace
+      // Skip empty lines and lines with only whitespace, but continue searching
       if (nextLine.trim() === '') continue;
 
       // Look for primitive on the next line (with optional indentation)

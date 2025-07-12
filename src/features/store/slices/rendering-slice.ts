@@ -25,18 +25,20 @@ export const createRenderingSlice = (
       set((state) => {
         if (state.rendering) {
           // Dispose of old meshes to prevent memory leaks
-          state.rendering.meshes.forEach((mesh) => {
-            if (mesh.geometry) {
-              mesh.geometry.dispose();
-            }
-            if (mesh.material) {
-              if (Array.isArray(mesh.material)) {
-                mesh.material.forEach((material) => material.dispose());
-              } else {
-                mesh.material.dispose();
+          if (state.rendering.meshes && Array.isArray(state.rendering.meshes)) {
+            state.rendering.meshes.forEach((mesh) => {
+              if (mesh.geometry) {
+                mesh.geometry.dispose();
               }
-            }
-          });
+              if (mesh.material) {
+                if (Array.isArray(mesh.material)) {
+                  mesh.material.forEach((material) => material.dispose());
+                } else {
+                  mesh.material.dispose();
+                }
+              }
+            });
+          }
 
           state.rendering.meshes = [...meshes];
           state.rendering.lastRendered = new Date();
@@ -146,11 +148,13 @@ export const createRenderingSlice = (
           const updatedCamera = { ...state.rendering.camera };
 
           // Update non-array properties
-          Object.keys(cameraUpdate).forEach((key) => {
-            if (key !== 'position' && key !== 'target') {
-              (updatedCamera as any)[key] = (cameraUpdate as any)[key];
-            }
-          });
+          if (cameraUpdate && typeof cameraUpdate === 'object') {
+            Object.keys(cameraUpdate).forEach((key) => {
+              if (key !== 'position' && key !== 'target') {
+                (updatedCamera as any)[key] = (cameraUpdate as any)[key];
+              }
+            });
+          }
 
           // Handle array properties with proper mutable assignment
           if (cameraUpdate.position) {

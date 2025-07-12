@@ -196,6 +196,7 @@ export class SimpleErrorHandler implements IErrorHandler {
    * messages for flexibility.
    *
    * @param error - The error to handle (Error object or string message)
+   * @param suppressConsoleOutput - Whether to suppress console output (for non-fatal warnings)
    *
    * @example Handling different error types
    * ```typescript
@@ -210,12 +211,18 @@ export class SimpleErrorHandler implements IErrorHandler {
    *
    * // Handle string messages
    * handler.handleError('Unexpected token at line 5');
+   *
+   * // Handle non-fatal warnings (suppress console output)
+   * handler.handleError('Tree-sitter syntax warning', true);
    * ```
    */
-  handleError(error: Error | string): void {
+  handleError(error: Error | string, suppressConsoleOutput = false): void {
     const errorMessage = error instanceof Error ? error.message : error;
     this.errors.push(errorMessage);
-    console.error(`[ERROR] ${errorMessage}`);
+
+    if (!suppressConsoleOutput) {
+      console.error(`[ERROR] ${errorMessage}`);
+    }
   }
 
   /**

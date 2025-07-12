@@ -240,9 +240,11 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
         }
 
         // Add meshes to scene
-        renderedMeshes.forEach((meshWrapper) => {
-          scene.add(meshWrapper.mesh);
-        });
+        if (renderedMeshes && Array.isArray(renderedMeshes)) {
+          renderedMeshes.forEach((meshWrapper) => {
+            scene.add(meshWrapper.mesh);
+          });
+        }
 
         return renderedMeshes;
       })();
@@ -281,10 +283,12 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
     if (!scene) return;
 
     // Remove and dispose meshes
-    meshes.forEach((meshWrapper) => {
-      scene.remove(meshWrapper.mesh);
-      meshWrapper.dispose();
-    });
+    if (meshes && Array.isArray(meshes)) {
+      meshes.forEach((meshWrapper) => {
+        scene.remove(meshWrapper.mesh);
+        meshWrapper.dispose();
+      });
+    }
 
     // Update state
     set({
