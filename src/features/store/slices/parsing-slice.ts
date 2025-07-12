@@ -8,7 +8,7 @@
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { CoreNode } from '../../../shared/types/ast.types.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   AsyncOperationResult,
   OperationError,
@@ -33,7 +33,7 @@ export const createParsingSlice = (
     parseCode: async (
       code: string,
       _options?: ParseOptions
-    ): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+    ): AsyncOperationResult<ReadonlyArray<ASTNode>, OperationError> => {
       const operationId = operationUtils.generateOperationId();
       const metadata = operationUtils.createMetadata(
         operationId,
@@ -93,7 +93,7 @@ export const createParsingSlice = (
     parseAST: async (
       code: string,
       options?: ParseOptions
-    ): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+    ): AsyncOperationResult<ReadonlyArray<ASTNode>, OperationError> => {
       // Alias for backwards compatibility
       return get().parseCode(code, options);
     },

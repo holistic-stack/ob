@@ -14,7 +14,6 @@
  */
 
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type { AsyncOperationResult, OperationError } from '../../../shared/types/operations.types.js';
 import { isSuccess, type Result } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
@@ -24,11 +23,11 @@ import {
   setSourceCodeForRestructuring,
 } from '../../3d-renderer/services/ast-restructuring-service.js';
 import { ParserError } from '../ast/errors/parser-error.js';
+import type { ASTNode } from '../core/ast-types.js';
 import { RecoveryStrategyRegistry } from '../error-handling/recovery-strategy-registry.js';
 import { getInitializedParser, initializeParser } from './parser-initialization.service.js';
 
 const logger = createLogger('ParsingService');
-const recoveryRegistry = new RecoveryStrategyRegistry();
 
 /**
  * Attempts to recover from a parser error by re-parsing with a fresh instance.
@@ -36,9 +35,9 @@ const recoveryRegistry = new RecoveryStrategyRegistry();
  * @param code The source code that failed to parse.
  * @returns A Result containing the recovered AST or an error message.
  */
-const recoverWithFreshParser = async (code: string): Promise<Result<ReadonlyArray<CoreNode>, string>> => {
+const recoverWithFreshParser = async (code: string): Promise<Result<ReadonlyArray<ASTNode>, string>> => {
   logger.warn('Attempting recovery with a fresh parser instance.');
-  const initResult = await initializeParser(true); // Force re-initialization
+  const initResult = await initializeParser(); // Force re-initialization
   if (!initResult.success) {
     const errorMsg = `Recovery failed: Could not re-initialize parser: ${initResult.error}`;
     logger.error(errorMsg);
@@ -73,7 +72,7 @@ const recoverWithFreshParser = async (code: string): Promise<Result<ReadonlyArra
  */
 export const unifiedParseOpenSCAD = async (
   code: string
-): AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError> => {
+): AsyncOperationResult<ReadonlyArray<ASTNode>, OperationError> => {
   const operationId = operationUtils.generateOperationId();
   const metadata = operationUtils.createMetadata(
     operationId,
@@ -108,7 +107,7 @@ export const unifiedParseOpenSCAD = async (
       const recoveryResult = await recoverWithFreshParser(code);
 
       if (isSuccess(recoveryResult)) {
-        parseResult = { success: true, data: recoveryResult.data };
+        parseResult = { success: true, data: [...recoveryResult.data] };
       } else {
         // If recovery also fails, return the error
         const errorMessage = `Parse and recovery failed: ${recoveryResult.error}`;
@@ -116,6 +115,13 @@ export const unifiedParseOpenSCAD = async (
         const operationError = operationUtils.createOperationError('PARSE_AND_RECOVERY_FAILURE', errorMessage);
         return operationUtils.createError(operationError, metadata);
       }
+    }
+
+    if (!isSuccess(parseResult)) {
+      const errorMessage = `Parse failed: ${(parseResult as any).error}`;
+      logger.error(errorMessage);
+      const operationError = operationUtils.createOperationError('PARSE_ERROR', errorMessage);
+      return operationUtils.createError(operationError, metadata);
     }
 
     const rawAST = parseResult.data;

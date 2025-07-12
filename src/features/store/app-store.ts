@@ -54,7 +54,7 @@ export const DEFAULT_CAMERA: CameraConfig = {
 /**
  * Default OpenSCAD code for initialization
  */
-export const DEFAULT_OPENSCAD_CODE = '';
+export const DEFAULT_OPENSCAD_CODE = 'sphere(5);';
 
 /**
  * Parser initialization is now handled by the parser initialization service
@@ -67,7 +67,7 @@ export const DEFAULT_OPENSCAD_CODE = '';
  */
 const createInitialState = (options?: StoreOptions): AppState => ({
   editor: {
-    code: options?.initialState?.editor?.code ?? '',
+    code: options?.initialState?.editor?.code ?? DEFAULT_OPENSCAD_CODE,
     cursorPosition: { line: 1, column: 1 },
     selection: null,
     isDirty: false,
@@ -170,7 +170,15 @@ const initializeStore = async (store: ReturnType<typeof createAppStore>) => {
 /**
  * Create and export the main app store instance
  */
-const appStore = createAppStore();
+const appStore = createAppStore({
+  enableDevtools: true,
+  enablePersistence: true, // Enable persistence to save editor content between sessions
+  debounceConfig: {
+    parseDelayMs: 300,
+    renderDelayMs: 300,
+    saveDelayMs: 1000,
+  },
+});
 
 // Initialize the store after creating it
 void initializeStore(appStore);
