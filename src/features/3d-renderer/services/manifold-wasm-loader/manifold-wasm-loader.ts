@@ -1,4 +1,7 @@
-import init, { type ManifoldModule } from 'manifold-3d';
+import init from 'manifold-3d';
+
+// Define the ManifoldModule type based on the actual module structure
+type ManifoldModule = Awaited<ReturnType<typeof init>>;
 
 /**
  * A service to manage the asynchronous loading of the Manifold WASM module.

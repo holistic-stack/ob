@@ -5,13 +5,13 @@
  * Monaco Editor → AST parsing → CSG operations → Three.js rendering
  */
 
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { Result } from '../../../shared/types/result.types.js';
 import { error, success } from '../../../shared/utils/functional/result.js';
 import type { ASTNode } from '../../openscad-parser/ast/ast-types.js';
 import { OpenscadParser } from '../../openscad-parser/openscad-parser.js';
-import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
+import { ManifoldASTConverter } from '../services/manifold-ast-converter/manifold-ast-converter.js';
 import { MaterialService } from '../services/material.service.js';
 import { MatrixIntegrationService } from '../services/matrix-integration.service.js';
 import { MatrixServiceContainer } from '../services/matrix-service-container.js';
@@ -324,8 +324,61 @@ export class IntegrationTestSuite {
       if (!firstAstNode) {
         return error('No valid AST node to convert');
       }
-      const result = await convertASTNodeToCSG(firstAstNode, 0);
-      return result;
+      const { MaterialIDManager } = await import(
+        '../services/manifold-material-manager/manifold-material-manager'
+      );
+      const materialManager = new MaterialIDManager();
+      await materialManager.initialize();
+
+      const converter = new ManifoldASTConverter(materialManager);
+      await converter.initialize();
+
+      const result = await converter.convertNode(firstAstNode);
+
+      if (result.success) {
+        // Convert ManifoldConversionResult to Mesh3D format
+        const geometry = result.data.geometry;
+        const material = new THREE.MeshStandardMaterial({
+          color: '#00ff88',
+          metalness: 0.1,
+          roughness: 0.8,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+
+        // Calculate bounding box
+        geometry.computeBoundingBox();
+        const boundingBox = geometry.boundingBox || new THREE.Box3();
+
+        const mesh3D: Mesh3D = {
+          mesh,
+          metadata: {
+            meshId: `test_mesh_${Date.now()}`,
+            triangleCount: result.data.triangleCount,
+            vertexCount: result.data.vertexCount,
+            boundingBox,
+            material: 'standard',
+            color: '#00ff88',
+            opacity: 1,
+            visible: true,
+            nodeId: 'test_node' as any,
+            nodeType: firstAstNode.type as any,
+            depth: 0,
+            childrenIds: [],
+            size: 1,
+            complexity: result.data.vertexCount,
+            isOptimized: false,
+            lastAccessed: new Date(),
+          },
+          dispose: () => {
+            geometry.dispose();
+            material.dispose();
+          },
+        };
+
+        return { success: true, data: mesh3D };
+      } else {
+        return result;
+      }
     } catch (err) {
       return error(`CSG conversion failed: ${err instanceof Error ? err.message : String(err)}`);
     }

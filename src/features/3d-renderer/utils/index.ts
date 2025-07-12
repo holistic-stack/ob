@@ -7,17 +7,15 @@
 
 // Re-export config for convenience
 export { GEOMETRY_CONFIG } from '../config/geometry-config';
-// Backward compatibility for CSG class and legacy utility classes
-export { CSG, CSGCoreService, Node, Plane, Polygon, Vertex } from '../services/csg-core.service';
+// Manifold CSG services
+export { ManifoldCSGOperations } from '../services/manifold-csg-operations/manifold-csg-operations';
 // Material utilities - migrated to MaterialService
 // @deprecated Use MaterialService from '../services/material.service' instead
 export { createMaterial } from '../services/material.service';
 // Re-export types for backward compatibility
 export type {
-  BSPNodeData,
   BufferType,
   GeometricPrimitive,
-  PlaneData,
   PolygonData,
   VertexData,
 } from '../types/geometry.types';

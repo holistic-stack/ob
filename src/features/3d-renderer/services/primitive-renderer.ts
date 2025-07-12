@@ -17,7 +17,7 @@ import type {
   PrimitiveParams,
   PrimitiveRendererFactory,
 } from '../types/renderer.types';
-import { convertASTNodeToCSG } from './ast-to-csg-converter/ast-to-csg-converter.js';
+import { ManifoldASTConverter } from './manifold-ast-converter/manifold-ast-converter.js';
 
 // Create logger instance for this service
 const logger = createLogger('PrimitiveRenderer');
@@ -389,27 +389,68 @@ export const renderASTNode = async (
 ): Promise<Result<Mesh3D, string>> => {
   logger.debug(`Rendering AST node ${index}: ${node.type} using CSG`);
 
-  // Use the new CSG converter for all OpenSCAD primitives
-  const csgResult = await convertASTNodeToCSG(node, index, {
-    material: {
-      color: '#00ff88', // Green color as specified
-      opacity: 1,
-      metalness: 0.1,
-      roughness: 0.8,
-      wireframe: false,
-      transparent: false,
-      side: 'front',
-    },
-    enableOptimization: true,
-    maxComplexity: 50000,
-    timeoutMs: 10000,
+  // Use the Manifold converter for all OpenSCAD primitives
+  const { MaterialIDManager } = await import(
+    '../services/manifold-material-manager/manifold-material-manager'
+  );
+  const materialManager = new MaterialIDManager();
+  await materialManager.initialize();
+
+  const converter = new ManifoldASTConverter(materialManager);
+  await converter.initialize();
+
+  const csgResult = await converter.convertNode(node, {
+    preserveMaterials: false,
+    optimizeResult: true,
+    timeout: 10000,
   });
 
   if (csgResult.success) {
     logger.debug(`Successfully rendered ${node.type} using CSG`);
+
+    // Create a THREE.Mesh from the BufferGeometry
+    const geometry = csgResult.data.geometry;
+    const material = new THREE.MeshStandardMaterial({
+      color: '#00ff88', // Green color as specified
+      metalness: 0.1,
+      roughness: 0.8,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    // Calculate bounding box
+    geometry.computeBoundingBox();
+    const boundingBox = geometry.boundingBox || new THREE.Box3();
+
+    // Convert ManifoldConversionResult to Mesh3D format
+    const mesh3D: Mesh3D = {
+      mesh,
+      metadata: {
+        meshId: `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        triangleCount: csgResult.data.triangleCount,
+        vertexCount: csgResult.data.vertexCount,
+        boundingBox,
+        material: 'standard',
+        color: '#00ff88',
+        opacity: 1,
+        visible: true,
+        nodeId: `node_${index}` as any,
+        nodeType: node.type as any,
+        depth: 0,
+        childrenIds: [],
+        size: 1,
+        complexity: csgResult.data.vertexCount,
+        isOptimized: false,
+        lastAccessed: new Date(),
+      },
+      dispose: () => {
+        geometry.dispose();
+        material.dispose();
+      },
+    };
+
+    return { success: true, data: mesh3D };
   } else {
     logger.error(`Failed to render ${node.type} using CSG:`, csgResult.error);
+    return { success: false, error: csgResult.error };
   }
-
-  return csgResult;
 };

@@ -302,7 +302,7 @@ const findChildrenBySourceLocation = (
       `findDirectChildrenForNode: ${parentNode.type} - potentialChildren: ${potentialChildren.length}, directChildren: ${directChildren.length}`
     );
 
-    if (directChildren.length > 0) {
+    if (directChildren && Array.isArray(directChildren) && directChildren.length > 0) {
       directChildren.forEach((child) => {
         logger.debug(
           `Found direct child ${child.type} for parent ${parentNode.type} via source location`
@@ -359,19 +359,20 @@ const findNextPrimitiveAfterTransform = (
 
     if (nodeStartLine === transformEndLine) {
       // Same line: check column position to ensure primitive comes after transform
-      const isAfterTransform = nodeStartColumn > transformEndColumn;
+      const isAfterTransform = nodeStartColumn > (transformEndColumn ?? 0);
       if (config.enableLogging) {
         logger.debug(
-          `Same line check: ${node.type} ${isAfterTransform ? 'AFTER' : 'BEFORE'} transform (${nodeStartColumn} > ${transformEndColumn})`
+          `Same line check: ${node.type} ${isAfterTransform ? 'AFTER' : 'BEFORE'} transform (${nodeStartColumn} > ${transformEndColumn ?? 0})`
         );
       }
       return isAfterTransform;
-    } else if (nodeStartLine > transformEndLine) {
+    } else if (nodeStartLine > (transformEndLine ?? 0)) {
       // Later line: allow primitives within reasonable distance
-      const isWithinDistance = nodeStartLine <= transformEndLine + 2;
+      const endLine = transformEndLine ?? 0;
+      const isWithinDistance = nodeStartLine <= endLine + 2;
       if (config.enableLogging) {
         logger.debug(
-          `Later line check: ${node.type} ${isWithinDistance ? 'WITHIN' : 'OUTSIDE'} distance (line ${nodeStartLine} <= ${transformEndLine + 2})`
+          `Later line check: ${node.type} ${isWithinDistance ? 'WITHIN' : 'OUTSIDE'} distance (line ${nodeStartLine} <= ${endLine + 2})`
         );
       }
       return isWithinDistance;
@@ -388,29 +389,35 @@ const findNextPrimitiveAfterTransform = (
 
   if (config.enableLogging) {
     logger.debug(
-      `Found ${candidateNodes.length} candidate primitives after transform ${transformNode.type}`
+      `Found ${candidateNodes?.length || 0} candidate primitives after transform ${transformNode.type}`
     );
-    candidateNodes.forEach((node) => {
-      logger.debug(
-        `✅ CANDIDATE: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
-      );
-    });
+    if (candidateNodes && Array.isArray(candidateNodes)) {
+      candidateNodes.forEach((node) => {
+        logger.debug(
+          `✅ CANDIDATE: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
+        );
+      });
+    }
 
     // Also log rejected nodes for debugging
-    const rejectedNodes = allNodes.filter((node) => {
-      return (
-        node !== transformNode &&
-        isPrimitiveNode(node) &&
-        node.location &&
-        !candidateNodes.includes(node)
-      );
-    });
+    const rejectedNodes =
+      allNodes?.filter((node) => {
+        return (
+          node !== transformNode &&
+          isPrimitiveNode(node) &&
+          node.location &&
+          candidateNodes &&
+          !candidateNodes.includes(node)
+        );
+      }) || [];
     logger.debug(`Found ${rejectedNodes.length} rejected primitives:`);
-    rejectedNodes.forEach((node) => {
-      logger.debug(
-        `❌ REJECTED: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
-      );
-    });
+    if (rejectedNodes && Array.isArray(rejectedNodes)) {
+      rejectedNodes.forEach((node) => {
+        logger.debug(
+          `❌ REJECTED: ${node.type} at line ${node.location?.start.line}, column ${node.location?.start.column}`
+        );
+      });
+    }
   }
 
   // Sort by line number and column to get the closest one
@@ -422,7 +429,7 @@ const findNextPrimitiveAfterTransform = (
   });
 
   // Return the first (closest) candidate
-  return candidateNodes.length > 0 ? candidateNodes[0] : null;
+  return candidateNodes.length > 0 ? (candidateNodes[0] ?? null) : null;
 };
 
 /**
@@ -463,7 +470,12 @@ const findChildrenByProximity = (
   const maxChildren = isCSGNode(parentNode) ? 3 : 1;
   const selectedChildren = nearbyPrimitives.slice(0, maxChildren);
 
-  if (config.enableLogging && selectedChildren.length > 0) {
+  if (
+    config.enableLogging &&
+    selectedChildren &&
+    Array.isArray(selectedChildren) &&
+    selectedChildren.length > 0
+  ) {
     selectedChildren.forEach((child) => {
       logger.debug(
         `Found child ${child.type} for parent ${parentNode.type} via proximity analysis`
@@ -604,7 +616,9 @@ const getTopLevelNodes = (
   for (const parentNode of allNodes) {
     if (isCSGNode(parentNode) || isTransformNode(parentNode)) {
       const children = findDirectChildrenForNode(parentNode, allNodes, config);
-      children.forEach((child) => childNodes.add(child));
+      if (children && Array.isArray(children)) {
+        children.forEach((child) => childNodes.add(child));
+      }
     }
   }
 

@@ -47,7 +47,7 @@ export default defineConfig(({ mode: _mode }) => {
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ['zustand', 'clsx', 'class-variance-authority', 'tslog', 'gl-matrix'],
+            utils: ['zustand', 'class-variance-authority', 'tslog', 'gl-matrix'],
             // Manifold 3D WASM module
             'manifold-wasm': ['manifold-3d'],
           },

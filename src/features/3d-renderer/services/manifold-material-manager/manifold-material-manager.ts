@@ -286,10 +286,12 @@ export function validateMaterialIDs(
     // Check each range against all others
     for (let i = 0; i < ranges.length; i++) {
       const range1 = ranges[i];
+      if (!range1) continue;
       totalReserved += range1.count;
 
       for (let j = i + 1; j < ranges.length; j++) {
         const range2 = ranges[j];
+        if (!range2) continue;
 
         // Check for overlap
         const overlapStart = Math.max(range1.startID, range2.startID);
@@ -470,6 +472,9 @@ export class MaterialIDManager {
     this.mapping = mappingResult.data;
 
     const manifoldID = this.mapping.threeToManifold[threeJSMaterialID];
+    if (manifoldID === undefined) {
+      throw new Error('Failed to create material mapping: manifoldID is undefined');
+    }
 
     // Update cache
     this.updateCache(threeJSMaterialID, manifoldID);
@@ -525,7 +530,7 @@ export class MaterialIDManager {
         isInitialized: false,
         cacheSize: 0,
         cacheHitRate: 0,
-        metrics: this.options.enableMetrics ? this.metrics : undefined,
+        ...(this.options.enableMetrics && { metrics: this.metrics }),
       };
     }
 
@@ -541,7 +546,7 @@ export class MaterialIDManager {
       isInitialized: this.isInitialized,
       cacheSize: this.materialCache.size,
       cacheHitRate,
-      metrics: this.options.enableMetrics ? this.metrics : undefined,
+      ...(this.options.enableMetrics && { metrics: this.metrics }),
     };
   }
 
@@ -644,5 +649,12 @@ export class MaterialIDManager {
       cacheSize: this.materialCache.size,
       validMappings: validIDs.size,
     });
+  }
+
+  /**
+   * Delete method required by memory manager
+   */
+  delete(): void {
+    this.dispose();
   }
 }

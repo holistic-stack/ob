@@ -836,9 +836,9 @@ export class TransformVisitor extends BaseASTVisitor {
                     ? [vector[0], vector[1], 0]
                     : [vector[0], vector[1], vector[2]];
                 const vectorsMatch =
-                  Math.abs(currentVector[0] - expectedVector[0]) < tolerance &&
-                  Math.abs(currentVector[1] - expectedVector[1]) < tolerance &&
-                  Math.abs(currentVector[2] - expectedVector[2]) < tolerance;
+                  Math.abs((currentVector[0] ?? 0) - (expectedVector[0] ?? 0)) < tolerance &&
+                  Math.abs((currentVector[1] ?? 0) - (expectedVector[1] ?? 0)) < tolerance &&
+                  Math.abs((currentVector[2] ?? 0) - (expectedVector[2] ?? 0)) < tolerance;
 
                 if (!vectorsMatch) {
                   // Use the source-parsed vector instead

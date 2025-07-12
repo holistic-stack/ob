@@ -11,7 +11,7 @@ import { createLogger } from '../../../shared/services/logger.service.js';
 // OperationId removed
 import type { CameraConfig as SharedCameraConfig } from '../../../shared/types/common.types.js';
 import type { ASTNode } from '../../openscad-parser/ast/ast-types.js';
-import { convertASTNodeToCSG } from '../services/ast-to-csg-converter/ast-to-csg-converter.js';
+import { ManifoldASTConverter } from '../services/manifold-ast-converter/manifold-ast-converter.js';
 import type { Mesh3D, RenderingMetrics, Scene3DConfig } from '../types/renderer.types.js';
 
 const logger = createLogger('ThreeRendererStore');
@@ -182,12 +182,59 @@ export const useThreeRendererStore = create<ThreeRendererState>((set, get) => ({
         // Render new meshes
         const renderedMeshes: Mesh3D[] = [];
 
+        const { MaterialIDManager } = await import(
+          '../services/manifold-material-manager/manifold-material-manager'
+        );
+        const materialManager = new MaterialIDManager();
+        await materialManager.initialize();
+
+        const converter = new ManifoldASTConverter(materialManager);
+        await converter.initialize();
+
         for (let i = 0; i < ast.length; i++) {
           const node = ast[i];
           if (node) {
-            const result = await convertASTNodeToCSG(node, i);
+            const result = await converter.convertNode(node);
             if (result.success && result.data) {
-              renderedMeshes.push(result.data);
+              // Create a THREE.Mesh from the BufferGeometry
+              const geometry = result.data.geometry;
+              const material = new THREE.MeshStandardMaterial({
+                color: '#00ff88', // Green color as specified
+                metalness: 0.1,
+                roughness: 0.8,
+              });
+              const mesh = new THREE.Mesh(geometry, material);
+
+              // Calculate bounding box
+              geometry.computeBoundingBox();
+              const boundingBox = geometry.boundingBox || new THREE.Box3();
+
+              const mesh3D: Mesh3D = {
+                mesh,
+                metadata: {
+                  meshId: `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  triangleCount: result.data.triangleCount,
+                  vertexCount: result.data.vertexCount,
+                  boundingBox,
+                  material: 'standard',
+                  color: '#00ff88',
+                  opacity: 1,
+                  visible: true,
+                  nodeId: `node_${i}` as any,
+                  nodeType: node.type as any,
+                  depth: 0,
+                  childrenIds: [],
+                  size: 1,
+                  complexity: result.data.vertexCount,
+                  isOptimized: false,
+                  lastAccessed: new Date(),
+                },
+                dispose: () => {
+                  geometry.dispose();
+                  material.dispose();
+                },
+              };
+              renderedMeshes.push(mesh3D);
             }
           }
         }

@@ -97,7 +97,14 @@ export async function performUnion(
     if (geometries.length === 1) {
       // Single geometry - return as-is with metrics
       const geometry = geometries[0];
+      if (!geometry) {
+        return {
+          success: false,
+          error: 'Invalid input: First geometry is null or undefined',
+        };
+      }
       const endTime = performance.now();
+      const indexCount = geometry.getIndex()?.count ?? 0;
 
       return {
         success: true,
@@ -105,7 +112,7 @@ export async function performUnion(
           geometry,
           operationTime: endTime - startTime,
           vertexCount: geometry.getAttribute('position').count,
-          triangleCount: geometry.getIndex()?.count ? geometry.getIndex()!.count / 3 : 0,
+          triangleCount: indexCount / 3,
           materialGroups: geometry.groups.length,
         },
       };
@@ -136,15 +143,29 @@ export async function performUnion(
 
     // Perform union operation using Manifold
     let resultMesh = manifoldMeshes[0];
+    if (!resultMesh) {
+      return {
+        success: false,
+        error: 'No valid meshes to perform union operation',
+      };
+    }
 
     for (let i = 1; i < manifoldMeshes.length; i++) {
       try {
+        const mesh2 = manifoldMeshes[i];
+        if (!mesh2) {
+          return {
+            success: false,
+            error: `Manifold mesh ${i} is null or undefined`,
+          };
+        }
+
         // Create Manifold objects from mesh data
-        const manifold1 = new manifoldModule.Manifold(resultMesh);
-        const manifold2 = new manifoldModule.Manifold(manifoldMeshes[i]);
+        const manifold1: any = new manifoldModule.Manifold(resultMesh as any);
+        const manifold2: any = new manifoldModule.Manifold(mesh2 as any);
 
         // Perform union
-        const unionManifold = manifold1.add(manifold2);
+        const unionManifold: any = manifold1.add(manifold2);
 
         // Get result mesh
         resultMesh = unionManifold.getMesh();
@@ -162,9 +183,16 @@ export async function performUnion(
     }
 
     // Convert result back to Three.js
+    if (!resultMesh) {
+      return {
+        success: false,
+        error: 'Result mesh is null or undefined after union operations',
+      };
+    }
+
     const threeResult = convertManifoldToThree(resultMesh, {
-      preserveGroups: options.preserveMaterials,
-      optimizeGeometry: options.optimizeResult,
+      preserveGroups: options.preserveMaterials ?? false,
+      optimizeGeometry: options.optimizeResult ?? false,
     });
 
     if (!threeResult.success) {
@@ -252,8 +280,8 @@ export async function performSubtraction(
 
     try {
       // Create Manifold objects
-      const baseManifold = new manifoldModule.Manifold(baseResult.data);
-      const subtractManifold = new manifoldModule.Manifold(subtractResult.data);
+      const baseManifold = new manifoldModule.Manifold(baseResult.data as any);
+      const subtractManifold = new manifoldModule.Manifold(subtractResult.data as any);
 
       // Perform subtraction
       const differenceManifold = baseManifold.subtract(subtractManifold);
@@ -268,8 +296,8 @@ export async function performSubtraction(
 
       // Convert result back to Three.js
       const threeResult = convertManifoldToThree(resultMesh, {
-        preserveGroups: options.preserveMaterials,
-        optimizeGeometry: options.optimizeResult,
+        preserveGroups: options.preserveMaterials ?? false,
+        optimizeGeometry: options.optimizeResult ?? false,
       });
 
       if (!threeResult.success) {
@@ -559,7 +587,10 @@ export class ManifoldCSGOperations {
       const keys = Array.from(this.operationCache.keys());
 
       for (let i = 0; i < entriesToRemove; i++) {
-        this.operationCache.delete(keys[i]);
+        const key = keys[i];
+        if (key !== undefined) {
+          this.operationCache.delete(key);
+        }
       }
 
       logger.debug('[DEBUG][ManifoldCSGOperations] Cache optimized', {
@@ -595,6 +626,13 @@ export class ManifoldCSGOperations {
       logger.error('[ERROR][ManifoldCSGOperations] Disposal failed', { error: errorMessage });
       return { success: false, error: errorMessage };
     }
+  }
+
+  /**
+   * Delete method required by memory manager
+   */
+  delete(): void {
+    this.dispose();
   }
 }
 
@@ -651,15 +689,29 @@ export async function performIntersection(
 
     // Perform intersection operation using Manifold
     let resultMesh = manifoldMeshes[0];
+    if (!resultMesh) {
+      return {
+        success: false,
+        error: 'No valid meshes to perform intersection operation',
+      };
+    }
 
     for (let i = 1; i < manifoldMeshes.length; i++) {
       try {
+        const mesh2 = manifoldMeshes[i];
+        if (!mesh2) {
+          return {
+            success: false,
+            error: `Manifold mesh ${i} is null or undefined`,
+          };
+        }
+
         // Create Manifold objects from mesh data
-        const manifold1 = new manifoldModule.Manifold(resultMesh);
-        const manifold2 = new manifoldModule.Manifold(manifoldMeshes[i]);
+        const manifold1: any = new manifoldModule.Manifold(resultMesh as any);
+        const manifold2: any = new manifoldModule.Manifold(mesh2 as any);
 
         // Perform intersection
-        const intersectManifold = manifold1.intersect(manifold2);
+        const intersectManifold: any = manifold1.intersect(manifold2);
 
         // Get result mesh
         resultMesh = intersectManifold.getMesh();
@@ -677,9 +729,16 @@ export async function performIntersection(
     }
 
     // Convert result back to Three.js
+    if (!resultMesh) {
+      return {
+        success: false,
+        error: 'Result mesh is null or undefined after intersection operations',
+      };
+    }
+
     const threeResult = convertManifoldToThree(resultMesh, {
-      preserveGroups: options.preserveMaterials,
-      optimizeGeometry: options.optimizeResult,
+      preserveGroups: options.preserveMaterials ?? false,
+      optimizeGeometry: options.optimizeResult ?? false,
     });
 
     if (!threeResult.success) {
@@ -749,25 +808,35 @@ export async function performBatchCSGOperations(
     // Process each operation
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i];
+      if (!operation) {
+        return {
+          success: false,
+          error: `Batch operation ${i}: Operation is null or undefined`,
+        };
+      }
       let result: Result<CSGOperationResult, string>;
 
       switch (operation.type) {
         case 'union':
           result = await performUnion(operation.geometries, options);
           break;
-        case 'subtract':
+        case 'subtract': {
           if (!operation.baseGeometry) {
             return {
               success: false,
               error: `Batch operation ${i}: Subtract operation requires baseGeometry`,
             };
           }
-          result = await performSubtraction(
-            operation.baseGeometry,
-            operation.geometries[0],
-            options
-          );
+          const subtractGeometry = operation.geometries[0];
+          if (!subtractGeometry) {
+            return {
+              success: false,
+              error: `Batch operation ${i}: Subtract operation requires at least one geometry to subtract`,
+            };
+          }
+          result = await performSubtraction(operation.baseGeometry, subtractGeometry, options);
           break;
+        }
         case 'intersect':
           result = await performIntersection(operation.geometries, options);
           break;

@@ -281,8 +281,8 @@ export const createManifoldMesh = (
   return Object.freeze({
     vertices,
     indices,
-    normals,
-    uvs,
+    ...(normals && { normals }),
+    ...(uvs && { uvs }),
     __brand: 'ManifoldMesh' as const,
   });
 };

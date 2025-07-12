@@ -130,10 +130,6 @@ export const isPolygonData = (obj: unknown): obj is PolygonData => {
   return Boolean(obj && typeof obj === 'object' && 'vertices' in obj && 'plane' in obj);
 };
 
-export const isBSPNodeData = (obj: unknown): obj is BSPNodeData => {
-  return Boolean(obj && typeof obj === 'object' && 'polygons' in obj);
-};
-
 /**
  * Utility types for geometric operations
  */

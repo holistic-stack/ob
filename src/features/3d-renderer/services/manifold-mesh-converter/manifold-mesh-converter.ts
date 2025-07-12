@@ -11,7 +11,14 @@
  * - World matrix transformation during conversion
  */
 
-import { BufferGeometry, Float32BufferAttribute, Matrix4, Uint32BufferAttribute } from 'three';
+import {
+  BufferGeometry,
+  Float32BufferAttribute,
+  Matrix4,
+  Uint32BufferAttribute,
+  Vector3,
+} from 'three';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { logger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
@@ -255,10 +262,16 @@ function processTriangleIndices(
     // Official Manifold pattern: preserve Three.js CCW winding (reverseWinding = false)
     if (reverseWinding) {
       for (let i = 0; i < indices.length; i += 3) {
-        // Reverse winding: [a, b, c] -> [a, c, b]
-        const temp = indices[i + 1];
-        indices[i + 1] = indices[i + 2];
-        indices[i + 2] = temp;
+        // Ensure we have a complete triangle
+        if (i + 2 < indices.length) {
+          // Reverse winding: [a, b, c] -> [a, c, b]
+          const temp = indices[i + 1];
+          const val1 = indices[i + 2];
+          if (temp !== undefined && val1 !== undefined) {
+            indices[i + 1] = val1;
+            indices[i + 2] = temp;
+          }
+        }
       }
     }
 
@@ -299,7 +312,9 @@ function applyWorldMatrixTransformation(
       const z = vertProperties[offset + 2];
 
       // Apply matrix transformation
-      const transformed = matrix.multiplyVector3({ x, y, z } as any);
+      const vector = new Vector3(x, y, z);
+      vector.applyMatrix4(matrix);
+      const transformed = vector;
 
       vertProperties[offset] = transformed.x;
       vertProperties[offset + 1] = transformed.y;
@@ -314,7 +329,9 @@ function applyWorldMatrixTransformation(
 
         // Transform normal (use normal matrix - upper 3x3 of inverse transpose)
         const normalMatrix = matrix.clone().invert().transpose();
-        const transformedNormal = normalMatrix.multiplyVector3({ x: nx, y: ny, z: nz } as any);
+        const normalVector = new Vector3(nx, ny, nz);
+        normalVector.applyMatrix4(normalMatrix);
+        const transformedNormal = normalVector;
 
         vertProperties[offset + 3] = transformedNormal.x;
         vertProperties[offset + 4] = transformedNormal.y;
@@ -681,7 +698,18 @@ export function convertManifoldToThree(
     // Optimize geometry if requested
     if (optimizeGeometry) {
       // Merge vertices and optimize indices
-      geometry.mergeVertices();
+      const optimizedGeometry = BufferGeometryUtils.mergeVertices(geometry);
+      // Copy optimized attributes back to original geometry
+      geometry.setAttribute('position', optimizedGeometry.getAttribute('position'));
+      if (optimizedGeometry.hasAttribute('normal')) {
+        geometry.setAttribute('normal', optimizedGeometry.getAttribute('normal'));
+      }
+      if (optimizedGeometry.hasAttribute('uv')) {
+        geometry.setAttribute('uv', optimizedGeometry.getAttribute('uv'));
+      }
+      if (optimizedGeometry.getIndex()) {
+        geometry.setIndex(optimizedGeometry.getIndex());
+      }
       logger.debug('[DEBUG][ManifoldMeshConverter] Optimized geometry');
     }
 
@@ -783,28 +811,28 @@ function extractVertexAttributes(
       let propIndex = 0;
 
       // Extract positions (always present)
-      positions[i * 3] = vertProperties[offset + propIndex++];
-      positions[i * 3 + 1] = vertProperties[offset + propIndex++];
-      positions[i * 3 + 2] = vertProperties[offset + propIndex++];
+      positions[i * 3] = vertProperties[offset + propIndex++] ?? 0;
+      positions[i * 3 + 1] = vertProperties[offset + propIndex++] ?? 0;
+      positions[i * 3 + 2] = vertProperties[offset + propIndex++] ?? 0;
 
       // Extract normals if present
       if (hasNormals && normals) {
-        normals[i * 3] = vertProperties[offset + propIndex++];
-        normals[i * 3 + 1] = vertProperties[offset + propIndex++];
-        normals[i * 3 + 2] = vertProperties[offset + propIndex++];
+        normals[i * 3] = vertProperties[offset + propIndex++] ?? 0;
+        normals[i * 3 + 1] = vertProperties[offset + propIndex++] ?? 0;
+        normals[i * 3 + 2] = vertProperties[offset + propIndex++] ?? 0;
       }
 
       // Extract UVs if present
       if (hasUVs && uvs) {
-        uvs[i * 2] = vertProperties[offset + propIndex++];
-        uvs[i * 2 + 1] = vertProperties[offset + propIndex++];
+        uvs[i * 2] = vertProperties[offset + propIndex++] ?? 0;
+        uvs[i * 2 + 1] = vertProperties[offset + propIndex++] ?? 0;
       }
 
       // Extract colors if present
       if (hasColors && colors) {
-        colors[i * 3] = vertProperties[offset + propIndex++];
-        colors[i * 3 + 1] = vertProperties[offset + propIndex++];
-        colors[i * 3 + 2] = vertProperties[offset + propIndex++];
+        colors[i * 3] = vertProperties[offset + propIndex++] ?? 0;
+        colors[i * 3 + 1] = vertProperties[offset + propIndex++] ?? 0;
+        colors[i * 3 + 2] = vertProperties[offset + propIndex++] ?? 0;
       }
     }
 
@@ -812,9 +840,9 @@ function extractVertexAttributes(
       success: true,
       data: {
         positions,
-        normals,
-        uvs,
-        colors,
+        ...(normals && { normals }),
+        ...(uvs && { uvs }),
+        ...(colors && { colors }),
       },
     };
   } catch (error) {
@@ -841,11 +869,13 @@ function createGeometryGroups(
     for (let i = 0; i < numRun; i++) {
       const start = runIndex[i];
       const end = i < numRun - 1 ? runIndex[i + 1] : triVerts.length;
-      const count = end - start;
       const materialIndex = runOriginalID[i];
 
-      if (count > 0) {
-        geometry.addGroup(start, count, materialIndex);
+      if (start !== undefined && end !== undefined && materialIndex !== undefined) {
+        const count = end - start;
+        if (count > 0) {
+          geometry.addGroup(start, count, materialIndex);
+        }
       }
     }
 
