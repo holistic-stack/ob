@@ -61,7 +61,9 @@ export const createParsingSlice = (
       const parseResult = await unifiedParseOpenSCAD(code);
 
       if (isSuccess(parseResult)) {
-        const ast = Array.isArray(parseResult.data) ? parseResult.data : [];
+        // Extract AST from the nested structure: parseResult.data.data contains the actual AST
+        const ast = Array.isArray(parseResult.data.data) ? parseResult.data.data : [];
+
         set((state: WritableDraft<AppStore>) => {
           state.parsing.ast = [...ast];
           state.parsing.isLoading = false;

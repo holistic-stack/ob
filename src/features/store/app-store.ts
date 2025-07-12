@@ -10,6 +10,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
+import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
 import { getParserInitializationService } from '../openscad-parser/services/parser-initialization.service.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
@@ -74,7 +75,7 @@ const createInitialState = (options?: StoreOptions): AppState => ({
     lastSaved: null,
   },
   parsing: {
-    ast: [],
+    ast: [] as ReadonlyArray<ASTNode>,
     errors: [],
     warnings: [],
     isLoading: false,
