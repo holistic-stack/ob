@@ -2,8 +2,8 @@
  * @file OpenSCAD parser with AST generation and error handling
  *
  * This module provides a high-level parser for OpenSCAD code that extends the Tree-sitter
- * parsing with additional capabilities like Abstract Syntax Tree (AST) generation,
- * error reporting, and incremental parsing for editor integration.
+ * parsing with additional capabilities like Abstract Syntax Tree (AST) generation
+ * and comprehensive error reporting.
  *
  * The parser follows a layered architecture:
  * 1. Tree-sitter provides the low-level syntax parsing (CST)
@@ -22,6 +22,7 @@ import { VisitorASTGenerator } from './ast/index.js';
 import { ErrorHandler } from './error-handling/index.js';
 import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-error-handler.js';
 
+
 /**
  * OpenSCAD parser with AST generation capabilities and error handling.
  *
@@ -33,7 +34,6 @@ import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-
  * Key features:
  * - WASM-based Tree-sitter parser for efficient and accurate syntax parsing
  * - Visitor pattern for transforming Concrete Syntax Trees (CSTs) into semantic ASTs
- * - Incremental parsing support for editor integration with better performance
  * - Detailed error reporting with line/column information and formatted messages
  * - Configurable error handling through the IErrorHandler interface
  *
@@ -43,8 +43,7 @@ import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-
  * 3. Transform the CST into an AST (parseAST)
  * 4. Handle any syntax or semantic errors through the error handler
  *
- * For incremental updates (common in code editors), use the update/updateAST methods
- * to efficiently update only the changed portions of the syntax tree.
+
  *
  * @example Complete Parser Workflow
  * ```typescript
@@ -68,15 +67,7 @@ import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-
  *     // Process the AST (e.g., code analysis, transformation)
  *     console.log(JSON.stringify(ast, null, 2));
  *
- *     // Later, for incremental updates (e.g., in an editor)
- *     const updatedCode = 'module test() { cube(20); sphere(5); }';
- *     // Only reparse the changed part (the parameter 10 -> 20)
- *     const updatedAst = parser.updateAST(
- *       updatedCode,
- *       code.indexOf('10'),  // start index of change
- *       code.indexOf('10') + 2,  // old end index
- *       code.indexOf('10') + 2 + 1  // new end index (one digit longer)
- *     );
+
  *   } catch (error) {
  *     console.error('Parsing failed:', error);
  *     // Access collected errors
@@ -94,7 +85,6 @@ import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-
 export class OpenscadParser {
   private parser: TreeSitter.Parser | null = null;
   private language: TreeSitter.Language | null = null;
-  private previousTree: TreeSitter.Tree | null = null;
   private errorHandler: ErrorHandler;
   private simpleErrorHandler: SimpleErrorHandler;
   private astGenerators: Set<import('./ast/visitor-ast-generator.js').VisitorASTGenerator> =
@@ -251,8 +241,8 @@ export class OpenscadParser {
     }
 
     try {
-      const tree = this.parser.parse(code, this.previousTree ?? undefined);
-      this.previousTree = tree;
+      // Always use cold parsing for consistent, reliable results
+      const tree = this.parser.parse(code, undefined);
 
       // Check for syntax errors
       if (tree && (this.hasErrorNodes(tree.rootNode) || this.hasMissingTokens(tree.rootNode))) {
@@ -937,7 +927,8 @@ export class OpenscadParser {
    */
   parseASTWithResult(code: string): Result<ASTNode[], string> {
     try {
-      const cst = this.parseCST(code);
+      let cst = this.parseCST(code);
+
       if (!cst) {
         return { success: false, error: 'Failed to generate CST' };
       }
@@ -979,140 +970,9 @@ export class OpenscadParser {
     return this.parseCST(code);
   }
 
-  /**
-   * Updates the parse tree incrementally for better performance when making small edits to code.
-   *
-   * Instead of reparsing the entire file, this method updates only the changed portion
-   * of the syntax tree, significantly improving performance for large files.
-   *
-   * @param newCode - The updated OpenSCAD code string
-   * @param startIndex - The byte index where the edit starts in the original code
-   * @param oldEndIndex - The byte index where the edit ends in the original code
-   * @param newEndIndex - The byte index where the edit ends in the new code
-   * @returns Updated Tree-sitter CST or null if incremental update fails
-   *
-   * @example Simple Edit
-   * ```ts
-   * // Original: "cube(10);"
-   * // Change to: "cube(20);"
-   * const tree = parser.update("cube(20);", 5, 7, 7);
-   * ```
-   *
-   * @example Complex Edit
-   * ```ts
-   * // For more complex edits with position calculations:
-   * const oldCode = "cube([10, 10, 10]);";
-   * const newCode = "cube([20, 10, 10]);";
-   * // Calculate the edit position (append at the end)
-   * const startIndex = oldCode.indexOf("10");
-   * const oldEndIndex = startIndex + 2; // "10" is 2 chars
-   * const newEndIndex = startIndex + 2; // "20" is also 2 chars
-   * const tree = parser.update(newCode, startIndex, oldEndIndex, newEndIndex);
-   * ```
-   *
-   * @since 0.2.0
-   */
-  update(
-    newCode: string,
-    startIndex: number,
-    oldEndIndex: number,
-    newEndIndex: number
-  ): TreeSitter.Tree | null {
-    if (!this.parser || !this.previousTree) {
-      return this.parseCST(newCode);
-    }
 
-    try {
-      // Create edit object for tree-sitter
-      const edit = {
-        startIndex,
-        oldEndIndex,
-        newEndIndex,
-        startPosition: this.indexToPosition(newCode, startIndex),
-        oldEndPosition: this.indexToPosition(newCode, oldEndIndex),
-        newEndPosition: this.indexToPosition(newCode, newEndIndex),
-      };
 
-      this.previousTree.edit(edit);
-      const newTree = this.parser.parse(newCode, this.previousTree);
-      this.previousTree = newTree;
 
-      return newTree;
-    } catch (error) {
-      this.errorHandler.handleError(new Error(`Failed to update parse tree: ${error}`));
-      throw error;
-    }
-  }
-
-  /**
-   * Updates the Abstract Syntax Tree (AST) incrementally for improved performance.
-   *
-   * This method first performs an incremental update of the Concrete Syntax Tree (CST)
-   * and then generates a new AST from the updated tree. This approach is much more efficient
-   * than regenerating the entire AST for large files when only small changes are made.
-   *
-   * @param newCode - The updated OpenSCAD code string
-   * @param startIndex - The byte index where the edit starts in the original code
-   * @param oldEndIndex - The byte index where the edit ends in the original code
-   * @param newEndIndex - The byte index where the edit ends in the new code
-   * @returns Array of updated AST nodes representing the OpenSCAD program
-   * @throws Error if the AST update process fails
-   *
-   * @example Simple Parameter Change
-   * ```ts
-   * // Original: "cube(10);"
-   * // Changed to: "cube(20);"
-   * const ast = parser.updateAST("cube(20);", 5, 7, 7);
-   * // ast will contain the updated node structure
-   * ```
-   *
-   * @example Adding New Element
-   * ```ts
-   * const oldCode = "cube(10);";
-   * const newCode = "cube(10); sphere(5);";
-   * // Calculate the edit position (append at the end)
-   * const startIndex = oldCode.length;
-   * const oldEndIndex = oldCode.length;
-   * const newEndIndex = newCode.length;
-   *
-   * const ast = parser.updateAST(newCode, startIndex, oldEndIndex, newEndIndex);
-   * // ast now contains both the cube and sphere nodes
-   * ```
-   *
-   * @since 0.2.0
-   */
-  updateAST(
-    newCode: string,
-    startIndex: number,
-    oldEndIndex: number,
-    newEndIndex: number
-  ): ASTNode[] {
-    try {
-      // First update the CST incrementally
-      const updatedTree = this.update(newCode, startIndex, oldEndIndex, newEndIndex);
-
-      if (!updatedTree) {
-        return [];
-      }
-
-      // Generate new AST from updated CST
-      const astGenerator = new VisitorASTGenerator(
-        updatedTree,
-        newCode,
-        this.language,
-        this.errorHandler as any
-      );
-
-      // Track the AST generator for proper cleanup
-      this.astGenerators.add(astGenerator);
-
-      const ast = astGenerator.generate();
-      return ast;
-    } catch (error) {
-      this.errorHandler.handleError(new Error(`Failed to update AST: ${error}`));
-      throw error;
-    }
-  }
   /**
    * Gets the Tree Sitter language object.
    *
@@ -1158,12 +1018,6 @@ export class OpenscadParser {
    */
   dispose(): void {
     try {
-      // Clear previous tree first to break any references
-      if (this.previousTree) {
-        this.previousTree.delete();
-        this.previousTree = null;
-      }
-
       // Dispose all AST generators and their Query objects
       for (const astGenerator of this.astGenerators) {
         if (astGenerator && typeof astGenerator.dispose === 'function') {
@@ -1380,34 +1234,7 @@ export class OpenscadParser {
     return null;
   }
 
-  /**
-   * Converts a byte index in the source text to a line/column position.
-   *
-   * This utility method is used during incremental parsing to convert a character
-   * index to the corresponding line and column position. This is necessary because
-   * Tree-sitter's edit API requires position objects with row and column properties.
-   *
-   * @param text - The source text string
-   * @param index - The byte index to convert to a position
-   * @returns An object containing row (line) and column numbers (0-based)
-   * @private
-   * @since 0.2.0
-   */
-  private indexToPosition(text: string, index: number): { row: number; column: number } {
-    let row = 0;
-    let column = 0;
 
-    for (let i = 0; i < index && i < text.length; i++) {
-      if (text[i] === '\n') {
-        row++;
-        column = 0;
-      } else {
-        column++;
-      }
-    }
-
-    return { row, column };
-  }
 
   /**
    * Check if a statement looks like a standalone primitive (sphere, cube, etc.)
