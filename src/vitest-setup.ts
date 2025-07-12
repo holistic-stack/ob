@@ -1,3 +1,9 @@
+import { vi } from 'vitest';
+
+vi.mock('./features/code-editor/components/monaco-editor.tsx', () => ({
+  MonacoEditorComponent: () => <div data-testid="monaco-editor-mock">Monaco Editor Mock</div>,
+}));
+
 // Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
 import ResizeObserver from 'resize-observer-polyfill';
 
@@ -148,7 +154,7 @@ Object.defineProperty(window, 'getComputedStyle', {
 
     // Parse inline styles to extract width and height
     const parseInlineStyle = (styleAttr: string, property: string): string => {
-      const regex = new RegExp(`${property}:\\s*([^;]+)`, 'i');
+      const regex = new RegExp(`${property}:\s*([^;]+)`, 'i');
       const match = styleAttr.match(regex);
       return match ? match[1]?.trim() || '' : '';
     };
@@ -223,15 +229,15 @@ function _createMockWasmFile(): Uint8Array {
   const mockWasm = new Uint8Array(totalLength);
 
   let offset = 0;
-  mockWasm.set(wasmHeader, offset);
+mockWasm.set(wasmHeader, offset);
   offset += wasmHeader.length;
-  mockWasm.set(typeSection, offset);
+mockWasm.set(typeSection, offset);
   offset += typeSection.length;
-  mockWasm.set(functionSection, offset);
+mockWasm.set(functionSection, offset);
   offset += functionSection.length;
-  mockWasm.set(exportSection, offset);
+mockWasm.set(exportSection, offset);
   offset += exportSection.length;
-  mockWasm.set(codeSection, offset);
+mockWasm.set(codeSection, offset);
 
   logger.debug(`Created mock WASM file: ${mockWasm.length} bytes`);
   return mockWasm;
@@ -553,9 +559,8 @@ export async function initializeCSGForTests(): Promise<void> {
       shutdown: () => Promise.resolve(),
     };
 
-    (
-      globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }
-    ).__MOCK_MATRIX_SERVICE__ = mockMatrixService;
+    (globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }).__MOCK_MATRIX_SERVICE__ =
+      mockMatrixService;
 
     logger.debug('✅ Mock Matrix Service initialized for testing');
   } catch (error) {

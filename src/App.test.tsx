@@ -6,110 +6,21 @@
  */
 
 import { render, screen } from '@testing-library/react';
-
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-
-// Mock the store-connected components
-interface MockComponentProps {
-  className?: string;
-  'data-testid'?: string;
-}
-
-vi.mock('./features/code-editor/components/store-connected-editor', () => ({
-  StoreConnectedEditor: ({ className, 'data-testid': testId }: MockComponentProps) => (
-    <div className={className} data-testid={testId || 'store-connected-editor-mock'}>
-      <div data-testid="editor-mock-content">Monaco Editor Mock</div>
-    </div>
-  ),
-}));
-
-vi.mock('./features/3d-renderer/components/store-connected-renderer', () => ({
-  StoreConnectedRenderer: ({ className, 'data-testid': testId }: MockComponentProps) => (
-    <div className={className} data-testid={testId || 'store-connected-renderer-mock'}>
-      <div data-testid="renderer-mock-content">Three.js Renderer Mock</div>
-    </div>
-  ),
-}));
-
+import { appStoreInstance } from './features/store/app-store';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
-
-// Mock store state
-const mockStoreState: {
-  application: { status: string };
-  editor: { code: string };
-  parsing: { ast: ASTNode[] };
-  rendering: {
-    isRendering: boolean;
-    meshes: THREE.Mesh[];
-    renderErrors: string[];
-  };
-  performance: {
-    metrics: {
-      renderTime: number;
-      parseTime: number;
-      memoryUsage: number;
-    };
-  };
-} = {
-  application: {
-    status: 'idle',
-  },
-  editor: {
-    code: '',
-  },
-  parsing: {
-    ast: [],
-  },
-  rendering: {
-    isRendering: false,
-    meshes: [],
-    renderErrors: [],
-  },
-  performance: {
-    metrics: {
-      renderTime: 0,
-      parseTime: 0,
-      memoryUsage: 0,
-    },
-  },
-};
-
-// Mock the store
-vi.mock('./features/store/app-store', () => ({
-  useAppStore: vi.fn((selector) => {
-    if (typeof selector === 'function') {
-      // Handle selectors
-      const selectorName = selector.name;
-      if (selectorName === 'selectApplicationStatus') return mockStoreState.application.status;
-      if (selectorName === 'selectEditorCode') return mockStoreState.editor.code;
-      if (selectorName === 'selectParsingAST') return mockStoreState.parsing.ast;
-      if (selectorName === 'selectRenderingIsRendering')
-        return mockStoreState.rendering.isRendering;
-      if (selectorName === 'selectRenderingMeshes') return mockStoreState.rendering.meshes;
-      if (selectorName === 'selectRenderingErrors') return mockStoreState.rendering.renderErrors;
-      if (selectorName === 'selectRenderingState') return mockStoreState.rendering;
-      if (selectorName === 'selectPerformanceMetrics') return mockStoreState.performance.metrics;
-
-      // Handle action selectors - return mock functions
-      return vi.fn();
-    }
-    return vi.fn();
-  }),
-}));
 
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset mock store state
-    mockStoreState.application.status = 'idle';
-    mockStoreState.editor.code = '';
-    mockStoreState.parsing.ast = [];
-    mockStoreState.rendering.isRendering = false;
-    mockStoreState.rendering.meshes = [];
-    mockStoreState.rendering.renderErrors = [];
-    mockStoreState.performance.metrics = { renderTime: 0, parseTime: 0, memoryUsage: 0 };
+    // Reset store state before each test
+    appStoreInstance.setState({
+      editor: { code: '', isDirty: false, lastSaved: null, cursorPosition: { line: 1, column: 1 }, selection: null },
+      parsing: { ast: [], errors: [], warnings: [], isLoading: false, lastParsed: null, lastParsedCode: null, parseTime: 0 },
+      rendering: { meshes: [], isRendering: false, renderErrors: [], lastRendered: null, renderTime: 0, camera: { position: [10, 10, 10], target: [0, 0, 0], zoom: 1, fov: 75, near: 0.1, far: 1000, enableControls: true, enableAutoRotate: false, autoRotateSpeed: 1 } },
+    });
   });
 
   describe('Application Layout', () => {
@@ -139,7 +50,7 @@ describe('App', () => {
     });
 
     it('should display application status correctly', () => {
-      mockStoreState.rendering.isRendering = true;
+      appStoreInstance.setState({ rendering: { ...appStoreInstance.getState().rendering, isRendering: true } });
 
       render(<App />);
 
@@ -147,7 +58,7 @@ describe('App', () => {
     });
 
     it('should display metrics in header', () => {
-      mockStoreState.parsing.ast = [
+      const ast: ASTNode[] = [
         {
           type: 'cube',
           size: [1, 1, 1],
@@ -166,12 +77,16 @@ describe('App', () => {
           },
         } as ASTNode,
       ];
-      mockStoreState.rendering.meshes = [
+      const meshes: THREE.Mesh[] = [
         {} as THREE.Mesh, // Mock THREE.Mesh for cube
         {} as THREE.Mesh, // Mock THREE.Mesh for sphere
         {} as THREE.Mesh, // Mock THREE.Mesh for cylinder
       ];
-      mockStoreState.performance.metrics.renderTime = 15.5;
+
+      appStoreInstance.setState({
+        parsing: { ...appStoreInstance.getState().parsing, ast },
+        rendering: { ...appStoreInstance.getState().rendering, meshes },
+      });
 
       render(<App />);
 
@@ -186,8 +101,6 @@ describe('App', () => {
 
       const editor = screen.getByTestId('main-editor');
       expect(editor).toBeInTheDocument();
-      expect(screen.getByTestId('editor-mock-content')).toBeInTheDocument();
-      expect(screen.getByText('Monaco Editor Mock')).toBeInTheDocument();
     });
 
     it('should integrate store-connected renderer', () => {
@@ -195,8 +108,6 @@ describe('App', () => {
 
       const renderer = screen.getByTestId('main-renderer');
       expect(renderer).toBeInTheDocument();
-      expect(screen.getByTestId('renderer-mock-content')).toBeInTheDocument();
-      expect(screen.getByText('Three.js Renderer Mock')).toBeInTheDocument();
     });
 
     it('should apply proper CSS classes for layout', () => {

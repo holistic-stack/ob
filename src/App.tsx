@@ -16,6 +16,7 @@ import { useAppStore } from './features/store/app-store';
 import {
   selectEditorCode,
   selectParsingAST,
+  selectParsingLastParsed, // Import the new selector
   selectRenderingErrors,
   selectRenderingIsRendering,
   selectRenderingMeshes,
@@ -34,6 +35,7 @@ export function App(): React.JSX.Element {
   // Store selectors for application state
   const editorCode: string = useAppStore(selectEditorCode);
   const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
+  const lastParsed: Date | null = useAppStore(selectParsingLastParsed); // Get the last parsed date
   const applicationStatus: boolean = useAppStore(selectRenderingIsRendering);
   const renderingStateMeshes: ReadonlyArray<THREE.Mesh> = useAppStore(selectRenderingMeshes);
 
@@ -159,7 +161,11 @@ export function App(): React.JSX.Element {
             <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
           </div>
           <div className="panel-content flex-1 relative">
-            <StoreConnectedRenderer className="h-full w-full" data-testid="main-renderer" />
+            <StoreConnectedRenderer
+              key={lastParsed instanceof Date ? lastParsed.getTime() : 'initial'} // Add the key prop here
+              className="h-full w-full"
+              data-testid="main-renderer"
+            />
           </div>
         </div>
       </main>

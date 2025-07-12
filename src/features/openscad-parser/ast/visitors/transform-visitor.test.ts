@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, test } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import { variableScope } from '../../../3d-renderer/services/ast-to-csg-converter/variable-scope.service';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
+import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
 import { TransformVisitor } from './transform-visitor.js';
 
@@ -14,7 +14,7 @@ describe('TransformVisitor', () => {
     parser = new OpenscadParser();
     await parser.init();
     errorHandler = new ErrorHandler();
-    visitor = new TransformVisitor('', undefined, errorHandler, variableScope);
+    visitor = new TransformVisitor('', undefined, errorHandler);
   });
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe('TransformVisitor', () => {
     it.skip('should parse translate([10, 20, 30]) sphere(5);', () => {
       const code = 'translate([10, 20, 30]) sphere(5);';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
@@ -65,7 +65,7 @@ describe('TransformVisitor', () => {
     it.skip('should parse translate(v = [1, 2, 3]) cube(1);', () => {
       const code = 'translate(v = [1, 2, 3]) cube(1);';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
@@ -82,7 +82,7 @@ describe('TransformVisitor', () => {
     it.skip('should parse translate([10, 20]) /* 2D vector */ circle(5);', () => {
       const code = 'translate([10, 20]) circle(5);';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
@@ -99,7 +99,7 @@ describe('TransformVisitor', () => {
     it('should parse translate(5) /* single number */ cylinder(h=10, r=1);', () => {
       const code = 'translate(5) cylinder(h=10, r=1);';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       // No-op: This block was for debugging and had an empty statement.
 
@@ -120,7 +120,7 @@ describe('TransformVisitor', () => {
     it.skip('should parse translate([-5, 10.5, 0]) text("hello");', () => {
       const code = 'translate([-5, 10.5, 0]) text("hello");';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;
@@ -138,7 +138,7 @@ describe('TransformVisitor', () => {
     it.skip('should parse translate([-5, 10.5]) polygon();', () => {
       const code = 'translate([-5, 10.5]) polygon();';
       // Update the visitor with the current code being tested
-      visitor = new TransformVisitor(code, undefined, errorHandler, variableScope);
+      visitor = new TransformVisitor(code, undefined, errorHandler);
       const transformCstNode = getTransformCstNode(code, 'translate');
       expect(transformCstNode, `CST node for 'translate' not found in: "${code}"`).not.toBeNull();
       if (!transformCstNode) return;

@@ -102,14 +102,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     )
   );
 
-  const renderFromAST = useAppStore(
-    useCallback(
-      (state: AppStore) =>
-        state.renderFromAST ??
-        (() => Promise.resolve({ success: false, error: 'Store not initialized' })),
-      []
-    )
-  );
   const addRenderError = useAppStore(
     useCallback(
       (state: AppStore) =>
@@ -189,35 +181,16 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   }, [ast]);
 
   /**
-   * Effect: Trigger rendering when AST changes (stable dependencies only)
+   * Effect: Clear render errors when AST changes (R3F Scene handles actual rendering)
    */
   useEffect(() => {
     if (!enableRealTimeRendering || processedAST.length === 0) {
       return;
     }
 
-    logger.debug('AST changed, triggering render');
+    logger.debug('AST changed, clearing render errors (R3F Scene will handle rendering)');
     clearRenderErrors();
-
-    // Trigger rendering through store action
-    renderFromAST(processedAST)
-      .then((result: Result<ReadonlyArray<THREE.Mesh>, string>) => {
-        if (result.success) {
-          logger.debug(`AST rendering successful: ${result.data?.length ?? 0} meshes`);
-        } else {
-          logger.error('AST rendering failed:', result.error);
-          addRenderError({ type: 'initialization', message: result.error });
-        }
-      })
-      .catch((error: unknown) => {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error('AST rendering exception:', errorMessage);
-        addRenderError({
-          type: 'initialization',
-          message: errorMessage,
-        });
-      });
-  }, [enableRealTimeRendering, processedAST, renderFromAST, clearRenderErrors, addRenderError]); // Stable functions only
+  }, [enableRealTimeRendering, processedAST, clearRenderErrors]);
 
   /**
    * Memoized debug info (prevent unnecessary recalculations)

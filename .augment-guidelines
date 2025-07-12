@@ -157,7 +157,7 @@ Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() →
 ### Core Components
 - **Code Editor (`src/features/code-editor`):** Monaco Editor integration with OpenSCAD syntax highlighting. The `StoreConnectedEditor` component syncs editor content with the Zustand store.
 
-- **OpenSCAD Parser (`src/features/openscad-parser`):** Takes raw OpenSCAD code and converts it into an AST using `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar.
+- **OpenSCAD Parser (`src/features/openscad-parser`):** Comprehensive parsing infrastructure with 100+ files including AST generation, error handling, recovery strategies, parameter extraction, and utilities. Uses `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar.
 
 - **3D Renderer (`src/features/3d-renderer`):** React Three Fiber-based component that takes AST from the store and renders 3D scenes. The `StoreConnectedRenderer` ensures all data flows through the store.
 
@@ -167,6 +167,15 @@ Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() →
 3. `R3FScene` uses `primitive-renderer` and `csg-operations` services
 4. Each AST node converted to `three.js` mesh
 5. Resulting meshes rendered to screen
+
+### OpenSCAD Parser Infrastructure
+- **Comprehensive System**: 100+ files in `src/features/openscad-parser/` covering all aspects of OpenSCAD parsing
+- **Error Recovery**: `error-handling/recovery-strategy-registry.ts` with built-in strategies for common syntax errors
+- **AST Visitors**: 20+ specialized visitors using visitor pattern for different OpenSCAD constructs
+- **Parameter Extraction**: Specialized extractors for primitives (cube, sphere, cylinder) and transformations
+- **Expression Evaluation**: Binary expression evaluation with context management
+- **Real Parser Testing**: Always use actual parser instances, never mock the core parser
+- **Tree-sitter Integration**: Grammar works correctly; issues are in application layer parameter extraction
 
 ### CSG Operations
 - **Advanced CSG Operations:** Production-ready boolean operations (union, difference, intersection) with Manifold WASM

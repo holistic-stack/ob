@@ -155,7 +155,10 @@ Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() →
 ### Core Components
 - **Code Editor (`src/features/code-editor`):** Monaco Editor integration with OpenSCAD syntax highlighting. The `StoreConnectedEditor` component syncs editor content with the Zustand store.
 
-- **OpenSCAD Parser (`src/features/openscad-parser`):** Takes raw OpenSCAD code and converts it into an AST using `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar.
+- **OpenSCAD Parser (`src/features/openscad-parser`):** Takes raw OpenSCAD code and converts it into an AST using `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar. This feature is not just a simple parser; it's a comprehensive toolkit for language processing. It includes:
+  - **Advanced AST Manipulation:** A rich set of utilities for AST traversal, querying, and transformation.
+  - **CST Utilities:** Tools for working with the Concrete Syntax Tree, including query capabilities.
+  - **Robust Error Handling:** A sophisticated error recovery system with a registry of strategies to handle common syntax errors automatically.
 
 - **3D Renderer (`src/features/3d-renderer`):** React Three Fiber-based component that takes AST from the store and renders 3D scenes. The `StoreConnectedRenderer` ensures all data flows through the store.
 

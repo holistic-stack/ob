@@ -181,62 +181,9 @@ void initializeStore(appStore);
 export const appStoreInstance = appStore;
 
 /**
- * Hook to use the app store with flattened properties for backwards compatibility
- * Supports both selector and non-selector usage patterns
+ * Hook to use the app store.
+ * This hook connects to the single, centralized appStore instance.
  */
-export const useAppStore = create<AppStore>()(
-  devtools(
-    persist(
-      immer((set, get) => {
-        const defaultStoreOptions: StoreOptions = {
-          enableDevtools: true,
-          enablePersistence: false,
-          debounceConfig: {
-            parseDelayMs: 300,
-            renderDelayMs: 300,
-            saveDelayMs: 1000,
-          },
-        };
-        const store = {
-          ...createInitialState(defaultStoreOptions),
-          ...createEditorSlice(set, get, {
-            debounceConfig: defaultStoreOptions.debounceConfig,
-          }),
-          ...createParsingSlice(set, get),
-          ...createRenderingSlice(set, get),
-          ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
-        };
-
-        // Trigger initial parsing after store creation
-        setTimeout(() => {
-          const currentState = get();
-          if (currentState.editor.code.length > 0 && currentState.parsing.ast.length === 0) {
-            logger.init('Auto-triggering initial parsing of default code');
-            void currentState.parseCode(currentState.editor.code);
-          }
-        }, 100); // Small delay to ensure store is fully initialized
-
-        return store;
-      }),
-      {
-        name: 'openscad-app-store',
-        partialize: (state) => ({
-          config: state.config,
-          editor: {
-            code: state.editor.code,
-            lastSaved: state.editor.lastSaved,
-          },
-          rendering: {
-            camera: state.rendering?.camera ?? null,
-          },
-        }),
-      }
-    ),
-    {
-      enabled: true,
-      name: 'OpenSCAD App Store',
-    }
-  )
-);
+export const useAppStore = appStore;
 
 export type { AppState, AppStore };

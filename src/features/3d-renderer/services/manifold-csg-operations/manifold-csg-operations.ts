@@ -529,18 +529,28 @@ export class ManifoldCSGOperations {
   /**
    * Generate cache key for operation caching
    * Private helper method for performance optimization
+   *
+   * FIXED: Include geometry parameters to prevent caching different-sized primitives as identical
    */
   private generateCacheKey(
     operation: string,
     geometries: BufferGeometry[],
     options: CSGOperationOptions
   ): string {
-    // Create a simple hash based on operation type, geometry vertex counts, and key options
+    // Create a detailed hash that includes geometry parameters, not just vertex counts
     const geometryHashes = geometries
-      .map((geo) => {
+      .map((geo, index) => {
         const positions = geo.getAttribute('position');
         const indices = geo.getIndex();
-        return `${positions?.count || 0}-${indices?.count || 0}`;
+
+        // Include bounding box information to differentiate geometries with same vertex count but different sizes
+        geo.computeBoundingBox();
+        const bbox = geo.boundingBox;
+        const bboxHash = bbox
+          ? `${bbox.min.x.toFixed(3)},${bbox.min.y.toFixed(3)},${bbox.min.z.toFixed(3)}-${bbox.max.x.toFixed(3)},${bbox.max.y.toFixed(3)},${bbox.max.z.toFixed(3)}`
+          : 'no-bbox';
+
+        return `geo${index}:${positions?.count || 0}-${indices?.count || 0}-${bboxHash}`;
       })
       .join(',');
 

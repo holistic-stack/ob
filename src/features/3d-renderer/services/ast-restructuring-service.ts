@@ -23,29 +23,7 @@ import type {
 
 const logger = createLogger('ASTRestructuringService');
 
-/**
- * Module-level storage for source code to enable AST restructuring
- * This allows the restructuring service to access the original source code
- * for parsing child primitives
- */
-let currentSourceCode: string | null = null;
 
-/**
- * Set the source code for AST restructuring
- * This enables the restructuring service to find child primitives via source code analysis
- */
-export function setSourceCodeForRestructuring(sourceCode: string): void {
-  currentSourceCode = sourceCode;
-  logger.debug(`Source code set for restructuring (${sourceCode.length} characters)`);
-}
-
-/**
- * Clear the source code after restructuring
- */
-export function clearSourceCodeForRestructuring(): void {
-  currentSourceCode = null;
-  logger.debug('Source code cleared after restructuring');
-}
 
 /**
  * Configuration for AST restructuring
@@ -194,6 +172,7 @@ const isNodeContainedWithin = (childNode: ASTNode, parentNode: ASTNode): boolean
 const findDirectChildrenForNode = (
   parentNode: ASTNode,
   allNodes: readonly ASTNode[],
+  sourceCode: string,
   config: ASTRestructuringConfig
 ): ASTNode[] => {
   if (!config.enableSourceLocationAnalysis) {
@@ -201,7 +180,7 @@ const findDirectChildrenForNode = (
   }
 
   // Primary strategy: source location analysis
-  const locationBasedChildren = findChildrenBySourceLocation(parentNode, allNodes, config);
+  const locationBasedChildren = findChildrenBySourceLocation(parentNode, allNodes, sourceCode, config);
 
   if (locationBasedChildren.length > 0) {
     if (config.enableLogging) {
@@ -234,6 +213,7 @@ const findDirectChildrenForNode = (
 const findChildrenBySourceLocation = (
   parentNode: ASTNode,
   allNodes: readonly ASTNode[],
+  sourceCode: string,
   config: ASTRestructuringConfig
 ): ASTNode[] => {
   const potentialChildren: ASTNode[] = [];
@@ -266,7 +246,7 @@ const findChildrenBySourceLocation = (
       }
     } else {
       // Try to find the child primitive via source code analysis (Tree-sitter grammar workaround)
-      const sourceCodeChild = tryParseChildFromSourceCode(parentNode);
+      const sourceCodeChild = tryParseChildFromSourceCode(parentNode, sourceCode);
       if (sourceCodeChild) {
         potentialChildren.push(sourceCodeChild);
         if (config.enableLogging) {
@@ -495,6 +475,7 @@ const findChildrenByProximity = (
 const restructureCSGNode = (
   csgNode: UnionNode | DifferenceNode | IntersectionNode,
   allNodes: readonly ASTNode[],
+  sourceCode: string,
   config: ASTRestructuringConfig
 ): UnionNode | DifferenceNode | IntersectionNode => {
   if (config.enableLogging) {
@@ -512,7 +493,7 @@ const restructureCSGNode = (
     children = csgNode.children;
   } else {
     // Find children that belong to this CSG operation via source location analysis
-    children = findDirectChildrenForNode(csgNode, allNodes, config);
+    children = findDirectChildrenForNode(csgNode, allNodes, sourceCode, config);
 
     // If no children found via location analysis, try to find primitives that should belong to this CSG operation
     // This handles the case where the parser doesn't correctly process block contents
@@ -554,6 +535,7 @@ const restructureCSGNode = (
 const restructureTransformNode = (
   transformNode: TranslateNode | RotateNode | ScaleNode,
   allNodes: readonly ASTNode[],
+  sourceCode: string,
   config: ASTRestructuringConfig
 ): TranslateNode | RotateNode | ScaleNode => {
   if (config.enableLogging) {
@@ -576,7 +558,7 @@ const restructureTransformNode = (
         `${transformNode.type} has no children from parser, searching via source location analysis`
       );
     }
-    children = findDirectChildrenForNode(transformNode, allNodes, config);
+    children = findDirectChildrenForNode(transformNode, allNodes, sourceCode, config);
     if (config.enableLogging) {
       logger.debug(
         `${transformNode.type} found ${children.length} children via source location analysis`
@@ -587,7 +569,7 @@ const restructureTransformNode = (
   // Recursively restructure children if they are CSG nodes
   const restructuredChildren = children.map((child) => {
     if (isCSGNode(child)) {
-      return restructureCSGNode(child, allNodes, config);
+      return restructureCSGNode(child, allNodes, sourceCode, config);
     }
     return child;
   });
@@ -610,6 +592,7 @@ const restructureTransformNode = (
  */
 const getTopLevelNodes = (
   allNodes: readonly ASTNode[],
+  sourceCode: string,
   config: ASTRestructuringConfig
 ): ASTNode[] => {
   const topLevelNodes: ASTNode[] = [];
@@ -618,7 +601,7 @@ const getTopLevelNodes = (
   // First pass: identify all nodes that are children of other nodes
   for (const parentNode of allNodes) {
     if (isCSGNode(parentNode) || isTransformNode(parentNode)) {
-      const children = findDirectChildrenForNode(parentNode, allNodes, config);
+      const children = findDirectChildrenForNode(parentNode, allNodes, sourceCode, config);
       if (children && Array.isArray(children)) {
         children.forEach((child) => {
           if (child) {
@@ -656,7 +639,7 @@ const getTopLevelNodes = (
  * @param transformNode - The transform node that needs a child
  * @returns The child primitive node if found, null otherwise
  */
-const tryParseChildFromSourceCode = (transformNode: ASTNode): ASTNode | null => {
+const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string): ASTNode | null => {
   if (!transformNode.location || !currentSourceCode) {
     return null;
   }
@@ -894,6 +877,7 @@ const createSyntheticPrimitiveNode = (
  */
 export const restructureAST = (
   ast: readonly ASTNode[],
+  sourceCode: string,
   config: Partial<ASTRestructuringConfig> = {}
 ): Result<readonly ASTNode[], string> => {
   return tryCatch(
@@ -928,7 +912,7 @@ export const restructureAST = (
       }
 
       // Get top-level nodes (nodes that are not children of other nodes)
-      const topLevelNodes = getTopLevelNodes(ast, finalConfig);
+      const topLevelNodes = getTopLevelNodes(ast, sourceCode, finalConfig);
 
       if (finalConfig.enableLogging) {
       }
@@ -944,12 +928,12 @@ export const restructureAST = (
           if (finalConfig.enableLogging) {
             logger.debug(`Restructuring transform node: ${node.type}`);
           }
-          return restructureTransformNode(node, ast, finalConfig);
+          return restructureTransformNode(node, ast, sourceCode, finalConfig);
         } else if (isCSGNode(node)) {
           if (finalConfig.enableLogging) {
             logger.debug(`Restructuring CSG node: ${node.type}`);
           }
-          return restructureCSGNode(node, ast, finalConfig);
+          return restructureCSGNode(node, ast, sourceCode, finalConfig);
         } else {
           // Primitive nodes don't need restructuring
           if (finalConfig.enableLogging) {
