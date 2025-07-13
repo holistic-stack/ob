@@ -106,7 +106,6 @@ coverage/
 # Nuxt.js build / generate output
 .nuxt
 dist
-tasks/
 
 # Gatsby files
 .cache/
