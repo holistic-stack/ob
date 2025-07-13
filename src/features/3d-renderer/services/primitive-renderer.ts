@@ -18,6 +18,7 @@ import type {
   PrimitiveRendererFactory,
 } from '../types/renderer.types';
 import { ManifoldASTConverter } from './manifold-ast-converter/manifold-ast-converter.js';
+import { configureCSGMesh } from './lighting-fix/csg-lighting-setup';
 
 // Create logger instance for this service
 const logger = createLogger('PrimitiveRenderer');
@@ -414,8 +415,12 @@ export const renderASTNode = async (
       color: '#00ff88', // Green color as specified
       metalness: 0.1,
       roughness: 0.8,
+      side: THREE.DoubleSide, // CRITICAL: Use DoubleSide for CSG operations to show interior surfaces
     });
     const mesh = new THREE.Mesh(geometry, material);
+
+    // Configure mesh for CSG operations (shadow casting, receiving, etc.)
+    configureCSGMesh(mesh);
 
     // Calculate bounding box
     geometry.computeBoundingBox();

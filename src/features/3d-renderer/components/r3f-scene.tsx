@@ -15,6 +15,7 @@ import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { clearCSGCache } from '../components/csg-components/csg-components';
 import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D } from '../types/renderer.types';
+import { CSGLighting } from './csg-lighting';
 
 // Create logger instance for this component
 const logger = createLogger('R3FScene');
@@ -158,9 +159,13 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
+      {/* CSG-Optimized Lighting for proper difference operation visualization */}
+      <CSGLighting
+        enableShadows={true}
+        lightIntensity={100}
+        ambientIntensity={0.3}
+        replaceExistingLights={true}
+      />
 
       {/* Camera controls */}
       <OrbitControls

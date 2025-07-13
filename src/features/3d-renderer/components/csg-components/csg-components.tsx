@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as THREE from 'three';
 import { BufferGeometry, Float32BufferAttribute, Uint32BufferAttribute } from 'three';
 import { logger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
@@ -507,7 +508,7 @@ export const CSGUnion = React.memo(function CSGUnion({
   return (
     <mesh>
       <primitive object={resultGeometry} />
-      <meshStandardMaterial />
+      <meshStandardMaterial side={THREE.DoubleSide} />
     </mesh>
   );
 });
@@ -613,7 +614,7 @@ export const CSGSubtract = React.memo(function CSGSubtract({
   return (
     <mesh>
       <primitive object={resultGeometry} />
-      <meshStandardMaterial />
+      <meshStandardMaterial side={THREE.DoubleSide} />
     </mesh>
   );
 });
@@ -694,7 +695,7 @@ export const CSGIntersect = React.memo(function CSGIntersect({
   return (
     <mesh>
       <primitive object={resultGeometry} />
-      <meshStandardMaterial />
+      <meshStandardMaterial side={THREE.DoubleSide} />
     </mesh>
   );
 });

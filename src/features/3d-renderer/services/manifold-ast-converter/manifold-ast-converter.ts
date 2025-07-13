@@ -614,6 +614,7 @@ export class ManifoldASTConverter {
       const threeResult = convertManifoldToThree(transformedMesh, {
         preserveGroups: false,
         optimizeGeometry: false,
+        computeNormals: true, // CRITICAL: Compute normals for proper rendering
       });
 
       if (!threeResult.success) {

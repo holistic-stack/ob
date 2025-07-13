@@ -240,6 +240,7 @@ export async function performUnion(
     const threeResult = convertManifoldToThree(resultMesh, {
       preserveGroups: options.preserveMaterials ?? false,
       optimizeGeometry: options.optimizeResult ?? false,
+      computeNormals: true, // CRITICAL: Compute normals for proper rendering
     });
 
     if (!threeResult.success) {
@@ -373,6 +374,7 @@ export async function performSubtraction(
       const threeResult = convertManifoldToThree(resultMesh, {
         preserveGroups: options.preserveMaterials ?? false,
         optimizeGeometry: options.optimizeResult ?? false,
+        computeNormals: true, // CRITICAL: Compute normals for proper rendering
       });
 
       if (!threeResult.success) {
@@ -859,6 +861,7 @@ export async function performIntersection(
     const threeResult = convertManifoldToThree(resultMesh, {
       preserveGroups: options.preserveMaterials ?? false,
       optimizeGeometry: options.optimizeResult ?? false,
+      computeNormals: true, // CRITICAL: Compute normals for proper rendering
     });
 
     // Clean up final Manifold object
