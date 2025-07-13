@@ -759,9 +759,23 @@ export class ManifoldASTConverter {
         return { success: false, error: 'Invalid rotation parameter format' };
       }
 
-      // Convert back to Three.js geometry (placeholder - in full implementation would use Manifold → Three.js converter)
-      // For now, return the original geometry with transformation applied
-      const resultGeometry = childResult.data.geometry.clone();
+      // Convert the transformed Manifold object back to Three.js BufferGeometry
+      const transformedMesh = currentManifold.getMesh();
+      const threeResult = convertManifoldToThree(transformedMesh, {
+        preserveGroups: false,
+        optimizeGeometry: false,
+        computeNormals: true, // CRITICAL: Compute normals for proper rendering
+      });
+
+      if (!threeResult.success) {
+        currentManifold.delete();
+        return { success: false, error: `Failed to convert rotated Manifold to Three.js: ${threeResult.error}` };
+      }
+
+      const resultGeometry = threeResult.data;
+
+      // Clean up Manifold object
+      currentManifold.delete();
 
       const endTime = performance.now();
       const operationTime = endTime - startTime;
@@ -839,9 +853,24 @@ export class ManifoldASTConverter {
         return { success: false, error: `Scaling failed: ${scaleResult.error}` };
       }
 
-      // Convert back to Three.js geometry (placeholder - in full implementation would use Manifold → Three.js converter)
-      // For now, return the original geometry with transformation applied
-      const resultGeometry = childResult.data.geometry.clone();
+      // Convert the transformed Manifold object back to Three.js BufferGeometry
+      const scaledManifold = scaleResult.data;
+      const transformedMesh = scaledManifold.getMesh();
+      const threeResult = convertManifoldToThree(transformedMesh, {
+        preserveGroups: false,
+        optimizeGeometry: false,
+        computeNormals: true, // CRITICAL: Compute normals for proper rendering
+      });
+
+      if (!threeResult.success) {
+        scaledManifold.delete();
+        return { success: false, error: `Failed to convert scaled Manifold to Three.js: ${threeResult.error}` };
+      }
+
+      const resultGeometry = threeResult.data;
+
+      // Clean up Manifold object
+      scaledManifold.delete();
 
       const endTime = performance.now();
       const operationTime = endTime - startTime;
@@ -895,9 +924,62 @@ export class ManifoldASTConverter {
       return { success: false, error: `Failed to convert child: ${childResult.error}` };
     }
 
-    // For now, return the child geometry without mirroring
-    // In a full implementation, this would use Manifold's transform() method with mirror matrix
-    const resultGeometry = childResult.data.geometry.clone();
+    // Extract mirror vector from node (similar to translate node)
+    const [x, y, z] = node.v.length === 3 ? node.v : [node.v[0] || 1, node.v[1] || 0, 0];
+    const mirrorVector: readonly [number, number, number] = [x, y, z];
+
+    // Convert child geometry to Manifold object using the same pattern as other transformations
+    const { convertGeometryToManifold } = await import('../manifold-csg-operations/geometry-to-manifold-converter/geometry-to-manifold-converter');
+
+    const manifoldModule = this.csgOperations!.getManifoldModule();
+    const manifoldResult = await convertGeometryToManifold(childResult.data.geometry, manifoldModule);
+    if (!manifoldResult.success) {
+      return { success: false, error: `Failed to convert geometry to Manifold: ${manifoldResult.error}` };
+    }
+
+    // Create mirror transformation matrix
+    // Mirror matrix formula: I - 2 * n * n^T where n is the normalized mirror vector
+    const [nx, ny, nz] = mirrorVector;
+    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (length === 0) {
+      manifoldResult.data.delete();
+      return { success: false, error: 'Invalid mirror vector (zero length)' };
+    }
+
+    const nnx = nx / length;
+    const nny = ny / length;
+    const nnz = nz / length;
+
+    // Create mirror matrix (column-major order for Manifold)
+    const mirrorMatrix = [
+      1 - 2 * nnx * nnx, -2 * nnx * nny, -2 * nnx * nnz, 0,
+      -2 * nny * nnx, 1 - 2 * nny * nny, -2 * nny * nnz, 0,
+      -2 * nnz * nnx, -2 * nnz * nny, 1 - 2 * nnz * nnz, 0,
+      0, 0, 0, 1
+    ];
+
+    // Apply mirror transformation using Manifold's native transform method
+    const mirroredManifold = manifoldResult.data.transform(mirrorMatrix);
+
+    // Convert the transformed Manifold object back to Three.js BufferGeometry
+    const transformedMesh = mirroredManifold.getMesh();
+    const threeResult = convertManifoldToThree(transformedMesh, {
+      preserveGroups: false,
+      optimizeGeometry: false,
+      computeNormals: true, // CRITICAL: Compute normals for proper rendering
+    });
+
+    if (!threeResult.success) {
+      mirroredManifold.delete();
+      manifoldResult.data.delete();
+      return { success: false, error: `Failed to convert mirrored Manifold to Three.js: ${threeResult.error}` };
+    }
+
+    const resultGeometry = threeResult.data;
+
+    // Clean up Manifold objects
+    mirroredManifold.delete();
+    manifoldResult.data.delete();
 
     return {
       success: true,
@@ -997,9 +1079,23 @@ export class ManifoldASTConverter {
       // Apply matrix transformation using Manifold's native transform method
       const transformedManifold = manifoldResult.data.transform(columnMajorMatrix);
 
-      // Convert back to Three.js geometry (placeholder - in full implementation would use Manifold → Three.js converter)
-      // For now, return the original geometry with transformation applied
-      const resultGeometry = childResult.data.geometry.clone();
+      // Convert the transformed Manifold object back to Three.js BufferGeometry
+      const transformedMesh = transformedManifold.getMesh();
+      const threeResult = convertManifoldToThree(transformedMesh, {
+        preserveGroups: false,
+        optimizeGeometry: false,
+        computeNormals: true, // CRITICAL: Compute normals for proper rendering
+      });
+
+      if (!threeResult.success) {
+        transformedManifold.delete();
+        return { success: false, error: `Failed to convert transformed Manifold to Three.js: ${threeResult.error}` };
+      }
+
+      const resultGeometry = threeResult.data;
+
+      // Clean up Manifold object
+      transformedManifold.delete();
 
       const endTime = performance.now();
       const operationTime = endTime - startTime;
