@@ -27,6 +27,22 @@ import type { BufferGeometry } from 'three';
 import type { Result } from '../../../../../shared/types/result.types';
 
 /**
+ * ⚠️  CRITICAL: After creating a Manifold mesh with this data, you MUST call mesh.merge()
+ *
+ * From the official Manifold three.ts example:
+ * ```typescript
+ * const mesh = new Mesh({numProp: 3, vertProperties, triVerts, runIndex, runOriginalID});
+ * mesh.merge(); // CRITICAL - this merges vertices with nearly identical positions
+ * ```
+ *
+ * The merge() call is essential because:
+ * - GL drivers require duplicate vertices when properties change (UV boundaries, sharp corners)
+ * - Manifold needs manifold-compliant topology
+ * - This fills in mergeFromVert and mergeToVert vectors automatically
+ * - Without merge(), you'll get "Invalid mesh" errors
+ */
+
+/**
  * Manifold mesh data structure following the official format
  * Based on the Manifold library's Mesh interface
  */
@@ -124,21 +140,51 @@ function extractTriangleVertices(geometry: BufferGeometry): Uint32Array {
 }
 
 /**
- * Creates run structure for material handling
+ * Creates run structure for material handling following official pattern
  *
- * For single-material meshes, creates a single run covering all triangles.
- * This follows the official pattern from the Manifold examples.
+ * Based on the official three.ts example from Manifold library.
+ * Creates triangle runs for each group (material) - akin to a draw call.
  *
- * @param triangleCount - Number of triangle indices
+ * @param geometry - Three.js BufferGeometry to analyze
  * @returns Object containing runIndex and runOriginalID arrays
  */
-function createRunStructure(triangleCount: number): {
+function createRunStructureFromGroups(geometry: BufferGeometry): {
   runIndex: Uint32Array;
   runOriginalID: Uint32Array;
 } {
-  // Single run covering all triangles (official pattern)
-  const runIndex = new Uint32Array([0, triangleCount]);
-  const runOriginalID = new Uint32Array([0]);
+  // If no groups, create single run covering all triangles
+  if (geometry.groups.length === 0) {
+    const positionAttribute = geometry.getAttribute('position');
+    const triangleCount = geometry.index ? geometry.index.count : (positionAttribute?.count ?? 0);
+    return {
+      runIndex: new Uint32Array([0, triangleCount]),
+      runOriginalID: new Uint32Array([0])
+    };
+  }
+
+  // Create a triangle run for each group (material) following official pattern
+  const starts: number[] = [];
+  const originalIDs: number[] = [];
+
+  for (let idx = 0; idx < geometry.groups.length; idx++) {
+    const group = geometry.groups[idx];
+    if (group) {
+      starts.push(group.start);
+      originalIDs.push(group.materialIndex ?? 0);
+    }
+  }
+
+  // List the runs in sequence and sort by start position
+  const indices = Array.from(starts.keys());
+  indices.sort((a, b) => starts[a]! - starts[b]!);
+
+  // Create runIndex with start positions + final end position
+  const sortedStarts = indices.map(i => starts[i]!);
+  const totalTriangles = geometry.index ? geometry.index.count : (geometry.getAttribute('position')?.count ?? 0);
+  const runIndexArray = [...sortedStarts, totalTriangles];
+
+  const runIndex = new Uint32Array(runIndexArray);
+  const runOriginalID = new Uint32Array(indices.map(i => originalIDs[i]!));
 
   return { runIndex, runOriginalID };
 }
@@ -149,6 +195,8 @@ function createRunStructure(triangleCount: number): {
  * This function implements the exact conversion pattern from the official Manifold
  * three.ts example. It creates a mesh data structure that can be directly passed
  * to the Manifold constructor.
+ *
+ * Based on: https://github.com/elalish/manifold/blob/master/bindings/wasm/examples/three.ts
  *
  * @param geometry - Three.js BufferGeometry to convert
  * @returns Result containing Manifold mesh data or error
@@ -178,14 +226,37 @@ export function createManifoldMeshFromGeometry(
       return validation;
     }
 
-    // Step 2: Extract vertex properties (positions only)
-    const vertProperties = extractVertexProperties(geometry);
+    // Step 2: Extract vertex properties following official pattern
+    // Only using position in this implementation for simplicity
+    const positionAttribute = geometry.getAttribute('position');
+    if (!positionAttribute) {
+      return { success: false, error: 'Geometry missing position attribute' };
+    }
+    const vertProperties = positionAttribute.array as Float32Array;
 
-    // Step 3: Extract triangle vertex indices
-    const triVerts = extractTriangleVertices(geometry);
+    // Step 3: Extract triangle indices following official pattern
+    // Manifold only uses indexed geometry, so generate an index if necessary
+    const sourceIndices = geometry.index != null ?
+      geometry.index.array as Uint32Array :
+      new Uint32Array(vertProperties.length / 3).map((_, idx) => idx);
 
-    // Step 4: Create run structure for materials
-    const { runIndex, runOriginalID } = createRunStructure(triVerts.length);
+    // Step 3.1: CRITICAL - Reverse triangle winding order for Manifold compatibility
+    // Based on BabylonJS CSG2 implementation pattern
+    const triVerts = new Uint32Array(sourceIndices.length);
+    for (let i = 0; i < sourceIndices.length; i += 3) {
+      const v0 = sourceIndices[i];
+      const v1 = sourceIndices[i + 1];
+      const v2 = sourceIndices[i + 2];
+
+      if (v0 !== undefined && v1 !== undefined && v2 !== undefined) {
+        triVerts[i] = v2;     // Reverse triangle order
+        triVerts[i + 1] = v1; // Keep middle vertex
+        triVerts[i + 2] = v0; // Reverse triangle order
+      }
+    }
+
+    // Step 4: Create run structure for materials following official pattern
+    const { runIndex, runOriginalID } = createRunStructureFromGroups(geometry);
 
     // Step 5: Create mesh data following official format
     const meshData: ManifoldMeshData = {
@@ -205,31 +276,7 @@ export function createManifoldMeshFromGeometry(
   }
 }
 
-/**
- * Creates Manifold mesh data with detailed logging for debugging
- *
- * @param geometry - Three.js BufferGeometry to convert
- * @returns Result containing Manifold mesh data or error
- */
-export function createManifoldMeshFromGeometryWithLogging(
-  geometry: BufferGeometry
-): Result<ManifoldMeshData, string> {
-  const result = createManifoldMeshFromGeometry(geometry);
 
-  if (result.success) {
-    const { vertProperties, triVerts, runIndex } = result.data;
-    console.log('Created Manifold mesh data:', {
-      numProp: result.data.numProp,
-      vertexCount: vertProperties.length / 3,
-      triangleCount: triVerts.length / 3,
-      runCount: runIndex.length - 1,
-    });
-  } else {
-    console.error('Failed to create Manifold mesh:', result.error);
-  }
-
-  return result;
-}
 
 /**
  * Validates that mesh data conforms to Manifold requirements
@@ -258,10 +305,11 @@ export function validateManifoldMeshData(meshData: ManifoldMeshData): Result<voi
   // Validate vertex indices are within range
   const vertexCount = vertProperties.length / 3;
   for (let i = 0; i < triVerts.length; i++) {
-    if (triVerts[i] >= vertexCount) {
+    const vertexIndex = triVerts[i];
+    if (vertexIndex !== undefined && vertexIndex >= vertexCount) {
       return {
         success: false,
-        error: `Invalid vertex index ${triVerts[i]} at position ${i}, max allowed: ${vertexCount - 1}`,
+        error: `Invalid vertex index ${vertexIndex} at position ${i}, max allowed: ${vertexCount - 1}`,
       };
     }
   }

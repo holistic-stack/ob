@@ -57,7 +57,7 @@ import {
   scaleManifold,
   translateManifold,
 } from '../manifold-transformation-helpers/manifold-transformation-helpers';
-import { convertThreeToManifold } from '../three-manifold-converter/three-manifold-converter';
+
 
 /**
  * Manifold conversion options
@@ -377,6 +377,10 @@ export class ManifoldASTConverter {
     if (childGeometries.length === 1) {
       // Single child intersection returns the child itself
       const geometry = childGeometries[0];
+      if (!geometry) {
+        return { success: false, error: 'First child geometry is undefined' };
+      }
+
       const vertexCount = geometry.getAttribute('position').count;
       const triangleCount = geometry.getIndex()?.count ? geometry.getIndex()!.count / 3 : 0;
 
@@ -474,10 +478,11 @@ export class ManifoldASTConverter {
           break;
         }
         default: {
-          // Fallback to a simple cube for unknown primitive types
-          geometry = new BoxGeometry(1, 1, 1);
-          logger.debug(`Created fallback cube geometry for unknown primitive type: ${node.type}`);
-          break;
+          // No fallback - fail fast for unknown primitive types
+          return {
+            success: false,
+            error: `Unknown primitive type: ${node.type}. Supported types: cube, sphere, cylinder`
+          };
         }
       }
 
@@ -577,46 +582,23 @@ export class ManifoldASTConverter {
     const translationVector: readonly [number, number, number] = [x, y, z];
 
     try {
-      // SOLUTION: Use Manifold native transformations with static constructor approach
-      // Instead of converting BufferGeometry → Manifold (which fails),
-      // create Manifold objects directly and apply transformations natively
+      // ENHANCED SOLUTION: Use clean architecture with generic geometry conversion
+      // This works for ANY geometry type, not just hardcoded cube and sphere
 
-      let manifoldObject: any;
+      const { convertGeometryToManifold } = await import('../manifold-csg-operations/geometry-to-manifold-converter/geometry-to-manifold-converter');
 
-      // Check if child is a basic shape that we can create with static constructors
-      if (firstChild.type === 'cube') {
-        const cubeNode = firstChild as any;
-        const size = cubeNode.size || [1, 1, 1];
-        const center = cubeNode.center || false;
+      // Convert the actual Three.js geometry to Manifold using our clean architecture
+      const manifoldModule = this.csgOperations!.getManifoldModule();
+      const manifoldResult = await convertGeometryToManifold(childResult.data.geometry, manifoldModule);
 
-        // Create cube using proven static constructor
-        const manifoldModule = this.csgOperations!.getManifoldModule();
-        manifoldObject = (manifoldModule as any)._Cube(
-          {
-            x: size[0],
-            y: size[1],
-            z: size[2],
-          },
-          center
-        );
-      } else if (firstChild.type === 'sphere') {
-        const sphereNode = firstChild as any;
-        const radius = sphereNode.r || 1;
-
-        // Create sphere using proven static constructor
-        const manifoldModule = this.csgOperations!.getManifoldModule();
-        manifoldObject = (manifoldModule as any)._Sphere(radius, 32);
-      } else {
-        // For other shapes, fall back to the original approach (will likely fail)
-        const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
-        if (!manifoldResult.success) {
-          return {
-            success: false,
-            error: `Failed to convert to Manifold: ${manifoldResult.error}`,
-          };
-        }
-        manifoldObject = manifoldResult.data;
+      if (!manifoldResult.success) {
+        return {
+          success: false,
+          error: `Failed to convert geometry to Manifold: ${manifoldResult.error}`,
+        };
       }
+
+      const manifoldObject = manifoldResult.data;
 
       // Apply translation using Manifold's native translate method
       const translatedObject = manifoldObject.translate(translationVector);
@@ -714,10 +696,15 @@ export class ManifoldASTConverter {
     const rotationParam = node.a || 0;
 
     try {
-      // Convert Three.js geometry to Manifold object
-      const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
+      // ENHANCED SOLUTION: Use clean architecture with generic geometry conversion
+      const { convertGeometryToManifold } = await import('../manifold-csg-operations/geometry-to-manifold-converter/geometry-to-manifold-converter');
+
+      // Convert the actual Three.js geometry to Manifold using our clean architecture
+      const manifoldModule = this.csgOperations!.getManifoldModule();
+      const manifoldResult = await convertGeometryToManifold(childResult.data.geometry, manifoldModule);
+
       if (!manifoldResult.success) {
-        return { success: false, error: `Failed to convert to Manifold: ${manifoldResult.error}` };
+        return { success: false, error: `Failed to convert geometry to Manifold: ${manifoldResult.error}` };
       }
 
       // Apply rotation using our transformation helper
@@ -834,10 +821,15 @@ export class ManifoldASTConverter {
     const scaleVector = node.v || [1, 1, 1];
 
     try {
-      // Convert Three.js geometry to Manifold object
-      const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
+      // ENHANCED SOLUTION: Use clean architecture with generic geometry conversion
+      const { convertGeometryToManifold } = await import('../manifold-csg-operations/geometry-to-manifold-converter/geometry-to-manifold-converter');
+
+      // Convert the actual Three.js geometry to Manifold using our clean architecture
+      const manifoldModule = this.csgOperations!.getManifoldModule();
+      const manifoldResult = await convertGeometryToManifold(childResult.data.geometry, manifoldModule);
+
       if (!manifoldResult.success) {
-        return { success: false, error: `Failed to convert to Manifold: ${manifoldResult.error}` };
+        return { success: false, error: `Failed to convert geometry to Manifold: ${manifoldResult.error}` };
       }
 
       // Apply scaling using our transformation helper
@@ -952,10 +944,15 @@ export class ManifoldASTConverter {
     const matrix = node.m;
 
     try {
-      // Convert Three.js geometry to Manifold object
-      const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
+      // ENHANCED SOLUTION: Use clean architecture with generic geometry conversion
+      const { convertGeometryToManifold } = await import('../manifold-csg-operations/geometry-to-manifold-converter/geometry-to-manifold-converter');
+
+      // Convert the actual Three.js geometry to Manifold using our clean architecture
+      const manifoldModule = this.csgOperations!.getManifoldModule();
+      const manifoldResult = await convertGeometryToManifold(childResult.data.geometry, manifoldModule);
+
       if (!manifoldResult.success) {
-        return { success: false, error: `Failed to convert to Manifold: ${manifoldResult.error}` };
+        return { success: false, error: `Failed to convert geometry to Manifold: ${manifoldResult.error}` };
       }
 
       // Convert OpenSCAD 4x4 matrix to column-major format for Manifold

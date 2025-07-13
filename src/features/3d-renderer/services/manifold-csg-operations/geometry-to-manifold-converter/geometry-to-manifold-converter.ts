@@ -111,7 +111,7 @@ function convertWithDetectAndReplace(
 
     try {
       // Type guard to ensure we have cube parameters
-      if (detection.type === 'cube') {
+      if (detection.type === 'cube' && 'size' in detection.params) {
         const manifoldCube = createManifoldCube(detection.params.size);
         return { success: true, data: manifoldCube };
       }
@@ -158,7 +158,7 @@ function convertWithRepairAndConvert(
  */
 function convertWithDirectConvert(
   geometry: BufferGeometry,
-  options: ConversionOptions
+  _options: ConversionOptions
 ): Result<BufferGeometry, string> {
   // Use geometry as-is
   return { success: true, data: geometry };
@@ -238,10 +238,30 @@ export async function convertGeometryToManifold(
       });
     }
 
-    // Step 3: Create Manifold object using the official pattern
+    // Step 3: Create Manifold mesh and apply critical merge() call
+    let manifoldMesh: any;
+    try {
+      // Create mesh following official pattern
+      manifoldMesh = new manifoldModule.Mesh(meshDataResult.data);
+
+      // CRITICAL: Call merge() to ensure manifold-compliant topology
+      // This is essential based on official Manifold three.ts example
+      manifoldMesh.merge();
+
+      if (options.logProgress) {
+        console.log('Applied mesh.merge() for manifold compliance');
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to create Manifold mesh: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+
+    // Step 4: Create Manifold object from the merged mesh
     let manifoldObject: any;
     try {
-      manifoldObject = new manifoldModule.Manifold(meshDataResult.data);
+      manifoldObject = new manifoldModule.Manifold(manifoldMesh);
     } catch (error) {
       return {
         success: false,

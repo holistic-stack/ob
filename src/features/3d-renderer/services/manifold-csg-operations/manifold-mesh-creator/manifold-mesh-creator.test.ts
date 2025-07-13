@@ -8,7 +8,6 @@ import { BoxGeometry, BufferAttribute, BufferGeometry, SphereGeometry } from 'th
 import { describe, expect, test } from 'vitest';
 import {
   createManifoldMeshFromGeometry,
-  createManifoldMeshFromGeometryWithLogging,
   validateManifoldMeshData,
 } from './manifold-mesh-creator';
 
@@ -36,11 +35,11 @@ describe('Manifold Mesh Creator', () => {
         // Verify triangle count (BoxGeometry has 12 triangles)
         expect(triVerts.length).toBe(36); // 12 triangles × 3 vertices
 
-        // Verify run structure
-        expect(runIndex.length).toBe(2);
+        // Verify run structure (BoxGeometry may have multiple groups)
+        expect(runIndex.length).toBeGreaterThanOrEqual(2);
         expect(runIndex[0]).toBe(0);
-        expect(runIndex[1]).toBe(triVerts.length);
-        expect(runOriginalID.length).toBe(1);
+        expect(runIndex[runIndex.length - 1]).toBe(triVerts.length);
+        expect(runOriginalID.length).toBe(runIndex.length - 1);
         expect(runOriginalID[0]).toBe(0);
       }
     });
@@ -98,7 +97,8 @@ describe('Manifold Mesh Creator', () => {
 
         expect(vertProperties.length).toBe(9); // 3 vertices × 3 coordinates
         expect(triVerts.length).toBe(3); // 1 triangle × 3 vertices
-        expect(Array.from(triVerts)).toEqual([0, 1, 2]);
+        // Triangle winding is reversed for Manifold compatibility (following BabylonJS pattern)
+        expect(Array.from(triVerts)).toEqual([2, 1, 0]);
       }
     });
 
@@ -170,42 +170,7 @@ describe('Manifold Mesh Creator', () => {
     });
   });
 
-  describe('createManifoldMeshFromGeometryWithLogging', () => {
-    test('should create mesh data with console output', () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      const boxGeometry = new BoxGeometry(1, 1, 1);
-      const result = createManifoldMeshFromGeometryWithLogging(boxGeometry);
-
-      expect(result.success).toBe(true);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Created Manifold mesh data:',
-        expect.objectContaining({
-          numProp: 3,
-          vertexCount: expect.any(Number),
-          triangleCount: expect.any(Number),
-          runCount: 1,
-        })
-      );
-
-      consoleSpy.mockRestore();
-    });
-
-    test('should log errors for invalid geometry', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const emptyGeometry = new BufferGeometry();
-      const result = createManifoldMeshFromGeometryWithLogging(emptyGeometry);
-
-      expect(result.success).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to create Manifold mesh:',
-        expect.stringContaining('missing position attribute')
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
 
   describe('validateManifoldMeshData', () => {
     test('should validate correct mesh data', () => {
