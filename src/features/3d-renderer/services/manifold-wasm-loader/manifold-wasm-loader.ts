@@ -26,7 +26,14 @@ export class ManifoldWasmLoader {
 
   private async loadWithFallback(): Promise<ManifoldModule> {
     try {
-      return await init();
+      const manifoldModule = await init();
+
+      // CRITICAL: Call setup() to initialize the module
+      if (typeof manifoldModule.setup === 'function') {
+        manifoldModule.setup();
+      }
+
+      return manifoldModule;
     } catch (error) {
       console.warn(
         'Failed to load Manifold module from local source, trying CDN fallback...',
@@ -34,7 +41,14 @@ export class ManifoldWasmLoader {
       );
       try {
         // @ts-ignore
-        return await import('https://cdn.jsdelivr.net/npm/manifold-3d@latest/manifold.js');
+        const cdnModule = await import('https://cdn.jsdelivr.net/npm/manifold-3d@latest/manifold.js');
+
+        // CRITICAL: Call setup() for CDN module too
+        if (typeof cdnModule.setup === 'function') {
+          cdnModule.setup();
+        }
+
+        return cdnModule;
       } catch (cdnError) {
         console.error('Failed to load Manifold module from both local source and CDN.', cdnError);
         throw cdnError;
