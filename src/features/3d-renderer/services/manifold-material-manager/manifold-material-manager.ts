@@ -401,7 +401,11 @@ export class MaterialIDManager {
       this.mapping = mappingResult.data;
 
       // Register with memory manager
-      this.managedResource = createManagedResource(this);
+      const managedResourceResult = createManagedResource(this);
+      if (!managedResourceResult.success) {
+        return { success: false, error: `Failed to create managed resource: ${managedResourceResult.error}` };
+      }
+      this.managedResource = managedResourceResult.data;
 
       this.isInitialized = true;
 
@@ -559,7 +563,10 @@ export class MaterialIDManager {
 
       // Dispose managed resource
       if (this.managedResource) {
-        disposeManagedResource(this.managedResource);
+        const disposeResult = disposeManagedResource(this.managedResource);
+        if (!disposeResult.success) {
+          logger.warn('[WARN][MaterialIDManager] Failed to dispose managed resource', { error: disposeResult.error });
+        }
         this.managedResource = null;
       }
 
@@ -653,8 +660,15 @@ export class MaterialIDManager {
 
   /**
    * Delete method required by memory manager
+   * This is called by disposeManagedResource and should not call dispose() to avoid circular calls
    */
   delete(): void {
-    this.dispose();
+    // Clear state directly without calling dispose() to avoid circular dependency
+    this.reservation = null;
+    this.mapping = null;
+    this.isInitialized = false;
+    this.materialCache.clear();
+
+    logger.debug('[DEBUG][MaterialIDManager] Deleted via memory manager');
   }
 }

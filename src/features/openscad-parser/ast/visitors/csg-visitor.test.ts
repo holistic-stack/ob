@@ -20,7 +20,7 @@ describe('CSGVisitor', () => {
 
   beforeEach(() => {
     errorHandler = new ErrorHandler();
-    visitor = new CSGVisitor('', errorHandler);
+    visitor = new CSGVisitor('', undefined, errorHandler);
 
     // Add mock children to the visitor for testing
     visitor.mockChildren = {
