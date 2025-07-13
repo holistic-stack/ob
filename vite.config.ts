@@ -11,6 +11,12 @@ export default defineConfig(({ mode: _mode }) => {
       // Monaco Editor plugin temporarily disabled for initial integration
       // monacoEditorPlugin(createViteMonacoPlugin(monacoConfig))
     ],
+    define: {
+      // Polyfill process.env for browser environment
+      'process.env': {},
+      // Polyfill global process object for WASM modules
+      global: 'globalThis',
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

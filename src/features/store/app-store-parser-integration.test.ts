@@ -141,7 +141,9 @@ describe('App Store Parser Integration', () => {
 
       // Should fail gracefully
       expect(result.success).toBe(false);
-      expect(result.error.message).toContain('Parser initialization failed');
+      if (!result.success) {
+        expect(result.error.message).toContain('Parser initialization failed');
+      }
 
       // Store should reflect the error
       const updatedState = store.getState();

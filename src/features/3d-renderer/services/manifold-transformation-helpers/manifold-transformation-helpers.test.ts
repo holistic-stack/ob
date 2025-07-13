@@ -46,7 +46,9 @@ describe('ManifoldTransformationHelpers', () => {
         const result = translateManifold(manifoldResult.data, invalidVector);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('translation vector');
+        if (!result.success) {
+          expect(result.error).toContain('translation vector');
+        }
       }
     });
   });
@@ -81,7 +83,9 @@ describe('ManifoldTransformationHelpers', () => {
         const result = rotateManifold(manifoldResult.data, invalidAxis, angle);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('rotation axis');
+        if (!result.success) {
+          expect(result.error).toContain('rotation axis');
+        }
       }
     });
   });
@@ -130,7 +134,9 @@ describe('ManifoldTransformationHelpers', () => {
         const result = scaleManifold(manifoldResult.data, invalidFactors);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('scale factor');
+        if (!result.success) {
+          expect(result.error).toContain('scale factor');
+        }
       }
     });
   });

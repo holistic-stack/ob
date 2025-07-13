@@ -1,15 +1,14 @@
 /**
- * Primitive Renderer Service
+ * Generic Primitive Renderer Service
  *
- * Service for converting OpenSCAD AST nodes to Three.js geometries
- * with support for all OpenSCAD primitives and transformations.
+ * Service for creating generic Three.js geometries and primitives.
+ * This service is now part of the rendering layer and only handles
+ * generic primitive creation, not OpenSCAD-specific logic.
  */
 
 import * as THREE from 'three';
-import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
 import { error, tryCatch } from '../../../shared/utils/functional/result';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   MaterialConfig,
   MaterialFactory,
@@ -17,11 +16,6 @@ import type {
   PrimitiveParams,
   PrimitiveRendererFactory,
 } from '../types/renderer.types';
-import { ManifoldASTConverter } from './manifold-ast-converter/manifold-ast-converter.js';
-import { configureCSGMesh } from './lighting-fix/csg-lighting-setup';
-
-// Create logger instance for this service
-const logger = createLogger('PrimitiveRenderer');
 
 /**
  * Default material configuration
@@ -32,8 +26,8 @@ const DEFAULT_MATERIAL: MaterialConfig = {
   metalness: 0.1,
   roughness: 0.8,
   wireframe: false,
-  transparent: false,
-  side: 'front',
+  transparent: true, // Enable transparency for interior visibility
+  side: 'double', // Set material.side = DoubleSide for CSG operations
 };
 
 /**
@@ -165,7 +159,7 @@ export const createMaterialFactory = (): MaterialFactory => ({
               ? THREE.FrontSide
               : config.side === 'back'
                 ? THREE.BackSide
-                : THREE.DoubleSide,
+                : THREE.DoubleSide, // Explicitly set DoubleSide for CSG operations
         });
 
         return material;
@@ -210,19 +204,7 @@ export const createMaterialFactory = (): MaterialFactory => ({
   },
 });
 
-/**
- * Parse OpenSCAD parameters from AST node
- */
-const _parseParameters = (node: ASTNode): Record<string, unknown> => {
-  // In the new parser structure, parameters are direct properties of the node
-  // Extract only the non-standard properties (not type, location)
-  const {
-    type: _type,
-    location: _location,
-    ...parameters
-  } = node as unknown as Record<string, unknown>;
-  return parameters;
-};
+// NOTE: OpenSCAD-specific parameter parsing removed - moved to conversion layer
 
 /**
  * Apply transformations to mesh
@@ -332,6 +314,10 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
 
       // Create mesh
       const mesh = new THREE.Mesh(geometryResult.data, materialResult.data);
+      
+      // Enable castShadow and receiveShadow for CSG operations
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
 
       // Apply transformations
       const transformResult = applyTransformations(mesh, params.transformations);
@@ -381,81 +367,5 @@ export const renderPrimitive = (params: PrimitiveParams): Result<Mesh3D, string>
   );
 };
 
-/**
- * Render OpenSCAD AST node to Three.js mesh using CSG operations
- */
-export const renderASTNode = async (
-  node: ASTNode,
-  index: number
-): Promise<Result<Mesh3D, string>> => {
-  logger.debug(`Rendering AST node ${index}: ${node.type} using CSG`);
-
-  // Use the Manifold converter for all OpenSCAD primitives
-  const { MaterialIDManager } = await import(
-    '../services/manifold-material-manager/manifold-material-manager'
-  );
-  const materialManager = new MaterialIDManager();
-  await materialManager.initialize();
-
-  const converter = new ManifoldASTConverter(materialManager);
-  await converter.initialize();
-
-  const csgResult = await converter.convertNode(node, {
-    preserveMaterials: false,
-    optimizeResult: true,
-    timeout: 10000,
-  });
-
-  if (csgResult.success) {
-    logger.debug(`Successfully rendered ${node.type} using CSG`);
-
-    // Create a THREE.Mesh from the BufferGeometry
-    const geometry = csgResult.data.geometry;
-    const material = new THREE.MeshStandardMaterial({
-      color: '#00ff88', // Green color as specified
-      metalness: 0.1,
-      roughness: 0.8,
-      side: THREE.DoubleSide, // CRITICAL: Use DoubleSide for CSG operations to show interior surfaces
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-
-    // Configure mesh for CSG operations (shadow casting, receiving, etc.)
-    configureCSGMesh(mesh);
-
-    // Calculate bounding box
-    geometry.computeBoundingBox();
-    const boundingBox = geometry.boundingBox || new THREE.Box3();
-
-    // Convert ManifoldConversionResult to Mesh3D format
-    const mesh3D: Mesh3D = {
-      mesh,
-      metadata: {
-        meshId: `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        triangleCount: csgResult.data.triangleCount,
-        vertexCount: csgResult.data.vertexCount,
-        boundingBox,
-        material: 'standard',
-        color: '#00ff88',
-        opacity: 1,
-        visible: true,
-        nodeId: `node_${index}` as any,
-        nodeType: node.type as any,
-        depth: 0,
-        childrenIds: [],
-        size: 1,
-        complexity: csgResult.data.vertexCount,
-        isOptimized: false,
-        lastAccessed: new Date(),
-      },
-      dispose: () => {
-        geometry.dispose();
-        material.dispose();
-      },
-    };
-
-    return { success: true, data: mesh3D };
-  } else {
-    logger.error(`Failed to render ${node.type} using CSG:`, csgResult.error);
-    return { success: false, error: csgResult.error };
-  }
-};
+// NOTE: renderASTNode function removed - moved to conversion layer
+// This file now only contains generic primitive rendering functions

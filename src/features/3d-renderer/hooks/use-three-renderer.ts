@@ -222,7 +222,7 @@ export const useThreeRenderer = (): UseRendererReturn => {
     metrics,
     meshes: meshes as ReadonlyArray<Mesh3D>,
     actions: {
-      renderAST,
+      renderMeshes,
       clearScene,
       updateCamera,
       resetCamera,

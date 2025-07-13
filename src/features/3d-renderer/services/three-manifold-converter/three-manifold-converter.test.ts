@@ -36,7 +36,9 @@ describe('ThreeManifoldConverter', () => {
     const result = await convertThreeToManifold(invalidGeometry);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('position attribute');
+    if (!result.success) {
+      expect(result.error).toContain('position attribute');
+    }
   });
 
   test('should create a valid Manifold object', async () => {
@@ -71,7 +73,9 @@ describe('ThreeManifoldConverter', () => {
     const result = await convertThreeToManifold(geometryWithoutPosition);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('position attribute');
+    if (!result.success) {
+      expect(result.error).toContain('position attribute');
+    }
   });
 
   test('should handle geometry with zero vertices', async () => {
@@ -81,7 +85,9 @@ describe('ThreeManifoldConverter', () => {
     const result = await convertThreeToManifold(emptyGeometry);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('no vertices');
+    if (!result.success) {
+      expect(result.error).toContain('no vertices');
+    }
   });
 
   test('should handle indexed geometry correctly', async () => {
@@ -132,7 +138,9 @@ describe('ThreeManifoldConverter', () => {
     const result = await convertThreeToManifold(nullGeometry);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('null or undefined');
+    if (!result.success) {
+      expect(result.error).toContain('null or undefined');
+    }
   });
 
   // Tests for transformation methods (Step 1.2)

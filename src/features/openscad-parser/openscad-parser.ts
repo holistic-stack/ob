@@ -1554,19 +1554,5 @@ export class OpenscadParser {
     return primitiveTypes.includes(node.type);
   }
 
-  /**
-   * Check if a node is a transform node
-   */
-  private isTransformNode(node: ASTNode): boolean {
-    const transformTypes = [
-      'translate',
-      'rotate',
-      'scale',
-      'mirror',
-      'multmatrix',
-      'color',
-      'resize',
-    ];
-    return transformTypes.includes(node.type);
-  }
+
 }

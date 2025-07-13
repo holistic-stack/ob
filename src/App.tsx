@@ -8,7 +8,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import type * as THREE from 'three';
-import { StoreConnectedRenderer } from './features/3d-renderer/components/store-connected-renderer';
+import { Store3DRendererBridge } from './features/3d-renderer/components/store-3d-renderer-bridge/store-3d-renderer-bridge';
 import type { RenderingError } from './features/3d-renderer/types/renderer.types.js';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
@@ -161,7 +161,7 @@ export function App(): React.JSX.Element {
             <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
           </div>
           <div className="panel-content flex-1 relative">
-            <StoreConnectedRenderer className="h-full w-full" data-testid="main-renderer" />
+            <Store3DRendererBridge className="h-full w-full" data-testid="main-renderer" />
           </div>
         </div>
       </main>

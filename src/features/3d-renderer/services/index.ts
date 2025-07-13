@@ -3,7 +3,7 @@
  */
 
 // Manifold CSG Services
-export * from './manifold-ast-converter/manifold-ast-converter';
+// NOTE: ManifoldASTConverter moved to ast-to-csg-converter feature
 export * from './manifold-csg-operations/manifold-csg-operations';
 export * from './manifold-material-manager/manifold-material-manager';
 export * from './manifold-memory-manager/manifold-memory-manager';

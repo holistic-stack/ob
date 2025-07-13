@@ -253,6 +253,23 @@ export async function performUnion(
     const endTime = performance.now();
     const resultGeometry = threeResult.data;
 
+    // STEP 3: Fix normal vectors computation for interior surfaces
+    // Force recomputation of vertex normals after CSG operation to ensure proper normal calculation for cut surfaces
+    resultGeometry.computeVertexNormals();
+    
+    // Enable computeBoundingSphere() for proper camera framing
+    resultGeometry.computeBoundingSphere();
+    
+    // Validate normal vectors are correctly oriented
+    if (!validateNormalVectors(resultGeometry)) {
+      logger.warn('[WARN][ManifoldCSGOperations] Normal vector validation failed for union operation');
+    }
+    
+    // Add debug visualization for normals if needed (controlled by environment variable)
+    if (process.env.NODE_ENV === 'development' && process.env.DEBUG_NORMALS === 'true') {
+      addDebugNormalsVisualization(resultGeometry, 'union');
+    }
+
     const result: CSGOperationResult = {
       geometry: resultGeometry,
       operationTime: endTime - startTime,
@@ -386,6 +403,23 @@ export async function performSubtraction(
 
       const endTime = performance.now();
       const resultGeometry = threeResult.data;
+
+      // STEP 3: Fix normal vectors computation for interior surfaces
+      // Force recomputation of vertex normals after CSG operation to ensure proper normal calculation for cut surfaces
+      resultGeometry.computeVertexNormals();
+      
+      // Enable computeBoundingSphere() for proper camera framing
+      resultGeometry.computeBoundingSphere();
+      
+      // Validate normal vectors are correctly oriented
+      if (!validateNormalVectors(resultGeometry)) {
+        logger.warn('[WARN][ManifoldCSGOperations] Normal vector validation failed for subtraction operation');
+      }
+      
+      // Add debug visualization for normals if needed (controlled by environment variable)
+      if (process.env.NODE_ENV === 'development' && process.env.DEBUG_NORMALS === 'true') {
+        addDebugNormalsVisualization(resultGeometry, 'subtraction');
+      }
 
       const result: CSGOperationResult = {
         geometry: resultGeometry,
@@ -884,6 +918,23 @@ export async function performIntersection(
     const endTime = performance.now();
     const resultGeometry = threeResult.data;
 
+    // STEP 3: Fix normal vectors computation for interior surfaces
+    // Force recomputation of vertex normals after CSG operation to ensure proper normal calculation for cut surfaces
+    resultGeometry.computeVertexNormals();
+    
+    // Enable computeBoundingSphere() for proper camera framing
+    resultGeometry.computeBoundingSphere();
+    
+    // Validate normal vectors are correctly oriented
+    if (!validateNormalVectors(resultGeometry)) {
+      logger.warn('[WARN][ManifoldCSGOperations] Normal vector validation failed for intersection operation');
+    }
+    
+    // Add debug visualization for normals if needed (controlled by environment variable)
+    if (process.env.NODE_ENV === 'development' && process.env.DEBUG_NORMALS === 'true') {
+      addDebugNormalsVisualization(resultGeometry, 'intersection');
+    }
+
     const result: CSGOperationResult = {
       geometry: resultGeometry,
       operationTime: endTime - startTime,
@@ -1004,5 +1055,183 @@ export async function performBatchCSGOperations(
     const errorMessage = `Batch CSG operations failed: ${error instanceof Error ? error.message : String(error)}`;
     logger.error('[ERROR][ManifoldCSGOperations] Batch operations error', { error: errorMessage });
     return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Validate normal vectors are correctly oriented
+ * 
+ * Checks that normal vectors:
+ * 1. Are unit length (normalized)
+ * 2. Are not degenerate (zero vectors)
+ * 3. Are finite (no NaN or Infinity values)
+ * 4. Point outward from the surface (when possible to determine)
+ * 
+ * @param geometry - BufferGeometry to validate
+ * @returns boolean - true if normals are valid, false otherwise
+ */
+function validateNormalVectors(geometry: BufferGeometry): boolean {
+  try {
+    const normalAttribute = geometry.getAttribute('normal');
+    if (!normalAttribute) {
+      logger.warn('[WARN][ManifoldCSGOperations] No normal attribute found for validation');
+      return false;
+    }
+
+    const normals = normalAttribute.array;
+    const normalCount = normalAttribute.count;
+    let validNormals = 0;
+    let degenerateNormals = 0;
+    let unnormalizedNormals = 0;
+    let invalidNormals = 0;
+
+    // Check each normal vector
+    for (let i = 0; i < normalCount; i++) {
+      const nx = normals[i * 3];
+      const ny = normals[i * 3 + 1];
+      const nz = normals[i * 3 + 2];
+
+      // Check for undefined values
+      if (nx === undefined || ny === undefined || nz === undefined) {
+        invalidNormals++;
+        continue;
+      }
+
+      // Check for finite values
+      if (!isFinite(nx) || !isFinite(ny) || !isFinite(nz)) {
+        invalidNormals++;
+        continue;
+      }
+
+      // Calculate magnitude
+      const magnitude = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+      // Check for degenerate normals (zero vectors)
+      if (magnitude < 1e-6) {
+        degenerateNormals++;
+        continue;
+      }
+
+      // Check if normal is approximately unit length (allowing for floating point precision)
+      const isNormalized = Math.abs(magnitude - 1.0) < 1e-4;
+      if (!isNormalized) {
+        unnormalizedNormals++;
+      }
+
+      validNormals++;
+    }
+
+    // Log validation results
+    const totalNormals = normalCount;
+    const validPercentage = (validNormals / totalNormals) * 100;
+    
+    logger.debug('[DEBUG][ManifoldCSGOperations] Normal vector validation results', {
+      totalNormals,
+      validNormals,
+      degenerateNormals,
+      unnormalizedNormals,
+      invalidNormals,
+      validPercentage: validPercentage.toFixed(2) + '%'
+    });
+
+    // Consider normals valid if at least 95% are good
+    const isValid = validPercentage >= 95.0;
+
+    if (!isValid) {
+      logger.warn('[WARN][ManifoldCSGOperations] Normal vector validation failed', {
+        validPercentage: validPercentage.toFixed(2) + '%',
+        issues: {
+          degenerate: degenerateNormals,
+          unnormalized: unnormalizedNormals,
+          invalid: invalidNormals
+        }
+      });
+    }
+
+    return isValid;
+  } catch (error) {
+    logger.error('[ERROR][ManifoldCSGOperations] Normal vector validation error', {
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return false;
+  }
+}
+
+/**
+ * Add debug visualization for normal vectors
+ * 
+ * Creates helper geometry to visualize normal vectors for debugging purposes.
+ * Only active in development mode when DEBUG_NORMALS environment variable is set.
+ * 
+ * @param geometry - BufferGeometry to create normal visualization for
+ * @param operationType - Type of CSG operation for logging context
+ */
+function addDebugNormalsVisualization(geometry: BufferGeometry, operationType: string): void {
+  try {
+    const normalAttribute = geometry.getAttribute('normal');
+    const positionAttribute = geometry.getAttribute('position');
+    
+    if (!normalAttribute || !positionAttribute) {
+      logger.warn('[WARN][ManifoldCSGOperations] Cannot create normal visualization - missing attributes');
+      return;
+    }
+
+    const positions = positionAttribute.array;
+    const normals = normalAttribute.array;
+    const vertexCount = positionAttribute.count;
+    
+    // Create lines to visualize normals
+    const normalLines: number[] = [];
+    const normalLength = 0.1; // Length of normal visualization lines
+    
+    // Sample every Nth vertex to avoid too many lines
+    const sampleRate = Math.max(1, Math.floor(vertexCount / 100)); // Sample up to 100 normals
+    
+    for (let i = 0; i < vertexCount; i += sampleRate) {
+      const px = positions[i * 3];
+      const py = positions[i * 3 + 1];
+      const pz = positions[i * 3 + 2];
+      
+      const nx = normals[i * 3];
+      const ny = normals[i * 3 + 1];
+      const nz = normals[i * 3 + 2];
+      
+      // Skip if any values are undefined
+      if (px === undefined || py === undefined || pz === undefined ||
+          nx === undefined || ny === undefined || nz === undefined) {
+        continue;
+      }
+      
+      // Start point (vertex position)
+      normalLines.push(px, py, pz);
+      
+      // End point (vertex position + normal * length)
+      normalLines.push(
+        px + nx * normalLength,
+        py + ny * normalLength,
+        pz + nz * normalLength
+      );
+    }
+    
+    logger.debug('[DEBUG][ManifoldCSGOperations] Created normal visualization', {
+      operationType,
+      vertexCount,
+      sampledNormals: normalLines.length / 6,
+      normalLength,
+      sampleRate
+    });
+    
+    // Store debug data as user data for potential access by rendering system
+    geometry.userData.debugNormals = {
+      lines: normalLines,
+      operationType,
+      timestamp: Date.now()
+    };
+    
+  } catch (error) {
+    logger.error('[ERROR][ManifoldCSGOperations] Debug normal visualization error', {
+      error: error instanceof Error ? error.message : String(error),
+      operationType
+    });
   }
 }

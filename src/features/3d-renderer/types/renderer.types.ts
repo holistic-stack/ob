@@ -7,7 +7,6 @@
 
 import type * as React from 'react';
 import type * as THREE from 'three';
-import type { CoreNode, NodeMetadata } from '../../../shared/types/ast.types.js';
 import type { CameraConfig, PerformanceMetrics } from '../../../shared/types/common.types.js';
 import type {
   AsyncOperationResult,
@@ -16,7 +15,7 @@ import type {
   OperationResult,
 } from '../../../shared/types/operations.types.js';
 import type { Result } from '../../../shared/types/result.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { GenericMeshData } from '../../ast-to-csg-converter/types/conversion.types';
 
 /**
  * 3D Scene configuration
@@ -150,12 +149,12 @@ export interface SceneState {
 }
 
 /**
- * Renderer service interface using shared operation types
+ * Generic renderer service interface (no OpenSCAD references)
  */
 export interface RendererService {
   readonly initialize: (config: Scene3DConfig) => AsyncOperationResult<void, OperationError>;
-  readonly renderAST: (
-    ast: ReadonlyArray<CoreNode>
+  readonly renderMeshes: (
+    meshes: ReadonlyArray<GenericMeshData>
   ) => AsyncOperationResult<ReadonlyArray<Mesh3D>, OperationError>;
   readonly renderPrimitive: (params: PrimitiveParams) => OperationResult<Mesh3D, OperationError>;
   readonly performCSG: (config: CSGConfig) => AsyncOperationResult<THREE.Mesh, OperationError>;
@@ -170,12 +169,12 @@ export interface RendererService {
 }
 
 /**
- * AST node renderer interface using shared types
+ * Generic mesh renderer interface (no OpenSCAD references)
  */
-export interface ASTNodeRenderer {
-  readonly canRender: (node: CoreNode) => boolean;
-  readonly render: (node: CoreNode) => OperationResult<Mesh3D, OperationError>;
-  readonly renderAsync: (node: CoreNode) => AsyncOperationResult<Mesh3D, OperationError>;
+export interface MeshRenderer {
+  readonly canRender: (mesh: GenericMeshData) => boolean;
+  readonly render: (mesh: GenericMeshData) => OperationResult<Mesh3D, OperationError>;
+  readonly renderAsync: (mesh: GenericMeshData) => AsyncOperationResult<Mesh3D, OperationError>;
 }
 
 /**
@@ -264,10 +263,10 @@ export type RenderingError =
   | { readonly type: 'webgl'; readonly message: string; readonly context?: string };
 
 /**
- * Renderer component props
+ * Generic renderer component props (no OpenSCAD references)
  */
 export interface RendererProps {
-  readonly ast: ReadonlyArray<ASTNode>;
+  readonly meshes: ReadonlyArray<GenericMeshData>;
   readonly camera: CameraConfig;
   readonly config: Scene3DConfig;
   readonly className?: string;
@@ -279,7 +278,7 @@ export interface RendererProps {
 }
 
 /**
- * Hook return type for 3D renderer
+ * Generic hook return type for 3D renderer (no OpenSCAD references)
  */
 export interface UseRendererReturn {
   readonly sceneRef: React.RefObject<THREE.Scene | null>;
@@ -291,7 +290,7 @@ export interface UseRendererReturn {
   readonly metrics: RenderingMetrics;
   readonly meshes: ReadonlyArray<Mesh3D>;
   readonly actions: {
-    readonly renderAST: (ast: ReadonlyArray<ASTNode>) => Promise<void>;
+    readonly renderMeshes: (meshes: ReadonlyArray<GenericMeshData>) => Promise<void>;
     readonly clearScene: () => void;
     readonly updateCamera: (camera: CameraConfig) => void;
     readonly resetCamera: () => void;

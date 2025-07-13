@@ -137,7 +137,9 @@ describe('Manifold Mesh Format Converter', () => {
 
       const result = convertToManifoldFormat(emptyMesh);
       expect(result.success).toBe(false);
-      expect(result.error).toContain('empty');
+      if (!result.success) {
+        expect(result.error).toContain('empty');
+      }
     });
   });
 

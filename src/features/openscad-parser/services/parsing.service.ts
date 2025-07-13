@@ -20,11 +20,7 @@ import type {
 } from '../../../shared/types/operations.types.js';
 import { isSuccess, type Result } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
-import {
-  clearSourceCodeForRestructuring,
-  restructureAST,
-  setSourceCodeForRestructuring,
-} from '../../3d-renderer/services/ast-restructuring-service.js';
+// NOTE: AST restructuring service removed - functionality moved to conversion layer
 import { ParserError } from '../ast/errors/parser-error.js';
 import type { ASTNode } from '../core/ast-types.js';
 import { RecoveryStrategyRegistry } from '../error-handling/recovery-strategy-registry.js';
@@ -136,24 +132,10 @@ export const unifiedParseOpenSCAD = async (
 
     const rawAST = parseResult.data;
 
-    // 4. Apply AST restructuring
-    logger.debug(`Restructuring AST with ${rawAST.length} nodes.`);
+    // 4. Return the parsed AST (restructuring moved to conversion layer)
+    logger.debug(`Unified parsing successful. AST nodes: ${rawAST.length}.`);
 
-    const restructureResult = restructureAST(rawAST, code, {
-      enableLogging: true,
-      enableSourceLocationAnalysis: true,
-    });
-
-    if (!isSuccess(restructureResult)) {
-      logger.warn(`AST restructuring failed: ${restructureResult.error}, using original AST.`);
-    }
-
-    const finalAST = isSuccess(restructureResult) ? restructureResult.data : rawAST;
-
-    logger.debug(
-      `Unified parsing successful. Raw AST nodes: ${rawAST.length}, Final AST nodes: ${finalAST.length}.`
-    );
-    return operationUtils.createSuccess(finalAST, metadata);
+    return operationUtils.createSuccess(rawAST, metadata);
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     logger.error(`An unexpected error occurred during unified parsing: ${errorMessage}`);

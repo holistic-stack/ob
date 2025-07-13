@@ -111,6 +111,7 @@ export type ParsingSlice = ParsingState & ParsingActions;
 export interface RenderingActions {
   updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => void;
   renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
+  renderFromMeshData: (meshData: ReadonlyArray<import('../../ast-to-csg-converter/types/conversion.types').GenericMeshData>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
   clearScene: () => void;
   updateCamera: (camera: Partial<CameraConfig>) => void;
   resetCamera: () => void;

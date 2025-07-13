@@ -35,7 +35,7 @@ import {
   convertASTNodeToManifoldMesh,
   ManifoldASTConverter,
   type ManifoldConversionOptions,
-} from '../services/manifold-ast-converter/manifold-ast-converter';
+} from '../../ast-to-csg-converter/services/manifold-ast-converter/manifold-ast-converter';
 import { MaterialIDManager } from '../services/manifold-material-manager/manifold-material-manager';
 import {
   clearAllResources,

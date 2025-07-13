@@ -11,5 +11,6 @@ import * as testUtils from './openscad-parser-test-utils.ts';
 
 // Re-export for consistency
 export const createTestParser = testUtils.createTestParser;
+export const createInitializedTestParser = testUtils.createInitializedTestParser;
 
 console.log('OpenSCAD Parser test utilities loaded');
