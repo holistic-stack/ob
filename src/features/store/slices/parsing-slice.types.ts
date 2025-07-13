@@ -5,7 +5,6 @@
  * following functional programming patterns and immutable data structures.
  */
 
-
 import type {
   AsyncOperationResult,
   OperationError,

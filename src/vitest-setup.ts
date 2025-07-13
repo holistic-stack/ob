@@ -2,7 +2,8 @@ import React from 'react';
 import { vi } from 'vitest';
 
 vi.mock('./features/code-editor/components/monaco-editor.tsx', () => ({
-  MonacoEditorComponent: () => React.createElement('div', { 'data-testid': 'monaco-editor-mock' }, 'Monaco Editor Mock'),
+  MonacoEditorComponent: () =>
+    React.createElement('div', { 'data-testid': 'monaco-editor-mock' }, 'Monaco Editor Mock'),
 }));
 
 // Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
@@ -230,15 +231,15 @@ function _createMockWasmFile(): Uint8Array {
   const mockWasm = new Uint8Array(totalLength);
 
   let offset = 0;
-mockWasm.set(wasmHeader, offset);
+  mockWasm.set(wasmHeader, offset);
   offset += wasmHeader.length;
-mockWasm.set(typeSection, offset);
+  mockWasm.set(typeSection, offset);
   offset += typeSection.length;
-mockWasm.set(functionSection, offset);
+  mockWasm.set(functionSection, offset);
   offset += functionSection.length;
-mockWasm.set(exportSection, offset);
+  mockWasm.set(exportSection, offset);
   offset += exportSection.length;
-mockWasm.set(codeSection, offset);
+  mockWasm.set(codeSection, offset);
 
   logger.debug(`Created mock WASM file: ${mockWasm.length} bytes`);
   return mockWasm;
@@ -560,8 +561,9 @@ export async function initializeCSGForTests(): Promise<void> {
       shutdown: () => Promise.resolve(),
     };
 
-    (globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }).__MOCK_MATRIX_SERVICE__ =
-      mockMatrixService;
+    (
+      globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }
+    ).__MOCK_MATRIX_SERVICE__ = mockMatrixService;
 
     logger.debug('✅ Mock Matrix Service initialized for testing');
   } catch (error) {

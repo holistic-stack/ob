@@ -14,7 +14,10 @@
  */
 
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { AsyncOperationResult, OperationError } from '../../../shared/types/operations.types.js';
+import type {
+  AsyncOperationResult,
+  OperationError,
+} from '../../../shared/types/operations.types.js';
 import { isSuccess, type Result } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
 import {
@@ -35,7 +38,9 @@ const logger = createLogger('ParsingService');
  * @param code The source code that failed to parse.
  * @returns A Result containing the recovered AST or an error message.
  */
-const recoverWithFreshParser = async (code: string): Promise<Result<ReadonlyArray<ASTNode>, string>> => {
+const recoverWithFreshParser = async (
+  code: string
+): Promise<Result<ReadonlyArray<ASTNode>, string>> => {
   logger.warn('Attempting recovery with a fresh parser instance.');
   const initResult = await initializeParser(); // Force re-initialization
   if (!initResult.success) {
@@ -61,7 +66,6 @@ const recoverWithFreshParser = async (code: string): Promise<Result<ReadonlyArra
   logger.error(errorMsg);
   return { success: false, error: errorMsg };
 };
-
 
 /**
  * Parses the given OpenSCAD code into an AST.
@@ -94,7 +98,10 @@ export const unifiedParseOpenSCAD = async (
     if (!parser) {
       const errorMessage = 'Parser not available after initialization.';
       logger.error(errorMessage);
-      const operationError = operationUtils.createOperationError('PARSER_UNAVAILABLE', errorMessage);
+      const operationError = operationUtils.createOperationError(
+        'PARSER_UNAVAILABLE',
+        errorMessage
+      );
       return operationUtils.createError(operationError, metadata);
     }
 
@@ -112,7 +119,10 @@ export const unifiedParseOpenSCAD = async (
         // If recovery also fails, return the error
         const errorMessage = `Parse and recovery failed: ${recoveryResult.error}`;
         logger.error(errorMessage);
-        const operationError = operationUtils.createOperationError('PARSE_AND_RECOVERY_FAILURE', errorMessage);
+        const operationError = operationUtils.createOperationError(
+          'PARSE_AND_RECOVERY_FAILURE',
+          errorMessage
+        );
         return operationUtils.createError(operationError, metadata);
       }
     }
@@ -128,12 +138,11 @@ export const unifiedParseOpenSCAD = async (
 
     // 4. Apply AST restructuring
     logger.debug(`Restructuring AST with ${rawAST.length} nodes.`);
-    
+
     const restructureResult = restructureAST(rawAST, code, {
       enableLogging: true,
       enableSourceLocationAnalysis: true,
     });
-    
 
     if (!isSuccess(restructureResult)) {
       logger.warn(`AST restructuring failed: ${restructureResult.error}, using original AST.`);
@@ -141,9 +150,10 @@ export const unifiedParseOpenSCAD = async (
 
     const finalAST = isSuccess(restructureResult) ? restructureResult.data : rawAST;
 
-    logger.debug(`Unified parsing successful. Raw AST nodes: ${rawAST.length}, Final AST nodes: ${finalAST.length}.`);
+    logger.debug(
+      `Unified parsing successful. Raw AST nodes: ${rawAST.length}, Final AST nodes: ${finalAST.length}.`
+    );
     return operationUtils.createSuccess(finalAST, metadata);
-
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     logger.error(`An unexpected error occurred during unified parsing: ${errorMessage}`);

@@ -41,7 +41,9 @@ export class ManifoldWasmLoader {
       );
       try {
         // @ts-ignore
-        const cdnModule = await import('https://cdn.jsdelivr.net/npm/manifold-3d@latest/manifold.js');
+        const cdnModule = await import(
+          'https://cdn.jsdelivr.net/npm/manifold-3d@latest/manifold.js'
+        );
 
         // CRITICAL: Call setup() for CDN module too
         if (typeof cdnModule.setup === 'function') {

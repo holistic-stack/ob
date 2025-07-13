@@ -314,77 +314,77 @@ function extractGeometriesFromChildren(children: React.ReactNode): BufferGeometr
         // In a real implementation, this would extract geometries from mesh children
         const geometry = new BufferGeometry();
 
-      // Create a simple cube geometry for testing
-      const vertices = new Float32Array([
-        -1,
-        -1,
-        -1,
-        1,
-        -1,
-        -1,
-        1,
-        1,
-        -1,
-        -1,
-        1,
-        -1, // Front face
-        -1,
-        -1,
-        1,
-        -1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        -1,
-        1, // Back face
-      ]);
+        // Create a simple cube geometry for testing
+        const vertices = new Float32Array([
+          -1,
+          -1,
+          -1,
+          1,
+          -1,
+          -1,
+          1,
+          1,
+          -1,
+          -1,
+          1,
+          -1, // Front face
+          -1,
+          -1,
+          1,
+          -1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          1, // Back face
+        ]);
 
-      const indices = new Uint32Array([
-        0,
-        1,
-        2,
-        0,
-        2,
-        3, // Front
-        4,
-        5,
-        6,
-        4,
-        6,
-        7, // Back
-        0,
-        4,
-        7,
-        0,
-        7,
-        1, // Bottom
-        2,
-        6,
-        5,
-        2,
-        5,
-        3, // Top
-        0,
-        3,
-        5,
-        0,
-        5,
-        4, // Left
-        1,
-        7,
-        6,
-        1,
-        6,
-        2, // Right
-      ]);
+        const indices = new Uint32Array([
+          0,
+          1,
+          2,
+          0,
+          2,
+          3, // Front
+          4,
+          5,
+          6,
+          4,
+          6,
+          7, // Back
+          0,
+          4,
+          7,
+          0,
+          7,
+          1, // Bottom
+          2,
+          6,
+          5,
+          2,
+          5,
+          3, // Top
+          0,
+          3,
+          5,
+          0,
+          5,
+          4, // Left
+          1,
+          7,
+          6,
+          1,
+          6,
+          2, // Right
+        ]);
 
-      geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-      geometry.setIndex(new Uint32BufferAttribute(indices, 1));
+        geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+        geometry.setIndex(new Uint32BufferAttribute(indices, 1));
 
-      geometries.push(geometry);
+        geometries.push(geometry);
       }
     });
   }

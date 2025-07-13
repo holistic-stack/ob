@@ -4,10 +4,10 @@
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { ManifoldASTConverter } from './manifold-ast-converter';
-import type { UnionNode, CubeNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Result } from '../../../../shared/types/result.types';
+import type { CubeNode, SphereNode, UnionNode } from '../../../openscad-parser/ast/ast-types';
+import { ManifoldASTConverter } from './manifold-ast-converter';
 
 describe('CSG Union Integration', () => {
   let converter: ManifoldASTConverter;
@@ -130,22 +130,26 @@ describe('CSG Union Integration', () => {
           {
             type: 'translate',
             v: [1, 0, 0],
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
+            children: [
+              {
+                type: 'cube',
+                size: [1, 1, 1],
+                center: false,
+                children: [],
+              },
+            ],
           },
           {
             type: 'translate',
             v: [-1, 0, 0],
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
+            children: [
+              {
+                type: 'cube',
+                size: [1, 1, 1],
+                center: false,
+                children: [],
+              },
+            ],
           },
         ],
       };
@@ -162,11 +166,13 @@ describe('CSG Union Integration', () => {
     test('should handle single child union gracefully', async () => {
       const unionNode: UnionNode = {
         type: 'union',
-        children: [{
-          type: 'sphere',
-          r: 1,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'sphere',
+            r: 1,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(unionNode);

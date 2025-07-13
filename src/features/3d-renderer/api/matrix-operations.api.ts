@@ -911,7 +911,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
         if (validationResult.success) {
           return success(Boolean(validationResult.data));
         } else {
-          const errorMessage = 'error' in validationResult ? validationResult.error : 'Matrix validation failed';
+          const errorMessage =
+            'error' in validationResult ? validationResult.error : 'Matrix validation failed';
           return error(errorMessage || 'Matrix validation failed');
         }
       }
@@ -996,7 +997,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
               return success({ isValid: Boolean(analysisData) });
             }
           } else {
-            const errorMessage = 'error' in analysisResult ? analysisResult.error : 'Matrix analysis failed';
+            const errorMessage =
+              'error' in analysisResult ? analysisResult.error : 'Matrix analysis failed';
             return error(errorMessage || 'Matrix analysis failed');
           }
         } else {
@@ -1017,7 +1019,8 @@ export class MatrixOperationsAPIImpl implements MatrixOperationsAPI {
             return success({ isValid: Boolean(analysisData) });
           }
         } else {
-          const errorMessage = 'error' in analysisResult ? analysisResult.error : 'Matrix analysis failed';
+          const errorMessage =
+            'error' in analysisResult ? analysisResult.error : 'Matrix analysis failed';
           return error(errorMessage || 'Matrix analysis failed');
         }
       }

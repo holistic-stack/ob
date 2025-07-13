@@ -4,16 +4,16 @@
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import * as THREE from 'three';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import type { Result } from '../../../../shared/types/result.types';
 import { convertThreeToManifold } from '../three-manifold-converter/three-manifold-converter';
 import {
-  translateManifold,
+  createTransformationMatrix,
   rotateManifold,
   scaleManifold,
-  createTransformationMatrix,
+  translateManifold,
 } from './manifold-transformation-helpers';
-import type { Result } from '../../../../shared/types/result.types';
 
 describe('ManifoldTransformationHelpers', () => {
   // Following project guidelines: no mocks, real implementations
@@ -22,7 +22,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should translate Manifold object using native API', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const translationVector = [2, 3, 4] as const;
@@ -39,7 +39,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should handle invalid translation vector', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const invalidVector = [1, 2] as any; // Invalid: only 2 components
@@ -55,7 +55,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should rotate Manifold object around axis', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const axis = [0, 0, 1] as const; // Z-axis
@@ -73,7 +73,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should handle invalid rotation axis', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const invalidAxis = [0, 0, 0] as const; // Zero vector
@@ -90,7 +90,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should scale Manifold object uniformly', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const scaleFactors = [2, 2, 2] as const; // Uniform scaling
@@ -107,7 +107,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should scale Manifold object non-uniformly', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const scaleFactors = [2, 1, 0.5] as const; // Non-uniform scaling
@@ -123,7 +123,7 @@ describe('ManifoldTransformationHelpers', () => {
     test('should handle invalid scale factors', async () => {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const manifoldResult = await convertThreeToManifold(cubeGeometry);
-      
+
       expect(manifoldResult.success).toBe(true);
       if (manifoldResult.success) {
         const invalidFactors = [2, 0, 1] as const; // Zero scale factor
@@ -171,8 +171,8 @@ describe('ManifoldTransformationHelpers', () => {
       if (result.success) {
         expect(result.data).toHaveLength(16);
         // Check scale components
-        expect(result.data[0]).toBe(2);  // X scale
-        expect(result.data[5]).toBe(3);  // Y scale
+        expect(result.data[0]).toBe(2); // X scale
+        expect(result.data[5]).toBe(3); // Y scale
         expect(result.data[10]).toBe(4); // Z scale
       }
     });
@@ -186,7 +186,7 @@ describe('ManifoldTransformationHelpers', () => {
       if (result.success) {
         expect(result.data).toHaveLength(16);
         // Should combine both transformations
-        expect(result.data[0]).toBe(2);  // X scale
+        expect(result.data[0]).toBe(2); // X scale
         expect(result.data[12]).toBe(1); // X translation
       }
     });

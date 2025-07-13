@@ -4,15 +4,15 @@
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  convertToManifoldFormat, 
-  convertFromManifoldFormat, 
-  validateManifoldFormat,
-  type ManifoldCompatibleMesh 
-} from './manifold-mesh-format-converter';
-import type { IManifoldMesh } from './manifold-mesh-converter';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
+import type { IManifoldMesh } from './manifold-mesh-converter';
+import {
+  convertFromManifoldFormat,
+  convertToManifoldFormat,
+  type ManifoldCompatibleMesh,
+  validateManifoldFormat,
+} from './manifold-mesh-format-converter';
 
 describe('Manifold Mesh Format Converter', () => {
   let manifoldModule: any;
@@ -31,9 +31,15 @@ describe('Manifold Mesh Format Converter', () => {
       const inputMesh: IManifoldMesh = {
         numProp: 3,
         vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,   // vertex 0
-          -1.0, -1.0, 0.0, // vertex 1
-          1.0, -1.0, 0.0,  // vertex 2
+          0.0,
+          1.0,
+          0.0, // vertex 0
+          -1.0,
+          -1.0,
+          0.0, // vertex 1
+          1.0,
+          -1.0,
+          0.0, // vertex 2
         ]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
@@ -46,19 +52,19 @@ describe('Manifold Mesh Format Converter', () => {
 
       if (result.success) {
         const converted = result.data;
-        
+
         // Check basic properties
         expect(converted.numProp).toBe(3);
         expect(converted.vertProperties).toEqual(inputMesh.vertProperties);
         expect(converted.triVerts).toEqual(inputMesh.triVerts);
-        
+
         // Check required additional fields
         expect(converted.mergeFromVert).toBeInstanceOf(Uint32Array);
         expect(converted.mergeToVert).toBeInstanceOf(Uint32Array);
         expect(converted.faceID).toBeInstanceOf(Uint32Array);
         expect(converted.halfedgeTangent).toBeInstanceOf(Float32Array);
         expect(converted.runTransform).toBeInstanceOf(Float32Array);
-        
+
         // Check faceID has correct length (one per triangle)
         expect(converted.faceID.length).toBe(1); // 1 triangle
         expect(converted.faceID[0]).toBe(0);
@@ -68,11 +74,7 @@ describe('Manifold Mesh Format Converter', () => {
     test('should validate converted format is correct', () => {
       const inputMesh: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 0.0, 0.0,
-          1.0, 0.0, 0.0,
-          0.0, 1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -92,10 +94,18 @@ describe('Manifold Mesh Format Converter', () => {
       const inputMesh: IManifoldMesh = {
         numProp: 3,
         vertProperties: new Float32Array([
-          0.0, 0.0, 0.0,   // vertex 0
-          1.0, 0.0, 0.0,   // vertex 1
-          0.0, 1.0, 0.0,   // vertex 2
-          1.0, 1.0, 0.0,   // vertex 3
+          0.0,
+          0.0,
+          0.0, // vertex 0
+          1.0,
+          0.0,
+          0.0, // vertex 1
+          0.0,
+          1.0,
+          0.0, // vertex 2
+          1.0,
+          1.0,
+          0.0, // vertex 3
         ]),
         triVerts: new Uint32Array([0, 1, 2, 1, 3, 2]), // 2 triangles
         runIndex: new Uint32Array([0]),
@@ -135,11 +145,7 @@ describe('Manifold Mesh Format Converter', () => {
     test('should create working Manifold object from converted format', () => {
       const inputMesh: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0,
-          1.0, -1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -177,11 +183,7 @@ describe('Manifold Mesh Format Converter', () => {
       // Create two simple triangle meshes
       const mesh1: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0,
-          1.0, -1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -190,11 +192,7 @@ describe('Manifold Mesh Format Converter', () => {
 
       const mesh2: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 2.0, 0.0,
-          -0.5, 0.0, 0.0,
-          0.5, 0.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 2.0, 0.0, -0.5, 0.0, 0.0, 0.5, 0.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -204,7 +202,7 @@ describe('Manifold Mesh Format Converter', () => {
       // Convert both meshes
       const convert1 = convertToManifoldFormat(mesh1);
       const convert2 = convertToManifoldFormat(mesh2);
-      
+
       expect(convert1.success).toBe(true);
       expect(convert2.success).toBe(true);
 

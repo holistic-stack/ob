@@ -9,17 +9,48 @@ import { render, screen } from '@testing-library/react';
 import type * as THREE from 'three';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import { appStoreInstance } from './features/store/app-store';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
+import { appStoreInstance } from './features/store/app-store';
 
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset store state before each test
     appStoreInstance.setState({
-      editor: { code: '', isDirty: false, lastSaved: null, cursorPosition: { line: 1, column: 1 }, selection: null },
-      parsing: { ast: [], errors: [], warnings: [], isLoading: false, lastParsed: null, lastParsedCode: null, parseTime: 0 },
-      rendering: { meshes: [], isRendering: false, renderErrors: [], lastRendered: null, renderTime: 0, camera: { position: [10, 10, 10], target: [0, 0, 0], zoom: 1, fov: 75, near: 0.1, far: 1000, enableControls: true, enableAutoRotate: false, autoRotateSpeed: 1 } },
+      editor: {
+        code: '',
+        isDirty: false,
+        lastSaved: null,
+        cursorPosition: { line: 1, column: 1 },
+        selection: null,
+      },
+      parsing: {
+        ast: [],
+        errors: [],
+        warnings: [],
+        isLoading: false,
+        lastParsed: null,
+        lastParsedCode: null,
+        parseTime: 0,
+      },
+      rendering: {
+        meshes: [],
+        isRendering: false,
+        renderErrors: [],
+        lastRendered: null,
+        renderTime: 0,
+        camera: {
+          position: [10, 10, 10],
+          target: [0, 0, 0],
+          zoom: 1,
+          fov: 75,
+          near: 0.1,
+          far: 1000,
+          enableControls: true,
+          enableAutoRotate: false,
+          autoRotateSpeed: 1,
+        },
+      },
     });
   });
 
@@ -50,7 +81,9 @@ describe('App', () => {
     });
 
     it('should display application status correctly', () => {
-      appStoreInstance.setState({ rendering: { ...appStoreInstance.getState().rendering, isRendering: true } });
+      appStoreInstance.setState({
+        rendering: { ...appStoreInstance.getState().rendering, isRendering: true },
+      });
 
       render(<App />);
 

@@ -26,10 +26,10 @@ export interface ManifoldCompatibleMesh {
 
 /**
  * Converts IManifoldMesh format to Manifold constructor-compatible format
- * 
+ *
  * @param mesh - Input mesh in IManifoldMesh format
  * @returns Result containing converted mesh or error
- * 
+ *
  * @example
  * ```typescript
  * const result = convertToManifoldFormat(iManifoldMesh);
@@ -38,7 +38,9 @@ export interface ManifoldCompatibleMesh {
  * }
  * ```
  */
-export function convertToManifoldFormat(mesh: IManifoldMesh): Result<ManifoldCompatibleMesh, string> {
+export function convertToManifoldFormat(
+  mesh: IManifoldMesh
+): Result<ManifoldCompatibleMesh, string> {
   try {
     // Validate input mesh
     if (!mesh.vertProperties || !mesh.triVerts) {
@@ -61,44 +63,48 @@ export function convertToManifoldFormat(mesh: IManifoldMesh): Result<ManifoldCom
       numProp: mesh.numProp,
       triVerts: new Uint32Array(mesh.triVerts),
       vertProperties: new Float32Array(mesh.vertProperties),
-      
+
       // Initialize required fields that are missing from IManifoldMesh
       // Based on working Manifold mesh analysis:
       mergeFromVert: new Uint32Array(0), // Empty for simple meshes
-      mergeToVert: new Uint32Array(0),   // Empty for simple meshes
-      
+      mergeToVert: new Uint32Array(0), // Empty for simple meshes
+
       // runIndex: maps triangles to material runs
       runIndex: mesh.runIndex ? new Uint32Array(mesh.runIndex) : new Uint32Array([0, numTriangles]),
-      
+
       // runOriginalID: material/object IDs
-      runOriginalID: mesh.runOriginalID ? new Uint32Array(mesh.runOriginalID) : new Uint32Array([0]),
-      
+      runOriginalID: mesh.runOriginalID
+        ? new Uint32Array(mesh.runOriginalID)
+        : new Uint32Array([0]),
+
       // faceID: face identifiers (one per triangle)
       faceID: new Uint32Array(Array.from({ length: numTriangles }, (_, i) => i)),
-      
+
       // halfedgeTangent: tangent vectors for edges (empty for simple meshes)
       halfedgeTangent: new Float32Array(0),
-      
+
       // runTransform: transformation matrices (empty for simple meshes)
       runTransform: new Float32Array(0),
     };
 
     return { success: true, data: compatibleMesh };
   } catch (error) {
-    return { 
-      success: false, 
-      error: `Failed to convert mesh format: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      success: false,
+      error: `Failed to convert mesh format: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
 
 /**
  * Converts Manifold constructor-compatible format back to IManifoldMesh format
- * 
+ *
  * @param mesh - Input mesh in Manifold-compatible format
  * @returns Result containing converted mesh or error
  */
-export function convertFromManifoldFormat(mesh: ManifoldCompatibleMesh): Result<IManifoldMesh, string> {
+export function convertFromManifoldFormat(
+  mesh: ManifoldCompatibleMesh
+): Result<IManifoldMesh, string> {
   try {
     // Validate input mesh
     if (!mesh.vertProperties || !mesh.triVerts) {
@@ -117,23 +123,31 @@ export function convertFromManifoldFormat(mesh: ManifoldCompatibleMesh): Result<
 
     return { success: true, data: iManifoldMesh };
   } catch (error) {
-    return { 
-      success: false, 
-      error: `Failed to convert from Manifold format: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      success: false,
+      error: `Failed to convert from Manifold format: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
 
 /**
  * Validates that a mesh is in correct Manifold-compatible format
- * 
+ *
  * @param mesh - Mesh to validate
  * @returns Result indicating validation success or error details
  */
 export function validateManifoldFormat(mesh: ManifoldCompatibleMesh): Result<void, string> {
   const requiredFields = [
-    'numProp', 'triVerts', 'vertProperties', 'mergeFromVert', 'mergeToVert',
-    'runIndex', 'runOriginalID', 'faceID', 'halfedgeTangent', 'runTransform'
+    'numProp',
+    'triVerts',
+    'vertProperties',
+    'mergeFromVert',
+    'mergeToVert',
+    'runIndex',
+    'runOriginalID',
+    'faceID',
+    'halfedgeTangent',
+    'runTransform',
   ];
 
   for (const field of requiredFields) {

@@ -4,7 +4,7 @@
  */
 
 export {
-  optimizeTransformationChain,
   combineTransformationMatrices,
   extractTransformationChain,
+  optimizeTransformationChain,
 } from './transformation-optimizer';

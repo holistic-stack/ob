@@ -53,15 +53,21 @@ export function translateManifold(
     return { success: false, error: 'Invalid translation vector: must have exactly 3 components' };
   }
 
-  if (translation.some(v => !Number.isFinite(v))) {
-    return { success: false, error: 'Invalid translation vector: all components must be finite numbers' };
+  if (translation.some((v) => !Number.isFinite(v))) {
+    return {
+      success: false,
+      error: 'Invalid translation vector: all components must be finite numbers',
+    };
   }
 
   try {
     // Create translation matrix
     const matrixResult = createTransformationMatrix({ translation });
     if (!matrixResult.success) {
-      return { success: false, error: `Failed to create translation matrix: ${matrixResult.error}` };
+      return {
+        success: false,
+        error: `Failed to create translation matrix: ${matrixResult.error}`,
+      };
     }
 
     // Apply transformation using Manifold's native transform method
@@ -102,7 +108,7 @@ export function rotateManifold(
     return { success: false, error: 'Invalid rotation axis: must have exactly 3 components' };
   }
 
-  if (axis.every(v => v === 0)) {
+  if (axis.every((v) => v === 0)) {
     return { success: false, error: 'Invalid rotation axis: cannot be zero vector' };
   }
 
@@ -154,8 +160,11 @@ export function scaleManifold(
     return { success: false, error: 'Invalid scale factors: must have exactly 3 components' };
   }
 
-  if (scale.some(v => !Number.isFinite(v) || v === 0)) {
-    return { success: false, error: 'Invalid scale factor: all components must be finite non-zero numbers' };
+  if (scale.some((v) => !Number.isFinite(v) || v === 0)) {
+    return {
+      success: false,
+      error: 'Invalid scale factor: all components must be finite non-zero numbers',
+    };
   }
 
   try {
@@ -193,17 +202,29 @@ export function createTransformationMatrix(
   try {
     // Start with identity matrix (column-major order)
     const matrix = [
-      1, 0, 0, 0,  // Column 0
-      0, 1, 0, 0,  // Column 1
-      0, 0, 1, 0,  // Column 2
-      0, 0, 0, 1   // Column 3
+      1,
+      0,
+      0,
+      0, // Column 0
+      0,
+      1,
+      0,
+      0, // Column 1
+      0,
+      0,
+      1,
+      0, // Column 2
+      0,
+      0,
+      0,
+      1, // Column 3
     ];
 
     // Apply scale transformation
     if (options.scale) {
       const [sx, sy, sz] = options.scale;
-      matrix[0] *= sx;  // M[0][0]
-      matrix[5] *= sy;  // M[1][1]
+      matrix[0] *= sx; // M[0][0]
+      matrix[5] *= sy; // M[1][1]
       matrix[10] *= sz; // M[2][2]
     }
 
@@ -214,7 +235,7 @@ export function createTransformationMatrix(
       if (!rotationMatrix.success) {
         return rotationMatrix;
       }
-      
+
       // Multiply current matrix with rotation matrix
       multiplyMatrices(matrix, rotationMatrix.data);
     }
@@ -261,10 +282,22 @@ function createRotationMatrix(
     const oneMinusCos = 1 - cos;
 
     const matrix = [
-      cos + nx * nx * oneMinusCos,           ny * nx * oneMinusCos + nz * sin,     nz * nx * oneMinusCos - ny * sin,     0,
-      nx * ny * oneMinusCos - nz * sin,     cos + ny * ny * oneMinusCos,           nz * ny * oneMinusCos + nx * sin,     0,
-      nx * nz * oneMinusCos + ny * sin,     ny * nz * oneMinusCos - nx * sin,     cos + nz * nz * oneMinusCos,           0,
-      0,                                     0,                                     0,                                     1
+      cos + nx * nx * oneMinusCos,
+      ny * nx * oneMinusCos + nz * sin,
+      nz * nx * oneMinusCos - ny * sin,
+      0,
+      nx * ny * oneMinusCos - nz * sin,
+      cos + ny * ny * oneMinusCos,
+      nz * ny * oneMinusCos + nx * sin,
+      0,
+      nx * nz * oneMinusCos + ny * sin,
+      ny * nz * oneMinusCos - nx * sin,
+      cos + nz * nz * oneMinusCos,
+      0,
+      0,
+      0,
+      0,
+      1,
     ];
 
     return { success: true, data: matrix };
@@ -279,17 +312,17 @@ function createRotationMatrix(
  */
 function multiplyMatrices(a: number[], b: readonly number[]): void {
   const result = new Array(16);
-  
+
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 4; j++) {
-      result[i * 4 + j] = 
+      result[i * 4 + j] =
         a[i * 4 + 0] * b[0 * 4 + j] +
         a[i * 4 + 1] * b[1 * 4 + j] +
         a[i * 4 + 2] * b[2 * 4 + j] +
         a[i * 4 + 3] * b[3 * 4 + j];
     }
   }
-  
+
   // Copy result back to a
   for (let i = 0; i < 16; i++) {
     a[i] = result[i];

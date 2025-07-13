@@ -6,7 +6,13 @@
 
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import type { ASTNode, TranslateNode, RotateNode, ScaleNode, MultmatrixNode } from '../../../openscad-parser/ast/ast-types';
+import type {
+  ASTNode,
+  MultmatrixNode,
+  RotateNode,
+  ScaleNode,
+  TranslateNode,
+} from '../../../openscad-parser/ast/ast-types';
 import { createTransformationMatrix } from '../manifold-transformation-helpers/manifold-transformation-helpers';
 
 const logger = createLogger('TransformationOptimizer');
@@ -18,7 +24,7 @@ interface TransformationOperation {
   readonly type: 'translate' | 'rotate' | 'scale' | 'multmatrix';
   readonly v?: readonly [number, number, number]; // For translate/scale
   readonly a?: number | readonly [number, number, number]; // For rotate
-  readonly m?: readonly (readonly number[])[];  // For multmatrix
+  readonly m?: readonly (readonly number[])[]; // For multmatrix
 }
 
 /**
@@ -56,9 +62,9 @@ export function extractTransformationChain(node: ASTNode): Result<Transformation
       if (!transformation.success) {
         return transformation;
       }
-      
+
       transformations.push(transformation.data);
-      
+
       // Move to the first child (should be the next transformation or primitive)
       if (currentNode.children && currentNode.children.length > 0) {
         currentNode = currentNode.children[0];
@@ -96,22 +102,12 @@ export function combineTransformationMatrices(
       // Return identity matrix
       return {
         success: true,
-        data: Object.freeze([
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1
-        ]),
+        data: Object.freeze([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
       };
     }
 
     // Start with identity matrix
-    let combinedMatrix = [
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-    ];
+    let combinedMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
     // Apply transformations in order
     for (const transformation of transformations) {
@@ -139,7 +135,9 @@ export function combineTransformationMatrices(
  * @param node - Root AST node to optimize
  * @returns Result with optimization result
  */
-export async function optimizeTransformationChain(node: ASTNode): Promise<Result<OptimizationResult, string>> {
+export async function optimizeTransformationChain(
+  node: ASTNode
+): Promise<Result<OptimizationResult, string>> {
   try {
     // Extract transformation chain
     const chainResult = extractTransformationChain(node);
@@ -199,22 +197,26 @@ function isTransformationNode(node: ASTNode): boolean {
  */
 function extractTransformation(node: ASTNode): Result<TransformationOperation, string> {
   switch (node.type) {
-    case 'translate':
+    case 'translate': {
       const translateNode = node as TranslateNode;
       return { success: true, data: { type: 'translate', v: translateNode.v } };
-    
-    case 'rotate':
+    }
+
+    case 'rotate': {
       const rotateNode = node as RotateNode;
       return { success: true, data: { type: 'rotate', a: rotateNode.a } };
-    
-    case 'scale':
+    }
+
+    case 'scale': {
       const scaleNode = node as ScaleNode;
       return { success: true, data: { type: 'scale', v: scaleNode.v } };
-    
-    case 'multmatrix':
+    }
+
+    case 'multmatrix': {
       const multmatrixNode = node as MultmatrixNode;
       return { success: true, data: { type: 'multmatrix', m: multmatrixNode.m } };
-    
+    }
+
     default:
       return { success: false, error: `Unknown transformation type: ${node.type}` };
   }
@@ -232,32 +234,32 @@ function createTransformationMatrixFromOperation(
         return { success: false, error: 'Translation operation missing vector' };
       }
       return createTransformationMatrix({ translation: operation.v });
-    
+
     case 'rotate':
       if (operation.a === undefined) {
         return { success: false, error: 'Rotation operation missing angle' };
       }
-      
+
       if (typeof operation.a === 'number') {
         // Single number means Z-axis rotation
-        return createTransformationMatrix({ 
-          rotation: { axis: [0, 0, 1], angle: operation.a * Math.PI / 180 }
+        return createTransformationMatrix({
+          rotation: { axis: [0, 0, 1], angle: (operation.a * Math.PI) / 180 },
         });
       } else {
         // Euler angles - for now, just handle Z rotation (simplified)
         const [, , zDeg] = operation.a;
-        return createTransformationMatrix({ 
-          rotation: { axis: [0, 0, 1], angle: zDeg * Math.PI / 180 }
+        return createTransformationMatrix({
+          rotation: { axis: [0, 0, 1], angle: (zDeg * Math.PI) / 180 },
         });
       }
-    
+
     case 'scale':
       if (!operation.v) {
         return { success: false, error: 'Scale operation missing vector' };
       }
       return createTransformationMatrix({ scale: operation.v });
-    
-    case 'multmatrix':
+
+    case 'multmatrix': {
       if (!operation.m) {
         return { success: false, error: 'Matrix operation missing matrix' };
       }
@@ -266,13 +268,26 @@ function createTransformationMatrixFromOperation(
       return {
         success: true,
         data: [
-          matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-          matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-          matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-          matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3],
+          matrix[0][0],
+          matrix[1][0],
+          matrix[2][0],
+          matrix[3][0],
+          matrix[0][1],
+          matrix[1][1],
+          matrix[2][1],
+          matrix[3][1],
+          matrix[0][2],
+          matrix[1][2],
+          matrix[2][2],
+          matrix[3][2],
+          matrix[0][3],
+          matrix[1][3],
+          matrix[2][3],
+          matrix[3][3],
         ],
       };
-    
+    }
+
     default:
       return { success: false, error: `Unknown transformation type: ${operation.type}` };
   }

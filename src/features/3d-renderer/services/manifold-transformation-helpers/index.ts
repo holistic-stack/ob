@@ -4,8 +4,8 @@
  */
 
 export {
-  translateManifold,
+  createTransformationMatrix,
   rotateManifold,
   scaleManifold,
-  createTransformationMatrix,
+  translateManifold,
 } from './manifold-transformation-helpers';

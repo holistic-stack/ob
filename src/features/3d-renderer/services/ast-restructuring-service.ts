@@ -196,7 +196,12 @@ const findDirectChildrenForNode = (
   }
 
   // Primary strategy: source location analysis
-  const locationBasedChildren = findChildrenBySourceLocation(parentNode, allNodes, sourceCode, config);
+  const locationBasedChildren = findChildrenBySourceLocation(
+    parentNode,
+    allNodes,
+    sourceCode,
+    config
+  );
 
   if (locationBasedChildren.length > 0) {
     if (config.enableLogging) {
@@ -655,7 +660,10 @@ const getTopLevelNodes = (
  * @param transformNode - The transform node that needs a child
  * @returns The child primitive node if found, null otherwise
  */
-const tryParseChildFromSourceCode = (transformNode: ASTNode, sourceCode: string): ASTNode | null => {
+const tryParseChildFromSourceCode = (
+  transformNode: ASTNode,
+  sourceCode: string
+): ASTNode | null => {
   if (!transformNode.location || !sourceCode) {
     return null;
   }
@@ -982,7 +990,8 @@ export const createASTRestructuringService = (config?: Partial<ASTRestructuringC
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
   return {
-    restructure: (ast: readonly ASTNode[], sourceCode: string) => restructureAST(ast, sourceCode, finalConfig),
+    restructure: (ast: readonly ASTNode[], sourceCode: string) =>
+      restructureAST(ast, sourceCode, finalConfig),
     config: finalConfig,
   };
 };

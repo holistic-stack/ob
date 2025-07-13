@@ -4,10 +4,10 @@
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import * as THREE from 'three';
-import { convertThreeToManifold } from './three-manifold-converter';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Result } from '../../../../shared/types/result.types';
+import { convertThreeToManifold } from './three-manifold-converter';
 
 describe('ThreeManifoldConverter', () => {
   // Following project guidelines: no mocks, real implementations
@@ -158,12 +158,7 @@ describe('ThreeManifoldConverter', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         // Test matrix transformation capability
-        const identityMatrix = [
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1
-        ];
+        const identityMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
         // This should work with the existing transform method
         const transformedResult = result.data.transform(identityMatrix);

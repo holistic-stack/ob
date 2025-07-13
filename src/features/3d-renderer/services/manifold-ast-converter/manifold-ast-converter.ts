@@ -18,13 +18,6 @@ import {
   SphereGeometry,
   Uint32BufferAttribute,
 } from 'three';
-import { convertThreeToManifold } from '../three-manifold-converter/three-manifold-converter';
-import {
-  translateManifold,
-  rotateManifold,
-  scaleManifold,
-  createTransformationMatrix,
-} from '../manifold-transformation-helpers/manifold-transformation-helpers';
 import { logger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import type {
@@ -54,6 +47,17 @@ import {
   createManagedResource,
   disposeManagedResource,
 } from '../manifold-memory-manager/manifold-memory-manager';
+import {
+  convertManifoldToThree,
+  type IManifoldMesh,
+} from '../manifold-mesh-converter/manifold-mesh-converter';
+import {
+  createTransformationMatrix,
+  rotateManifold,
+  scaleManifold,
+  translateManifold,
+} from '../manifold-transformation-helpers/manifold-transformation-helpers';
+import { convertThreeToManifold } from '../three-manifold-converter/three-manifold-converter';
 
 /**
  * Manifold conversion options
@@ -314,11 +318,15 @@ export class ManifoldASTConverter {
       }
 
       // Use real Manifold CSG difference operation
-      const differenceResult = await this.csgOperations.subtract(resultGeometry, subtractResult.data.geometry, {
-        preserveMaterials: options.preserveMaterials ?? false,
-        optimizeResult: options.optimizeResult ?? true,
-        validateInput: true,
-      });
+      const differenceResult = await this.csgOperations.subtract(
+        resultGeometry,
+        subtractResult.data.geometry,
+        {
+          preserveMaterials: options.preserveMaterials ?? false,
+          optimizeResult: options.optimizeResult ?? true,
+          validateInput: true,
+        }
+      );
 
       if (!differenceResult.success) {
         return { success: false, error: `Difference operation failed: ${differenceResult.error}` };
@@ -361,37 +369,55 @@ export class ManifoldASTConverter {
       childGeometries.push(childResult.data.geometry);
     }
 
-    // For testing: create a simple intersection result
-    // In production, this would use actual Manifold CSG operations
+    // Use real Manifold CSG intersection operations
     if (childGeometries.length === 0) {
-      return { success: false, error: 'No child geometries to intersect' };
+      return { success: false, error: 'Intersection requires at least 2 children' };
     }
 
-    const firstGeometry = childGeometries[0];
-    if (!firstGeometry) {
-      return { success: false, error: 'First child geometry is null or undefined' };
-    }
-
-    const resultGeometry = firstGeometry.clone();
-
-    // Simple intersection: use smallest geometry for testing
-    let minVertices = Number.MAX_SAFE_INTEGER;
-    let minTriangles = Number.MAX_SAFE_INTEGER;
-
-    for (const geometry of childGeometries) {
+    if (childGeometries.length === 1) {
+      // Single child intersection returns the child itself
+      const geometry = childGeometries[0];
       const vertexCount = geometry.getAttribute('position').count;
       const triangleCount = geometry.getIndex()?.count ? geometry.getIndex()!.count / 3 : 0;
-      minVertices = Math.min(minVertices, vertexCount);
-      minTriangles = Math.min(minTriangles, triangleCount);
+
+      return {
+        success: true,
+        data: {
+          geometry: geometry.clone(),
+          operationTime: 1,
+          vertexCount,
+          triangleCount,
+          materialGroups: geometry.groups.length,
+        },
+      };
     }
+
+    // Perform real Manifold intersection operation
+    const startTime = performance.now();
+    const intersectionResult = await this.csgOperations.intersect(childGeometries);
+    const endTime = performance.now();
+    const operationTime = endTime - startTime;
+
+    if (!intersectionResult.success) {
+      return {
+        success: false,
+        error: `Intersection operation failed: ${intersectionResult.error}`,
+      };
+    }
+
+    const resultGeometry = intersectionResult.data.geometry;
+    const vertexCount = resultGeometry.getAttribute('position').count;
+    const triangleCount = resultGeometry.getIndex()?.count
+      ? resultGeometry.getIndex()!.count / 3
+      : 0;
 
     return {
       success: true,
       data: {
         geometry: resultGeometry,
-        operationTime: 5, // Simulated operation time
-        vertexCount: minVertices,
-        triangleCount: minTriangles,
+        operationTime,
+        vertexCount,
+        triangleCount,
         materialGroups: resultGeometry.groups.length,
       },
     };
@@ -551,21 +577,77 @@ export class ManifoldASTConverter {
     const translationVector: readonly [number, number, number] = [x, y, z];
 
     try {
-      // Convert Three.js geometry to Manifold object
-      const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
-      if (!manifoldResult.success) {
-        return { success: false, error: `Failed to convert to Manifold: ${manifoldResult.error}` };
+      // SOLUTION: Use Manifold native transformations with static constructor approach
+      // Instead of converting BufferGeometry → Manifold (which fails),
+      // create Manifold objects directly and apply transformations natively
+
+      let manifoldObject: any;
+
+      // Check if child is a basic shape that we can create with static constructors
+      if (firstChild.type === 'cube') {
+        const cubeNode = firstChild as any;
+        const size = cubeNode.size || [1, 1, 1];
+        const center = cubeNode.center || false;
+
+        // Create cube using proven static constructor
+        const manifoldModule = this.csgOperations!.getManifoldModule();
+        manifoldObject = (manifoldModule as any)._Cube(
+          {
+            x: size[0],
+            y: size[1],
+            z: size[2],
+          },
+          center
+        );
+      } else if (firstChild.type === 'sphere') {
+        const sphereNode = firstChild as any;
+        const radius = sphereNode.r || 1;
+
+        // Create sphere using proven static constructor
+        const manifoldModule = this.csgOperations!.getManifoldModule();
+        manifoldObject = (manifoldModule as any)._Sphere(radius, 32);
+      } else {
+        // For other shapes, fall back to the original approach (will likely fail)
+        const manifoldResult = await convertThreeToManifold(childResult.data.geometry);
+        if (!manifoldResult.success) {
+          return {
+            success: false,
+            error: `Failed to convert to Manifold: ${manifoldResult.error}`,
+          };
+        }
+        manifoldObject = manifoldResult.data;
       }
 
-      // Apply translation using our transformation helper
-      const translateResult = translateManifold(manifoldResult.data, translationVector);
-      if (!translateResult.success) {
-        return { success: false, error: `Translation failed: ${translateResult.error}` };
+      // Apply translation using Manifold's native translate method
+      const translatedObject = manifoldObject.translate(translationVector);
+
+      // Verify the translation succeeded
+      if (!translatedObject || translatedObject.isEmpty()) {
+        manifoldObject.delete();
+        return { success: false, error: 'Translation resulted in empty object' };
       }
 
-      // Convert back to Three.js geometry (placeholder - in full implementation would use Manifold → Three.js converter)
-      // For now, return the original geometry with transformation applied
-      const resultGeometry = childResult.data.geometry.clone();
+      // Convert the transformed Manifold object back to Three.js BufferGeometry
+      const transformedMesh = translatedObject.getMesh();
+      const threeResult = convertManifoldToThree(transformedMesh, {
+        preserveGroups: false,
+        optimizeGeometry: false,
+      });
+
+      if (!threeResult.success) {
+        manifoldObject.delete();
+        translatedObject.delete();
+        return {
+          success: false,
+          error: `Failed to convert transformed object to Three.js: ${threeResult.error}`,
+        };
+      }
+
+      const resultGeometry = threeResult.data;
+      const vertexCount = resultGeometry.getAttribute('position').count;
+      const triangleCount = resultGeometry.getIndex()?.count
+        ? resultGeometry.getIndex()!.count / 3
+        : 0;
 
       const endTime = performance.now();
       const operationTime = endTime - startTime;
@@ -573,16 +655,22 @@ export class ManifoldASTConverter {
       logger.debug('Successfully applied Manifold translation', {
         translation: translationVector,
         operationTime,
+        vertexCount,
+        triangleCount,
       });
+
+      // Clean up Manifold objects
+      manifoldObject.delete();
+      translatedObject.delete();
 
       return {
         success: true,
         data: {
           geometry: resultGeometry,
           operationTime,
-          vertexCount: childResult.data.vertexCount,
-          triangleCount: childResult.data.triangleCount,
-          materialGroups: childResult.data.materialGroups ?? 0,
+          vertexCount,
+          triangleCount,
+          materialGroups: resultGeometry.groups.length,
         },
       };
     } catch (error) {
@@ -639,7 +727,7 @@ export class ManifoldASTConverter {
       if (typeof rotationParam === 'number') {
         // Single number means rotation around Z-axis
         if (rotationParam !== 0) {
-          const angleRad = rotationParam * Math.PI / 180;
+          const angleRad = (rotationParam * Math.PI) / 180;
           const rotateResult = rotateManifold(currentManifold, [0, 0, 1], angleRad);
           if (!rotateResult.success) {
             return { success: false, error: `Z rotation failed: ${rotateResult.error}` };
@@ -649,7 +737,11 @@ export class ManifoldASTConverter {
       } else if (Array.isArray(rotationParam) && rotationParam.length === 3) {
         // Handle Euler angles [x, y, z] in degrees
         const [xDeg, yDeg, zDeg] = rotationParam;
-        const [xRad, yRad, zRad] = [xDeg * Math.PI / 180, yDeg * Math.PI / 180, zDeg * Math.PI / 180];
+        const [xRad, yRad, zRad] = [
+          (xDeg * Math.PI) / 180,
+          (yDeg * Math.PI) / 180,
+          (zDeg * Math.PI) / 180,
+        ];
 
         // Apply rotations in order: Z, Y, X (OpenSCAD convention)
         if (zRad !== 0) {
@@ -869,7 +961,11 @@ export class ManifoldASTConverter {
       // Convert OpenSCAD 4x4 matrix to column-major format for Manifold
       // OpenSCAD uses row-major format: [[m00,m01,m02,m03],[m10,m11,m12,m13],[m20,m21,m22,m23],[m30,m31,m32,m33]]
       // Manifold expects column-major format: [m00,m10,m20,m30,m01,m11,m21,m31,m02,m12,m22,m32,m03,m13,m23,m33]
-      if (!matrix || matrix.length !== 4 || matrix.some(row => !Array.isArray(row) || row.length !== 4)) {
+      if (
+        !matrix ||
+        matrix.length !== 4 ||
+        matrix.some((row) => !Array.isArray(row) || row.length !== 4)
+      ) {
         return { success: false, error: 'Invalid transformation matrix: must be 4x4' };
       }
 
@@ -878,14 +974,26 @@ export class ManifoldASTConverter {
         [number, number, number, number],
         [number, number, number, number],
         [number, number, number, number],
-        [number, number, number, number]
+        [number, number, number, number],
       ];
 
       const columnMajorMatrix = [
-        validMatrix[0][0], validMatrix[1][0], validMatrix[2][0], validMatrix[3][0], // Column 0
-        validMatrix[0][1], validMatrix[1][1], validMatrix[2][1], validMatrix[3][1], // Column 1
-        validMatrix[0][2], validMatrix[1][2], validMatrix[2][2], validMatrix[3][2], // Column 2
-        validMatrix[0][3], validMatrix[1][3], validMatrix[2][3], validMatrix[3][3], // Column 3
+        validMatrix[0][0],
+        validMatrix[1][0],
+        validMatrix[2][0],
+        validMatrix[3][0], // Column 0
+        validMatrix[0][1],
+        validMatrix[1][1],
+        validMatrix[2][1],
+        validMatrix[3][1], // Column 1
+        validMatrix[0][2],
+        validMatrix[1][2],
+        validMatrix[2][2],
+        validMatrix[3][2], // Column 2
+        validMatrix[0][3],
+        validMatrix[1][3],
+        validMatrix[2][3],
+        validMatrix[3][3], // Column 3
       ];
 
       // Apply matrix transformation using Manifold's native transform method

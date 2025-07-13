@@ -339,7 +339,10 @@ export const createOpenSCADCompletionProvider = (): monaco.languages.CompletionI
     });
 
     // Add builtin function suggestions
-    if (OPENSCAD_LANGUAGE_CONFIG.builtinFunctions && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinFunctions)) {
+    if (
+      OPENSCAD_LANGUAGE_CONFIG.builtinFunctions &&
+      Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinFunctions)
+    ) {
       OPENSCAD_LANGUAGE_CONFIG.builtinFunctions.forEach((func) => {
         suggestions.push({
           label: func,
@@ -352,7 +355,10 @@ export const createOpenSCADCompletionProvider = (): monaco.languages.CompletionI
     }
 
     // Add builtin module suggestions
-    if (OPENSCAD_LANGUAGE_CONFIG.builtinModules && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinModules)) {
+    if (
+      OPENSCAD_LANGUAGE_CONFIG.builtinModules &&
+      Array.isArray(OPENSCAD_LANGUAGE_CONFIG.builtinModules)
+    ) {
       OPENSCAD_LANGUAGE_CONFIG.builtinModules.forEach((module) => {
         suggestions.push({
           label: module,

@@ -22,7 +22,6 @@ import { VisitorASTGenerator } from './ast/index.js';
 import { ErrorHandler } from './error-handling/index.js';
 import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-error-handler.js';
 
-
 /**
  * OpenSCAD parser with AST generation capabilities and error handling.
  *
@@ -927,7 +926,7 @@ export class OpenscadParser {
    */
   parseASTWithResult(code: string): Result<ASTNode[], string> {
     try {
-      let cst = this.parseCST(code);
+      const cst = this.parseCST(code);
 
       if (!cst) {
         return { success: false, error: 'Failed to generate CST' };
@@ -969,9 +968,6 @@ export class OpenscadParser {
   parse(code: string): TreeSitter.Tree | null {
     return this.parseCST(code);
   }
-
-
-
 
   /**
    * Gets the Tree Sitter language object.
@@ -1233,8 +1229,6 @@ export class OpenscadParser {
 
     return null;
   }
-
-
 
   /**
    * Check if a statement looks like a standalone primitive (sphere, cube, etc.)

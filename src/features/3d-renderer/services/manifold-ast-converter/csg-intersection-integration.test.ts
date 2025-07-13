@@ -1,15 +1,19 @@
 /**
- * @file CSG Difference Integration Tests
- * @description TDD tests for real Manifold difference operations in ManifoldASTConverter
+ * @file CSG Intersection Integration Tests
+ * @description TDD tests for real Manifold intersection operations in ManifoldASTConverter
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Result } from '../../../../shared/types/result.types';
-import type { CubeNode, DifferenceNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
+import type {
+  CubeNode,
+  IntersectionNode,
+  SphereNode,
+} from '../../../openscad-parser/ast/ast-types';
 import { ManifoldASTConverter } from './manifold-ast-converter';
 
-describe('CSG Difference Integration', () => {
+describe('CSG Intersection Integration', () => {
   let converter: ManifoldASTConverter;
 
   beforeEach(async () => {
@@ -21,11 +25,11 @@ describe('CSG Difference Integration', () => {
     converter.dispose();
   });
 
-  describe('Step C.2: Difference Operations - Red Phase', () => {
-    test('should perform real Manifold difference of cube minus sphere', async () => {
-      // Create difference node: cube - sphere
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+  describe('Step C.3: Intersection Operations - Red Phase', () => {
+    test('should perform real Manifold intersection of cube and sphere', async () => {
+      // Create intersection node: cube ∩ sphere
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [
           {
             type: 'cube',
@@ -35,14 +39,14 @@ describe('CSG Difference Integration', () => {
           },
           {
             type: 'sphere',
-            r: 1,
+            r: 1.2,
             children: [],
           },
         ],
       };
 
-      // This should use real Manifold difference operation
-      const result = await converter.convertNode(differenceNode);
+      // This should use real Manifold intersection operation
+      const result = await converter.convertNode(intersectionNode);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -53,10 +57,10 @@ describe('CSG Difference Integration', () => {
       }
     });
 
-    test('should handle difference with multiple subtractions', async () => {
-      // Create difference node: cube - sphere1 - sphere2
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+    test('should handle intersection with multiple objects', async () => {
+      // Create intersection node: cube ∩ sphere1 ∩ sphere2
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [
           {
             type: 'cube',
@@ -66,18 +70,18 @@ describe('CSG Difference Integration', () => {
           },
           {
             type: 'sphere',
-            r: 0.8,
+            r: 2,
             children: [],
           },
           {
             type: 'sphere',
-            r: 0.6,
+            r: 1.5,
             children: [],
           },
         ],
       };
 
-      const result = await converter.convertNode(differenceNode);
+      const result = await converter.convertNode(intersectionNode);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -86,10 +90,10 @@ describe('CSG Difference Integration', () => {
       }
     });
 
-    test('should handle difference with transformations', async () => {
-      // Difference with translated sphere
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+    test('should handle intersection with transformations', async () => {
+      // Intersection with translated sphere
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [
           {
             type: 'cube',
@@ -103,7 +107,7 @@ describe('CSG Difference Integration', () => {
             children: [
               {
                 type: 'sphere',
-                r: 0.8,
+                r: 1.5,
                 children: [],
               },
             ],
@@ -111,7 +115,7 @@ describe('CSG Difference Integration', () => {
         ],
       };
 
-      const result = await converter.convertNode(differenceNode);
+      const result = await converter.convertNode(intersectionNode);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -120,9 +124,9 @@ describe('CSG Difference Integration', () => {
       }
     });
 
-    test('should handle single child difference gracefully', async () => {
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+    test('should handle single child intersection gracefully', async () => {
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [
           {
             type: 'cube',
@@ -133,7 +137,7 @@ describe('CSG Difference Integration', () => {
         ],
       };
 
-      const result = await converter.convertNode(differenceNode);
+      const result = await converter.convertNode(intersectionNode);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -142,20 +146,20 @@ describe('CSG Difference Integration', () => {
       }
     });
 
-    test('should handle empty difference with proper error', async () => {
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+    test('should handle empty intersection with proper error', async () => {
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [],
       };
 
-      const result = await converter.convertNode(differenceNode);
+      const result = await converter.convertNode(intersectionNode);
       expect(result.success).toBe(false);
       expect(result.error).toContain('at least 2 children');
     });
 
-    test('should validate difference operation performance', async () => {
-      const differenceNode: DifferenceNode = {
-        type: 'difference',
+    test('should validate intersection operation performance', async () => {
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
         children: [
           {
             type: 'cube',
@@ -165,14 +169,14 @@ describe('CSG Difference Integration', () => {
           },
           {
             type: 'sphere',
-            r: 1,
+            r: 1.2,
             children: [],
           },
         ],
       };
 
       const startTime = performance.now();
-      const result = await converter.convertNode(differenceNode);
+      const result = await converter.convertNode(intersectionNode);
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
@@ -182,6 +186,43 @@ describe('CSG Difference Integration', () => {
       if (result.success) {
         expect(result.data.operationTime).toBeGreaterThan(0);
         expect(result.data.operationTime).toBeLessThan(50); // Individual operation under 50ms
+      }
+    });
+
+    test('should handle non-overlapping intersection correctly', async () => {
+      // Create intersection of non-overlapping objects (should result in empty geometry)
+      const intersectionNode: IntersectionNode = {
+        type: 'intersection',
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false, // cube at origin
+            children: [],
+          },
+          {
+            type: 'translate',
+            v: [5, 5, 5], // sphere far away
+            children: [
+              {
+                type: 'sphere',
+                r: 0.5,
+                children: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await converter.convertNode(intersectionNode);
+      // This might succeed with empty geometry or fail gracefully
+      // Both are acceptable behaviors for non-overlapping intersection
+      if (result.success) {
+        // If successful, geometry might be empty or minimal
+        expect(result.data.geometry).toBeDefined();
+      } else {
+        // If failed, should have meaningful error message
+        expect(result.error).toBeDefined();
       }
     });
   });

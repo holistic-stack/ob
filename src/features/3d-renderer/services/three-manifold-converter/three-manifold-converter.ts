@@ -4,14 +4,14 @@
  * Follows SRP: Single responsibility for Three.js → Manifold conversion
  */
 
-import * as THREE from 'three';
-import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
+import type * as THREE from 'three';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import {
   convertThreeToManifold as convertToIManifoldMesh,
-  type IManifoldMesh
+  type IManifoldMesh,
 } from '../manifold-mesh-converter/manifold-mesh-converter';
+import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 
 const logger = createLogger('ThreeManifoldConverter');
 
@@ -89,7 +89,9 @@ export async function convertThreeToManifold(
 
     // Create Manifold object directly from IManifoldMesh data
     // This follows the working pattern from manifold-csg-operations.ts
-    const manifoldObject = new manifoldModule.Manifold(meshResult.data as any) as ManifoldWasmObject;
+    const manifoldObject = new manifoldModule.Manifold(
+      meshResult.data as any
+    ) as ManifoldWasmObject;
 
     logger.debug('Successfully converted Three.js geometry to Manifold object', {
       vertexCount: meshResult.data.vertProperties.length / meshResult.data.numProp,
@@ -125,5 +127,3 @@ function validateThreeGeometry(geometry: THREE.BufferGeometry): Result<void, str
 
   return { success: true, data: undefined };
 }
-
-

@@ -13,10 +13,7 @@
 import type { BufferGeometry } from 'three';
 import { logger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import type {
-  MaterialIDManager,
-  MaterialMapping,
-} from '../manifold-material-manager/manifold-material-manager';
+import type { MaterialIDManager } from '../manifold-material-manager/manifold-material-manager';
 import {
   createManagedResource,
   disposeManagedResource,
@@ -160,13 +157,50 @@ export async function performUnion(
           };
         }
 
-        // SOLUTION: Use static constructors for basic shapes instead of constructor
-        // This avoids the "Not manifold" issue by using geometrically valid shapes
+        // ENHANCED SOLUTION: Use clean architecture with proper separation of concerns
+        // This provides true generic CSG support for arbitrary meshes
 
-        // For now, create simple test geometries using static constructors
-        // TODO: Implement proper geometry analysis to determine shape type
-        const manifold1: any = (manifoldModule as any)._Cube({x: 1, y: 1, z: 1}, false);
-        const manifold2: any = (manifoldModule as any)._Sphere(0.5, 32);
+        // Validate we have at least 2 geometries
+        if (geometries.length < 2) {
+          return { success: false, error: 'Union requires at least 2 geometries' };
+        }
+
+        const { convertGeometryToManifold } = await import(
+          './geometry-to-manifold-converter/geometry-to-manifold-converter'
+        );
+
+        // Convert first geometry
+        const geometry1 = geometries[0];
+        if (!geometry1) {
+          return { success: false, error: 'First geometry is undefined' };
+        }
+
+        const manifold1Result = await convertGeometryToManifold(geometry1, manifoldModule);
+        if (!manifold1Result.success) {
+          return {
+            success: false,
+            error: `Failed to convert first geometry: ${manifold1Result.error}`,
+          };
+        }
+
+        // Convert second geometry
+        const geometry2 = geometries[1];
+        if (!geometry2) {
+          manifold1Result.data.delete();
+          return { success: false, error: 'Second geometry is undefined' };
+        }
+
+        const manifold2Result = await convertGeometryToManifold(geometry2, manifoldModule);
+        if (!manifold2Result.success) {
+          manifold1Result.data.delete();
+          return {
+            success: false,
+            error: `Failed to convert second geometry: ${manifold2Result.error}`,
+          };
+        }
+
+        const manifold1: any = manifold1Result.data;
+        const manifold2: any = manifold2Result.data;
 
         // Perform union
         const unionManifold: any = manifold1.add(manifold2);
@@ -292,10 +326,37 @@ export async function performSubtraction(
     }
 
     try {
-      // SOLUTION: Use static constructors for basic shapes instead of constructor
-      // This avoids the "Not manifold" issue by using geometrically valid shapes
-      const baseManifold: any = (manifoldModule as any)._Cube({x: 2, y: 2, z: 2}, false);
-      const subtractManifold: any = (manifoldModule as any)._Sphere(1, 32);
+      // ENHANCED SOLUTION: Use clean architecture with proper separation of concerns
+      // This provides true generic CSG support for arbitrary meshes
+
+      const { convertGeometryToManifold } = await import(
+        './geometry-to-manifold-converter/geometry-to-manifold-converter'
+      );
+
+      // Convert base geometry
+      const baseManifoldResult = await convertGeometryToManifold(baseGeometry, manifoldModule);
+      if (!baseManifoldResult.success) {
+        return {
+          success: false,
+          error: `Failed to convert base geometry: ${baseManifoldResult.error}`,
+        };
+      }
+
+      // Convert subtract geometry
+      const subtractManifoldResult = await convertGeometryToManifold(
+        subtractGeometry,
+        manifoldModule
+      );
+      if (!subtractManifoldResult.success) {
+        baseManifoldResult.data.delete();
+        return {
+          success: false,
+          error: `Failed to convert subtract geometry: ${subtractManifoldResult.error}`,
+        };
+      }
+
+      const baseManifold: any = baseManifoldResult.data;
+      const subtractManifold: any = subtractManifoldResult.data;
 
       // Perform subtraction
       const differenceManifold: any = baseManifold.subtract(subtractManifold);
@@ -499,6 +560,14 @@ export class ManifoldCSGOperations {
   }
 
   /**
+   * Get the loaded Manifold WASM module
+   * Used for direct Manifold operations like static constructors and transformations
+   */
+  getManifoldModule(): any {
+    return this.manifoldModule;
+  }
+
+  /**
    * Get current CSG operations statistics
    * Enhanced with performance metrics and cache statistics
    */
@@ -698,53 +767,68 @@ export async function performIntersection(
       };
     }
 
-    // Convert geometries to Manifold meshes
-    const manifoldMeshes: IManifoldMesh[] = [];
+    // ENHANCED SOLUTION: Use clean architecture with proper separation of concerns
+    // This provides true generic CSG support for arbitrary meshes
+
+    const { convertGeometryToManifold } = await import(
+      './geometry-to-manifold-converter/geometry-to-manifold-converter'
+    );
+
+    // Convert geometries to Manifold objects
+    const manifoldObjects: any[] = [];
     for (const geometry of geometries) {
-      const conversionResult = convertThreeToManifold(geometry);
+      const conversionResult = await convertGeometryToManifold(geometry, manifoldModule);
       if (!conversionResult.success) {
+        // Clean up any previously created objects
+        for (const obj of manifoldObjects) {
+          obj.delete();
+        }
         return {
           success: false,
           error: `Failed to convert geometry to Manifold: ${conversionResult.error}`,
         };
       }
-      manifoldMeshes.push(conversionResult.data);
+      manifoldObjects.push(conversionResult.data);
     }
 
     // Perform intersection operation using Manifold
-    let resultMesh = manifoldMeshes[0];
-    if (!resultMesh) {
+    let resultManifold = manifoldObjects[0];
+    if (!resultManifold) {
       return {
         success: false,
-        error: 'No valid meshes to perform intersection operation',
+        error: 'No valid manifold objects to perform intersection operation',
       };
     }
 
-    for (let i = 1; i < manifoldMeshes.length; i++) {
+    for (let i = 1; i < manifoldObjects.length; i++) {
       try {
-        const mesh2 = manifoldMeshes[i];
-        if (!mesh2) {
+        const nextManifold = manifoldObjects[i];
+        if (!nextManifold) {
+          // Clean up all objects
+          for (const obj of manifoldObjects) {
+            obj.delete();
+          }
           return {
             success: false,
-            error: `Manifold mesh ${i} is null or undefined`,
+            error: `Manifold object ${i} is null or undefined`,
           };
         }
 
-        // Create Manifold objects from mesh data
-        const manifold1: any = new manifoldModule.Manifold(resultMesh as any);
-        const manifold2: any = new manifoldModule.Manifold(mesh2 as any);
-
         // Perform intersection
-        const intersectManifold: any = manifold1.intersect(manifold2);
+        const intersectManifold: any = resultManifold.intersect(nextManifold);
 
-        // Get result mesh using the correct Manifold WASM API method
-        resultMesh = intersectManifold.getMesh();
+        // Clean up the previous result
+        if (i > 1) {
+          resultManifold.delete();
+        }
 
-        // Clean up intermediate objects
-        manifold1.delete();
-        manifold2.delete();
-        intersectManifold.delete();
+        // Update result for next iteration
+        resultManifold = intersectManifold;
       } catch (error) {
+        // Clean up all objects
+        for (const obj of manifoldObjects) {
+          obj.delete();
+        }
         return {
           success: false,
           error: `Manifold intersection operation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -753,24 +837,46 @@ export async function performIntersection(
     }
 
     // Convert result back to Three.js
-    if (!resultMesh) {
+    if (!resultManifold) {
       return {
         success: false,
-        error: 'Result mesh is null or undefined after intersection operations',
+        error: 'Result manifold is null or undefined after intersection operations',
       };
     }
+
+    // Get mesh from final Manifold object
+    const resultMesh = resultManifold.getMesh();
+
+    // Debug: Log the result mesh structure for intersection operations
+    console.log('Intersection getMesh returned:', {
+      type: typeof resultMesh,
+      keys: Object.keys(resultMesh || {}),
+      vertProp: resultMesh?.vertProperties?.length || 0,
+      triVerts: resultMesh?.triVerts?.length || 0,
+      numProp: resultMesh?.numProp,
+    });
 
     const threeResult = convertManifoldToThree(resultMesh, {
       preserveGroups: options.preserveMaterials ?? false,
       optimizeGeometry: options.optimizeResult ?? false,
     });
 
+    // Clean up final Manifold object
+    resultManifold.delete();
+
     if (!threeResult.success) {
+      console.log('convertManifoldToThree failed for intersection:', threeResult.error);
       return {
         success: false,
         error: `Failed to convert result to Three.js: ${threeResult.error}`,
       };
     }
+
+    console.log('convertManifoldToThree success for intersection:', {
+      type: typeof threeResult.data,
+      isBufferGeometry: threeResult.data?.isBufferGeometry,
+      hasGetAttribute: typeof threeResult.data?.getAttribute,
+    });
 
     const endTime = performance.now();
     const resultGeometry = threeResult.data;

@@ -161,10 +161,7 @@ export function App(): React.JSX.Element {
             <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
           </div>
           <div className="panel-content flex-1 relative">
-            <StoreConnectedRenderer
-              className="h-full w-full"
-              data-testid="main-renderer"
-            />
+            <StoreConnectedRenderer className="h-full w-full" data-testid="main-renderer" />
           </div>
         </div>
       </main>

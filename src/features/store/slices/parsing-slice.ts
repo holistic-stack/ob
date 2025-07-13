@@ -8,7 +8,6 @@
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type {
   AsyncOperationResult,
   OperationError,
@@ -16,6 +15,7 @@ import type {
 } from '../../../shared/types/operations.types.js';
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
+import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { unifiedParseOpenSCAD } from '../../openscad-parser/services/parsing.service.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';

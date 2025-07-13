@@ -3,9 +3,9 @@
  * @description Exports for Three.js to Manifold conversion utilities
  */
 
-export { convertThreeToManifold } from './three-manifold-converter';
 export type {
-  ManifoldWasmObject,
-  ManifoldMesh,
   ManifoldBounds,
+  ManifoldMesh,
+  ManifoldWasmObject,
 } from './three-manifold-converter';
+export { convertThreeToManifold } from './three-manifold-converter';

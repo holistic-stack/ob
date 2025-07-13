@@ -12,9 +12,9 @@ import { useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import { clearCSGCache } from '../components/csg-components/csg-components';
 import { renderASTNode } from '../services/primitive-renderer';
 import type { Mesh3D } from '../types/renderer.types';
-import { clearCSGCache } from '../components/csg-components/csg-components';
 
 // Create logger instance for this component
 const logger = createLogger('R3FScene');
@@ -44,13 +44,19 @@ export const R3FScene: React.FC<R3FSceneProps> = ({
   const meshesRef = useRef<Mesh3D[]>([]);
   const [_isRendering, setIsRendering] = useState(false);
 
-  console.log("R3FScene ast node", astNodes.length);
+  console.log('R3FScene ast node', astNodes.length);
 
   // Debug AST nodes to help identify parsing issues
   if (astNodes.length === 0) {
-    console.warn("⚠️ R3FScene received 0 AST nodes - check parsing pipeline");
+    console.warn('⚠️ R3FScene received 0 AST nodes - check parsing pipeline');
   } else {
-    console.log("✅ R3FScene received AST nodes:", astNodes.map(node => `${node.type}${(node as any).children ? `(${(node as any).children.length} children)` : '(no children)'}`));
+    console.log(
+      '✅ R3FScene received AST nodes:',
+      astNodes.map(
+        (node) =>
+          `${node.type}${(node as any).children ? `(${(node as any).children.length} children)` : '(no children)'}`
+      )
+    );
   }
 
   /**

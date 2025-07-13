@@ -4,14 +4,14 @@
  * Following project guidelines: no mocks, real implementations, Result<T,E> patterns
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { Result } from '../../../../shared/types/result.types';
+import type { RotateNode, ScaleNode, TranslateNode } from '../../../openscad-parser/ast/ast-types';
 import {
-  optimizeTransformationChain,
   combineTransformationMatrices,
   extractTransformationChain,
+  optimizeTransformationChain,
 } from './transformation-optimizer';
-import type { Result } from '../../../../shared/types/result.types';
-import type { TranslateNode, RotateNode, ScaleNode } from '../../../openscad-parser/ast/ast-types';
 
 describe('TransformationOptimizer', () => {
   // Following project guidelines: no mocks, real implementations
@@ -22,20 +22,26 @@ describe('TransformationOptimizer', () => {
       const transformationChain: TranslateNode = {
         type: 'translate',
         v: [1, 2, 3],
-        children: [{
-          type: 'rotate',
-          a: [0, 0, 45],
-          children: [{
-            type: 'scale',
-            v: [2, 1, 0.5],
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'rotate',
+            a: [0, 0, 45],
+            children: [
+              {
+                type: 'scale',
+                v: [2, 1, 0.5],
+                children: [
+                  {
+                    type: 'cube',
+                    size: [1, 1, 1],
+                    center: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const result = extractTransformationChain(transformationChain);
@@ -54,11 +60,13 @@ describe('TransformationOptimizer', () => {
       const singleTransform: RotateNode = {
         type: 'rotate',
         a: 90,
-        children: [{
-          type: 'sphere',
-          r: 1,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'sphere',
+            r: 1,
+            children: [],
+          },
+        ],
       };
 
       const result = extractTransformationChain(singleTransform);
@@ -120,8 +128,8 @@ describe('TransformationOptimizer', () => {
       if (result.success) {
         expect(result.data).toHaveLength(16);
         // Should have scale components
-        expect(result.data[0]).toBe(2);  // X scale
-        expect(result.data[5]).toBe(3);  // Y scale
+        expect(result.data[0]).toBe(2); // X scale
+        expect(result.data[5]).toBe(3); // Y scale
         expect(result.data[10]).toBe(4); // Z scale
         // Translation components will be scaled when scale is applied first
         // This is correct mathematical behavior: scale then translate means translate by scaled amount
@@ -155,12 +163,7 @@ describe('TransformationOptimizer', () => {
 
       if (result.success) {
         // Should return identity matrix
-        const identityMatrix = [
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1
-        ];
+        const identityMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
         expect(result.data).toEqual(identityMatrix);
       }
     });
@@ -171,16 +174,20 @@ describe('TransformationOptimizer', () => {
       const transformationChain: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'rotate',
-          a: 45,
-          children: [{
-            type: 'cube',
-            size: [1, 1, 1],
-            center: false,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            type: 'rotate',
+            a: 45,
+            children: [
+              {
+                type: 'cube',
+                size: [1, 1, 1],
+                center: false,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await optimizeTransformationChain(transformationChain);
@@ -197,23 +204,31 @@ describe('TransformationOptimizer', () => {
       const complexChain: TranslateNode = {
         type: 'translate',
         v: [1, 2, 3],
-        children: [{
-          type: 'rotate',
-          a: [45, 0, 90],
-          children: [{
-            type: 'scale',
-            v: [2, 1, 0.5],
-            children: [{
-              type: 'translate',
-              v: [0, 1, 0],
-              children: [{
-                type: 'sphere',
-                r: 1,
-                children: [],
-              }],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'rotate',
+            a: [45, 0, 90],
+            children: [
+              {
+                type: 'scale',
+                v: [2, 1, 0.5],
+                children: [
+                  {
+                    type: 'translate',
+                    v: [0, 1, 0],
+                    children: [
+                      {
+                        type: 'sphere',
+                        r: 1,
+                        children: [],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await optimizeTransformationChain(complexChain);

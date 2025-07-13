@@ -4,9 +4,9 @@
  * Following TDD approach to isolate and solve the core CSG problem
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { IManifoldMesh } from '../manifold-mesh-converter/manifold-mesh-converter';
+import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 
 describe('Manifold Constructor Debug', () => {
   let manifoldModule: any;
@@ -35,7 +35,10 @@ describe('Manifold Constructor Debug', () => {
       // Debug: Log what the module actually contains
       console.log('Manifold module type:', typeof manifoldModule);
       console.log('Manifold module keys:', Object.keys(manifoldModule || {}));
-      console.log('Manifold module prototype:', Object.getOwnPropertyNames(Object.getPrototypeOf(manifoldModule || {})));
+      console.log(
+        'Manifold module prototype:',
+        Object.getOwnPropertyNames(Object.getPrototypeOf(manifoldModule || {}))
+      );
 
       // Check for common expected properties
       console.log('Available properties:', {
@@ -55,9 +58,15 @@ describe('Manifold Constructor Debug', () => {
       const minimalMesh: IManifoldMesh = {
         numProp: 3, // Only positions (x, y, z)
         vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,  // vertex 0
-          -1.0, -1.0, 0.0, // vertex 1
-          1.0, -1.0, 0.0,  // vertex 2
+          0.0,
+          1.0,
+          0.0, // vertex 0
+          -1.0,
+          -1.0,
+          0.0, // vertex 1
+          1.0,
+          -1.0,
+          0.0, // vertex 2
         ]),
         triVerts: new Uint32Array([0, 1, 2]), // Single triangle
         runIndex: new Uint32Array([0]),
@@ -110,11 +119,11 @@ describe('Manifold Constructor Debug', () => {
         numProp: 6, // Positions + normals
         vertProperties: new Float32Array([
           // vertex 0: position + normal
-          0.0, 1.0, 0.0,   0.0, 0.0, 1.0,
+          0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
           // vertex 1: position + normal
           -1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
           // vertex 2: position + normal
-          1.0, -1.0, 0.0,  0.0, 0.0, 1.0,
+          1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
         ]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
@@ -145,11 +154,7 @@ describe('Manifold Constructor Debug', () => {
     test('should test mesh extraction from created Manifold', () => {
       const testMesh: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0,
-          1.0, -1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -157,10 +162,10 @@ describe('Manifold Constructor Debug', () => {
       };
 
       const manifoldObject = new manifoldModule.Manifold(testMesh);
-      
+
       // Test mesh extraction using standard getMesh() method
       const extractedMesh = manifoldObject.getMesh();
-      
+
       console.log('Extracted mesh data:', {
         type: typeof extractedMesh,
         keys: Object.keys(extractedMesh || {}),
@@ -181,7 +186,7 @@ describe('Manifold Constructor Debug', () => {
     test('should test Manifold static constructors', () => {
       // Test if static constructors work (using correct API with underscores)
       // _Cube expects object with x, y, z properties and center boolean
-      const cube = manifoldModule._Cube({x: 1, y: 1, z: 1}, false); // size object, center
+      const cube = manifoldModule._Cube({ x: 1, y: 1, z: 1 }, false); // size object, center
       const sphere = manifoldModule._Sphere(0.5, 32); // radius, circularSegments
 
       console.log('Static constructor results:', {
@@ -245,17 +250,13 @@ describe('Manifold Constructor Debug', () => {
 
     test('should compare working mesh format vs our IManifoldMesh format', () => {
       // Create a working cube using static constructor
-      const cube = manifoldModule._Cube({x: 1, y: 1, z: 1}, false);
+      const cube = manifoldModule._Cube({ x: 1, y: 1, z: 1 }, false);
       const workingMesh = cube.getMesh();
 
       // Create our IManifoldMesh format (the one that fails)
       const ourMesh: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0,
-          1.0, -1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -285,7 +286,7 @@ describe('Manifold Constructor Debug', () => {
             faceID: workingMesh?.faceID?.length || 0,
             halfedgeTangent: workingMesh?.halfedgeTangent?.length || 0,
             runTransform: workingMesh?.runTransform?.length || 0,
-          }
+          },
         },
         ourMesh: {
           type: typeof ourMesh,
@@ -301,7 +302,7 @@ describe('Manifold Constructor Debug', () => {
             length: ourMesh?.triVerts?.length,
             sample: ourMesh?.triVerts?.slice(0, 6),
           },
-        }
+        },
       });
 
       // Test if we can create a Manifold object using the working mesh format
@@ -322,11 +323,7 @@ describe('Manifold Constructor Debug', () => {
       // Create two simple triangle meshes
       const mesh1: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 1.0, 0.0,
-          -1.0, -1.0, 0.0,
-          1.0, -1.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -335,11 +332,7 @@ describe('Manifold Constructor Debug', () => {
 
       const mesh2: IManifoldMesh = {
         numProp: 3,
-        vertProperties: new Float32Array([
-          0.0, 2.0, 0.0,
-          -0.5, 0.0, 0.0,
-          0.5, 0.0, 0.0,
-        ]),
+        vertProperties: new Float32Array([0.0, 2.0, 0.0, -0.5, 0.0, 0.0, 0.5, 0.0, 0.0]),
         triVerts: new Uint32Array([0, 1, 2]),
         runIndex: new Uint32Array([0]),
         runOriginalID: new Uint32Array([0]),
@@ -358,7 +351,7 @@ describe('Manifold Constructor Debug', () => {
 
       // Perform union
       const unionResult = manifold1.add(manifold2);
-      
+
       console.log('After union:', {
         union_isEmpty: unionResult.isEmpty(),
         union_numVert: unionResult.numVert(),
@@ -370,7 +363,7 @@ describe('Manifold Constructor Debug', () => {
 
       // Test mesh extraction using standard getMesh() method
       const resultMesh = unionResult.getMesh();
-      
+
       console.log('Union result mesh:', {
         vertProperties: resultMesh?.vertProperties?.length || 0,
         triVerts: resultMesh?.triVerts?.length || 0,

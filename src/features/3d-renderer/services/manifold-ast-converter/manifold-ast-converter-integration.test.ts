@@ -4,9 +4,14 @@
  * These tests expect real Manifold transformation behavior, not placeholder implementations
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Result } from '../../../../shared/types/result.types';
-import type { TranslateNode, RotateNode, ScaleNode, MultmatrixNode } from '../../../openscad-parser/ast/ast-types';
+import type {
+  MultmatrixNode,
+  RotateNode,
+  ScaleNode,
+  TranslateNode,
+} from '../../../openscad-parser/ast/ast-types';
 import { MaterialIDManager } from '../manifold-material-manager/manifold-material-manager';
 import { ManifoldASTConverter } from './manifold-ast-converter';
 
@@ -38,12 +43,14 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const translateNode: TranslateNode = {
         type: 'translate',
         v: [2, 3, 4],
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       // This should use real Manifold transformation, not vertex manipulation
@@ -69,11 +76,13 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const translateNode: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'sphere',
-          r: 1,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'sphere',
+            r: 1,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(translateNode);
@@ -92,12 +101,14 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const rotateNode: RotateNode = {
         type: 'rotate',
         a: [0, 0, 45], // 45 degrees around Z-axis
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       // This should use real Manifold rotation transformation
@@ -116,12 +127,14 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const rotateNode: RotateNode = {
         type: 'rotate',
         a: 90, // 90 degrees around Z-axis (default)
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(rotateNode);
@@ -140,12 +153,14 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const scaleNode: ScaleNode = {
         type: 'scale',
         v: [2, 1, 0.5], // Non-uniform scaling
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       // This should use real Manifold scaling transformation
@@ -164,11 +179,13 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const scaleNode: ScaleNode = {
         type: 'scale',
         v: [2, 2, 2], // Uniform scaling
-        children: [{
-          type: 'sphere',
-          r: 1,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'sphere',
+            r: 1,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(scaleNode);
@@ -190,14 +207,16 @@ describe('ManifoldASTConverter Integration Tests', () => {
           [1, 0, 0, 1], // Translation in X
           [0, 1, 0, 2], // Translation in Y
           [0, 0, 1, 3], // Translation in Z
-          [0, 0, 0, 1]  // Homogeneous coordinate
+          [0, 0, 0, 1], // Homogeneous coordinate
         ],
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       // This should use real Manifold transform() method
@@ -219,13 +238,15 @@ describe('ManifoldASTConverter Integration Tests', () => {
           [1, 0, 0, 0], // Identity matrix
           [0, 1, 0, 0],
           [0, 0, 1, 0],
-          [0, 0, 0, 1]
+          [0, 0, 0, 1],
         ],
-        children: [{
-          type: 'sphere',
-          r: 1,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'sphere',
+            r: 1,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(multmatrixNode);
@@ -243,14 +264,16 @@ describe('ManifoldASTConverter Integration Tests', () => {
         m: [
           [1, 0, 0], // Invalid: only 3 columns
           [0, 1, 0],
-          [0, 0, 1]
+          [0, 0, 1],
         ] as any,
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(multmatrixNode);
@@ -265,20 +288,26 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const nestedTransformNode: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'rotate',
-          a: [0, 0, 45], // 45 degrees around Z-axis
-          children: [{
-            type: 'scale',
-            v: [2, 1, 1], // Non-uniform scaling
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'rotate',
+            a: [0, 0, 45], // 45 degrees around Z-axis
+            children: [
+              {
+                type: 'scale',
+                v: [2, 1, 1], // Non-uniform scaling
+                children: [
+                  {
+                    type: 'cube',
+                    size: [1, 1, 1],
+                    center: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       // This should properly compose transformations using Manifold
@@ -298,15 +327,19 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const rotateTranslateNode: RotateNode = {
         type: 'rotate',
         a: [0, 0, 90], // 90 degrees around Z-axis
-        children: [{
-          type: 'translate',
-          v: [1, 0, 0],
-          children: [{
-            type: 'sphere',
-            r: 1,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            type: 'translate',
+            v: [1, 0, 0],
+            children: [
+              {
+                type: 'sphere',
+                r: 1,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await converter.convertNode(rotateTranslateNode);
@@ -326,18 +359,22 @@ describe('ManifoldASTConverter Integration Tests', () => {
           [1, 0, 0, 2], // Translation matrix
           [0, 1, 0, 3],
           [0, 0, 1, 4],
-          [0, 0, 0, 1]
+          [0, 0, 0, 1],
         ],
-        children: [{
-          type: 'scale',
-          v: [0.5, 0.5, 0.5], // Uniform scaling down
-          children: [{
-            type: 'cube',
-            size: [2, 2, 2],
-            center: true,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            type: 'scale',
+            v: [0.5, 0.5, 0.5], // Uniform scaling down
+            children: [
+              {
+                type: 'cube',
+                size: [2, 2, 2],
+                center: true,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await converter.convertNode(matrixScaleNode);
@@ -354,28 +391,38 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const deepNestingNode: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'rotate',
-          a: 45,
-          children: [{
-            type: 'translate',
-            v: [0, 1, 0],
-            children: [{
-              type: 'scale',
-              v: [1.5, 1.5, 1.5],
-              children: [{
-                type: 'rotate',
-                a: [0, 45, 0],
-                children: [{
-                  type: 'cube',
-                  size: [1, 1, 1],
-                  center: false,
-                  children: [],
-                }],
-              }],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'rotate',
+            a: 45,
+            children: [
+              {
+                type: 'translate',
+                v: [0, 1, 0],
+                children: [
+                  {
+                    type: 'scale',
+                    v: [1.5, 1.5, 1.5],
+                    children: [
+                      {
+                        type: 'rotate',
+                        a: [0, 45, 0],
+                        children: [
+                          {
+                            type: 'cube',
+                            size: [1, 1, 1],
+                            center: false,
+                            children: [],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const startTime = performance.now();
@@ -400,20 +447,26 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const gearToothPattern: RotateNode = {
         type: 'rotate',
         a: [0, 0, 60], // 60 degrees for gear tooth
-        children: [{
-          type: 'translate',
-          v: [10, 0, 0], // Move to gear radius
-          children: [{
-            type: 'scale',
-            v: [0.5, 2, 1], // Tooth shape
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'translate',
+            v: [10, 0, 0], // Move to gear radius
+            children: [
+              {
+                type: 'scale',
+                v: [0.5, 2, 1], // Tooth shape
+                children: [
+                  {
+                    type: 'cube',
+                    size: [1, 1, 1],
+                    center: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await converter.convertNode(gearToothPattern);
@@ -432,20 +485,26 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const architecturalColumn: TranslateNode = {
         type: 'translate',
         v: [0, 0, 5], // Lift column
-        children: [{
-          type: 'scale',
-          v: [1, 1, 10], // Stretch height
-          children: [{
-            type: 'rotate',
-            a: [0, 0, 45], // Rotate for aesthetics
-            children: [{
-              type: 'cube',
-              size: [1, 1, 1],
-              center: false,
-              children: [],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'scale',
+            v: [1, 1, 10], // Stretch height
+            children: [
+              {
+                type: 'rotate',
+                a: [0, 0, 45], // Rotate for aesthetics
+                children: [
+                  {
+                    type: 'cube',
+                    size: [1, 1, 1],
+                    center: false,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await converter.convertNode(architecturalColumn);
@@ -463,27 +522,35 @@ describe('ManifoldASTConverter Integration Tests', () => {
         type: 'multmatrix',
         m: [
           [0.707, -0.707, 0, 5], // Rotation + translation matrix
-          [0.707,  0.707, 0, 3],
-          [0,     0,     1, 2],
-          [0,     0,     0, 1]
+          [0.707, 0.707, 0, 3],
+          [0, 0, 1, 2],
+          [0, 0, 0, 1],
         ],
-        children: [{
-          type: 'scale',
-          v: [2, 0.5, 1.5],
-          children: [{
-            type: 'rotate',
-            a: [45, 0, 0], // Additional rotation
-            children: [{
-              type: 'translate',
-              v: [1, 1, 1],
-              children: [{
-                type: 'sphere',
-                r: 1,
-                children: [],
-              }],
-            }],
-          }],
-        }],
+        children: [
+          {
+            type: 'scale',
+            v: [2, 0.5, 1.5],
+            children: [
+              {
+                type: 'rotate',
+                a: [45, 0, 0], // Additional rotation
+                children: [
+                  {
+                    type: 'translate',
+                    v: [1, 1, 1],
+                    children: [
+                      {
+                        type: 'sphere',
+                        r: 1,
+                        children: [],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const result = await converter.convertNode(complexScene);
@@ -500,40 +567,56 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const stressTestNode: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'rotate',
-          a: 15,
-          children: [{
-            type: 'scale',
-            v: [1.1, 1.1, 1.1],
-            children: [{
-              type: 'translate',
-              v: [0, 1, 0],
-              children: [{
-                type: 'rotate',
-                a: [0, 15, 0],
-                children: [{
-                  type: 'scale',
-                  v: [0.9, 0.9, 0.9],
-                  children: [{
+        children: [
+          {
+            type: 'rotate',
+            a: 15,
+            children: [
+              {
+                type: 'scale',
+                v: [1.1, 1.1, 1.1],
+                children: [
+                  {
                     type: 'translate',
-                    v: [0, 0, 1],
-                    children: [{
-                      type: 'rotate',
-                      a: [0, 0, 30],
-                      children: [{
-                        type: 'cube',
-                        size: [1, 1, 1],
-                        center: true,
-                        children: [],
-                      }],
-                    }],
-                  }],
-                }],
-              }],
-            }],
-          }],
-        }],
+                    v: [0, 1, 0],
+                    children: [
+                      {
+                        type: 'rotate',
+                        a: [0, 15, 0],
+                        children: [
+                          {
+                            type: 'scale',
+                            v: [0.9, 0.9, 0.9],
+                            children: [
+                              {
+                                type: 'translate',
+                                v: [0, 0, 1],
+                                children: [
+                                  {
+                                    type: 'rotate',
+                                    a: [0, 0, 30],
+                                    children: [
+                                      {
+                                        type: 'cube',
+                                        size: [1, 1, 1],
+                                        center: true,
+                                        children: [],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       const startTime = performance.now();
@@ -557,32 +640,40 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const scaleFirst: ScaleNode = {
         type: 'scale',
         v: [2, 1, 1],
-        children: [{
-          type: 'translate',
-          v: [1, 0, 0],
-          children: [{
-            type: 'cube',
-            size: [1, 1, 1],
-            center: false,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            type: 'translate',
+            v: [1, 0, 0],
+            children: [
+              {
+                type: 'cube',
+                size: [1, 1, 1],
+                center: false,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       // Case 2: translate then scale
       const translateFirst: TranslateNode = {
         type: 'translate',
         v: [1, 0, 0],
-        children: [{
-          type: 'scale',
-          v: [2, 1, 1],
-          children: [{
-            type: 'cube',
-            size: [1, 1, 1],
-            center: false,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            type: 'scale',
+            v: [2, 1, 1],
+            children: [
+              {
+                type: 'cube',
+                size: [1, 1, 1],
+                center: false,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       const result1 = await converter.convertNode(scaleFirst);
@@ -621,12 +712,14 @@ describe('ManifoldASTConverter Integration Tests', () => {
       const translateNode: TranslateNode = {
         type: 'translate',
         v: [], // Empty vector - should fail gracefully
-        children: [{
-          type: 'cube',
-          size: [1, 1, 1],
-          center: false,
-          children: [],
-        }],
+        children: [
+          {
+            type: 'cube',
+            size: [1, 1, 1],
+            center: false,
+            children: [],
+          },
+        ],
       };
 
       const result = await converter.convertNode(translateNode);
