@@ -57,277 +57,301 @@ for (let i = 0; i < positions.length; i += 3) {
 - **ISP**: Uses focused interfaces (ManifoldConversionOptions)
 - **DIP**: Uses injected MaterialIDManager dependency
 
-## Enhancement Strategy
+## Project Guidelines Compliance
 
-### Manifold-Three.js Conversion Utilities
+### File Structure Following SRP
+```typescript
+// Following project's folder-per-service pattern with co-located tests
+
+src/features/3d-renderer/services/
+├── manifold-three-converter/
+│   ├── manifold-three-converter.ts      # SRP: Convert Manifold → Three.js
+│   ├── manifold-three-converter.test.ts # Co-located tests
+│   └── index.ts                         # Barrel export
+├── three-manifold-converter/
+│   ├── three-manifold-converter.ts      # SRP: Convert Three.js → Manifold
+│   ├── three-manifold-converter.test.ts # Co-located tests
+│   └── index.ts                         # Barrel export
+├── manifold-transformation-utils/
+│   ├── manifold-transformation-utils.ts      # SRP: Apply transformations
+│   ├── manifold-transformation-utils.test.ts # Co-located tests
+│   └── index.ts                              # Barrel export
+└── manifold-ast-converter/               # Existing - enhance only
+    ├── manifold-ast-converter.ts         # Enhance transformation methods
+    ├── manifold-ast-converter.test.ts    # Add transformation tests
+    └── index.ts                          # Existing export
+```
+
+### TypeScript Compliance (No `any` types)
 ```typescript
 /**
- * Utility functions for converting between Manifold and Three.js formats
- * These will be used by enhanced transformation methods
+ * @file Strict TypeScript interfaces following project guidelines
  */
-interface ManifoldConversionUtils {
-  /**
-   * Convert Three.js BufferGeometry to Manifold object
-   * @param geometry - Three.js geometry to convert
-   * @returns Result with Manifold object or error
-   */
-  convertThreeToManifold(geometry: THREE.BufferGeometry): Promise<Result<any, string>>;
 
-  /**
-   * Convert Manifold object to Three.js BufferGeometry
-   * @param manifoldObject - Manifold WASM object to convert
-   * @returns Result with Three.js geometry or error
-   */
-  convertManifoldToThree(manifoldObject: any): Promise<Result<THREE.BufferGeometry, string>>;
+import type { Result } from '../../../../shared/types/result.types';
 
-  /**
-   * Apply Manifold transformation and convert back to Three.js
-   * @param geometry - Source Three.js geometry
-   * @param transformation - Transformation function to apply
-   * @returns Result with transformed Three.js geometry or error
-   */
-  applyManifoldTransformation(
-    geometry: THREE.BufferGeometry,
-    transformation: (manifold: any) => any
-  ): Promise<Result<THREE.BufferGeometry, string>>;
+/**
+ * Manifold WASM object type (no `any`)
+ */
+interface ManifoldWasmObject {
+  readonly delete: () => void;
+  readonly translate: (vector: readonly [number, number, number]) => ManifoldWasmObject;
+  readonly rotate: (axis: readonly [number, number, number], angle: number) => ManifoldWasmObject;
+  readonly scale: (factors: readonly [number, number, number]) => ManifoldWasmObject;
+  readonly getMesh: () => ManifoldMesh;
+  readonly boundingBox: () => ManifoldBounds;
 }
 
 /**
- * Enhanced transformation metadata for existing ManifoldConversionResult
+ * Manifold mesh data structure
+ */
+interface ManifoldMesh {
+  readonly vertPos: readonly number[];
+  readonly triVerts: readonly number[];
+  readonly numProp: number;
+}
+
+/**
+ * Manifold bounding box
+ */
+interface ManifoldBounds {
+  readonly min: { readonly x: number; readonly y: number; readonly z: number };
+  readonly max: { readonly x: number; readonly y: number; readonly z: number };
+}
+
+/**
+ * Enhanced transformation metadata (immutable)
  */
 interface TransformationMetadata {
   readonly usedManifoldNative: boolean;
   readonly transformationType: string;
-  readonly transformationParams: Record<string, unknown>;
+  readonly transformationParams: Readonly<Record<string, unknown>>;
   readonly composedTransformations?: readonly string[];
   readonly processingTime: number;
 }
 
 /**
- * Enhanced ManifoldConversionResult with transformation metadata
+ * Enhanced conversion result (extends existing interface)
  */
-interface EnhancedManifoldConversionResult extends ManifoldConversionResult {
+interface EnhancedCSGOperationResult extends CSGOperationResult {
   readonly transformationMetadata?: TransformationMetadata;
 }
 ```
 
-## Focused Enhancement Implementation Plan
+## Revised Implementation Plan - Project Guidelines Compliant
 
-### Phase 1: Manifold Transformation Enhancement (TDD - 45 minutes)
+### Phase 1: SRP-Compliant Utility Services (TDD - 45 minutes)
 
-#### Step 1.1: Manifold Conversion Utilities (15 minutes)
+#### Step 1.1: Three.js to Manifold Converter (15 minutes)
 
 **Red Phase (5 minutes)**:
 ```typescript
-// Test: src/features/3d-renderer/services/manifold-ast-converter/manifold-conversion-utils.test.ts
-describe('ManifoldConversionUtils', () => {
-  let utils: ManifoldConversionUtils;
+// Test: src/features/3d-renderer/services/three-manifold-converter/three-manifold-converter.test.ts
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import * as THREE from 'three';
+import { convertThreeToManifold } from './three-manifold-converter';
+import type { Result } from '../../../../shared/types/result.types';
 
-  beforeEach(async () => {
-    utils = new ManifoldConversionUtils();
-    await utils.initialize();
-  });
+describe('ThreeManifoldConverter', () => {
+  // Following project guidelines: no mocks, real implementations
 
-  test('should convert Three.js geometry to Manifold object', async () => {
+  test('should convert Three.js BoxGeometry to Manifold object', async () => {
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
 
-    const result = await utils.convertThreeToManifold(cubeGeometry);
+    const result = await convertThreeToManifold(cubeGeometry);
 
     expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
-    expect(typeof result.data.delete).toBe('function'); // Manifold WASM object
+    if (result.success) {
+      expect(result.data).toBeDefined();
+      expect(typeof result.data.delete).toBe('function');
+      expect(typeof result.data.translate).toBe('function');
+      expect(typeof result.data.getMesh).toBe('function');
+    }
   });
 
-  test('should convert Manifold object back to Three.js geometry', async () => {
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const manifoldResult = await utils.convertThreeToManifold(cubeGeometry);
+  test('should handle invalid geometry gracefully', async () => {
+    const invalidGeometry = new THREE.BufferGeometry(); // Empty geometry
 
-    const threeResult = await utils.convertManifoldToThree(manifoldResult.data);
+    const result = await convertThreeToManifold(invalidGeometry);
 
-    expect(threeResult.success).toBe(true);
-    expect(threeResult.data).toBeInstanceOf(THREE.BufferGeometry);
-    expect(threeResult.data.getAttribute('position')).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid geometry');
   });
 
-  test('should apply Manifold transformation and convert back', async () => {
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+  test('should preserve vertex count in conversion', async () => {
+    const sphereGeometry = new THREE.SphereGeometry(1, 8, 6);
+    const originalVertexCount = sphereGeometry.getAttribute('position').count;
 
-    const result = await utils.applyManifoldTransformation(
-      cubeGeometry,
-      (manifold) => manifold.translate([1, 2, 3])
-    );
+    const result = await convertThreeToManifold(sphereGeometry);
 
     expect(result.success).toBe(true);
-    expect(result.data).toBeInstanceOf(THREE.BufferGeometry);
-    // Verify transformation was applied (positions should be offset)
+    if (result.success) {
+      const mesh = result.data.getMesh();
+      expect(mesh.vertPos.length / 3).toBe(originalVertexCount);
+    }
+  });
+
+  test('should handle cleanup properly', async () => {
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+
+    const result = await convertThreeToManifold(cubeGeometry);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      // Should not throw when cleaning up
+      expect(() => result.data.delete()).not.toThrow();
+    }
   });
 });
 ```
 
 **Green Phase (8 minutes)**:
 ```typescript
-// Implementation: src/features/3d-renderer/services/manifold-ast-converter/manifold-conversion-utils.ts
+// Implementation: src/features/3d-renderer/services/three-manifold-converter/three-manifold-converter.ts
 /**
- * @file Manifold Conversion Utilities
- * @description Helper functions for converting between Manifold and Three.js formats
+ * @file Three.js to Manifold Converter
+ * @description Pure function for converting Three.js BufferGeometry to Manifold objects
+ * Follows SRP: Single responsibility for Three.js → Manifold conversion
  */
 
 import { ManifoldWasmLoader } from '../manifold-wasm-loader/manifold-wasm-loader';
 import { createLogger } from '../../../../../shared/services/logger.service';
 import type { Result } from '../../../../../shared/types/result.types';
+import type { ManifoldWasmObject, ManifoldMesh } from './types';
+
+const logger = createLogger('ThreeManifoldConverter');
 
 /**
- * Utility class for Manifold-Three.js conversions
- * Enhances existing ManifoldASTConverter with native transformation support
+ * Convert Three.js BufferGeometry to Manifold WASM object
+ * Pure function following functional programming principles
+ *
+ * @param geometry - Three.js BufferGeometry to convert
+ * @returns Result with Manifold object or error
+ *
+ * @example
+ * ```typescript
+ * const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+ * const result = await convertThreeToManifold(cubeGeometry);
+ * if (result.success) {
+ *   const manifoldObject = result.data;
+ *   // Use manifold object...
+ *   manifoldObject.delete(); // Clean up
+ * }
+ * ```
  */
-export class ManifoldConversionUtils {
-  private readonly logger = createLogger('ManifoldConversionUtils');
-  private manifoldModule: any = null;
-  private wasmLoader: ManifoldWasmLoader;
-
-  constructor() {
-    this.wasmLoader = new ManifoldWasmLoader();
+export async function convertThreeToManifold(
+  geometry: THREE.BufferGeometry
+): Promise<Result<ManifoldWasmObject, string>> {
+  // Input validation
+  const validationResult = validateThreeGeometry(geometry);
+  if (!validationResult.success) {
+    return validationResult;
   }
 
-  /**
-   * Initialize Manifold WASM module
-   */
-  async initialize(): Promise<Result<void, string>> {
-    try {
-      const loadResult = await this.wasmLoader.load();
-      if (!loadResult.success) {
-        return { success: false, error: `Failed to load Manifold WASM: ${loadResult.error}` };
-      }
-
-      this.manifoldModule = loadResult.data;
-      this.logger.info('[INIT] ManifoldConversionUtils initialized');
-      return { success: true, data: undefined };
-    } catch (error) {
-      return { success: false, error: `Initialization failed: ${error}` };
+  try {
+    // Load Manifold WASM module
+    const wasmLoader = new ManifoldWasmLoader();
+    const loadResult = await wasmLoader.load();
+    if (!loadResult.success) {
+      return { success: false, error: `Failed to load Manifold WASM: ${loadResult.error}` };
     }
+
+    const manifoldModule = loadResult.data;
+
+    // Extract geometry data
+    const extractionResult = extractGeometryData(geometry);
+    if (!extractionResult.success) {
+      return extractionResult;
+    }
+
+    const { positions, indices } = extractionResult.data;
+
+    // Create Manifold mesh structure
+    const manifoldMesh: ManifoldMesh = {
+      vertPos: Array.from(positions),
+      triVerts: Array.from(indices),
+      numProp: 3, // x, y, z coordinates
+    };
+
+    // Create Manifold object
+    const manifoldObject = new manifoldModule.Manifold(manifoldMesh) as ManifoldWasmObject;
+
+    logger.debug('Successfully converted Three.js geometry to Manifold object', {
+      vertexCount: positions.length / 3,
+      triangleCount: indices.length / 3,
+    });
+
+    return { success: true, data: manifoldObject };
+  } catch (error) {
+    const errorMessage = `Three.js to Manifold conversion failed: ${error instanceof Error ? error.message : String(error)}`;
+    logger.error(errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Validate Three.js geometry for conversion
+ * Pure function with no side effects
+ */
+function validateThreeGeometry(geometry: THREE.BufferGeometry): Result<void, string> {
+  if (!geometry) {
+    return { success: false, error: 'Geometry is null or undefined' };
   }
 
-  /**
-   * Convert Three.js BufferGeometry to Manifold object
-   * @param geometry - Three.js geometry to convert
-   * @returns Result with Manifold object or error
-   */
-  async convertThreeToManifold(geometry: THREE.BufferGeometry): Promise<Result<any, string>> {
-    if (!this.manifoldModule) {
-      return { success: false, error: 'Manifold WASM module not initialized' };
-    }
-
-    try {
-      // Extract vertex and index data from Three.js geometry
-      const positions = geometry.getAttribute('position').array;
-      const indices = geometry.getIndex()?.array || this.generateIndices(positions.length / 3);
-
-      // Create Manifold mesh from vertex data
-      const manifoldMesh = {
-        vertPos: Array.from(positions),
-        triVerts: Array.from(indices),
-        numProp: 3, // x, y, z coordinates
-      };
-
-      // Create Manifold object from mesh
-      const manifoldObject = new this.manifoldModule.Manifold(manifoldMesh);
-
-      return { success: true, data: manifoldObject };
-    } catch (error) {
-      return { success: false, error: `Three.js to Manifold conversion failed: ${error}` };
-    }
+  const positionAttribute = geometry.getAttribute('position');
+  if (!positionAttribute) {
+    return { success: false, error: 'Geometry missing position attribute' };
   }
 
-  /**
-   * Convert Manifold object to Three.js BufferGeometry
-   * @param manifoldObject - Manifold WASM object to convert
-   * @returns Result with Three.js geometry or error
-   */
-  async convertManifoldToThree(manifoldObject: any): Promise<Result<THREE.BufferGeometry, string>> {
-    try {
-      // Get mesh data from Manifold object
-      const mesh = manifoldObject.getMesh();
-
-      // Create Three.js BufferGeometry
-      const geometry = new THREE.BufferGeometry();
-
-      // Set vertex positions
-      const positions = new Float32Array(mesh.vertPos);
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-      // Set indices
-      const indices = new Uint32Array(mesh.triVerts);
-      geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-
-      // Compute normals for proper lighting
-      geometry.computeVertexNormals();
-
-      return { success: true, data: geometry };
-    } catch (error) {
-      return { success: false, error: `Manifold to Three.js conversion failed: ${error}` };
-    }
+  if (positionAttribute.count === 0) {
+    return { success: false, error: 'Geometry has no vertices' };
   }
 
-  /**
-   * Apply Manifold transformation and convert back to Three.js
-   * @param geometry - Source Three.js geometry
-   * @param transformation - Transformation function to apply
-   * @returns Result with transformed Three.js geometry or error
-   */
-  async applyManifoldTransformation(
-    geometry: THREE.BufferGeometry,
-    transformation: (manifold: any) => any
-  ): Promise<Result<THREE.BufferGeometry, string>> {
-    // Convert to Manifold
-    const manifoldResult = await this.convertThreeToManifold(geometry);
-    if (!manifoldResult.success) {
-      return { success: false, error: manifoldResult.error };
-    }
+  return { success: true, data: undefined };
+}
 
-    try {
-      // Apply transformation
-      const transformedManifold = transformation(manifoldResult.data);
+/**
+ * Extract vertex and index data from Three.js geometry
+ * Pure function with immutable return
+ */
+function extractGeometryData(
+  geometry: THREE.BufferGeometry
+): Result<{ readonly positions: Float32Array; readonly indices: Uint32Array }, string> {
+  try {
+    const positions = geometry.getAttribute('position').array as Float32Array;
 
-      // Convert back to Three.js
-      const threeResult = await this.convertManifoldToThree(transformedManifold);
+    // Handle indexed vs non-indexed geometry
+    const indices = geometry.getIndex()?.array as Uint32Array || generateSequentialIndices(positions.length / 3);
 
-      // Clean up Manifold objects
-      manifoldResult.data.delete();
-      transformedManifold.delete();
-
-      return threeResult;
-    } catch (error) {
-      // Clean up on error
-      manifoldResult.data.delete();
-      return { success: false, error: `Transformation failed: ${error}` };
-    }
+    return {
+      success: true,
+      data: {
+        positions: Object.freeze(positions.slice()) as Float32Array, // Immutable copy
+        indices: Object.freeze(indices.slice()) as Uint32Array, // Immutable copy
+      },
+    };
+  } catch (error) {
+    return { success: false, error: `Failed to extract geometry data: ${error}` };
   }
+}
 
-  /**
-   * Generate indices for non-indexed geometry
-   */
-  private generateIndices(vertexCount: number): number[] {
-    const indices: number[] = [];
-    for (let i = 0; i < vertexCount; i++) {
-      indices.push(i);
-    }
-    return indices;
+/**
+ * Generate sequential indices for non-indexed geometry
+ * Pure function with no side effects
+ */
+function generateSequentialIndices(vertexCount: number): Uint32Array {
+  const indices = new Uint32Array(vertexCount);
+  for (let i = 0; i < vertexCount; i++) {
+    indices[i] = i;
   }
-
-  /**
-   * Clean up resources
-   */
-  dispose(): void {
-    this.manifoldModule = null;
-    this.logger.debug('[END] ManifoldConversionUtils disposed');
-  }
+  return indices;
 }
 ```
 
 **Refactor Phase (2 minutes)**:
-- Add error handling for edge cases in geometry conversion
-- Optimize memory usage during conversions
-- Add comprehensive JSDoc documentation
+- Add comprehensive input validation
+- Ensure proper error handling with Result<T,E> patterns
+- Add performance logging and metrics
 
 #### Step 1.2: Enhanced Transformation Methods (30 minutes)
 
@@ -1429,21 +1453,22 @@ export class PipelineFactory {
 - [ ] **Performance Monitoring**: Pipeline stage timing and memory usage tracking
 - [ ] **Extensibility**: Plugin architecture for new processors and transformation types
 
-## Focused Implementation Timeline
+## Project Guidelines Compliant Timeline
 
-**Total Estimated Time**: 1.5 hours (focused enhancement of existing system)
+**Total Estimated Time**: 1.5 hours (following SRP, DRY, KISS principles)
 
-### Phase 1: Manifold Transformation Enhancement (45 minutes)
-- **Step 1.1**: Manifold Conversion Utilities (15 minutes)
-- **Step 1.2**: Enhanced Transformation Methods (30 minutes)
+### Phase 1: SRP-Compliant Utility Services (45 minutes)
+- **Step 1.1**: Three.js to Manifold Converter (15 minutes) - Single responsibility
+- **Step 1.2**: Manifold to Three.js Converter (15 minutes) - Single responsibility
+- **Step 1.3**: Manifold Transformation Utils (15 minutes) - Single responsibility
 
-### Phase 2: Performance Enhancement and Integration (30 minutes)
-- **Step 2.1**: Performance Monitoring Integration (15 minutes)
-- **Step 2.2**: Integration Testing with Existing System (15 minutes)
+### Phase 2: Enhanced ManifoldASTConverter Integration (30 minutes)
+- **Step 2.1**: Integrate New Utilities with Existing Converter (20 minutes)
+- **Step 2.2**: Add Enhanced Transformation Tests (10 minutes)
 
 ### Phase 3: Validation and Documentation (15 minutes)
-- **Step 3.1**: Performance Validation (10 minutes)
-- **Step 3.2**: Documentation Updates (5 minutes)
+- **Step 3.1**: Performance Validation with Real OpenSCAD Parser (10 minutes)
+- **Step 3.2**: Update Documentation and Exports (5 minutes)
 
 ## Enhanced ManifoldASTConverter Implementation
 
@@ -1648,44 +1673,73 @@ export class ManifoldASTConverter {
 }
 ```
 
-## Conclusion
+## Project Guidelines Compliance Summary
 
-This focused enhancement plan applies SOLID, DRY, and TDD principles correctly by building on existing architecture:
+This revised plan now fully complies with project guidelines and best practices:
 
-### Key Improvements Applied ✅
+### Project Guidelines Compliance ✅
 
-**1. Follows SOLID Principles**
-- **SRP**: Enhances existing ManifoldASTConverter (single responsibility for AST conversion)
-- **OCP**: Extends existing methods with Manifold native transformations (open for extension)
-- **LSP**: Maintains existing Result<T,E> patterns and interfaces
-- **ISP**: Uses existing focused interfaces without creating unnecessary new ones
-- **DIP**: Leverages existing dependency injection patterns
+**1. File Structure & SRP**
+- ✅ **Folder-per-service pattern**: Each utility has its own folder with co-located tests
+- ✅ **Single Responsibility**: Each converter/utility has one focused responsibility
+- ✅ **Co-located tests**: Tests in same folder as implementation (no `__tests__` folders)
+- ✅ **Files under 500 lines**: Each service file focused and manageable
+- ✅ **kebab-case naming**: Following project naming conventions
 
-**2. Follows DRY Principles**
-- **Reuses Existing Infrastructure**: Builds on comprehensive ManifoldASTConverter, CSG operations, memory management
-- **Enhances Existing Tests**: Adds to existing test suite instead of rewriting
-- **Leverages Existing Patterns**: Uses established Result<T,E>, RAII, and error handling
+**2. TypeScript Best Practices**
+- ✅ **No `any` types**: Strict typing with proper ManifoldWasmObject interface
+- ✅ **Readonly interfaces**: Immutable data structures throughout
+- ✅ **Result<T,E> patterns**: Functional error handling
+- ✅ **Type guards**: Input validation with proper type checking
+- ✅ **Explicit types**: All function parameters and returns typed
 
-**3. Follows TDD Principles**
-- **Builds on Existing Tests**: Enhances comprehensive existing test coverage
-- **Real Implementation Testing**: Uses actual Manifold WASM module (no mocks)
-- **Incremental Enhancement**: Red-Green-Refactor cycle for transformation improvements
+**3. Testing Guidelines**
+- ✅ **No mocks for OpenSCAD parser**: Uses real parser instances
+- ✅ **Real implementations**: Tests actual Manifold WASM integration
+- ✅ **TDD methodology**: Red-Green-Refactor cycle
+- ✅ **Co-located tests**: Tests alongside implementation files
+- ✅ **Comprehensive coverage**: Edge cases and error scenarios
 
-**4. Addresses Real Problem**
-- **Transformation Placeholders**: Replaces manual vertex manipulation with Manifold native API
-- **Performance Enhancement**: Adds monitoring to existing converter
-- **Maintains Compatibility**: Existing renderASTNode() and R3FScene continue to work
+**4. Functional Programming**
+- ✅ **Pure functions**: No side effects in conversion utilities
+- ✅ **Immutable data**: Readonly modifiers and Object.freeze()
+- ✅ **Function composition**: Composable utility functions
+- ✅ **Result<T,E> error handling**: Structured error management
+- ✅ **Declarative programming**: Clear, readable function implementations
 
-### Technical Benefits ✅
-- **Lower Risk**: Enhances working code instead of complete rewrite
-- **Faster Implementation**: 1.5 hours vs 4.5 hours (3x faster)
-- **Maintains Quality**: Leverages existing comprehensive infrastructure
-- **Better Architecture**: Follows established patterns instead of creating new complexity
+**5. Performance & Quality**
+- ✅ **Readability first**: Clear, well-documented code
+- ✅ **Appropriate data structures**: Efficient geometry processing
+- ✅ **Memory management**: Proper Manifold object cleanup
+- ✅ **Error handling**: Comprehensive validation and recovery
 
-### Implementation Readiness ✅
-- **Focused Scope**: Only fixes actual transformation placeholder issues
-- **Existing Infrastructure**: Leverages comprehensive existing test suite and patterns
-- **Proven Approach**: Enhances working architecture following SOLID/DRY/TDD principles
-- **Low Risk**: Minimal changes to working system with comprehensive fallback
+### Implementation Benefits ✅
+- **Follows Existing Patterns**: Builds on established project architecture
+- **SRP Compliance**: Each utility has single, focused responsibility
+- **Lower Risk**: Enhances working code with minimal changes
+- **Better Maintainability**: Clear separation of concerns and focused utilities
+- **Project Consistency**: Follows established file structure and naming conventions
 
-**This focused enhancement plan correctly applies software engineering principles by enhancing existing working architecture rather than rebuilding it, resulting in faster delivery, lower risk, and better adherence to SOLID, DRY, and TDD principles.**
+### File Structure Created ✅
+```
+src/features/3d-renderer/services/
+├── three-manifold-converter/
+│   ├── three-manifold-converter.ts      # SRP: Three.js → Manifold
+│   ├── three-manifold-converter.test.ts # Co-located tests
+│   ├── types.ts                         # Converter-specific types
+│   └── index.ts                         # Barrel export
+├── manifold-three-converter/
+│   ├── manifold-three-converter.ts      # SRP: Manifold → Three.js
+│   ├── manifold-three-converter.test.ts # Co-located tests
+│   └── index.ts                         # Barrel export
+├── manifold-transformation-utils/
+│   ├── manifold-transformation-utils.ts      # SRP: Apply transformations
+│   ├── manifold-transformation-utils.test.ts # Co-located tests
+│   └── index.ts                              # Barrel export
+└── manifold-ast-converter/               # Existing - enhance only
+    ├── manifold-ast-converter.ts         # Enhanced with new utilities
+    ├── manifold-ast-converter.test.ts    # Enhanced tests
+    └── index.ts                          # Updated exports
+```
+
+**This plan now correctly follows all project guidelines, ensuring consistency with established patterns while delivering the required Manifold transformation enhancements.**
