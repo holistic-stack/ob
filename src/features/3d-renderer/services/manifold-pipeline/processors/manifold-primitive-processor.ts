@@ -185,8 +185,8 @@ export class ManifoldPrimitiveProcessor extends BasePipelineProcessor<ASTNode, M
         return { success: false, error: `Invalid sphere parameters: ${validation.errors.join(', ')}` };
       }
 
-      // Calculate radius (handle both r and d parameters)
-      const radius = node.r !== undefined ? node.r : (node.d !== undefined ? node.d / 2 : 1);
+      // Calculate radius (handle both radius and diameter parameters)
+      const radius = node.radius !== undefined ? node.radius : (node.diameter !== undefined ? node.diameter / 2 : 1);
       
       // Create sphere using Manifold static constructor API
       const sphere = this.manifoldModule._Sphere(radius, node.fn || 32);
@@ -286,19 +286,19 @@ export class ManifoldPrimitiveProcessor extends BasePipelineProcessor<ASTNode, M
    */
   private validateSphereParameters(node: SphereNode): ValidationResult {
     const errors: string[] = [];
-    
-    if (node.r !== undefined && node.r <= 0) {
+
+    if (node.radius !== undefined && node.radius <= 0) {
       errors.push('Sphere radius must be positive');
     }
-    
-    if (node.d !== undefined && node.d <= 0) {
+
+    if (node.diameter !== undefined && node.diameter <= 0) {
       errors.push('Sphere diameter must be positive');
     }
-    
-    if (node.r === undefined && node.d === undefined) {
+
+    if (node.radius === undefined && node.diameter === undefined) {
       errors.push('Sphere must have either radius (r) or diameter (d) parameter');
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
