@@ -5,7 +5,7 @@
  * Following functional programming patterns with Result<T,E> error handling.
  */
 
-import { Mesh, type Scene, VertexData } from '@babylonjs/core';
+import { Mesh, type Scene, VertexData, type FloatArray } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
@@ -68,11 +68,11 @@ export const convertGenericMeshToBabylon = (
     () => {
       // Validate input
       if (!meshData || !meshData.geometry) {
-        throw createConversionError('INVALID_MESH_DATA', 'Invalid mesh data provided');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Invalid mesh data provided');
       }
 
       if (!scene) {
-        throw createConversionError('INVALID_MESH_DATA', 'Scene is required for mesh creation');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Scene is required for mesh creation');
       }
 
       // Create new mesh
@@ -90,7 +90,7 @@ export const convertGenericMeshToBabylon = (
           ? new Float32Array(geometry.positions)
           : geometry.positions;
       } else {
-        throw createConversionError('INVALID_MESH_DATA', 'Mesh geometry must have positions');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh geometry must have positions');
       }
 
       // Set indices (required for CSG operations)
@@ -99,7 +99,7 @@ export const convertGenericMeshToBabylon = (
           ? new Uint32Array(geometry.indices)
           : geometry.indices;
       } else {
-        throw createConversionError('INVALID_MESH_DATA', 'Mesh geometry must have indices');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh geometry must have indices');
       }
 
       // Set normals if available or generate them
@@ -163,7 +163,7 @@ export const convertGenericMeshToBabylon = (
       logger.debug('[DEBUG][CSG2MeshConverter] Generic mesh converted successfully');
       return mesh;
     },
-    (error) => createConversionError('CONVERSION_FAILED', `Failed to convert mesh: ${error}`)
+    (error) => createConversionError(MeshConversionErrorCode.CONVERSION_FAILED, `Failed to convert mesh: ${error}`)
   );
 };
 
@@ -180,7 +180,7 @@ export const convertBabylonMeshToGeneric = (
     () => {
       // Validate input
       if (!mesh) {
-        throw createConversionError('INVALID_MESH_DATA', 'Mesh is required');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh is required');
       }
 
       // Extract vertex data
@@ -190,7 +190,7 @@ export const convertBabylonMeshToGeneric = (
       const uvs = mesh.getVerticesData('uv');
 
       if (!positions || !indices) {
-        throw createConversionError('INVALID_MESH_DATA', 'Mesh must have positions and indices');
+        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh must have positions and indices');
       }
 
       // Create generic mesh data
@@ -204,40 +204,44 @@ export const convertBabylonMeshToGeneric = (
         } as any, // TODO: Replace with proper geometry type
         material: {
           // TODO: Convert BabylonJS material to generic format
-          color: [1, 1, 1, 1],
-          metallic: 0,
+          color: '#ffffff',
+          metalness: 0,
           roughness: 1,
-          emissive: [0, 0, 0],
+          opacity: 1,
+          transparent: false,
+          side: 'front' as const,
         },
         transform: mesh.getWorldMatrix() as any, // TODO: Replace with proper matrix type
         metadata: {
+          meshId: mesh.id,
           triangleCount: indices.length / 3,
           vertexCount: positions.length / 3,
           boundingBox: mesh.getBoundingInfo().boundingBox as any, // TODO: Replace with proper bounding box type
-          hasNormals: !!normals,
-          hasUVs: !!uvs,
+          complexity: indices.length / 3,
+          operationTime: 0,
           isOptimized: false,
+          lastAccessed: new Date(),
         },
       };
 
       logger.debug('[DEBUG][CSG2MeshConverter] BabylonJS mesh converted successfully');
       return genericMeshData;
     },
-    (error) => createConversionError('CONVERSION_FAILED', `Failed to convert mesh: ${error}`)
+    (error) => createConversionError(MeshConversionErrorCode.CONVERSION_FAILED, `Failed to convert mesh: ${error}`)
   );
 };
 
 /**
  * Generate basic UV coordinates for a mesh
  */
-const generateBasicUVs = (positions: Float32Array): Float32Array => {
+const generateBasicUVs = (positions: FloatArray): Float32Array => {
   const uvs = new Float32Array((positions.length / 3) * 2);
 
   for (let i = 0; i < positions.length; i += 3) {
     const uvIndex = (i / 3) * 2;
     // Simple planar projection
-    uvs[uvIndex] = (positions[i] + 1) * 0.5; // X -> U
-    uvs[uvIndex + 1] = (positions[i + 1] + 1) * 0.5; // Y -> V
+    uvs[uvIndex] = (positions[i]! + 1) * 0.5; // X -> U
+    uvs[uvIndex + 1] = (positions[i + 1]! + 1) * 0.5; // Y -> V
   }
 
   return uvs;
@@ -320,16 +324,16 @@ export const optimizeMeshForCSG = (
       }
 
       // Validate mesh geometry
-      if (options.validateMesh) {
-        const isValid = validateMeshGeometry(mesh);
+      if (options.validateManifold) {
+        const isValid = validateManifoldGeometry(mesh);
         if (!isValid) {
-          throw createConversionError('VALIDATION_FAILED', 'Mesh is not valid');
+          throw createConversionError(MeshConversionErrorCode.VALIDATION_FAILED, 'Mesh is not valid');
         }
       }
 
       logger.debug('[DEBUG][CSG2MeshConverter] Mesh optimization completed');
       return mesh;
     },
-    (error) => createConversionError('OPTIMIZATION_FAILED', `Failed to optimize mesh: ${error}`)
+    (error) => createConversionError(MeshConversionErrorCode.OPTIMIZATION_FAILED, `Failed to optimize mesh: ${error}`)
   );
 };

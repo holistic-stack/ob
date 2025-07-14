@@ -64,9 +64,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
     const code = `cube(${vectorCode});`;
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
-    expect(tree.rootNode).toBeDefined();
+    expect(tree!.rootNode).toBeDefined();
 
-    const arrayNode = findArrayLiteralNode(tree.rootNode);
+    const arrayNode = findArrayLiteralNode(tree!.rootNode);
     expect(arrayNode).not.toBeNull();
 
     console.log(`[Test] Found array node: type='${arrayNode?.type}', text='${arrayNode?.text}'`);
@@ -100,7 +100,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
         } else if (numericArray.length >= 3) {
           return [numericArray[0], numericArray[1], numericArray[2]] as Vector3D;
         } else if (numericArray.length === 0) {
-          return [] as Vector2D; // empty vector case
+          return [] as unknown as Vector2D; // empty vector case
         }
       }
     }
@@ -195,7 +195,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
 
       // Find the array literal within the function call
-      const arrayNode = findArrayLiteralNode(tree.rootNode);
+      const arrayNode = findArrayLiteralNode(tree!.rootNode);
       expect(arrayNode).not.toBeNull();
 
       const rawResult = extractValue(arrayNode as TSNode, code);
@@ -260,12 +260,12 @@ describe('extractValue - Vector Literals Regression Tests', () => {
           if (child) collectArrayNodes(child);
         }
       }
-      collectArrayNodes(tree.rootNode);
+      collectArrayNodes(tree!.rootNode);
 
       expect(arrayNodes.length).toBeGreaterThanOrEqual(1);
 
       // Extract from the first array found
-      const rawResult = extractValue(arrayNodes[0], code);
+      const rawResult = extractValue(arrayNodes[0]!, code);
 
       // Convert structured result to simple array
       let result: number[] | undefined;
@@ -340,9 +340,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       // For this test, we create the full code with trailing whitespace after the semicolon
       const code = `cube(${vectorCode});   `;
       const tree = parser.parse(code);
-      const arrayNode = findArrayLiteralNode(tree.rootNode);
+      const arrayNode = findArrayLiteralNode(tree!.rootNode);
       expect(arrayNode).not.toBeNull();
-      const rawResult = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode!, code);
 
       // Convert structured result to simple array
       let result: number[] | undefined;
@@ -383,9 +383,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       // For this test, we create the full code with newlines after the semicolon
       const code = `cube(${vectorCode});\n\n`;
       const tree = parser.parse(code);
-      const arrayNode = findArrayLiteralNode(tree.rootNode);
+      const arrayNode = findArrayLiteralNode(tree!.rootNode);
       expect(arrayNode).not.toBeNull();
-      const rawResult = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode!, code);
 
       // Convert structured result to simple array
       let result: number[] | undefined;
@@ -425,10 +425,10 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const code = 'module test() { cube([10, 10, 10]); }';
       const tree = parser.parse(code);
 
-      const arrayNode = findArrayLiteralNode(tree.rootNode);
+      const arrayNode = findArrayLiteralNode(tree!.rootNode);
       expect(arrayNode).not.toBeNull();
 
-      const rawResult = extractValue(arrayNode as TSNode, code);
+      const rawResult = extractValue(arrayNode!, code);
 
       // Convert structured result to simple array
       let result: number[] | undefined;

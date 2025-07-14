@@ -49,7 +49,7 @@ export class BabylonEngineService {
     return tryCatchAsync(
       async () => {
         if (this.engine) {
-          throw this.createError('ENGINE_INITIALIZATION_FAILED', 'Engine already initialized');
+          throw this.createError(EngineErrorCode.INITIALIZATION_FAILED, 'Engine already initialized');
         }
 
         this.canvas = options.canvas;
@@ -75,12 +75,12 @@ export class BabylonEngineService {
         }
 
         throw this.createError(
-          'ENGINE_INITIALIZATION_FAILED',
+          EngineErrorCode.INITIALIZATION_FAILED,
           'Both WebGPU and WebGL2 initialization failed'
         );
       },
       (error) =>
-        this.createError('ENGINE_INITIALIZATION_FAILED', `Engine initialization failed: ${error}`)
+        this.createError(EngineErrorCode.INITIALIZATION_FAILED, `Engine initialization failed: ${error}`)
     );
   }
 
@@ -93,7 +93,7 @@ export class BabylonEngineService {
     return tryCatchAsync(
       async () => {
         if (!WebGPUEngine.IsSupported()) {
-          throw this.createError('WEBGPU_NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+          throw this.createError(EngineErrorCode.WEBGPU_NOT_SUPPORTED, 'WebGPU is not supported in this browser');
         }
 
         const webgpuEngine = new WebGPUEngine(this.canvas!, {
@@ -111,7 +111,7 @@ export class BabylonEngineService {
 
         return webgpuEngine;
       },
-      (error) => this.createError('WEBGPU_NOT_SUPPORTED', `WebGPU initialization failed: ${error}`)
+      (error) => this.createError(EngineErrorCode.WEBGPU_NOT_SUPPORTED, `WebGPU initialization failed: ${error}`)
     );
   }
 
@@ -137,7 +137,7 @@ export class BabylonEngineService {
 
         return webglEngine;
       },
-      (error) => this.createError('WEBGL_NOT_SUPPORTED', `WebGL2 initialization failed: ${error}`)
+      (error) => this.createError(EngineErrorCode.WEBGL_NOT_SUPPORTED, `WebGL2 initialization failed: ${error}`)
     );
   }
 
@@ -236,7 +236,7 @@ export class BabylonEngineService {
 
         logger.end('[END][BabylonEngineService] Engine disposed successfully');
       },
-      (error) => this.createError('DISPOSAL_FAILED', `Engine disposal failed: ${error}`)
+      (error) => this.createError(EngineErrorCode.DISPOSAL_FAILED, `Engine disposal failed: ${error}`)
     );
   }
 

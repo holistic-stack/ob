@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { LRUQueryCache } from './lru-query-cache.js';
 import type { QueryCache } from './query-cache.js';
 

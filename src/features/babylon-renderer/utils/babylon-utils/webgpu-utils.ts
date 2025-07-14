@@ -60,23 +60,23 @@ export const getWebGPUCapabilities = async (): Promise<Result<WebGPUCapabilities
   return tryCatchAsync(
     async () => {
       if (!isWebGPUSupported()) {
-        throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+        throw createWebGPUError(WebGPUErrorCode.NOT_SUPPORTED, 'WebGPU is not supported in this browser');
       }
 
-      const adapter = await navigator.gpu.requestAdapter({
+      const adapter = await navigator.gpu?.requestAdapter({
         powerPreference: 'high-performance',
       });
 
       if (!adapter) {
-        throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
+        throw createWebGPUError(WebGPUErrorCode.ADAPTER_REQUEST_FAILED, 'Failed to request WebGPU adapter');
       }
 
-      const adapterInfo = await adapter.requestAdapterInfo();
+      const adapterInfo = 'requestAdapterInfo' in adapter ? await (adapter as any).requestAdapterInfo() : null;
       const limits = adapter.limits;
       const features = Array.from(adapter.features);
 
       // Get preferred canvas format
-      const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
+      const preferredFormat = navigator.gpu?.getPreferredCanvasFormat() || null;
 
       const capabilities: WebGPUCapabilities = {
         isSupported: true,
@@ -95,7 +95,7 @@ export const getWebGPUCapabilities = async (): Promise<Result<WebGPUCapabilities
         return error as WebGPUError;
       }
       return createWebGPUError(
-        'CAPABILITIES_CHECK_FAILED',
+        WebGPUErrorCode.CAPABILITIES_CHECK_FAILED,
         `Failed to get WebGPU capabilities: ${error}`
       );
     }
@@ -130,7 +130,7 @@ export const checkWebGPUFeatures = async (
       return true;
     },
     (error) =>
-      createWebGPUError('CAPABILITIES_CHECK_FAILED', `Failed to check WebGPU features: ${error}`)
+      createWebGPUError(WebGPUErrorCode.CAPABILITIES_CHECK_FAILED, `Failed to check WebGPU features: ${error}`)
   );
 };
 
@@ -145,13 +145,13 @@ export const requestWebGPUAdapter = async (
   return tryCatchAsync(
     async () => {
       if (!isWebGPUSupported()) {
-        throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+        throw createWebGPUError(WebGPUErrorCode.NOT_SUPPORTED, 'WebGPU is not supported in this browser');
       }
 
-      const adapter = await navigator.gpu.requestAdapter(options);
+      const adapter = await navigator.gpu?.requestAdapter(options);
 
       if (!adapter) {
-        throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
+        throw createWebGPUError(WebGPUErrorCode.ADAPTER_REQUEST_FAILED, 'Failed to request WebGPU adapter');
       }
 
       logger.debug('[DEBUG][WebGPUUtils] WebGPU adapter requested successfully');
@@ -163,7 +163,7 @@ export const requestWebGPUAdapter = async (
         return error as WebGPUError;
       }
       return createWebGPUError(
-        'ADAPTER_REQUEST_FAILED',
+        WebGPUErrorCode.ADAPTER_REQUEST_FAILED,
         `Failed to request WebGPU adapter: ${error}`
       );
     }
@@ -184,19 +184,19 @@ export const requestWebGPUDevice = async (
       const device = await adapter.requestDevice(descriptor);
 
       if (!device) {
-        throw createWebGPUError('DEVICE_REQUEST_FAILED', 'Failed to request WebGPU device');
+        throw createWebGPUError(WebGPUErrorCode.DEVICE_REQUEST_FAILED, 'Failed to request WebGPU device');
       }
 
       // Set up error handling
-      device.addEventListener('uncapturederror', (event) => {
-        logger.error(`[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error.message}`);
+      device.addEventListener('uncapturederror', (event: any) => {
+        logger.error(`[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error?.message || 'Unknown error'}`);
       });
 
       logger.debug('[DEBUG][WebGPUUtils] WebGPU device requested successfully');
       return device;
     },
     (error) =>
-      createWebGPUError('DEVICE_REQUEST_FAILED', `Failed to request WebGPU device: ${error}`)
+      createWebGPUError(WebGPUErrorCode.DEVICE_REQUEST_FAILED, `Failed to request WebGPU device: ${error}`)
   );
 };
 

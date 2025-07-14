@@ -121,7 +121,7 @@ export class BabylonIBLShadowsService {
     return tryCatchAsync(
       async () => {
         if (!scene) {
-          throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required for IBL shadows');
+          throw this.createError(IBLShadowErrorCode.SCENE_NOT_PROVIDED, 'Scene is required for IBL shadows');
         }
 
         // Check if IBL shadows are supported
@@ -374,7 +374,7 @@ export class BabylonIBLShadowsService {
         );
       },
       (error) =>
-        this.createError('INVALID_CONFIG', `Failed to update IBL shadow configuration: ${error}`)
+        this.createError(IBLShadowErrorCode.INVALID_CONFIG, `Failed to update IBL shadow configuration: ${error}`)
     );
   }
 
@@ -407,7 +407,9 @@ export class BabylonIBLShadowsService {
     const engine = scene.getEngine();
 
     // IBL shadows require WebGL2 or WebGPU
-    return engine.webGLVersion >= 2 || engine.isWebGPU;
+    const isWebGL2Supported = 'webGLVersion' in engine && (engine as any).webGLVersion >= 2;
+    const isWebGPUSupported = 'isWebGPU' in engine && (engine as any).isWebGPU;
+    return isWebGL2Supported || isWebGPUSupported;
   }
 
   /**

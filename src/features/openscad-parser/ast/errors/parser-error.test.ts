@@ -41,8 +41,8 @@ describe('ParserError', () => {
     expect(formattedMessage).toContain(source);
     expect(formattedMessage).toContain('^'); // Pointer to the error position
     expect(formattedMessage).toContain('Suggestions');
-    expect(formattedMessage).toContain(suggestions[0].message);
-    expect(formattedMessage).toContain(suggestions[0].replacement);
+    expect(formattedMessage).toContain(suggestions[0]!.message);
+    expect(formattedMessage).toContain(suggestions[0]!.replacement);
   });
 
   it('should create a ParserError from a tree-sitter position', () => {

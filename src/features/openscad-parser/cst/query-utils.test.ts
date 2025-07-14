@@ -22,14 +22,56 @@ describe('QueryManager', () => {
     // Mock the loadQuery method
     queryManager.loadQuery = async (_name: string) => {
       // Mock implementation that returns a fake Query object
-      return { matches: () => [] } as Query;
+      return {
+        matches: vi.fn(() => []),
+        captures: vi.fn(() => []),
+        captureNames: [],
+        captureQuantifiers: [],
+        predicates: [],
+        setProperties: [],
+        assertedProperties: [],
+        refutedProperties: [],
+        matchLimit: undefined,
+        delete: vi.fn(),
+        predicatesForPattern: vi.fn(() => []),
+        disableCapture: vi.fn(),
+        disablePattern: vi.fn(),
+        didExceedMatchLimit: vi.fn(() => false),
+        startIndexForPattern: vi.fn(() => 0),
+        endIndexForPattern: vi.fn(() => 0),
+        patternCount: vi.fn(() => 0),
+        captureIndexForName: vi.fn(() => 0),
+        isPatternRooted: vi.fn(() => false),
+        isPatternNonLocal: vi.fn(() => false),
+        isPatternGuaranteedAtStep: vi.fn(() => false),
+      } as Query;
     };
 
     // Mock the query cache
     // Access private properties for testing using any type
     (queryManager as any).queryCache = new Map();
     (queryManager as any).queryCache.set('find-function-calls', {
-      matches: () => [],
+      matches: vi.fn(() => []),
+      captures: vi.fn(() => []),
+      captureNames: [],
+      captureQuantifiers: [],
+      predicates: [],
+      setProperties: [],
+      assertedProperties: [],
+      refutedProperties: [],
+      matchLimit: undefined,
+      delete: vi.fn(),
+      predicatesForPattern: vi.fn(() => []),
+      disableCapture: vi.fn(),
+      disablePattern: vi.fn(),
+      didExceedMatchLimit: vi.fn(() => false),
+      startIndexForPattern: vi.fn(() => 0),
+      endIndexForPattern: vi.fn(() => 0),
+      patternCount: vi.fn(() => 0),
+      captureIndexForName: vi.fn(() => 0),
+      isPatternRooted: vi.fn(() => false),
+      isPatternNonLocal: vi.fn(() => false),
+      isPatternGuaranteedAtStep: vi.fn(() => false)
     } as Query);
   });
 

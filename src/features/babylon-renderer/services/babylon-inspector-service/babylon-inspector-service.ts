@@ -114,7 +114,7 @@ export class BabylonInspectorService {
     return tryCatchAsync(
       async () => {
         if (!scene) {
-          throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required to show inspector');
+          throw this.createError(InspectorErrorCode.SCENE_NOT_PROVIDED, 'Scene is required to show inspector');
         }
 
         // Merge config if provided
@@ -122,7 +122,7 @@ export class BabylonInspectorService {
 
         // Check if inspector is available
         if (!this.isInspectorAvailable()) {
-          throw this.createError('INSPECTOR_NOT_AVAILABLE', 'BabylonJS Inspector is not available');
+          throw this.createError(InspectorErrorCode.INSPECTOR_NOT_AVAILABLE, 'BabylonJS Inspector is not available');
         }
 
         // Import inspector dynamically
@@ -155,7 +155,7 @@ export class BabylonInspectorService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as InspectorError;
         }
-        return this.createError('SHOW_FAILED', `Failed to show inspector: ${error}`);
+        return this.createError(InspectorErrorCode.SHOW_FAILED, `Failed to show inspector: ${error}`);
       }
     );
   }
@@ -183,7 +183,7 @@ export class BabylonInspectorService {
 
         logger.debug('[DEBUG][BabylonInspectorService] Inspector hidden successfully');
       },
-      (error) => this.createError('HIDE_FAILED', `Failed to hide inspector: ${error}`)
+      (error) => this.createError(InspectorErrorCode.HIDE_FAILED, `Failed to hide inspector: ${error}`)
     );
   }
 
@@ -196,7 +196,7 @@ export class BabylonInspectorService {
     return tryCatchAsync(
       async () => {
         if (!this.isVisible || !this.scene) {
-          throw this.createError('TAB_SWITCH_FAILED', 'Inspector must be visible to switch tabs');
+          throw this.createError(InspectorErrorCode.TAB_SWITCH_FAILED, 'Inspector must be visible to switch tabs');
         }
 
         // Import inspector and switch tab
@@ -215,7 +215,7 @@ export class BabylonInspectorService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as InspectorError;
         }
-        return this.createError('TAB_SWITCH_FAILED', `Failed to switch tab: ${error}`);
+        return this.createError(InspectorErrorCode.TAB_SWITCH_FAILED, `Failed to switch tab: ${error}`);
       }
     );
   }
@@ -230,7 +230,7 @@ export class BabylonInspectorService {
       if (!scene && !this.scene) {
         return {
           success: false,
-          error: this.createError('SCENE_NOT_PROVIDED', 'Scene is required to show inspector'),
+          error: this.createError(InspectorErrorCode.SCENE_NOT_PROVIDED, 'Scene is required to show inspector'),
         };
       }
       return this.show(scene || this.scene!);

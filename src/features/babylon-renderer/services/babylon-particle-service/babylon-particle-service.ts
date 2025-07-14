@@ -160,7 +160,7 @@ export class BabylonParticleService {
     return tryCatch(
       () => {
         if (!scene) {
-          throw this.createError('INVALID_CONFIG', 'Scene is required for particle systems');
+          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, 'Scene is required for particle systems');
         }
 
         this.scene = scene;
@@ -172,7 +172,7 @@ export class BabylonParticleService {
           return error as ParticleSystemError;
         }
         return this.createError(
-          'CREATION_FAILED',
+          ParticleSystemErrorCode.CREATION_FAILED,
           `Failed to initialize particle service: ${error}`
         );
       }
@@ -192,7 +192,7 @@ export class BabylonParticleService {
       async () => {
         if (!this.scene) {
           throw this.createError(
-            'INVALID_CONFIG',
+            ParticleSystemErrorCode.INVALID_CONFIG,
             'Scene must be initialized before creating particle systems'
           );
         }
@@ -244,7 +244,7 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError('CREATION_FAILED', `Failed to create particle system: ${error}`);
+        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to create particle system: ${error}`);
       }
     );
   }
@@ -259,7 +259,7 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
         }
 
         particleSystem.start();
@@ -281,7 +281,7 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError('CREATION_FAILED', `Failed to start particle system: ${error}`);
+        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to start particle system: ${error}`);
       }
     );
   }
@@ -296,7 +296,7 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
         }
 
         particleSystem.stop();
@@ -318,7 +318,7 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError('CREATION_FAILED', `Failed to stop particle system: ${error}`);
+        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to stop particle system: ${error}`);
       }
     );
   }
@@ -354,7 +354,7 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
         }
 
         particleSystem.dispose();
@@ -368,7 +368,7 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError('DISPOSAL_FAILED', `Failed to remove particle system: ${error}`);
+        return this.createError(ParticleSystemErrorCode.DISPOSAL_FAILED, `Failed to remove particle system: ${error}`);
       }
     );
   }
@@ -461,7 +461,9 @@ export class BabylonParticleService {
     if (!this.scene) return false;
 
     const engine = this.scene.getEngine();
-    return GPUParticleSystem.IsSupported && engine.webGLVersion >= 2;
+    // Check if it's a WebGL engine and has webGLVersion property
+    const isWebGL2Supported = 'webGLVersion' in engine && (engine as any).webGLVersion >= 2;
+    return GPUParticleSystem.IsSupported && isWebGL2Supported;
   }
 
   /**

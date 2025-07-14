@@ -168,7 +168,12 @@ describe('AST Evaluator Handlers', () => {
         type: 'expression',
         expressionType: 'list_comprehension_expression',
         variable: 'i',
-        range: createLiteral([1, 2, 3]),
+        range: {
+          type: 'expression',
+          expressionType: 'array',
+          items: [createLiteral(1), createLiteral(2), createLiteral(3)],
+          location: createLocation(),
+        } as ExpressionNode,
         expression: createLiteral('i'),
         location: createLocation(),
       };

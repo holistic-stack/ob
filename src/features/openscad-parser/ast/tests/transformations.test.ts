@@ -231,14 +231,12 @@ describe('Transformation AST Generation', () => {
       expect(ast[0]?.type).toBe('offset');
 
       const offsetNode = ast[0] as ast.OffsetNode;
-      // With the real parser, the radius might be stored in r or radius property
-      if (offsetNode.radius !== undefined) {
-        expect(typeof offsetNode.radius).toBe('number');
-      } else if (offsetNode.r !== undefined) {
+      // With the real parser, the radius is stored in r property
+      if (offsetNode.r !== undefined) {
         expect(typeof offsetNode.r).toBe('number');
       } else {
-        // If neither property exists, fail the test
-        expect(offsetNode.r ?? offsetNode.radius).toBeDefined();
+        // If r property doesn't exist, fail the test
+        expect(offsetNode.r).toBeDefined();
       }
       // For now, we'll just check that the node has the right type
       expect(offsetNode.children).toBeDefined();

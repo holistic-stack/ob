@@ -11,6 +11,7 @@ import {
   convertBabylonMeshToGeneric,
   convertGenericMeshToBabylon,
   DEFAULT_CONVERSION_OPTIONS,
+  MeshConversionErrorCode,
   optimizeMeshForCSG,
 } from './mesh-converter';
 
@@ -116,7 +117,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('INVALID_MESH_DATA');
+        expect(result.error.code).toBe(MeshConversionErrorCode.INVALID_MESH_DATA);
         expect(result.error.message).toContain('Invalid mesh data');
       }
     });
@@ -126,7 +127,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('INVALID_MESH_DATA');
+        expect(result.error.code).toBe(MeshConversionErrorCode.INVALID_MESH_DATA);
         expect(result.error.message).toContain('Scene is required');
       }
     });
@@ -137,7 +138,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('INVALID_MESH_DATA');
+        expect(result.error.code).toBe(MeshConversionErrorCode.INVALID_MESH_DATA);
       }
     });
 
@@ -150,7 +151,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('INVALID_MESH_DATA');
+        expect(result.error.code).toBe(MeshConversionErrorCode.INVALID_MESH_DATA);
         expect(result.error.message).toContain('positions');
       }
     });
@@ -164,7 +165,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('INVALID_MESH_DATA');
+        expect(result.error.code).toBe(MeshConversionErrorCode.INVALID_MESH_DATA);
         expect(result.error.message).toContain('indices');
       }
     });
@@ -277,7 +278,7 @@ describe('CSG2 Mesh Converter', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_FAILED');
+        expect(result.error.code).toBe(MeshConversionErrorCode.VALIDATION_FAILED);
         expect(result.error.message).toContain('not manifold');
       }
     });
@@ -288,7 +289,7 @@ describe('CSG2 Mesh Converter', () => {
       expect(DEFAULT_CONVERSION_OPTIONS.generateNormals).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.generateUVs).toBe(false);
       expect(DEFAULT_CONVERSION_OPTIONS.optimizeIndices).toBe(true);
-      expect(DEFAULT_CONVERSION_OPTIONS.validateMesh).toBe(true);
+      expect(DEFAULT_CONVERSION_OPTIONS.validateManifold).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.mergeVertices).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.tolerance).toBe(1e-6);
     });

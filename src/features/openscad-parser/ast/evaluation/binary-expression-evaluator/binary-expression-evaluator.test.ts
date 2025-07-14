@@ -23,10 +23,8 @@ describe('BinaryExpressionEvaluator', () => {
     return {
       type: 'expression',
       expressionType: 'literal',
-      literalType: typeof value === 'number' ? 'number' : 'boolean',
       value,
-      location: undefined,
-    };
+    } as ast.LiteralNode;
   }
 
   // Helper function to create a binary expression node
@@ -41,8 +39,7 @@ describe('BinaryExpressionEvaluator', () => {
       operator,
       left,
       right,
-      location: undefined,
-    };
+    } as ast.BinaryExpressionNode;
   }
 
   it('should evaluate addition correctly', () => {

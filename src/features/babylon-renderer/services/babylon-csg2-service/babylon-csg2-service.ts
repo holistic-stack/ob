@@ -50,13 +50,13 @@ export class BabylonCSG2Service {
     return tryCatch(
       () => {
         if (!scene) {
-          throw this.createError('INVALID_MESH', 'Scene is required for CSG2 operations');
+          throw this.createError(CSGErrorCode.INVALID_MESH, 'Scene is required for CSG2 operations');
         }
 
         this.scene = scene;
         logger.debug('[DEBUG][BabylonCSG2Service] CSG2 service initialized successfully');
       },
-      (error) => this.createError('OPERATION_FAILED', `Failed to initialize CSG2 service: ${error}`)
+      (error) => this.createError(CSGErrorCode.OPERATION_FAILED, `Failed to initialize CSG2 service: ${error}`)
     );
   }
 
@@ -123,7 +123,7 @@ export class BabylonCSG2Service {
         const { CSG2 } = await import('@babylonjs/core');
 
         if (!CSG2) {
-          throw this.createError('MANIFOLD_ERROR', 'CSG2 is not available in this BabylonJS build');
+          throw this.createError(CSGErrorCode.CSG_ERROR, 'CSG2 is not available in this BabylonJS build');
         }
 
         // Prepare meshes for CSG operation
@@ -147,7 +147,7 @@ export class BabylonCSG2Service {
             resultCSG = CSG2.Intersect(csgA, csgB);
             break;
           default:
-            throw this.createError('OPERATION_FAILED', `Unsupported operation: ${operation}`);
+            throw this.createError(CSGErrorCode.OPERATION_FAILED, `Unsupported operation: ${operation}`);
         }
 
         const operationTime = performance.now() - operationStartTime;
@@ -212,7 +212,7 @@ export class BabylonCSG2Service {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as CSGError;
         }
-        return this.createError('OPERATION_FAILED', `CSG ${operation} operation failed: ${error}`);
+        return this.createError(CSGErrorCode.OPERATION_FAILED, `CSG ${operation} operation failed: ${error}`);
       }
     );
   }
@@ -222,11 +222,11 @@ export class BabylonCSG2Service {
    */
   private validateMeshes(meshA: Mesh, meshB: Mesh): void {
     if (!meshA || !meshB) {
-      throw this.createError('INVALID_MESH', 'Both meshes are required for CSG operations');
+      throw this.createError(CSGErrorCode.INVALID_MESH, 'Both meshes are required for CSG operations');
     }
 
     if (!meshA.geometry || !meshB.geometry) {
-      throw this.createError('INVALID_MESH', 'Meshes must have valid geometry');
+      throw this.createError(CSGErrorCode.INVALID_MESH, 'Meshes must have valid geometry');
     }
 
     // Check for manifold geometry (simplified check)

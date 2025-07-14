@@ -13,19 +13,24 @@ export default defineConfig({
   define: {
     // Add any global defines here if needed
   },
-  optimizeDeps: {
-      include: [
-        'zustand',
-        'zustand/middleware',
-        'immer',
-        'monaco-editor',
-        '@monaco-editor/react',
-        'tslog',
-        // TODO: Add BabylonJS dependencies
-      ],
-      // TODO: Add BabylonJS exclusions if needed
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
     },
-    build: {
+  },
+  optimizeDeps: {
+    include: [
+      'zustand',
+      'zustand/middleware',
+      'immer',
+      'monaco-editor',
+      '@monaco-editor/react',
+      'tslog',
+      // TODO: Add BabylonJS dependencies
+    ],
+    // TODO: Add BabylonJS exclusions if needed
+  },
+  build: {
       outDir: 'dist',
       sourcemap: true,
       // Increase chunk size warning limit for large dependencies
@@ -83,5 +88,4 @@ export default defineConfig({
       teardownTimeout: 20000,
       isolate: false,
     },
-  },
 });

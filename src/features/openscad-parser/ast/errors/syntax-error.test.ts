@@ -31,8 +31,8 @@ describe('OpenSCADSyntaxError', () => {
     expect(error.message).toContain(`Missing ${tokenName}`);
     expect(error.suggestions).toHaveLength(1);
     if (error.suggestions && error.suggestions.length > 0) {
-      expect(error.suggestions[0].message).toContain(`Add the missing ${tokenName}`);
-      expect(error.suggestions[0].replacement).toBe(tokenName);
+      expect(error.suggestions[0]!.message).toContain(`Add the missing ${tokenName}`);
+      expect(error.suggestions[0]!.replacement).toBe(tokenName);
     }
   });
 
@@ -46,10 +46,10 @@ describe('OpenSCADSyntaxError', () => {
     expect(error.message).toContain(`expected '${expectedToken}'`);
     expect(error.suggestions).toHaveLength(1);
     if (error.suggestions && error.suggestions.length > 0) {
-      expect(error.suggestions[0].message).toContain(
+      expect(error.suggestions[0]!.message).toContain(
         `Replace '${foundToken}' with '${expectedToken}'`
       );
-      expect(error.suggestions[0].replacement).toBe(expectedToken);
+      expect(error.suggestions[0]!.replacement).toBe(expectedToken);
     }
   });
 
@@ -63,8 +63,8 @@ describe('OpenSCADSyntaxError', () => {
     expect(error.message).toContain(`missing '${closeToken}'`);
     expect(error.suggestions).toHaveLength(1);
     if (error.suggestions && error.suggestions.length > 0) {
-      expect(error.suggestions[0].message).toContain(`Add the missing '${closeToken}'`);
-      expect(error.suggestions[0].replacement).toBe(closeToken);
+      expect(error.suggestions[0]!.message).toContain(`Add the missing '${closeToken}'`);
+      expect(error.suggestions[0]!.replacement).toBe(closeToken);
     }
   });
 
@@ -75,8 +75,8 @@ describe('OpenSCADSyntaxError', () => {
     expect(error.message).toContain('Missing semicolon');
     expect(error.suggestions).toHaveLength(1);
     if (error.suggestions && error.suggestions.length > 0) {
-      expect(error.suggestions[0].message).toContain('Add a semicolon');
-      expect(error.suggestions[0].replacement).toBe(';');
+      expect(error.suggestions[0]!.message).toContain('Add a semicolon');
+      expect(error.suggestions[0]!.replacement).toBe(';');
     }
   });
 });

@@ -204,7 +204,7 @@ export class BabylonMaterialService {
     return tryCatch(
       () => {
         if (!scene) {
-          throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required for material management');
+          throw this.createError(MaterialErrorCode.SCENE_NOT_PROVIDED, 'Scene is required for material management');
         }
 
         this.scene = scene;
@@ -298,7 +298,7 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError('CREATION_FAILED', `Failed to create PBR material: ${error}`);
+        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to create PBR material: ${error}`);
       }
     );
   }
@@ -363,7 +363,7 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError('CREATION_FAILED', `Failed to create node material: ${error}`);
+        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to create node material: ${error}`);
       }
     );
   }
@@ -380,7 +380,7 @@ export class BabylonMaterialService {
       () => {
         const material = this.materials.get(materialName);
         if (!material) {
-          throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${materialName}`);
+          throw this.createError(MaterialErrorCode.MATERIAL_NOT_FOUND, `Material not found: ${materialName}`);
         }
 
         mesh.material = material;
@@ -405,7 +405,7 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError('CREATION_FAILED', `Failed to apply material: ${error}`);
+        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to apply material: ${error}`);
       }
     );
   }
@@ -441,7 +441,7 @@ export class BabylonMaterialService {
       () => {
         const material = this.materials.get(name);
         if (!material) {
-          throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${name}`);
+          throw this.createError(MaterialErrorCode.MATERIAL_NOT_FOUND, `Material not found: ${name}`);
         }
 
         material.dispose();
@@ -455,7 +455,7 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError('CREATION_FAILED', `Failed to remove material: ${error}`);
+        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to remove material: ${error}`);
       }
     );
   }
@@ -481,7 +481,7 @@ export class BabylonMaterialService {
     if (textures.metallicRoughnessTexture) {
       texturePromises.push(
         this.loadTexture(textures.metallicRoughnessTexture).then((texture) => {
-          if (texture) material.metallicRoughnessTexture = texture;
+          if (texture) material.metallicTexture = texture;
         })
       );
     }
@@ -531,7 +531,13 @@ export class BabylonMaterialService {
           resolve();
         } else {
           texture.onLoadObservable.addOnce(() => resolve());
-          texture.onErrorObservable.addOnce(() => reject(new Error('Failed to load texture')));
+          // Handle texture loading errors by checking if texture failed to load
+          const checkError = () => {
+            if (!texture.isReady() && texture.loadingError) {
+              reject(new Error('Failed to load texture'));
+            }
+          };
+          setTimeout(checkError, 5000); // Timeout after 5 seconds
         }
       });
 
