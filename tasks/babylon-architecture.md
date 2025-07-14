@@ -28,13 +28,17 @@ Complete migration from Three.js to BabylonJS with CSG2 Manifold implementation,
 ## Tasks
 
 ### Task Overview
-Complete migration from Three.js to BabylonJS with comprehensive feature integration and testing.
+Complete migration from Three.js to BabylonJS with comprehensive feature integration and testing. **Priority 1: Complete cleanup of all Three.js related files, dependencies, and code to provide a manageable codebase following SRP principles.**
 
 | Task Name | Responsible Person | Due Date | Status | Priority |
 |-----------|-------------------|----------|--------|----------|
+| **PRIORITY 1: Complete Cleanup** | Lead Developer | Week 1 Day 1 | Not Started | **CRITICAL** |
+| Remove All Three.js Files & Directories | Lead Developer | Week 1 Day 1 | Not Started | **CRITICAL** |
+| Remove All Three.js Dependencies | Lead Developer | Week 1 Day 1 | Not Started | **CRITICAL** |
+| Clean All Three.js References | Lead Developer | Week 1 Day 1 | Not Started | **CRITICAL** |
+| Update All Configuration Files | Lead Developer | Week 1 Day 1 | Not Started | **CRITICAL** |
 | **Phase 1: Foundation & Setup** | Lead Developer | Week 1 | Not Started | Critical |
-| Remove Three.js Dependencies | Lead Developer | Week 1 Day 1-2 | Not Started | Critical |
-| Add BabylonJS 8.16.1 Dependencies | Lead Developer | Week 1 Day 1-2 | Not Started | Critical |
+| Add BabylonJS 8.16.1 Dependencies | Lead Developer | Week 1 Day 2 | Not Started | Critical |
 | Create BabylonJS Feature Structure | Lead Developer | Week 1 Day 2-3 | Not Started | Critical |
 | WebGPU Engine Integration | Lead Developer | Week 1 Day 3-4 | Not Started | High |
 | Inspector v2 Integration | Lead Developer | Week 1 Day 4-5 | Not Started | High |
@@ -55,6 +59,264 @@ Complete migration from Three.js to BabylonJS with comprehensive feature integra
 | Final Validation & Deployment | Lead Developer | Week 4 Day 4-5 | Not Started | Critical |
 
 ### Task Details
+
+## 🗑️ **PRIORITY 1: Complete Three.js Cleanup (Day 1)**
+
+**CRITICAL: This cleanup must be completed FIRST to provide a manageable codebase following SRP principles and eliminate all Three.js dependencies before BabylonJS implementation.**
+
+### **Complete File and Directory Removal**
+
+#### **1. Remove Entire Three.js Feature Directory**
+```bash
+# Remove the entire 3d-renderer feature (100+ files)
+rm -rf src/features/3d-renderer/
+
+# This removes:
+# - All Three.js components and services
+# - React Three Fiber integration
+# - Manifold-3d integration
+# - Three.js specific types and utilities
+# - All related test files
+```
+
+#### **2. Remove Three.js Specific Services from AST Converter**
+```bash
+# Remove Three.js specific converters
+rm -rf src/features/ast-to-csg-converter/services/manifold-ast-converter/
+rm -rf src/features/ast-to-csg-converter/services/three-manifold-converter/
+
+# These contain Three.js BufferGeometry conversion logic
+```
+
+#### **3. Remove Three.js Test Utilities**
+```bash
+# Remove Three.js specific test utilities
+rm -f src/vitest-helpers/three-object-tracker.ts
+
+# Remove any Three.js related test files
+find src/ -name "*three*" -type f -delete
+find src/ -name "*r3f*" -type f -delete
+find src/ -name "*manifold*" -type f -delete
+```
+
+### **Package.json Dependencies Cleanup**
+
+#### **4. Remove All Three.js Dependencies**
+```bash
+# Core Three.js packages
+pnpm remove three
+pnpm remove @types/three
+
+# React Three Fiber ecosystem
+pnpm remove @react-three/fiber
+pnpm remove @react-three/drei
+pnpm remove @react-three/test-renderer
+
+# External Manifold dependency (replaced by BabylonJS CSG2)
+pnpm remove manifold-3d
+
+# gl-matrix (BabylonJS has built-in math)
+pnpm remove gl-matrix
+```
+
+#### **5. Update Package.json Scripts**
+Remove or update these scripts in `package.json`:
+```json
+// REMOVE these scripts:
+"validate:r3f": "vitest run src/features/r3f-renderer --reporter=verbose",
+"test:r3f-visual": "playwright test src/features/r3f-renderer/components/r3f-renderer/r3f-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots",
+
+// UPDATE project name:
+"name": "openscad-babylon", // Change from "openscad-r3f"
+```
+
+### **Configuration Files Cleanup**
+
+#### **6. TypeScript Configuration Updates**
+Update all TypeScript config files to remove Three.js references:
+
+**tsconfig.json:**
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vite/client",
+      "vitest/globals",
+      "vitest"
+      // REMOVE: "@types/three"
+    ]
+  }
+}
+```
+
+**tsconfig.spec.json:**
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest",
+      // REMOVE: "@types/three",
+      "@testing-library/jest-dom"
+    ]
+  }
+}
+```
+
+**tsconfig.ct.json:**
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "node",
+      "@playwright/experimental-ct-react",
+      // REMOVE: "@types/three",
+      "vite/client"
+    ]
+  }
+}
+```
+
+**tsconfig.lib.json:**
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vite/client"
+      // REMOVE: "@types/three"
+    ]
+  }
+}
+```
+
+#### **7. Vite Configuration Cleanup**
+Update `vite.config.ts` to remove Three.js chunk splitting:
+```typescript
+// REMOVE this entire chunk from manualChunks:
+// three: ['three', '@react-three/fiber', '@react-three/drei'],
+
+// REMOVE this chunk:
+// 'manifold-wasm': ['manifold-3d'],
+
+// UPDATE utils chunk to remove gl-matrix:
+utils: ['zustand', 'class-variance-authority', 'tslog'], // Remove 'gl-matrix'
+```
+
+### **Documentation Cleanup**
+
+#### **8. Remove Three.js Documentation Files**
+```bash
+# Remove Three.js specific documentation
+rm -f docs/react-three-fiber-integration.md
+rm -f llm-r3f-test.md
+
+# Update README.md to remove Three.js references
+# Update all .md files to remove Three.js pipeline descriptions
+```
+
+#### **9. Update Documentation References**
+Files to update:
+- `README.md` - Remove Three.js pipeline, update to BabylonJS
+- `docs/implementation-status.md` - Remove R3F references
+- `docs/codebase-analysis.md` - Remove Three.js dependencies
+- `GEMINI.md` - Update technology stack
+- `.trae/rules/project_rules.md` - Update 3D rendering section
+
+### **Code Reference Cleanup**
+
+#### **10. Search and Remove All Import Statements**
+```bash
+# Search for all Three.js imports and remove them
+grep -r "from 'three'" src/ --include="*.ts" --include="*.tsx"
+grep -r "from '@react-three/fiber'" src/ --include="*.ts" --include="*.tsx"
+grep -r "from '@react-three/drei'" src/ --include="*.ts" --include="*.tsx"
+grep -r "from '@react-three/test-renderer'" src/ --include="*.ts" --include="*.tsx"
+grep -r "from 'manifold-3d'" src/ --include="*.ts" --include="*.tsx"
+grep -r "from 'gl-matrix'" src/ --include="*.ts" --include="*.tsx"
+
+# Remove all found import statements
+```
+
+#### **11. Update Store Slices**
+Remove Three.js specific state from Zustand store:
+- Remove `three-renderer.store.ts` references
+- Remove React Three Fiber specific actions
+- Remove Manifold-specific state management
+- Update store exports to exclude Three.js slices
+
+#### **12. Update App.tsx and Main Components**
+Remove any Three.js renderer components from:
+- `src/App.tsx`
+- `src/main.tsx`
+- Any layout components that reference Three.js
+
+### **Validation Checklist for Cleanup**
+
+#### **13. Verify Complete Removal**
+```bash
+# 1. Check for any remaining Three.js references
+grep -r "three\|r3f\|manifold\|gl-matrix" src/ --exclude-dir=node_modules
+
+# 2. Verify no Three.js dependencies remain
+cat package.json | grep -E "(three|@react-three|manifold-3d|gl-matrix)"
+
+# 3. Check TypeScript compilation (should have errors for missing imports)
+pnpm type-check
+
+# 4. Verify build fails appropriately (missing dependencies)
+pnpm build
+
+# 5. Check for any remaining test files
+find src/ -name "*.test.*" | grep -E "(three|r3f|manifold)"
+```
+
+#### **14. Expected State After Cleanup**
+- ✅ Zero Three.js files in codebase
+- ✅ Zero Three.js dependencies in package.json
+- ✅ Zero Three.js references in configuration files
+- ✅ Zero Three.js imports in source code
+- ✅ TypeScript errors for missing Three.js imports (expected)
+- ✅ Build failures due to missing dependencies (expected)
+- ✅ Clean, manageable codebase ready for BabylonJS implementation
+
+**This cleanup creates a clean foundation following SRP principles, with each remaining file having a single responsibility and no Three.js dependencies to manage during the BabylonJS implementation.**
+
+### **Benefits of Priority 1 Cleanup Approach**
+
+#### **🎯 Manageable Codebase**
+- **Reduced Complexity**: Eliminates 100+ Three.js files before starting BabylonJS implementation
+- **Clear Dependencies**: No conflicting Three.js and BabylonJS dependencies
+- **SRP Compliance**: Each remaining file has a single, clear responsibility
+- **Focused Development**: Team can focus on BabylonJS without Three.js distractions
+
+#### **🔧 Technical Benefits**
+- **Clean TypeScript**: No type conflicts between Three.js and BabylonJS
+- **Optimized Bundle**: Removes unnecessary Three.js dependencies (3MB+ reduction)
+- **Faster Development**: No need to navigate through unused Three.js code
+- **Clear Architecture**: Bulletproof-react structure maintained without legacy code
+
+#### **📊 Quality Assurance**
+- **Easier Testing**: No Three.js mocks or test utilities to maintain
+- **Simplified CI/CD**: Faster builds without Three.js compilation
+- **Better Performance**: No unused Three.js code affecting bundle size
+- **Cleaner Git History**: Clear separation between Three.js removal and BabylonJS addition
+
+#### **👥 Team Productivity**
+- **Reduced Cognitive Load**: Developers don't need to understand both Three.js and BabylonJS
+- **Faster Onboarding**: New team members only need to learn BabylonJS patterns
+- **Clear Migration Path**: Obvious before/after state for the migration
+- **Easier Debugging**: No confusion between Three.js and BabylonJS issues
+
+#### **🚀 Implementation Strategy**
+- **Risk Mitigation**: Complete cleanup before adding new dependencies
+- **Incremental Progress**: Clear milestone completion with cleanup
+- **Quality Gates**: Validation checkpoints ensure complete removal
+- **Documentation**: Clear record of what was removed and why
 
 #### **Phase 1: Foundation & Setup (Week 1)**
 - **Remove Three.js Dependencies**
@@ -1143,74 +1405,41 @@ This comprehensive migration plan replaces Three.js with BabylonJS, leveraging C
 
 ## 🗑️ **Complete Removal Checklist**
 
-### **Files and Directories to Remove**
+**⚠️ IMPORTANT: See "PRIORITY 1: Complete Three.js Cleanup" section above for detailed step-by-step removal instructions.**
 
-#### **Three.js Feature Directory**
-```bash
-# Remove entire 3d-renderer feature
-rm -rf src/features/3d-renderer/
+### **Summary of Files and Directories to Remove**
 
-# Remove Three.js specific components
-rm -rf src/features/ast-to-csg-converter/services/manifold-ast-converter/
-rm -rf src/features/ast-to-csg-converter/services/three-manifold-converter/
-```
+#### **Major Directories (100+ files)**
+- `src/features/3d-renderer/` - Entire Three.js feature directory
+- `src/features/ast-to-csg-converter/services/manifold-ast-converter/`
+- `src/features/ast-to-csg-converter/services/three-manifold-converter/`
+- `src/vitest-helpers/three-object-tracker.ts`
 
-#### **Three.js Dependencies in package.json**
-```bash
-# Remove Three.js packages
-pnpm remove three
-pnpm remove @types/three
-pnpm remove @react-three/fiber
-pnpm remove @react-three/drei
-pnpm remove @react-three/test-renderer
+#### **Dependencies to Remove**
+- `three`, `@types/three`
+- `@react-three/fiber`, `@react-three/drei`, `@react-three/test-renderer`
+- `manifold-3d` (replaced by BabylonJS CSG2)
+- `gl-matrix` (BabylonJS has built-in math)
 
-# Remove Manifold (now built into BabylonJS CSG2)
-pnpm remove manifold-3d
+#### **Configuration Files to Update**
+- `package.json` - Remove dependencies and update scripts
+- `tsconfig.json`, `tsconfig.spec.json`, `tsconfig.ct.json`, `tsconfig.lib.json` - Remove `@types/three`
+- `vite.config.ts` - Remove Three.js chunk splitting
+- All documentation files referencing Three.js
 
-# Remove gl-matrix (BabylonJS has built-in math)
-pnpm remove gl-matrix
-```
+#### **Code References to Clean**
+- All import statements from Three.js packages
+- Store slices with Three.js state
+- Type definitions using Three.js types
+- Test files with Three.js dependencies
 
-#### **Documentation References**
-- [ ] Remove Three.js references from `docs/typescript-guidelines.md`
-- [ ] Remove React Three Fiber patterns from `docs/bulletproof-react-structure.md`
-- [ ] Update `docs/how-to-debug.md` to remove Three.js debugging sections
-- [ ] Remove Three.js performance targets from `tasks/refined-architecture.md`
-
-#### **Test Files to Remove**
-```bash
-# Remove Three.js specific tests
-find src/ -name "*three*" -type f -delete
-find src/ -name "*r3f*" -type f -delete
-find src/ -name "*manifold*" -type f -delete
-```
-
-#### **Import Statements to Remove**
-Search and remove all imports containing:
-- `from 'three'`
-- `from '@react-three/fiber'`
-- `from '@react-three/drei'`
-- `from '@react-three/test-renderer'`
-- `from 'manifold-3d'`
-- `from 'gl-matrix'`
-
-### **Code References to Remove**
-
-#### **Store Slices**
-- [ ] Remove Three.js renderer state from Zustand store
-- [ ] Remove React Three Fiber specific actions
-- [ ] Remove Manifold-specific state management
-
-#### **Type Definitions**
-- [ ] Remove Three.js type imports
-- [ ] Remove React Three Fiber type definitions
-- [ ] Remove Manifold type definitions
-- [ ] Remove gl-matrix type references
-
-#### **Configuration Files**
-- [ ] Remove Three.js from Vite configuration
-- [ ] Remove React Three Fiber from test setup
-- [ ] Remove Manifold from build configuration
+### **Cleanup Validation**
+After completing the cleanup from the detailed section above:
+- [ ] Zero Three.js files remain in codebase
+- [ ] Zero Three.js dependencies in package.json
+- [ ] Zero Three.js references in configuration files
+- [ ] TypeScript compilation shows expected errors for missing imports
+- [ ] Clean, manageable codebase following SRP principles
 
 ## 🔄 **Step-by-Step Migration Process**
 
