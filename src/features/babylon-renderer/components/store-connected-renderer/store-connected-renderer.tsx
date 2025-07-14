@@ -1,23 +1,24 @@
 /**
  * @file Store-Connected BabylonJS Renderer
- * 
+ *
  * React component that connects the BabylonJS renderer with the Zustand store.
  * Provides seamless integration between OpenSCAD AST and 3D visualization.
  */
 
-import React, { useEffect, useRef, useCallback, useMemo } from 'react';
-import { Vector3, Color3 } from '@babylonjs/core';
-import { BabylonScene } from '../babylon-scene';
-import type { BabylonSceneProps } from '../babylon-scene';
-import { useAppStore } from '../../../store/app-store';
-import { 
-  selectParsingAST, 
-  selectRenderingIsRendering,
-  selectRenderingErrors,
-  selectRenderingMeshes 
-} from '../../../store/selectors';
+import { Color3, Vector3 } from '@babylonjs/core';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
+import { useAppStore } from '../../../store/app-store';
+import {
+  selectParsingAST,
+  selectRenderingErrors,
+  selectRenderingIsRendering,
+  selectRenderingMeshes,
+} from '../../../store/selectors';
+import type { BabylonSceneProps } from '../babylon-scene';
+import { BabylonScene } from '../babylon-scene';
 
 const logger = createLogger('StoreConnectedRenderer');
 
@@ -35,7 +36,7 @@ export interface StoreConnectedRendererProps {
 
 /**
  * Store-Connected BabylonJS Renderer Component
- * 
+ *
  * Integrates BabylonJS scene with Zustand store for reactive 3D rendering.
  * Automatically renders OpenSCAD AST changes and manages rendering state.
  */
@@ -58,115 +59,175 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const meshes = useAppStore(selectRenderingMeshes);
 
   // Store actions
-  const { 
+  const {
     initializeEngine,
     renderAST,
     clearScene,
     updatePerformanceMetrics,
     showInspector,
-    hideInspector
+    hideInspector,
   } = useAppStore((state) => ({
-    initializeEngine: state.initializeEngine || (() => Promise.resolve({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'BabylonJS rendering not implemented', timestamp: new Date(), service: 'renderer' } })),
-    renderAST: state.renderAST || (() => Promise.resolve({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'BabylonJS rendering not implemented', timestamp: new Date(), service: 'renderer' } })),
+    initializeEngine:
+      state.initializeEngine ||
+      (() =>
+        Promise.resolve({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+            message: 'BabylonJS rendering not implemented',
+            timestamp: new Date(),
+            service: 'renderer',
+          },
+        })),
+    renderAST:
+      state.renderAST ||
+      (() =>
+        Promise.resolve({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+            message: 'BabylonJS rendering not implemented',
+            timestamp: new Date(),
+            service: 'renderer',
+          },
+        })),
     clearScene: state.clearScene || (() => {}),
     updatePerformanceMetrics: state.updatePerformanceMetrics || (() => {}),
-    showInspector: state.showInspector || (() => ({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Inspector not implemented', timestamp: new Date(), service: 'inspector' } })),
-    hideInspector: state.hideInspector || (() => ({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Inspector not implemented', timestamp: new Date(), service: 'inspector' } })),
+    showInspector:
+      state.showInspector ||
+      (() => ({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+          message: 'Inspector not implemented',
+          timestamp: new Date(),
+          service: 'inspector',
+        },
+      })),
+    hideInspector:
+      state.hideInspector ||
+      (() => ({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+          message: 'Inspector not implemented',
+          timestamp: new Date(),
+          service: 'inspector',
+        },
+      })),
   }));
 
   /**
    * Scene configuration
    */
-  const sceneConfig = useMemo((): Partial<BabylonSceneProps['config']> => ({
-    enableWebGPU,
-    enableInspector,
-    enablePhysics: false,
-    enableXR: false,
-    antialias: true,
-    adaptToDeviceRatio: true,
-  }), [enableWebGPU, enableInspector]);
+  const sceneConfig = useMemo(
+    (): Partial<BabylonSceneProps['config']> => ({
+      enableWebGPU,
+      enableInspector,
+      enablePhysics: false,
+      enableXR: false,
+      antialias: true,
+      adaptToDeviceRatio: true,
+    }),
+    [enableWebGPU, enableInspector]
+  );
 
   /**
    * Camera configuration for OpenSCAD visualization
    */
-  const cameraConfig = useMemo((): Partial<BabylonSceneProps['camera']> => ({
-    type: 'arcRotate',
-    radius: 20,
-    alpha: -Math.PI / 4,
-    beta: Math.PI / 3,
-    fov: Math.PI / 3,
-    minZ: 0.1,
-    maxZ: 1000,
-  }), []);
+  const cameraConfig = useMemo(
+    (): Partial<BabylonSceneProps['camera']> => ({
+      type: 'arcRotate',
+      radius: 20,
+      alpha: -Math.PI / 4,
+      beta: Math.PI / 3,
+      fov: Math.PI / 3,
+      minZ: 0.1,
+      maxZ: 1000,
+    }),
+    []
+  );
 
   /**
    * Lighting configuration optimized for 3D models
    */
-  const lightingConfig = useMemo((): Partial<BabylonSceneProps['lighting']> => ({
-    ambient: {
-      enabled: true,
-      intensity: 0.6,
-      color: new Color3(1, 1, 1), // White ambient light
-      direction: new Vector3(0, 1, 0), // Up direction
-    },
-    directional: {
-      enabled: true,
-      intensity: 1.0,
-      color: new Color3(1, 1, 1), // White directional light
-      direction: new Vector3(-1, -1, -1), // Top-left-front direction
-    },
-    environment: {
-      enabled: false,
-      intensity: 1.0,
-    },
-  }), []);
+  const lightingConfig = useMemo(
+    (): Partial<BabylonSceneProps['lighting']> => ({
+      ambient: {
+        enabled: true,
+        intensity: 0.6,
+        color: new Color3(1, 1, 1), // White ambient light
+        direction: new Vector3(0, 1, 0), // Up direction
+      },
+      directional: {
+        enabled: true,
+        intensity: 1.0,
+        color: new Color3(1, 1, 1), // White directional light
+        direction: new Vector3(-1, -1, -1), // Top-left-front direction
+      },
+      environment: {
+        enabled: false,
+        intensity: 1.0,
+      },
+    }),
+    []
+  );
 
   /**
    * Handle scene ready
    */
-  const handleSceneReady = useCallback(async (scene: any) => {
-    logger.debug('[DEBUG][StoreConnectedRenderer] Scene ready, initializing engine...');
-    sceneRef.current = scene;
+  const handleSceneReady = useCallback(
+    async (scene: any) => {
+      logger.debug('[DEBUG][StoreConnectedRenderer] Scene ready, initializing engine...');
+      sceneRef.current = scene;
 
-    // Initialize BabylonJS engine through store
-    const canvas = scene.getEngine().getRenderingCanvas();
-    if (canvas) {
-      const result = await initializeEngine(canvas);
-      if (!result.success) {
-        logger.error(`[ERROR][StoreConnectedRenderer] Engine initialization failed: ${result.error.message}`);
-        onRenderError?.(new Error(result.error.message));
-      } else {
-        logger.debug('[DEBUG][StoreConnectedRenderer] Engine initialized successfully');
+      // Initialize BabylonJS engine through store
+      const canvas = scene.getEngine().getRenderingCanvas();
+      if (canvas) {
+        const result = await initializeEngine(canvas);
+        if (!result.success) {
+          logger.error(
+            `[ERROR][StoreConnectedRenderer] Engine initialization failed: ${result.error.message}`
+          );
+          onRenderError?.(new Error(result.error.message));
+        } else {
+          logger.debug('[DEBUG][StoreConnectedRenderer] Engine initialized successfully');
+        }
       }
-    }
-  }, [initializeEngine, onRenderError]);
+    },
+    [initializeEngine, onRenderError]
+  );
 
   /**
    * Handle engine ready
    */
-  const handleEngineReady = useCallback((engine: any) => {
-    logger.debug('[DEBUG][StoreConnectedRenderer] Engine ready');
-    
-    // Start performance monitoring
-    updatePerformanceMetrics();
-    
-    // Set up performance monitoring interval
-    const performanceInterval = setInterval(() => {
-      updatePerformanceMetrics();
-    }, 1000);
+  const handleEngineReady = useCallback(
+    (_engine: any) => {
+      logger.debug('[DEBUG][StoreConnectedRenderer] Engine ready');
 
-    // Cleanup on unmount
-    return () => {
-      clearInterval(performanceInterval);
-    };
-  }, [updatePerformanceMetrics]);
+      // Start performance monitoring
+      updatePerformanceMetrics();
+
+      // Set up performance monitoring interval
+      const performanceInterval = setInterval(() => {
+        updatePerformanceMetrics();
+      }, 1000);
+
+      // Cleanup on unmount
+      return () => {
+        clearInterval(performanceInterval);
+      };
+    },
+    [updatePerformanceMetrics]
+  );
 
   /**
    * Handle render loop
    */
   const handleRenderLoop = useCallback(() => {
     // Update performance metrics periodically
-    if (Math.random() < 0.01) { // Update 1% of frames to avoid performance impact
+    if (Math.random() < 0.01) {
+      // Update 1% of frames to avoid performance impact
       updatePerformanceMetrics();
     }
   }, [updatePerformanceMetrics]);
@@ -201,16 +262,20 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
     renderTimeoutRef.current = setTimeout(async () => {
       logger.debug(`[DEBUG][StoreConnectedRenderer] Rendering AST with ${ast.length} nodes...`);
-      
+
       const startTime = performance.now();
       const result = await renderAST(ast);
       const renderTime = performance.now() - startTime;
 
       if (result.success) {
-        logger.debug(`[DEBUG][StoreConnectedRenderer] AST rendered successfully in ${renderTime.toFixed(2)}ms`);
+        logger.debug(
+          `[DEBUG][StoreConnectedRenderer] AST rendered successfully in ${renderTime.toFixed(2)}ms`
+        );
         onRenderComplete?.(meshes.length);
       } else {
-        logger.error(`[ERROR][StoreConnectedRenderer] AST rendering failed: ${result.error.message}`);
+        logger.error(
+          `[ERROR][StoreConnectedRenderer] AST rendering failed: ${result.error.message}`
+        );
         onRenderError?.(new Error(result.error.message));
       }
 
@@ -231,12 +296,16 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     if (enableInspector && sceneRef.current) {
       const result = showInspector();
       if (!result.success) {
-        logger.warn(`[WARN][StoreConnectedRenderer] Failed to show inspector: ${result.error.message}`);
+        logger.warn(
+          `[WARN][StoreConnectedRenderer] Failed to show inspector: ${result.error.message}`
+        );
       }
     } else if (!enableInspector) {
       const result = hideInspector();
       if (!result.success) {
-        logger.warn(`[WARN][StoreConnectedRenderer] Failed to hide inspector: ${result.error.message}`);
+        logger.warn(
+          `[WARN][StoreConnectedRenderer] Failed to hide inspector: ${result.error.message}`
+        );
       }
     }
   }, [enableInspector, showInspector, hideInspector]);

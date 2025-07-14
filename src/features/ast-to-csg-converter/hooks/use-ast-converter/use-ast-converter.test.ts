@@ -1,12 +1,12 @@
 /**
  * @file React Hook Tests for AST Converter
- * 
+ *
  * Tests for the useASTConverter hook following TDD principles.
  * Uses real OpenSCAD parser instances (no mocks) as per project guidelines.
  */
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { useASTConverter } from './use-ast-converter';
@@ -44,9 +44,9 @@ describe('useASTConverter', () => {
 
       // Should remain uninitialized
       expect(result.current.state.isInitialized).toBe(false);
-      
+
       // Wait a bit to ensure it doesn't auto-initialize
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       expect(result.current.state.isInitialized).toBe(false);
     });
   });
@@ -64,7 +64,7 @@ describe('useASTConverter', () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
       expect(parseResult.success).toBe(true);
-      
+
       if (!parseResult.success) return;
 
       // Convert single node
@@ -91,7 +91,7 @@ describe('useASTConverter', () => {
       const code = 'cube(10); sphere(5);';
       const parseResult = parser.parseASTWithResult(code);
       expect(parseResult.success).toBe(true);
-      
+
       if (!parseResult.success) return;
 
       // Convert multiple nodes
@@ -117,7 +117,7 @@ describe('useASTConverter', () => {
       const code = 'difference() { cube(10); sphere(5); }';
       const parseResult = parser.parseASTWithResult(code);
       expect(parseResult.success).toBe(true);
-      
+
       if (!parseResult.success) return;
 
       // Convert CSG operation
@@ -146,7 +146,7 @@ describe('useASTConverter', () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
       expect(parseResult.success).toBe(true);
-      
+
       if (!parseResult.success) return;
 
       // Start conversion (should set isConverting to true)
@@ -243,7 +243,7 @@ describe('useASTConverter', () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
       expect(parseResult.success).toBe(true);
-      
+
       if (!parseResult.success) return;
 
       await result.current.convert(parseResult.data);

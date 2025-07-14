@@ -1,72 +1,75 @@
 /**
  * @file BabylonJS IBL Shadows Service Tests
- * 
+ *
  * Tests for BabylonJS IBL shadows service functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  BabylonIBLShadowsService, 
-  DEFAULT_IBL_SHADOW_CONFIG 
-} from './babylon-ibl-shadows-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IBLShadowConfig } from './babylon-ibl-shadows-service';
+import { BabylonIBLShadowsService, DEFAULT_IBL_SHADOW_CONFIG } from './babylon-ibl-shadows-service';
 
 // Mock BabylonJS components for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-  getEngine: vi.fn(() => ({
-    webGLVersion: 2,
-    isWebGPU: false,
-  })),
-  getMeshById: vi.fn(),
-  environmentTexture: null,
-  environmentIntensity: 1.0,
-  environmentRotationY: 0,
-  imageProcessingConfiguration: {
-    toneMappingEnabled: false,
-    toneMappingType: 0,
-    exposure: 1.0,
-  },
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+    getEngine: vi.fn(() => ({
+      webGLVersion: 2,
+      isWebGPU: false,
+    })),
+    getMeshById: vi.fn(),
+    environmentTexture: null,
+    environmentIntensity: 1.0,
+    environmentRotationY: 0,
+    imageProcessingConfiguration: {
+      toneMappingEnabled: false,
+      toneMappingType: 0,
+      exposure: 1.0,
+    },
+  }) as any;
 
-const createMockMesh = (id: string) => ({
-  id,
-  material: null,
-  dispose: vi.fn(),
-}) as any;
+const createMockMesh = (id: string) =>
+  ({
+    id,
+    material: null,
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockPBRMaterial = (name: string) => ({
-  name,
-  environmentTexture: null,
-  environmentIntensity: 1.0,
-  dispose: vi.fn(),
-}) as any;
+const createMockPBRMaterial = (name: string) =>
+  ({
+    name,
+    environmentTexture: null,
+    environmentIntensity: 1.0,
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockHDRTexture = (url: string) => ({
-  url,
-  isReady: vi.fn(() => true),
-  onLoadObservable: {
-    addOnce: vi.fn((callback: () => void) => callback()),
-  },
-  onErrorObservable: {
-    addOnce: vi.fn(),
-  },
-  dispose: vi.fn(),
-}) as any;
+const createMockHDRTexture = (url: string) =>
+  ({
+    url,
+    isReady: vi.fn(() => true),
+    onLoadObservable: {
+      addOnce: vi.fn((callback: () => void) => callback()),
+    },
+    onErrorObservable: {
+      addOnce: vi.fn(),
+    },
+    dispose: vi.fn(),
+  }) as any;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
   const actual = await vi.importActual('@babylonjs/core');
-  
+
   // Mock Vector3 constructor
-  const Vector3Mock = vi.fn().mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
+  const Vector3Mock = vi
+    .fn()
+    .mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
   Vector3Mock.Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
-  
+
   // Mock Color3 constructor
   const Color3Mock = vi.fn().mockImplementation((r: number, g: number, b: number) => ({ r, g, b }));
-  
+
   return {
     ...actual,
     HDRCubeTexture: vi.fn().mockImplementation((url: string) => createMockHDRTexture(url)),
@@ -102,7 +105,7 @@ describe('BabylonIBLShadowsService', () => {
     it('should initialize with default configuration', () => {
       const service = new BabylonIBLShadowsService();
       const config = service.getConfig();
-      
+
       expect(config.enabled).toBe(DEFAULT_IBL_SHADOW_CONFIG.enabled);
       expect(config.shadowIntensity).toBe(DEFAULT_IBL_SHADOW_CONFIG.shadowIntensity);
       expect(config.environmentIntensity).toBe(DEFAULT_IBL_SHADOW_CONFIG.environmentIntensity);
@@ -114,10 +117,10 @@ describe('BabylonIBLShadowsService', () => {
         shadowIntensity: 0.5,
         environmentIntensity: 2.0,
       };
-      
+
       const service = new BabylonIBLShadowsService(customConfig);
       const config = service.getConfig();
-      
+
       expect(config.shadowIntensity).toBe(0.5);
       expect(config.environmentIntensity).toBe(2.0);
     });
@@ -167,7 +170,7 @@ describe('BabylonIBLShadowsService', () => {
       const result = await iblService.init(mockScene, customConfig);
 
       expect(result.success).toBe(true);
-      
+
       const config = iblService.getConfig();
       expect(config.shadowIntensity).toBe(0.8);
       expect(config.environmentIntensity).toBe(1.5);
@@ -190,14 +193,7 @@ describe('BabylonIBLShadowsService', () => {
 
       // Verify HDRCubeTexture was created
       const { HDRCubeTexture } = await import('@babylonjs/core');
-      expect(HDRCubeTexture).toHaveBeenCalledWith(
-        textureUrl,
-        mockScene,
-        512,
-        false,
-        true,
-        false
-      );
+      expect(HDRCubeTexture).toHaveBeenCalledWith(textureUrl, mockScene, 512, false, true, false);
     });
 
     it('should handle texture loading without scene initialization', async () => {
@@ -266,11 +262,7 @@ describe('BabylonIBLShadowsService', () => {
     });
 
     it('should apply IBL shadows to multiple meshes successfully', () => {
-      const meshes = [
-        createMockMesh('mesh-1'),
-        createMockMesh('mesh-2'),
-        createMockMesh('mesh-3'),
-      ];
+      const meshes = [createMockMesh('mesh-1'), createMockMesh('mesh-2'), createMockMesh('mesh-3')];
 
       const result = iblService.applyToMeshes(meshes);
 
@@ -329,7 +321,7 @@ describe('BabylonIBLShadowsService', () => {
 
     it('should return correct initial state', () => {
       const state = iblService.getState();
-      
+
       expect(state.isEnabled).toBe(true);
       expect(state.affectedMeshes).toEqual([]);
       expect(state.shadowIntensity).toBe(DEFAULT_IBL_SHADOW_CONFIG.shadowIntensity);
@@ -343,7 +335,7 @@ describe('BabylonIBLShadowsService', () => {
       iblService.applyToMesh(mockMesh);
 
       const state = iblService.getState();
-      
+
       expect(state.affectedMeshes).toContain('test-mesh');
       expect(state.environmentTexture).toBeDefined();
     });
@@ -352,7 +344,7 @@ describe('BabylonIBLShadowsService', () => {
   describe('getConfig', () => {
     it('should return current configuration', () => {
       const config = iblService.getConfig();
-      
+
       expect(config).toEqual(DEFAULT_IBL_SHADOW_CONFIG);
     });
 
@@ -363,7 +355,7 @@ describe('BabylonIBLShadowsService', () => {
 
       iblService.updateConfig(newConfig);
       const config = iblService.getConfig();
-      
+
       expect(config.shadowIntensity).toBe(0.6);
     });
   });
@@ -372,9 +364,9 @@ describe('BabylonIBLShadowsService', () => {
     it('should dispose service cleanly', async () => {
       await iblService.init(mockScene);
       await iblService.loadEnvironmentTexture('test-environment.hdr');
-      
+
       iblService.dispose();
-      
+
       // Verify state is cleared
       const state = iblService.getState();
       expect(state.affectedMeshes).toEqual([]);

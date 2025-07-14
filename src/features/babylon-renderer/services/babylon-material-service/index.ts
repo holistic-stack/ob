@@ -1,25 +1,25 @@
 /**
  * @file BabylonJS Material Service Exports
- * 
+ *
  * Exports for the BabylonJS advanced material service.
  */
 
-export { BabylonMaterialService } from './babylon-material-service';
 export type {
-  PBRMaterialConfig,
-  PBRClearCoatConfig,
-  PBRSheenConfig,
-  PBRAnisotropyConfig,
-  PBRTextureConfig,
-  NodeMaterialConfig,
-  MaterialState,
-  MaterialError,
-  MaterialCreateResult,
   MaterialApplyResult,
+  MaterialCreateResult,
+  MaterialError,
+  MaterialState,
   MaterialUpdateResult,
+  NodeMaterialConfig,
+  PBRAnisotropyConfig,
+  PBRClearCoatConfig,
+  PBRMaterialConfig,
+  PBRSheenConfig,
+  PBRTextureConfig,
 } from './babylon-material-service';
-export { 
-  MaterialType,
+export {
+  BabylonMaterialService,
+  DEFAULT_PBR_CONFIG,
   MaterialErrorCode,
-  DEFAULT_PBR_CONFIG 
+  MaterialType,
 } from './babylon-material-service';

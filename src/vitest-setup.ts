@@ -348,7 +348,7 @@ export function resolveWasmPath(urlPath: string): string {
     () => {
       try {
         logger.debug(
-          `Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`,
+          `Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`
         );
         const packageJson = findUpSync(
           (directory: string) => {
@@ -363,7 +363,7 @@ export function resolveWasmPath(urlPath: string): string {
           {
             cwd: __dirname,
             type: 'file',
-          },
+          }
         );
 
         if (packageJson) {
@@ -392,7 +392,7 @@ export function resolveWasmPath(urlPath: string): string {
         // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
         logger.debug(
-          `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`,
+          `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`
         );
         return `file://${resolvedPath}`;
       } catch {
@@ -403,12 +403,12 @@ export function resolveWasmPath(urlPath: string): string {
   }
 
   throw new Error(
-    `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`,
+    `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`
   );
 }
 
 // Configure fetch mock to handle WASM files with better URL handling
-vi.mocked(fetch).mockImplementation(url => {
+vi.mocked(fetch).mockImplementation((url) => {
   logger.debug('using local fetch mock', url);
   logger.debug('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
@@ -514,7 +514,7 @@ export function forceGarbageCollection(): void {
     global.gc();
   } else {
     logger.debug(
-      'Garbage collection not available (run with --expose-gc for better memory management)',
+      'Garbage collection not available (run with --expose-gc for better memory management)'
     );
   }
 }

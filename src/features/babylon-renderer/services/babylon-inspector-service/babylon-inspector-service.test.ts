@@ -1,22 +1,27 @@
 /**
  * @file BabylonJS Inspector Service Tests
- * 
+ *
  * Tests for BabylonJS Inspector service functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { BabylonInspectorService, InspectorTab, DEFAULT_INSPECTOR_CONFIG } from './babylon-inspector-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InspectorConfig } from './babylon-inspector-service';
+import {
+  BabylonInspectorService,
+  DEFAULT_INSPECTOR_CONFIG,
+  InspectorTab,
+} from './babylon-inspector-service';
 
 // Mock Scene for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-  registerBeforeRender: vi.fn(),
-  unregisterBeforeRender: vi.fn(),
-  // Add other Scene properties as needed
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+    registerBeforeRender: vi.fn(),
+    unregisterBeforeRender: vi.fn(),
+    // Add other Scene properties as needed
+  }) as any;
 
 // Mock BabylonJS Inspector
 const mockInspector = {
@@ -38,10 +43,10 @@ describe('BabylonInspectorService', () => {
     // Create fresh instances for each test
     inspectorService = new BabylonInspectorService();
     mockScene = createMockScene();
-    
+
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Mock window object for browser environment
     Object.defineProperty(global, 'window', {
       value: {
@@ -62,7 +67,7 @@ describe('BabylonInspectorService', () => {
     it('should initialize with default configuration', () => {
       const service = new BabylonInspectorService();
       const state = service.getState();
-      
+
       expect(state.isVisible).toBe(false);
       expect(state.isEmbedded).toBe(false);
       expect(state.currentTab).toBe(InspectorTab.SCENE);
@@ -75,10 +80,10 @@ describe('BabylonInspectorService', () => {
         enablePopup: true,
         initialTab: InspectorTab.DEBUG,
       };
-      
+
       const service = new BabylonInspectorService(customConfig);
       const state = service.getState();
-      
+
       expect(state.currentTab).toBe(InspectorTab.SCENE); // Initial state, not config
     });
   });
@@ -93,7 +98,7 @@ describe('BabylonInspectorService', () => {
         expect(result.data.scene).toBe(mockScene);
         expect(result.data.currentTab).toBe(InspectorTab.SCENE);
       }
-      
+
       expect(mockInspector.Show).toHaveBeenCalledWith(mockScene, expect.any(Object));
     });
 
@@ -130,7 +135,7 @@ describe('BabylonInspectorService', () => {
     it('should hide visible inspector', async () => {
       // First show the inspector
       await inspectorService.show(mockScene);
-      
+
       const hideResult = inspectorService.hide();
 
       expect(hideResult.success).toBe(true);
@@ -149,7 +154,7 @@ describe('BabylonInspectorService', () => {
     it('should switch tab when inspector is visible', async () => {
       // First show the inspector
       await inspectorService.show(mockScene);
-      
+
       const result = await inspectorService.switchTab(InspectorTab.DEBUG);
 
       expect(result.success).toBe(true);
@@ -180,7 +185,7 @@ describe('BabylonInspectorService', () => {
     it('should hide inspector when visible', async () => {
       // First show the inspector
       await inspectorService.show(mockScene);
-      
+
       const result = await inspectorService.toggle();
 
       expect(result.success).toBe(true);
@@ -200,7 +205,7 @@ describe('BabylonInspectorService', () => {
   describe('getState', () => {
     it('should return correct initial state', () => {
       const state = inspectorService.getState();
-      
+
       expect(state.isVisible).toBe(false);
       expect(state.isEmbedded).toBe(false);
       expect(state.currentTab).toBe(InspectorTab.SCENE);
@@ -211,7 +216,7 @@ describe('BabylonInspectorService', () => {
     it('should return correct state after showing inspector', async () => {
       await inspectorService.show(mockScene);
       const state = inspectorService.getState();
-      
+
       expect(state.isVisible).toBe(true);
       expect(state.scene).toBe(mockScene);
     });
@@ -237,9 +242,9 @@ describe('BabylonInspectorService', () => {
   describe('dispose', () => {
     it('should dispose service cleanly', async () => {
       await inspectorService.show(mockScene);
-      
+
       inspectorService.dispose();
-      
+
       expect(inspectorService.isInspectorVisible()).toBe(false);
       expect(inspectorService.getState().scene).toBeNull();
     });

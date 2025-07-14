@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
-import { FunctionVisitor } from './function-visitor.js';
 import type { ParameterValue } from '../ast-types.js';
+import { FunctionVisitor } from './function-visitor.js';
 
 describe('FunctionVisitor', () => {
   let parser: OpenscadParser;

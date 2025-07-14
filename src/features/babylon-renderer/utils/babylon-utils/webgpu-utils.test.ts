@@ -1,17 +1,17 @@
 /**
  * @file WebGPU Utils Tests
- * 
+ *
  * Tests for WebGPU utility functions.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  isWebGPUSupported,
-  getWebGPUCapabilities,
   checkWebGPUFeatures,
-  requestWebGPUAdapter,
+  getWebGPUCapabilities,
+  isWebGPUSupported,
   logWebGPUCapabilities,
+  requestWebGPUAdapter,
 } from './webgpu-utils';
 
 describe('WebGPU Utils', () => {
@@ -24,7 +24,7 @@ describe('WebGPU Utils', () => {
     it('should return false when WebGPU is not supported', () => {
       // Mock navigator without gpu
       vi.stubGlobal('navigator', {});
-      
+
       const result = isWebGPUSupported();
       expect(result).toBe(false);
     });
@@ -32,7 +32,7 @@ describe('WebGPU Utils', () => {
     it('should return false when gpu is undefined', () => {
       // Mock navigator with undefined gpu
       vi.stubGlobal('navigator', { gpu: undefined });
-      
+
       const result = isWebGPUSupported();
       expect(result).toBe(false);
     });
@@ -45,7 +45,7 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn(),
         },
       });
-      
+
       const result = isWebGPUSupported();
       expect(result).toBe(true);
     });
@@ -55,9 +55,9 @@ describe('WebGPU Utils', () => {
     it('should return error when WebGPU is not supported', async () => {
       // Mock navigator without gpu
       vi.stubGlobal('navigator', {});
-      
+
       const result = await getWebGPUCapabilities();
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe('NOT_SUPPORTED');
@@ -73,9 +73,9 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn(),
         },
       });
-      
+
       const result = await getWebGPUCapabilities();
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe('ADAPTER_REQUEST_FAILED');
@@ -103,9 +103,9 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn().mockReturnValue('bgra8unorm'),
         },
       });
-      
+
       const result = await getWebGPUCapabilities();
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isSupported).toBe(true);
@@ -132,9 +132,9 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn().mockReturnValue('bgra8unorm'),
         },
       });
-      
+
       const result = await checkWebGPUFeatures(['advanced-feature', 'another-feature']);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBe(false);
@@ -155,9 +155,9 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn().mockReturnValue('bgra8unorm'),
         },
       });
-      
+
       const result = await checkWebGPUFeatures(['feature1', 'feature2']);
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBe(true);
@@ -169,9 +169,9 @@ describe('WebGPU Utils', () => {
     it('should return error when WebGPU is not supported', async () => {
       // Mock navigator without gpu
       vi.stubGlobal('navigator', {});
-      
+
       const result = await requestWebGPUAdapter();
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe('NOT_SUPPORTED');
@@ -190,9 +190,9 @@ describe('WebGPU Utils', () => {
           requestAdapter: vi.fn().mockResolvedValue(mockAdapter),
         },
       });
-      
+
       const result = await requestWebGPUAdapter();
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBe(mockAdapter);
@@ -204,7 +204,7 @@ describe('WebGPU Utils', () => {
     it('should handle logging when WebGPU is not supported', async () => {
       // Mock navigator without gpu
       vi.stubGlobal('navigator', {});
-      
+
       // Should not throw
       await expect(logWebGPUCapabilities()).resolves.toBeUndefined();
     });
@@ -229,7 +229,7 @@ describe('WebGPU Utils', () => {
           getPreferredCanvasFormat: vi.fn().mockReturnValue('bgra8unorm'),
         },
       });
-      
+
       // Should not throw
       await expect(logWebGPUCapabilities()).resolves.toBeUndefined();
     });

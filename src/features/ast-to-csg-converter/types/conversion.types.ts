@@ -1,6 +1,6 @@
 /**
  * @file AST to CSG Conversion Types
- * 
+ *
  * Type definitions for the conversion layer that bridges OpenSCAD AST nodes
  * to generic mesh data structures. This layer encapsulates all OpenSCAD-specific
  * knowledge and provides generic interfaces for the rendering layer.

@@ -1,6 +1,6 @@
 /**
  * @file BabylonJS Components Exports
- * 
+ *
  * Centralized exports for all BabylonJS renderer components.
  * Following SRP principles with co-located tests.
  */

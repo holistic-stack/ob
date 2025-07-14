@@ -196,8 +196,6 @@ table {
   border-spacing: 0;
 }
 
-
-
 /* Ensure Babylon.js canvas container allows overlays */
 .babylon-canvas-container {
   position: relative !important;

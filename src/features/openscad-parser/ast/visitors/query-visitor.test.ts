@@ -4,12 +4,12 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
+import type { ParameterValue } from '../ast-types.js';
 import { CompositeVisitor } from './composite-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
 import { QueryVisitor } from './query-visitor.js';
 import { TransformVisitor } from './transform-visitor.js';
-import type { ParameterValue } from '../ast-types.js';
 
 // Use real Tree Sitter language for testing
 

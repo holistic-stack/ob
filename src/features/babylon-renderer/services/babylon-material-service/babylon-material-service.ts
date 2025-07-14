@@ -1,21 +1,19 @@
 /**
  * @file BabylonJS Advanced Material Service
- * 
+ *
  * Service for managing advanced PBR materials with node-based material editor support.
  * Provides comprehensive material creation and management capabilities.
  */
 
-import { 
-  Scene, 
-  PBRMaterial,
-  StandardMaterial,
-  NodeMaterial,
-  Texture,
-  BaseTexture,
-  AbstractMesh,
+import {
+  type AbstractMesh,
   Color3,
+  type Material,
+  NodeMaterial,
+  PBRMaterial,
+  type Scene,
+  Texture,
   Vector3,
-  Material
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
@@ -184,7 +182,7 @@ export const DEFAULT_PBR_CONFIG: PBRMaterialConfig = {
 
 /**
  * BabylonJS Advanced Material Service
- * 
+ *
  * Manages advanced PBR and node materials with comprehensive configuration.
  * Follows SRP by focusing solely on material management.
  */
@@ -203,20 +201,26 @@ export class BabylonMaterialService {
   init(scene: Scene): Result<void, MaterialError> {
     logger.debug('[DEBUG][BabylonMaterialService] Initializing material service...');
 
-    return tryCatch(() => {
-      if (!scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required for material management');
-      }
+    return tryCatch(
+      () => {
+        if (!scene) {
+          throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required for material management');
+        }
 
-      this.scene = scene;
-      logger.debug('[DEBUG][BabylonMaterialService] Material service initialized successfully');
-    }, (error) => {
-      // If error is already a MaterialError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as MaterialError;
+        this.scene = scene;
+        logger.debug('[DEBUG][BabylonMaterialService] Material service initialized successfully');
+      },
+      (error) => {
+        // If error is already a MaterialError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as MaterialError;
+        }
+        return this.createError(
+          'CREATION_FAILED',
+          `Failed to initialize material service: ${error}`
+        );
       }
-      return this.createError('CREATION_FAILED', `Failed to initialize material service: ${error}`);
-    });
+    );
   }
 
   /**
@@ -225,72 +229,78 @@ export class BabylonMaterialService {
   async createPBRMaterial(config: PBRMaterialConfig): Promise<MaterialCreateResult> {
     logger.debug(`[DEBUG][BabylonMaterialService] Creating PBR material: ${config.name}`);
 
-    return tryCatchAsync(async () => {
-      if (!this.scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene must be initialized before creating materials');
+    return tryCatchAsync(
+      async () => {
+        if (!this.scene) {
+          throw this.createError(
+            'SCENE_NOT_PROVIDED',
+            'Scene must be initialized before creating materials'
+          );
+        }
+
+        const material = new PBRMaterial(config.name, this.scene);
+
+        // Configure basic PBR properties
+        material.baseColor = config.baseColor;
+        material.metallicFactor = config.metallicFactor;
+        material.roughnessFactor = config.roughnessFactor;
+        material.emissiveColor = config.emissiveColor;
+        material.emissiveIntensity = config.emissiveIntensity;
+        material.indexOfRefraction = config.indexOfRefraction;
+
+        // Configure transparency
+        material.alphaCutOff = config.alphaCutOff;
+        material.transparencyMode = config.transparencyMode;
+
+        // Configure clear coat if enabled
+        if (config.clearCoat.enabled) {
+          material.clearCoat.isEnabled = true;
+          material.clearCoat.intensity = config.clearCoat.intensity;
+          material.clearCoat.roughness = config.clearCoat.roughness;
+          material.clearCoat.indexOfRefraction = config.clearCoat.indexOfRefraction;
+          material.clearCoat.tintColor = config.clearCoat.tint;
+        }
+
+        // Configure sheen if enabled
+        if (config.sheen.enabled) {
+          material.sheen.isEnabled = true;
+          material.sheen.intensity = config.sheen.intensity;
+          material.sheen.color = config.sheen.color;
+          material.sheen.roughness = config.sheen.roughness;
+        }
+
+        // Configure anisotropy if enabled
+        if (config.anisotropy.enabled) {
+          material.anisotropy.isEnabled = true;
+          material.anisotropy.intensity = config.anisotropy.intensity;
+          material.anisotropy.direction = config.anisotropy.direction;
+        }
+
+        // Load textures if provided
+        await this.loadPBRTextures(material, config.textures);
+
+        // Store material and state
+        this.materials.set(config.name, material);
+        this.materialStates.set(config.name, {
+          id: config.name,
+          name: config.name,
+          type: MaterialType.PBR,
+          isReady: material.isReady(),
+          appliedMeshes: [],
+          lastUpdated: new Date(),
+        });
+
+        logger.debug(`[DEBUG][BabylonMaterialService] PBR material created: ${config.name}`);
+        return material;
+      },
+      (error) => {
+        // If error is already a MaterialError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as MaterialError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to create PBR material: ${error}`);
       }
-
-      const material = new PBRMaterial(config.name, this.scene);
-
-      // Configure basic PBR properties
-      material.baseColor = config.baseColor;
-      material.metallicFactor = config.metallicFactor;
-      material.roughnessFactor = config.roughnessFactor;
-      material.emissiveColor = config.emissiveColor;
-      material.emissiveIntensity = config.emissiveIntensity;
-      material.indexOfRefraction = config.indexOfRefraction;
-
-      // Configure transparency
-      material.alphaCutOff = config.alphaCutOff;
-      material.transparencyMode = config.transparencyMode;
-
-      // Configure clear coat if enabled
-      if (config.clearCoat.enabled) {
-        material.clearCoat.isEnabled = true;
-        material.clearCoat.intensity = config.clearCoat.intensity;
-        material.clearCoat.roughness = config.clearCoat.roughness;
-        material.clearCoat.indexOfRefraction = config.clearCoat.indexOfRefraction;
-        material.clearCoat.tintColor = config.clearCoat.tint;
-      }
-
-      // Configure sheen if enabled
-      if (config.sheen.enabled) {
-        material.sheen.isEnabled = true;
-        material.sheen.intensity = config.sheen.intensity;
-        material.sheen.color = config.sheen.color;
-        material.sheen.roughness = config.sheen.roughness;
-      }
-
-      // Configure anisotropy if enabled
-      if (config.anisotropy.enabled) {
-        material.anisotropy.isEnabled = true;
-        material.anisotropy.intensity = config.anisotropy.intensity;
-        material.anisotropy.direction = config.anisotropy.direction;
-      }
-
-      // Load textures if provided
-      await this.loadPBRTextures(material, config.textures);
-
-      // Store material and state
-      this.materials.set(config.name, material);
-      this.materialStates.set(config.name, {
-        id: config.name,
-        name: config.name,
-        type: MaterialType.PBR,
-        isReady: material.isReady(),
-        appliedMeshes: [],
-        lastUpdated: new Date(),
-      });
-
-      logger.debug(`[DEBUG][BabylonMaterialService] PBR material created: ${config.name}`);
-      return material;
-    }, (error) => {
-      // If error is already a MaterialError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as MaterialError;
-      }
-      return this.createError('CREATION_FAILED', `Failed to create PBR material: ${error}`);
-    });
+    );
   }
 
   /**
@@ -299,87 +309,105 @@ export class BabylonMaterialService {
   async createNodeMaterial(config: NodeMaterialConfig): Promise<MaterialCreateResult> {
     logger.debug(`[DEBUG][BabylonMaterialService] Creating node material: ${config.name}`);
 
-    return tryCatchAsync(async () => {
-      if (!this.scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene must be initialized before creating materials');
-      }
-
-      const material = new NodeMaterial(config.name, this.scene);
-
-      try {
-        // Parse and load node definition
-        const nodeDefinition = JSON.parse(config.nodeDefinition);
-        await material.loadFromSerialization(nodeDefinition);
-
-        // Configure inputs if provided
-        for (const [inputName, inputValue] of Object.entries(config.inputs)) {
-          const inputBlock = material.getInputBlockByPredicate((block) => block.name === inputName);
-          if (inputBlock) {
-            inputBlock.value = inputValue;
-          }
+    return tryCatchAsync(
+      async () => {
+        if (!this.scene) {
+          throw this.createError(
+            'SCENE_NOT_PROVIDED',
+            'Scene must be initialized before creating materials'
+          );
         }
 
-        // Build the material
-        material.build();
+        const material = new NodeMaterial(config.name, this.scene);
 
-        // Store material and state
-        this.materials.set(config.name, material);
-        this.materialStates.set(config.name, {
-          id: config.name,
-          name: config.name,
-          type: MaterialType.NODE,
-          isReady: material.isReady(),
-          appliedMeshes: [],
-          lastUpdated: new Date(),
-        });
+        try {
+          // Parse and load node definition
+          const nodeDefinition = JSON.parse(config.nodeDefinition);
+          await material.loadFromSerialization(nodeDefinition);
 
-        logger.debug(`[DEBUG][BabylonMaterialService] Node material created: ${config.name}`);
-        return material;
-      } catch (error) {
-        throw this.createError('NODE_COMPILATION_FAILED', `Failed to compile node material: ${error}`);
+          // Configure inputs if provided
+          for (const [inputName, inputValue] of Object.entries(config.inputs)) {
+            const inputBlock = material.getInputBlockByPredicate(
+              (block) => block.name === inputName
+            );
+            if (inputBlock) {
+              inputBlock.value = inputValue;
+            }
+          }
+
+          // Build the material
+          material.build();
+
+          // Store material and state
+          this.materials.set(config.name, material);
+          this.materialStates.set(config.name, {
+            id: config.name,
+            name: config.name,
+            type: MaterialType.NODE,
+            isReady: material.isReady(),
+            appliedMeshes: [],
+            lastUpdated: new Date(),
+          });
+
+          logger.debug(`[DEBUG][BabylonMaterialService] Node material created: ${config.name}`);
+          return material;
+        } catch (error) {
+          throw this.createError(
+            'NODE_COMPILATION_FAILED',
+            `Failed to compile node material: ${error}`
+          );
+        }
+      },
+      (error) => {
+        // If error is already a MaterialError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as MaterialError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to create node material: ${error}`);
       }
-    }, (error) => {
-      // If error is already a MaterialError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as MaterialError;
-      }
-      return this.createError('CREATION_FAILED', `Failed to create node material: ${error}`);
-    });
+    );
   }
 
   /**
    * Apply material to a mesh
    */
   applyToMesh(materialName: string, mesh: AbstractMesh): MaterialApplyResult {
-    logger.debug(`[DEBUG][BabylonMaterialService] Applying material ${materialName} to mesh: ${mesh.id}`);
+    logger.debug(
+      `[DEBUG][BabylonMaterialService] Applying material ${materialName} to mesh: ${mesh.id}`
+    );
 
-    return tryCatch(() => {
-      const material = this.materials.get(materialName);
-      if (!material) {
-        throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${materialName}`);
+    return tryCatch(
+      () => {
+        const material = this.materials.get(materialName);
+        if (!material) {
+          throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${materialName}`);
+        }
+
+        mesh.material = material;
+
+        // Update material state
+        const state = this.materialStates.get(materialName);
+        if (state) {
+          const updatedMeshes = [...state.appliedMeshes, mesh.id];
+          this.materialStates.set(materialName, {
+            ...state,
+            appliedMeshes: updatedMeshes,
+            lastUpdated: new Date(),
+          });
+        }
+
+        logger.debug(
+          `[DEBUG][BabylonMaterialService] Material applied: ${materialName} to ${mesh.id}`
+        );
+      },
+      (error) => {
+        // If error is already a MaterialError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as MaterialError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to apply material: ${error}`);
       }
-
-      mesh.material = material;
-
-      // Update material state
-      const state = this.materialStates.get(materialName);
-      if (state) {
-        const updatedMeshes = [...state.appliedMeshes, mesh.id];
-        this.materialStates.set(materialName, {
-          ...state,
-          appliedMeshes: updatedMeshes,
-          lastUpdated: new Date(),
-        });
-      }
-
-      logger.debug(`[DEBUG][BabylonMaterialService] Material applied: ${materialName} to ${mesh.id}`);
-    }, (error) => {
-      // If error is already a MaterialError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as MaterialError;
-      }
-      return this.createError('CREATION_FAILED', `Failed to apply material: ${error}`);
-    });
+    );
   }
 
   /**
@@ -409,24 +437,27 @@ export class BabylonMaterialService {
   removeMaterial(name: string): Result<void, MaterialError> {
     logger.debug(`[DEBUG][BabylonMaterialService] Removing material: ${name}`);
 
-    return tryCatch(() => {
-      const material = this.materials.get(name);
-      if (!material) {
-        throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${name}`);
-      }
+    return tryCatch(
+      () => {
+        const material = this.materials.get(name);
+        if (!material) {
+          throw this.createError('MATERIAL_NOT_FOUND', `Material not found: ${name}`);
+        }
 
-      material.dispose();
-      this.materials.delete(name);
-      this.materialStates.delete(name);
+        material.dispose();
+        this.materials.delete(name);
+        this.materialStates.delete(name);
 
-      logger.debug(`[DEBUG][BabylonMaterialService] Material removed: ${name}`);
-    }, (error) => {
-      // If error is already a MaterialError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as MaterialError;
+        logger.debug(`[DEBUG][BabylonMaterialService] Material removed: ${name}`);
+      },
+      (error) => {
+        // If error is already a MaterialError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as MaterialError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to remove material: ${error}`);
       }
-      return this.createError('CREATION_FAILED', `Failed to remove material: ${error}`);
-    });
+    );
   }
 
   /**
@@ -493,7 +524,7 @@ export class BabylonMaterialService {
 
     try {
       const texture = new Texture(url, this.scene);
-      
+
       // Wait for texture to be ready
       await new Promise<void>((resolve, reject) => {
         if (texture.isReady()) {
@@ -505,7 +536,7 @@ export class BabylonMaterialService {
       });
 
       return texture;
-    } catch (error) {
+    } catch (_error) {
       logger.warn(`[WARN][BabylonMaterialService] Failed to load texture: ${url}`);
       return null;
     }
@@ -514,11 +545,7 @@ export class BabylonMaterialService {
   /**
    * Create material error
    */
-  private createError(
-    code: MaterialErrorCode,
-    message: string,
-    details?: unknown
-  ): MaterialError {
+  private createError(code: MaterialErrorCode, message: string, details?: unknown): MaterialError {
     return {
       code,
       message,
@@ -532,7 +559,7 @@ export class BabylonMaterialService {
    */
   dispose(): void {
     logger.debug('[DEBUG][BabylonMaterialService] Disposing material service...');
-    
+
     // Dispose all materials
     for (const [name, material] of this.materials) {
       try {
@@ -541,11 +568,11 @@ export class BabylonMaterialService {
         logger.warn(`[WARN][BabylonMaterialService] Failed to dispose material ${name}: ${error}`);
       }
     }
-    
+
     this.materials.clear();
     this.materialStates.clear();
     this.scene = null;
-    
+
     logger.end('[END][BabylonMaterialService] Material service disposed');
   }
 }

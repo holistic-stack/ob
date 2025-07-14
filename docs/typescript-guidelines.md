@@ -1,17 +1,118 @@
 # TypeScript Guidelines and Best Practices
 
-This document provides comprehensive guidelines for TypeScript development, covering version migration best practices, modern features, and developer best practices.
+This document provides comprehensive guidelines for TypeScript development, covering version migration best practices, modern features, and developer best practices. All formatting and linting rules are enforced by Biome v2.0.6.
 
 ## Table of Contents
 
-1. [Version Migration Guide](#version-migration-guide)
-2. [TypeScript 5.x Features](#typescript-5x-features)
-3. [ESM and Module Best Practices](#esm-and-module-best-practices)
-4. [Strict Mode and Type Safety](#strict-mode-and-type-safety)
-5. [Advanced Type Patterns](#advanced-type-patterns)
-6. [Performance and Optimization](#performance-and-optimization)
-7. [Developer Cheatsheet](#developer-cheatsheet)
-8. [Common Pitfalls and Solutions](#common-pitfalls-and-solutions)
+1. [Biome Integration and Formatting Rules](#biome-integration-and-formatting-rules)
+2. [Version Migration Guide](#version-migration-guide)
+3. [TypeScript 5.x Features](#typescript-5x-features)
+4. [ESM and Module Best Practices](#esm-and-module-best-practices)
+5. [Strict Mode and Type Safety](#strict-mode-and-type-safety)
+6. [Advanced Type Patterns](#advanced-type-patterns)
+7. [Performance and Optimization](#performance-and-optimization)
+8. [Developer Cheatsheet](#developer-cheatsheet)
+9. [Common Pitfalls and Solutions](#common-pitfalls-and-solutions)
+
+## Biome Integration and Formatting Rules
+
+This project uses **Biome v2.0.6** for linting and formatting. All code examples in this document follow Biome's enforced rules.
+
+### Biome Formatting Standards
+
+**1. Code Formatting (Enforced by Biome)**
+```typescript
+// ✅ Biome enforced formatting
+const config = {
+  apiUrl: 'https://api.example.com', // Single quotes for JS
+  timeout: 5000,                     // Always semicolons
+  retries: 3,                        // 2-space indentation
+};
+
+// ✅ JSX uses double quotes
+const component = <div className="container">Content</div>;
+
+// ✅ Arrow functions always use parentheses
+const handler = (event) => {
+  console.log('Event handled');
+};
+```
+
+**2. Linting Rules (Enforced by Biome) - MANDATORY COMPLIANCE**
+- `noExplicitAny: "error"` - Never use `any` type (use `unknown` instead)
+- `noUnusedVariables: "error"` - Remove unused variables (prefix with `_` if intentional)
+- `noUnusedFunctionParameters: "error"` - Remove unused parameters (prefix with `_` if intentional)
+- `noNonNullAssertion: "error"` - Avoid `!` operators (use proper null checks)
+- `noEmptyBlockStatements: "error"` - No empty `{}` blocks (add comments if intentional)
+- `useOptionalChain: "error"` - Use `?.` instead of manual null checks
+- `useTemplate: "error"` - Use template literals over string concatenation
+- `noUndeclaredVariables: "error"` - All variables must be declared
+
+**3. Import/Export Standards**
+```typescript
+// ✅ Biome enforced import formatting
+import { Vector3, Mesh, Scene } from 'three';
+import type { Material } from 'three';
+
+// ✅ Named exports preferred
+export const createUser = (name: string) => ({ name });
+export const deleteUser = (id: string) => { /* ... */ };
+```
+
+### Biome Configuration Alignment
+
+All TypeScript code must pass:
+```bash
+pnpm biome:check  # Must return 0 violations
+pnpm type-check   # Must return 0 TypeScript errors
+```
+
+### Common Biome Violations and Fixes
+
+**1. noExplicitAny Violations**
+```typescript
+// ❌ Biome ERROR
+const mockFn = vi.fn().mockImplementation((x: any) => x);
+
+// ✅ Fix: Use proper types
+const mockFn = vi.fn().mockImplementation((x: unknown) => x);
+```
+
+**2. noUnusedVariables/noUnusedFunctionParameters**
+```typescript
+// ❌ Biome ERROR
+function handler(event: Event, unusedParam: string) {
+  console.log(event);
+}
+
+// ✅ Fix: Prefix unused with underscore
+function handler(event: Event, _unusedParam: string) {
+  console.log(event);
+}
+```
+
+**3. noNonNullAssertion**
+```typescript
+// ❌ Biome ERROR
+const result = canvasRef.current!.getContext('2d')!;
+
+// ✅ Fix: Use proper null checks
+if (!canvasRef.current) throw new Error('Canvas not found');
+const context = canvasRef.current.getContext('2d');
+if (!context) throw new Error('2D context not supported');
+const result = context;
+```
+
+**4. noEmptyBlockStatements**
+```typescript
+// ❌ Biome ERROR
+const fallback = () => {};
+
+// ✅ Fix: Add comment or implementation
+const fallback = () => {
+  // Intentionally empty - no action needed
+};
+```
 
 ## Version Migration Guide
 
@@ -299,9 +400,9 @@ import { helper } from "../helpers/helper.js";
 
 ### Import/Export Best Practices
 
-**1. Prefer Named Exports**
+**1. Prefer Named Exports (Biome Enforced)**
 ```typescript
-// ✅ Named exports - better for tree shaking
+// ✅ Named exports - better for tree shaking (single quotes enforced)
 export const createUser = (name: string) => ({ name });
 export const deleteUser = (id: string) => { /* ... */ };
 
@@ -309,31 +410,31 @@ export const deleteUser = (id: string) => { /* ... */ };
 export default { createUser, deleteUser };
 ```
 
-**2. Use Type-Only Imports When Appropriate**
+**2. Use Type-Only Imports When Appropriate (Biome Enforced)**
 ```typescript
-// ✅ Type-only imports
-import type { User, UserConfig } from "./types.js";
-import { createUser } from "./user-service.js";
+// ✅ Type-only imports (single quotes enforced)
+import type { User, UserConfig } from './types.js';
+import { createUser } from './user-service.js';
 
 // ✅ Mixed imports
-import { type User, createUser } from "./user-service.js";
+import { type User, createUser } from './user-service.js';
 ```
 
-**3. Re-exports with Type Safety**
+**3. Re-exports with Type Safety (Biome Enforced)**
 ```typescript
-// ✅ Re-export with type information
-export type { User, UserConfig } from "./types.js";
-export { createUser, deleteUser } from "./user-service.js";
+// ✅ Re-export with type information (single quotes enforced)
+export type { User, UserConfig } from './types.js';
+export { createUser, deleteUser } from './user-service.js';
 
 // ✅ Namespace re-export
-export type * as UserTypes from "./user-types.js";
+export type * as UserTypes from './user-types.js';
 ```
 
 ### Dynamic Imports
 
-**1. Conditional Loading**
+**1. Conditional Loading (Biome Enforced)**
 ```typescript
-// ✅ Dynamic imports for code splitting
+// ✅ Dynamic imports for code splitting (single quotes enforced)
 async function loadFeature(featureName: string) {
   switch (featureName) {
     case 'advanced':
@@ -345,21 +446,21 @@ async function loadFeature(featureName: string) {
 }
 ```
 
-**2. JSON Imports**
+**2. JSON Imports (Biome Enforced)**
 ```typescript
-// ✅ JSON imports with type safety
-import config from "./config.json" with { type: "json" };
+// ✅ JSON imports with type safety (single quotes enforced)
+import config from './config.json' with { type: 'json' };
 
 // ✅ Dynamic JSON import
-const config = await import("./config.json", { with: { type: "json" } });
+const config = await import('./config.json', { with: { type: 'json' } });
 ```
 
 ### Module Augmentation
 
-**1. Extending Third-Party Types**
+**1. Extending Third-Party Types (Biome Enforced)**
 ```typescript
-// ✅ Module augmentation
-declare module "express" {
+// ✅ Module augmentation (single quotes enforced)
+declare module 'express' {
   interface Request {
     user?: User;
   }
@@ -411,14 +512,14 @@ declare global {
 
 ### Type Safety Best Practices
 
-**1. Avoid any - Use Proper Types**
+**1. Avoid any - Use Proper Types (Biome: noExplicitAny)**
 ```typescript
-// ❌ Avoid any
+// ❌ Biome ERROR: noExplicitAny
 function processData(data: any): any {
   return data.someProperty;
 }
 
-// ✅ Use proper types
+// ✅ Use proper types (Biome compliant)
 interface DataInput {
   someProperty: string;
   optionalProp?: number;
@@ -428,7 +529,7 @@ function processData(data: DataInput): string {
   return data.someProperty;
 }
 
-// ✅ Use unknown for truly unknown data
+// ✅ Use unknown for truly unknown data (Biome compliant)
 function processUnknownData(data: unknown): string {
   if (typeof data === 'object' && data !== null && 'someProperty' in data) {
     return String((data as { someProperty: unknown }).someProperty);
@@ -437,9 +538,12 @@ function processUnknownData(data: unknown): string {
 }
 ```
 
-**2. Proper Null/Undefined Handling**
+**2. Proper Null/Undefined Handling (Biome: useOptionalChain, noNonNullAssertion)**
 ```typescript
-// ✅ Explicit null checks
+// ❌ Biome ERROR: noNonNullAssertion
+const value = user.profile!.name!;
+
+// ✅ Explicit null checks (Biome compliant)
 function getUserName(user: User | null): string {
   if (user === null) {
     return 'Anonymous';
@@ -447,10 +551,10 @@ function getUserName(user: User | null): string {
   return user.name;
 }
 
-// ✅ Optional chaining
+// ✅ Optional chaining (Biome enforced: useOptionalChain)
 const userName = user?.profile?.name ?? 'Anonymous';
 
-// ✅ Nullish coalescing
+// ✅ Nullish coalescing (Biome compliant)
 const config = userConfig ?? defaultConfig;
 ```
 
@@ -1210,11 +1314,11 @@ npm update @types/*
 
 #### 2. Configuration Updates Required
 
-**Remove Deprecated Options (Breaking Changes)**
+**Remove Deprecated Options (Breaking Changes) - ✅ APPLIED TO PROJECT**
 ```json
 {
   "compilerOptions": {
-    // ❌ Remove these deprecated options
+    // ❌ These deprecated options have been REMOVED from tsconfig.base.json
     // "target": "ES3",                    // Deprecated in 5.0
     // "out": "./output.js",               // Deprecated in 5.0
     // "noImplicitUseStrict": false,       // Deprecated in 5.0
@@ -1223,15 +1327,21 @@ npm update @types/*
     // "suppressImplicitAnyIndexErrors": false, // Deprecated in 5.0
     // "noStrictGenericChecks": false,     // Deprecated in 5.0
     // "charset": "utf8",                  // Deprecated in 5.0
-    // "importsNotUsedAsValues": "remove", // Deprecated in 5.0
-    // "preserveValueImports": false,      // Deprecated in 5.0
+    // "importsNotUsedAsValues": "remove", // ✅ REMOVED - deprecated in 5.0
+    // "preserveValueImports": false,      // ✅ REMOVED - deprecated in 5.0
 
-    // ✅ Use these instead
-    "target": "es2020",                   // Minimum supported
-    "verbatimModuleSyntax": true          // Replaces import/preserve options
+    // ✅ Current configuration uses these instead
+    "target": "es2022",                   // Modern target
+    "verbatimModuleSyntax": true          // Replaces deprecated import/preserve options
   }
 }
 ```
+
+**Project Configuration Status:**
+- ✅ **tsconfig.base.json**: Deprecated options removed, aligned with TypeScript 5.8
+- ✅ **biome.json**: Strict linting rules enforced
+- ⚠️ **Codebase**: 199 Biome violations need fixing (mainly `noExplicitAny`, `noUnusedVariables`)
+- ⚠️ **TypeScript**: 783 type errors need resolution
 
 **Update Module Resolution**
 ```json

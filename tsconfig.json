@@ -4,12 +4,7 @@
     // Application-specific settings for OpenSCAD-Babylon
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx", // React 19 JSX transform
-    "types": [
-      "node",
-      "vite/client",
-      "vitest/globals",
-      "vitest"
-    ],
+    "types": ["node", "vite/client", "vitest/globals", "vitest"],
 
     // Application-specific module resolution
     "resolvePackageJsonExports": true,

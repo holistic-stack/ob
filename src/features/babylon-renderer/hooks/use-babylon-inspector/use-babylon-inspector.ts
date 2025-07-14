@@ -1,21 +1,21 @@
 /**
  * @file Use BabylonJS Inspector Hook
- * 
+ *
  * React hook for managing BabylonJS Inspector lifecycle and state.
  * Provides declarative inspector management with React 19 compatibility.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { BabylonInspectorService } from '../../services/babylon-inspector-service';
-import type { 
-  InspectorConfig, 
-  InspectorState,
-  InspectorShowResult,
-  InspectorHideResult,
-  InspectorSwitchTabResult
-} from '../../services/babylon-inspector-service';
-import { createLogger } from '../../../../shared/services/logger.service';
 import type { Scene } from '@babylonjs/core';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createLogger } from '../../../../shared/services/logger.service';
+import type {
+  InspectorConfig,
+  InspectorHideResult,
+  InspectorShowResult,
+  InspectorState,
+  InspectorSwitchTabResult,
+} from '../../services/babylon-inspector-service';
+import { BabylonInspectorService } from '../../services/babylon-inspector-service';
 
 const logger = createLogger('useBabylonInspector');
 
@@ -76,7 +76,7 @@ const INITIAL_INSPECTOR_STATE: InspectorState = {
 
 /**
  * Use BabylonJS Inspector Hook
- * 
+ *
  * Manages BabylonJS Inspector lifecycle with React 19 compatibility.
  * Provides declarative inspector show/hide and state management.
  */
@@ -102,9 +102,11 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   const isInspectorAvailable = useCallback((): boolean => {
     try {
       // Check if BabylonJS Inspector is available
-      return typeof window !== 'undefined' && 
-             'BABYLON' in window && 
-             'Inspector' in (window as any).BABYLON;
+      return (
+        typeof window !== 'undefined' &&
+        'BABYLON' in window &&
+        'Inspector' in (window as any).BABYLON
+      );
     } catch {
       return false;
     }
@@ -113,79 +115,79 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   /**
    * Show BabylonJS inspector
    */
-  const showInspector = useCallback((
-    scene?: Scene,
-    options: InspectorOptions = {}
-  ): InspectorShowResult => {
-    logger.debug('[DEBUG][useBabylonInspector] Showing inspector...');
+  const showInspector = useCallback(
+    (scene?: Scene, options: InspectorOptions = {}): InspectorShowResult => {
+      logger.debug('[DEBUG][useBabylonInspector] Showing inspector...');
 
-    const inspectorService = getInspectorService();
-    const targetScene = scene || currentSceneRef.current;
+      const inspectorService = getInspectorService();
+      const targetScene = scene || currentSceneRef.current;
 
-    if (!targetScene) {
-      const error = {
-        code: 'SCENE_NOT_PROVIDED' as const,
-        message: 'Scene is required to show inspector',
-        timestamp: new Date(),
+      if (!targetScene) {
+        const error = {
+          code: 'SCENE_NOT_PROVIDED' as const,
+          message: 'Scene is required to show inspector',
+          timestamp: new Date(),
+        };
+
+        setInspectorState((prev) => ({
+          ...prev,
+          error,
+          lastUpdated: new Date(),
+        }));
+
+        if (options.onInspectorError) {
+          options.onInspectorError(new Error(error.message));
+        }
+
+        return {
+          success: false,
+          error,
+        };
+      }
+
+      // Merge options with defaults
+      const config: InspectorConfig = {
+        ...DEFAULT_INSPECTOR_CONFIG,
+        enablePopup: options.enablePopup ?? DEFAULT_INSPECTOR_CONFIG.enablePopup,
+        enableOverlay: options.enableOverlay ?? DEFAULT_INSPECTOR_CONFIG.enableOverlay,
+        enableEmbedMode: options.enableEmbedMode ?? DEFAULT_INSPECTOR_CONFIG.enableEmbedMode,
+        initialTab: options.initialTab ?? DEFAULT_INSPECTOR_CONFIG.initialTab,
       };
 
-      setInspectorState(prev => ({
-        ...prev,
-        error,
-        lastUpdated: new Date(),
-      }));
+      const result = inspectorService.show(targetScene, config);
 
-      if (options.onInspectorError) {
-        options.onInspectorError(new Error(error.message));
+      if (result.success) {
+        // Update state with successful show
+        const newState = inspectorService.getState();
+        setInspectorState(newState);
+        currentSceneRef.current = targetScene;
+
+        // Call success callback
+        if (options.onInspectorReady) {
+          options.onInspectorReady();
+        }
+
+        logger.debug('[DEBUG][useBabylonInspector] Inspector shown successfully');
+      } else {
+        // Update state with error
+        setInspectorState((prev) => ({
+          ...prev,
+          error: result.error,
+          lastUpdated: new Date(),
+        }));
+
+        // Call error callback
+        if (options.onInspectorError) {
+          options.onInspectorError(new Error(result.error.message));
+        }
+
+        logger.error(`[ERROR][useBabylonInspector] Inspector show failed: ${result.error.message}`);
       }
 
-      return {
-        success: false,
-        error,
-      };
-    }
-
-    // Merge options with defaults
-    const config: InspectorConfig = {
-      ...DEFAULT_INSPECTOR_CONFIG,
-      enablePopup: options.enablePopup ?? DEFAULT_INSPECTOR_CONFIG.enablePopup,
-      enableOverlay: options.enableOverlay ?? DEFAULT_INSPECTOR_CONFIG.enableOverlay,
-      enableEmbedMode: options.enableEmbedMode ?? DEFAULT_INSPECTOR_CONFIG.enableEmbedMode,
-      initialTab: options.initialTab ?? DEFAULT_INSPECTOR_CONFIG.initialTab,
-    };
-
-    const result = inspectorService.show(targetScene, config);
-
-    if (result.success) {
-      // Update state with successful show
-      const newState = inspectorService.getState();
-      setInspectorState(newState);
-      currentSceneRef.current = targetScene;
-
-      // Call success callback
-      if (options.onInspectorReady) {
-        options.onInspectorReady();
-      }
-
-      logger.debug('[DEBUG][useBabylonInspector] Inspector shown successfully');
-    } else {
-      // Update state with error
-      setInspectorState(prev => ({
-        ...prev,
-        error: result.error,
-        lastUpdated: new Date(),
-      }));
-
-      // Call error callback
-      if (options.onInspectorError) {
-        options.onInspectorError(new Error(result.error.message));
-      }
-
-      logger.error(`[ERROR][useBabylonInspector] Inspector show failed: ${result.error.message}`);
-    }
-
-    return result;
-  }, [getInspectorService]);
+      return result;
+    },
+    [getInspectorService]
+  );
 
   /**
    * Hide BabylonJS inspector
@@ -256,7 +258,7 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
     }
 
     const updateInterval = setInterval(() => {
-      const newState = inspectorServiceRef.current!.getState();
+      const newState = inspectorServiceRef.current?.getState();
       setInspectorState(newState);
     }, 2000); // Update every 2 seconds
 

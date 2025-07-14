@@ -109,7 +109,10 @@ export interface UpdateConfigPayload {
 export type SaveCodeResult = AsyncOperationResult<void, OperationError>;
 export type LoadCodeResult = AsyncOperationResult<void, OperationError>;
 export type ParseCodeResult = AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
-export type RenderFromASTResult = AsyncOperationResult<ReadonlyArray<import('@babylonjs/core').Mesh>, OperationError>;
+export type RenderFromASTResult = AsyncOperationResult<
+  ReadonlyArray<import('@babylonjs/core').Mesh>,
+  OperationError
+>;
 
 /**
  * Action creator types for type-safe action dispatch

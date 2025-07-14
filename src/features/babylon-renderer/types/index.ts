@@ -1,48 +1,45 @@
 /**
  * @file BabylonJS Renderer Type Exports
- * 
+ *
  * Centralized exports for all BabylonJS renderer type definitions.
  * Following functional programming patterns with immutable data structures.
  */
 
-// Scene types
+// CSG types
 export type {
-  BabylonSceneConfig,
-  SceneInitOptions,
-  BabylonSceneState,
-  SceneInitResult,
-  SceneUpdateResult,
-  SceneDisposeResult,
-  SceneError,
-} from './babylon-scene.types';
-
-export { SceneErrorCode, DEFAULT_SCENE_CONFIG } from './babylon-scene.types';
+  CSGDifferenceResult,
+  CSGError,
+  CSGIntersectionResult,
+  CSGOperationConfig,
+  CSGOperationInput,
+  CSGOperationMetadata,
+  CSGOperationResult,
+  CSGPerformanceMetrics,
+  CSGUnionResult,
+} from './babylon-csg.types';
+export { CSGErrorCode, CSGOperationType, DEFAULT_CSG_CONFIG } from './babylon-csg.types';
 
 // Engine types
 export type {
   BabylonEngineConfig,
-  EngineInitOptions,
   BabylonEngineState,
-  EnginePerformanceMetrics,
-  EngineInitResult,
-  EngineUpdateResult,
   EngineDisposeResult,
   EngineError,
+  EngineInitOptions,
+  EngineInitResult,
+  EnginePerformanceMetrics,
+  EngineUpdateResult,
 } from './babylon-engine.types';
 
-export { EngineErrorCode, DEFAULT_ENGINE_CONFIG } from './babylon-engine.types';
-
-// CSG types
+export { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from './babylon-engine.types';
+// Scene types
 export type {
-  CSGOperationConfig,
-  CSGOperationInput,
-  CSGOperationResult,
-  CSGOperationMetadata,
-  CSGPerformanceMetrics,
-  CSGError,
-  CSGUnionResult,
-  CSGDifferenceResult,
-  CSGIntersectionResult,
-} from './babylon-csg.types';
-
-export { CSGOperationType, CSGErrorCode, DEFAULT_CSG_CONFIG } from './babylon-csg.types';
+  BabylonSceneConfig,
+  BabylonSceneState,
+  SceneDisposeResult,
+  SceneError,
+  SceneInitOptions,
+  SceneInitResult,
+  SceneUpdateResult,
+} from './babylon-scene.types';
+export { DEFAULT_SCENE_CONFIG, SceneErrorCode } from './babylon-scene.types';

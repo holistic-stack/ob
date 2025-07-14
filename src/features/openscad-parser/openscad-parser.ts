@@ -369,14 +369,15 @@ export class OpenscadParser {
   private countExpectedStatements(code: string): number {
     try {
       console.log('[DEBUG] countExpectedStatements called with code:', code.replace(/\n/g, '\\n'));
-      
+
       // For block statements (union, difference, intersection), count as single statement
-      const blockStatementPattern = /^\s*(union|difference|intersection|hull|minkowski)\s*\(.*?\)\s*\{/;
+      const blockStatementPattern =
+        /^\s*(union|difference|intersection|hull|minkowski)\s*\(.*?\)\s*\{/;
       if (blockStatementPattern.test(code.trim())) {
         console.log('[DEBUG] Detected block statement, returning 1');
         return 1;
       }
-      
+
       // Split by lines and count statements
       const lines = code.split('\n');
       let statementCount = 0;
@@ -390,7 +391,7 @@ export class OpenscadParser {
         if (!trimmedLine || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*')) {
           continue;
         }
-        
+
         // Track brace depth to detect if we're inside a block
         for (const char of trimmedLine) {
           if (char === '{') {
@@ -417,7 +418,7 @@ export class OpenscadParser {
             statementCount++;
             console.log('[DEBUG] Counted transform statement:', trimmedLine);
           }
-          
+
           // Count block statements
           if (trimmedLine.match(/^(union|difference|intersection|hull|minkowski)\s*\(/)) {
             statementCount++;
@@ -674,7 +675,7 @@ export class OpenscadParser {
    */
   private findChildPrimitiveInStatement(
     statement: string,
-    transformNode: ASTNode,
+    _transformNode: ASTNode,
     startLine: number
   ): ASTNode | null {
     try {
@@ -765,14 +766,14 @@ export class OpenscadParser {
               const x = parseFloat(components[0] || '0');
               const y = parseFloat(components[1] || '0');
               const z = parseFloat(components[2] || '0');
-              if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+              if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
                 size = [x, y, z];
               }
             }
           } else {
             // Scalar size
             const scalarSize = parseFloat(sizeParam);
-            if (!isNaN(scalarSize)) {
+            if (!Number.isNaN(scalarSize)) {
               size = scalarSize;
             } else {
             }
@@ -811,10 +812,10 @@ export class OpenscadParser {
         // Pattern: sphere(radius) or sphere(r=radius)
         const sphereMatch = sourceLine.match(/sphere\s*\(\s*(?:r\s*=\s*)?([^,)]+)\s*\)/);
 
-        if (sphereMatch && sphereMatch[1]) {
+        if (sphereMatch?.[1]) {
           const radiusParam = sphereMatch[1].trim();
           const parsedRadius = parseFloat(radiusParam);
-          if (!isNaN(parsedRadius)) {
+          if (!Number.isNaN(parsedRadius)) {
             radius = parsedRadius;
           }
         }
@@ -848,39 +849,39 @@ export class OpenscadParser {
         // Pattern: cylinder(h=height, r=radius) or cylinder(h=height, r1=r1, r2=r2, center=true/false)
         const cylinderMatch = sourceLine.match(/cylinder\s*\(([^)]+)\)/);
 
-        if (cylinderMatch && cylinderMatch[1]) {
+        if (cylinderMatch?.[1]) {
           const params = cylinderMatch[1];
 
           // Parse height
           const hMatch = params.match(/h\s*=\s*([^,)]+)/);
-          if (hMatch && hMatch[1]) {
+          if (hMatch?.[1]) {
             const parsedH = parseFloat(hMatch[1].trim());
-            if (!isNaN(parsedH)) {
+            if (!Number.isNaN(parsedH)) {
               h = parsedH;
             }
           }
 
           // Parse radius (single radius)
           const rMatch = params.match(/(?:^|,)\s*r\s*=\s*([^,)]+)/);
-          if (rMatch && rMatch[1]) {
+          if (rMatch?.[1]) {
             const parsedR = parseFloat(rMatch[1].trim());
-            if (!isNaN(parsedR)) {
+            if (!Number.isNaN(parsedR)) {
               r1 = r2 = parsedR;
             }
           } else {
             // Parse r1 and r2 separately
             const r1Match = params.match(/r1\s*=\s*([^,)]+)/);
-            if (r1Match && r1Match[1]) {
+            if (r1Match?.[1]) {
               const parsedR1 = parseFloat(r1Match[1].trim());
-              if (!isNaN(parsedR1)) {
+              if (!Number.isNaN(parsedR1)) {
                 r1 = parsedR1;
               }
             }
 
             const r2Match = params.match(/r2\s*=\s*([^,)]+)/);
-            if (r2Match && r2Match[1]) {
+            if (r2Match?.[1]) {
               const parsedR2 = parseFloat(r2Match[1].trim());
-              if (!isNaN(parsedR2)) {
+              if (!Number.isNaN(parsedR2)) {
                 r2 = parsedR2;
               }
             }
@@ -888,7 +889,7 @@ export class OpenscadParser {
 
           // Parse center parameter
           const centerMatch = params.match(/center\s*=\s*(true|false)/);
-          if (centerMatch && centerMatch[1]) {
+          if (centerMatch?.[1]) {
             center = centerMatch[1] === 'true';
           }
         }
@@ -1064,9 +1065,6 @@ export class OpenscadParser {
   parse(code: string): TreeSitter.Tree | null {
     return this.parseCST(code);
   }
-
-
-
 
   /**
    * Gets the Tree Sitter language object.
@@ -1329,8 +1327,6 @@ export class OpenscadParser {
     return null;
   }
 
-
-
   /**
    * Check if a statement looks like a standalone primitive (sphere, cube, etc.)
    */
@@ -1386,6 +1382,4 @@ export class OpenscadParser {
     ];
     return primitiveTypes.includes(node.type);
   }
-
-
 }

@@ -1,16 +1,16 @@
 /**
  * @file AST to Mesh Converter Tests
- * 
+ *
  * Tests for the AST to mesh conversion service following TDD principles.
  * Uses real OpenSCAD parser instances (no mocks) as per project guidelines.
  */
 
-import { beforeEach, afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createInitializedTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
-import { ASTToMeshConversionService } from './ast-to-mesh-converter';
+import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import type { ConversionOptions } from '../../types/conversion.types';
+import { ASTToMeshConversionService } from './ast-to-mesh-converter';
 
 describe('ASTToMeshConversionService', () => {
   let parser: OpenscadParser;
@@ -35,16 +35,16 @@ describe('ASTToMeshConversionService', () => {
     it('should initialize successfully', async () => {
       const newConverter = new ASTToMeshConversionService();
       const result = await newConverter.initialize();
-      
+
       expect(result.success).toBe(true);
-      
+
       newConverter.dispose();
     });
 
     it('should handle multiple initialization calls', async () => {
       const result1 = await converter.initialize();
       const result2 = await converter.initialize();
-      
+
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
     });
@@ -54,7 +54,7 @@ describe('ASTToMeshConversionService', () => {
     it('should convert cube AST node to generic mesh', async () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
@@ -62,7 +62,7 @@ describe('ASTToMeshConversionService', () => {
       expect(ast.length).toBe(1);
 
       const result = await converter.convertSingle(ast[0]);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -72,7 +72,7 @@ describe('ASTToMeshConversionService', () => {
       expect(mesh.material).toBeDefined();
       expect(mesh.transform).toBeDefined();
       expect(mesh.metadata).toBeDefined();
-      
+
       // Verify metadata
       expect(mesh.metadata.meshId).toBeDefined();
       expect(mesh.metadata.vertexCount).toBeGreaterThan(0);
@@ -82,13 +82,13 @@ describe('ASTToMeshConversionService', () => {
     it('should convert sphere AST node to generic mesh', async () => {
       const code = 'sphere(5);';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
       const ast = parseResult.data;
       const result = await converter.convertSingle(ast[0]);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -97,7 +97,7 @@ describe('ASTToMeshConversionService', () => {
 
     it('should handle conversion errors gracefully', async () => {
       const invalidNode = { type: 'invalid', location: null } as unknown as ASTNode;
-      
+
       const result = await converter.convertSingle(invalidNode);
 
       expect(result.success).toBe(false);
@@ -111,13 +111,13 @@ describe('ASTToMeshConversionService', () => {
     it('should convert multiple AST nodes to generic meshes', async () => {
       const code = 'cube(10); sphere(5);';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
       const ast = parseResult.data;
       const result = await converter.convert(ast);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -132,13 +132,13 @@ describe('ASTToMeshConversionService', () => {
     it('should handle CSG operations', async () => {
       const code = 'difference() { cube(10); sphere(5); }';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
       const ast = parseResult.data;
       const result = await converter.convert(ast);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -148,9 +148,9 @@ describe('ASTToMeshConversionService', () => {
     it('should collect errors for failed conversions', async () => {
       const validNode = { type: 'cube', size: 10, location: null } as unknown as ASTNode;
       const invalidNode = { type: 'invalid', location: null } as unknown as ASTNode;
-      
+
       const result = await converter.convert([validNode, invalidNode]);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -163,7 +163,7 @@ describe('ASTToMeshConversionService', () => {
     it('should respect optimization options', async () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
@@ -173,7 +173,7 @@ describe('ASTToMeshConversionService', () => {
       };
 
       const result = await converter.convertSingle(parseResult.data[0], options);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 
@@ -183,20 +183,20 @@ describe('ASTToMeshConversionService', () => {
     it('should handle caching when enabled', async () => {
       const code = 'cube(10);';
       const parseResult = parser.parseASTWithResult(code);
-      
+
       expect(parseResult.success).toBe(true);
       if (!parseResult.success) return;
 
       const options: ConversionOptions = { enableCaching: true };
-      
+
       // First conversion
       const result1 = await converter.convertSingle(parseResult.data[0], options);
       expect(result1.success).toBe(true);
-      
+
       // Second conversion (should use cache)
       const result2 = await converter.convertSingle(parseResult.data[0], options);
       expect(result2.success).toBe(true);
-      
+
       // Results should be equivalent
       if (result1.success && result2.success) {
         expect(result1.data.id).toBe(result2.data.id);
@@ -218,9 +218,9 @@ describe('ASTToMeshConversionService', () => {
   describe('Error Handling', () => {
     it('should fail gracefully when not initialized', async () => {
       const uninitializedConverter = new ASTToMeshConversionService();
-      
+
       const result = await uninitializedConverter.convert([]);
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('not initialized');
@@ -229,7 +229,7 @@ describe('ASTToMeshConversionService', () => {
 
     it('should handle empty AST arrays', async () => {
       const result = await converter.convert([]);
-      
+
       expect(result.success).toBe(true);
       if (!result.success) return;
 

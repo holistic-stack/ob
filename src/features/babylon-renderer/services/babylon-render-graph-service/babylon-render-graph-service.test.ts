@@ -1,64 +1,70 @@
 /**
  * @file BabylonJS Render Graph Service Tests
- * 
+ *
  * Tests for BabylonJS render graph service functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  BabylonRenderGraphService, 
-  RenderGraphBlockType,
-  DEFAULT_RENDER_GRAPH_CONFIG 
-} from './babylon-render-graph-service';
-import type { 
-  RenderGraphConfig, 
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
   RenderGraphBlockConfig,
-  RenderGraphConnectionConfig 
+  RenderGraphConfig,
+  RenderGraphConnectionConfig,
+} from './babylon-render-graph-service';
+import {
+  BabylonRenderGraphService,
+  DEFAULT_RENDER_GRAPH_CONFIG,
+  RenderGraphBlockType,
 } from './babylon-render-graph-service';
 
 // Mock BabylonJS components for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+  }) as any;
 
-const createMockRenderGraph = (name: string) => ({
-  name,
-  setScene: vi.fn(),
-  build: vi.fn(),
-  dispose: vi.fn(),
-  getBlockByName: vi.fn(),
-  addBlock: vi.fn(),
-}) as any;
+const createMockRenderGraph = (name: string) =>
+  ({
+    name,
+    setScene: vi.fn(),
+    build: vi.fn(),
+    dispose: vi.fn(),
+    getBlockByName: vi.fn(),
+    addBlock: vi.fn(),
+  }) as any;
 
-const createMockRenderGraphBlock = (name: string) => ({
-  name,
-  getInputByName: vi.fn(),
-  getOutputByName: vi.fn(),
-  visibleInInspector: false,
-  dispose: vi.fn(),
-}) as any;
+const createMockRenderGraphBlock = (name: string) =>
+  ({
+    name,
+    getInputByName: vi.fn(),
+    getOutputByName: vi.fn(),
+    visibleInInspector: false,
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockConnectionPoint = () => ({
-  connectTo: vi.fn(),
-  value: null,
-}) as any;
+const createMockConnectionPoint = () =>
+  ({
+    connectTo: vi.fn(),
+    value: null,
+  }) as any;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
   const actual = await vi.importActual('@babylonjs/core');
-  
+
   const Vector2Mock = vi.fn().mockImplementation((x = 0, y = 0) => ({ x, y }));
   const Vector3Mock = vi.fn().mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z }));
   const Vector4Mock = vi.fn().mockImplementation((x = 0, y = 0, z = 0, w = 0) => ({ x, y, z, w }));
   const Color3Mock = vi.fn().mockImplementation((r = 1, g = 1, b = 1) => ({ r, g, b }));
   const Color4Mock = vi.fn().mockImplementation((r = 1, g = 1, b = 1, a = 1) => ({ r, g, b, a }));
-  
+
   return {
     ...actual,
     NodeRenderGraph: vi.fn().mockImplementation((name: string) => createMockRenderGraph(name)),
-    NodeRenderGraphBlock: vi.fn().mockImplementation((name: string) => createMockRenderGraphBlock(name)),
+    NodeRenderGraphBlock: vi
+      .fn()
+      .mockImplementation((name: string) => createMockRenderGraphBlock(name)),
     NodeRenderGraphConnectionPoint: vi.fn().mockImplementation(() => createMockConnectionPoint()),
     Vector2: Vector2Mock,
     Vector3: Vector3Mock,
@@ -89,7 +95,7 @@ describe('BabylonRenderGraphService', () => {
   describe('constructor', () => {
     it('should initialize service', () => {
       const service = new BabylonRenderGraphService();
-      
+
       // Service should be created without errors
       expect(service).toBeDefined();
     });
@@ -291,7 +297,7 @@ describe('BabylonRenderGraphService', () => {
 
       mockSourceBlock.getOutputByName.mockReturnValue(mockSourceOutput);
       mockTargetBlock.getInputByName.mockReturnValue(mockTargetInput);
-      mockRenderGraph!.getBlockByName.mockImplementation((name: string) => {
+      mockRenderGraph?.getBlockByName.mockImplementation((name: string) => {
         if (name === 'source-block') return mockSourceBlock;
         if (name === 'target-block') return mockTargetBlock;
         return null;
@@ -347,7 +353,7 @@ describe('BabylonRenderGraphService', () => {
 
       // Verify build was called
       const mockRenderGraph = renderGraphService.getRenderGraph('test-graph');
-      expect(mockRenderGraph!.build).toHaveBeenCalled();
+      expect(mockRenderGraph?.build).toHaveBeenCalled();
 
       // Verify state was updated
       const state = renderGraphService.getRenderGraphState('test-graph');
@@ -357,7 +363,7 @@ describe('BabylonRenderGraphService', () => {
 
     it('should handle build failure', () => {
       const mockRenderGraph = renderGraphService.getRenderGraph('test-graph');
-      mockRenderGraph!.build.mockImplementation(() => {
+      mockRenderGraph?.build.mockImplementation(() => {
         throw new Error('Build failed');
       });
 
@@ -427,7 +433,7 @@ describe('BabylonRenderGraphService', () => {
 
       const states = renderGraphService.getAllRenderGraphStates();
       expect(states).toHaveLength(2);
-      expect(states.map(s => s.isEnabled)).toEqual([true, true]);
+      expect(states.map((s) => s.isEnabled)).toEqual([true, true]);
     });
   });
 
@@ -471,9 +477,9 @@ describe('BabylonRenderGraphService', () => {
         ...DEFAULT_RENDER_GRAPH_CONFIG,
         name: 'test-graph',
       });
-      
+
       renderGraphService.dispose();
-      
+
       // Verify all render graphs were disposed
       const states = renderGraphService.getAllRenderGraphStates();
       expect(states).toEqual([]);

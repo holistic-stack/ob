@@ -1,14 +1,14 @@
 /**
  * @file BabylonJS Integration Tests
- * 
+ *
  * Comprehensive integration tests for BabylonJS renderer using real NullEngine.
  * Tests core functionality without mocks following TDD principles.
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
-import { BabylonEngineService } from '../services/babylon-engine-service';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service';
+import { BabylonEngineService } from '../services/babylon-engine-service';
 
 const logger = createLogger('BabylonIntegrationTest');
 
@@ -63,7 +63,7 @@ describe('BabylonJS Integration Tests', () => {
     it('should have proper service methods', () => {
       // Test that the service has the expected methods
       expect(typeof engineService.getState).toBe('function');
-      
+
       // Note: Other methods might not be implemented yet
       // This test verifies the basic service structure
     });
@@ -95,7 +95,11 @@ describe('BabylonJS Integration Tests', () => {
       expect(sphere.name).toBe('testSphere');
       expect(scene.meshes).toContain(sphere);
 
-      const cylinder = BABYLON.MeshBuilder.CreateCylinder('testCylinder', { height: 3, diameter: 2 }, scene);
+      const cylinder = BABYLON.MeshBuilder.CreateCylinder(
+        'testCylinder',
+        { height: 3, diameter: 2 },
+        scene
+      );
       expect(cylinder).toBeDefined();
       expect(cylinder.name).toBe('testCylinder');
       expect(scene.meshes).toContain(cylinder);
@@ -103,7 +107,7 @@ describe('BabylonJS Integration Tests', () => {
 
     it('should handle basic transformations', () => {
       const box = BABYLON.MeshBuilder.CreateBox('transformBox', { size: 1 }, scene);
-      
+
       // Test position
       box.position.x = 5;
       box.position.y = 3;
@@ -129,14 +133,14 @@ describe('BabylonJS Integration Tests', () => {
 
     it('should handle materials', () => {
       const box = BABYLON.MeshBuilder.CreateBox('materialBox', { size: 1 }, scene);
-      
+
       // Create a standard material
       const material = new BABYLON.StandardMaterial('testMaterial', scene);
       material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Red
-      
+
       // Apply material to mesh
       box.material = material;
-      
+
       expect(box.material).toBe(material);
       expect(material.diffuseColor.r).toBe(1);
       expect(material.diffuseColor.g).toBe(0);
@@ -145,9 +149,13 @@ describe('BabylonJS Integration Tests', () => {
 
     it('should handle lighting', () => {
       // Create directional light
-      const light = new BABYLON.DirectionalLight('testLight', new BABYLON.Vector3(-1, -1, -1), scene);
+      const light = new BABYLON.DirectionalLight(
+        'testLight',
+        new BABYLON.Vector3(-1, -1, -1),
+        scene
+      );
       light.intensity = 1.0;
-      
+
       expect(light).toBeDefined();
       expect(light.intensity).toBe(1.0);
       expect(scene.lights).toContain(light);
@@ -163,7 +171,7 @@ describe('BabylonJS Integration Tests', () => {
         BABYLON.Vector3.Zero(),
         scene
       );
-      
+
       expect(camera).toBeDefined();
       expect(camera.alpha).toBeCloseTo(-Math.PI / 2);
       expect(camera.beta).toBeCloseTo(Math.PI / 2.5);
@@ -174,31 +182,35 @@ describe('BabylonJS Integration Tests', () => {
   describe('Performance and Memory', () => {
     it('should handle multiple mesh creation and disposal', () => {
       const meshes: BABYLON.Mesh[] = [];
-      
+
       // Create multiple meshes
       for (let i = 0; i < 100; i++) {
         const mesh = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: 1 }, scene);
         meshes.push(mesh);
       }
-      
+
       expect(scene.meshes.length).toBeGreaterThanOrEqual(100);
-      
+
       // Dispose all meshes
-      meshes.forEach(mesh => mesh.dispose());
-      
+      meshes.forEach((mesh) => mesh.dispose());
+
       // Note: Scene might still have references, but meshes should be disposed
-      meshes.forEach(mesh => {
+      meshes.forEach((mesh) => {
         expect(mesh.isDisposed()).toBe(true);
       });
     });
 
     it('should handle render loop without errors', () => {
       // Create a simple scene
-      const box = BABYLON.MeshBuilder.CreateBox('renderBox', { size: 1 }, scene);
-      const light = new BABYLON.DirectionalLight('renderLight', new BABYLON.Vector3(-1, -1, -1), scene);
+      const _box = BABYLON.MeshBuilder.CreateBox('renderBox', { size: 1 }, scene);
+      const _light = new BABYLON.DirectionalLight(
+        'renderLight',
+        new BABYLON.Vector3(-1, -1, -1),
+        scene
+      );
 
       // Create a camera (required for rendering)
-      const camera = new BABYLON.ArcRotateCamera(
+      const _camera = new BABYLON.ArcRotateCamera(
         'renderCamera',
         -Math.PI / 2,
         Math.PI / 2.5,
@@ -230,12 +242,12 @@ describe('BabylonJS Integration Tests', () => {
     });
 
     it('should handle scene disposal', () => {
-      const box = BABYLON.MeshBuilder.CreateBox('disposeBox', { size: 1 }, scene);
-      
+      const _box = BABYLON.MeshBuilder.CreateBox('disposeBox', { size: 1 }, scene);
+
       expect(() => {
         scene.dispose();
       }).not.toThrow();
-      
+
       expect(scene.isDisposed).toBe(true);
     });
 
@@ -243,7 +255,7 @@ describe('BabylonJS Integration Tests', () => {
       expect(() => {
         engine.dispose();
       }).not.toThrow();
-      
+
       // Create new engine for cleanup
       engine = new BABYLON.NullEngine({
         renderWidth: 800,
@@ -259,32 +271,44 @@ describe('BabylonJS Integration Tests', () => {
   describe('OpenSCAD Integration Readiness', () => {
     it('should support basic OpenSCAD primitives', () => {
       // Test cube (OpenSCAD cube)
-      const cube = BABYLON.MeshBuilder.CreateBox('openscadCube', { 
-        width: 2, 
-        height: 2, 
-        depth: 2 
-      }, scene);
+      const cube = BABYLON.MeshBuilder.CreateBox(
+        'openscadCube',
+        {
+          width: 2,
+          height: 2,
+          depth: 2,
+        },
+        scene
+      );
       expect(cube).toBeDefined();
 
       // Test sphere (OpenSCAD sphere)
-      const sphere = BABYLON.MeshBuilder.CreateSphere('openscadSphere', { 
-        diameter: 2,
-        segments: 16 
-      }, scene);
+      const sphere = BABYLON.MeshBuilder.CreateSphere(
+        'openscadSphere',
+        {
+          diameter: 2,
+          segments: 16,
+        },
+        scene
+      );
       expect(sphere).toBeDefined();
 
       // Test cylinder (OpenSCAD cylinder)
-      const cylinder = BABYLON.MeshBuilder.CreateCylinder('openscadCylinder', { 
-        height: 3, 
-        diameter: 2,
-        tessellation: 16 
-      }, scene);
+      const cylinder = BABYLON.MeshBuilder.CreateCylinder(
+        'openscadCylinder',
+        {
+          height: 3,
+          diameter: 2,
+          tessellation: 16,
+        },
+        scene
+      );
       expect(cylinder).toBeDefined();
     });
 
     it('should support transformations for OpenSCAD operations', () => {
       const cube = BABYLON.MeshBuilder.CreateBox('transformCube', { size: 1 }, scene);
-      
+
       // Test translate (OpenSCAD translate)
       cube.position = new BABYLON.Vector3(5, 3, -2);
       expect(cube.position.x).toBe(5);

@@ -1,22 +1,22 @@
 /**
  * @file BabylonJS Render Graph Service Exports
- * 
+ *
  * Exports for the BabylonJS render graph service.
  */
 
-export { BabylonRenderGraphService } from './babylon-render-graph-service';
 export type {
-  RenderGraphConfig,
   RenderGraphBlockConfig,
-  RenderGraphConnectionConfig,
-  RenderGraphState,
-  RenderGraphError,
-  RenderGraphCreateResult,
   RenderGraphBuildResult,
+  RenderGraphConfig,
+  RenderGraphConnectionConfig,
+  RenderGraphCreateResult,
+  RenderGraphError,
   RenderGraphExecuteResult,
+  RenderGraphState,
 } from './babylon-render-graph-service';
-export { 
+export {
+  BabylonRenderGraphService,
+  DEFAULT_RENDER_GRAPH_CONFIG,
   RenderGraphBlockType,
   RenderGraphErrorCode,
-  DEFAULT_RENDER_GRAPH_CONFIG 
 } from './babylon-render-graph-service';

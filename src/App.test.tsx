@@ -52,7 +52,7 @@ describe('App', () => {
             drawCalls: 0,
             triangleCount: 0,
             memoryUsage: 0,
-            gpuMemoryUsage: 0
+            gpuMemoryUsage: 0,
           },
         },
         inspector: {
@@ -60,7 +60,7 @@ describe('App', () => {
           isEmbedded: false,
           currentTab: 'scene' as any,
           scene: null,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         },
         csg: {
           isEnabled: true,

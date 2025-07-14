@@ -1,46 +1,48 @@
 /**
  * @file CSG2 Mesh Converter Tests
- * 
+ *
  * Tests for CSG2 mesh conversion utilities.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  convertGenericMeshToBabylon,
-  convertBabylonMeshToGeneric,
-  optimizeMeshForCSG,
-  DEFAULT_CONVERSION_OPTIONS,
-} from './mesh-converter';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GenericMeshData } from '../../../ast-to-csg-converter/types/conversion.types';
+import {
+  convertBabylonMeshToGeneric,
+  convertGenericMeshToBabylon,
+  DEFAULT_CONVERSION_OPTIONS,
+  optimizeMeshForCSG,
+} from './mesh-converter';
 
 // Mock BabylonJS components
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+  }) as any;
 
-const createMockMesh = (id: string) => ({
-  id,
-  getVerticesData: vi.fn((kind: string) => {
-    if (kind === 'position') return new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
-    if (kind === 'normal') return new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
-    if (kind === 'uv') return new Float32Array([0, 0, 1, 0, 0, 1]);
-    return null;
-  }),
-  getIndices: vi.fn(() => new Uint32Array([0, 1, 2])),
-  createNormals: vi.fn(),
-  optimizeIndices: vi.fn(),
-  getBoundingInfo: vi.fn(() => ({
-    boundingBox: {
-      minimum: { x: 0, y: 0, z: 0 },
-      maximum: { x: 1, y: 1, z: 1 },
-    },
-  })),
-  getWorldMatrix: vi.fn(() => ({
-    m: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  })),
-}) as any;
+const createMockMesh = (id: string) =>
+  ({
+    id,
+    getVerticesData: vi.fn((kind: string) => {
+      if (kind === 'position') return new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+      if (kind === 'normal') return new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+      if (kind === 'uv') return new Float32Array([0, 0, 1, 0, 0, 1]);
+      return null;
+    }),
+    getIndices: vi.fn(() => new Uint32Array([0, 1, 2])),
+    createNormals: vi.fn(),
+    optimizeIndices: vi.fn(),
+    getBoundingInfo: vi.fn(() => ({
+      boundingBox: {
+        minimum: { x: 0, y: 0, z: 0 },
+        maximum: { x: 1, y: 1, z: 1 },
+      },
+    })),
+    getWorldMatrix: vi.fn(() => ({
+      m: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    })),
+  }) as any;
 
 // Mock BabylonJS classes
 vi.mock('@babylonjs/core', async () => {
@@ -64,7 +66,7 @@ describe('CSG2 Mesh Converter', () => {
 
   beforeEach(() => {
     mockScene = createMockScene();
-    
+
     mockGenericMeshData = {
       id: 'test-mesh',
       geometry: {

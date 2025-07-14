@@ -1,23 +1,22 @@
 /**
  * @file BabylonJS Engine Service
- * 
+ *
  * Service for managing BabylonJS engine lifecycle with WebGPU-first configuration.
  * Implements WebGPU engine with fallback to WebGL2, following functional programming patterns.
  */
 
-import { Engine, WebGPUEngine, Scene, Vector3 } from '@babylonjs/core';
+import { Engine, WebGPUEngine } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
   BabylonEngineConfig,
   BabylonEngineState,
-  EngineInitOptions,
-  EngineInitResult,
-  EngineUpdateResult,
   EngineDisposeResult,
   EngineError,
   EngineErrorCode,
+  EngineInitOptions,
+  EngineInitResult,
   EnginePerformanceMetrics,
 } from '../../types/babylon-engine.types';
 import { DEFAULT_ENGINE_CONFIG } from '../../types/babylon-engine.types';
@@ -26,7 +25,7 @@ const logger = createLogger('BabylonEngineService');
 
 /**
  * BabylonJS Engine Service
- * 
+ *
  * Manages engine lifecycle with WebGPU-first approach and comprehensive error handling.
  * Follows SRP by focusing solely on engine management.
  */
@@ -47,82 +46,99 @@ export class BabylonEngineService {
   async init(options: EngineInitOptions): Promise<EngineInitResult> {
     logger.debug('[DEBUG][BabylonEngineService] Initializing engine...');
 
-    return tryCatchAsync(async () => {
-      if (this.engine) {
-        throw this.createError('ENGINE_INITIALIZATION_FAILED', 'Engine already initialized');
-      }
-
-      this.canvas = options.canvas;
-      
-      // Try WebGPU first if enabled
-      if (this.config.enableWebGPU) {
-        const webgpuResult = await this.initWebGPUEngine(options);
-        if (webgpuResult.success) {
-          logger.debug('[DEBUG][BabylonEngineService] WebGPU engine initialized successfully');
-          return this.createEngineState(true);
+    return tryCatchAsync(
+      async () => {
+        if (this.engine) {
+          throw this.createError('ENGINE_INITIALIZATION_FAILED', 'Engine already initialized');
         }
-        
-        logger.warn('[WARN][BabylonEngineService] WebGPU initialization failed, falling back to WebGL2');
-      }
 
-      // Fallback to WebGL2
-      const webglResult = await this.initWebGLEngine(options);
-      if (webglResult.success) {
-        logger.debug('[DEBUG][BabylonEngineService] WebGL2 engine initialized successfully');
-        return this.createEngineState(false);
-      }
+        this.canvas = options.canvas;
 
-      throw this.createError('ENGINE_INITIALIZATION_FAILED', 'Both WebGPU and WebGL2 initialization failed');
-    }, (error) => this.createError('ENGINE_INITIALIZATION_FAILED', `Engine initialization failed: ${error}`));
+        // Try WebGPU first if enabled
+        if (this.config.enableWebGPU) {
+          const webgpuResult = await this.initWebGPUEngine(options);
+          if (webgpuResult.success) {
+            logger.debug('[DEBUG][BabylonEngineService] WebGPU engine initialized successfully');
+            return this.createEngineState(true);
+          }
+
+          logger.warn(
+            '[WARN][BabylonEngineService] WebGPU initialization failed, falling back to WebGL2'
+          );
+        }
+
+        // Fallback to WebGL2
+        const webglResult = await this.initWebGLEngine(options);
+        if (webglResult.success) {
+          logger.debug('[DEBUG][BabylonEngineService] WebGL2 engine initialized successfully');
+          return this.createEngineState(false);
+        }
+
+        throw this.createError(
+          'ENGINE_INITIALIZATION_FAILED',
+          'Both WebGPU and WebGL2 initialization failed'
+        );
+      },
+      (error) =>
+        this.createError('ENGINE_INITIALIZATION_FAILED', `Engine initialization failed: ${error}`)
+    );
   }
 
   /**
    * Initialize WebGPU engine
    */
-  private async initWebGPUEngine(options: EngineInitOptions): Promise<Result<WebGPUEngine, EngineError>> {
-    return tryCatchAsync(async () => {
-      if (!WebGPUEngine.IsSupported()) {
-        throw this.createError('WEBGPU_NOT_SUPPORTED', 'WebGPU is not supported in this browser');
-      }
+  private async initWebGPUEngine(
+    options: EngineInitOptions
+  ): Promise<Result<WebGPUEngine, EngineError>> {
+    return tryCatchAsync(
+      async () => {
+        if (!WebGPUEngine.IsSupported()) {
+          throw this.createError('WEBGPU_NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+        }
 
-      const webgpuEngine = new WebGPUEngine(this.canvas!, {
-        antialias: this.config.antialias,
-        adaptToDeviceRatio: this.config.adaptToDeviceRatio,
-        powerPreference: this.config.powerPreference,
-      });
+        const webgpuEngine = new WebGPUEngine(this.canvas!, {
+          antialias: this.config.antialias,
+          adaptToDeviceRatio: this.config.adaptToDeviceRatio,
+          powerPreference: this.config.powerPreference,
+        });
 
-      await webgpuEngine.initAsync();
-      
-      this.engine = webgpuEngine;
-      this.setupEngineEvents();
-      
-      options.onEngineReady?.(webgpuEngine);
-      
-      return webgpuEngine;
-    }, (error) => this.createError('WEBGPU_NOT_SUPPORTED', `WebGPU initialization failed: ${error}`));
+        await webgpuEngine.initAsync();
+
+        this.engine = webgpuEngine;
+        this.setupEngineEvents();
+
+        options.onEngineReady?.(webgpuEngine);
+
+        return webgpuEngine;
+      },
+      (error) => this.createError('WEBGPU_NOT_SUPPORTED', `WebGPU initialization failed: ${error}`)
+    );
   }
 
   /**
    * Initialize WebGL2 engine
    */
   private async initWebGLEngine(options: EngineInitOptions): Promise<Result<Engine, EngineError>> {
-    return tryCatch(() => {
-      const webglEngine = new Engine(this.canvas!, this.config.antialias, {
-        preserveDrawingBuffer: this.config.preserveDrawingBuffer,
-        stencil: this.config.stencil,
-        antialias: this.config.antialias,
-        adaptToDeviceRatio: this.config.adaptToDeviceRatio,
-        powerPreference: this.config.powerPreference,
-        failIfMajorPerformanceCaveat: this.config.failIfMajorPerformanceCaveat,
-      });
+    return tryCatch(
+      () => {
+        const webglEngine = new Engine(this.canvas!, this.config.antialias, {
+          preserveDrawingBuffer: this.config.preserveDrawingBuffer,
+          stencil: this.config.stencil,
+          antialias: this.config.antialias,
+          adaptToDeviceRatio: this.config.adaptToDeviceRatio,
+          powerPreference: this.config.powerPreference,
+          failIfMajorPerformanceCaveat: this.config.failIfMajorPerformanceCaveat,
+        });
 
-      this.engine = webglEngine;
-      this.setupEngineEvents();
-      
-      options.onEngineReady?.(webglEngine);
-      
-      return webglEngine;
-    }, (error) => this.createError('WEBGL_NOT_SUPPORTED', `WebGL2 initialization failed: ${error}`));
+        this.engine = webglEngine;
+        this.setupEngineEvents();
+
+        options.onEngineReady?.(webglEngine);
+
+        return webglEngine;
+      },
+      (error) => this.createError('WEBGL_NOT_SUPPORTED', `WebGL2 initialization failed: ${error}`)
+    );
   }
 
   /**
@@ -208,17 +224,20 @@ export class BabylonEngineService {
   dispose(): EngineDisposeResult {
     logger.debug('[DEBUG][BabylonEngineService] Disposing engine...');
 
-    return tryCatch(() => {
-      if (this.engine) {
-        this.engine.dispose();
-        this.engine = null;
-      }
-      
-      this.canvas = null;
-      this.isDisposed = true;
-      
-      logger.end('[END][BabylonEngineService] Engine disposed successfully');
-    }, (error) => this.createError('DISPOSAL_FAILED', `Engine disposal failed: ${error}`));
+    return tryCatch(
+      () => {
+        if (this.engine) {
+          this.engine.dispose();
+          this.engine = null;
+        }
+
+        this.canvas = null;
+        this.isDisposed = true;
+
+        logger.end('[END][BabylonEngineService] Engine disposed successfully');
+      },
+      (error) => this.createError('DISPOSAL_FAILED', `Engine disposal failed: ${error}`)
+    );
   }
 
   /**

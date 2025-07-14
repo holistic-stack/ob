@@ -191,7 +191,7 @@ function convertValueToParameterValue(value: ast.Value | ast.ErrorNode): ast.Par
  */
 function convertNodeToParameterValue(
   node: TSNode,
-  errorHandler?: ErrorHandler,
+  _errorHandler?: ErrorHandler,
   sourceCode: string = '',
   variableScope?: Map<string, ast.ParameterValue>
 ): ast.ParameterValue | undefined {

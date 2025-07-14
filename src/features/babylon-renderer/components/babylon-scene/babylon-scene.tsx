@@ -1,20 +1,18 @@
 /**
  * @file BabylonJS Scene Component
- * 
+ *
  * React component that provides declarative BabylonJS scene management
  * with React 19 compatibility and hook-based integration.
  */
 
-import React, { useEffect, useRef, useCallback, useMemo } from 'react';
+import type { Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
+import { Color3, Color4, Vector3 } from '@babylonjs/core';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Engine, Scene } from 'react-babylonjs';
-import { Vector3, Color3, Color4, ArcRotateCamera, HemisphericLight } from '@babylonjs/core';
-import type { Scene as BabylonSceneType, Engine as BabylonEngineType } from '@babylonjs/core';
-import { BabylonEngineService } from '../../services/babylon-engine-service';
-import { BabylonInspectorService } from '../../services/babylon-inspector-service';
+import { createLogger } from '../../../../shared/services/logger.service';
 import { useBabylonEngine } from '../../hooks/use-babylon-engine';
 import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 
 const logger = createLogger('BabylonScene');
 
@@ -140,7 +138,7 @@ const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
 
 /**
  * BabylonJS Scene Component
- * 
+ *
  * Provides declarative scene management with React 19 compatibility.
  * Integrates with BabylonJS services for engine and inspector management.
  */
@@ -160,73 +158,83 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const engineRef = useRef<BabylonEngineType | null>(null);
 
   // Merge configurations with defaults
-  const config = useMemo(() => ({
-    ...DEFAULT_SCENE_CONFIG,
-    ...userConfig,
-  }), [userConfig]);
+  const config = useMemo(
+    () => ({
+      ...DEFAULT_SCENE_CONFIG,
+      ...userConfig,
+    }),
+    [userConfig]
+  );
 
-  const camera = useMemo(() => ({
-    ...DEFAULT_CAMERA_CONFIG,
-    ...userCamera,
-  }), [userCamera]);
+  const camera = useMemo(
+    () => ({
+      ...DEFAULT_CAMERA_CONFIG,
+      ...userCamera,
+    }),
+    [userCamera]
+  );
 
-  const lighting = useMemo(() => ({
-    ambient: { ...DEFAULT_LIGHTING_CONFIG.ambient, ...userLighting?.ambient },
-    directional: { ...DEFAULT_LIGHTING_CONFIG.directional, ...userLighting?.directional },
-    environment: { ...DEFAULT_LIGHTING_CONFIG.environment, ...userLighting?.environment },
-  }), [userLighting]);
+  const lighting = useMemo(
+    () => ({
+      ambient: { ...DEFAULT_LIGHTING_CONFIG.ambient, ...userLighting?.ambient },
+      directional: { ...DEFAULT_LIGHTING_CONFIG.directional, ...userLighting?.directional },
+      environment: { ...DEFAULT_LIGHTING_CONFIG.environment, ...userLighting?.environment },
+    }),
+    [userLighting]
+  );
 
   // Initialize BabylonJS services
-  const { 
-    engineService, 
-    engineState, 
-    initializeEngine, 
-    disposeEngine 
-  } = useBabylonEngine();
+  const { engineService, engineState, initializeEngine, disposeEngine } = useBabylonEngine();
 
-  const { 
-    inspectorService, 
-    inspectorState, 
-    showInspector, 
-    hideInspector 
-  } = useBabylonInspector();
+  const { inspectorService, inspectorState, showInspector, hideInspector } = useBabylonInspector();
 
   /**
    * Handle scene ready callback
    */
-  const handleSceneReady = useCallback((sceneEventArgs: any) => {
-    const scene = sceneEventArgs.scene;
-    logger.debug('[DEBUG][BabylonScene] Scene ready');
-    sceneRef.current = scene;
+  const handleSceneReady = useCallback(
+    (sceneEventArgs: any) => {
+      const scene = sceneEventArgs.scene;
+      logger.debug('[DEBUG][BabylonScene] Scene ready');
+      sceneRef.current = scene;
 
-    // Configure scene properties
-    scene.clearColor = new Color4(config.backgroundColor.r, config.backgroundColor.g, config.backgroundColor.b, 1.0);
-    scene.environmentIntensity = config.environmentIntensity;
-    scene.imageProcessingConfiguration.isEnabled = config.imageProcessingEnabled;
+      // Configure scene properties
+      scene.clearColor = new Color4(
+        config.backgroundColor.r,
+        config.backgroundColor.g,
+        config.backgroundColor.b,
+        1.0
+      );
+      scene.environmentIntensity = config.environmentIntensity;
+      scene.imageProcessingConfiguration.isEnabled = config.imageProcessingEnabled;
 
-    // Initialize inspector if enabled (async operation)
-    if (config.enableInspector && inspectorService) {
-      inspectorService.show(scene).then((result) => {
-        if (!result.success) {
-          logger.warn(`[WARN][BabylonScene] Failed to show inspector: ${result.error.message}`);
-        }
-      });
-    }
+      // Initialize inspector if enabled (async operation)
+      if (config.enableInspector && inspectorService) {
+        inspectorService.show(scene).then((result) => {
+          if (!result.success) {
+            logger.warn(`[WARN][BabylonScene] Failed to show inspector: ${result.error.message}`);
+          }
+        });
+      }
 
-    // Call user callback
-    onSceneReady?.(scene);
-  }, [config, inspectorService, onSceneReady]);
+      // Call user callback
+      onSceneReady?.(scene);
+    },
+    [config, inspectorService, onSceneReady]
+  );
 
   /**
    * Handle engine ready callback
    */
-  const handleEngineReady = useCallback((engine: BabylonEngineType) => {
-    logger.debug('[DEBUG][BabylonScene] Engine ready');
-    engineRef.current = engine;
+  const handleEngineReady = useCallback(
+    (engine: BabylonEngineType) => {
+      logger.debug('[DEBUG][BabylonScene] Engine ready');
+      engineRef.current = engine;
 
-    // Call user callback
-    onEngineReady?.(engine);
-  }, [onEngineReady]);
+      // Call user callback
+      onEngineReady?.(engine);
+    },
+    [onEngineReady]
+  );
 
   /**
    * Handle render loop callback
@@ -249,7 +257,9 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         });
 
         if (!result.success) {
-          logger.error(`[ERROR][BabylonScene] Failed to initialize engine: ${result.error.message}`);
+          logger.error(
+            `[ERROR][BabylonScene] Failed to initialize engine: ${result.error.message}`
+          );
         }
       };
 
@@ -280,16 +290,16 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
    */
   if (!engineState.isInitialized || !engineState.engine) {
     return (
-      <div 
-        className={className} 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+      <div
+        className={className}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           minHeight: '400px',
           backgroundColor: '#1a1a1a',
           color: '#ffffff',
-          ...style 
+          ...style,
         }}
       >
         <div>
@@ -311,16 +321,21 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         adaptToDeviceRatio={config.adaptToDeviceRatio}
         onEngineReady={handleEngineReady}
       >
-        <Scene
-          onSceneMount={handleSceneReady}
-          onRender={handleRenderLoop}
-        >
+        <Scene onSceneMount={handleSceneReady} onRender={handleRenderLoop}>
           {/* Camera */}
           {camera.type === 'arcRotate' && (
             <arcRotateCamera
               name="camera"
-              position={camera.position ? new Vector3(camera.position.x, camera.position.y, camera.position.z) : new Vector3(10, 10, 10)}
-              target={camera.target ? new Vector3(camera.target.x, camera.target.y, camera.target.z) : Vector3.Zero()}
+              position={
+                camera.position
+                  ? new Vector3(camera.position.x, camera.position.y, camera.position.z)
+                  : new Vector3(10, 10, 10)
+              }
+              target={
+                camera.target
+                  ? new Vector3(camera.target.x, camera.target.y, camera.target.z)
+                  : Vector3.Zero()
+              }
               radius={camera.radius ?? 10}
               alpha={camera.alpha ?? -Math.PI / 2}
               beta={camera.beta ?? Math.PI / 2.5}

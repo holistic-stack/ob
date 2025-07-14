@@ -1,102 +1,109 @@
 /**
  * @file BabylonJS Material Service Tests
- * 
+ *
  * Tests for BabylonJS advanced material service functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  BabylonMaterialService, 
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NodeMaterialConfig, PBRMaterialConfig } from './babylon-material-service';
+import {
+  BabylonMaterialService,
+  DEFAULT_PBR_CONFIG,
   MaterialType,
-  DEFAULT_PBR_CONFIG 
 } from './babylon-material-service';
-import type { PBRMaterialConfig, NodeMaterialConfig } from './babylon-material-service';
 
 // Mock BabylonJS components for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+  }) as any;
 
-const createMockMesh = (id: string) => ({
-  id,
-  material: null,
-  dispose: vi.fn(),
-}) as any;
+const createMockMesh = (id: string) =>
+  ({
+    id,
+    material: null,
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockPBRMaterial = (name: string) => ({
-  name,
-  baseColor: null,
-  metallicFactor: 0,
-  roughnessFactor: 1,
-  emissiveColor: null,
-  emissiveIntensity: 1,
-  indexOfRefraction: 1.5,
-  alphaCutOff: 0.5,
-  transparencyMode: 0,
-  clearCoat: {
-    isEnabled: false,
-    intensity: 0,
-    roughness: 0,
+const createMockPBRMaterial = (name: string) =>
+  ({
+    name,
+    baseColor: null,
+    metallicFactor: 0,
+    roughnessFactor: 1,
+    emissiveColor: null,
+    emissiveIntensity: 1,
     indexOfRefraction: 1.5,
-    tintColor: null,
-  },
-  sheen: {
-    isEnabled: false,
-    intensity: 0,
-    color: null,
-    roughness: 0,
-  },
-  anisotropy: {
-    isEnabled: false,
-    intensity: 0,
-    direction: null,
-  },
-  baseTexture: null,
-  metallicRoughnessTexture: null,
-  bumpTexture: null,
-  emissiveTexture: null,
-  ambientTexture: null,
-  isReady: vi.fn(() => true),
-  dispose: vi.fn(),
-}) as any;
+    alphaCutOff: 0.5,
+    transparencyMode: 0,
+    clearCoat: {
+      isEnabled: false,
+      intensity: 0,
+      roughness: 0,
+      indexOfRefraction: 1.5,
+      tintColor: null,
+    },
+    sheen: {
+      isEnabled: false,
+      intensity: 0,
+      color: null,
+      roughness: 0,
+    },
+    anisotropy: {
+      isEnabled: false,
+      intensity: 0,
+      direction: null,
+    },
+    baseTexture: null,
+    metallicRoughnessTexture: null,
+    bumpTexture: null,
+    emissiveTexture: null,
+    ambientTexture: null,
+    isReady: vi.fn(() => true),
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockNodeMaterial = (name: string) => ({
-  name,
-  loadFromSerialization: vi.fn().mockResolvedValue(undefined),
-  getInputBlockByPredicate: vi.fn(() => ({
-    name: 'test-input',
-    value: null,
-  })),
-  build: vi.fn(),
-  isReady: vi.fn(() => true),
-  dispose: vi.fn(),
-}) as any;
+const createMockNodeMaterial = (name: string) =>
+  ({
+    name,
+    loadFromSerialization: vi.fn().mockResolvedValue(undefined),
+    getInputBlockByPredicate: vi.fn(() => ({
+      name: 'test-input',
+      value: null,
+    })),
+    build: vi.fn(),
+    isReady: vi.fn(() => true),
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockTexture = (url: string) => ({
-  url,
-  isReady: vi.fn(() => true),
-  onLoadObservable: {
-    addOnce: vi.fn((callback: () => void) => callback()),
-  },
-  onErrorObservable: {
-    addOnce: vi.fn(),
-  },
-  dispose: vi.fn(),
-}) as any;
+const createMockTexture = (url: string) =>
+  ({
+    url,
+    isReady: vi.fn(() => true),
+    onLoadObservable: {
+      addOnce: vi.fn((callback: () => void) => callback()),
+    },
+    onErrorObservable: {
+      addOnce: vi.fn(),
+    },
+    dispose: vi.fn(),
+  }) as any;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
   const actual = await vi.importActual('@babylonjs/core');
-  
+
   // Mock Vector3 constructor
-  const Vector3Mock = vi.fn().mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
+  const Vector3Mock = vi
+    .fn()
+    .mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
   Vector3Mock.Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
-  
+
   // Mock Color3 constructor
   const Color3Mock = vi.fn().mockImplementation((r: number, g: number, b: number) => ({ r, g, b }));
-  
+
   return {
     ...actual,
     PBRMaterial: vi.fn().mockImplementation((name: string) => createMockPBRMaterial(name)),
@@ -128,7 +135,7 @@ describe('BabylonMaterialService', () => {
   describe('constructor', () => {
     it('should initialize service', () => {
       const service = new BabylonMaterialService();
-      
+
       // Service should be created without errors
       expect(service).toBeDefined();
     });
@@ -351,8 +358,8 @@ describe('BabylonMaterialService', () => {
 
       const states = materialService.getAllMaterialStates();
       expect(states).toHaveLength(2);
-      expect(states.map(s => s.name)).toContain('material-1');
-      expect(states.map(s => s.name)).toContain('material-2');
+      expect(states.map((s) => s.name)).toContain('material-1');
+      expect(states.map((s) => s.name)).toContain('material-2');
     });
   });
 
@@ -397,9 +404,9 @@ describe('BabylonMaterialService', () => {
         ...DEFAULT_PBR_CONFIG,
         name: 'test-material',
       });
-      
+
       materialService.dispose();
-      
+
       // Verify all materials were disposed
       const states = materialService.getAllMaterialStates();
       expect(states).toEqual([]);

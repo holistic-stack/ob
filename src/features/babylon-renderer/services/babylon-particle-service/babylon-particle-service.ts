@@ -1,19 +1,18 @@
 /**
  * @file BabylonJS Particle System Service
- * 
+ *
  * Service for managing BabylonJS particle systems with GPU acceleration.
  * Provides comprehensive particle system creation and management capabilities.
  */
 
-import { 
-  Scene, 
-  ParticleSystem, 
+import {
+  type AbstractMesh,
+  Color4,
   GPUParticleSystem,
+  ParticleSystem,
+  type Scene,
   Texture,
   Vector3,
-  Color4,
-  AbstractMesh,
-  Engine
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
@@ -102,7 +101,10 @@ export interface ParticleSystemState {
 /**
  * Particle system operation results
  */
-export type ParticleSystemCreateResult = Result<ParticleSystem | GPUParticleSystem, ParticleSystemError>;
+export type ParticleSystemCreateResult = Result<
+  ParticleSystem | GPUParticleSystem,
+  ParticleSystemError
+>;
 export type ParticleSystemStartResult = Result<void, ParticleSystemError>;
 export type ParticleSystemStopResult = Result<void, ParticleSystemError>;
 
@@ -136,7 +138,7 @@ export const DEFAULT_PARTICLE_CONFIG: ParticleSystemConfig = {
 
 /**
  * BabylonJS Particle System Service
- * 
+ *
  * Manages particle systems with GPU acceleration support.
  * Follows SRP by focusing solely on particle system management.
  */
@@ -155,20 +157,26 @@ export class BabylonParticleService {
   init(scene: Scene): Result<void, ParticleSystemError> {
     logger.debug('[DEBUG][BabylonParticleService] Initializing particle service...');
 
-    return tryCatch(() => {
-      if (!scene) {
-        throw this.createError('INVALID_CONFIG', 'Scene is required for particle systems');
-      }
+    return tryCatch(
+      () => {
+        if (!scene) {
+          throw this.createError('INVALID_CONFIG', 'Scene is required for particle systems');
+        }
 
-      this.scene = scene;
-      logger.debug('[DEBUG][BabylonParticleService] Particle service initialized successfully');
-    }, (error) => {
-      // If error is already a ParticleSystemError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as ParticleSystemError;
+        this.scene = scene;
+        logger.debug('[DEBUG][BabylonParticleService] Particle service initialized successfully');
+      },
+      (error) => {
+        // If error is already a ParticleSystemError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as ParticleSystemError;
+        }
+        return this.createError(
+          'CREATION_FAILED',
+          `Failed to initialize particle service: ${error}`
+        );
       }
-      return this.createError('CREATION_FAILED', `Failed to initialize particle service: ${error}`);
-    });
+    );
   }
 
   /**
@@ -180,53 +188,65 @@ export class BabylonParticleService {
   ): Promise<ParticleSystemCreateResult> {
     logger.debug(`[DEBUG][BabylonParticleService] Creating particle system: ${config.name}`);
 
-    return tryCatchAsync(async () => {
-      if (!this.scene) {
-        throw this.createError('INVALID_CONFIG', 'Scene must be initialized before creating particle systems');
+    return tryCatchAsync(
+      async () => {
+        if (!this.scene) {
+          throw this.createError(
+            'INVALID_CONFIG',
+            'Scene must be initialized before creating particle systems'
+          );
+        }
+
+        // Check if GPU particles are supported and requested
+        const useGPU = config.type === ParticleSystemType.GPU && this.isGPUParticlesSupported();
+
+        let particleSystem: ParticleSystem | GPUParticleSystem;
+
+        if (useGPU) {
+          particleSystem = new GPUParticleSystem(
+            config.name,
+            { capacity: config.capacity },
+            this.scene
+          );
+        } else {
+          particleSystem = new ParticleSystem(config.name, config.capacity, this.scene);
+        }
+
+        // Set emitter
+        if (emitter) {
+          particleSystem.emitter = emitter;
+        } else {
+          particleSystem.emitter = Vector3.Zero();
+        }
+
+        // Configure particle system
+        await this.configureParticleSystem(particleSystem, config);
+
+        // Store particle system and state
+        this.particleSystems.set(config.name, particleSystem);
+        this.systemStates.set(config.name, {
+          id: config.name,
+          name: config.name,
+          type: useGPU ? ParticleSystemType.GPU : ParticleSystemType.CPU,
+          isStarted: false,
+          particleCount: 0,
+          emitRate: config.emitRate,
+          lastUpdated: new Date(),
+        });
+
+        logger.debug(
+          `[DEBUG][BabylonParticleService] Particle system created: ${config.name} (${useGPU ? 'GPU' : 'CPU'})`
+        );
+        return particleSystem;
+      },
+      (error) => {
+        // If error is already a ParticleSystemError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as ParticleSystemError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to create particle system: ${error}`);
       }
-
-      // Check if GPU particles are supported and requested
-      const useGPU = config.type === ParticleSystemType.GPU && this.isGPUParticlesSupported();
-      
-      let particleSystem: ParticleSystem | GPUParticleSystem;
-
-      if (useGPU) {
-        particleSystem = new GPUParticleSystem(config.name, { capacity: config.capacity }, this.scene);
-      } else {
-        particleSystem = new ParticleSystem(config.name, config.capacity, this.scene);
-      }
-
-      // Set emitter
-      if (emitter) {
-        particleSystem.emitter = emitter;
-      } else {
-        particleSystem.emitter = Vector3.Zero();
-      }
-
-      // Configure particle system
-      await this.configureParticleSystem(particleSystem, config);
-
-      // Store particle system and state
-      this.particleSystems.set(config.name, particleSystem);
-      this.systemStates.set(config.name, {
-        id: config.name,
-        name: config.name,
-        type: useGPU ? ParticleSystemType.GPU : ParticleSystemType.CPU,
-        isStarted: false,
-        particleCount: 0,
-        emitRate: config.emitRate,
-        lastUpdated: new Date(),
-      });
-
-      logger.debug(`[DEBUG][BabylonParticleService] Particle system created: ${config.name} (${useGPU ? 'GPU' : 'CPU'})`);
-      return particleSystem;
-    }, (error) => {
-      // If error is already a ParticleSystemError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as ParticleSystemError;
-      }
-      return this.createError('CREATION_FAILED', `Failed to create particle system: ${error}`);
-    });
+    );
   }
 
   /**
@@ -235,32 +255,35 @@ export class BabylonParticleService {
   startParticleSystem(name: string): ParticleSystemStartResult {
     logger.debug(`[DEBUG][BabylonParticleService] Starting particle system: ${name}`);
 
-    return tryCatch(() => {
-      const particleSystem = this.particleSystems.get(name);
-      if (!particleSystem) {
-        throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
-      }
+    return tryCatch(
+      () => {
+        const particleSystem = this.particleSystems.get(name);
+        if (!particleSystem) {
+          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+        }
 
-      particleSystem.start();
+        particleSystem.start();
 
-      // Update state
-      const state = this.systemStates.get(name);
-      if (state) {
-        this.systemStates.set(name, {
-          ...state,
-          isStarted: true,
-          lastUpdated: new Date(),
-        });
-      }
+        // Update state
+        const state = this.systemStates.get(name);
+        if (state) {
+          this.systemStates.set(name, {
+            ...state,
+            isStarted: true,
+            lastUpdated: new Date(),
+          });
+        }
 
-      logger.debug(`[DEBUG][BabylonParticleService] Particle system started: ${name}`);
-    }, (error) => {
-      // If error is already a ParticleSystemError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as ParticleSystemError;
+        logger.debug(`[DEBUG][BabylonParticleService] Particle system started: ${name}`);
+      },
+      (error) => {
+        // If error is already a ParticleSystemError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as ParticleSystemError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to start particle system: ${error}`);
       }
-      return this.createError('CREATION_FAILED', `Failed to start particle system: ${error}`);
-    });
+    );
   }
 
   /**
@@ -269,32 +292,35 @@ export class BabylonParticleService {
   stopParticleSystem(name: string): ParticleSystemStopResult {
     logger.debug(`[DEBUG][BabylonParticleService] Stopping particle system: ${name}`);
 
-    return tryCatch(() => {
-      const particleSystem = this.particleSystems.get(name);
-      if (!particleSystem) {
-        throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
-      }
+    return tryCatch(
+      () => {
+        const particleSystem = this.particleSystems.get(name);
+        if (!particleSystem) {
+          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+        }
 
-      particleSystem.stop();
+        particleSystem.stop();
 
-      // Update state
-      const state = this.systemStates.get(name);
-      if (state) {
-        this.systemStates.set(name, {
-          ...state,
-          isStarted: false,
-          lastUpdated: new Date(),
-        });
-      }
+        // Update state
+        const state = this.systemStates.get(name);
+        if (state) {
+          this.systemStates.set(name, {
+            ...state,
+            isStarted: false,
+            lastUpdated: new Date(),
+          });
+        }
 
-      logger.debug(`[DEBUG][BabylonParticleService] Particle system stopped: ${name}`);
-    }, (error) => {
-      // If error is already a ParticleSystemError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as ParticleSystemError;
+        logger.debug(`[DEBUG][BabylonParticleService] Particle system stopped: ${name}`);
+      },
+      (error) => {
+        // If error is already a ParticleSystemError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as ParticleSystemError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to stop particle system: ${error}`);
       }
-      return this.createError('CREATION_FAILED', `Failed to stop particle system: ${error}`);
-    });
+    );
   }
 
   /**
@@ -324,24 +350,27 @@ export class BabylonParticleService {
   removeParticleSystem(name: string): Result<void, ParticleSystemError> {
     logger.debug(`[DEBUG][BabylonParticleService] Removing particle system: ${name}`);
 
-    return tryCatch(() => {
-      const particleSystem = this.particleSystems.get(name);
-      if (!particleSystem) {
-        throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
-      }
+    return tryCatch(
+      () => {
+        const particleSystem = this.particleSystems.get(name);
+        if (!particleSystem) {
+          throw this.createError('INVALID_CONFIG', `Particle system not found: ${name}`);
+        }
 
-      particleSystem.dispose();
-      this.particleSystems.delete(name);
-      this.systemStates.delete(name);
+        particleSystem.dispose();
+        this.particleSystems.delete(name);
+        this.systemStates.delete(name);
 
-      logger.debug(`[DEBUG][BabylonParticleService] Particle system removed: ${name}`);
-    }, (error) => {
-      // If error is already a ParticleSystemError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as ParticleSystemError;
+        logger.debug(`[DEBUG][BabylonParticleService] Particle system removed: ${name}`);
+      },
+      (error) => {
+        // If error is already a ParticleSystemError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as ParticleSystemError;
+        }
+        return this.createError('DISPOSAL_FAILED', `Failed to remove particle system: ${error}`);
       }
-      return this.createError('DISPOSAL_FAILED', `Failed to remove particle system: ${error}`);
-    });
+    );
   }
 
   /**
@@ -355,7 +384,7 @@ export class BabylonParticleService {
     if (config.textureUrl) {
       try {
         particleSystem.particleTexture = new Texture(config.textureUrl, this.scene!);
-      } catch (error) {
+      } catch (_error) {
         logger.warn(`[WARN][BabylonParticleService] Failed to load texture: ${config.textureUrl}`);
       }
     }
@@ -403,7 +432,10 @@ export class BabylonParticleService {
   /**
    * Set blend mode for particle system
    */
-  private setBlendMode(particleSystem: ParticleSystem | GPUParticleSystem, blendMode: ParticleBlendMode): void {
+  private setBlendMode(
+    _particleSystem: ParticleSystem | GPUParticleSystem,
+    blendMode: ParticleBlendMode
+  ): void {
     // Note: Blend mode constants would need to be imported from BabylonJS
     // This is a simplified implementation
     switch (blendMode) {
@@ -427,7 +459,7 @@ export class BabylonParticleService {
    */
   private isGPUParticlesSupported(): boolean {
     if (!this.scene) return false;
-    
+
     const engine = this.scene.getEngine();
     return GPUParticleSystem.IsSupported && engine.webGLVersion >= 2;
   }
@@ -453,20 +485,22 @@ export class BabylonParticleService {
    */
   dispose(): void {
     logger.debug('[DEBUG][BabylonParticleService] Disposing particle service...');
-    
+
     // Dispose all particle systems
     for (const [name, particleSystem] of this.particleSystems) {
       try {
         particleSystem.dispose();
       } catch (error) {
-        logger.warn(`[WARN][BabylonParticleService] Failed to dispose particle system ${name}: ${error}`);
+        logger.warn(
+          `[WARN][BabylonParticleService] Failed to dispose particle system ${name}: ${error}`
+        );
       }
     }
-    
+
     this.particleSystems.clear();
     this.systemStates.clear();
     this.scene = null;
-    
+
     logger.end('[END][BabylonParticleService] Particle service disposed');
   }
 }

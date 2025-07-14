@@ -1,75 +1,83 @@
 /**
  * @file BabylonJS Particle System Service Tests
- * 
+ *
  * Tests for BabylonJS particle system service functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  BabylonParticleService, 
-  ParticleSystemType, 
-  ParticleBlendMode,
-  DEFAULT_PARTICLE_CONFIG 
-} from './babylon-particle-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ParticleSystemConfig } from './babylon-particle-service';
+import {
+  BabylonParticleService,
+  DEFAULT_PARTICLE_CONFIG,
+  ParticleSystemType,
+} from './babylon-particle-service';
 
 // Mock BabylonJS components for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-  getEngine: vi.fn(() => ({
-    webGLVersion: 2,
-  })),
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+    getEngine: vi.fn(() => ({
+      webGLVersion: 2,
+    })),
+  }) as any;
 
-const createMockParticleSystem = (name: string) => ({
-  name,
-  emitter: null,
-  emitRate: 100,
-  minEmitBox: null,
-  maxEmitBox: null,
-  direction1: null,
-  direction2: null,
-  minAngularSpeed: 0,
-  maxAngularSpeed: 0,
-  minInitialRotation: 0,
-  maxInitialRotation: 0,
-  minLifeTime: 1,
-  maxLifeTime: 3,
-  minSize: 0.1,
-  maxSize: 0.5,
-  color1: null,
-  color2: null,
-  colorDead: null,
-  gravity: null,
-  updateSpeed: 0.01,
-  particleTexture: null,
-  start: vi.fn(),
-  stop: vi.fn(),
-  dispose: vi.fn(),
-}) as any;
+const createMockParticleSystem = (name: string) =>
+  ({
+    name,
+    emitter: null,
+    emitRate: 100,
+    minEmitBox: null,
+    maxEmitBox: null,
+    direction1: null,
+    direction2: null,
+    minAngularSpeed: 0,
+    maxAngularSpeed: 0,
+    minInitialRotation: 0,
+    maxInitialRotation: 0,
+    minLifeTime: 1,
+    maxLifeTime: 3,
+    minSize: 0.1,
+    maxSize: 0.5,
+    color1: null,
+    color2: null,
+    colorDead: null,
+    gravity: null,
+    updateSpeed: 0.01,
+    particleTexture: null,
+    start: vi.fn(),
+    stop: vi.fn(),
+    dispose: vi.fn(),
+  }) as any;
 
-const createMockGPUParticleSystem = (name: string) => ({
-  ...createMockParticleSystem(name),
-  isGPU: true,
-}) as any;
+const createMockGPUParticleSystem = (name: string) =>
+  ({
+    ...createMockParticleSystem(name),
+    isGPU: true,
+  }) as any;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
   const actual = await vi.importActual('@babylonjs/core');
 
   // Mock Vector3 constructor
-  const Vector3Mock = vi.fn().mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
+  const Vector3Mock = vi
+    .fn()
+    .mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
   Vector3Mock.Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
 
   // Mock Color4 constructor
-  const Color4Mock = vi.fn().mockImplementation((r: number, g: number, b: number, a: number) => ({ r, g, b, a }));
+  const Color4Mock = vi
+    .fn()
+    .mockImplementation((r: number, g: number, b: number, a: number) => ({ r, g, b, a }));
 
   return {
     ...actual,
     ParticleSystem: vi.fn().mockImplementation((name: string) => createMockParticleSystem(name)),
-    GPUParticleSystem: vi.fn().mockImplementation((name: string) => createMockGPUParticleSystem(name)),
+    GPUParticleSystem: vi
+      .fn()
+      .mockImplementation((name: string) => createMockGPUParticleSystem(name)),
     Texture: vi.fn().mockImplementation((url: string) => ({ url })),
     Vector3: Vector3Mock,
     Color4: Color4Mock,
@@ -101,7 +109,7 @@ describe('BabylonParticleService', () => {
   describe('constructor', () => {
     it('should initialize service', () => {
       const service = new BabylonParticleService();
-      
+
       // Service should be created without errors
       expect(service).toBeDefined();
     });
@@ -337,8 +345,8 @@ describe('BabylonParticleService', () => {
 
       const states = particleService.getAllParticleSystemStates();
       expect(states).toHaveLength(2);
-      expect(states.map(s => s.name)).toContain('particles-1');
-      expect(states.map(s => s.name)).toContain('particles-2');
+      expect(states.map((s) => s.name)).toContain('particles-1');
+      expect(states.map((s) => s.name)).toContain('particles-2');
     });
   });
 
@@ -349,9 +357,9 @@ describe('BabylonParticleService', () => {
         ...DEFAULT_PARTICLE_CONFIG,
         name: 'test-particles',
       });
-      
+
       particleService.dispose();
-      
+
       // Verify all particle systems were disposed
       const states = particleService.getAllParticleSystemStates();
       expect(states).toEqual([]);

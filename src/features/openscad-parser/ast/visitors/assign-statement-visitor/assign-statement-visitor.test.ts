@@ -106,8 +106,6 @@ describe('AssignStatementVisitor', () => {
       }
     });
 
-    
-
     it('should parse assign statement with mixed value types', () => {
       const code = 'assign(num = 42, str = "hello", flag = false) echo(num, str, flag);';
       const ast = parser.parseAST(code);

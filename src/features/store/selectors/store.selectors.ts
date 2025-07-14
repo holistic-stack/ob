@@ -10,12 +10,12 @@
  * - Shallow equality checks for object comparisons
  */
 
+import type { Mesh } from '@babylonjs/core';
 import { createSelector } from 'reselect';
 // TODO: Replace with BabylonJS mesh types
 import type { AppConfig, EditorState } from '../../../shared/types/common.types';
-import type { AppState, ParsingState, RenderingError } from '../types/store.types';
 import type { BabylonRenderingState } from '../slices/babylon-rendering-slice';
-import type { Mesh } from '@babylonjs/core';
+import type { AppState, ParsingState, RenderingError } from '../types/store.types';
 
 /**
  * Editor selectors
@@ -64,7 +64,8 @@ export const selectBabylonRenderingState = (state: AppState): BabylonRenderingSt
 const EMPTY_MESHES: ReadonlyArray<Mesh> = [];
 const EMPTY_ERRORS: ReadonlyArray<RenderingError> = [];
 
-export const selectRenderingMeshes = (state: AppState) => state.babylonRendering?.meshes ?? EMPTY_MESHES;
+export const selectRenderingMeshes = (state: AppState) =>
+  state.babylonRendering?.meshes ?? EMPTY_MESHES;
 
 export const selectRenderingIsRendering = (state: AppState): boolean =>
   state.babylonRendering?.isRendering ?? false;
@@ -75,10 +76,11 @@ export const selectRenderingErrors = (state: AppState) =>
 export const selectRenderingLastRendered = (state: AppState) =>
   state.babylonRendering?.lastRendered ?? null;
 
-export const selectRenderingTime = (state: AppState): number => state.babylonRendering?.renderTime ?? 0;
+export const selectRenderingTime = (state: AppState): number =>
+  state.babylonRendering?.renderTime ?? 0;
 
 // Camera configuration is handled by BabylonScene component, not in store state
-export const selectRenderingCamera = (state: AppState) => null;
+export const selectRenderingCamera = (_state: AppState) => null;
 
 export const selectRenderingHasErrors = (state: AppState): boolean =>
   (state.babylonRendering?.renderErrors?.length ?? 0) > 0;

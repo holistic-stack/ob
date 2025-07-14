@@ -1,40 +1,42 @@
 /**
  * @file BabylonJS CSG2 Service Tests
- * 
+ *
  * Tests for BabylonJS CSG2 service.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { BabylonCSG2Service } from './babylon-csg2-service';
-import { CSGOperationType, DEFAULT_CSG_CONFIG } from '../../types/babylon-csg.types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CSGOperationConfig } from '../../types/babylon-csg.types';
+import { CSGOperationType, DEFAULT_CSG_CONFIG } from '../../types/babylon-csg.types';
+import { BabylonCSG2Service } from './babylon-csg2-service';
 
 // Mock BabylonJS components for testing
-const createMockScene = () => ({
-  dispose: vi.fn(),
-  render: vi.fn(),
-  registerBeforeRender: vi.fn(),
-  unregisterBeforeRender: vi.fn(),
-}) as any;
+const createMockScene = () =>
+  ({
+    dispose: vi.fn(),
+    render: vi.fn(),
+    registerBeforeRender: vi.fn(),
+    unregisterBeforeRender: vi.fn(),
+  }) as any;
 
-const createMockMesh = (id: string) => ({
-  id,
-  geometry: {
-    positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-    indices: new Uint32Array([0, 1, 2]),
-  },
-  material: null,
-  getVerticesData: vi.fn((kind: string) => {
-    if (kind === 'position') return new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
-    if (kind === 'normal') return new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
-    if (kind === 'uv') return new Float32Array([0, 0, 1, 0, 0, 1]);
-    return null;
-  }),
-  getIndices: vi.fn(() => new Uint32Array([0, 1, 2])),
-  createNormals: vi.fn(),
-  optimizeIndices: vi.fn(),
-}) as any;
+const createMockMesh = (id: string) =>
+  ({
+    id,
+    geometry: {
+      positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      indices: new Uint32Array([0, 1, 2]),
+    },
+    material: null,
+    getVerticesData: vi.fn((kind: string) => {
+      if (kind === 'position') return new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+      if (kind === 'normal') return new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+      if (kind === 'uv') return new Float32Array([0, 0, 1, 0, 0, 1]);
+      return null;
+    }),
+    getIndices: vi.fn(() => new Uint32Array([0, 1, 2])),
+    createNormals: vi.fn(),
+    optimizeIndices: vi.fn(),
+  }) as any;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
@@ -87,7 +89,7 @@ describe('BabylonCSG2Service', () => {
     it('should initialize with default configuration', () => {
       const service = new BabylonCSG2Service();
       const config = service.getConfig();
-      
+
       expect(config.operation).toBe(DEFAULT_CSG_CONFIG.operation);
       expect(config.preserveMaterials).toBe(DEFAULT_CSG_CONFIG.preserveMaterials);
       expect(config.optimizeResult).toBe(DEFAULT_CSG_CONFIG.optimizeResult);
@@ -99,10 +101,10 @@ describe('BabylonCSG2Service', () => {
         operation: CSGOperationType.DIFFERENCE,
         preserveMaterials: false,
       };
-      
+
       const service = new BabylonCSG2Service(customConfig);
       const config = service.getConfig();
-      
+
       expect(config.operation).toBe(CSGOperationType.DIFFERENCE);
       expect(config.preserveMaterials).toBe(false);
     });
@@ -214,7 +216,7 @@ describe('BabylonCSG2Service', () => {
   describe('getConfig', () => {
     it('should return current configuration', () => {
       const config = csgService.getConfig();
-      
+
       expect(config).toEqual(DEFAULT_CSG_CONFIG);
     });
 
@@ -226,7 +228,7 @@ describe('BabylonCSG2Service', () => {
 
       csgService.updateConfig(newConfig);
       const config = csgService.getConfig();
-      
+
       expect(config.preserveMaterials).toBe(false);
       expect(config.optimizeResult).toBe(false);
     });
@@ -235,10 +237,10 @@ describe('BabylonCSG2Service', () => {
   describe('updateConfig', () => {
     it('should update configuration partially', () => {
       const originalConfig = csgService.getConfig();
-      
+
       csgService.updateConfig({ preserveMaterials: false });
       const updatedConfig = csgService.getConfig();
-      
+
       expect(updatedConfig.preserveMaterials).toBe(false);
       expect(updatedConfig.optimizeResult).toBe(originalConfig.optimizeResult);
     });
@@ -247,7 +249,7 @@ describe('BabylonCSG2Service', () => {
   describe('dispose', () => {
     it('should dispose service cleanly', () => {
       csgService.init(mockScene);
-      
+
       // Should not throw
       expect(() => csgService.dispose()).not.toThrow();
     });

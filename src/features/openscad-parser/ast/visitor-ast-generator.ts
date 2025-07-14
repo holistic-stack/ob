@@ -42,7 +42,7 @@
  * @since 0.1.0
  */
 
-import type { Tree, Node as TSNode } from 'web-tree-sitter';
+import type { Tree } from 'web-tree-sitter';
 import type { ErrorHandler } from '../error-handling/index.js';
 import type * as ast from './ast-types.js';
 import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';

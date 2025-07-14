@@ -1,14 +1,14 @@
 /**
  * @file BabylonJS Engine Service Tests
- * 
+ *
  * Comprehensive tests for BabylonJS engine service with WebGPU support.
  * Following TDD principles with real implementations (no mocks).
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { BabylonEngineService } from './babylon-engine-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BabylonEngineConfig, EngineInitOptions } from '../../types/babylon-engine.types';
 import { DEFAULT_ENGINE_CONFIG } from '../../types/babylon-engine.types';
+import { BabylonEngineService } from './babylon-engine-service';
 
 // Mock canvas for testing
 const createMockCanvas = (): HTMLCanvasElement => {
@@ -26,7 +26,7 @@ describe('BabylonEngineService', () => {
     // Create fresh instances for each test
     engineService = new BabylonEngineService();
     mockCanvas = createMockCanvas();
-    
+
     // Mock WebGPU support check
     vi.stubGlobal('navigator', {
       gpu: undefined, // Simulate no WebGPU support for consistent testing
@@ -52,7 +52,7 @@ describe('BabylonEngineService', () => {
         enableWebGPU: false,
         antialias: false,
       };
-      
+
       const service = new BabylonEngineService(customConfig);
       expect(service.isInitialized()).toBe(false);
     });
@@ -78,7 +78,7 @@ describe('BabylonEngineService', () => {
     it('should handle initialization failure gracefully', async () => {
       // Use invalid canvas to trigger failure
       const invalidCanvas = null as any;
-      
+
       const initOptions: EngineInitOptions = {
         canvas: invalidCanvas,
         config: DEFAULT_ENGINE_CONFIG,
@@ -115,7 +115,7 @@ describe('BabylonEngineService', () => {
   describe('getState', () => {
     it('should return correct state when not initialized', () => {
       const state = engineService.getState();
-      
+
       expect(state.isInitialized).toBe(false);
       expect(state.isDisposed).toBe(false);
       expect(state.engine).toBeNull();
@@ -130,7 +130,7 @@ describe('BabylonEngineService', () => {
 
       await engineService.init(initOptions);
       const state = engineService.getState();
-      
+
       expect(state.isInitialized).toBe(true);
       expect(state.isDisposed).toBe(false);
       expect(state.engine).toBeDefined();
@@ -141,7 +141,7 @@ describe('BabylonEngineService', () => {
   describe('getPerformanceMetrics', () => {
     it('should return zero metrics when not initialized', () => {
       const metrics = engineService.getPerformanceMetrics();
-      
+
       expect(metrics.fps).toBe(0);
       expect(metrics.deltaTime).toBe(0);
       expect(metrics.renderTime).toBe(0);
@@ -156,7 +156,7 @@ describe('BabylonEngineService', () => {
 
       await engineService.init(initOptions);
       const metrics = engineService.getPerformanceMetrics();
-      
+
       expect(typeof metrics.fps).toBe('number');
       expect(typeof metrics.deltaTime).toBe('number');
       expect(typeof metrics.renderTime).toBe('number');

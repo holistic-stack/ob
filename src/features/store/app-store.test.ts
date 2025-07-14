@@ -318,8 +318,6 @@ describe('App Store', () => {
       expect(state.babylonRendering?.renderErrors).toContain(error);
     });
 
-
-
     it('should clear render errors', () => {
       // First add some errors
       store.getState().addRenderError({ type: 'geometry', message: 'error 1' });

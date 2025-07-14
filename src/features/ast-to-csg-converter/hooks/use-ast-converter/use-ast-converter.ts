@@ -1,6 +1,6 @@
 /**
  * @file React Hook for AST to Mesh Conversion
- * 
+ *
  * React hook that provides AST to mesh conversion functionality
  * with proper lifecycle management and error handling.
  */
@@ -13,7 +13,6 @@ import type {
   ConversionOptions,
   ConversionResult,
   GenericMeshData,
-  ConversionError,
 } from '../../types/conversion.types';
 
 const logger = createLogger('useASTConverter');
@@ -46,20 +45,20 @@ interface UseASTConverterReturn {
 
 /**
  * React hook for AST to mesh conversion
- * 
+ *
  * Provides a clean interface for converting OpenSCAD AST nodes to generic mesh data
  * with proper lifecycle management, error handling, and performance tracking.
- * 
+ *
  * @param autoInitialize - Whether to automatically initialize the converter
  * @returns Hook interface with conversion functions and state
- * 
+ *
  * @example
  * ```typescript
  * const { state, convert, convertSingle } = useASTConverter();
- * 
+ *
  * // Convert multiple nodes
  * const result = await convert(astNodes, { optimizeResult: true });
- * 
+ *
  * // Convert single node
  * const meshResult = await convertSingle(astNode);
  * ```
@@ -79,22 +78,22 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
   const initializeConverter = useCallback(async () => {
     try {
       logger.debug('[INIT] Initializing AST converter hook');
-      
+
       if (!converterRef.current) {
         converterRef.current = new ASTToMeshConversionService();
       }
 
       const result = await converterRef.current.initialize();
-      
+
       if (result.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isInitialized: true,
           error: null,
         }));
         logger.debug('[INIT] AST converter hook initialized successfully');
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isInitialized: false,
           error: result.error,
@@ -103,7 +102,7 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isInitialized: false,
         error: errorMessage,
@@ -126,16 +125,16 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
         return { success: false, error };
       }
 
-      setState(prev => ({ ...prev, isConverting: true, error: null }));
+      setState((prev) => ({ ...prev, isConverting: true, error: null }));
       const startTime = performance.now();
 
       try {
         logger.debug(`[CONVERT] Converting ${ast.length} AST nodes`);
-        
+
         const result = await converterRef.current.convert(ast, options);
         const conversionTime = performance.now() - startTime;
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isConverting: false,
           lastConversionTime: conversionTime,
@@ -152,8 +151,8 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const conversionTime = performance.now() - startTime;
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           isConverting: false,
           lastConversionTime: conversionTime,
@@ -181,16 +180,16 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
         return { success: false, error };
       }
 
-      setState(prev => ({ ...prev, isConverting: true, error: null }));
+      setState((prev) => ({ ...prev, isConverting: true, error: null }));
       const startTime = performance.now();
 
       try {
         logger.debug('[CONVERT] Converting single AST node');
-        
+
         const result = await converterRef.current.convertSingle(node, options);
         const conversionTime = performance.now() - startTime;
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isConverting: false,
           lastConversionTime: conversionTime,
@@ -198,7 +197,9 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
         }));
 
         if (result.success) {
-          logger.debug(`[CONVERT] Single node conversion completed in ${conversionTime.toFixed(2)}ms`);
+          logger.debug(
+            `[CONVERT] Single node conversion completed in ${conversionTime.toFixed(2)}ms`
+          );
         } else {
           logger.error('[ERROR] Single node conversion failed:', result.error);
         }
@@ -207,8 +208,8 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const conversionTime = performance.now() - startTime;
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           isConverting: false,
           lastConversionTime: conversionTime,
@@ -226,7 +227,7 @@ export function useASTConverter(autoInitialize = true): UseASTConverterReturn {
    * Clear error state
    */
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   /**

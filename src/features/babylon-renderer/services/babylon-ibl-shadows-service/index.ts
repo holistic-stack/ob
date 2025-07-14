@@ -1,19 +1,19 @@
 /**
  * @file BabylonJS IBL Shadows Service Exports
- * 
+ *
  * Exports for the BabylonJS IBL shadows service.
  */
 
-export { BabylonIBLShadowsService } from './babylon-ibl-shadows-service';
 export type {
+  IBLShadowApplyResult,
   IBLShadowConfig,
-  IBLShadowState,
   IBLShadowError,
   IBLShadowInitResult,
-  IBLShadowApplyResult,
+  IBLShadowState,
   IBLShadowUpdateResult,
 } from './babylon-ibl-shadows-service';
-export { 
+export {
+  BabylonIBLShadowsService,
+  DEFAULT_IBL_SHADOW_CONFIG,
   IBLShadowErrorCode,
-  DEFAULT_IBL_SHADOW_CONFIG 
 } from './babylon-ibl-shadows-service';

@@ -4,117 +4,107 @@
  * Centralized exports for all BabylonJS services and their types.
  */
 
-// Engine Service
-export { BabylonEngineService } from './babylon-engine-service';
+export type {
+  CSG2Config,
+  CSG2DisposeResult,
+  CSG2Error,
+  CSG2InitResult,
+  CSG2OperationResult,
+  CSG2State,
+} from './babylon-csg2-service';
+// CSG2 Service
+export { BabylonCSG2Service, CSG2ErrorCode, DEFAULT_CSG2_CONFIG } from './babylon-csg2-service';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,
+  EngineDisposeResult,
   EngineError,
   EngineInitResult,
-  EngineDisposeResult,
   EngineUpdateResult,
 } from './babylon-engine-service';
+// Engine Service
 export {
+  BabylonEngineService,
+  DEFAULT_ENGINE_CONFIG,
   EngineErrorCode,
-  DEFAULT_ENGINE_CONFIG
 } from './babylon-engine-service';
-
-// Inspector Service
-export { BabylonInspectorService } from './babylon-inspector-service';
 export type {
-  InspectorConfig,
-  InspectorState,
-  InspectorError,
-  InspectorShowResult,
-  InspectorHideResult,
-  InspectorTabSwitchResult,
-} from './babylon-inspector-service';
-export {
-  InspectorTab,
-  InspectorErrorCode,
-  DEFAULT_INSPECTOR_CONFIG
-} from './babylon-inspector-service';
-
-// CSG2 Service
-export { BabylonCSG2Service } from './babylon-csg2-service';
-export type {
-  CSG2Config,
-  CSG2State,
-  CSG2Error,
-  CSG2OperationResult,
-  CSG2InitResult,
-  CSG2DisposeResult,
-} from './babylon-csg2-service';
-export {
-  CSG2ErrorCode,
-  DEFAULT_CSG2_CONFIG
-} from './babylon-csg2-service';
-
-// Particle Service
-export { BabylonParticleService } from './babylon-particle-service';
-export type {
-  ParticleSystemConfig,
-  ParticleSystemState,
-  ParticleSystemError,
-  ParticleSystemCreateResult,
-  ParticleSystemStartResult,
-  ParticleSystemStopResult,
-} from './babylon-particle-service';
-export {
-  ParticleSystemErrorCode,
-  DEFAULT_PARTICLE_CONFIG
-} from './babylon-particle-service';
-
-// IBL Shadows Service
-export { BabylonIBLShadowsService } from './babylon-ibl-shadows-service';
-export type {
+  IBLShadowApplyResult,
   IBLShadowConfig,
-  IBLShadowState,
   IBLShadowError,
   IBLShadowInitResult,
-  IBLShadowApplyResult,
+  IBLShadowState,
   IBLShadowUpdateResult,
 } from './babylon-ibl-shadows-service';
+// IBL Shadows Service
 export {
+  BabylonIBLShadowsService,
+  DEFAULT_IBL_SHADOW_CONFIG,
   IBLShadowErrorCode,
-  DEFAULT_IBL_SHADOW_CONFIG
 } from './babylon-ibl-shadows-service';
-
-// Material Service
-export { BabylonMaterialService } from './babylon-material-service';
 export type {
-  PBRMaterialConfig,
-  PBRClearCoatConfig,
-  PBRSheenConfig,
-  PBRAnisotropyConfig,
-  PBRTextureConfig,
-  NodeMaterialConfig,
-  MaterialState,
-  MaterialError,
-  MaterialCreateResult,
+  InspectorConfig,
+  InspectorError,
+  InspectorHideResult,
+  InspectorShowResult,
+  InspectorState,
+  InspectorTabSwitchResult,
+} from './babylon-inspector-service';
+// Inspector Service
+export {
+  BabylonInspectorService,
+  DEFAULT_INSPECTOR_CONFIG,
+  InspectorErrorCode,
+  InspectorTab,
+} from './babylon-inspector-service';
+export type {
   MaterialApplyResult,
+  MaterialCreateResult,
+  MaterialError,
+  MaterialState,
   MaterialUpdateResult,
+  NodeMaterialConfig,
+  PBRAnisotropyConfig,
+  PBRClearCoatConfig,
+  PBRMaterialConfig,
+  PBRSheenConfig,
+  PBRTextureConfig,
 } from './babylon-material-service';
+// Material Service
 export {
-  MaterialType,
+  BabylonMaterialService,
+  DEFAULT_PBR_CONFIG,
   MaterialErrorCode,
-  DEFAULT_PBR_CONFIG
+  MaterialType,
 } from './babylon-material-service';
-
-// Render Graph Service
-export { BabylonRenderGraphService } from './babylon-render-graph-service';
 export type {
-  RenderGraphConfig,
-  RenderGraphBlockConfig,
-  RenderGraphConnectionConfig,
-  RenderGraphState,
-  RenderGraphError,
-  RenderGraphCreateResult,
-  RenderGraphBuildResult,
-  RenderGraphExecuteResult,
-} from './babylon-render-graph-service';
+  ParticleSystemConfig,
+  ParticleSystemCreateResult,
+  ParticleSystemError,
+  ParticleSystemStartResult,
+  ParticleSystemState,
+  ParticleSystemStopResult,
+} from './babylon-particle-service';
+// Particle Service
 export {
+  BabylonParticleService,
+  DEFAULT_PARTICLE_CONFIG,
+  ParticleSystemErrorCode,
+} from './babylon-particle-service';
+export type {
+  RenderGraphBlockConfig,
+  RenderGraphBuildResult,
+  RenderGraphConfig,
+  RenderGraphConnectionConfig,
+  RenderGraphCreateResult,
+  RenderGraphError,
+  RenderGraphExecuteResult,
+  RenderGraphState,
+} from './babylon-render-graph-service';
+// Render Graph Service
+export {
+  BabylonRenderGraphService,
+  DEFAULT_RENDER_GRAPH_CONFIG,
   RenderGraphBlockType,
   RenderGraphErrorCode,
-  DEFAULT_RENDER_GRAPH_CONFIG
 } from './babylon-render-graph-service';

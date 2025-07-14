@@ -1,6 +1,6 @@
 /**
  * @file BabylonJS Hooks Exports
- * 
+ *
  * Centralized exports for all BabylonJS renderer hooks.
  * Following SRP principles with co-located tests.
  */

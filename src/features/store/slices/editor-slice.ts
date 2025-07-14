@@ -14,7 +14,6 @@ import type {
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
-import type { OpenscadParser } from '../../openscad-parser/openscad-parser.ts';
 import type { AppStore, EditorSlice } from '../types/store.types.js';
 
 interface EditorSliceConfig {

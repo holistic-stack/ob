@@ -8,7 +8,7 @@
 import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import type { AppState, RenderingError, BabylonRenderingState } from '../types/store.types';
+import type { AppState, BabylonRenderingState } from '../types/store.types';
 import {
   selectAllErrors,
   selectApplicationStatus,
@@ -29,7 +29,6 @@ import {
   selectParsingStats,
   selectRenderingHasErrors,
   selectRenderingMeshCount,
-  selectRenderingMeshes,
   selectRenderingStats,
   selectTotalErrors,
 } from './store.selectors';
@@ -155,7 +154,10 @@ describe('Store Selectors', () => {
 
       const renderingState: AppState = {
         ...mockState,
-        babylonRendering: { ...mockState.babylonRendering, isRendering: true } as BabylonRenderingState,
+        babylonRendering: {
+          ...mockState.babylonRendering,
+          isRendering: true,
+        } as BabylonRenderingState,
       };
       expect(selectCanRender(renderingState)).toBe(false);
 
@@ -187,7 +189,10 @@ describe('Store Selectors', () => {
 
       const renderingState: AppState = {
         ...mockState,
-        babylonRendering: { ...mockState.babylonRendering, isRendering: true } as BabylonRenderingState,
+        babylonRendering: {
+          ...mockState.babylonRendering,
+          isRendering: true,
+        } as BabylonRenderingState,
       };
       expect(selectIsProcessing(renderingState)).toBe(true);
     });
@@ -205,7 +210,9 @@ describe('Store Selectors', () => {
         ...mockState,
         babylonRendering: {
           ...mockState.babylonRendering,
-          renderErrors: [{ code: 'webgl', message: 'render error', timestamp: new Date(), service: 'rendering' }],
+          renderErrors: [
+            { code: 'webgl', message: 'render error', timestamp: new Date(), service: 'rendering' },
+          ],
         } as BabylonRenderingState,
       };
       expect(selectHasAnyErrors(renderErrorState)).toBe(true);
@@ -219,7 +226,9 @@ describe('Store Selectors', () => {
         parsing: { ...mockState.parsing, errors: ['error1', 'error2'] },
         babylonRendering: {
           ...mockState.babylonRendering,
-          renderErrors: [{ code: 'csg', message: 'error3', timestamp: new Date(), service: 'rendering' }],
+          renderErrors: [
+            { code: 'csg', message: 'error3', timestamp: new Date(), service: 'rendering' },
+          ],
         } as BabylonRenderingState,
       };
       expect(selectTotalErrors(errorState)).toBe(3);
@@ -233,7 +242,9 @@ describe('Store Selectors', () => {
         parsing: { ...mockState.parsing, errors: ['parse error'] },
         babylonRendering: {
           ...mockState.babylonRendering,
-          renderErrors: [{ code: 'csg', message: 'render error', timestamp: new Date(), service: 'rendering' }],
+          renderErrors: [
+            { code: 'csg', message: 'render error', timestamp: new Date(), service: 'rendering' },
+          ],
         } as BabylonRenderingState,
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);

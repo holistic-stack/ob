@@ -1,20 +1,20 @@
 /**
  * @file BabylonJS Scene Component Tests
- * 
+ *
  * Tests for BabylonJS scene component functionality.
  * Following TDD principles with React Testing Library.
  */
 
-import React from 'react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Color3, Vector3 } from '@babylonjs/core';
 import { render, screen, waitFor } from '@testing-library/react';
-import { Vector3, Color3 } from '@babylonjs/core';
-import { BabylonScene } from './babylon-scene';
+import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BabylonSceneProps } from './babylon-scene';
+import { BabylonScene } from './babylon-scene';
 
 // Mock BabylonJS components
 vi.mock('react-babylonjs', () => ({
-  Engine: React.forwardRef<any, any>(({ children, onEngineReady }, ref) => {
+  Engine: React.forwardRef<any, any>(({ children, onEngineReady }, _ref) => {
     // Simulate engine ready after a short delay
     React.useEffect(() => {
       const timer = setTimeout(() => {
@@ -29,7 +29,7 @@ vi.mock('react-babylonjs', () => ({
 
     return <div data-testid="babylon-engine">{children}</div>;
   }),
-  Scene: React.forwardRef<any, any>(({ children, onSceneReady, onRender }, ref) => {
+  Scene: React.forwardRef<any, any>(({ children, onSceneReady, onRender }, _ref) => {
     // Simulate scene ready after a short delay
     React.useEffect(() => {
       const timer = setTimeout(() => {
@@ -54,7 +54,9 @@ vi.mock('@babylonjs/core', () => {
   (Vector3Mock as any).Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
 
   const Color3Mock = vi.fn().mockImplementation((r = 1, g = 1, b = 1) => ({
-    r, g, b,
+    r,
+    g,
+    b,
     asColor4: vi.fn(() => ({ r, g, b, a: 1 })),
   }));
 
@@ -295,7 +297,7 @@ describe('BabylonScene', () => {
     it('should show inspector when enabled in config', async () => {
       const { useBabylonInspector } = require('../../hooks/use-babylon-inspector');
       const mockShowInspector = vi.fn(() => ({ success: true }));
-      
+
       useBabylonInspector.mockReturnValue({
         inspectorService: {
           show: mockShowInspector,

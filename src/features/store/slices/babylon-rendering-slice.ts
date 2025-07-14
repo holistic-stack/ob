@@ -1,36 +1,36 @@
 /**
  * @file Zustand Store Slice: BabylonJS Rendering
- * 
+ *
  * Manages BabylonJS rendering state, integrating with BabylonJS services
  * for engine management, scene rendering, and advanced features.
  */
 
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import type { Result } from '../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../shared/utils/functional/result';
-import type { ASTNode } from '../../openscad-parser/core/ast-types';
-import type { CameraConfig } from '../../../shared/types/common.types';
-import { DEFAULT_CAMERA } from '../app-store';
-import {
-  BabylonEngineService,
-  BabylonInspectorService,
-  BabylonCSG2Service,
-  BabylonParticleService,
-  BabylonIBLShadowsService,
-  BabylonMaterialService,
-  BabylonRenderGraphService,
-  InspectorTab
-} from '../../babylon-renderer/services';
 import type {
   BabylonEngineState,
-  InspectorState,
   CSG2State,
-  ParticleSystemState,
   IBLShadowState,
+  InspectorState,
   MaterialState,
-  RenderGraphState
+  ParticleSystemState,
+  RenderGraphState,
 } from '../../babylon-renderer/services';
+import {
+  BabylonCSG2Service,
+  BabylonEngineService,
+  BabylonIBLShadowsService,
+  BabylonInspectorService,
+  BabylonMaterialService,
+  BabylonParticleService,
+  BabylonRenderGraphService,
+  InspectorTab,
+} from '../../babylon-renderer/services';
+import type { ASTNode } from '../../openscad-parser/core/ast-types';
+import { DEFAULT_CAMERA } from '../app-store';
 
 const logger = createLogger('BabylonRenderingSlice');
 
@@ -82,7 +82,9 @@ export interface BabylonPerformanceMetrics {
  */
 export interface BabylonRenderingActions {
   // Engine management
-  readonly initializeEngine: (canvas: HTMLCanvasElement) => Promise<Result<void, BabylonRenderingError>>;
+  readonly initializeEngine: (
+    canvas: HTMLCanvasElement
+  ) => Promise<Result<void, BabylonRenderingError>>;
   readonly disposeEngine: () => Promise<Result<void, BabylonRenderingError>>;
   readonly getEngineState: () => BabylonEngineState;
 
@@ -92,12 +94,18 @@ export interface BabylonRenderingActions {
   readonly getInspectorState: () => InspectorState;
 
   // CSG operations
-  readonly performCSGOperation: (operation: string, meshes: unknown[]) => Promise<Result<unknown, BabylonRenderingError>>;
+  readonly performCSGOperation: (
+    operation: string,
+    meshes: unknown[]
+  ) => Promise<Result<unknown, BabylonRenderingError>>;
   readonly getCSGState: () => CSG2State;
 
   // Particle systems
   readonly createParticleSystem: (config: unknown) => Result<string, BabylonRenderingError>;
-  readonly updateParticleSystem: (id: string, config: unknown) => Result<void, BabylonRenderingError>;
+  readonly updateParticleSystem: (
+    id: string,
+    config: unknown
+  ) => Result<void, BabylonRenderingError>;
   readonly removeParticleSystem: (id: string) => Result<void, BabylonRenderingError>;
 
   // IBL shadows
@@ -106,7 +114,10 @@ export interface BabylonRenderingActions {
 
   // Materials
   readonly createMaterial: (config: unknown) => Promise<Result<string, BabylonRenderingError>>;
-  readonly applyMaterial: (materialId: string, meshId: string) => Result<void, BabylonRenderingError>;
+  readonly applyMaterial: (
+    materialId: string,
+    meshId: string
+  ) => Result<void, BabylonRenderingError>;
   readonly removeMaterial: (materialId: string) => Result<void, BabylonRenderingError>;
 
   // Render graphs
@@ -201,7 +212,7 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
  */
 export const createBabylonRenderingSlice = (
   set: Parameters<StateCreator<any, [['zustand/immer', never]], [], any>>[0],
-  get: Parameters<StateCreator<any, [['zustand/immer', never]], [], any>>[1]
+  _get: Parameters<StateCreator<any, [['zustand/immer', never]], [], any>>[1]
 ): BabylonRenderingActions => {
   // Service instances
   let engineService: BabylonEngineService | null = null;
@@ -217,54 +228,26 @@ export const createBabylonRenderingSlice = (
     initializeEngine: async (canvas: HTMLCanvasElement) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Initializing BabylonJS engine...');
 
-      return tryCatchAsync(async () => {
-        if (!engineService) {
-          engineService = new BabylonEngineService();
-        }
-
-        const result = await engineService.init({
-          canvas,
-          config: {
-            antialias: true,
-            adaptToDeviceRatio: true,
-            preserveDrawingBuffer: true,
-            stencil: true,
-            enableWebGPU: true,
-            enableOfflineSupport: false,
-            enableInspector: false,
-            powerPreference: 'high-performance',
-            failIfMajorPerformanceCaveat: false
+      return tryCatchAsync(
+        async () => {
+          if (!engineService) {
+            engineService = new BabylonEngineService();
           }
-        });
-        if (!result.success) {
-          throw {
-            code: result.error.code,
-            message: result.error.message,
-            timestamp: new Date(),
-            service: 'engine',
-          };
-        }
 
-        // Update state
-        set((state: any) => {
-          state.babylonRendering.engine = engineService!.getState();
-        });
-
-        logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine initialized successfully');
-      }, (error) => ({
-        code: 'ENGINE_INIT_FAILED',
-        message: `Failed to initialize BabylonJS engine: ${error}`,
-        timestamp: new Date(),
-        service: 'engine',
-      }));
-    },
-
-    disposeEngine: async () => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Disposing BabylonJS engine...');
-
-      return tryCatchAsync(async () => {
-        if (engineService) {
-          const result = await engineService.dispose();
+          const result = await engineService.init({
+            canvas,
+            config: {
+              antialias: true,
+              adaptToDeviceRatio: true,
+              preserveDrawingBuffer: true,
+              stencil: true,
+              enableWebGPU: true,
+              enableOfflineSupport: false,
+              enableInspector: false,
+              powerPreference: 'high-performance',
+              failIfMajorPerformanceCaveat: false,
+            },
+          });
           if (!result.success) {
             throw {
               code: result.error.code,
@@ -273,21 +256,55 @@ export const createBabylonRenderingSlice = (
               service: 'engine',
             };
           }
-          engineService = null;
-        }
 
-        // Reset state
-        set((state: any) => {
-          state.babylonRendering.engine = createInitialBabylonRenderingState().engine;
-        });
+          // Update state
+          set((state: any) => {
+            state.babylonRendering.engine = engineService?.getState();
+          });
 
-        logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine disposed successfully');
-      }, (error) => ({
-        code: 'ENGINE_DISPOSE_FAILED',
-        message: `Failed to dispose BabylonJS engine: ${error}`,
-        timestamp: new Date(),
-        service: 'engine',
-      }));
+          logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine initialized successfully');
+        },
+        (error) => ({
+          code: 'ENGINE_INIT_FAILED',
+          message: `Failed to initialize BabylonJS engine: ${error}`,
+          timestamp: new Date(),
+          service: 'engine',
+        })
+      );
+    },
+
+    disposeEngine: async () => {
+      logger.debug('[DEBUG][BabylonRenderingSlice] Disposing BabylonJS engine...');
+
+      return tryCatchAsync(
+        async () => {
+          if (engineService) {
+            const result = await engineService.dispose();
+            if (!result.success) {
+              throw {
+                code: result.error.code,
+                message: result.error.message,
+                timestamp: new Date(),
+                service: 'engine',
+              };
+            }
+            engineService = null;
+          }
+
+          // Reset state
+          set((state: any) => {
+            state.babylonRendering.engine = createInitialBabylonRenderingState().engine;
+          });
+
+          logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine disposed successfully');
+        },
+        (error) => ({
+          code: 'ENGINE_DISPOSE_FAILED',
+          message: `Failed to dispose BabylonJS engine: ${error}`,
+          timestamp: new Date(),
+          service: 'engine',
+        })
+      );
     },
 
     getEngineState: () => {
@@ -330,7 +347,7 @@ export const createBabylonRenderingSlice = (
 
       // Update state
       set((state: any) => {
-        state.babylonRendering.inspector = inspectorService!.getState();
+        state.babylonRendering.inspector = inspectorService?.getState();
       });
 
       return { success: true, data: undefined };
@@ -358,7 +375,7 @@ export const createBabylonRenderingSlice = (
 
       // Update state
       set((state: any) => {
-        state.babylonRendering.inspector = inspectorService!.getState();
+        state.babylonRendering.inspector = inspectorService?.getState();
       });
 
       return { success: true, data: undefined };
@@ -369,42 +386,45 @@ export const createBabylonRenderingSlice = (
     },
 
     // CSG operations
-    performCSGOperation: async (operation: string, meshes: unknown[]) => {
+    performCSGOperation: async (operation: string, _meshes: unknown[]) => {
       logger.debug(`[DEBUG][BabylonRenderingSlice] Performing CSG operation: ${operation}`);
 
-      return tryCatchAsync(async () => {
-        if (!csgService) {
-          csgService = new BabylonCSG2Service();
-          const scene = engineService?.getState().engine?.scenes?.[0];
-          if (scene) {
-            csgService.init(scene);
+      return tryCatchAsync(
+        async () => {
+          if (!csgService) {
+            csgService = new BabylonCSG2Service();
+            const scene = engineService?.getState().engine?.scenes?.[0];
+            if (scene) {
+              csgService.init(scene);
+            }
           }
-        }
 
-        // Perform CSG operation based on type
-        // This would be implemented based on the specific operation
-        // For now, return a placeholder result
-        const result = { success: true, data: null };
+          // Perform CSG operation based on type
+          // This would be implemented based on the specific operation
+          // For now, return a placeholder result
+          const result = { success: true, data: null };
 
-        // Update state
-        set((state: any) => {
-          // Update CSG state - service doesn't have getState method
-          state.babylonRendering.csg = {
-            isEnabled: true,
-            operations: [],
-            lastOperationTime: 0,
-            error: null,
-            lastUpdated: new Date(),
-          };
-        });
+          // Update state
+          set((state: any) => {
+            // Update CSG state - service doesn't have getState method
+            state.babylonRendering.csg = {
+              isEnabled: true,
+              operations: [],
+              lastOperationTime: 0,
+              error: null,
+              lastUpdated: new Date(),
+            };
+          });
 
-        return result.data;
-      }, (error) => ({
-        code: 'CSG_OPERATION_FAILED',
-        message: `CSG operation failed: ${error}`,
-        timestamp: new Date(),
-        service: 'csg',
-      }));
+          return result.data;
+        },
+        (error) => ({
+          code: 'CSG_OPERATION_FAILED',
+          message: `CSG operation failed: ${error}`,
+          timestamp: new Date(),
+          service: 'csg',
+        })
+      );
     },
 
     getCSGState: () => {
@@ -412,7 +432,7 @@ export const createBabylonRenderingSlice = (
     },
 
     // Particle systems
-    createParticleSystem: (config: unknown) => {
+    createParticleSystem: (_config: unknown) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Creating particle system...');
 
       if (!particleService) {
@@ -429,13 +449,13 @@ export const createBabylonRenderingSlice = (
 
       set((state: any) => {
         // Update particles state
-        state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
+        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
       });
 
       return { success: true, data: systemId };
     },
 
-    updateParticleSystem: (id: string, config: unknown) => {
+    updateParticleSystem: (id: string, _config: unknown) => {
       logger.debug(`[DEBUG][BabylonRenderingSlice] Updating particle system: ${id}`);
 
       if (!particleService) {
@@ -452,7 +472,7 @@ export const createBabylonRenderingSlice = (
 
       // Implementation would update particle system
       set((state: any) => {
-        state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
+        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
       });
 
       return { success: true, data: undefined };
@@ -479,14 +499,14 @@ export const createBabylonRenderingSlice = (
       }
 
       set((state: any) => {
-        state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
+        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
       });
 
       return { success: true, data: undefined };
     },
 
     // IBL shadows
-    enableIBLShadows: (config: unknown) => {
+    enableIBLShadows: (_config: unknown) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Enabling IBL shadows...');
 
       if (!iblShadowsService) {
@@ -499,7 +519,7 @@ export const createBabylonRenderingSlice = (
 
       // Implementation would enable IBL shadows with config
       set((state: any) => {
-        state.babylonRendering.iblShadows = iblShadowsService!.getState();
+        state.babylonRendering.iblShadows = iblShadowsService?.getState();
       });
 
       return { success: true, data: undefined };
@@ -514,43 +534,48 @@ export const createBabylonRenderingSlice = (
 
       // Implementation would disable IBL shadows
       set((state: any) => {
-        state.babylonRendering.iblShadows = iblShadowsService!.getState();
+        state.babylonRendering.iblShadows = iblShadowsService?.getState();
       });
 
       return { success: true, data: undefined };
     },
 
     // Materials
-    createMaterial: async (config: unknown) => {
+    createMaterial: async (_config: unknown) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Creating material...');
 
-      return tryCatchAsync(async () => {
-        if (!materialService) {
-          materialService = new BabylonMaterialService();
-          const scene = engineService?.getState().engine?.scenes?.[0];
-          if (scene) {
-            materialService.init(scene);
+      return tryCatchAsync(
+        async () => {
+          if (!materialService) {
+            materialService = new BabylonMaterialService();
+            const scene = engineService?.getState().engine?.scenes?.[0];
+            if (scene) {
+              materialService.init(scene);
+            }
           }
-        }
 
-        // Implementation would create material with config
-        const materialId = `material-${Date.now()}`;
+          // Implementation would create material with config
+          const materialId = `material-${Date.now()}`;
 
-        set((state: any) => {
-          state.babylonRendering.materials = materialService!.getAllMaterialStates();
-        });
+          set((state: any) => {
+            state.babylonRendering.materials = materialService?.getAllMaterialStates();
+          });
 
-        return materialId;
-      }, (error) => ({
-        code: 'MATERIAL_CREATION_FAILED',
-        message: `Material creation failed: ${error}`,
-        timestamp: new Date(),
-        service: 'materials',
-      }));
+          return materialId;
+        },
+        (error) => ({
+          code: 'MATERIAL_CREATION_FAILED',
+          message: `Material creation failed: ${error}`,
+          timestamp: new Date(),
+          service: 'materials',
+        })
+      );
     },
 
     applyMaterial: (materialId: string, meshId: string) => {
-      logger.debug(`[DEBUG][BabylonRenderingSlice] Applying material ${materialId} to mesh ${meshId}`);
+      logger.debug(
+        `[DEBUG][BabylonRenderingSlice] Applying material ${materialId} to mesh ${meshId}`
+      );
 
       if (!materialService) {
         return {
@@ -589,14 +614,14 @@ export const createBabylonRenderingSlice = (
       }
 
       set((state: any) => {
-        state.babylonRendering.materials = materialService!.getAllMaterialStates();
+        state.babylonRendering.materials = materialService?.getAllMaterialStates();
       });
 
       return { success: true, data: undefined };
     },
 
     // Render graphs
-    createRenderGraph: (config: unknown) => {
+    createRenderGraph: (_config: unknown) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Creating render graph...');
 
       if (!renderGraphService) {
@@ -611,7 +636,7 @@ export const createBabylonRenderingSlice = (
       const graphId = `graph-${Date.now()}`;
 
       set((state: any) => {
-        state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
+        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
       });
 
       return { success: true, data: graphId };
@@ -646,7 +671,7 @@ export const createBabylonRenderingSlice = (
       }
 
       set((state: any) => {
-        state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
+        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
       });
 
       return { success: true, data: undefined };
@@ -673,58 +698,63 @@ export const createBabylonRenderingSlice = (
       }
 
       set((state: any) => {
-        state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
+        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
       });
 
       return { success: true, data: undefined };
     },
 
     // Rendering
-    renderAST: async (ast: readonly ASTNode[]) => {
+    renderAST: async (_ast: readonly ASTNode[]) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Rendering AST...');
 
-      return tryCatchAsync(async () => {
-        set((state: any) => {
-          state.babylonRendering.isRendering = true;
-        });
+      return tryCatchAsync(
+        async () => {
+          set((state: any) => {
+            state.babylonRendering.isRendering = true;
+          });
 
-        const startTime = performance.now();
+          const startTime = performance.now();
 
-        // Implementation would convert AST to BabylonJS meshes
-        // This would use the CSG service and other services as needed
-        const meshes: unknown[] = [];
+          // Implementation would convert AST to BabylonJS meshes
+          // This would use the CSG service and other services as needed
+          const meshes: unknown[] = [];
 
-        const renderTime = performance.now() - startTime;
+          const renderTime = performance.now() - startTime;
 
-        set((state: any) => {
-          state.babylonRendering.meshes = meshes;
-          state.babylonRendering.isRendering = false;
-          state.babylonRendering.lastRendered = new Date();
-          state.babylonRendering.renderTime = renderTime;
-        });
+          set((state: any) => {
+            state.babylonRendering.meshes = meshes;
+            state.babylonRendering.isRendering = false;
+            state.babylonRendering.lastRendered = new Date();
+            state.babylonRendering.renderTime = renderTime;
+          });
 
-        logger.debug(`[DEBUG][BabylonRenderingSlice] AST rendered successfully in ${renderTime}ms`);
-      }, (error) => {
-        set((state: any) => {
-          state.babylonRendering.isRendering = false;
-          state.babylonRendering.renderErrors = [
-            ...state.babylonRendering.renderErrors,
-            {
-              code: 'RENDER_FAILED',
-              message: `AST rendering failed: ${error}`,
-              timestamp: new Date(),
-              service: 'rendering',
-            },
-          ];
-        });
+          logger.debug(
+            `[DEBUG][BabylonRenderingSlice] AST rendered successfully in ${renderTime}ms`
+          );
+        },
+        (error) => {
+          set((state: any) => {
+            state.babylonRendering.isRendering = false;
+            state.babylonRendering.renderErrors = [
+              ...state.babylonRendering.renderErrors,
+              {
+                code: 'RENDER_FAILED',
+                message: `AST rendering failed: ${error}`,
+                timestamp: new Date(),
+                service: 'rendering',
+              },
+            ];
+          });
 
-        return {
-          code: 'RENDER_FAILED',
-          message: `AST rendering failed: ${error}`,
-          timestamp: new Date(),
-          service: 'rendering',
-        };
-      });
+          return {
+            code: 'RENDER_FAILED',
+            message: `AST rendering failed: ${error}`,
+            timestamp: new Date(),
+            service: 'rendering',
+          };
+        }
+      );
     },
 
     updateMeshes: (meshes: readonly unknown[]) => {

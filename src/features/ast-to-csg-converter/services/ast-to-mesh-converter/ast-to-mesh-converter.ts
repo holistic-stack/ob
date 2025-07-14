@@ -1,10 +1,10 @@
 /**
  * @file AST to Mesh Conversion Service
- * 
+ *
  * Main conversion service that bridges OpenSCAD AST nodes to generic mesh data.
  * This service encapsulates all OpenSCAD-specific knowledge and provides a clean
  * interface for the rendering layer.
- * 
+ *
  * Following architectural principles:
  * - Single Responsibility: Only handles AST to mesh conversion
  * - Dependency Inversion: Depends on abstractions, not concretions
@@ -12,12 +12,12 @@
  */
 
 // BabylonJS math types
-import { Matrix, BoundingBox } from '@babylonjs/core';
+import { BoundingBox, Matrix } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import { BabylonCSG2Service } from '../../../babylon-renderer/services/babylon-csg2-service';
+import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
 import type {
   ASTToMeshConverter,
   ConversionOptions,
@@ -25,7 +25,6 @@ import type {
   GenericMeshData,
   MaterialConfig,
   MeshMetadata,
-  ConversionError,
 } from '../../types/conversion.types';
 
 const logger = createLogger('ASTToMeshConverter');
@@ -56,7 +55,7 @@ const DEFAULT_MATERIAL: MaterialConfig = {
 
 /**
  * AST to Mesh Conversion Service Implementation
- * 
+ *
  * This service is the bridge between OpenSCAD AST nodes and generic mesh data.
  * It encapsulates all OpenSCAD-specific logic and provides a clean interface
  * for the rendering layer.
@@ -84,7 +83,8 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
         this.isInitialized = true;
         logger.debug('[INIT] AST to Mesh conversion service initialized successfully');
       },
-      (error) => `Failed to initialize AST to Mesh converter: ${error instanceof Error ? error.message : String(error)}`
+      (error) =>
+        `Failed to initialize AST to Mesh converter: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 
@@ -96,12 +96,15 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
     options: ConversionOptions = {}
   ): Promise<Result<ConversionResult, string>> {
     if (!this.isInitialized) {
-      return { success: false, error: 'ASTToMeshConverter not initialized. Call initialize() first.' };
+      return {
+        success: false,
+        error: 'ASTToMeshConverter not initialized. Call initialize() first.',
+      };
     }
 
     const startTime = performance.now();
     const mergedOptions = { ...DEFAULT_CONVERSION_OPTIONS, ...options };
-    
+
     logger.debug(`[CONVERT] Converting ${ast.length} AST nodes to meshes`);
 
     return tryCatchAsync(
@@ -139,10 +142,13 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
           errors,
         };
 
-        logger.debug(`[CONVERT] Conversion completed: ${meshes.length} meshes, ${errors.length} errors, ${operationTime.toFixed(2)}ms`);
+        logger.debug(
+          `[CONVERT] Conversion completed: ${meshes.length} meshes, ${errors.length} errors, ${operationTime.toFixed(2)}ms`
+        );
         return result;
       },
-      (error) => `AST to mesh conversion failed: ${error instanceof Error ? error.message : String(error)}`
+      (error) =>
+        `AST to mesh conversion failed: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 
@@ -197,7 +203,8 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
         logger.debug(`[CONVERT] Successfully converted ${astNode.type} to generic mesh`);
         return genericMesh;
       },
-      (error) => `Failed to convert ${astNode.type} node: ${error instanceof Error ? error.message : String(error)}`
+      (error) =>
+        `Failed to convert ${astNode.type} node: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 
@@ -205,12 +212,12 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
    * Convert CSG result to generic mesh data
    */
   private convertToGenericMesh(
-    astNode: ASTNode,
+    _astNode: ASTNode,
     csgResult: any,
     options: Required<ConversionOptions>
   ): GenericMeshData {
     const meshId = `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Calculate bounding box (using BabylonJS BoundingBox)
     const boundingBox = new BoundingBox(
       csgResult.boundingBox?.min || { x: 0, y: 0, z: 0 },

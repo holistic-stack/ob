@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
+import type { CubeNode, CylinderNode, SphereNode } from '../ast-types.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
-import type { CubeNode, SphereNode, CylinderNode } from '../ast-types.js';
 
 describe('PrimitiveVisitor', () => {
   let parser: OpenscadParser;

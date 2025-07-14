@@ -1,15 +1,18 @@
 /**
  * @file BabylonJS Rendering Slice Tests
- * 
+ *
  * Tests for BabylonJS rendering slice functionality.
  * Following TDD principles with real implementations where possible.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { createBabylonRenderingSlice, createInitialBabylonRenderingState } from './babylon-rendering-slice';
 import type { BabylonRenderingActions, BabylonRenderingState } from './babylon-rendering-slice';
+import {
+  createBabylonRenderingSlice,
+  createInitialBabylonRenderingState,
+} from './babylon-rendering-slice';
 
 // Mock BabylonJS services
 vi.mock('../../babylon-renderer/services/babylon-engine-service', () => ({
@@ -146,11 +149,11 @@ interface TestStore {
 
 describe('BabylonRenderingSlice', () => {
   let store: any; // Zustand store with TestStore interface
-  let mockCanvas: HTMLCanvasElement;
+  let _mockCanvas: HTMLCanvasElement;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Create test store with BabylonJS rendering slice
     store = create<TestStore>()(
       immer((set, get) => ({
@@ -160,7 +163,7 @@ describe('BabylonRenderingSlice', () => {
     );
 
     // Create mock canvas
-    mockCanvas = document.createElement('canvas');
+    _mockCanvas = document.createElement('canvas');
   });
 
   afterEach(() => {
@@ -170,7 +173,7 @@ describe('BabylonRenderingSlice', () => {
   describe('initial state', () => {
     it('should have correct initial state', () => {
       const state = store.getState();
-      
+
       expect(state.babylonRendering.engine.isInitialized).toBe(false);
       expect(state.babylonRendering.inspector.isVisible).toBe(false);
       expect(state.babylonRendering.csg.isEnabled).toBe(true);
@@ -189,7 +192,7 @@ describe('BabylonRenderingSlice', () => {
       const result = await store.getState().initializeEngine(mockCanvas);
 
       expect(result.success).toBe(true);
-      
+
       const state = store.getState();
       expect(state.babylonRendering.engine.isInitialized).toBe(true);
     });
@@ -197,18 +200,18 @@ describe('BabylonRenderingSlice', () => {
     it('should dispose engine successfully', async () => {
       const mockCanvas = document.createElement('canvas');
       await store.getState().initializeEngine(mockCanvas);
-      
+
       const result = await store.getState().disposeEngine();
 
       expect(result.success).toBe(true);
-      
+
       const state = store.getState();
       expect(state.babylonRendering.engine.isInitialized).toBe(false);
     });
 
     it('should get engine state', () => {
       const engineState = store.getState().getEngineState();
-      
+
       expect(engineState).toBeDefined();
       expect(engineState.isInitialized).toBeDefined();
     });
@@ -235,7 +238,7 @@ describe('BabylonRenderingSlice', () => {
 
     it('should get inspector state', () => {
       const inspectorState = store.getState().getInspectorState();
-      
+
       expect(inspectorState).toBeDefined();
       expect(inspectorState.isVisible).toBeDefined();
     });
@@ -255,7 +258,7 @@ describe('BabylonRenderingSlice', () => {
 
     it('should get CSG state', () => {
       const csgState = store.getState().getCSGState();
-      
+
       expect(csgState).toBeDefined();
       expect(csgState.isEnabled).toBeDefined();
     });
@@ -272,7 +275,7 @@ describe('BabylonRenderingSlice', () => {
     it('should update particle system successfully', () => {
       const createResult = store.getState().createParticleSystem({});
       expect(createResult.success).toBe(true);
-      
+
       const updateResult = store.getState().updateParticleSystem(createResult.data!, {});
       expect(updateResult.success).toBe(true);
     });
@@ -280,7 +283,7 @@ describe('BabylonRenderingSlice', () => {
     it('should remove particle system successfully', () => {
       const createResult = store.getState().createParticleSystem({});
       expect(createResult.success).toBe(true);
-      
+
       const removeResult = store.getState().removeParticleSystem(createResult.data!);
       expect(removeResult.success).toBe(true);
     });
@@ -312,7 +315,7 @@ describe('BabylonRenderingSlice', () => {
     it('should apply material successfully', async () => {
       const createResult = await store.getState().createMaterial({});
       expect(createResult.success).toBe(true);
-      
+
       const applyResult = store.getState().applyMaterial(createResult.data!, 'mesh-1');
       expect(applyResult.success).toBe(true);
     });
@@ -320,7 +323,7 @@ describe('BabylonRenderingSlice', () => {
     it('should remove material successfully', async () => {
       const createResult = await store.getState().createMaterial({});
       expect(createResult.success).toBe(true);
-      
+
       const removeResult = store.getState().removeMaterial(createResult.data!);
       expect(removeResult.success).toBe(true);
     });
@@ -337,7 +340,7 @@ describe('BabylonRenderingSlice', () => {
     it('should build render graph successfully', () => {
       const createResult = store.getState().createRenderGraph({});
       expect(createResult.success).toBe(true);
-      
+
       const buildResult = store.getState().buildRenderGraph(createResult.data!);
       expect(buildResult.success).toBe(true);
     });
@@ -345,7 +348,7 @@ describe('BabylonRenderingSlice', () => {
     it('should remove render graph successfully', () => {
       const createResult = store.getState().createRenderGraph({});
       expect(createResult.success).toBe(true);
-      
+
       const removeResult = store.getState().removeRenderGraph(createResult.data!);
       expect(removeResult.success).toBe(true);
     });
@@ -365,7 +368,7 @@ describe('BabylonRenderingSlice', () => {
       const result = await store.getState().renderAST(mockAST);
 
       expect(result.success).toBe(true);
-      
+
       const state = store.getState();
       expect(state.babylonRendering.lastRendered).toBeInstanceOf(Date);
       expect(state.babylonRendering.renderTime).toBeGreaterThan(0);
@@ -373,9 +376,9 @@ describe('BabylonRenderingSlice', () => {
 
     it('should update meshes successfully', () => {
       const mockMeshes = [{ id: 'mesh-1' }, { id: 'mesh-2' }];
-      
+
       store.getState().updateMeshes(mockMeshes);
-      
+
       const state = store.getState();
       expect(state.babylonRendering.meshes).toEqual(mockMeshes);
       expect(state.babylonRendering.lastRendered).toBeInstanceOf(Date);
@@ -384,9 +387,9 @@ describe('BabylonRenderingSlice', () => {
     it('should clear scene successfully', () => {
       const mockMeshes = [{ id: 'mesh-1', dispose: vi.fn() }];
       store.getState().updateMeshes(mockMeshes);
-      
+
       store.getState().clearScene();
-      
+
       const state = store.getState();
       expect(state.babylonRendering.meshes).toEqual([]);
       expect(state.babylonRendering.renderErrors).toEqual([]);
@@ -396,7 +399,7 @@ describe('BabylonRenderingSlice', () => {
 
     it('should update performance metrics', () => {
       store.getState().updatePerformanceMetrics();
-      
+
       const state = store.getState();
       expect(state.babylonRendering.performanceMetrics).toBeDefined();
       expect(state.babylonRendering.performanceMetrics.fps).toBeGreaterThanOrEqual(0);
@@ -406,7 +409,9 @@ describe('BabylonRenderingSlice', () => {
   describe('error handling', () => {
     it('should handle engine initialization failure', async () => {
       // Mock engine service to fail
-      const { BabylonEngineService } = await import('../../babylon-renderer/services/babylon-engine-service');
+      const { BabylonEngineService } = await import(
+        '../../babylon-renderer/services/babylon-engine-service'
+      );
       const mockService = new BabylonEngineService();
       mockService.init = vi.fn().mockResolvedValue({
         success: false,

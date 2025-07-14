@@ -20,8 +20,11 @@ import type {
 } from '../../../shared/types/operations.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type {
+  BabylonRenderingActions,
+  BabylonRenderingState,
+} from '../slices/babylon-rendering-slice';
 import type { ParseOptions } from '../slices/parsing-slice.types.js';
-import type { BabylonRenderingActions, BabylonRenderingState } from '../slices/babylon-rendering-slice';
 
 // Re-export types for external use
 export type { BabylonRenderingState };
@@ -119,7 +122,11 @@ export type ConfigSlice = { config: AppConfig } & ConfigActions;
 /**
  * Store interface combining state and actions from all slices
  */
-export type AppStore = AppState & EditorActions & ParsingActions & BabylonRenderingActions & ConfigActions;
+export type AppStore = AppState &
+  EditorActions &
+  ParsingActions &
+  BabylonRenderingActions &
+  ConfigActions;
 
 /**
  * Store selector types for performance optimization

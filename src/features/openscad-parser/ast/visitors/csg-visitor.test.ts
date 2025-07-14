@@ -2,11 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
 import type {
-  UnionNode,
   DifferenceNode,
-  IntersectionNode,
   HullNode,
-  MinkowskiNode
+  IntersectionNode,
+  MinkowskiNode,
+  UnionNode,
 } from '../ast-types.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { CSGVisitor } from './csg-visitor.js';

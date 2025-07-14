@@ -14,10 +14,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
 
   // Note: cleanup is now handled automatically by the test utility
 
-  function findDescendantNode(
-    node: any | null,
-    predicate: (n: any) => boolean
-  ): any | undefined {
+  function findDescendantNode(node: any | null, predicate: (n: any) => boolean): any | undefined {
     if (!node) return undefined;
     if (predicate(node)) return node;
 

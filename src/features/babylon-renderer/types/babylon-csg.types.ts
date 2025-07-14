@@ -1,11 +1,11 @@
 /**
  * @file BabylonJS CSG2 Type Definitions
- * 
+ *
  * Type definitions for BabylonJS CSG2 operations with Manifold integration.
  * Following functional programming patterns with Result<T,E> error handling.
  */
 
-import type { Mesh, Material, Vector3 } from '@babylonjs/core';
+import type { Mesh } from '@babylonjs/core';
 import type { Result } from '../../../shared/types/result.types';
 
 /**

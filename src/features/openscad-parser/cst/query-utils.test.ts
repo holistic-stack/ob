@@ -1,6 +1,6 @@
 import * as path from 'node:path';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Parser, type Language, type Query, type Tree, type Node as TSNode } from 'web-tree-sitter';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { type Language, Parser, type Query, type Tree, type Node as TSNode } from 'web-tree-sitter';
 import { QueryManager } from './query-utils.js';
 
 describe('QueryManager', () => {

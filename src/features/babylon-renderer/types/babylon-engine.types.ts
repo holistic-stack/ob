@@ -1,6 +1,6 @@
 /**
  * @file BabylonJS Engine Type Definitions
- * 
+ *
  * Type definitions for BabylonJS engine configuration and lifecycle management.
  * Following functional programming patterns with immutable data structures.
  */

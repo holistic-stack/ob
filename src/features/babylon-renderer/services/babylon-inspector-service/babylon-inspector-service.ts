@@ -1,11 +1,11 @@
 /**
  * @file BabylonJS Inspector Service
- * 
+ *
  * Service for managing BabylonJS Inspector v2 with Fluent UI components.
  * Provides scene debugging and exploration capabilities.
  */
 
-import { Scene } from '@babylonjs/core';
+import type { Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -89,7 +89,7 @@ export const DEFAULT_INSPECTOR_CONFIG: InspectorConfig = {
 
 /**
  * BabylonJS Inspector Service
- * 
+ *
  * Manages Inspector v2 lifecycle with comprehensive error handling.
  * Follows SRP by focusing solely on inspector management.
  */
@@ -111,50 +111,53 @@ export class BabylonInspectorService {
   async show(scene: Scene, config?: Partial<InspectorConfig>): Promise<InspectorShowResult> {
     logger.debug('[DEBUG][BabylonInspectorService] Showing inspector...');
 
-    return tryCatchAsync(async () => {
-      if (!scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required to show inspector');
+    return tryCatchAsync(
+      async () => {
+        if (!scene) {
+          throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required to show inspector');
+        }
+
+        // Merge config if provided
+        const effectiveConfig = config ? { ...this.config, ...config } : this.config;
+
+        // Check if inspector is available
+        if (!this.isInspectorAvailable()) {
+          throw this.createError('INSPECTOR_NOT_AVAILABLE', 'BabylonJS Inspector is not available');
+        }
+
+        // Import inspector dynamically
+        const { Inspector } = await import('@babylonjs/inspector');
+
+        // Show inspector with configuration
+        await Inspector.Show(scene, {
+          popup: effectiveConfig.enablePopup,
+          embedMode: effectiveConfig.enableEmbedded,
+          showExplorer: effectiveConfig.showExplorer,
+          showInspector: effectiveConfig.showInspector,
+          enableClose: true,
+          enablePopup: effectiveConfig.enablePopup,
+          explorerExtensibility: [],
+          inspectorExtensibility: [],
+          globalRoot: document.body,
+          initialTab: this.mapTabToInspectorTab(effectiveConfig.initialTab),
+        });
+
+        this.scene = scene;
+        this.isVisible = true;
+        this.isEmbedded = effectiveConfig.enableEmbedded;
+        this.currentTab = effectiveConfig.initialTab;
+
+        logger.debug('[DEBUG][BabylonInspectorService] Inspector shown successfully');
+        return this.getState();
+      },
+      (error) => {
+        // If error is already an InspectorError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as InspectorError;
+        }
+        return this.createError('SHOW_FAILED', `Failed to show inspector: ${error}`);
       }
-
-      // Merge config if provided
-      const effectiveConfig = config ? { ...this.config, ...config } : this.config;
-
-      // Check if inspector is available
-      if (!this.isInspectorAvailable()) {
-        throw this.createError('INSPECTOR_NOT_AVAILABLE', 'BabylonJS Inspector is not available');
-      }
-
-      // Import inspector dynamically
-      const { Inspector } = await import('@babylonjs/inspector');
-
-      // Show inspector with configuration
-      await Inspector.Show(scene, {
-        popup: effectiveConfig.enablePopup,
-        embedMode: effectiveConfig.enableEmbedded,
-        showExplorer: effectiveConfig.showExplorer,
-        showInspector: effectiveConfig.showInspector,
-        enableClose: true,
-        enablePopup: effectiveConfig.enablePopup,
-        explorerExtensibility: [],
-        inspectorExtensibility: [],
-        globalRoot: document.body,
-        initialTab: this.mapTabToInspectorTab(effectiveConfig.initialTab),
-      });
-
-      this.scene = scene;
-      this.isVisible = true;
-      this.isEmbedded = effectiveConfig.enableEmbedded;
-      this.currentTab = effectiveConfig.initialTab;
-
-      logger.debug('[DEBUG][BabylonInspectorService] Inspector shown successfully');
-      return this.getState();
-    }, (error) => {
-      // If error is already an InspectorError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as InspectorError;
-      }
-      return this.createError('SHOW_FAILED', `Failed to show inspector: ${error}`);
-    });
+    );
   }
 
   /**
@@ -163,22 +166,25 @@ export class BabylonInspectorService {
   hide(): InspectorHideResult {
     logger.debug('[DEBUG][BabylonInspectorService] Hiding inspector...');
 
-    return tryCatch(() => {
-      if (!this.isVisible) {
-        logger.debug('[DEBUG][BabylonInspectorService] Inspector is already hidden');
-        return;
-      }
+    return tryCatch(
+      () => {
+        if (!this.isVisible) {
+          logger.debug('[DEBUG][BabylonInspectorService] Inspector is already hidden');
+          return;
+        }
 
-      // Import inspector and hide
-      import('@babylonjs/inspector').then(({ Inspector }) => {
-        Inspector.Hide();
-      });
+        // Import inspector and hide
+        import('@babylonjs/inspector').then(({ Inspector }) => {
+          Inspector.Hide();
+        });
 
-      this.isVisible = false;
-      this.scene = null;
+        this.isVisible = false;
+        this.scene = null;
 
-      logger.debug('[DEBUG][BabylonInspectorService] Inspector hidden successfully');
-    }, (error) => this.createError('HIDE_FAILED', `Failed to hide inspector: ${error}`));
+        logger.debug('[DEBUG][BabylonInspectorService] Inspector hidden successfully');
+      },
+      (error) => this.createError('HIDE_FAILED', `Failed to hide inspector: ${error}`)
+    );
   }
 
   /**
@@ -187,28 +193,31 @@ export class BabylonInspectorService {
   async switchTab(tab: InspectorTab): Promise<InspectorTabSwitchResult> {
     logger.debug(`[DEBUG][BabylonInspectorService] Switching to tab: ${tab}`);
 
-    return tryCatchAsync(async () => {
-      if (!this.isVisible || !this.scene) {
-        throw this.createError('TAB_SWITCH_FAILED', 'Inspector must be visible to switch tabs');
+    return tryCatchAsync(
+      async () => {
+        if (!this.isVisible || !this.scene) {
+          throw this.createError('TAB_SWITCH_FAILED', 'Inspector must be visible to switch tabs');
+        }
+
+        // Import inspector and switch tab
+        const { Inspector } = await import('@babylonjs/inspector');
+
+        // Note: BabylonJS Inspector doesn't have a direct tab switching API
+        // This would need to be implemented through the inspector's internal API
+        // For now, we'll update our internal state
+        this.currentTab = tab;
+
+        logger.debug(`[DEBUG][BabylonInspectorService] Switched to tab: ${tab}`);
+        return this.getState();
+      },
+      (error) => {
+        // If error is already an InspectorError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as InspectorError;
+        }
+        return this.createError('TAB_SWITCH_FAILED', `Failed to switch tab: ${error}`);
       }
-
-      // Import inspector and switch tab
-      const { Inspector } = await import('@babylonjs/inspector');
-
-      // Note: BabylonJS Inspector doesn't have a direct tab switching API
-      // This would need to be implemented through the inspector's internal API
-      // For now, we'll update our internal state
-      this.currentTab = tab;
-
-      logger.debug(`[DEBUG][BabylonInspectorService] Switched to tab: ${tab}`);
-      return this.getState();
-    }, (error) => {
-      // If error is already an InspectorError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as InspectorError;
-      }
-      return this.createError('TAB_SWITCH_FAILED', `Failed to switch tab: ${error}`);
-    });
+    );
   }
 
   /**
@@ -284,7 +293,11 @@ export class BabylonInspectorService {
   /**
    * Create inspector error
    */
-  private createError(code: InspectorErrorCode, message: string, details?: unknown): InspectorError {
+  private createError(
+    code: InspectorErrorCode,
+    message: string,
+    details?: unknown
+  ): InspectorError {
     return {
       code,
       message,
@@ -298,14 +311,14 @@ export class BabylonInspectorService {
    */
   dispose(): void {
     logger.debug('[DEBUG][BabylonInspectorService] Disposing inspector service...');
-    
+
     if (this.isVisible) {
       this.hide();
     }
-    
+
     this.scene = null;
     this.isVisible = false;
-    
+
     logger.end('[END][BabylonInspectorService] Inspector service disposed');
   }
 }

@@ -1,6 +1,6 @@
 /**
  * @file WebGPU Utilities
- * 
+ *
  * Utility functions for WebGPU support detection and capabilities.
  * Following functional programming patterns with Result<T,E> error handling.
  */
@@ -44,9 +44,9 @@ export enum WebGPUErrorCode {
  */
 export const isWebGPUSupported = (): boolean => {
   logger.debug('[DEBUG][WebGPUUtils] Checking WebGPU support...');
-  
+
   const isSupported = 'gpu' in navigator && navigator.gpu !== undefined;
-  
+
   logger.debug(`[DEBUG][WebGPUUtils] WebGPU supported: ${isSupported}`);
   return isSupported;
 };
@@ -57,97 +57,117 @@ export const isWebGPUSupported = (): boolean => {
 export const getWebGPUCapabilities = async (): Promise<Result<WebGPUCapabilities, WebGPUError>> => {
   logger.debug('[DEBUG][WebGPUUtils] Getting WebGPU capabilities...');
 
-  return tryCatchAsync(async () => {
-    if (!isWebGPUSupported()) {
-      throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+  return tryCatchAsync(
+    async () => {
+      if (!isWebGPUSupported()) {
+        throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+      }
+
+      const adapter = await navigator.gpu.requestAdapter({
+        powerPreference: 'high-performance',
+      });
+
+      if (!adapter) {
+        throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
+      }
+
+      const adapterInfo = await adapter.requestAdapterInfo();
+      const limits = adapter.limits;
+      const features = Array.from(adapter.features);
+
+      // Get preferred canvas format
+      const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
+
+      const capabilities: WebGPUCapabilities = {
+        isSupported: true,
+        adapterInfo,
+        limits,
+        features,
+        preferredFormat,
+      };
+
+      logger.debug('[DEBUG][WebGPUUtils] WebGPU capabilities retrieved successfully');
+      return capabilities;
+    },
+    (error) => {
+      // If error is already a WebGPUError, preserve it
+      if (error && typeof error === 'object' && 'code' in error) {
+        return error as WebGPUError;
+      }
+      return createWebGPUError(
+        'CAPABILITIES_CHECK_FAILED',
+        `Failed to get WebGPU capabilities: ${error}`
+      );
     }
-
-    const adapter = await navigator.gpu.requestAdapter({
-      powerPreference: 'high-performance',
-    });
-
-    if (!adapter) {
-      throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
-    }
-
-    const adapterInfo = await adapter.requestAdapterInfo();
-    const limits = adapter.limits;
-    const features = Array.from(adapter.features);
-
-    // Get preferred canvas format
-    const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
-
-    const capabilities: WebGPUCapabilities = {
-      isSupported: true,
-      adapterInfo,
-      limits,
-      features,
-      preferredFormat,
-    };
-
-    logger.debug('[DEBUG][WebGPUUtils] WebGPU capabilities retrieved successfully');
-    return capabilities;
-  }, (error) => {
-    // If error is already a WebGPUError, preserve it
-    if (error && typeof error === 'object' && 'code' in error) {
-      return error as WebGPUError;
-    }
-    return createWebGPUError('CAPABILITIES_CHECK_FAILED', `Failed to get WebGPU capabilities: ${error}`);
-  });
+  );
 };
 
 /**
  * Check if specific WebGPU features are supported
  */
-export const checkWebGPUFeatures = async (requiredFeatures: ReadonlyArray<string>): Promise<Result<boolean, WebGPUError>> => {
+export const checkWebGPUFeatures = async (
+  requiredFeatures: ReadonlyArray<string>
+): Promise<Result<boolean, WebGPUError>> => {
   logger.debug('[DEBUG][WebGPUUtils] Checking WebGPU features...');
 
-  return tryCatchAsync(async () => {
-    const capabilitiesResult = await getWebGPUCapabilities();
-    
-    if (!capabilitiesResult.success) {
-      throw capabilitiesResult.error;
-    }
+  return tryCatchAsync(
+    async () => {
+      const capabilitiesResult = await getWebGPUCapabilities();
 
-    const { features } = capabilitiesResult.data;
-    const missingFeatures = requiredFeatures.filter(feature => !features.includes(feature));
+      if (!capabilitiesResult.success) {
+        throw capabilitiesResult.error;
+      }
 
-    if (missingFeatures.length > 0) {
-      logger.warn(`[WARN][WebGPUUtils] Missing WebGPU features: ${missingFeatures.join(', ')}`);
-      return false;
-    }
+      const { features } = capabilitiesResult.data;
+      const missingFeatures = requiredFeatures.filter((feature) => !features.includes(feature));
 
-    logger.debug('[DEBUG][WebGPUUtils] All required WebGPU features are supported');
-    return true;
-  }, (error) => createWebGPUError('CAPABILITIES_CHECK_FAILED', `Failed to check WebGPU features: ${error}`));
+      if (missingFeatures.length > 0) {
+        logger.warn(`[WARN][WebGPUUtils] Missing WebGPU features: ${missingFeatures.join(', ')}`);
+        return false;
+      }
+
+      logger.debug('[DEBUG][WebGPUUtils] All required WebGPU features are supported');
+      return true;
+    },
+    (error) =>
+      createWebGPUError('CAPABILITIES_CHECK_FAILED', `Failed to check WebGPU features: ${error}`)
+  );
 };
 
 /**
  * Get WebGPU adapter with specific requirements
  */
-export const requestWebGPUAdapter = async (options?: GPURequestAdapterOptions): Promise<Result<GPUAdapter, WebGPUError>> => {
+export const requestWebGPUAdapter = async (
+  options?: GPURequestAdapterOptions
+): Promise<Result<GPUAdapter, WebGPUError>> => {
   logger.debug('[DEBUG][WebGPUUtils] Requesting WebGPU adapter...');
 
-  return tryCatchAsync(async () => {
-    if (!isWebGPUSupported()) {
-      throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
-    }
+  return tryCatchAsync(
+    async () => {
+      if (!isWebGPUSupported()) {
+        throw createWebGPUError('NOT_SUPPORTED', 'WebGPU is not supported in this browser');
+      }
 
-    const adapter = await navigator.gpu.requestAdapter(options);
+      const adapter = await navigator.gpu.requestAdapter(options);
 
-    if (!adapter) {
-      throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
-    }
+      if (!adapter) {
+        throw createWebGPUError('ADAPTER_REQUEST_FAILED', 'Failed to request WebGPU adapter');
+      }
 
-    logger.debug('[DEBUG][WebGPUUtils] WebGPU adapter requested successfully');
-    return adapter;
-  }, (error) => {
-    // If error is already a WebGPUError, preserve it
-    if (error && typeof error === 'object' && 'code' in error) {
-      return error as WebGPUError;
+      logger.debug('[DEBUG][WebGPUUtils] WebGPU adapter requested successfully');
+      return adapter;
+    },
+    (error) => {
+      // If error is already a WebGPUError, preserve it
+      if (error && typeof error === 'object' && 'code' in error) {
+        return error as WebGPUError;
+      }
+      return createWebGPUError(
+        'ADAPTER_REQUEST_FAILED',
+        `Failed to request WebGPU adapter: ${error}`
+      );
     }
-    return createWebGPUError('ADAPTER_REQUEST_FAILED', `Failed to request WebGPU adapter: ${error}`);
-  });
+  );
 };
 
 /**
@@ -159,27 +179,35 @@ export const requestWebGPUDevice = async (
 ): Promise<Result<GPUDevice, WebGPUError>> => {
   logger.debug('[DEBUG][WebGPUUtils] Requesting WebGPU device...');
 
-  return tryCatchAsync(async () => {
-    const device = await adapter.requestDevice(descriptor);
+  return tryCatchAsync(
+    async () => {
+      const device = await adapter.requestDevice(descriptor);
 
-    if (!device) {
-      throw createWebGPUError('DEVICE_REQUEST_FAILED', 'Failed to request WebGPU device');
-    }
+      if (!device) {
+        throw createWebGPUError('DEVICE_REQUEST_FAILED', 'Failed to request WebGPU device');
+      }
 
-    // Set up error handling
-    device.addEventListener('uncapturederror', (event) => {
-      logger.error(`[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error.message}`);
-    });
+      // Set up error handling
+      device.addEventListener('uncapturederror', (event) => {
+        logger.error(`[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error.message}`);
+      });
 
-    logger.debug('[DEBUG][WebGPUUtils] WebGPU device requested successfully');
-    return device;
-  }, (error) => createWebGPUError('DEVICE_REQUEST_FAILED', `Failed to request WebGPU device: ${error}`));
+      logger.debug('[DEBUG][WebGPUUtils] WebGPU device requested successfully');
+      return device;
+    },
+    (error) =>
+      createWebGPUError('DEVICE_REQUEST_FAILED', `Failed to request WebGPU device: ${error}`)
+  );
 };
 
 /**
  * Create WebGPU error
  */
-const createWebGPUError = (code: WebGPUErrorCode, message: string, details?: unknown): WebGPUError => ({
+const createWebGPUError = (
+  code: WebGPUErrorCode,
+  message: string,
+  details?: unknown
+): WebGPUError => ({
   code,
   message,
   details,
@@ -191,19 +219,23 @@ const createWebGPUError = (code: WebGPUErrorCode, message: string, details?: unk
  */
 export const logWebGPUCapabilities = async (): Promise<void> => {
   const capabilitiesResult = await getWebGPUCapabilities();
-  
+
   if (!capabilitiesResult.success) {
-    logger.error(`[ERROR][WebGPUUtils] Failed to get capabilities: ${capabilitiesResult.error.message}`);
+    logger.error(
+      `[ERROR][WebGPUUtils] Failed to get capabilities: ${capabilitiesResult.error.message}`
+    );
     return;
   }
 
   const { adapterInfo, limits, features, preferredFormat } = capabilitiesResult.data;
-  
+
   logger.debug('[DEBUG][WebGPUUtils] WebGPU Capabilities:');
   logger.debug(`[DEBUG][WebGPUUtils] - Vendor: ${adapterInfo?.vendor || 'Unknown'}`);
   logger.debug(`[DEBUG][WebGPUUtils] - Architecture: ${adapterInfo?.architecture || 'Unknown'}`);
   logger.debug(`[DEBUG][WebGPUUtils] - Device: ${adapterInfo?.device || 'Unknown'}`);
-  logger.debug(`[DEBUG][WebGPUUtils] - Max Texture Size: ${limits?.maxTextureDimension2D || 'Unknown'}`);
+  logger.debug(
+    `[DEBUG][WebGPUUtils] - Max Texture Size: ${limits?.maxTextureDimension2D || 'Unknown'}`
+  );
   logger.debug(`[DEBUG][WebGPUUtils] - Max Buffer Size: ${limits?.maxBufferSize || 'Unknown'}`);
   logger.debug(`[DEBUG][WebGPUUtils] - Features: ${features.join(', ')}`);
   logger.debug(`[DEBUG][WebGPUUtils] - Preferred Format: ${preferredFormat || 'Unknown'}`);

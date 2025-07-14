@@ -11,12 +11,13 @@ import { immer } from 'zustand/middleware/immer';
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
-import { getParserInitializationService } from '../openscad-parser/services/parser-initialization.service.js';
+import {
+  createBabylonRenderingSlice,
+  createInitialBabylonRenderingState,
+} from './slices/babylon-rendering-slice';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
-
-import { createBabylonRenderingSlice, createInitialBabylonRenderingState } from './slices/babylon-rendering-slice';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
 const logger = createLogger('Store');
@@ -111,7 +112,7 @@ export const createAppStore = (
       debounceConfig: options.debounceConfig,
     }),
     ...createParsingSlice(set, get),
-    
+
     ...createBabylonRenderingSlice(set, get),
     ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
   }));

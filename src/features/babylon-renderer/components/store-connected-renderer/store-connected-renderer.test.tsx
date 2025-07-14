@@ -1,50 +1,46 @@
 /**
  * @file Store-Connected BabylonJS Renderer Tests
- * 
+ *
  * Tests for store-connected BabylonJS renderer component.
  * Following TDD principles with React Testing Library.
  */
 
-import React from 'react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { StoreConnectedRenderer } from './store-connected-renderer';
+import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { StoreConnectedRendererProps } from './store-connected-renderer';
+import { StoreConnectedRenderer } from './store-connected-renderer';
 
 // Mock BabylonScene component
 vi.mock('../babylon-scene', () => ({
-  BabylonScene: React.forwardRef<any, any>(({ 
-    onSceneReady, 
-    onEngineReady, 
-    onRenderLoop,
-    children,
-    className 
-  }, ref) => {
-    // Simulate scene ready after a short delay
-    React.useEffect(() => {
-      const timer = setTimeout(() => {
-        const mockScene = {
-          getEngine: vi.fn(() => ({
-            getRenderingCanvas: vi.fn(() => document.createElement('canvas')),
-          })),
-        };
-        onSceneReady?.(mockScene);
-        
-        const mockEngine = {
-          dispose: vi.fn(),
-          runRenderLoop: vi.fn(),
-        };
-        onEngineReady?.(mockEngine);
-      }, 100);
-      return () => clearTimeout(timer);
-    }, [onSceneReady, onEngineReady]);
+  BabylonScene: React.forwardRef<any, any>(
+    ({ onSceneReady, onEngineReady, onRenderLoop, children, className }, _ref) => {
+      // Simulate scene ready after a short delay
+      React.useEffect(() => {
+        const timer = setTimeout(() => {
+          const mockScene = {
+            getEngine: vi.fn(() => ({
+              getRenderingCanvas: vi.fn(() => document.createElement('canvas')),
+            })),
+          };
+          onSceneReady?.(mockScene);
 
-    return (
-      <div data-testid="babylon-scene" className={className}>
-        {children}
-      </div>
-    );
-  }),
+          const mockEngine = {
+            dispose: vi.fn(),
+            runRenderLoop: vi.fn(),
+          };
+          onEngineReady?.(mockEngine);
+        }, 100);
+        return () => clearTimeout(timer);
+      }, [onSceneReady, onEngineReady]);
+
+      return (
+        <div data-testid="babylon-scene" className={className}>
+          {children}
+        </div>
+      );
+    }
+  ),
 }));
 
 // Mock app store
@@ -81,7 +77,7 @@ vi.mock('../../../store/selectors', () => ({
 describe('StoreConnectedRenderer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock store state
     Object.assign(mockStoreState, {
       ast: [],
@@ -189,9 +185,12 @@ describe('StoreConnectedRenderer', () => {
 
       render(<StoreConnectedRenderer />);
 
-      await waitFor(() => {
-        expect(mockStoreState.renderAST).toHaveBeenCalledWith(mockAST);
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(mockStoreState.renderAST).toHaveBeenCalledWith(mockAST);
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should clear scene when AST is empty', async () => {
@@ -216,36 +215,56 @@ describe('StoreConnectedRenderer', () => {
   describe('callbacks', () => {
     it('should call onRenderComplete when rendering succeeds', async () => {
       const onRenderComplete = vi.fn();
-      mockStoreState.ast = [{ type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
       mockStoreState.meshes = [{ id: 'mesh-1' }];
 
       render(<StoreConnectedRenderer onRenderComplete={onRenderComplete} />);
 
-      await waitFor(() => {
-        expect(onRenderComplete).toHaveBeenCalledWith(1);
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(onRenderComplete).toHaveBeenCalledWith(1);
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should call onRenderError when rendering fails', async () => {
       const onRenderError = vi.fn();
       mockStoreState.renderAST = vi.fn().mockResolvedValue({
         success: false,
-        error: { code: 'RENDER_FAILED', message: 'Test error', timestamp: new Date(), service: 'renderer' },
+        error: {
+          code: 'RENDER_FAILED',
+          message: 'Test error',
+          timestamp: new Date(),
+          service: 'renderer',
+        },
       });
-      mockStoreState.ast = [{ type: 'invalid', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'invalid', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
 
       render(<StoreConnectedRenderer onRenderError={onRenderError} />);
 
-      await waitFor(() => {
-        expect(onRenderError).toHaveBeenCalledWith(expect.any(Error));
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(onRenderError).toHaveBeenCalledWith(expect.any(Error));
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should call onRenderError when engine initialization fails', async () => {
       const onRenderError = vi.fn();
       mockStoreState.initializeEngine = vi.fn().mockResolvedValue({
         success: false,
-        error: { code: 'ENGINE_INIT_FAILED', message: 'Engine init failed', timestamp: new Date(), service: 'engine' },
+        error: {
+          code: 'ENGINE_INIT_FAILED',
+          message: 'Engine init failed',
+          timestamp: new Date(),
+          service: 'engine',
+        },
       });
 
       render(<StoreConnectedRenderer onRenderError={onRenderError} />);
@@ -261,30 +280,44 @@ describe('StoreConnectedRenderer', () => {
       const { rerender } = render(<StoreConnectedRenderer />);
 
       // Change AST multiple times quickly
-      mockStoreState.ast = [{ type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
       rerender(<StoreConnectedRenderer />);
 
-      mockStoreState.ast = [{ type: 'sphere', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'sphere', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
       rerender(<StoreConnectedRenderer />);
 
-      mockStoreState.ast = [{ type: 'cylinder', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'cylinder', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
       rerender(<StoreConnectedRenderer />);
 
       // Should only render once after debounce period
-      await waitFor(() => {
-        expect(mockStoreState.renderAST).toHaveBeenCalledTimes(1);
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(mockStoreState.renderAST).toHaveBeenCalledTimes(1);
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should skip rendering when already rendering', async () => {
       mockStoreState.isRendering = true;
-      mockStoreState.ast = [{ type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } }];
+      mockStoreState.ast = [
+        { type: 'cube', parameters: {}, children: [], position: { line: 1, column: 1 } },
+      ];
 
       render(<StoreConnectedRenderer />);
 
-      await waitFor(() => {
-        expect(mockStoreState.renderAST).not.toHaveBeenCalled();
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          expect(mockStoreState.renderAST).not.toHaveBeenCalled();
+        },
+        { timeout: 500 }
+      );
     });
   });
 

@@ -20,10 +20,7 @@ import type {
 } from '../../../shared/types/operations.types.js';
 import { isSuccess, type Result } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
-// NOTE: AST restructuring service removed - functionality moved to conversion layer
-import { ParserError } from '../ast/errors/parser-error.js';
 import type { ASTNode } from '../core/ast-types.js';
-import { RecoveryStrategyRegistry } from '../error-handling/recovery-strategy-registry.js';
 import { getInitializedParser, initializeParser } from './parser-initialization.service.js';
 
 const logger = createLogger('ParsingService');

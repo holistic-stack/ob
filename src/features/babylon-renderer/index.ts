@@ -1,6 +1,6 @@
 /**
  * @file BabylonJS Renderer Feature Exports
- * 
+ *
  * Main export file for the BabylonJS renderer feature.
  * Following bulletproof-react architecture with feature-based organization.
  */

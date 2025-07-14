@@ -1,29 +1,20 @@
 /**
  * @file BabylonJS Node Render Graph Service
- * 
+ *
  * Service for managing BabylonJS Node Render Graph for advanced rendering pipeline management.
  * Provides comprehensive render graph creation, configuration, and execution.
  */
 
-import { 
-  Scene, 
+import {
+  Color4,
   NodeRenderGraph,
   NodeRenderGraphBlock,
-  NodeRenderGraphConnectionPoint,
-  RenderTargetTexture,
-  PostProcess,
-  Camera,
-  AbstractMesh,
-  Texture,
+  type Scene,
   Vector2,
-  Vector3,
-  Vector4,
-  Color3,
-  Color4
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatch } from '../../../../shared/utils/functional/result';
 
 const logger = createLogger('BabylonRenderGraphService');
 
@@ -149,7 +140,7 @@ export const DEFAULT_RENDER_GRAPH_CONFIG: RenderGraphConfig = {
 
 /**
  * BabylonJS Node Render Graph Service
- * 
+ *
  * Manages advanced rendering pipelines using Node Render Graph.
  * Follows SRP by focusing solely on render graph management.
  */
@@ -168,20 +159,31 @@ export class BabylonRenderGraphService {
   init(scene: Scene): Result<void, RenderGraphError> {
     logger.debug('[DEBUG][BabylonRenderGraphService] Initializing render graph service...');
 
-    return tryCatch(() => {
-      if (!scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene is required for render graph management');
-      }
+    return tryCatch(
+      () => {
+        if (!scene) {
+          throw this.createError(
+            'SCENE_NOT_PROVIDED',
+            'Scene is required for render graph management'
+          );
+        }
 
-      this.scene = scene;
-      logger.debug('[DEBUG][BabylonRenderGraphService] Render graph service initialized successfully');
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as RenderGraphError;
+        this.scene = scene;
+        logger.debug(
+          '[DEBUG][BabylonRenderGraphService] Render graph service initialized successfully'
+        );
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as RenderGraphError;
+        }
+        return this.createError(
+          'CREATION_FAILED',
+          `Failed to initialize render graph service: ${error}`
+        );
       }
-      return this.createError('CREATION_FAILED', `Failed to initialize render graph service: ${error}`);
-    });
+    );
   }
 
   /**
@@ -190,133 +192,150 @@ export class BabylonRenderGraphService {
   createRenderGraph(config: RenderGraphConfig): RenderGraphCreateResult {
     logger.debug(`[DEBUG][BabylonRenderGraphService] Creating render graph: ${config.name}`);
 
-    return tryCatch(() => {
-      if (!this.scene) {
-        throw this.createError('SCENE_NOT_PROVIDED', 'Scene must be initialized before creating render graphs');
+    return tryCatch(
+      () => {
+        if (!this.scene) {
+          throw this.createError(
+            'SCENE_NOT_PROVIDED',
+            'Scene must be initialized before creating render graphs'
+          );
+        }
+
+        const renderGraph = new NodeRenderGraph(config.name);
+
+        // Configure render graph properties
+        renderGraph.setScene(this.scene);
+
+        // Store render graph and initial state
+        this.renderGraphs.set(config.name, renderGraph);
+        this.renderGraphStates.set(config.name, {
+          isEnabled: config.enabled,
+          isBuilt: false,
+          blockCount: 0,
+          connectionCount: 0,
+          renderTargets: [],
+          lastBuildTime: new Date(),
+          lastRenderTime: new Date(),
+          error: null,
+        });
+
+        logger.debug(`[DEBUG][BabylonRenderGraphService] Render graph created: ${config.name}`);
+        return renderGraph;
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as RenderGraphError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to create render graph: ${error}`);
       }
-
-      const renderGraph = new NodeRenderGraph(config.name);
-
-      // Configure render graph properties
-      renderGraph.setScene(this.scene);
-
-      // Store render graph and initial state
-      this.renderGraphs.set(config.name, renderGraph);
-      this.renderGraphStates.set(config.name, {
-        isEnabled: config.enabled,
-        isBuilt: false,
-        blockCount: 0,
-        connectionCount: 0,
-        renderTargets: [],
-        lastBuildTime: new Date(),
-        lastRenderTime: new Date(),
-        error: null,
-      });
-
-      logger.debug(`[DEBUG][BabylonRenderGraphService] Render graph created: ${config.name}`);
-      return renderGraph;
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as RenderGraphError;
-      }
-      return this.createError('CREATION_FAILED', `Failed to create render graph: ${error}`);
-    });
+    );
   }
 
   /**
    * Add a block to a render graph
    */
   addBlock(
-    renderGraphName: string, 
+    renderGraphName: string,
     blockConfig: RenderGraphBlockConfig
   ): Result<NodeRenderGraphBlock, RenderGraphError> {
-    logger.debug(`[DEBUG][BabylonRenderGraphService] Adding block ${blockConfig.name} to ${renderGraphName}`);
+    logger.debug(
+      `[DEBUG][BabylonRenderGraphService] Adding block ${blockConfig.name} to ${renderGraphName}`
+    );
 
-    return tryCatch(() => {
-      const renderGraph = this.renderGraphs.get(renderGraphName);
-      if (!renderGraph) {
-        throw this.createError('RENDER_GRAPH_NOT_FOUND', `Render graph not found: ${renderGraphName}`);
-      }
-
-      let block: NodeRenderGraphBlock;
-
-      // Create block based on type
-      switch (blockConfig.type) {
-        case RenderGraphBlockType.SCENE_RENDER:
-          block = this.createSceneRenderBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.POST_PROCESS:
-          block = this.createPostProcessBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.TEXTURE_INPUT:
-          block = this.createTextureInputBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.TEXTURE_OUTPUT:
-          block = this.createTextureOutputBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.CLEAR_BLOCK:
-          block = this.createClearBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.COPY_TEXTURE:
-          block = this.createCopyTextureBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.BLUR:
-          block = this.createBlurBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.BLOOM:
-          block = this.createBloomBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.TONE_MAPPING:
-          block = this.createToneMappingBlock(renderGraph, blockConfig);
-          break;
-        case RenderGraphBlockType.FXAA:
-          block = this.createFXAABlock(renderGraph, blockConfig);
-          break;
-        default:
-          throw this.createError('INVALID_BLOCK_TYPE', `Unsupported block type: ${blockConfig.type}`);
-      }
-
-      // Set block position if provided
-      if (blockConfig.position) {
-        block.visibleInInspector = true;
-        // Note: Position setting would depend on the specific block implementation
-      }
-
-      // Configure block inputs
-      for (const [inputName, inputValue] of Object.entries(blockConfig.inputs)) {
-        const input = block.getInputByName(inputName);
-        if (input && inputValue !== undefined) {
-          input.value = inputValue;
+    return tryCatch(
+      () => {
+        const renderGraph = this.renderGraphs.get(renderGraphName);
+        if (!renderGraph) {
+          throw this.createError(
+            'RENDER_GRAPH_NOT_FOUND',
+            `Render graph not found: ${renderGraphName}`
+          );
         }
-      }
 
-      // Configure block properties
-      for (const [propertyName, propertyValue] of Object.entries(blockConfig.properties)) {
-        if (propertyName in block && propertyValue !== undefined) {
-          (block as any)[propertyName] = propertyValue;
+        let block: NodeRenderGraphBlock;
+
+        // Create block based on type
+        switch (blockConfig.type) {
+          case RenderGraphBlockType.SCENE_RENDER:
+            block = this.createSceneRenderBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.POST_PROCESS:
+            block = this.createPostProcessBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.TEXTURE_INPUT:
+            block = this.createTextureInputBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.TEXTURE_OUTPUT:
+            block = this.createTextureOutputBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.CLEAR_BLOCK:
+            block = this.createClearBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.COPY_TEXTURE:
+            block = this.createCopyTextureBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.BLUR:
+            block = this.createBlurBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.BLOOM:
+            block = this.createBloomBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.TONE_MAPPING:
+            block = this.createToneMappingBlock(renderGraph, blockConfig);
+            break;
+          case RenderGraphBlockType.FXAA:
+            block = this.createFXAABlock(renderGraph, blockConfig);
+            break;
+          default:
+            throw this.createError(
+              'INVALID_BLOCK_TYPE',
+              `Unsupported block type: ${blockConfig.type}`
+            );
         }
-      }
 
-      // Update state
-      const state = this.renderGraphStates.get(renderGraphName);
-      if (state) {
-        this.renderGraphStates.set(renderGraphName, {
-          ...state,
-          blockCount: state.blockCount + 1,
-          lastBuildTime: new Date(),
-        });
-      }
+        // Set block position if provided
+        if (blockConfig.position) {
+          block.visibleInInspector = true;
+          // Note: Position setting would depend on the specific block implementation
+        }
 
-      logger.debug(`[DEBUG][BabylonRenderGraphService] Block added: ${blockConfig.name}`);
-      return block;
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as RenderGraphError;
+        // Configure block inputs
+        for (const [inputName, inputValue] of Object.entries(blockConfig.inputs)) {
+          const input = block.getInputByName(inputName);
+          if (input && inputValue !== undefined) {
+            input.value = inputValue;
+          }
+        }
+
+        // Configure block properties
+        for (const [propertyName, propertyValue] of Object.entries(blockConfig.properties)) {
+          if (propertyName in block && propertyValue !== undefined) {
+            (block as any)[propertyName] = propertyValue;
+          }
+        }
+
+        // Update state
+        const state = this.renderGraphStates.get(renderGraphName);
+        if (state) {
+          this.renderGraphStates.set(renderGraphName, {
+            ...state,
+            blockCount: state.blockCount + 1,
+            lastBuildTime: new Date(),
+          });
+        }
+
+        logger.debug(`[DEBUG][BabylonRenderGraphService] Block added: ${blockConfig.name}`);
+        return block;
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as RenderGraphError;
+        }
+        return this.createError('BLOCK_CREATION_FAILED', `Failed to add block: ${error}`);
       }
-      return this.createError('BLOCK_CREATION_FAILED', `Failed to add block: ${error}`);
-    });
+    );
   }
 
   /**
@@ -328,57 +347,75 @@ export class BabylonRenderGraphService {
   ): Result<void, RenderGraphError> {
     logger.debug(`[DEBUG][BabylonRenderGraphService] Connecting blocks in ${renderGraphName}`);
 
-    return tryCatch(() => {
-      const renderGraph = this.renderGraphs.get(renderGraphName);
-      if (!renderGraph) {
-        throw this.createError('RENDER_GRAPH_NOT_FOUND', `Render graph not found: ${renderGraphName}`);
+    return tryCatch(
+      () => {
+        const renderGraph = this.renderGraphs.get(renderGraphName);
+        if (!renderGraph) {
+          throw this.createError(
+            'RENDER_GRAPH_NOT_FOUND',
+            `Render graph not found: ${renderGraphName}`
+          );
+        }
+
+        // Find source and target blocks
+        const sourceBlock = renderGraph.getBlockByName(connection.sourceBlockName);
+        const targetBlock = renderGraph.getBlockByName(connection.targetBlockName);
+
+        if (!sourceBlock) {
+          throw this.createError(
+            'INVALID_CONNECTION',
+            `Source block not found: ${connection.sourceBlockName}`
+          );
+        }
+
+        if (!targetBlock) {
+          throw this.createError(
+            'INVALID_CONNECTION',
+            `Target block not found: ${connection.targetBlockName}`
+          );
+        }
+
+        // Find connection points
+        const sourceOutput = sourceBlock.getOutputByName(connection.sourceOutputName);
+        const targetInput = targetBlock.getInputByName(connection.targetInputName);
+
+        if (!sourceOutput) {
+          throw this.createError(
+            'INVALID_CONNECTION',
+            `Source output not found: ${connection.sourceOutputName}`
+          );
+        }
+
+        if (!targetInput) {
+          throw this.createError(
+            'INVALID_CONNECTION',
+            `Target input not found: ${connection.targetInputName}`
+          );
+        }
+
+        // Create connection
+        sourceOutput.connectTo(targetInput);
+
+        // Update state
+        const state = this.renderGraphStates.get(renderGraphName);
+        if (state) {
+          this.renderGraphStates.set(renderGraphName, {
+            ...state,
+            connectionCount: state.connectionCount + 1,
+            lastBuildTime: new Date(),
+          });
+        }
+
+        logger.debug(`[DEBUG][BabylonRenderGraphService] Blocks connected successfully`);
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as RenderGraphError;
+        }
+        return this.createError('CONNECTION_FAILED', `Failed to connect blocks: ${error}`);
       }
-
-      // Find source and target blocks
-      const sourceBlock = renderGraph.getBlockByName(connection.sourceBlockName);
-      const targetBlock = renderGraph.getBlockByName(connection.targetBlockName);
-
-      if (!sourceBlock) {
-        throw this.createError('INVALID_CONNECTION', `Source block not found: ${connection.sourceBlockName}`);
-      }
-
-      if (!targetBlock) {
-        throw this.createError('INVALID_CONNECTION', `Target block not found: ${connection.targetBlockName}`);
-      }
-
-      // Find connection points
-      const sourceOutput = sourceBlock.getOutputByName(connection.sourceOutputName);
-      const targetInput = targetBlock.getInputByName(connection.targetInputName);
-
-      if (!sourceOutput) {
-        throw this.createError('INVALID_CONNECTION', `Source output not found: ${connection.sourceOutputName}`);
-      }
-
-      if (!targetInput) {
-        throw this.createError('INVALID_CONNECTION', `Target input not found: ${connection.targetInputName}`);
-      }
-
-      // Create connection
-      sourceOutput.connectTo(targetInput);
-
-      // Update state
-      const state = this.renderGraphStates.get(renderGraphName);
-      if (state) {
-        this.renderGraphStates.set(renderGraphName, {
-          ...state,
-          connectionCount: state.connectionCount + 1,
-          lastBuildTime: new Date(),
-        });
-      }
-
-      logger.debug(`[DEBUG][BabylonRenderGraphService] Blocks connected successfully`);
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as RenderGraphError;
-      }
-      return this.createError('CONNECTION_FAILED', `Failed to connect blocks: ${error}`);
-    });
+    );
   }
 
   /**
@@ -387,58 +424,69 @@ export class BabylonRenderGraphService {
   buildRenderGraph(renderGraphName: string): RenderGraphBuildResult {
     logger.debug(`[DEBUG][BabylonRenderGraphService] Building render graph: ${renderGraphName}`);
 
-    return tryCatch(() => {
-      const renderGraph = this.renderGraphs.get(renderGraphName);
-      if (!renderGraph) {
-        throw this.createError('RENDER_GRAPH_NOT_FOUND', `Render graph not found: ${renderGraphName}`);
-      }
-
-      // Build the render graph
-      renderGraph.build();
-
-      // Update state
-      const state = this.renderGraphStates.get(renderGraphName);
-      if (state) {
-        this.renderGraphStates.set(renderGraphName, {
-          ...state,
-          isBuilt: true,
-          lastBuildTime: new Date(),
-          error: null,
-        });
-      }
-
-      logger.debug(`[DEBUG][BabylonRenderGraphService] Render graph built successfully: ${renderGraphName}`);
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        // Update state with error if it's a build-related error
-        if (error.code !== 'RENDER_GRAPH_NOT_FOUND') {
-          const state = this.renderGraphStates.get(renderGraphName);
-          if (state) {
-            this.renderGraphStates.set(renderGraphName, {
-              ...state,
-              isBuilt: false,
-              error: error as RenderGraphError,
-              lastBuildTime: new Date(),
-            });
-          }
+    return tryCatch(
+      () => {
+        const renderGraph = this.renderGraphs.get(renderGraphName);
+        if (!renderGraph) {
+          throw this.createError(
+            'RENDER_GRAPH_NOT_FOUND',
+            `Render graph not found: ${renderGraphName}`
+          );
         }
-        return error as RenderGraphError;
-      }
 
-      // Update state with generic build error
-      const state = this.renderGraphStates.get(renderGraphName);
-      const buildError = this.createError('BUILD_FAILED', `Failed to build render graph: ${error}`);
-      if (state) {
-        this.renderGraphStates.set(renderGraphName, {
-          ...state,
-          isBuilt: false,
-          error: buildError,
-          lastBuildTime: new Date(),
-        });
+        // Build the render graph
+        renderGraph.build();
+
+        // Update state
+        const state = this.renderGraphStates.get(renderGraphName);
+        if (state) {
+          this.renderGraphStates.set(renderGraphName, {
+            ...state,
+            isBuilt: true,
+            lastBuildTime: new Date(),
+            error: null,
+          });
+        }
+
+        logger.debug(
+          `[DEBUG][BabylonRenderGraphService] Render graph built successfully: ${renderGraphName}`
+        );
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          // Update state with error if it's a build-related error
+          if (error.code !== 'RENDER_GRAPH_NOT_FOUND') {
+            const state = this.renderGraphStates.get(renderGraphName);
+            if (state) {
+              this.renderGraphStates.set(renderGraphName, {
+                ...state,
+                isBuilt: false,
+                error: error as RenderGraphError,
+                lastBuildTime: new Date(),
+              });
+            }
+          }
+          return error as RenderGraphError;
+        }
+
+        // Update state with generic build error
+        const state = this.renderGraphStates.get(renderGraphName);
+        const buildError = this.createError(
+          'BUILD_FAILED',
+          `Failed to build render graph: ${error}`
+        );
+        if (state) {
+          this.renderGraphStates.set(renderGraphName, {
+            ...state,
+            isBuilt: false,
+            error: buildError,
+            lastBuildTime: new Date(),
+          });
+        }
+        return buildError;
       }
-      return buildError;
-    });
+    );
   }
 
   /**
@@ -468,31 +516,34 @@ export class BabylonRenderGraphService {
   removeRenderGraph(name: string): Result<void, RenderGraphError> {
     logger.debug(`[DEBUG][BabylonRenderGraphService] Removing render graph: ${name}`);
 
-    return tryCatch(() => {
-      const renderGraph = this.renderGraphs.get(name);
-      if (!renderGraph) {
-        throw this.createError('RENDER_GRAPH_NOT_FOUND', `Render graph not found: ${name}`);
-      }
+    return tryCatch(
+      () => {
+        const renderGraph = this.renderGraphs.get(name);
+        if (!renderGraph) {
+          throw this.createError('RENDER_GRAPH_NOT_FOUND', `Render graph not found: ${name}`);
+        }
 
-      renderGraph.dispose();
-      this.renderGraphs.delete(name);
-      this.renderGraphStates.delete(name);
+        renderGraph.dispose();
+        this.renderGraphs.delete(name);
+        this.renderGraphStates.delete(name);
 
-      logger.debug(`[DEBUG][BabylonRenderGraphService] Render graph removed: ${name}`);
-    }, (error) => {
-      // If error is already a RenderGraphError, preserve it
-      if (error && typeof error === 'object' && 'code' in error) {
-        return error as RenderGraphError;
+        logger.debug(`[DEBUG][BabylonRenderGraphService] Render graph removed: ${name}`);
+      },
+      (error) => {
+        // If error is already a RenderGraphError, preserve it
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as RenderGraphError;
+        }
+        return this.createError('CREATION_FAILED', `Failed to remove render graph: ${error}`);
       }
-      return this.createError('CREATION_FAILED', `Failed to remove render graph: ${error}`);
-    });
+    );
   }
 
   /**
    * Create scene render block
    */
   private createSceneRenderBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     // Implementation would depend on specific BabylonJS API
@@ -505,7 +556,7 @@ export class BabylonRenderGraphService {
    * Create post process block
    */
   private createPostProcessBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     // Implementation would depend on specific BabylonJS API
@@ -517,7 +568,7 @@ export class BabylonRenderGraphService {
    * Create texture input block
    */
   private createTextureInputBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -528,7 +579,7 @@ export class BabylonRenderGraphService {
    * Create texture output block
    */
   private createTextureOutputBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -539,7 +590,7 @@ export class BabylonRenderGraphService {
    * Create clear block
    */
   private createClearBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -550,7 +601,7 @@ export class BabylonRenderGraphService {
    * Create copy texture block
    */
   private createCopyTextureBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -561,7 +612,7 @@ export class BabylonRenderGraphService {
    * Create blur block
    */
   private createBlurBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -572,7 +623,7 @@ export class BabylonRenderGraphService {
    * Create bloom block
    */
   private createBloomBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -583,7 +634,7 @@ export class BabylonRenderGraphService {
    * Create tone mapping block
    */
   private createToneMappingBlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -594,7 +645,7 @@ export class BabylonRenderGraphService {
    * Create FXAA block
    */
   private createFXAABlock(
-    renderGraph: NodeRenderGraph, 
+    renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     const block = new (NodeRenderGraphBlock as any)(config.name, renderGraph);
@@ -622,20 +673,22 @@ export class BabylonRenderGraphService {
    */
   dispose(): void {
     logger.debug('[DEBUG][BabylonRenderGraphService] Disposing render graph service...');
-    
+
     // Dispose all render graphs
     for (const [name, renderGraph] of this.renderGraphs) {
       try {
         renderGraph.dispose();
       } catch (error) {
-        logger.warn(`[WARN][BabylonRenderGraphService] Failed to dispose render graph ${name}: ${error}`);
+        logger.warn(
+          `[WARN][BabylonRenderGraphService] Failed to dispose render graph ${name}: ${error}`
+        );
       }
     }
-    
+
     this.renderGraphs.clear();
     this.renderGraphStates.clear();
     this.scene = null;
-    
+
     logger.end('[END][BabylonRenderGraphService] Render graph service disposed');
   }
 }

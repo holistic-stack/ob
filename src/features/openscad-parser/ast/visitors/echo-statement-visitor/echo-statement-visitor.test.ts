@@ -11,12 +11,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { EnhancedOpenscadParser, SimpleErrorHandler } from '../../../index.js';
 import type {
+  ArrayExpressionNode,
+  BinaryExpressionNode,
   EchoStatementNode,
+  FunctionCallNode,
   LiteralNode,
   VariableNode,
-  BinaryExpressionNode,
-  FunctionCallNode,
-  ArrayExpressionNode
 } from '../../ast-types.js';
 
 describe('EchoStatementVisitor', () => {

@@ -1,13 +1,13 @@
 /**
  * @file BabylonJS Scene Component Exports
- * 
+ *
  * Exports for the BabylonJS scene component.
  */
 
-export { BabylonScene } from './babylon-scene';
 export type {
   BabylonSceneConfig,
+  BabylonSceneProps,
   CameraConfig,
   LightingConfig,
-  BabylonSceneProps,
 } from './babylon-scene';
+export { BabylonScene } from './babylon-scene';

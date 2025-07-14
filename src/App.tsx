@@ -33,7 +33,7 @@ export function App(): React.JSX.Element {
   // Store selectors for application state
   const editorCode: string = useAppStore(selectEditorCode);
   const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
-  const lastParsed: Date | null = useAppStore(selectParsingLastParsed); // Get the last parsed date
+  const _lastParsed: Date | null = useAppStore(selectParsingLastParsed); // Get the last parsed date
   const applicationStatus: boolean = useAppStore(selectRenderingIsRendering);
   const renderingStateMeshes: ReadonlyArray<unknown> = useAppStore(selectRenderingMeshes);
   const renderErrors = useAppStore(selectRenderingErrors);

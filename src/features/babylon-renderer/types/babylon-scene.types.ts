@@ -1,11 +1,11 @@
 /**
  * @file BabylonJS Scene Type Definitions
- * 
+ *
  * Type definitions for BabylonJS scene management and configuration.
  * Following functional programming patterns with immutable data structures.
  */
 
-import type { Scene, Engine, Camera, Light, Mesh } from '@babylonjs/core';
+import type { Camera, Engine, Light, Mesh, Scene } from '@babylonjs/core';
 import type { Result } from '../../../shared/types/result.types';
 
 /**

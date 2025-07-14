@@ -1,21 +1,19 @@
 /**
  * @file Use BabylonJS Engine Hook
- * 
+ *
  * React hook for managing BabylonJS engine lifecycle and state.
  * Provides declarative engine management with React 19 compatibility.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { BabylonEngineService } from '../../services/babylon-engine-service';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   BabylonEngineConfig,
   BabylonEngineState,
-  EngineInitResult,
   EngineDisposeResult,
-  EngineErrorCode
+  EngineInitResult,
 } from '../../services/babylon-engine-service';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
+import { BabylonEngineService } from '../../services/babylon-engine-service';
 
 const logger = createLogger('useBabylonEngine');
 
@@ -37,7 +35,10 @@ export interface EngineInitOptions {
 export interface UseBabylonEngineReturn {
   readonly engineService: BabylonEngineService | null;
   readonly engineState: BabylonEngineState;
-  readonly initializeEngine: (canvas: HTMLCanvasElement, options?: EngineInitOptions) => Promise<EngineInitResult>;
+  readonly initializeEngine: (
+    canvas: HTMLCanvasElement,
+    options?: EngineInitOptions
+  ) => Promise<EngineInitResult>;
   readonly disposeEngine: () => Promise<EngineDisposeResult>;
   readonly getPerformanceMetrics: () => any;
   readonly isWebGPUSupported: boolean;
@@ -84,7 +85,7 @@ const INITIAL_ENGINE_STATE: BabylonEngineState = {
 
 /**
  * Use BabylonJS Engine Hook
- * 
+ *
  * Manages BabylonJS engine lifecycle with React 19 compatibility.
  * Provides declarative engine initialization, disposal, and state management.
  */
@@ -127,74 +128,80 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
   /**
    * Initialize BabylonJS engine
    */
-  const initializeEngine = useCallback(async (
-    canvas: HTMLCanvasElement,
-    options: EngineInitOptions = {}
-  ): Promise<EngineInitResult> => {
-    logger.debug('[DEBUG][useBabylonEngine] Initializing engine...');
+  const initializeEngine = useCallback(
+    async (
+      canvas: HTMLCanvasElement,
+      options: EngineInitOptions = {}
+    ): Promise<EngineInitResult> => {
+      logger.debug('[DEBUG][useBabylonEngine] Initializing engine...');
 
-    // Prevent multiple simultaneous initializations
-    if (isInitializingRef.current) {
-      logger.warn('[WARN][useBabylonEngine] Engine initialization already in progress');
-      return {
-        success: false,
-        error: {
-          code: EngineErrorCode.INITIALIZATION_FAILED,
-          message: 'Engine initialization already in progress',
-          timestamp: new Date(),
-        },
-      };
-    }
-
-    isInitializingRef.current = true;
-
-    try {
-      const engineService = getEngineService();
-
-      // Merge options with defaults
-      const config: BabylonEngineConfig = {
-        ...DEFAULT_ENGINE_CONFIG,
-        enableWebGPU: options.enableWebGPU ?? DEFAULT_ENGINE_CONFIG.enableWebGPU,
-        antialias: options.antialias ?? DEFAULT_ENGINE_CONFIG.antialias,
-        adaptToDeviceRatio: options.adaptToDeviceRatio ?? DEFAULT_ENGINE_CONFIG.adaptToDeviceRatio,
-        powerPreference: options.powerPreference ?? DEFAULT_ENGINE_CONFIG.powerPreference,
-      };
-
-      // Initialize engine
-      const result = await engineService.init(canvas, config);
-
-      if (result.success) {
-        // Update state with successful initialization
-        const newState = engineService.getState();
-        setEngineState(newState);
-
-        // Call success callback
-        if (options.onEngineReady && newState.engine) {
-          options.onEngineReady(newState.engine);
-        }
-
-        logger.debug('[DEBUG][useBabylonEngine] Engine initialized successfully');
-      } else {
-        // Update state with error
-        setEngineState(prev => ({
-          ...prev,
-          error: result.error,
-          lastUpdated: new Date(),
-        }));
-
-        // Call error callback
-        if (options.onEngineError) {
-          options.onEngineError(new Error(result.error.message));
-        }
-
-        logger.error(`[ERROR][useBabylonEngine] Engine initialization failed: ${result.error.message}`);
+      // Prevent multiple simultaneous initializations
+      if (isInitializingRef.current) {
+        logger.warn('[WARN][useBabylonEngine] Engine initialization already in progress');
+        return {
+          success: false,
+          error: {
+            code: EngineErrorCode.INITIALIZATION_FAILED,
+            message: 'Engine initialization already in progress',
+            timestamp: new Date(),
+          },
+        };
       }
 
-      return result;
-    } finally {
-      isInitializingRef.current = false;
-    }
-  }, [getEngineService]);
+      isInitializingRef.current = true;
+
+      try {
+        const engineService = getEngineService();
+
+        // Merge options with defaults
+        const config: BabylonEngineConfig = {
+          ...DEFAULT_ENGINE_CONFIG,
+          enableWebGPU: options.enableWebGPU ?? DEFAULT_ENGINE_CONFIG.enableWebGPU,
+          antialias: options.antialias ?? DEFAULT_ENGINE_CONFIG.antialias,
+          adaptToDeviceRatio:
+            options.adaptToDeviceRatio ?? DEFAULT_ENGINE_CONFIG.adaptToDeviceRatio,
+          powerPreference: options.powerPreference ?? DEFAULT_ENGINE_CONFIG.powerPreference,
+        };
+
+        // Initialize engine
+        const result = await engineService.init(canvas, config);
+
+        if (result.success) {
+          // Update state with successful initialization
+          const newState = engineService.getState();
+          setEngineState(newState);
+
+          // Call success callback
+          if (options.onEngineReady && newState.engine) {
+            options.onEngineReady(newState.engine);
+          }
+
+          logger.debug('[DEBUG][useBabylonEngine] Engine initialized successfully');
+        } else {
+          // Update state with error
+          setEngineState((prev) => ({
+            ...prev,
+            error: result.error,
+            lastUpdated: new Date(),
+          }));
+
+          // Call error callback
+          if (options.onEngineError) {
+            options.onEngineError(new Error(result.error.message));
+          }
+
+          logger.error(
+            `[ERROR][useBabylonEngine] Engine initialization failed: ${result.error.message}`
+          );
+        }
+
+        return result;
+      } finally {
+        isInitializingRef.current = false;
+      }
+    },
+    [getEngineService]
+  );
 
   /**
    * Dispose BabylonJS engine
@@ -244,7 +251,7 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
     }
 
     const updateInterval = setInterval(() => {
-      const newState = engineServiceRef.current!.getState();
+      const newState = engineServiceRef.current?.getState();
       setEngineState(newState);
     }, 1000); // Update every second
 

@@ -1,14 +1,14 @@
 /**
  * @file Use BabylonJS Engine Hook Tests
- * 
+ *
  * Tests for BabylonJS engine management hook.
  * Following TDD principles with React Testing Library.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useBabylonEngine } from './use-babylon-engine';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EngineInitOptions } from './use-babylon-engine';
+import { useBabylonEngine } from './use-babylon-engine';
 
 // Mock BabylonJS Engine Service
 const mockEngineService = {
@@ -22,16 +22,17 @@ vi.mock('../../services/babylon-engine-service', () => ({
 }));
 
 // Mock canvas
-const createMockCanvas = () => ({
-  getContext: vi.fn(() => ({})),
-  width: 800,
-  height: 600,
-}) as unknown as HTMLCanvasElement;
+const createMockCanvas = () =>
+  ({
+    getContext: vi.fn(() => ({})),
+    width: 800,
+    height: 600,
+  }) as unknown as HTMLCanvasElement;
 
 describe('useBabylonEngine', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup default mock returns
     mockEngineService.init.mockResolvedValue({ success: true });
     mockEngineService.dispose.mockResolvedValue({ success: true });

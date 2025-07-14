@@ -1,21 +1,21 @@
 /**
  * @file BabylonJS Particle Service Exports
- * 
+ *
  * Exports for the BabylonJS particle system service.
  */
 
-export { BabylonParticleService } from './babylon-particle-service';
 export type {
   ParticleSystemConfig,
-  ParticleSystemError,
-  ParticleSystemState,
   ParticleSystemCreateResult,
+  ParticleSystemError,
   ParticleSystemStartResult,
+  ParticleSystemState,
   ParticleSystemStopResult,
 } from './babylon-particle-service';
-export { 
-  ParticleSystemType, 
-  ParticleBlendMode, 
+export {
+  BabylonParticleService,
+  DEFAULT_PARTICLE_CONFIG,
+  ParticleBlendMode,
   ParticleSystemErrorCode,
-  DEFAULT_PARTICLE_CONFIG 
+  ParticleSystemType,
 } from './babylon-particle-service';
