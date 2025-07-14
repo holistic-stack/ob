@@ -5,7 +5,7 @@
  * following functional programming patterns and type safety.
  */
 
-import type * as THREE from 'three';
+// TODO: Replace with BabylonJS types
 import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AppConfig,

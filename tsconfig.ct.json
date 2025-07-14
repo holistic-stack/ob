@@ -18,7 +18,7 @@
     "types": [
       "node",
       "@playwright/experimental-ct-react",
-      "@types/three", // Three.js types for component testing
+      // TODO: Add BabylonJS types for component testing
       "vite/client"
     ]
   },

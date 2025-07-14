@@ -5,7 +5,7 @@
  * with comprehensive coverage of all selector functions.
  */
 
-import type * as THREE from 'three';
+// TODO: Replace with BabylonJS types
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { AppState, RenderingError, RenderingState } from '../types/store.types';

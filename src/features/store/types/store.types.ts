@@ -5,7 +5,7 @@
  * following functional programming patterns and immutable data structures.
  */
 
-import type * as THREE from 'three';
+// TODO: Replace with BabylonJS types
 import type {
   AppConfig,
   CameraConfig,
@@ -36,23 +36,26 @@ export interface ParsingState {
   readonly parseTime: number; // parsing time in milliseconds
 }
 
-import type { RenderingError } from '../../3d-renderer/types/renderer.types.js';
+// TODO: Replace with BabylonJS error types
+// import type { RenderingError } from '../../babylon-renderer/types/renderer.types.js';
 
 /**
  * Represents a rendering error with a unique ID.
  */
-export type RenderError = RenderingError;
+export interface RenderingError {
+  readonly id: string;
+  readonly message: string;
+  readonly timestamp: Date;
+  readonly severity: 'error' | 'warning' | 'info';
+}
 
-/**
- * Re-export RenderingError for convenience
- */
-export type { RenderingError };
+export type RenderError = RenderingError;
 
 /**
  * 3D rendering state
  */
 export interface RenderingState {
-  readonly meshes: ReadonlyArray<THREE.Mesh>;
+  readonly meshes: ReadonlyArray<unknown>; // TODO: Replace with BabylonJS mesh type
   readonly isRendering: boolean;
   readonly renderErrors: ReadonlyArray<RenderingError>;
   readonly lastRendered: Date | null;
@@ -109,9 +112,9 @@ export interface ParsingActions {
 export type ParsingSlice = ParsingState & ParsingActions;
 
 export interface RenderingActions {
-  updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => void;
-  renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
-  renderFromMeshData: (meshData: ReadonlyArray<import('../../ast-to-csg-converter/types/conversion.types').GenericMeshData>) => AsyncResult<ReadonlyArray<THREE.Mesh>, string>;
+  updateMeshes: (meshes: ReadonlyArray<unknown>) => void; // TODO: Replace with BabylonJS mesh type
+  renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<unknown>, string>; // TODO: Replace with BabylonJS mesh type
+  renderFromMeshData: (meshData: ReadonlyArray<import('../../ast-to-csg-converter/types/conversion.types').GenericMeshData>) => AsyncResult<ReadonlyArray<unknown>, string>; // TODO: Replace with BabylonJS mesh type
   clearScene: () => void;
   updateCamera: (camera: Partial<CameraConfig>) => void;
   resetCamera: () => void;

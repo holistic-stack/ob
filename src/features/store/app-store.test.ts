@@ -5,7 +5,7 @@
  * with functional programming patterns and Result<T,E> error handling.
  */
 
-import type * as THREE from 'three';
+// TODO: Replace with BabylonJS types
 import { beforeEach, describe, expect, it } from 'vitest';
 import type {
   CameraConfig,

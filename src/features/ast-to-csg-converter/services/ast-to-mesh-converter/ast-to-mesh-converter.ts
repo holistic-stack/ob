@@ -11,7 +11,8 @@
  * - Open/Closed: Extensible for new AST node types
  */
 
-import { Matrix4, Box3 } from 'three';
+// TODO: Replace with BabylonJS math types
+// import { Matrix, BoundingBox } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';

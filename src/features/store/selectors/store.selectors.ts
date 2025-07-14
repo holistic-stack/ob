@@ -11,7 +11,7 @@
  */
 
 import { createSelector } from 'reselect';
-import type { Mesh } from 'three';
+// TODO: Replace with BabylonJS mesh types
 import type { AppConfig, EditorState } from '../../../shared/types/common.types';
 import type { AppState, ParsingState, RenderingError, RenderingState } from '../types/store.types';
 

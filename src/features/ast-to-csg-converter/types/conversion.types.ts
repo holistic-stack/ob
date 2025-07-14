@@ -6,7 +6,8 @@
  * knowledge and provides generic interfaces for the rendering layer.
  */
 
-import type { BufferGeometry, Matrix4, Box3 } from 'three';
+// TODO: Replace with BabylonJS types
+// import type { Geometry, Matrix, BoundingBox } from '@babylonjs/core';
 import type { Result } from '../../../shared/types/result.types';
 
 /**
@@ -15,9 +16,9 @@ import type { Result } from '../../../shared/types/result.types';
  */
 export interface GenericMeshData {
   readonly id: string;
-  readonly geometry: BufferGeometry;
+  readonly geometry: unknown; // TODO: Replace with BabylonJS Geometry
   readonly material: MaterialConfig;
-  readonly transform: Matrix4;
+  readonly transform: unknown; // TODO: Replace with BabylonJS Matrix
   readonly metadata: MeshMetadata;
 }
 
@@ -41,7 +42,7 @@ export interface MeshMetadata {
   readonly meshId: string;
   readonly triangleCount: number;
   readonly vertexCount: number;
-  readonly boundingBox: Box3;
+  readonly boundingBox: unknown; // TODO: Replace with BabylonJS BoundingBox
   readonly complexity: number;
   readonly operationTime: number;
   readonly isOptimized: boolean;

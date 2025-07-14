@@ -1,5 +1,5 @@
 {
-  "name": "openscad-r3f",
+  "name": "openscad-babylon",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -10,7 +10,6 @@
     "test": "vitest run",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
     "validate:pipeline": "vitest run src/features/openscad-pipeline --reporter=verbose",
-    "validate:r3f": "vitest run src/features/r3f-renderer --reporter=verbose",
     "typecheck": "npx tsc --noEmit",
     "test:glob": "glob \"src/**/*.test.{ts,tsx}\"",
     "test:coverage": "vitest run --coverage",
@@ -30,18 +29,13 @@
     "test-ct": "playwright test -c playwright-ct.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-
     "test:unit": "vitest run",
     "test:integration": "vitest run",
     "test:visual": "playwright test --config playwright-ct.config.ts",
-
     "test:watch": "vitest",
     "test:watch:integration": "vitest",
-
     "test:ast-service": "vitest run src/features/ui-components/editor/code-editor/openscad-ast-service.test.ts",
     "test:error-boundary": "vitest run src/features/ui-components/shared/error-boundary/openscad-error-boundary.test.tsx",
-    "test:r3f-visual": "playwright test src/features/r3f-renderer/components/r3f-renderer/r3f-renderer.vspec.tsx --config playwright-ct.config.ts --update-snapshots",
-
     "validate:types": "tsc --noEmit --strict",
     "validate:quality": "npm run lint && npm run validate:types && npm run validate:shared-utilities",
     "validate:all": "npm run validate:quality && npm run test:unit && npm run test:coverage",
@@ -50,26 +44,26 @@
     "fix:auto:phi3": "tsx scripts/ollama-lint-fixer.ts --model=phi3:3.8b"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.16.1",
+    "@babylonjs/loaders": "^8.16.1",
+    "@babylonjs/materials": "^8.16.1",
     "@monaco-editor/react": "4.7.0",
-    "@react-three/drei": "^10.3.0",
-    "@react-three/fiber": "^9.1.2",
-    "@types/three": "^0.177.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "gl-matrix": "^3.4.3",
     "immer": "^10.1.1",
     "monaco-editor": "0.52.2",
     "ollama": "^0.5.16",
     "react": "19.0.0",
+    "react-babylonjs": "3.2.5-beta.2",
     "react-dom": "19.0.0",
     "react-error-boundary": "^6.0.0",
     "reselect": "^5.1.1",
-    "three": "^0.177.0",
     "tslog": "^4.9.3",
     "web-tree-sitter": "0.25.3",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@babylonjs/inspector": "^8.16.1",
     "@biomejs/biome": "2.0.6",
     "@eslint/js": "^9.8.0",
     "@playwright/experimental-ct-react": "^1.53.0",

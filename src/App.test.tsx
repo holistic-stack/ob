@@ -6,7 +6,7 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import type * as THREE from 'three';
+// TODO: Replace with BabylonJS types
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
@@ -110,10 +110,11 @@ describe('App', () => {
           },
         } as ASTNode,
       ];
-      const meshes: THREE.Mesh[] = [
-        {} as THREE.Mesh, // Mock THREE.Mesh for cube
-        {} as THREE.Mesh, // Mock THREE.Mesh for sphere
-        {} as THREE.Mesh, // Mock THREE.Mesh for cylinder
+      // TODO: Replace with BabylonJS mesh types
+      const meshes: unknown[] = [
+        {}, // Mock mesh for cube
+        {}, // Mock mesh for sphere
+        {}, // Mock mesh for cylinder
       ];
 
       appStoreInstance.setState({

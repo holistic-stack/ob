@@ -24,7 +24,8 @@
     "noEmitOnError": true,
 
     // Library-specific types
-    "types": ["node", "vite/client", "@types/three"]
+    "types": ["node", "vite/client"]
+    // TODO: Add BabylonJS types for library build
   },
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "exclude": [

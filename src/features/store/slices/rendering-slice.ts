@@ -5,7 +5,7 @@
  * and render error handling with performance monitoring.
  */
 
-import * as THREE from 'three';
+// TODO: Replace with BabylonJS imports
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types.js';
@@ -23,7 +23,7 @@ export const createRenderingSlice = (
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1]
 ): RenderingActions => {
   return {
-    updateMeshes: (meshes: ReadonlyArray<THREE.Mesh>) => {
+    updateMeshes: (meshes: ReadonlyArray<unknown>) => { // TODO: Replace with BabylonJS mesh type
       set((state) => {
         if (state.rendering) {
           // Dispose of old meshes to prevent memory leaks

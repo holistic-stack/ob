@@ -8,8 +8,8 @@
       "node",
       "vite/client",
       "vitest/globals",
-      "vitest",
-      "@types/three" // Three.js types for 3D rendering
+      "vitest"
+      // TODO: Add BabylonJS types when implementing BabylonJS renderer
     ],
 
     // Application-specific module resolution

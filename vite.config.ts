@@ -30,9 +30,9 @@ export default defineConfig(({ mode: _mode }) => {
         'monaco-editor',
         '@monaco-editor/react',
         'tslog',
-        'gl-matrix',
+        // TODO: Add BabylonJS dependencies
       ],
-      exclude: ['manifold-3d'],
+      // TODO: Add BabylonJS exclusions if needed
     },
     build: {
       outDir: 'dist',
@@ -46,16 +46,16 @@ export default defineConfig(({ mode: _mode }) => {
           manualChunks: {
             // Monaco Editor - large code editor dependency
             monaco: ['monaco-editor', '@monaco-editor/react'],
-            // Three.js ecosystem - 3D rendering (excluding @types packages)
-            three: ['three', '@react-three/fiber', '@react-three/drei'],
+            // TODO: Add BabylonJS chunk when implementing BabylonJS renderer
+            // babylon: ['@babylonjs/core', '@babylonjs/materials', 'react-babylonjs'],
             // Parsing libraries
             parsing: ['web-tree-sitter'],
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ['zustand', 'class-variance-authority', 'tslog', 'gl-matrix'],
-            // Manifold 3D WASM module
-            'manifold-wasm': ['manifold-3d'],
+            utils: ['zustand', 'class-variance-authority', 'tslog'],
+            // TODO: Add BabylonJS WASM chunk if needed
+            // 'babylon-wasm': ['@babylonjs/core'],
           },
         },
       },
