@@ -2,14 +2,12 @@
  * Main Application Component
  *
  * OpenSCAD 3D Visualization Application with Zustand-centric architecture.
- * Integrates Monaco Editor for code input with Three.js renderer for 3D output.
+ * Integrates Monaco Editor for code input with BabylonJS renderer for 3D output.
  */
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
-// TODO: Replace with BabylonJS renderer
-// import { Store3DRendererBridge } from './features/babylon-renderer/components/store-babylon-bridge/store-babylon-bridge';
-// import type { RenderingError } from './features/babylon-renderer/types/renderer.types.js';
+import { StoreConnectedRenderer } from './features/babylon-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { useAppStore } from './features/store/app-store';
@@ -37,11 +35,8 @@ export function App(): React.JSX.Element {
   const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
   const lastParsed: Date | null = useAppStore(selectParsingLastParsed); // Get the last parsed date
   const applicationStatus: boolean = useAppStore(selectRenderingIsRendering);
-  // TODO: Replace with BabylonJS mesh types
   const renderingStateMeshes: ReadonlyArray<unknown> = useAppStore(selectRenderingMeshes);
-
-  // TODO: Replace with BabylonJS error types
-  const renderErrors: ReadonlyArray<unknown> = useAppStore(selectRenderingErrors);
+  const renderErrors = useAppStore(selectRenderingErrors);
   // Display render errors if any
   useEffect(() => {
     if (renderErrors.length > 0) {
@@ -163,14 +158,18 @@ export function App(): React.JSX.Element {
             <h2 className="text-sm font-medium text-gray-300">3D Visualization</h2>
           </div>
           <div className="panel-content flex-1 relative">
-            {/* TODO: Replace with BabylonJS renderer */}
-            <div className="h-full w-full flex items-center justify-center bg-gray-800 text-gray-400" data-testid="main-renderer">
-              <div className="text-center">
-                <div className="text-2xl mb-2">🚧</div>
-                <div>BabylonJS Renderer</div>
-                <div className="text-sm">Coming Soon</div>
-              </div>
-            </div>
+            <StoreConnectedRenderer
+              className="h-full w-full"
+              enableWebGPU={true}
+              enableInspector={false}
+              onRenderComplete={(meshCount) => {
+                logger.debug(`[DEBUG][App] Render completed with ${meshCount} meshes`);
+              }}
+              onRenderError={(error) => {
+                logger.error(`[ERROR][App] Render error: ${error.message}`);
+              }}
+              data-testid="main-renderer"
+            />
           </div>
         </div>
       </main>

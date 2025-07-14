@@ -47,6 +47,8 @@ export interface BabylonEngineState {
   readonly deltaTime: number;
   readonly renderTime: number;
   readonly lastUpdated: Date;
+  readonly error: EngineError | null;
+  readonly performanceMetrics: EnginePerformanceMetrics;
 }
 
 /**

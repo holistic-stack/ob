@@ -62,26 +62,27 @@ export const selectRenderingState = (state: AppState): RenderingState | undefine
 const EMPTY_MESHES: ReadonlyArray<Mesh> = [];
 const EMPTY_ERRORS: ReadonlyArray<RenderingError> = [];
 
-export const selectRenderingMeshes = (state: AppState) => state.rendering?.meshes ?? EMPTY_MESHES;
+export const selectRenderingMeshes = (state: AppState) => state.babylonRendering?.meshes ?? EMPTY_MESHES;
 
 export const selectRenderingIsRendering = (state: AppState): boolean =>
-  state.rendering?.isRendering ?? false;
+  state.babylonRendering?.isRendering ?? false;
 
 export const selectRenderingErrors = (state: AppState) =>
-  state.rendering?.renderErrors ?? EMPTY_ERRORS;
+  state.babylonRendering?.renderErrors ?? EMPTY_ERRORS;
 
 export const selectRenderingLastRendered = (state: AppState) =>
-  state.rendering?.lastRendered ?? null;
+  state.babylonRendering?.lastRendered ?? null;
 
-export const selectRenderingTime = (state: AppState): number => state.rendering?.renderTime ?? 0;
+export const selectRenderingTime = (state: AppState): number => state.babylonRendering?.renderTime ?? 0;
 
-export const selectRenderingCamera = (state: AppState) => state.rendering?.camera ?? null;
+// Camera configuration is handled by BabylonScene component, not in store state
+export const selectRenderingCamera = (state: AppState) => null;
 
 export const selectRenderingHasErrors = (state: AppState): boolean =>
-  (state.rendering?.renderErrors?.length ?? 0) > 0;
+  (state.babylonRendering?.renderErrors?.length ?? 0) > 0;
 
 export const selectRenderingMeshCount = (state: AppState): number =>
-  state.rendering?.meshes?.length ?? 0;
+  state.babylonRendering?.meshes?.length ?? 0;
 
 /**
  * Configuration selectors
@@ -112,7 +113,7 @@ export const selectCanParse = (state: AppState): boolean =>
   state.config.enableRealTimeParsing;
 
 export const selectCanRender = (state: AppState): boolean =>
-  !(state.rendering?.isRendering ?? false) &&
+  !(state.babylonRendering?.isRendering ?? false) &&
   state.parsing.ast.length > 0 &&
   state.parsing.errors.length === 0 &&
   state.config.enableRealTimeRendering;
@@ -120,17 +121,17 @@ export const selectCanRender = (state: AppState): boolean =>
 export const selectHasUnsavedChanges = (state: AppState): boolean => state.editor.isDirty;
 
 export const selectIsProcessing = (state: AppState): boolean =>
-  state.parsing.isLoading || (state.rendering?.isRendering ?? false);
+  state.parsing.isLoading || (state.babylonRendering?.isRendering ?? false);
 
 export const selectHasAnyErrors = (state: AppState): boolean =>
-  state.parsing.errors.length > 0 || (state.rendering?.renderErrors?.length ?? 0) > 0;
+  state.parsing.errors.length > 0 || (state.babylonRendering?.renderErrors?.length ?? 0) > 0;
 
 export const selectTotalErrors = (state: AppState): number =>
-  state.parsing.errors.length + (state.rendering?.renderErrors?.length ?? 0);
+  state.parsing.errors.length + (state.babylonRendering?.renderErrors?.length ?? 0);
 
 export const selectAllErrors = (state: AppState): ReadonlyArray<string> => [
   ...state.parsing.errors,
-  ...(state.rendering?.renderErrors?.map((error) => error.message) ?? []),
+  ...(state.babylonRendering?.renderErrors?.map((error) => error.message) ?? []),
 ];
 
 export const selectLastActivity = createSelector(
@@ -149,11 +150,11 @@ export const selectLastActivity = createSelector(
 );
 
 export const selectApplicationStatus = (state: AppState): 'idle' | 'working' | 'error' => {
-  if (state.parsing.errors.length > 0 || (state.rendering?.renderErrors?.length ?? 0) > 0) {
+  if (state.parsing.errors.length > 0 || (state.babylonRendering?.renderErrors?.length ?? 0) > 0) {
     return 'error';
   }
 
-  if (state.parsing.isLoading || (state.rendering?.isRendering ?? false)) {
+  if (state.parsing.isLoading || (state.babylonRendering?.isRendering ?? false)) {
     return 'working';
   }
 

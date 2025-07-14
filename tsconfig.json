@@ -9,7 +9,6 @@
       "vite/client",
       "vitest/globals",
       "vitest"
-      // TODO: Add BabylonJS types when implementing BabylonJS renderer
     ],
 
     // Application-specific module resolution

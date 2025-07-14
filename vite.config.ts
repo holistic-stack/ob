@@ -46,15 +46,14 @@ export default defineConfig(({ mode: _mode }) => {
           manualChunks: {
             // Monaco Editor - large code editor dependency
             monaco: ['monaco-editor', '@monaco-editor/react'],
-            // TODO: Add BabylonJS chunk when implementing BabylonJS renderer
-            // babylon: ['@babylonjs/core', '@babylonjs/materials', 'react-babylonjs'],
+            // BabylonJS - 3D rendering engine
+            babylon: ['@babylonjs/core', '@babylonjs/materials', '@babylonjs/loaders', 'react-babylonjs'],
             // Parsing libraries
             parsing: ['web-tree-sitter'],
             // React ecosystem
             'react-vendor': ['react', 'react-dom'],
             // State management and utilities
-            utils: ['zustand', 'class-variance-authority', 'tslog'],
-            // TODO: Add BabylonJS WASM chunk if needed
+            utils: ['zustand', 'class-variance-authority', 'tslog']
             // 'babylon-wasm': ['@babylonjs/core'],
           },
         },

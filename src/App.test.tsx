@@ -33,22 +33,59 @@ describe('App', () => {
         lastParsedCode: null,
         parseTime: 0,
       },
-      rendering: {
+      babylonRendering: {
+        engine: {
+          engine: null,
+          isInitialized: false,
+          isDisposed: false,
+          isWebGPU: false,
+          canvas: null,
+          fps: 0,
+          deltaTime: 0,
+          renderTime: 0,
+          lastUpdated: new Date(),
+          error: null,
+          performanceMetrics: {
+            fps: 0,
+            deltaTime: 0,
+            renderTime: 0,
+            drawCalls: 0,
+            triangleCount: 0,
+            memoryUsage: 0,
+            gpuMemoryUsage: 0
+          },
+        },
+        inspector: {
+          isVisible: false,
+          isEmbedded: false,
+          currentTab: 'scene' as any,
+          scene: null,
+          lastUpdated: new Date()
+        },
+        csg: { isEnabled: true, operationCount: 0, lastOperation: null },
+        particles: [],
+        iblShadows: {
+          isEnabled: false,
+          environmentTexture: null,
+          affectedMeshes: [],
+          shadowIntensity: 1.0,
+          environmentIntensity: 1.0,
+          lastUpdated: new Date()
+        },
+        materials: [],
+        renderGraphs: [],
         meshes: [],
         isRendering: false,
         renderErrors: [],
         lastRendered: null,
         renderTime: 0,
-        camera: {
-          position: [10, 10, 10],
-          target: [0, 0, 0],
-          zoom: 1,
-          fov: 75,
-          near: 0.1,
-          far: 1000,
-          enableControls: true,
-          enableAutoRotate: false,
-          autoRotateSpeed: 1,
+        performanceMetrics: {
+          fps: 0,
+          frameTime: 0,
+          drawCalls: 0,
+          triangleCount: 0,
+          textureCount: 0,
+          memoryUsage: 0
         },
       },
     });
@@ -82,7 +119,7 @@ describe('App', () => {
 
     it('should display application status correctly', () => {
       appStoreInstance.setState({
-        rendering: { ...appStoreInstance.getState().rendering, isRendering: true },
+        babylonRendering: { ...appStoreInstance.getState().babylonRendering, isRendering: true },
       });
 
       render(<App />);
@@ -119,7 +156,7 @@ describe('App', () => {
 
       appStoreInstance.setState({
         parsing: { ...appStoreInstance.getState().parsing, ast },
-        rendering: { ...appStoreInstance.getState().rendering, meshes },
+        babylonRendering: { ...appStoreInstance.getState().babylonRendering, meshes },
       });
 
       render(<App />);

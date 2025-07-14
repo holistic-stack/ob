@@ -8,7 +8,6 @@
 // TODO: Replace with BabylonJS types
 import type {
   AppConfig,
-  CameraConfig,
   DebounceConfig,
   EditorPosition,
   EditorSelection,
@@ -22,6 +21,7 @@ import type {
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { ParseOptions } from '../slices/parsing-slice.types.js';
+import type { BabylonRenderingActions, BabylonRenderingState } from '../slices/babylon-rendering-slice';
 
 /**
  * Parsing state for OpenSCAD AST processing
@@ -51,17 +51,7 @@ export interface RenderingError {
 
 export type RenderError = RenderingError;
 
-/**
- * 3D rendering state
- */
-export interface RenderingState {
-  readonly meshes: ReadonlyArray<unknown>; // TODO: Replace with BabylonJS mesh type
-  readonly isRendering: boolean;
-  readonly renderErrors: ReadonlyArray<RenderingError>;
-  readonly lastRendered: Date | null;
-  readonly camera: CameraConfig;
-  readonly renderTime: number; // rendering time in milliseconds
-}
+// Legacy RenderingState removed - using BabylonRenderingState from babylon-rendering-slice instead
 
 /**
  * Main application state
@@ -69,7 +59,7 @@ export interface RenderingState {
 export interface AppState {
   readonly editor: EditorState;
   readonly parsing: ParsingState;
-  readonly rendering?: RenderingState;
+  readonly babylonRendering: BabylonRenderingState;
   readonly config: AppConfig;
 }
 
@@ -111,18 +101,7 @@ export interface ParsingActions {
 
 export type ParsingSlice = ParsingState & ParsingActions;
 
-export interface RenderingActions {
-  updateMeshes: (meshes: ReadonlyArray<unknown>) => void; // TODO: Replace with BabylonJS mesh type
-  renderFromAST: (ast: ReadonlyArray<ASTNode>) => AsyncResult<ReadonlyArray<unknown>, string>; // TODO: Replace with BabylonJS mesh type
-  renderFromMeshData: (meshData: ReadonlyArray<import('../../ast-to-csg-converter/types/conversion.types').GenericMeshData>) => AsyncResult<ReadonlyArray<unknown>, string>; // TODO: Replace with BabylonJS mesh type
-  clearScene: () => void;
-  updateCamera: (camera: Partial<CameraConfig>) => void;
-  resetCamera: () => void;
-  addRenderError: (error: RenderingError) => void;
-  clearRenderErrors: () => void;
-}
-
-export type RenderingSlice = RenderingState & RenderingActions;
+// Legacy RenderingActions and RenderingSlice removed - using BabylonRenderingActions from babylon-rendering-slice instead
 
 export interface ConfigActions {
   updateConfig: (config: Partial<AppConfig>) => void;
@@ -137,7 +116,7 @@ export type ConfigSlice = { config: AppConfig } & ConfigActions;
 /**
  * Store interface combining state and actions from all slices
  */
-export type AppStore = AppState & EditorActions & ParsingActions & RenderingActions & ConfigActions;
+export type AppStore = AppState & EditorActions & ParsingActions & BabylonRenderingActions & ConfigActions;
 
 /**
  * Store selector types for performance optimization

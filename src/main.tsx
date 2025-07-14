@@ -3,12 +3,12 @@
  *
  * Entry point for the OpenSCAD 3D visualization application with Zustand-centric architecture.
  * Provides a complete interface for the pipeline:
- * OpenSCAD code → Monaco Editor → Zustand Store → @holistic-stack/openscad-parser:parseAST → Three.js CSG → React Three Fiber scene
+ * OpenSCAD code → Monaco Editor → Zustand Store → @holistic-stack/openscad-parser:parseAST → BabylonJS CSG2 → BabylonJS scene
  *
  * Features:
  * - React 19 + TypeScript 5.8 + Vite 6.0
  * - Monaco Editor with OpenSCAD syntax highlighting
- * - Three.js rendering with React Three Fiber
+ * - BabylonJS rendering with react-babylonjs
  * - Zustand state management with 300ms debouncing
  * - Apple Liquid Glass design system
  */

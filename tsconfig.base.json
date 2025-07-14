@@ -21,7 +21,7 @@
 
     // Additional strict checks for bulletproof-react architecture
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": false, // Disabled for THREE.js compatibility
+    "noPropertyAccessFromIndexSignature": false, // Disabled for dynamic property access
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "noImplicitThis": true,

@@ -76,7 +76,7 @@ export const createParsingSlice = (
         const { config } = get();
         if (config.enableRealTimeRendering && ast.length > 0) {
           logger.debug('Triggering real-time rendering after unified parsing.');
-          void get().renderFromAST(ast);
+          void get().renderAST(ast);
         }
         return operationUtils.createSuccess(ast, metadata);
       } else {

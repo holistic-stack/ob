@@ -5,3 +5,18 @@
  */
 
 export { BabylonEngineService } from './babylon-engine-service';
+
+// Re-export types from babylon-engine.types
+export type {
+  BabylonEngineConfig,
+  BabylonEngineState,
+  EngineInitResult,
+  EngineInitOptions,
+  EngineUpdateResult,
+  EngineDisposeResult,
+  EngineError,
+  EnginePerformanceMetrics,
+} from '../../types/babylon-engine.types';
+
+// Re-export enums
+export { EngineErrorCode } from '../../types/babylon-engine.types';

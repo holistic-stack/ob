@@ -11,8 +11,8 @@
  * - Open/Closed: Extensible for new AST node types
  */
 
-// TODO: Replace with BabylonJS math types
-// import { Matrix, BoundingBox } from '@babylonjs/core';
+// BabylonJS math types
+import { Matrix, BoundingBox } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -77,20 +77,21 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
 
         logger.init('[INIT] Initializing AST to Mesh conversion service');
 
-        // Import the Manifold converter from the conversion layer (moved from 3d-renderer)
-        const { ManifoldASTConverter } = await import(
-          '../manifold-ast-converter/manifold-ast-converter'
+        // Import BabylonJS CSG2 service (replaces legacy Manifold converter)
+        const { BabylonCSG2Service } = await import(
+          '../../../babylon-renderer/services/babylon-csg2-service'
         );
 
-        // Initialize material manager (still in 3d-renderer until moved)
-        const { MaterialIDManager } = await import(
-          '../../../3d-renderer/services/manifold-material-manager/manifold-material-manager'
+        // Import BabylonJS material service (replaces legacy MaterialIDManager)
+        const { BabylonMaterialService } = await import(
+          '../../../babylon-renderer/services/babylon-material-service'
         );
-        
-        const materialManager = new MaterialIDManager();
-        await materialManager.initialize();
 
-        this.manifoldConverter = new ManifoldASTConverter(materialManager);
+        // Initialize services (no constructor arguments needed)
+        const materialService = new BabylonMaterialService();
+        // Note: BabylonMaterialService doesn't have an initialize method
+
+        this.manifoldConverter = new BabylonCSG2Service();
         await this.manifoldConverter.initialize();
 
         this.isInitialized = true;
@@ -223,9 +224,11 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
   ): GenericMeshData {
     const meshId = `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Calculate bounding box
-    manifoldResult.geometry.computeBoundingBox();
-    const boundingBox = manifoldResult.geometry.boundingBox || new Box3();
+    // Calculate bounding box (using BabylonJS BoundingBox)
+    const boundingBox = new BoundingBox(
+      manifoldResult.boundingBox?.min || { x: 0, y: 0, z: 0 },
+      manifoldResult.boundingBox?.max || { x: 1, y: 1, z: 1 }
+    );
 
     const metadata: MeshMetadata = {
       meshId,
@@ -242,7 +245,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
       id: meshId,
       geometry: manifoldResult.geometry,
       material: DEFAULT_MATERIAL,
-      transform: new Matrix4(), // Identity matrix by default
+      transform: Matrix.Identity(), // Identity matrix by default
       metadata,
     };
   }
