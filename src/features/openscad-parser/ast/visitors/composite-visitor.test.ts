@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import { OpenscadParser } from '../../index.js';
+import { ErrorHandler } from '../../error-handling/index.js';
+import { OpenscadParser } from '../../openscad-parser.js';
 import type * as ast from '../ast-types.js';
 import { CompositeVisitor } from './composite-visitor.js';
 import { CSGVisitor } from './csg-visitor.js';
@@ -40,14 +41,14 @@ const _mockTranslateNode: ast.TranslateNode = {
 };
 
 // Simple mock ErrorHandler for testing
-class MockErrorHandler {
-  logInfo() {
+class MockErrorHandler extends ErrorHandler {
+  override logInfo() {
     /* no-op */
   }
-  logWarning() {
+  override logWarning() {
     /* no-op */
   }
-  handleError() {
+  override handleError() {
     /* no-op */
   }
 }
@@ -81,8 +82,9 @@ describe('CompositeVisitor', () => {
   function parseAndFindTestableNode(code: string): TSNode {
     const tree = parser.parse(code);
     expect(tree).not.toBeNull();
+    expect(tree?.rootNode).not.toBeNull();
 
-    const testableNode = findTestableNode(tree?.rootNode);
+    const testableNode = findTestableNode(tree!.rootNode);
     expect(testableNode).not.toBeNull();
 
     return testableNode as TSNode;
@@ -99,7 +101,7 @@ describe('CompositeVisitor', () => {
     // Create a composite visitor with primitive, transform, and CSG visitors
     const primitiveVisitor = new PrimitiveVisitor('', errorHandler);
     const transformVisitor = new TransformVisitor('', undefined, errorHandler);
-    const csgVisitor = new CSGVisitor('', errorHandler);
+    const csgVisitor = new CSGVisitor('', undefined, errorHandler);
 
     visitor = new CompositeVisitor([primitiveVisitor, transformVisitor, csgVisitor], errorHandler);
 
@@ -170,10 +172,10 @@ describe('CompositeVisitor', () => {
 
       // Use the root node which should have multiple children
       const rootNode = tree?.rootNode;
-      expect(rootNode.childCount).toBeGreaterThan(0);
+      expect(rootNode?.childCount).toBeGreaterThan(0);
 
       // Visit the children
-      const results = visitor.visitChildren(rootNode);
+      const results = visitor.visitChildren(rootNode!);
 
       // Verify we got some results (the exact number depends on the tree structure)
       expect(results.length).toBeGreaterThan(0);

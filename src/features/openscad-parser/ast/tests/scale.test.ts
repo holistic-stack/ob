@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import * as ast from '../ast-types.js';
 
 describe('Scale AST Generation', () => {
   let parser: OpenscadParser;
@@ -159,8 +160,8 @@ describe('Scale AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const scaleNode = ast[0];
-      expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
+      expect(scaleNode?.type).toBe('scale');
+      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
       expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
@@ -176,8 +177,8 @@ describe('Scale AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const scaleNode = ast[0];
-      expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 2, 2]);
+      expect(scaleNode?.type).toBe('scale');
+      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 2, 2]);
 
       // Check children
       expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
@@ -193,8 +194,8 @@ describe('Scale AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const scaleNode = ast[0];
-      expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
+      expect(scaleNode?.type).toBe('scale');
+      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
       expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
@@ -210,8 +211,8 @@ describe('Scale AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const scaleNode = ast[0];
-      expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 1]); // Z should default to 1
+      expect(scaleNode?.type).toBe('scale');
+      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 1]); // Z should default to 1
 
       // Check children
       expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
@@ -230,8 +231,8 @@ describe('Scale AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const scaleNode = ast[0];
-      expect(scaleNode.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).vector).toEqual([2, 1, 0.5]);
+      expect(scaleNode?.type).toBe('scale');
+      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
       expect((scaleNode as ast.ScaleNode).children).toHaveLength(2);

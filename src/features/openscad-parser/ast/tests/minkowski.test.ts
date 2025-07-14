@@ -23,7 +23,7 @@ describe('Minkowski Operation AST Generation', () => {
     const astNodes = parser.parseAST(code);
 
     expect(astNodes).toHaveLength(1);
-    expect(astNodes[0].type).toBe('minkowski');
+    expect(astNodes[0]?.type).toBe('minkowski');
 
     // The CSG Generator should create a minkowski node, but it might not have children
     // depending on how the parser processes the nodes
@@ -51,7 +51,7 @@ describe('Minkowski Operation AST Generation', () => {
     const astNodes = parser.parseAST(code);
 
     expect(astNodes).toHaveLength(1);
-    expect(astNodes[0].type).toBe('minkowski');
+    expect(astNodes[0]?.type).toBe('minkowski');
 
     // The CSG Generator should create a minkowski node, but it might not have children
     // depending on how the parser processes the nodes
@@ -78,7 +78,7 @@ describe('Minkowski Operation AST Generation', () => {
     const astNodes = parser.parseAST(code);
 
     expect(astNodes).toHaveLength(1);
-    expect(astNodes[0].type).toBe('minkowski');
+    expect(astNodes[0]?.type).toBe('minkowski');
 
     // The CSG Generator should create a minkowski node, but it might not have children
     // depending on how the parser processes the nodes
@@ -104,7 +104,7 @@ describe('Minkowski Operation AST Generation', () => {
     const astNodes = parser.parseAST(code);
 
     expect(astNodes).toHaveLength(1);
-    expect(astNodes[0].type).toBe('minkowski');
+    expect(astNodes[0]?.type).toBe('minkowski');
 
     // The CSG Generator should create a minkowski node, but it might not have children
     // depending on how the parser processes the nodes
@@ -134,7 +134,7 @@ describe('Minkowski Operation AST Generation', () => {
     const astNodes = parser.parseAST(code);
 
     expect(astNodes).toHaveLength(1);
-    expect(astNodes[0].type).toBe('minkowski');
+    expect(astNodes[0]?.type).toBe('minkowski');
 
     // The CSG Generator should create a minkowski node, but it might not have children
     // depending on how the parser processes the nodes

@@ -103,7 +103,7 @@ describe('ExpressionVisitor', () => {
         },
         'createExpressionNode'
       ).mockImplementation((node: unknown) => {
-        if (node.text === 'x') {
+        if ((node as any).text === 'x') {
           return {
             type: 'expression',
             expressionType: 'variable',
@@ -113,7 +113,7 @@ describe('ExpressionVisitor', () => {
               end: { line: 0, column: 1, offset: 1 },
             },
           } as ast.VariableNode;
-        } else if (node.text === '5') {
+        } else if ((node as any).text === '5') {
           return {
             type: 'expression',
             expressionType: 'literal',
@@ -254,7 +254,7 @@ describe('ExpressionVisitor', () => {
         },
         'createExpressionNode'
       ).mockImplementation((node: unknown) => {
-        if (node.text === '5') {
+        if ((node as any).text === '5') {
           return {
             type: 'expression',
             expressionType: 'literal',

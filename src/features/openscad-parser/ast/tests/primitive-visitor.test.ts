@@ -56,6 +56,7 @@ describe('PrimitiveVisitor', () => {
       // Create mock arguments
       const args: ast.Parameter[] = [
         {
+          name: undefined,
           value: {
             type: 'expression',
             expressionType: 'literal',
@@ -88,6 +89,7 @@ describe('PrimitiveVisitor', () => {
       // Create mock arguments
       const args: ast.Parameter[] = [
         {
+          name: undefined,
           value: {
             type: 'expression',
             expressionType: 'literal',
@@ -165,6 +167,7 @@ describe('PrimitiveVisitor', () => {
       // Create mock arguments
       const args: ast.Parameter[] = [
         {
+          name: undefined,
           value: {
             type: 'expression',
             expressionType: 'array',

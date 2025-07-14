@@ -34,7 +34,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('cube');
+      expect(ast[0]?.type).toBe('cube');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -50,7 +50,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('sphere');
+      expect(ast[0]?.type).toBe('sphere');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -66,7 +66,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('cylinder');
+      expect(ast[0]?.type).toBe('cylinder');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -82,7 +82,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('translate');
+      expect(ast[0]?.type).toBe('translate');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -98,7 +98,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('rotate');
+      expect(ast[0]?.type).toBe('rotate');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -114,7 +114,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('scale');
+      expect(ast[0]?.type).toBe('scale');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -130,7 +130,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('union');
+      expect(ast[0]?.type).toBe('union');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -146,7 +146,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('difference');
+      expect(ast[0]?.type).toBe('difference');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -162,7 +162,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('intersection');
+      expect(ast[0]?.type).toBe('intersection');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');
@@ -194,7 +194,7 @@ describe('VisitorASTGenerator', () => {
       const ast = generator.generate();
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('difference');
+      expect(ast[0]?.type).toBe('difference');
 
       // Instead of using the visitor directly, check the properties of the generated AST
       expect(ast[0]).toHaveProperty('type');

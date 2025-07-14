@@ -30,7 +30,7 @@ describe('ExpressionVisitor Debug', () => {
     console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Log the structure of each child
-    for (let i = 0; i < tree?.rootNode.childCount; i++) {
+    for (let i = 0; i < (tree?.rootNode.childCount ?? 0); i++) {
       const child = tree?.rootNode.child(i);
       if (!child) continue;
 
@@ -61,7 +61,7 @@ describe('ExpressionVisitor Debug', () => {
     console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Log the structure of each child
-    for (let i = 0; i < tree?.rootNode.childCount; i++) {
+    for (let i = 0; i < (tree?.rootNode.childCount ?? 0); i++) {
       const child = tree?.rootNode.child(i);
       if (!child) continue;
 

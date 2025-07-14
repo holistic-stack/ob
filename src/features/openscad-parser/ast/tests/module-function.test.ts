@@ -16,7 +16,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'mycube',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 7, offset: 7 },
+                end: { line: 0, column: 13, offset: 13 },
+              },
+            },
             parameters: [],
             body: [
               {
@@ -39,7 +47,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'mycube',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 7, offset: 7 },
+                end: { line: 0, column: 13, offset: 13 },
+              },
+            },
             parameters: [
               {
                 name: 'size',
@@ -75,7 +91,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'mycube',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 7, offset: 7 },
+                end: { line: 0, column: 13, offset: 13 },
+              },
+            },
             parameters: [
               {
                 name: 'size',
@@ -107,7 +131,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'mysphere',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mysphere',
+              location: {
+                start: { line: 0, column: 7, offset: 7 },
+                end: { line: 0, column: 15, offset: 15 },
+              },
+            },
             parameters: [
               {
                 name: 'r',
@@ -118,7 +150,7 @@ describe('Module and Function AST Generation', () => {
               {
                 type: 'sphere',
                 radius: 10,
-                fn: undefined,
+
                 location: {
                   start: { line: 2, column: 10, offset: 37 },
                   end: { line: 2, column: 28, offset: 55 },
@@ -135,7 +167,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'wrapper',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'wrapper',
+              location: {
+                start: { line: 0, column: 7, offset: 7 },
+                end: { line: 0, column: 14, offset: 14 },
+              },
+            },
             parameters: [],
             body: [
               {
@@ -144,7 +184,7 @@ describe('Module and Function AST Generation', () => {
                 children: [
                   {
                     type: 'children',
-                    index: undefined,
+                    index: 0,
                     location: {
                       start: { line: 2, column: 32, offset: 52 },
                       end: { line: 2, column: 42, offset: 62 },
@@ -167,7 +207,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: 'select_child',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'select_child',
+              location: {
+                start: { line: 0, column: 9, offset: 9 },
+                end: { line: 0, column: 21, offset: 21 },
+              },
+            },
             parameters: [],
             body: [
               {
@@ -191,7 +239,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'function_definition',
-            name: 'add',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'add',
+              location: {
+                start: { line: 0, column: 9, offset: 9 },
+                end: { line: 0, column: 12, offset: 12 },
+              },
+            },
             parameters: [
               {
                 name: 'a',
@@ -221,7 +277,15 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'function_definition',
-            name: 'add',
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'add',
+              location: {
+                start: { line: 0, column: 9, offset: 9 },
+                end: { line: 0, column: 12, offset: 12 },
+              },
+            },
             parameters: [
               {
                 name: 'a',
@@ -253,8 +317,16 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_instantiation',
-            name: 'mycube',
-            arguments: [],
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 6, offset: 6 },
+              },
+            },
+            args: [],
             children: [],
             location: {
               start: { line: 2, column: 8, offset: 9 },
@@ -266,8 +338,16 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_instantiation',
-            name: 'mycube',
-            arguments: [
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 6, offset: 6 },
+              },
+            },
+            args: [
               {
                 name: undefined,
                 value: {
@@ -292,8 +372,16 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_instantiation',
-            name: 'mycube',
-            arguments: [
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'mycube',
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 6, offset: 6 },
+              },
+            },
+            args: [
               {
                 name: 'size',
                 value: {
@@ -330,8 +418,16 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_instantiation',
-            name: 'wrapper',
-            arguments: [],
+            name: {
+              type: 'expression',
+              expressionType: 'identifier',
+              name: 'wrapper',
+              location: {
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 7, offset: 7 },
+              },
+            },
+            args: [],
             children: [
               {
                 type: 'cube',
@@ -370,13 +466,13 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('mycube');
       expect(moduleNode.parameters).toHaveLength(0);
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('cube');
+      expect(moduleNode.body[0]?.type).toBe('cube');
     });
 
     it('should parse a module with positional parameters', async () => {
@@ -388,15 +484,15 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('mycube');
       expect(moduleNode.parameters).toHaveLength(1);
-      expect(moduleNode.parameters[0].name).toBe('size');
-      expect(moduleNode.parameters[0].defaultValue).toBeUndefined();
+      expect(moduleNode.parameters[0]?.name).toBe('size');
+      expect(moduleNode.parameters[0]?.defaultValue).toBeUndefined();
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('cube');
+      expect(moduleNode.body[0]?.type).toBe('cube');
     });
 
     it('should parse a module with named parameters and default values', async () => {
@@ -408,17 +504,17 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('mycube');
       expect(moduleNode.parameters).toHaveLength(2);
-      expect(moduleNode.parameters[0].name).toBe('size');
-      expect(moduleNode.parameters[0].defaultValue).toBe(10);
-      expect(moduleNode.parameters[1].name).toBe('center');
-      expect(moduleNode.parameters[1].defaultValue).toBe(false);
+      expect(moduleNode.parameters[0]?.name).toBe('size');
+      expect(moduleNode.parameters[0]?.defaultValue).toBe(10);
+      expect(moduleNode.parameters[1]?.name).toBe('center');
+      expect(moduleNode.parameters[1]?.defaultValue).toBe(false);
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('cube');
+      expect(moduleNode.body[0]?.type).toBe('cube');
     });
 
     it('should parse a module with special variables', async () => {
@@ -430,15 +526,15 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('mysphere');
       expect(moduleNode.parameters).toHaveLength(1);
-      expect(moduleNode.parameters[0].name).toBe('r');
-      expect(moduleNode.parameters[0].defaultValue).toBe(10);
+      expect(moduleNode.parameters[0]?.name).toBe('r');
+      expect(moduleNode.parameters[0]?.defaultValue).toBe(10);
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('sphere');
+      expect(moduleNode.body[0]?.type).toBe('sphere');
     });
 
     it('should parse a module with children', async () => {
@@ -450,15 +546,15 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('wrapper');
       expect(moduleNode.parameters).toHaveLength(0);
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('translate');
+      expect(moduleNode.body[0]?.type).toBe('translate');
       expect((moduleNode.body[0] as ast.TranslateNode).children).toHaveLength(1);
-      expect((moduleNode.body[0] as ast.TranslateNode).children[0].type).toBe('children');
+      expect((moduleNode.body[0] as ast.TranslateNode).children[0]?.type).toBe('children');
     });
 
     it('should parse a module with child indexing', async () => {
@@ -470,13 +566,13 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_definition');
+      expect(astNodes[0]?.type).toBe('module_definition');
 
       const moduleNode = astNodes[0] as ast.ModuleDefinitionNode;
       expect(moduleNode.name).toBe('select_child');
       expect(moduleNode.parameters).toHaveLength(0);
       expect(moduleNode.body).toHaveLength(1);
-      expect(moduleNode.body[0].type).toBe('children');
+      expect(moduleNode.body[0]?.type).toBe('children');
       expect((moduleNode.body[0] as ast.ChildrenNode).index).toBe(0);
     });
   });
@@ -489,13 +585,13 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('function_definition');
+      expect(astNodes[0]?.type).toBe('function_definition');
 
       const functionNode = astNodes[0] as ast.FunctionDefinitionNode;
       expect(functionNode.name).toBe('add');
       expect(functionNode.parameters).toHaveLength(2);
-      expect(functionNode.parameters[0].name).toBe('a');
-      expect(functionNode.parameters[1].name).toBe('b');
+      expect(functionNode.parameters[0]?.name).toBe('a');
+      expect(functionNode.parameters[1]?.name).toBe('b');
       expect(functionNode.expression).toBeDefined();
       expect(functionNode.expression.type).toBe('expression');
     });
@@ -507,15 +603,15 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('function_definition');
+      expect(astNodes[0]?.type).toBe('function_definition');
 
       const functionNode = astNodes[0] as ast.FunctionDefinitionNode;
       expect(functionNode.name).toBe('add');
       expect(functionNode.parameters).toHaveLength(2);
-      expect(functionNode.parameters[0].name).toBe('a');
-      expect(functionNode.parameters[0].defaultValue).toBe(0);
-      expect(functionNode.parameters[1].name).toBe('b');
-      expect(functionNode.parameters[1].defaultValue).toBe(0);
+      expect(functionNode.parameters[0]?.name).toBe('a');
+      expect(functionNode.parameters[0]?.defaultValue).toBe(0);
+      expect(functionNode.parameters[1]?.name).toBe('b');
+      expect(functionNode.parameters[1]?.defaultValue).toBe(0);
       expect(functionNode.expression).toBeDefined();
       expect(functionNode.expression.type).toBe('expression');
     });
@@ -529,11 +625,11 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_instantiation');
+      expect(astNodes[0]?.type).toBe('module_instantiation');
 
       const moduleInstNode = astNodes[0] as ast.ModuleInstantiationNode;
       expect(moduleInstNode.name).toBe('mycube');
-      expect(moduleInstNode.arguments).toHaveLength(0);
+      expect(moduleInstNode.args).toHaveLength(0);
       expect(moduleInstNode.children).toHaveLength(0);
     });
 
@@ -544,12 +640,12 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_instantiation');
+      expect(astNodes[0]?.type).toBe('module_instantiation');
 
       const moduleInstNode = astNodes[0] as ast.ModuleInstantiationNode;
       expect(moduleInstNode.name).toBe('mycube');
-      expect(moduleInstNode.arguments).toHaveLength(1);
-      expect((moduleInstNode.arguments[0].value as ast.ExpressionNode).value).toBe(20);
+      expect(moduleInstNode.args).toHaveLength(1);
+      expect((moduleInstNode.args[0]?.value as ast.ExpressionNode).value).toBe(20);
       expect(moduleInstNode.children).toHaveLength(0);
     });
 
@@ -560,15 +656,15 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_instantiation');
+      expect(astNodes[0]?.type).toBe('module_instantiation');
 
       const moduleInstNode = astNodes[0] as ast.ModuleInstantiationNode;
       expect(moduleInstNode.name).toBe('mycube');
-      expect(moduleInstNode.arguments).toHaveLength(2);
-      expect(moduleInstNode.arguments[0].name).toBe('size');
-      expect((moduleInstNode.arguments[0].value as ast.ExpressionNode).value).toBe(20);
-      expect(moduleInstNode.arguments[1].name).toBe('center');
-      expect((moduleInstNode.arguments[1].value as ast.ExpressionNode).value).toBe('true');
+      expect(moduleInstNode.args).toHaveLength(2);
+      expect(moduleInstNode.args[0]?.name).toBe('size');
+      expect((moduleInstNode.args[0]?.value as ast.ExpressionNode).value).toBe(20);
+      expect(moduleInstNode.args[1]?.name).toBe('center');
+      expect((moduleInstNode.args[1]?.value as ast.ExpressionNode).value).toBe('true');
       expect(moduleInstNode.children).toHaveLength(0);
     });
 
@@ -581,13 +677,13 @@ describe('Module and Function AST Generation', () => {
       const astNodes = parser.parseAST(code);
 
       expect(astNodes).toHaveLength(1);
-      expect(astNodes[0].type).toBe('module_instantiation');
+      expect(astNodes[0]?.type).toBe('module_instantiation');
 
       const moduleInstNode = astNodes[0] as ast.ModuleInstantiationNode;
       expect(moduleInstNode.name).toBe('wrapper');
-      expect(moduleInstNode.arguments).toHaveLength(0);
+      expect(moduleInstNode.args).toHaveLength(0);
       expect(moduleInstNode.children).toHaveLength(1);
-      expect(moduleInstNode.children[0].type).toBe('cube');
+      expect(moduleInstNode.children[0]?.type).toBe('cube');
     });
   });
 });

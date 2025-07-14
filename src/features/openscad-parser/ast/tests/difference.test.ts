@@ -129,16 +129,16 @@ describe('Difference AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const differenceNode = ast[0];
-      expect(differenceNode.type).toBe('difference');
+      expect(differenceNode?.type).toBe('difference');
 
       // Check children
       expect((differenceNode as ast.DifferenceNode).children).toHaveLength(2);
-      expect((differenceNode as ast.DifferenceNode).children[0].type).toBe('cube');
-      expect((differenceNode as ast.DifferenceNode).children[0].size).toBe(20);
-      expect((differenceNode as ast.DifferenceNode).children[0].center).toBe(true);
+      expect((differenceNode as ast.DifferenceNode).children[0]?.type).toBe('cube');
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode)?.size).toBe(20);
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode)?.center).toBe(true);
 
-      expect((differenceNode as ast.DifferenceNode).children[1].type).toBe('sphere');
-      expect((differenceNode as ast.DifferenceNode).children[1].radius).toBe(10);
+      expect((differenceNode as ast.DifferenceNode).children[1]?.type).toBe('sphere');
+      expect(((differenceNode as ast.DifferenceNode).children[1] as ast.SphereNode)?.radius).toBe(10);
     });
 
     it('should parse difference with nested transformations', () => {
@@ -152,7 +152,7 @@ describe('Difference AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const differenceNode = ast[0];
-      expect(differenceNode.type).toBe('difference');
+      expect(differenceNode?.type).toBe('difference');
 
       // Check children
       expect((differenceNode as ast.DifferenceNode).children).toHaveLength(2);
@@ -216,7 +216,7 @@ describe('Difference AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const differenceNode = ast[0];
-      expect(differenceNode.type).toBe('difference');
+      expect(differenceNode?.type).toBe('difference');
 
       // Check children
       expect((differenceNode as ast.DifferenceNode).children).toHaveLength(0);

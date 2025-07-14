@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import * as ast from '../ast-types.js';
 
 describe('Union AST Generation', () => {
   let parser: OpenscadParser;
@@ -24,11 +25,11 @@ describe('Union AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const unionNode = ast[0];
-      expect(unionNode.type).toBe('union');
+      expect(unionNode?.type).toBe('union');
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect(unionNode.children).toBeDefined();
+      expect((unionNode as ast.UnionNode)?.children).toBeDefined();
       // Skip child node checks since children array might be empty
     });
 
@@ -56,11 +57,11 @@ describe('Union AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const unionNode = ast[0];
-      expect(unionNode.type).toBe('union');
+      expect(unionNode?.type).toBe('union');
 
       // With the real parser, the children array might be empty initially
       // We'll just check that the children property exists
-      expect(unionNode.children).toBeDefined();
+      expect((unionNode as ast.UnionNode)?.children).toBeDefined();
       // Skip child node checks since children array might be empty
     });
 
@@ -72,10 +73,10 @@ describe('Union AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const unionNode = ast[0];
-      expect(unionNode.type).toBe('union');
+      expect(unionNode?.type).toBe('union');
 
       // Check children
-      expect(unionNode.children).toHaveLength(0);
+      expect((unionNode as ast.UnionNode)?.children).toHaveLength(0);
     });
   });
 });

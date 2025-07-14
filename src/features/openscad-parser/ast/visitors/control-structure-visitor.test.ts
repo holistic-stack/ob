@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { EnhancedOpenscadParser, ErrorHandler } from '../../index.js';
+import type * as ast from '../ast-types.js';
 import * as extractorModule from '../extractors/index.js';
 import { getLocation } from '../utils/location-utils.js';
 import { ControlStructureVisitor } from './control-structure-visitor.js';
@@ -321,8 +322,8 @@ describe('ControlStructureVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
       expect((result as ast.ForLoopNode).variables).toHaveLength(1);
-      expect((result as ast.ForLoopNode).variables[0].variable).toBe('i');
-      expect((result as ast.ForLoopNode).variables[0].range).toBeDefined();
+      expect((result as ast.ForLoopNode).variables[0]?.variable).toBe('i');
+      expect((result as ast.ForLoopNode).variables[0]?.range).toBeDefined();
       expect((result as ast.ForLoopNode).body).toEqual([]);
     });
   });

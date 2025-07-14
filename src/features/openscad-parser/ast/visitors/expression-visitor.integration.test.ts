@@ -710,11 +710,11 @@ describe('ExpressionVisitor Integration', () => {
 
       const arrayExpr = result as ast.ArrayExpressionNode;
       expect(arrayExpr.items).toHaveLength(3);
-      expect(arrayExpr.items[0].expressionType).toBe('literal');
-      expect((arrayExpr.items[0] as ast.LiteralNode).value).toBe(1);
-      expect(arrayExpr.items[1].expressionType).toBe('literal');
-      expect((arrayExpr.items[1] as ast.LiteralNode).value).toBe(2);
-      expect(arrayExpr.items[2].expressionType).toBe('literal');
+      expect(arrayExpr.items[0]?.expressionType).toBe('literal');
+      expect((arrayExpr.items[0] as ast.LiteralNode)?.value).toBe(1);
+      expect(arrayExpr.items[1]?.expressionType).toBe('literal');
+      expect((arrayExpr.items[1] as ast.LiteralNode)?.value).toBe(2);
+      expect(arrayExpr.items[2]?.expressionType).toBe('literal');
       expect((arrayExpr.items[2] as ast.LiteralNode).value).toBe(3);
 
       // Restore the original method

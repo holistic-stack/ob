@@ -45,13 +45,13 @@ describe('EchoStatementVisitor', () => {
       expect(ast).toHaveLength(1);
       expect(ast).toBeDefined();
       expect(ast[0]).toBeDefined();
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
       expect(echoNode.arguments).toBeDefined();
       expect(echoNode.arguments[0]).toBeDefined();
-      expect(echoNode.arguments[0].expressionType).toBe('literal');
+      expect(echoNode.arguments[0]?.expressionType).toBe('literal');
       expect((echoNode.arguments[0] as LiteralNode).value).toBe('Hello World');
     });
 
@@ -62,7 +62,7 @@ describe('EchoStatementVisitor', () => {
       expect(ast).toHaveLength(1);
       expect(ast).toBeDefined();
       expect(ast[0]).toBeDefined();
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
@@ -79,7 +79,7 @@ describe('EchoStatementVisitor', () => {
       expect(ast).toHaveLength(1);
       expect(ast).toBeDefined();
       expect(ast[0]).toBeDefined();
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
@@ -94,7 +94,7 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
@@ -109,7 +109,7 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(2);
@@ -141,8 +141,8 @@ describe('EchoStatementVisitor', () => {
       expect((echoNode.arguments[2] as LiteralNode).value).toBe(42);
 
       // Fourth argument: boolean
-      expect(echoNode.arguments[3].expressionType).toBe('literal');
-      expect((echoNode.arguments[3] as LiteralNode).value).toBe(true);
+      expect(echoNode.arguments[3]?.expressionType).toBe('literal');
+      expect((echoNode.arguments[3] as LiteralNode)?.value).toBe(true);
     });
 
     it('should parse echo statement with many arguments', async () => {
@@ -150,7 +150,7 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(5);
@@ -169,11 +169,11 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
-      expect(['binary', 'binary_expression']).toContain(echoNode.arguments[0].expressionType);
+      expect(['binary', 'binary_expression']).toContain(echoNode.arguments[0]?.expressionType);
 
       const binaryExpr = echoNode.arguments[0] as BinaryExpressionNode;
       expect(binaryExpr.operator).toBe('+');
@@ -188,14 +188,14 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
-      expect(['function_call', 'call_expression']).toContain(echoNode.arguments[0].expressionType);
+      expect(['function_call', 'call_expression']).toContain(echoNode.arguments[0]?.expressionType);
 
       const funcCall = echoNode.arguments[0] as FunctionCallNode;
-      expect(funcCall.name || funcCall.function?.name).toBe('sin');
+      expect(funcCall.functionName).toBe('sin');
     });
 
     it('should parse echo statement with array expression', async () => {
@@ -203,16 +203,16 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
       expect(['array', 'vector', 'vector_expression']).toContain(
-        echoNode.arguments[0].expressionType
+        echoNode.arguments[0]?.expressionType
       );
 
       const arrayExpr = echoNode.arguments[0] as ArrayExpressionNode;
-      const items = arrayExpr.items || arrayExpr.elements;
+      const items = arrayExpr.items;
       expect(items).toHaveLength(3);
     });
   });
@@ -223,7 +223,7 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(0);
@@ -234,7 +234,7 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
@@ -251,9 +251,9 @@ describe('EchoStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(3);
-      expect(ast[0].type).toBe('echo');
-      expect(ast[1].type).toBe('echo');
-      expect(ast[2].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
+      expect(ast[1]?.type).toBe('echo');
+      expect(ast[2]?.type).toBe('echo');
 
       const firstEcho = ast[0] as EchoStatementNode;
       const secondEcho = ast[1] as EchoStatementNode;
@@ -280,7 +280,7 @@ describe('EchoStatementVisitor', () => {
 
       // Should parse successfully, handling extra commas gracefully
       expect(ast).toHaveLength(1);
-      expect(ast[0].type).toBe('echo');
+      expect(ast[0]?.type).toBe('echo');
 
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments.length).toBeGreaterThanOrEqual(1);

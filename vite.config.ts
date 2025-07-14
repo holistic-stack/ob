@@ -3,26 +3,17 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-// https://vitejs.dev/config/
-export default defineConfig(({ mode: _mode }) => {
-  return {
-    plugins: [
-      react(),
-      // Monaco Editor plugin temporarily disabled for initial integration
-      // monacoEditorPlugin(createViteMonacoPlugin(monacoConfig))
-    ],
-    define: {
-      // Polyfill process.env for browser environment
-      'process.env': {},
-      // Polyfill global process object for WASM modules
-      global: 'globalThis',
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-      },
-    },
-    optimizeDeps: {
+
+export default defineConfig({
+  plugins: [
+    react(),
+    // Monaco Editor plugin temporarily disabled for initial integration
+    // monacoEditorPlugin(createViteMonacoPlugin(monacoConfig))
+  ],
+  define: {
+    // Add any global defines here if needed
+  },
+  optimizeDeps: {
       include: [
         'zustand',
         'zustand/middleware',
@@ -92,5 +83,5 @@ export default defineConfig(({ mode: _mode }) => {
       teardownTimeout: 20000,
       isolate: false,
     },
-  };
+  },
 });

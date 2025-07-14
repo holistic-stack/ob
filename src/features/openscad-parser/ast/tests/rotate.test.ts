@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import * as ast from '../ast-types.js';
 
 describe('Rotate AST Generation', () => {
   let parser: OpenscadParser;
@@ -133,7 +134,7 @@ describe('Rotate AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const rotateNode = ast[0];
-      expect(rotateNode.type).toBe('rotate');
+      expect(rotateNode?.type).toBe('rotate');
       expect((rotateNode as ast.RotateNode).a).toBe(45);
       expect((rotateNode as ast.RotateNode).v).toEqual([0, 0, 1]); // Default z-axis
 
@@ -151,7 +152,7 @@ describe('Rotate AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const rotateNode = ast[0];
-      expect(rotateNode.type).toBe('rotate');
+      expect(rotateNode?.type).toBe('rotate');
       expect((rotateNode as ast.RotateNode).a).toEqual([45, 0, 90]);
 
       // Check children
@@ -168,7 +169,7 @@ describe('Rotate AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const rotateNode = ast[0];
-      expect(rotateNode.type).toBe('rotate');
+      expect(rotateNode?.type).toBe('rotate');
       expect((rotateNode as ast.RotateNode).a).toBe(45);
       expect((rotateNode as ast.RotateNode).v).toEqual([0, 0, 1]);
 
@@ -189,7 +190,7 @@ describe('Rotate AST Generation', () => {
       expect(ast).toHaveLength(1);
 
       const rotateNode = ast[0];
-      expect(rotateNode.type).toBe('rotate');
+      expect(rotateNode?.type).toBe('rotate');
       expect((rotateNode as ast.RotateNode).a).toEqual([45, 0, 90]);
 
       // Check children
@@ -197,7 +198,7 @@ describe('Rotate AST Generation', () => {
       expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).type).toBe('cube');
       expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).size).toBe(10);
       expect(((rotateNode as ast.RotateNode).children[1] as ast.SphereNode).type).toBe('sphere');
-      expect(((rotateNode as ast.RotateNode).children[1] as ast.SphereNode).r).toBe(5);
+      expect(((rotateNode as ast.RotateNode).children[1] as ast.SphereNode).radius).toBe(5);
     });
   });
 });

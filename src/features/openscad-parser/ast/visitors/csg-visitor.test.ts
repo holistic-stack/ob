@@ -37,16 +37,16 @@ describe('CSGVisitor', () => {
           size: 10,
           center: false,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
         {
           type: 'sphere',
           radius: 5,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
       ],
@@ -56,16 +56,16 @@ describe('CSGVisitor', () => {
           size: 20,
           center: true,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
         {
           type: 'sphere',
           radius: 10,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
       ],
@@ -75,16 +75,16 @@ describe('CSGVisitor', () => {
           size: 20,
           center: true,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
         {
           type: 'sphere',
           radius: 15,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
       ],
@@ -97,8 +97,8 @@ describe('CSGVisitor', () => {
               type: 'sphere',
               radius: 5,
               location: {
-                start: { row: 0, column: 0 },
-                end: { row: 0, column: 0 },
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
               },
             },
           ],
@@ -115,8 +115,8 @@ describe('CSGVisitor', () => {
               type: 'sphere',
               radius: 5,
               location: {
-                start: { row: 0, column: 0 },
-                end: { row: 0, column: 0 },
+                start: { line: 0, column: 0, offset: 0 },
+                end: { line: 0, column: 0, offset: 0 },
               },
             },
           ],
@@ -138,8 +138,8 @@ describe('CSGVisitor', () => {
         },
         {
           type: 'cylinder',
-          radius: 2,
-          height: 1,
+          r: 2,
+          h: 1,
           center: false,
           location: {
             start: { line: 0, column: 0, offset: 0 },
@@ -216,8 +216,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'difference() { cube(20, center=true); sphere(10); }',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 50 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 50 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -227,7 +227,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -244,8 +244,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'intersection() { cube(20, center=true); sphere(15); }',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 50 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 50 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -255,7 +255,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -272,8 +272,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'hull() { translate([0, 0, 0]) sphere(5); translate([20, 0, 0]) sphere(5); }',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 70 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 70 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -283,7 +283,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -300,8 +300,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'minkowski() { cube([10, 10, 1]); cylinder(r=2, h=1); }',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 60 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 60 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -311,7 +311,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Visit the node
       const result = visitor.visitModuleInstantiation(mockNode);
@@ -348,8 +348,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'difference() {}',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 15 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 15 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -359,7 +359,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -379,8 +379,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'intersection() {}',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 17 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 17 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -390,7 +390,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -410,8 +410,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'hull() {}',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 10 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 10 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -421,7 +421,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -440,8 +440,8 @@ describe('CSGVisitor', () => {
       const mockNode = {
         type: 'module_instantiation',
         text: 'minkowski() {}',
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 15 },
+        startPosition: { line: 0, column: 0 },
+        endPosition: { line: 0, column: 15 },
         childForFieldName: (name: string) => {
           if (name === 'name') {
             return {
@@ -451,7 +451,7 @@ describe('CSGVisitor', () => {
           }
           return null;
         },
-      } as TSNode;
+      } as unknown as TSNode;
 
       // Override the mock children for this test
       visitor.mockChildren = {};
@@ -499,7 +499,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as TSNode;
+    } as unknown as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('intersection()')) {
@@ -515,7 +515,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as TSNode;
+    } as unknown as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('hull()')) {
@@ -531,7 +531,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as TSNode;
+    } as unknown as TSNode;
   }
 
   if (type === 'module_instantiation' && node.text.includes('minkowski()')) {
@@ -547,7 +547,7 @@ function _findNodeOfType(node: TSNode, type: string): TSNode | null {
         }
         return null;
       },
-    } as TSNode;
+    } as unknown as TSNode;
   }
 
   if (node.type === type) {

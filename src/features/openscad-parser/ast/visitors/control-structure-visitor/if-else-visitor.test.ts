@@ -5,6 +5,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler } from '../../../error-handling/index.js';
 import { OpenscadParser } from '../../../openscad-parser';
 import type * as ast from '../../ast-types.js';
@@ -35,7 +36,7 @@ describe('IfElseVisitor', () => {
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
-      const ifNode = rootNode.namedChildren[0];
+      const ifNode = rootNode?.namedChildren[0];
       expect(ifNode?.type).toBe('statement');
 
       // Log the node structure
@@ -51,11 +52,13 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      expect(result?.condition).toBeDefined();
-      expect(result?.condition.expressionType).toBe('literal');
-      expect(result?.thenBranch).toBeDefined();
-      expect(result?.thenBranch.length).toBeGreaterThan(0);
-      expect(result?.elseBranch).toBeUndefined();
+      
+      const ifResult = result as ast.IfNode;
+      expect(ifResult.condition).toBeDefined();
+      expect(ifResult.condition.expressionType).toBe('literal');
+      expect(ifResult.thenBranch).toBeDefined();
+      expect(ifResult.thenBranch.length).toBeGreaterThan(0);
+      expect(ifResult.elseBranch).toBeUndefined();
     });
 
     it('should parse an if-else statement', () => {
@@ -64,7 +67,7 @@ describe('IfElseVisitor', () => {
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
-      const ifNode = rootNode.namedChildren[0];
+      const ifNode = rootNode?.namedChildren[0];
       expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
@@ -77,11 +80,13 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      expect(result?.condition).toBeDefined();
-      expect(result?.thenBranch).toBeDefined();
-      expect(result?.thenBranch.length).toBeGreaterThan(0);
-      expect(result?.elseBranch).toBeDefined();
-      expect(result?.elseBranch?.length).toBeGreaterThan(0);
+      
+      const ifResult = result as ast.IfNode;
+      expect(ifResult.condition).toBeDefined();
+      expect(ifResult.thenBranch).toBeDefined();
+      expect(ifResult.thenBranch.length).toBeGreaterThan(0);
+      expect(ifResult.elseBranch).toBeDefined();
+      expect(ifResult.elseBranch?.length).toBeGreaterThan(0);
     });
 
     it('should parse an if-else-if-else statement', () => {
@@ -90,7 +95,7 @@ describe('IfElseVisitor', () => {
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
-      const ifNode = rootNode.namedChildren[0];
+      const ifNode = rootNode?.namedChildren[0];
       expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
@@ -103,14 +108,16 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      expect(result?.condition).toBeDefined();
-      expect(result?.thenBranch).toBeDefined();
-      expect(result?.thenBranch.length).toBeGreaterThan(0);
-      expect(result?.elseBranch).toBeDefined();
-      expect(result?.elseBranch?.length).toBe(1);
+      
+      const ifResult = result as ast.IfNode;
+      expect(ifResult.condition).toBeDefined();
+      expect(ifResult.thenBranch).toBeDefined();
+      expect(ifResult.thenBranch.length).toBeGreaterThan(0);
+      expect(ifResult.elseBranch).toBeDefined();
+      expect(ifResult.elseBranch?.length).toBe(1);
 
       // Check the else-if branch
-      const elseIfNode = result?.elseBranch?.[0] as ast.IfNode;
+      const elseIfNode = ifResult.elseBranch?.[0] as ast.IfNode;
       expect(elseIfNode.type).toBe('if');
       expect(elseIfNode.condition).toBeDefined();
       expect(elseIfNode.thenBranch).toBeDefined();
@@ -125,7 +132,7 @@ describe('IfElseVisitor', () => {
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
-      const ifNode = rootNode.namedChildren[0];
+      const ifNode = rootNode?.namedChildren[0];
       expect(ifNode?.type).toBe('statement');
 
       // Get the actual if_statement node
@@ -138,11 +145,13 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      expect(result?.condition).toBeDefined();
+      
+      const ifResult = result as ast.IfNode;
+      expect(ifResult.condition).toBeDefined();
       // For complex conditions, the expression type can be 'binary', 'literal', or 'variable'
-      expect(['binary', 'literal', 'variable']).toContain(result?.condition.expressionType);
-      expect(result?.thenBranch).toBeDefined();
-      expect(result?.thenBranch.length).toBeGreaterThan(0);
+      expect(['binary', 'literal', 'variable']).toContain(ifResult.condition.expressionType);
+      expect(ifResult.thenBranch).toBeDefined();
+      expect(ifResult.thenBranch.length).toBeGreaterThan(0);
     });
   });
 });

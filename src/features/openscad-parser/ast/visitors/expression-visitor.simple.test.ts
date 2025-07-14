@@ -33,7 +33,7 @@ describe('ExpressionVisitor Simple Tests', () => {
     console.log('Root node child count:', tree?.rootNode.childCount);
 
     // Find the function call node (cube) - it's a module_instantiation in OpenSCAD
-    const functionCallNode = findNodeOfType(tree?.rootNode, 'module_instantiation');
+    const functionCallNode = tree?.rootNode ? findNodeOfType(tree.rootNode, 'module_instantiation') : null;
     expect(functionCallNode).not.toBeNull();
 
     if (functionCallNode) {
