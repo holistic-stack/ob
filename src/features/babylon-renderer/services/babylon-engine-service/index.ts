@@ -18,5 +18,5 @@ export type {
   EnginePerformanceMetrics,
 } from '../../types/babylon-engine.types';
 
-// Re-export enums
-export { EngineErrorCode } from '../../types/babylon-engine.types';
+// Re-export enums and constants
+export { EngineErrorCode, DEFAULT_ENGINE_CONFIG } from '../../types/babylon-engine.types';

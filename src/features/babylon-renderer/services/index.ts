@@ -9,13 +9,13 @@ export { BabylonEngineService } from './babylon-engine-service';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,
-  BabylonEngineError,
+  EngineError,
   EngineInitResult,
   EngineDisposeResult,
   EngineUpdateResult,
 } from './babylon-engine-service';
 export {
-  BabylonEngineErrorCode,
+  EngineErrorCode,
   DEFAULT_ENGINE_CONFIG
 } from './babylon-engine-service';
 
@@ -27,7 +27,7 @@ export type {
   InspectorError,
   InspectorShowResult,
   InspectorHideResult,
-  InspectorSwitchTabResult,
+  InspectorTabSwitchResult,
 } from './babylon-inspector-service';
 export {
   InspectorErrorCode,
@@ -56,8 +56,8 @@ export type {
   ParticleSystemState,
   ParticleSystemError,
   ParticleSystemCreateResult,
-  ParticleSystemUpdateResult,
-  ParticleSystemRemoveResult,
+  ParticleSystemStartResult,
+  ParticleSystemStopResult,
 } from './babylon-particle-service';
 export {
   ParticleSystemErrorCode,

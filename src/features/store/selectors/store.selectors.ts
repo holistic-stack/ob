@@ -13,7 +13,9 @@
 import { createSelector } from 'reselect';
 // TODO: Replace with BabylonJS mesh types
 import type { AppConfig, EditorState } from '../../../shared/types/common.types';
-import type { AppState, ParsingState, RenderingError, RenderingState } from '../types/store.types';
+import type { AppState, ParsingState, RenderingError } from '../types/store.types';
+import type { BabylonRenderingState } from '../slices/babylon-rendering-slice';
+import type { Mesh } from '@babylonjs/core';
 
 /**
  * Editor selectors
@@ -53,10 +55,10 @@ export const selectParsingHasWarnings = (state: AppState): boolean =>
   state.parsing.warnings.length > 0;
 
 /**
- * Rendering selectors
+ * Babylon Rendering selectors
  */
-export const selectRenderingState = (state: AppState): RenderingState | undefined =>
-  state.rendering;
+export const selectBabylonRenderingState = (state: AppState): BabylonRenderingState =>
+  state.babylonRendering;
 
 // Default empty arrays - defined outside to prevent re-creation
 const EMPTY_MESHES: ReadonlyArray<Mesh> = [];
@@ -138,7 +140,7 @@ export const selectLastActivity = createSelector(
   [
     (state: AppState) => state.editor.lastSaved,
     (state: AppState) => state.parsing.lastParsed,
-    (state: AppState) => state.rendering?.lastRendered,
+    (state: AppState) => state.babylonRendering?.lastRendered,
   ],
   (editorLastSaved, parsingLastParsed, renderingLastRendered) => {
     const dates = [editorLastSaved, parsingLastParsed, renderingLastRendered].filter(
@@ -184,15 +186,15 @@ export const selectParsingStats = createSelector(
   })
 );
 
-export const selectRenderingStats = createSelector(
-  [(state: AppState) => state.rendering],
-  (rendering) => ({
-    meshCount: rendering?.meshes?.length ?? 0,
-    errorCount: rendering?.renderErrors?.length ?? 0,
-    renderTime: rendering?.renderTime ?? 0,
-    lastRendered: rendering?.lastRendered ?? null,
-    isRendering: rendering?.isRendering ?? false,
-    camera: rendering?.camera ?? null,
+export const selectBabylonRenderingStats = createSelector(
+  [(state: AppState) => state.babylonRendering],
+  (babylonRendering) => ({
+    meshCount: babylonRendering?.meshes?.length ?? 0,
+    errorCount: babylonRendering?.renderErrors?.length ?? 0,
+    renderTime: babylonRendering?.renderTime ?? 0,
+    lastRendered: babylonRendering?.lastRendered ?? null,
+    isRendering: babylonRendering?.isRendering ?? false,
+    camera: babylonRendering?.camera ?? null,
   })
 );
 
@@ -246,9 +248,9 @@ export const selectCodeEditorProps = createSelector(
 // Optimized selector for 3D viewer performance
 export const selectViewerProps = createSelector(
   [
-    (state: AppState) => state.rendering?.meshes,
-    (state: AppState) => state.rendering?.isRendering,
-    (state: AppState) => state.rendering?.camera,
+    (state: AppState) => state.babylonRendering?.meshes,
+    (state: AppState) => state.babylonRendering?.isRendering,
+    (state: AppState) => state.babylonRendering?.camera,
   ],
   (meshes, isRendering, camera) => ({
     meshes: meshes ?? [],
@@ -267,12 +269,12 @@ export const selectParsingStatus = createSelector(
   })
 );
 
-// Optimized selector for rendering status
-export const selectRenderingStatus = createSelector(
+// Optimized selector for babylon rendering status
+export const selectBabylonRenderingStatus = createSelector(
   [
-    (state: AppState) => state.rendering?.isRendering ?? false,
+    (state: AppState) => state.babylonRendering?.isRendering ?? false,
     selectRenderingHasErrors,
-    (state: AppState) => state.rendering?.renderTime ?? 0,
+    (state: AppState) => state.babylonRendering?.renderTime ?? 0,
   ],
   (isRendering, hasErrors, renderTime) => ({
     isRendering,
@@ -283,7 +285,7 @@ export const selectRenderingStatus = createSelector(
 
 // Optimized selector for performance metrics
 export const selectPerformanceMetrics = createSelector(
-  [selectParsingTime, (state: AppState) => state.rendering?.renderTime ?? 0],
+  [selectParsingTime, (state: AppState) => state.babylonRendering?.renderTime ?? 0],
   (parseTime, renderTime) => ({
     parseTime,
     renderTime,
@@ -294,7 +296,7 @@ export const selectPerformanceMetrics = createSelector(
 
 // Optimized selector for error summary
 export const selectErrorSummary = createSelector(
-  [selectParsingErrors, (state: AppState) => state.rendering?.renderErrors ?? []],
+  [selectParsingErrors, (state: AppState) => state.babylonRendering?.renderErrors ?? []],
   (parsingErrors, renderingErrors) => ({
     parsingErrorCount: parsingErrors.length,
     renderingErrorCount: renderingErrors.length,

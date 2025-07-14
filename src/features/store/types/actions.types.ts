@@ -66,7 +66,7 @@ export interface AddParsingErrorPayload {
  * Rendering action payload types
  */
 export interface UpdateMeshesPayload {
-  readonly meshes: ReadonlyArray<THREE.Mesh>;
+  readonly meshes: ReadonlyArray<import('@babylonjs/core').Mesh>;
   readonly metadata?: {
     readonly nodeCount: number;
     readonly triangleCount: number;
@@ -109,7 +109,7 @@ export interface UpdateConfigPayload {
 export type SaveCodeResult = AsyncOperationResult<void, OperationError>;
 export type LoadCodeResult = AsyncOperationResult<void, OperationError>;
 export type ParseCodeResult = AsyncOperationResult<ReadonlyArray<CoreNode>, OperationError>;
-export type RenderFromASTResult = AsyncOperationResult<ReadonlyArray<THREE.Mesh>, OperationError>;
+export type RenderFromASTResult = AsyncOperationResult<ReadonlyArray<import('@babylonjs/core').Mesh>, OperationError>;
 
 /**
  * Action creator types for type-safe action dispatch

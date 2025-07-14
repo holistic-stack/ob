@@ -10,6 +10,7 @@ import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../shared/utils/functional/result';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
+import type { CameraConfig } from '../../../shared/types/common.types';
 import {
   BabylonEngineService,
   BabylonInspectorService,
@@ -119,7 +120,7 @@ export interface BabylonRenderingActions {
 /**
  * Initial BabylonJS rendering state
  */
-const createInitialBabylonRenderingState = (): BabylonRenderingState => ({
+export const createInitialBabylonRenderingState = (): BabylonRenderingState => ({
   engine: {
     isInitialized: false,
     isWebGPU: false,

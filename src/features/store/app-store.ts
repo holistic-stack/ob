@@ -16,7 +16,7 @@ import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
 // Legacy Three.js rendering slice removed - using babylon-rendering-slice instead
-import { createBabylonRenderingSlice } from './slices/babylon-rendering-slice';
+import { createBabylonRenderingSlice, createInitialBabylonRenderingState } from './slices/babylon-rendering-slice';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
 const logger = createLogger('Store');
@@ -84,14 +84,7 @@ const createInitialState = (options?: StoreOptions): AppState => ({
     lastParsedCode: null,
     parseTime: 0,
   },
-  rendering: {
-    meshes: [],
-    isRendering: false,
-    renderErrors: [],
-    lastRendered: null,
-    renderTime: 0,
-    camera: options?.initialState?.rendering?.camera ?? DEFAULT_CAMERA,
-  },
+  babylonRendering: createInitialBabylonRenderingState(),
   config: {
     ...DEFAULT_CONFIG,
     ...options?.initialState?.config,
@@ -132,8 +125,8 @@ export const createAppStore = (
             code: state.editor.code,
             lastSaved: state.editor.lastSaved,
           },
-          rendering: {
-            camera: state.rendering?.camera,
+          babylonRendering: {
+            camera: state.babylonRendering?.camera,
           },
         }),
       })
