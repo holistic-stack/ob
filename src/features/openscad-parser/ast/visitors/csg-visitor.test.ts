@@ -1,6 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
+import type {
+  UnionNode,
+  DifferenceNode,
+  IntersectionNode,
+  HullNode,
+  MinkowskiNode
+} from '../ast-types.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { CSGVisitor } from './csg-visitor.js';
 
@@ -114,8 +121,8 @@ describe('CSGVisitor', () => {
             },
           ],
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
       ],
@@ -125,8 +132,8 @@ describe('CSGVisitor', () => {
           size: [10, 10, 1],
           center: false,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
         {
@@ -135,8 +142,8 @@ describe('CSGVisitor', () => {
           height: 1,
           center: false,
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
       ],
@@ -182,7 +189,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('union');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle module_instantiation nodes for union operations', () => {
@@ -201,7 +208,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('union');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as UnionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for difference operations', () => {
@@ -229,7 +236,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('difference');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as DifferenceNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for intersection operations', () => {
@@ -257,7 +264,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('intersection');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as IntersectionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for hull operations', () => {
@@ -285,7 +292,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('hull');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as HullNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle call_expression nodes for minkowski operations', () => {
@@ -313,7 +320,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('minkowski');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as MinkowskiNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create a union node with children', () => {
@@ -364,7 +371,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('difference');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as DifferenceNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create an intersection node', () => {
@@ -395,7 +402,7 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('intersection');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as ast.UnionNode).children.length).toBeGreaterThanOrEqual(0);
+      expect((result as IntersectionNode).children.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should create a hull node', () => {

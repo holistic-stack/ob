@@ -17,6 +17,7 @@ import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
+import { BabylonCSG2Service } from '../../../babylon-renderer/services/babylon-csg2-service';
 import type {
   ASTToMeshConverter,
   ConversionOptions,
@@ -63,7 +64,7 @@ const DEFAULT_MATERIAL: MaterialConfig = {
 export class ASTToMeshConversionService implements ASTToMeshConverter {
   private isInitialized = false;
   private conversionCache = new Map<string, GenericMeshData>();
-  private manifoldConverter: any = null; // Will be dynamically imported
+  private csgService: BabylonCSG2Service | null = null;
 
   /**
    * Initialize the conversion service
@@ -77,22 +78,8 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
 
         logger.init('[INIT] Initializing AST to Mesh conversion service');
 
-        // Import BabylonJS CSG2 service (replaces legacy Manifold converter)
-        const { BabylonCSG2Service } = await import(
-          '../../../babylon-renderer/services/babylon-csg2-service'
-        );
-
-        // Import BabylonJS material service (replaces legacy MaterialIDManager)
-        const { BabylonMaterialService } = await import(
-          '../../../babylon-renderer/services/babylon-material-service'
-        );
-
-        // Initialize services (no constructor arguments needed)
-        const materialService = new BabylonMaterialService();
-        // Note: BabylonMaterialService doesn't have an initialize method
-
-        this.manifoldConverter = new BabylonCSG2Service();
-        await this.manifoldConverter.initialize();
+        this.csgService = new BabylonCSG2Service();
+        await this.csgService.initialize();
 
         this.isInitialized = true;
         logger.debug('[INIT] AST to Mesh conversion service initialized successfully');
@@ -166,7 +153,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
     node: unknown,
     options: ConversionOptions = {}
   ): Promise<Result<GenericMeshData, string>> {
-    if (!this.isInitialized || !this.manifoldConverter) {
+    if (!this.isInitialized || !this.csgService) {
       return { success: false, error: 'ASTToMeshConverter not initialized' };
     }
 
@@ -187,15 +174,15 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
       async () => {
         logger.debug(`[CONVERT] Converting ${astNode.type} node to mesh`);
 
-        // Use the Manifold converter for CSG operations
-        const csgResult = await this.manifoldConverter.convertNode(astNode, {
+        // Use the BabylonCSG2Service for CSG operations
+        const csgResult = await this.csgService.convertNode(astNode, {
           preserveMaterials: mergedOptions.preserveMaterials,
           optimizeResult: mergedOptions.optimizeResult,
           timeout: mergedOptions.timeout,
         });
 
         if (!csgResult.success) {
-          throw new Error(`Manifold conversion failed: ${csgResult.error}`);
+          throw new Error(`CSG conversion failed: ${csgResult.error}`);
         }
 
         // Convert to generic mesh data
@@ -215,35 +202,35 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
   }
 
   /**
-   * Convert Manifold result to generic mesh data
+   * Convert CSG result to generic mesh data
    */
   private convertToGenericMesh(
     astNode: ASTNode,
-    manifoldResult: any,
+    csgResult: any,
     options: Required<ConversionOptions>
   ): GenericMeshData {
     const meshId = `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Calculate bounding box (using BabylonJS BoundingBox)
     const boundingBox = new BoundingBox(
-      manifoldResult.boundingBox?.min || { x: 0, y: 0, z: 0 },
-      manifoldResult.boundingBox?.max || { x: 1, y: 1, z: 1 }
+      csgResult.boundingBox?.min || { x: 0, y: 0, z: 0 },
+      csgResult.boundingBox?.max || { x: 1, y: 1, z: 1 }
     );
 
     const metadata: MeshMetadata = {
       meshId,
-      triangleCount: manifoldResult.triangleCount || 0,
-      vertexCount: manifoldResult.vertexCount || 0,
+      triangleCount: csgResult.triangleCount || 0,
+      vertexCount: csgResult.vertexCount || 0,
       boundingBox,
-      complexity: manifoldResult.vertexCount || 0,
-      operationTime: manifoldResult.operationTime || 0,
+      complexity: csgResult.vertexCount || 0,
+      operationTime: csgResult.operationTime || 0,
       isOptimized: options.optimizeResult,
       lastAccessed: new Date(),
     };
 
     return {
       id: meshId,
-      geometry: manifoldResult.geometry,
+      geometry: csgResult.geometry,
       material: DEFAULT_MATERIAL,
       transform: Matrix.Identity(), // Identity matrix by default
       metadata,
@@ -265,7 +252,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
   dispose(): void {
     logger.debug('[DISPOSE] Disposing AST to Mesh conversion service');
     this.conversionCache.clear();
-    this.manifoldConverter?.dispose?.();
+    this.csgService?.dispose?.();
     this.isInitialized = false;
   }
 }

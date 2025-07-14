@@ -2,7 +2,7 @@
  * Main Application Component Tests
  *
  * Tests for the integrated OpenSCAD 3D visualization application
- * that verifies proper integration of Monaco Editor and Three.js renderer.
+ * that verifies proper integration of Monaco Editor and BabylonJS renderer.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -10,7 +10,7 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
-import { appStoreInstance } from './features/store/app-store';
+import { appStoreInstance, DEFAULT_CAMERA } from './features/store/app-store';
 
 describe('App', () => {
   beforeEach(() => {
@@ -62,7 +62,13 @@ describe('App', () => {
           scene: null,
           lastUpdated: new Date()
         },
-        csg: { isEnabled: true, operationCount: 0, lastOperation: null },
+        csg: {
+          isEnabled: true,
+          operations: [],
+          lastOperationTime: 0,
+          error: null,
+          lastUpdated: new Date(),
+        },
         particles: [],
         iblShadows: {
           isEnabled: false,
@@ -70,7 +76,7 @@ describe('App', () => {
           affectedMeshes: [],
           shadowIntensity: 1.0,
           environmentIntensity: 1.0,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         },
         materials: [],
         renderGraphs: [],
@@ -81,12 +87,14 @@ describe('App', () => {
         renderTime: 0,
         performanceMetrics: {
           fps: 0,
-          frameTime: 0,
+          deltaTime: 0,
+          renderTime: 0,
           drawCalls: 0,
           triangleCount: 0,
-          textureCount: 0,
-          memoryUsage: 0
+          memoryUsage: 0,
+          gpuMemoryUsage: 0,
         },
+        camera: DEFAULT_CAMERA,
       },
     });
   });

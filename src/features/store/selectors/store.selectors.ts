@@ -87,6 +87,28 @@ export const selectRenderingMeshCount = (state: AppState): number =>
   state.babylonRendering?.meshes?.length ?? 0;
 
 /**
+ * Rendering stats selector
+ */
+export const selectRenderingStats = createSelector(
+  [
+    selectRenderingMeshCount,
+    selectRenderingErrors,
+    selectRenderingTime,
+    selectRenderingLastRendered,
+    selectRenderingIsRendering,
+    selectRenderingCamera,
+  ],
+  (meshCount, errors, renderTime, lastRendered, isRendering, camera) => ({
+    meshCount,
+    errorCount: errors.length,
+    renderTime,
+    lastRendered,
+    isRendering,
+    camera,
+  })
+);
+
+/**
  * Configuration selectors
  */
 export const selectConfig = (state: AppState): AppConfig => state.config;

@@ -1,6 +1,6 @@
 import * as path from 'node:path';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { Parser } from 'web-tree-sitter';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { Parser, type Language, type Query, type Tree, type Node as TSNode } from 'web-tree-sitter';
 import { QueryManager } from './query-utils.js';
 
 describe('QueryManager', () => {
@@ -13,7 +13,7 @@ describe('QueryManager', () => {
     parser = new Parser();
 
     // Create a mock language object
-    const language = {} as Parser.Language;
+    const language = {} as Language;
 
     // Set up the query manager with mocks
     const queryDir = path.join(__dirname, 'queries');
@@ -22,14 +22,15 @@ describe('QueryManager', () => {
     // Mock the loadQuery method
     queryManager.loadQuery = async (_name: string) => {
       // Mock implementation that returns a fake Query object
-      return { matches: () => [] } as Parser.Query;
+      return { matches: () => [] } as Query;
     };
 
     // Mock the query cache
-    queryManager.queryCache = new Map();
-    queryManager.queryCache.set('find-function-calls', {
+    // Access private properties for testing using any type
+    (queryManager as any).queryCache = new Map();
+    (queryManager as any).queryCache.set('find-function-calls', {
       matches: () => [],
-    } as Parser.Query);
+    } as Query);
   });
 
   afterEach(() => {
@@ -63,12 +64,12 @@ describe('QueryManager', () => {
             // Add other required properties
           },
           // Add other required properties
-        }) as Parser.Tree;
+        }) as Tree;
 
       // Set the tree property directly
       const tree = parser.parse(source);
       if (tree) {
-        queryManager.tree = tree;
+        (queryManager as any).tree = tree;
       }
 
       // In a real test, we would mock the query execution
@@ -78,7 +79,7 @@ describe('QueryManager', () => {
         expect(Array.isArray(results)).toBe(true);
       } catch (error: unknown) {
         // If the query doesn't exist, that's okay for this test
-        expect(error.message).toContain('Query');
+        expect((error as Error).message).toContain('Query');
       }
     });
   });
@@ -90,7 +91,7 @@ describe('QueryManager', () => {
 
       // Set the tree property directly
       const source = 'cube(10);';
-      parser.parse = (source: string) =>
+      (parser as any).parse = (source: string) =>
         ({
           rootNode: {
             type: 'program',
@@ -100,11 +101,11 @@ describe('QueryManager', () => {
             startIndex: 0,
             endIndex: source.length,
           },
-        }) as unknown;
+        }) as Tree;
 
       const tree = parser.parse(source);
       if (tree) {
-        queryManager.tree = tree;
+        (queryManager as any).tree = tree;
       }
 
       const nodes = queryManager.findAllNodesOfType('function_call');
@@ -140,7 +141,7 @@ describe('QueryManager', () => {
 
       // Mock the getNodeTextWithSemicolon method to return the expected value
       const originalMethod = queryManager.getNodeTextWithSemicolon;
-      queryManager.getNodeTextWithSemicolon = (_node: TSNode, _source: string) => {
+      (queryManager as any).getNodeTextWithSemicolon = (_node: TSNode, _source: string) => {
         return 'cube(10);';
       };
 
@@ -154,7 +155,7 @@ describe('QueryManager', () => {
       expect(result).toBe('cube(10);');
 
       // Restore the original method
-      queryManager.getNodeTextWithSemicolon = originalMethod;
+      (queryManager as any).getNodeTextWithSemicolon = originalMethod;
     });
 
     it('should not add semicolon if not present in source', () => {

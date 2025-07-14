@@ -259,7 +259,7 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThanOrEqual(3);
       
-      // Verify we have all three primitives
+      // Verify we have all the primitives
       const cubeNode = ast.find(node => node.type === 'cube');
       const sphereNode = ast.find(node => node.type === 'sphere');
       const cylinderNode = ast.find(node => node.type === 'cylinder');

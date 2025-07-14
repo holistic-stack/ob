@@ -9,6 +9,7 @@ import { CSGVisitor } from './csg-visitor.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
 import { QueryVisitor } from './query-visitor.js';
 import { TransformVisitor } from './transform-visitor.js';
+import type { ParameterValue } from '../ast-types.js';
 
 // Use real Tree Sitter language for testing
 
@@ -37,7 +38,7 @@ describe('QueryVisitor', () => {
       [
         new PrimitiveVisitor(code, errorHandler),
         new TransformVisitor(code, undefined, errorHandler),
-        new CSGVisitor(code, errorHandler),
+        new CSGVisitor(code, undefined, errorHandler, new Map<string, ParameterValue>()),
       ],
       errorHandler
     );
@@ -74,7 +75,7 @@ describe('QueryVisitor', () => {
       [
         new PrimitiveVisitor(code, errorHandler),
         new TransformVisitor(code, undefined, errorHandler),
-        new CSGVisitor(code, errorHandler),
+        new CSGVisitor(code, undefined, errorHandler, new Map<string, ParameterValue>()),
       ],
       errorHandler
     );
@@ -114,7 +115,7 @@ describe('QueryVisitor', () => {
       [
         new PrimitiveVisitor(code, errorHandler),
         new TransformVisitor(code, undefined, errorHandler),
-        new CSGVisitor(code, errorHandler),
+        new CSGVisitor(code, undefined, errorHandler, new Map<string, ParameterValue>()),
       ],
       errorHandler
     );
@@ -158,7 +159,7 @@ describe('QueryVisitor', () => {
       [
         new PrimitiveVisitor(code, errorHandler),
         new TransformVisitor(code, undefined, errorHandler),
-        new CSGVisitor(code, errorHandler),
+        new CSGVisitor(code, undefined, errorHandler, new Map<string, ParameterValue>()),
       ],
       errorHandler
     );

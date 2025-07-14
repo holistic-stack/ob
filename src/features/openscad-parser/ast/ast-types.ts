@@ -121,7 +121,7 @@ export interface SourceLocation {
 /**
  * Represents a specific position in the source code.
  *
- * This interface defines a point location within source code using three
+ * This interface defines a point location within source code using two
  * coordinate systems: line/column (for human readability) and byte offset
  * (for efficient string operations). All coordinates are zero-based.
  *

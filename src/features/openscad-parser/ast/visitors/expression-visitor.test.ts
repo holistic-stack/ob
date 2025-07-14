@@ -83,7 +83,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('binary');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('binary');
+      }
       expect((result as ast.BinaryExpressionNode).operator).toBe('+');
       expect((result as ast.BinaryExpressionNode).left.expressionType).toBe('literal');
       expect((result as ast.BinaryExpressionNode).left.value).toBe(1);
@@ -158,7 +160,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('binary');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('binary');
+      }
       expect((result as ast.BinaryExpressionNode).operator).toBe('>');
       expect((result as ast.BinaryExpressionNode).left.expressionType).toBe('variable');
       expect((result as ast.BinaryExpressionNode).left.name).toBe('x');
@@ -228,7 +232,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('binary');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('binary');
+      }
       expect((result as ast.BinaryExpressionNode).operator).toBe('||');
       expect((result as ast.BinaryExpressionNode).left.expressionType).toBe('literal');
       expect((result as ast.BinaryExpressionNode).left.value).toBe(true);
@@ -293,7 +299,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('unary');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('unary');
+      }
       expect((result as ast.UnaryExpressionNode).operator).toBe('-');
       expect((result as ast.UnaryExpressionNode).operand.expressionType).toBe('literal');
       expect((result as ast.UnaryExpressionNode).operand.value).toBe(5);
@@ -349,7 +357,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('unary');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('unary');
+      }
       expect((result as ast.UnaryExpressionNode).operator).toBe('!');
       expect((result as ast.UnaryExpressionNode).operand.expressionType).toBe('literal');
       expect((result as ast.UnaryExpressionNode).operand.value).toBe(true);
@@ -499,7 +509,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('conditional');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('conditional');
+      }
       expect((result as ast.ConditionalExpressionNode).condition.expressionType).toBe('binary');
       expect((result as ast.ConditionalExpressionNode).thenBranch.expressionType).toBe('literal');
       expect((result as ast.ConditionalExpressionNode).thenBranch.value).toBe(10);
@@ -521,7 +533,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('variable');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('variable');
+      }
       expect((result as ast.VariableNode).name).toBe('myVariable');
     });
   });
@@ -539,7 +553,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('literal');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('literal');
+      }
       expect((result as ast.LiteralNode).value).toBe(42);
     });
 
@@ -555,7 +571,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('literal');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('literal');
+      }
       expect((result as ast.LiteralNode).value).toBe('hello');
     });
 
@@ -571,7 +589,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('literal');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('literal');
+      }
       expect((result as ast.LiteralNode).value).toBe(true);
     });
   });
@@ -637,7 +657,9 @@ describe('ExpressionVisitor', () => {
 
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
-      expect(result?.expressionType).toBe('array');
+      if (result && 'expressionType' in result) {
+        expect(result.expressionType).toBe('array');
+      }
       expect((result as ast.ArrayExpressionNode).items.length).toBe(3);
       expect((result as ast.ArrayExpressionNode).items[0].expressionType).toBe('literal');
       expect((result as ast.ArrayExpressionNode).items[0].value).toBe(1);

@@ -192,7 +192,7 @@ describe('cstTreeCursorWalkLog', () => {
     const maxIndentLevel = Math.max(
       ...output.split('\n').map((line: string) => {
         const match = line.match(/^(\s*)/);
-        return match ? match[1].length : 0;
+        return match?.[1]?.length ?? 0;
       })
     );
 

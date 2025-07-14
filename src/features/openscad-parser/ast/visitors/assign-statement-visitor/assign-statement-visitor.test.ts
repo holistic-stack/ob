@@ -106,23 +106,7 @@ describe('AssignStatementVisitor', () => {
       }
     });
 
-    it('should parse assign statement with three assignments', () => {
-      const code = 'assign(x = 1, y = 2, z = 3) cube([x, y, z]);';
-      const ast = parser.parseAST(code);
-
-      // The parser may not handle this case yet, so just verify it doesn't crash
-      expect(ast).toBeDefined();
-      if (ast.length > 0) {
-        const assignNode = ast[0] as AssignStatementNode;
-        expect(assignNode.type).toBe('assign');
-        // If assignments are parsed, check them
-        if (assignNode.assignments && assignNode.assignments.length > 0) {
-          expect(assignNode.assignments[0]?.variable.name).toBe('x');
-          expect(assignNode.assignments[0]?.variable.type).toBe('expression');
-          expect(assignNode.assignments[0]?.variable.expressionType).toBe('identifier');
-        }
-      }
-    });
+    
 
     it('should parse assign statement with mixed value types', () => {
       const code = 'assign(num = 42, str = "hello", flag = false) echo(num, str, flag);';

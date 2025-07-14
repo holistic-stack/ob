@@ -15,9 +15,9 @@ describe('OpenSCAD Parser - AST Generation', () => {
   // Note: cleanup is now handled automatically by the test utility
 
   function findDescendantNode(
-    node: TSNode | null,
-    predicate: (n: TSNode) => boolean
-  ): TSNode | undefined {
+    node: any | null,
+    predicate: (n: any) => boolean
+  ): any | undefined {
     if (!node) return undefined;
     if (predicate(node)) return node;
 
@@ -33,7 +33,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
   }
 
   // Debug function to print the tree structure
-  function _printTree(node: TSNode, depth = 0) {
+  function _printTree(node: any, depth = 0) {
     if (!node) return;
     const _indent = '  '.repeat(depth);
 

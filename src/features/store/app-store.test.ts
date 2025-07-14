@@ -6,6 +6,7 @@
  */
 
 // TODO: Replace with BabylonJS types
+import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type {
   CameraConfig,
@@ -54,13 +55,13 @@ describe('App Store', () => {
 
     it('should have correct initial rendering state', () => {
       const state = store.getState();
-      expect(state.rendering?.meshes).toEqual([]);
-      expect(state.rendering?.isRendering).toBe(false);
-      expect(state.rendering?.renderErrors).toEqual([]);
-      expect(state.rendering?.lastRendered).toBeNull();
-      expect(state.rendering?.camera?.position).toEqual([10, 10, 10]);
-      expect(state.rendering?.camera?.target).toEqual([0, 0, 0]);
-      expect(state.rendering?.camera?.zoom).toBe(1);
+      expect(state.babylonRendering?.meshes).toEqual([]);
+      expect(state.babylonRendering?.isRendering).toBe(false);
+      expect(state.babylonRendering?.renderErrors).toEqual([]);
+      expect(state.babylonRendering?.lastRendered).toBeNull();
+      expect(state.babylonRendering?.camera?.position).toEqual([10, 10, 10]);
+      expect(state.babylonRendering?.camera?.target).toEqual([0, 0, 0]);
+      expect(state.babylonRendering?.camera?.zoom).toBe(1);
     });
 
     it('should have correct initial config state', () => {
@@ -231,40 +232,40 @@ describe('App Store', () => {
 
   describe('Rendering Actions', () => {
     it('should update meshes', () => {
-      const meshes = [] as unknown as readonly THREE.Mesh[]; // Mock THREE.Mesh array
+      const meshes = [] as unknown as readonly Mesh[]; // Mock BabylonJS Mesh array
       store.getState().updateMeshes(meshes);
 
       const state = store.getState();
-      expect(state.rendering?.meshes).toEqual(meshes);
-      expect(state.rendering?.lastRendered).toBeInstanceOf(Date);
+      expect(state.babylonRendering?.meshes).toEqual(meshes);
+      expect(state.babylonRendering?.lastRendered).toBeInstanceOf(Date);
     });
 
     it('should render from AST successfully', async () => {
       const ast = [] as unknown as readonly ASTNode[]; // Mock AST nodes
-      const result = await store.getState().renderFromAST(ast);
+      const result = await store.getState().renderAST(ast);
 
       expect(result.success).toBe(true);
 
       const state = store.getState();
-      expect(state.rendering?.isRendering).toBe(false);
-      expect(state.rendering?.lastRendered).toBeInstanceOf(Date);
-      expect(state.rendering?.renderErrors).toEqual([]);
+      expect(state.babylonRendering?.isRendering).toBe(false);
+      expect(state.babylonRendering?.lastRendered).toBeInstanceOf(Date);
+      expect(state.babylonRendering?.renderErrors).toEqual([]);
     });
 
     it('should clear scene', () => {
       // First set some rendering state
-      store.getState().updateMeshes([{} as THREE.Mesh]);
+      store.getState().updateMeshes([{} as Mesh]);
       store.getState().addRenderError({ type: 'initialization', message: 'test error' });
-      expect(store.getState().rendering?.meshes).toHaveLength(1);
-      expect(store.getState().rendering?.renderErrors).toHaveLength(1);
+      expect(store.getState().babylonRendering?.meshes).toHaveLength(1);
+      expect(store.getState().babylonRendering?.renderErrors).toHaveLength(1);
 
       // Then clear the scene
       store.getState().clearScene();
 
       const state = store.getState();
-      expect(state.rendering?.meshes).toEqual([]);
-      expect(state.rendering?.renderErrors).toEqual([]);
-      expect(state.rendering?.lastRendered).toBeNull();
+      expect(state.babylonRendering?.meshes).toEqual([]);
+      expect(state.babylonRendering?.renderErrors).toEqual([]);
+      expect(state.babylonRendering?.lastRendered).toBeNull();
     });
 
     it('should update camera', () => {
@@ -276,12 +277,12 @@ describe('App Store', () => {
       store.getState().updateCamera(cameraUpdate);
 
       const state = store.getState();
-      expect(state.rendering?.camera?.position).toEqual([5, 5, 5]);
-      expect(state.rendering?.camera?.target).toEqual([1, 1, 1]);
-      expect(state.rendering?.camera?.zoom).toBe(1.5);
+      expect(state.babylonRendering?.camera?.position).toEqual([5, 5, 5]);
+      expect(state.babylonRendering?.camera?.target).toEqual([1, 1, 1]);
+      expect(state.babylonRendering?.camera?.zoom).toBe(1.5);
       // Other camera properties should remain unchanged
-      expect(state.rendering?.camera?.fov).toBe(75);
-      expect(state.rendering?.camera?.enableControls).toBe(true);
+      expect(state.babylonRendering?.camera?.fov).toBe(75);
+      expect(state.babylonRendering?.camera?.enableControls).toBe(true);
     });
 
     it('should reset camera to default', () => {
@@ -298,15 +299,15 @@ describe('App Store', () => {
         autoRotateSpeed: 1,
       };
       store.getState().updateCamera(customCamera);
-      expect(store.getState().rendering?.camera).toEqual(customCamera);
+      expect(store.getState().babylonRendering?.camera).toEqual(customCamera);
 
       // Then reset
       store.getState().resetCamera();
 
       const state = store.getState();
-      expect(state.rendering?.camera?.position).toEqual([10, 10, 10]);
-      expect(state.rendering?.camera?.target).toEqual([0, 0, 0]);
-      expect(state.rendering?.camera?.zoom).toBe(1);
+      expect(state.babylonRendering?.camera?.position).toEqual([10, 10, 10]);
+      expect(state.babylonRendering?.camera?.target).toEqual([0, 0, 0]);
+      expect(state.babylonRendering?.camera?.zoom).toBe(1);
     });
 
     it('should add render error', () => {
@@ -314,20 +315,22 @@ describe('App Store', () => {
       store.getState().addRenderError(error);
 
       const state = store.getState();
-      expect(state.rendering?.renderErrors).toContain(error);
+      expect(state.babylonRendering?.renderErrors).toContain(error);
     });
+
+
 
     it('should clear render errors', () => {
       // First add some errors
       store.getState().addRenderError({ type: 'geometry', message: 'error 1' });
       store.getState().addRenderError({ type: 'material', message: 'error 2' });
-      expect(store.getState().rendering?.renderErrors).toHaveLength(2);
+      expect(store.getState().babylonRendering?.renderErrors).toHaveLength(2);
 
       // Then clear them
       store.getState().clearRenderErrors();
 
       const state = store.getState();
-      expect(state.rendering?.renderErrors).toEqual([]);
+      expect(state.babylonRendering?.renderErrors).toEqual([]);
     });
   });
 

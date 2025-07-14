@@ -154,7 +154,7 @@ The OpenSCAD parser follows a **bulletproof-react** architecture with feature-ba
 ### 4. **Integration Points**
 - **Zustand Store**: Seamless integration with application state management
 - **Monaco Editor**: Real-time syntax highlighting and error reporting
-- **React Three Fiber**: Direct AST→3D mesh conversion pipeline
+- **BabylonJS**: Direct AST→3D mesh conversion pipeline
 - **Error Recovery**: Automatic code correction with user feedback
 
 ## 🚀 Usage Patterns

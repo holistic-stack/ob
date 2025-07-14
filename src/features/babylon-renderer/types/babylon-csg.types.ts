@@ -86,11 +86,21 @@ export interface CSGError {
 
 export enum CSGErrorCode {
   INVALID_MESH = 'INVALID_MESH',
-  NON_MANIFOLD_GEOMETRY = 'NON_MANIFOLD_GEOMETRY',
   OPERATION_FAILED = 'OPERATION_FAILED',
   MEMORY_LIMIT_EXCEEDED = 'MEMORY_LIMIT_EXCEEDED',
   TIMEOUT_EXCEEDED = 'TIMEOUT_EXCEEDED',
-  MANIFOLD_ERROR = 'MANIFOLD_ERROR',
+  CSG_ERROR = 'CSG_ERROR',
+}
+
+/**
+ * CSG2 service state
+ */
+export interface CSGServiceState {
+  readonly isEnabled: boolean;
+  readonly operations: ReadonlyArray<CSGOperationResult>;
+  readonly lastOperationTime: number;
+  readonly error: CSGError | null;
+  readonly lastUpdated: Date;
 }
 
 /**

@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { createBabylonRenderingSlice } from './babylon-rendering-slice';
+import { createBabylonRenderingSlice, createInitialBabylonRenderingState } from './babylon-rendering-slice';
 import type { BabylonRenderingActions, BabylonRenderingState } from './babylon-rendering-slice';
 
 // Mock BabylonJS services
@@ -114,12 +114,39 @@ vi.mock('../../babylon-renderer/services/babylon-render-graph-service', () => ({
 }));
 
 // Test store type
-interface TestStore extends BabylonRenderingActions {
+interface TestStore {
   babylonRendering: BabylonRenderingState;
+  // Actions from the slice
+  initializeEngine: BabylonRenderingActions['initializeEngine'];
+  disposeEngine: BabylonRenderingActions['disposeEngine'];
+  getEngineState: BabylonRenderingActions['getEngineState'];
+  showInspector: BabylonRenderingActions['showInspector'];
+  hideInspector: BabylonRenderingActions['hideInspector'];
+  getInspectorState: BabylonRenderingActions['getInspectorState'];
+  performCSGOperation: BabylonRenderingActions['performCSGOperation'];
+  getCSGState: BabylonRenderingActions['getCSGState'];
+  createParticleSystem: BabylonRenderingActions['createParticleSystem'];
+  updateParticleSystem: BabylonRenderingActions['updateParticleSystem'];
+  removeParticleSystem: BabylonRenderingActions['removeParticleSystem'];
+  enableIBLShadows: BabylonRenderingActions['enableIBLShadows'];
+  disableIBLShadows: BabylonRenderingActions['disableIBLShadows'];
+  createMaterial: BabylonRenderingActions['createMaterial'];
+  applyMaterial: BabylonRenderingActions['applyMaterial'];
+  removeMaterial: BabylonRenderingActions['removeMaterial'];
+  createRenderGraph: BabylonRenderingActions['createRenderGraph'];
+  buildRenderGraph: BabylonRenderingActions['buildRenderGraph'];
+  removeRenderGraph: BabylonRenderingActions['removeRenderGraph'];
+  renderAST: BabylonRenderingActions['renderAST'];
+  updateMeshes: BabylonRenderingActions['updateMeshes'];
+  clearScene: BabylonRenderingActions['clearScene'];
+  updatePerformanceMetrics: BabylonRenderingActions['updatePerformanceMetrics'];
+  updateCamera: BabylonRenderingActions['updateCamera'];
+  resetCamera: BabylonRenderingActions['resetCamera'];
 }
 
 describe('BabylonRenderingSlice', () => {
-  let store: ReturnType<typeof create<TestStore>>;
+  let store: any; // Zustand store with TestStore interface
+  let mockCanvas: HTMLCanvasElement;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -127,9 +154,13 @@ describe('BabylonRenderingSlice', () => {
     // Create test store with BabylonJS rendering slice
     store = create<TestStore>()(
       immer((set, get) => ({
+        babylonRendering: createInitialBabylonRenderingState(),
         ...createBabylonRenderingSlice(set, get),
       }))
     );
+
+    // Create mock canvas
+    mockCanvas = document.createElement('canvas');
   });
 
   afterEach(() => {

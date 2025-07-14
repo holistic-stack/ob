@@ -310,11 +310,11 @@ export const optimizeMeshForCSG = (
       mergeVertices(mesh, options.tolerance);
     }
 
-    // Validate manifold geometry
-    if (options.validateManifold) {
-      const isManifold = validateManifoldGeometry(mesh);
-      if (!isManifold) {
-        throw createConversionError('VALIDATION_FAILED', 'Mesh is not manifold');
+    // Validate mesh geometry
+    if (options.validateMesh) {
+      const isValid = validateMeshGeometry(mesh);
+      if (!isValid) {
+        throw createConversionError('VALIDATION_FAILED', 'Mesh is not valid');
       }
     }
 

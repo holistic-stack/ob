@@ -908,7 +908,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
       return null;
     }
 
-    // Extract the three parts of the conditional expression
+    // Extract the parts of the conditional expression
     const conditionNode = node.childForFieldName('condition');
     const consequenceNode = node.childForFieldName('consequence');
     const alternativeNode = node.childForFieldName('alternative');

@@ -1,7 +1,7 @@
 /**
  * @file BabylonJS CSG2 Service Tests
  * 
- * Tests for BabylonJS CSG2 service with Manifold 3.1.1 integration.
+ * Tests for BabylonJS CSG2 service.
  * Following TDD principles with real implementations where possible.
  */
 

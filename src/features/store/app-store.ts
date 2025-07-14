@@ -15,7 +15,7 @@ import { getParserInitializationService } from '../openscad-parser/services/pars
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
-// Legacy Three.js rendering slice removed - using babylon-rendering-slice instead
+
 import { createBabylonRenderingSlice, createInitialBabylonRenderingState } from './slices/babylon-rendering-slice';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
@@ -111,7 +111,7 @@ export const createAppStore = (
       debounceConfig: options.debounceConfig,
     }),
     ...createParsingSlice(set, get),
-    // Legacy Three.js rendering slice removed - using babylon-rendering-slice instead
+    
     ...createBabylonRenderingSlice(set, get),
     ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
   }));

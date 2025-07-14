@@ -60,7 +60,7 @@ describe('cursor-utils', () => {
       console.log('Cursor properties:', Object.getOwnPropertyNames(cursor));
 
       // Log the current node in detail
-      const logNode = (node: TSNode, depth = 0) => {
+      const logNode = (node: any, depth = 0) => {
         if (!node) return {};
         const indent = '  '.repeat(depth);
         const result: Record<string, unknown> = {

@@ -11,6 +11,7 @@ import type { Result } from '../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../shared/utils/functional/result';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
 import type { CameraConfig } from '../../../shared/types/common.types';
+import { DEFAULT_CAMERA } from '../app-store';
 import {
   BabylonEngineService,
   BabylonInspectorService,
@@ -18,7 +19,8 @@ import {
   BabylonParticleService,
   BabylonIBLShadowsService,
   BabylonMaterialService,
-  BabylonRenderGraphService
+  BabylonRenderGraphService,
+  InspectorTab
 } from '../../babylon-renderer/services';
 import type {
   BabylonEngineState,
@@ -49,6 +51,7 @@ export interface BabylonRenderingState {
   readonly lastRendered: Date | null;
   readonly renderTime: number;
   readonly performanceMetrics: BabylonPerformanceMetrics;
+  readonly camera: CameraConfig;
 }
 
 /**
@@ -66,11 +69,12 @@ export interface BabylonRenderingError {
  */
 export interface BabylonPerformanceMetrics {
   readonly fps: number;
-  readonly frameTime: number;
+  readonly deltaTime: number;
+  readonly renderTime: number;
   readonly drawCalls: number;
   readonly triangleCount: number;
-  readonly textureCount: number;
   readonly memoryUsage: number;
+  readonly gpuMemoryUsage: number;
 }
 
 /**
@@ -83,7 +87,7 @@ export interface BabylonRenderingActions {
   readonly getEngineState: () => BabylonEngineState;
 
   // Inspector management
-  readonly showInspector: () => Result<void, BabylonRenderingError>;
+  readonly showInspector: () => Promise<Result<void, BabylonRenderingError>>;
   readonly hideInspector: () => Result<void, BabylonRenderingError>;
   readonly getInspectorState: () => InspectorState;
 
@@ -115,6 +119,14 @@ export interface BabylonRenderingActions {
   readonly updateMeshes: (meshes: readonly unknown[]) => void;
   readonly clearScene: () => void;
   readonly updatePerformanceMetrics: () => void;
+
+  // Error management
+  readonly addRenderError: (error: { type: string; message: string }) => void;
+  readonly clearRenderErrors: () => void;
+
+  // Camera management
+  readonly updateCamera: (camera: Partial<CameraConfig>) => void;
+  readonly resetCamera: () => void;
 }
 
 /**
@@ -123,37 +135,30 @@ export interface BabylonRenderingActions {
 export const createInitialBabylonRenderingState = (): BabylonRenderingState => ({
   engine: {
     isInitialized: false,
+    isDisposed: false,
     isWebGPU: false,
     engine: null,
     canvas: null,
+    fps: 0,
+    deltaTime: 0,
+    renderTime: 0,
     performanceMetrics: {
       fps: 0,
-      frameTime: 0,
+      deltaTime: 0,
+      renderTime: 0,
       drawCalls: 0,
       triangleCount: 0,
-      textureCount: 0,
       memoryUsage: 0,
-    },
-    capabilities: {
-      webGPUSupported: false,
-      webGL2Supported: false,
-      maxTextureSize: 0,
-      maxCubeTextureSize: 0,
-      maxRenderTargetSize: 0,
-      maxVertexTextureImageUnits: 0,
-      maxFragmentTextureImageUnits: 0,
-      maxAnisotropy: 0,
+      gpuMemoryUsage: 0,
     },
     error: null,
     lastUpdated: new Date(),
   },
   inspector: {
     isVisible: false,
-    isInitialized: false,
-    currentTab: 'scene',
-    availableTabs: ['scene', 'debug', 'statistics', 'console'],
+    isEmbedded: false,
+    currentTab: InspectorTab.SCENE,
     scene: null,
-    error: null,
     lastUpdated: new Date(),
   },
   csg: {
@@ -181,12 +186,14 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
   renderTime: 0,
   performanceMetrics: {
     fps: 0,
-    frameTime: 0,
+    deltaTime: 0,
+    renderTime: 0,
     drawCalls: 0,
     triangleCount: 0,
-    textureCount: 0,
     memoryUsage: 0,
+    gpuMemoryUsage: 0,
   },
+  camera: DEFAULT_CAMERA,
 });
 
 /**
@@ -195,7 +202,7 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
 export const createBabylonRenderingSlice = (
   set: Parameters<StateCreator<any, [['zustand/immer', never]], [], any>>[0],
   get: Parameters<StateCreator<any, [['zustand/immer', never]], [], any>>[1]
-): BabylonRenderingActions & { babylonRendering: BabylonRenderingState } => {
+): BabylonRenderingActions => {
   // Service instances
   let engineService: BabylonEngineService | null = null;
   let inspectorService: BabylonInspectorService | null = null;
@@ -206,8 +213,6 @@ export const createBabylonRenderingSlice = (
   let renderGraphService: BabylonRenderGraphService | null = null;
 
   return {
-    babylonRendering: createInitialBabylonRenderingState(),
-
     // Engine management
     initializeEngine: async (canvas: HTMLCanvasElement) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Initializing BabylonJS engine...');
@@ -217,7 +222,20 @@ export const createBabylonRenderingSlice = (
           engineService = new BabylonEngineService();
         }
 
-        const result = await engineService.init(canvas);
+        const result = await engineService.init({
+          canvas,
+          config: {
+            antialias: true,
+            adaptToDeviceRatio: true,
+            preserveDrawingBuffer: true,
+            stencil: true,
+            enableWebGPU: true,
+            enableOfflineSupport: false,
+            enableInspector: false,
+            powerPreference: 'high-performance',
+            failIfMajorPerformanceCaveat: false
+          }
+        });
         if (!result.success) {
           throw {
             code: result.error.code,
@@ -228,7 +246,7 @@ export const createBabylonRenderingSlice = (
         }
 
         // Update state
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.engine = engineService!.getState();
         });
 
@@ -259,7 +277,7 @@ export const createBabylonRenderingSlice = (
         }
 
         // Reset state
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.engine = createInitialBabylonRenderingState().engine;
         });
 
@@ -277,14 +295,14 @@ export const createBabylonRenderingSlice = (
     },
 
     // Inspector management
-    showInspector: () => {
+    showInspector: async () => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Showing BabylonJS inspector...');
 
       if (!inspectorService) {
         inspectorService = new BabylonInspectorService();
       }
 
-      const scene = engineService?.getState().engine?.getScene?.();
+      const scene = engineService?.getState().engine?.scenes?.[0];
       if (!scene) {
         return {
           success: false,
@@ -297,7 +315,7 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      const result = inspectorService.show(scene);
+      const result = await inspectorService.show(scene);
       if (!result.success) {
         return {
           success: false,
@@ -311,7 +329,7 @@ export const createBabylonRenderingSlice = (
       }
 
       // Update state
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.inspector = inspectorService!.getState();
       });
 
@@ -339,7 +357,7 @@ export const createBabylonRenderingSlice = (
       }
 
       // Update state
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.inspector = inspectorService!.getState();
       });
 
@@ -357,7 +375,7 @@ export const createBabylonRenderingSlice = (
       return tryCatchAsync(async () => {
         if (!csgService) {
           csgService = new BabylonCSG2Service();
-          const scene = engineService?.getState().engine?.getScene?.();
+          const scene = engineService?.getState().engine?.scenes?.[0];
           if (scene) {
             csgService.init(scene);
           }
@@ -369,8 +387,15 @@ export const createBabylonRenderingSlice = (
         const result = { success: true, data: null };
 
         // Update state
-        set((state) => {
-          state.babylonRendering.csg = csgService!.getState();
+        set((state: any) => {
+          // Update CSG state - service doesn't have getState method
+          state.babylonRendering.csg = {
+            isEnabled: true,
+            operations: [],
+            lastOperationTime: 0,
+            error: null,
+            lastUpdated: new Date(),
+          };
         });
 
         return result.data;
@@ -383,7 +408,7 @@ export const createBabylonRenderingSlice = (
     },
 
     getCSGState: () => {
-      return csgService?.getState() ?? createInitialBabylonRenderingState().csg;
+      return createInitialBabylonRenderingState().csg;
     },
 
     // Particle systems
@@ -392,7 +417,7 @@ export const createBabylonRenderingSlice = (
 
       if (!particleService) {
         particleService = new BabylonParticleService();
-        const scene = engineService?.getState().engine?.getScene?.();
+        const scene = engineService?.getState().engine?.scenes?.[0];
         if (scene) {
           particleService.init(scene);
         }
@@ -402,7 +427,7 @@ export const createBabylonRenderingSlice = (
       // For now, return a placeholder
       const systemId = `particle-${Date.now()}`;
 
-      set((state) => {
+      set((state: any) => {
         // Update particles state
         state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
       });
@@ -426,7 +451,7 @@ export const createBabylonRenderingSlice = (
       }
 
       // Implementation would update particle system
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
       });
 
@@ -453,7 +478,7 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.particles = particleService!.getAllParticleSystemStates();
       });
 
@@ -466,14 +491,14 @@ export const createBabylonRenderingSlice = (
 
       if (!iblShadowsService) {
         iblShadowsService = new BabylonIBLShadowsService();
-        const scene = engineService?.getState().engine?.getScene?.();
+        const scene = engineService?.getState().engine?.scenes?.[0];
         if (scene) {
           iblShadowsService.init(scene);
         }
       }
 
       // Implementation would enable IBL shadows with config
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.iblShadows = iblShadowsService!.getState();
       });
 
@@ -488,7 +513,7 @@ export const createBabylonRenderingSlice = (
       }
 
       // Implementation would disable IBL shadows
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.iblShadows = iblShadowsService!.getState();
       });
 
@@ -502,7 +527,7 @@ export const createBabylonRenderingSlice = (
       return tryCatchAsync(async () => {
         if (!materialService) {
           materialService = new BabylonMaterialService();
-          const scene = engineService?.getState().engine?.getScene?.();
+          const scene = engineService?.getState().engine?.scenes?.[0];
           if (scene) {
             materialService.init(scene);
           }
@@ -511,7 +536,7 @@ export const createBabylonRenderingSlice = (
         // Implementation would create material with config
         const materialId = `material-${Date.now()}`;
 
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.materials = materialService!.getAllMaterialStates();
         });
 
@@ -563,7 +588,7 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.materials = materialService!.getAllMaterialStates();
       });
 
@@ -576,7 +601,7 @@ export const createBabylonRenderingSlice = (
 
       if (!renderGraphService) {
         renderGraphService = new BabylonRenderGraphService();
-        const scene = engineService?.getState().engine?.getScene?.();
+        const scene = engineService?.getState().engine?.scenes?.[0];
         if (scene) {
           renderGraphService.init(scene);
         }
@@ -585,7 +610,7 @@ export const createBabylonRenderingSlice = (
       // Implementation would create render graph with config
       const graphId = `graph-${Date.now()}`;
 
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
       });
 
@@ -620,7 +645,7 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
       });
 
@@ -647,7 +672,7 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.renderGraphs = renderGraphService!.getAllRenderGraphStates();
       });
 
@@ -659,7 +684,7 @@ export const createBabylonRenderingSlice = (
       logger.debug('[DEBUG][BabylonRenderingSlice] Rendering AST...');
 
       return tryCatchAsync(async () => {
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.isRendering = true;
         });
 
@@ -671,7 +696,7 @@ export const createBabylonRenderingSlice = (
 
         const renderTime = performance.now() - startTime;
 
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.meshes = meshes;
           state.babylonRendering.isRendering = false;
           state.babylonRendering.lastRendered = new Date();
@@ -680,7 +705,7 @@ export const createBabylonRenderingSlice = (
 
         logger.debug(`[DEBUG][BabylonRenderingSlice] AST rendered successfully in ${renderTime}ms`);
       }, (error) => {
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.isRendering = false;
           state.babylonRendering.renderErrors = [
             ...state.babylonRendering.renderErrors,
@@ -703,7 +728,7 @@ export const createBabylonRenderingSlice = (
     },
 
     updateMeshes: (meshes: readonly unknown[]) => {
-      set((state) => {
+      set((state: any) => {
         state.babylonRendering.meshes = [...meshes];
         state.babylonRendering.lastRendered = new Date();
       });
@@ -712,7 +737,7 @@ export const createBabylonRenderingSlice = (
     clearScene: () => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene...');
 
-      set((state) => {
+      set((state: any) => {
         // Dispose of existing meshes
         state.babylonRendering.meshes.forEach((mesh: any) => {
           if (mesh && typeof mesh.dispose === 'function') {
@@ -729,10 +754,47 @@ export const createBabylonRenderingSlice = (
     updatePerformanceMetrics: () => {
       if (engineService) {
         const engineState = engineService.getState();
-        set((state) => {
+        set((state: any) => {
           state.babylonRendering.performanceMetrics = engineState.performanceMetrics;
         });
       }
+    },
+
+    // Error management
+    addRenderError: (error: { type: string; message: string }) => {
+      set((state: any) => {
+        state.babylonRendering.renderErrors = [
+          ...state.babylonRendering.renderErrors,
+          {
+            code: error.type,
+            message: error.message,
+            timestamp: new Date(),
+            service: 'rendering',
+          },
+        ];
+      });
+    },
+
+    clearRenderErrors: () => {
+      set((state: any) => {
+        state.babylonRendering.renderErrors = [];
+      });
+    },
+
+    // Camera management
+    updateCamera: (camera: Partial<CameraConfig>) => {
+      set((state: any) => {
+        state.babylonRendering.camera = {
+          ...state.babylonRendering.camera,
+          ...camera,
+        };
+      });
+    },
+
+    resetCamera: () => {
+      set((state: any) => {
+        state.babylonRendering.camera = createInitialBabylonRenderingState().camera;
+      });
     },
   };
 };

@@ -286,7 +286,7 @@ describe('CSG2 Mesh Converter', () => {
       expect(DEFAULT_CONVERSION_OPTIONS.generateNormals).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.generateUVs).toBe(false);
       expect(DEFAULT_CONVERSION_OPTIONS.optimizeIndices).toBe(true);
-      expect(DEFAULT_CONVERSION_OPTIONS.validateManifold).toBe(true);
+      expect(DEFAULT_CONVERSION_OPTIONS.validateMesh).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.mergeVertices).toBe(true);
       expect(DEFAULT_CONVERSION_OPTIONS.tolerance).toBe(1e-6);
     });

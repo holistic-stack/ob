@@ -108,7 +108,7 @@ import { BaseASTVisitor } from './base-ast-visitor.js';
  * - **Flexible Delegation**: Seamless integration with any visitor implementation
  * - **Advanced Search**: Support for complex tree-sitter query patterns
  *
- * The visitor maintains three core components:
+ * The visitor maintains a set of core components:
  * - **QueryManager**: Handles query execution and result caching
  * - **Delegate Visitor**: The wrapped visitor that performs actual AST processing
  * - **Tree Reference**: The tree-sitter tree for query execution

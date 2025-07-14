@@ -3,6 +3,7 @@ import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { PrimitiveVisitor } from './primitive-visitor.js';
+import type { CubeNode, SphereNode, CylinderNode } from '../ast-types.js';
 
 describe('PrimitiveVisitor', () => {
   let parser: OpenscadParser;
@@ -198,8 +199,8 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cube');
-      expect((result as ast.CubeNode).size).toBe(10);
-      expect((result as ast.CubeNode).center).toBe(false);
+      expect((result as CubeNode).size).toBe(10);
+      expect((result as CubeNode).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -398,8 +399,8 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cube');
-      expect((result as ast.CubeNode).size).toBe(10);
-      expect((result as ast.CubeNode).center).toBe(true);
+      expect((result as CubeNode).size).toBe(10);
+      expect((result as CubeNode).center).toBe(true);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -619,8 +620,8 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cube');
-      expect((result as ast.CubeNode).size).toEqual([10, 20, 30]);
-      expect((result as ast.CubeNode).center).toBe(false);
+      expect((result as CubeNode).size).toEqual([10, 20, 30]);
+      expect((result as CubeNode).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -706,7 +707,7 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('sphere');
-      expect((result as ast.SphereNode).radius).toBe(1);
+      expect((result as SphereNode).radius).toBe(1);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -802,7 +803,7 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('sphere');
-      expect((result as ast.SphereNode).r).toBe(5);
+      expect((result as SphereNode).radius).toBe(5);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -963,7 +964,7 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('sphere');
-      expect((result as ast.SphereNode).r).toBe(5);
+      expect((result as SphereNode).radius).toBe(5);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -1052,10 +1053,10 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cylinder');
-      expect((result as ast.CylinderNode).height).toBe(1);
-      expect((result as ast.CylinderNode).radius1).toBe(1);
-      expect((result as ast.CylinderNode).radius2).toBe(1);
-      expect((result as ast.CylinderNode).center).toBe(false);
+      expect((result as CylinderNode).h).toBe(1);
+      expect((result as CylinderNode).r1).toBe(1);
+      expect((result as CylinderNode).r2).toBe(1);
+      expect((result as CylinderNode).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -1319,10 +1320,10 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cylinder');
-      expect((result as ast.CylinderNode).height).toBe(10);
-      expect((result as ast.CylinderNode).radius1).toBe(5);
-      expect((result as ast.CylinderNode).radius2).toBe(5);
-      expect((result as ast.CylinderNode).center).toBe(false);
+      expect((result as CylinderNode).h).toBe(10);
+      expect((result as CylinderNode).r1).toBe(5);
+      expect((result as CylinderNode).r2).toBe(5);
+      expect((result as CylinderNode).center).toBe(false);
     });
 
     it('should create a cylinder node with different top and bottom diameters', () => {
@@ -1665,10 +1666,10 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cylinder');
-      expect((result as ast.CylinderNode).h).toBe(10);
-      expect((result as ast.CylinderNode).r1).toBe(5);
-      expect((result as ast.CylinderNode).r2).toBe(3);
-      expect((result as ast.CylinderNode).center).toBe(false);
+      expect((result as CylinderNode).h).toBe(10);
+      expect((result as CylinderNode).r1).toBe(5);
+      expect((result as CylinderNode).r2).toBe(3);
+      expect((result as CylinderNode).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -1932,10 +1933,10 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cylinder');
-      expect((result as ast.CylinderNode).height).toBe(10);
-      expect((result as ast.CylinderNode).radius1).toBe(5);
-      expect((result as ast.CylinderNode).radius2).toBe(5);
-      expect((result as ast.CylinderNode).center).toBe(false);
+      expect((result as CylinderNode).h).toBe(10);
+      expect((result as CylinderNode).r1).toBe(5);
+      expect((result as CylinderNode).r2).toBe(5);
+      expect((result as CylinderNode).center).toBe(false);
 
       // Restore the original method
       createASTNodeForFunctionSpy.mockRestore();
@@ -2293,7 +2294,7 @@ describe('PrimitiveVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('cylinder');
-      const cylinderResult = result as ast.CylinderNode;
+      const cylinderResult = result as CylinderNode;
       expect(cylinderResult.h).toBe(10);
       expect(cylinderResult.r1).toBe(5);
       expect(cylinderResult.r2).toBe(3);

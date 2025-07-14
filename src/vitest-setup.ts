@@ -348,7 +348,7 @@ export function resolveWasmPath(urlPath: string): string {
     () => {
       try {
         logger.debug(
-          `Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`
+          `Attempting web-tree-sitter strategy 5 (find-up direct) for ${normalizedPath}`,
         );
         const packageJson = findUpSync(
           (directory: string) => {
@@ -363,7 +363,7 @@ export function resolveWasmPath(urlPath: string): string {
           {
             cwd: __dirname,
             type: 'file',
-          }
+          },
         );
 
         if (packageJson) {
@@ -392,7 +392,7 @@ export function resolveWasmPath(urlPath: string): string {
         // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
         logger.debug(
-          `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`
+          `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`,
         );
         return `file://${resolvedPath}`;
       } catch {
@@ -403,12 +403,12 @@ export function resolveWasmPath(urlPath: string): string {
   }
 
   throw new Error(
-    `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`
+    `WASM file not found: ${normalizedPath}. Tried ${allStrategies.length} resolution strategies.`,
   );
 }
 
 // Configure fetch mock to handle WASM files with better URL handling
-vi.mocked(fetch).mockImplementation((url) => {
+vi.mocked(fetch).mockImplementation(url => {
   logger.debug('using local fetch mock', url);
   logger.debug('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
@@ -459,166 +459,6 @@ vi.mocked(fetch).mockImplementation((url) => {
     } as unknown as Response);
   }
 });
-
-/**
- * Initialize Three.js CSG for testing environments
- * Provides fallback mock CSG if real CSG initialization fails
- */
-export async function initializeCSGForTests(): Promise<void> {
-  logger.info('Initializing Three.js CSG for tests');
-
-  try {
-    // Mock Three.js CSG for testing
-    const mockCSG = {
-      fromMesh: () => ({
-        union: () => ({ toMesh: () => null }),
-        subtract: () => ({ toMesh: () => null }),
-        intersect: () => ({ toMesh: () => null }),
-      }),
-    };
-
-    (globalThis as typeof globalThis & { __MOCK_THREE_CSG__?: typeof mockCSG }).__MOCK_THREE_CSG__ =
-      mockCSG;
-
-    logger.debug('✅ Mock Three.js CSG initialized for testing');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.warn('Three.js CSG initialization failed:', errorMessage);
-  }
-
-  // Mock matrix services to prevent initialization stalling
-  try {
-    const mockMatrixService = {
-      ensureInitialized: () => Promise.resolve({ success: true }),
-      getConversionService: () => ({
-        convertMatrix4ToMLMatrix: () =>
-          Promise.resolve({
-            success: true,
-            data: {
-              result: {
-                data: [
-                  [1, 0, 0, 0],
-                  [0, 1, 0, 0],
-                  [0, 0, 1, 0],
-                  [0, 0, 0, 1],
-                ],
-              },
-              performance: {
-                memoryUsed: 1024,
-                cacheHit: false,
-              },
-            },
-          }),
-        performRobustInversion: () =>
-          Promise.resolve({
-            success: true,
-            data: {
-              result: {
-                data: [
-                  [1, 0, 0, 0],
-                  [0, 1, 0, 0],
-                  [0, 0, 1, 0],
-                  [0, 0, 0, 1],
-                ],
-              },
-              performance: {
-                memoryUsed: 1024,
-                cacheHit: false,
-              },
-            },
-          }),
-        computeRobustNormalMatrix: () =>
-          Promise.resolve({
-            success: true,
-            data: {
-              result: {
-                elements: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-              },
-              performance: {
-                memoryUsed: 1024,
-                cacheHit: false,
-              },
-            },
-          }),
-        getPerformanceMetrics: () => ({
-          operationCount: 0,
-          averageExecutionTime: 0,
-          totalMemoryUsed: 0,
-          cacheHitRate: 0,
-        }),
-      }),
-      getValidationService: () => null,
-      getTelemetryService: () => null,
-      getCacheService: () => ({
-        getStats: () => ({
-          cacheHitRate: 0.8,
-          size: 0,
-          maxSize: 100,
-        }),
-      }),
-      getConfigManager: () => null,
-      getOperationsAPI: () => ({}),
-      shutdown: () => Promise.resolve(),
-    };
-
-    (
-      globalThis as typeof globalThis & { __MOCK_MATRIX_SERVICE__?: typeof mockMatrixService }
-    ).__MOCK_MATRIX_SERVICE__ = mockMatrixService;
-
-    logger.debug('✅ Mock Matrix Service initialized for testing');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.warn('Matrix Service mock initialization failed:', errorMessage);
-  }
-}
-
-/**
- * Create a test Three.js scene for headless testing
- * Following R3F testing patterns
- */
-export function createTestScene(): { scene: unknown; camera: unknown; renderer: unknown } {
-  logger.debug('Creating test Three.js scene');
-
-  // Mock Three.js objects for testing
-  const scene = {
-    add: vi.fn(),
-    remove: vi.fn(),
-    dispose: vi.fn(),
-    children: [],
-  };
-
-  const camera = {
-    position: { set: vi.fn(), x: 0, y: 0, z: 0 },
-    lookAt: vi.fn(),
-    updateProjectionMatrix: vi.fn(),
-  };
-
-  const renderer = {
-    render: vi.fn(),
-    dispose: vi.fn(),
-    setSize: vi.fn(),
-  };
-
-  return { scene, camera, renderer };
-}
-
-/**
- * Dispose test scene resources properly
- * Following R3F testing patterns
- */
-export function disposeTestScene(scene: unknown, _camera: unknown, renderer: unknown): void {
-  logger.debug('Disposing test scene resources');
-
-  const sceneObj = scene as { dispose?: () => void };
-  if (sceneObj?.dispose) {
-    sceneObj.dispose();
-  }
-
-  const rendererObj = renderer as { dispose?: () => void };
-  if (rendererObj?.dispose) {
-    rendererObj.dispose();
-  }
-}
 
 /**
  * Reset singleton instances for clean test isolation
@@ -674,7 +514,7 @@ export function forceGarbageCollection(): void {
     global.gc();
   } else {
     logger.debug(
-      'Garbage collection not available (run with --expose-gc for better memory management)'
+      'Garbage collection not available (run with --expose-gc for better memory management)',
     );
   }
 }

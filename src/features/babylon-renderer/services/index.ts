@@ -30,6 +30,7 @@ export type {
   InspectorTabSwitchResult,
 } from './babylon-inspector-service';
 export {
+  InspectorTab,
   InspectorErrorCode,
   DEFAULT_INSPECTOR_CONFIG
 } from './babylon-inspector-service';

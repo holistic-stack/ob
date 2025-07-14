@@ -588,7 +588,7 @@ export class OpenscadParser {
     // Transform statement with child on next line (multi-line pattern)
     const lines = statement.split('\n');
     if (lines.length >= 2) {
-      const firstLine = lines[0].trim();
+      const firstLine = lines[0]?.trim() ?? '';
       const hasTransform = firstLine.match(
         /^(translate|rotate|scale|mirror|multmatrix|color|offset)\s*\(/
       );
@@ -683,12 +683,16 @@ export class OpenscadParser {
       // Look for primitives in the statement
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (!line) continue;
+
         const primitiveMatch = line.match(
           /(cube|sphere|cylinder|polyhedron|circle|square|polygon)\s*\(/
         );
 
         if (primitiveMatch) {
           const primitiveType = primitiveMatch[1];
+          if (!primitiveType) continue;
+
           const primitiveStart = line.indexOf(primitiveType);
 
           // Create synthetic primitive node with actual parameters from source code
@@ -749,7 +753,7 @@ export class OpenscadParser {
         );
 
         if (cubeMatch) {
-          const sizeParam = cubeMatch[1].trim();
+          const sizeParam = cubeMatch[1]?.trim() ?? '';
           const centerParam = cubeMatch[2];
 
           // Parse size parameter

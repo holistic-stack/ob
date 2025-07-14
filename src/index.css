@@ -196,16 +196,7 @@ table {
   border-spacing: 0;
 }
 
-/* React Three Fiber canvas overlay styles */
-canvas[data-r3f-canvas="true"] {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  pointer-events: auto !important;
-  z-index: 1000 !important;
-}
+
 
 /* Ensure Babylon.js canvas container allows overlays */
 .babylon-canvas-container {

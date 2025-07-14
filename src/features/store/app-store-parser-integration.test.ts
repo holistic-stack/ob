@@ -142,7 +142,7 @@ describe('App Store Parser Integration', () => {
       // Should fail gracefully
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.message).toContain('Parser initialization failed');
+        expect(result.error.code).toContain('PARSER_INIT_FAILED');
       }
 
       // Store should reflect the error
@@ -192,7 +192,7 @@ describe('App Store Parser Integration', () => {
 
       // Other store slices should be unaffected
       expect(finalState.editor).toBeDefined();
-      expect(finalState.rendering).toBeDefined();
+      expect(finalState.babylonRendering).toBeDefined();
       expect(finalState.config).toBeDefined();
 
       logger.debug('✅ Store state preserved across operations');

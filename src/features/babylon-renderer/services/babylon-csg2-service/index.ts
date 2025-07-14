@@ -1,7 +1,7 @@
 /**
  * @file BabylonJS CSG2 Service Exports
  *
- * Exports for the BabylonJS CSG2 service with Manifold 3.1.1 integration.
+ * Exports for the BabylonJS CSG2 service.
  */
 
 export { BabylonCSG2Service } from './babylon-csg2-service';
@@ -9,7 +9,7 @@ export { BabylonCSG2Service } from './babylon-csg2-service';
 // Re-export types from babylon-csg.types
 export type {
   CSGOperationConfig as CSG2Config,
-  CSGOperationResult as CSG2State,
+  CSGServiceState as CSG2State,
   CSGError as CSG2Error,
   CSGUnionResult as CSG2OperationResult,
   CSGUnionResult as CSG2InitResult,

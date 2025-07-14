@@ -98,7 +98,7 @@ import { ExpressionVisitor } from './expression-visitor.js';
  * - **Error Context Preservation**: Maintains detailed error information throughout processing
  * - **Performance Optimization**: Efficient routing to appropriate processing methods
  *
- * The visitor maintains three specialized sub-visitors:
+ *  * The visitor maintains a set of specialized sub-visitors:
  * - **IfElseVisitor**: Handles conditional logic and else branches
  * - **ForLoopVisitor**: Processes various loop patterns and iteration types
  * - **ExpressionVisitor**: Evaluates expressions within control structure contexts

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
 import { FunctionVisitor } from './function-visitor.js';
+import type { ParameterValue } from '../ast-types.js';
 
 describe('FunctionVisitor', () => {
   let parser: OpenscadParser;
@@ -47,7 +48,8 @@ describe('FunctionVisitor', () => {
         },
       } as TSNode;
 
-      const visitor = new FunctionVisitor(code, errorHandler);
+      const variableScope = new Map<string, ParameterValue>();
+      const visitor = new FunctionVisitor(code, errorHandler, variableScope);
       const result = visitor.visitFunctionDefinition(mockNode);
 
       expect(result).not.toBeNull();
@@ -89,7 +91,8 @@ describe('FunctionVisitor', () => {
         },
       } as TSNode;
 
-      const visitor = new FunctionVisitor(code, errorHandler);
+      const variableScope = new Map<string, ParameterValue>();
+      const visitor = new FunctionVisitor(code, errorHandler, variableScope);
       const result = visitor.visitFunctionDefinition(mockNode);
 
       expect(result).not.toBeNull();
@@ -133,7 +136,8 @@ describe('FunctionVisitor', () => {
         },
       } as TSNode;
 
-      const visitor = new FunctionVisitor(code, errorHandler);
+      const variableScope = new Map<string, ParameterValue>();
+      const visitor = new FunctionVisitor(code, errorHandler, variableScope);
       const result = visitor.visitFunctionDefinition(mockNode);
 
       expect(result).not.toBeNull();
@@ -179,7 +183,8 @@ describe('FunctionVisitor', () => {
         },
       } as TSNode;
 
-      const visitor = new FunctionVisitor(code, errorHandler);
+      const variableScope = new Map<string, ParameterValue>();
+      const visitor = new FunctionVisitor(code, errorHandler, variableScope);
       const result = visitor.visitFunctionDefinition(mockNode);
 
       expect(result).not.toBeNull();
@@ -212,7 +217,8 @@ describe('FunctionVisitor', () => {
         text: 'add(1, 2);',
       } as TSNode;
 
-      const visitor = new FunctionVisitor(code, errorHandler);
+      const variableScope = new Map<string, ParameterValue>();
+      const visitor = new FunctionVisitor(code, errorHandler, variableScope);
       const result = visitor.createFunctionCallNode(mockNode, 'add', [
         {
           name: undefined,

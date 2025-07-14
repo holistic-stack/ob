@@ -5,10 +5,10 @@
  * with comprehensive coverage of all selector functions.
  */
 
-// TODO: Replace with BabylonJS types
+import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import type { AppState, RenderingError, RenderingState } from '../types/store.types';
+import type { AppState, RenderingError, BabylonRenderingState } from '../types/store.types';
 import {
   selectAllErrors,
   selectApplicationStatus,
@@ -29,6 +29,7 @@ import {
   selectParsingStats,
   selectRenderingHasErrors,
   selectRenderingMeshCount,
+  selectRenderingMeshes,
   selectRenderingStats,
   selectTotalErrors,
 } from './store.selectors';
@@ -51,12 +52,13 @@ describe('Store Selectors', () => {
         warnings: ['Warning: deprecated syntax'],
         isLoading: false,
         lastParsed: new Date('2024-01-01T10:01:00Z'),
+        lastParsedCode: null,
         parseTime: 15.5,
       },
-      rendering: {
-        meshes: [{} as THREE.Mesh, {} as THREE.Mesh],
+      babylonRendering: {
+        meshes: [{} as Mesh, {} as Mesh],
         isRendering: false,
-        renderErrors: [] as RenderingError[],
+        renderErrors: [],
         lastRendered: new Date('2024-01-01T10:02:00Z'),
         renderTime: 25.3,
         camera: {
@@ -70,6 +72,14 @@ describe('Store Selectors', () => {
           enableAutoRotate: false,
           autoRotateSpeed: 1,
         },
+        engine: {} as any,
+        inspector: {} as any,
+        csg: {} as any,
+        particles: [],
+        iblShadows: {} as any,
+        materials: [],
+        renderGraphs: [],
+        performanceMetrics: {} as any,
       },
       config: {
         debounceMs: 300,
@@ -145,7 +155,7 @@ describe('Store Selectors', () => {
 
       const renderingState: AppState = {
         ...mockState,
-        rendering: { ...mockState.rendering, isRendering: true } as RenderingState,
+        babylonRendering: { ...mockState.babylonRendering, isRendering: true } as BabylonRenderingState,
       };
       expect(selectCanRender(renderingState)).toBe(false);
 
@@ -177,7 +187,7 @@ describe('Store Selectors', () => {
 
       const renderingState: AppState = {
         ...mockState,
-        rendering: { ...mockState.rendering, isRendering: true } as RenderingState,
+        babylonRendering: { ...mockState.babylonRendering, isRendering: true } as BabylonRenderingState,
       };
       expect(selectIsProcessing(renderingState)).toBe(true);
     });
@@ -193,10 +203,10 @@ describe('Store Selectors', () => {
 
       const renderErrorState: AppState = {
         ...mockState,
-        rendering: {
-          ...mockState.rendering,
-          renderErrors: [{ type: 'webgl' as const, message: 'render error' }],
-        } as RenderingState,
+        babylonRendering: {
+          ...mockState.babylonRendering,
+          renderErrors: [{ code: 'webgl', message: 'render error', timestamp: new Date(), service: 'rendering' }],
+        } as BabylonRenderingState,
       };
       expect(selectHasAnyErrors(renderErrorState)).toBe(true);
     });
@@ -207,10 +217,10 @@ describe('Store Selectors', () => {
       const errorState: AppState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['error1', 'error2'] },
-        rendering: {
-          ...mockState.rendering,
-          renderErrors: [{ type: 'csg' as const, message: 'error3' }],
-        } as RenderingState,
+        babylonRendering: {
+          ...mockState.babylonRendering,
+          renderErrors: [{ code: 'csg', message: 'error3', timestamp: new Date(), service: 'rendering' }],
+        } as BabylonRenderingState,
       };
       expect(selectTotalErrors(errorState)).toBe(3);
     });
@@ -221,10 +231,10 @@ describe('Store Selectors', () => {
       const errorState: AppState = {
         ...mockState,
         parsing: { ...mockState.parsing, errors: ['parse error'] },
-        rendering: {
-          ...mockState.rendering,
-          renderErrors: [{ type: 'csg' as const, message: 'render error' }],
-        } as RenderingState,
+        babylonRendering: {
+          ...mockState.babylonRendering,
+          renderErrors: [{ code: 'csg', message: 'render error', timestamp: new Date(), service: 'rendering' }],
+        } as BabylonRenderingState,
       };
       expect(selectAllErrors(errorState)).toEqual(['parse error', 'render error']);
     });
@@ -255,8 +265,8 @@ describe('Store Selectors', () => {
         ...mockState,
         editor: { ...mockState.editor, lastSaved: null },
         parsing: { ...mockState.parsing, lastParsed: null },
-        rendering: mockState.rendering
-          ? { ...mockState.rendering, lastRendered: null }
+        babylonRendering: mockState.babylonRendering
+          ? { ...mockState.babylonRendering, lastRendered: null }
           : {
               meshes: [],
               isRendering: false,
@@ -274,6 +284,14 @@ describe('Store Selectors', () => {
               },
               renderTime: 0,
               lastRendered: null,
+              engine: {} as any,
+              inspector: {} as any,
+              csg: {} as any,
+              particles: [],
+              iblShadows: {} as any,
+              materials: [],
+              renderGraphs: [],
+              performanceMetrics: {} as any,
             },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
@@ -281,7 +299,7 @@ describe('Store Selectors', () => {
       // Test with state where rendering has default values
       const noRenderingState = {
         ...mockState,
-        rendering: {
+        babylonRendering: {
           meshes: [],
           isRendering: false,
           renderErrors: [],
@@ -298,6 +316,14 @@ describe('Store Selectors', () => {
           },
           renderTime: 0,
           lastRendered: null,
+          engine: {} as any,
+          inspector: {} as any,
+          csg: {} as any,
+          particles: [],
+          iblShadows: {} as any,
+          materials: [],
+          renderGraphs: [],
+          performanceMetrics: {} as any,
         },
       };
       expect(selectLastActivity(noRenderingState)).toEqual(new Date('2024-01-01T10:01:00Z')); // parsing.lastParsed is most recent
@@ -345,9 +371,9 @@ describe('Store Selectors', () => {
       expect(stats.meshCount).toBe(2); // mockState has 2 meshes
       expect(stats.errorCount).toBe(0);
       expect(stats.renderTime).toBe(25.3);
-      expect(stats.lastRendered).toEqual(mockState.rendering?.lastRendered);
+      expect(stats.lastRendered).toEqual(mockState.babylonRendering?.lastRendered);
       expect(stats.isRendering).toBe(false);
-      expect(stats.camera).toEqual(mockState.rendering?.camera);
+      expect(stats.camera).toEqual(mockState.babylonRendering?.camera);
     });
 
     it('should select feature flags', () => {

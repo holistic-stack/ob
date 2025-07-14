@@ -168,7 +168,6 @@ export class BabylonCSG2Service {
         operationId,
         timestamp: new Date(),
         inputMeshIds: [meshA.id, meshB.id],
-        manifoldVersion: '3.1.1',
         babylonVersion: '8.16.1',
         performance: performanceMetrics,
       };

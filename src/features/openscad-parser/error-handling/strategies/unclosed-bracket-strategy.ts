@@ -16,7 +16,7 @@
  * - **High Priority Processing**: Executes early due to structural importance
  *
  * Key features:
- * - **Complete Bracket Support**: Handles all three bracket types used in OpenSCAD
+ * - **Complete Bracket Support**: Handles all bracket types used in OpenSCAD
  * - **Nested Structure Handling**: Correctly processes deeply nested bracket combinations
  * - **Smart Closing Order**: Closes brackets in Last-In-First-Out (LIFO) order
  * - **Brace Formatting**: Adds closing braces on new lines for better readability

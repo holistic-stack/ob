@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
 import { ModuleVisitor } from './module-visitor.js';
+import type { ParameterValue } from '../ast-types.js';
 
 describe('ModuleVisitor', () => {
   let parser: OpenscadParser;
@@ -50,7 +51,8 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        const visitor = new ModuleVisitor(code, errorHandler);
+        const variableScope = new Map<string, ParameterValue>();
+        const visitor = new ModuleVisitor(code, errorHandler, variableScope);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
         expect(result).not.toBeNull();
@@ -88,7 +90,8 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        const visitor = new ModuleVisitor(code, errorHandler);
+        const variableScope = new Map<string, ParameterValue>();
+        const visitor = new ModuleVisitor(code, errorHandler, variableScope);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
         expect(result).not.toBeNull();
@@ -126,7 +129,8 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        const visitor = new ModuleVisitor(code, errorHandler);
+        const variableScope = new Map<string, ParameterValue>();
+        const visitor = new ModuleVisitor(code, errorHandler, variableScope);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
         expect(result).not.toBeNull();
@@ -167,7 +171,8 @@ describe('ModuleVisitor', () => {
       expect(moduleDefNode).toBeDefined();
 
       if (moduleDefNode) {
-        const visitor = new ModuleVisitor(code, errorHandler);
+        const variableScope = new Map<string, ParameterValue>();
+        const visitor = new ModuleVisitor(code, errorHandler, variableScope);
         const result = visitor.visitModuleDefinition(moduleDefNode);
 
         expect(result).not.toBeNull();

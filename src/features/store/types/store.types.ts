@@ -23,6 +23,9 @@ import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import type { ParseOptions } from '../slices/parsing-slice.types.js';
 import type { BabylonRenderingActions, BabylonRenderingState } from '../slices/babylon-rendering-slice';
 
+// Re-export types for external use
+export type { BabylonRenderingState };
+
 /**
  * Parsing state for OpenSCAD AST processing
  */
