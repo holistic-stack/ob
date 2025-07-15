@@ -68,6 +68,15 @@ export type {
   VariableContext,
   ControlFlowError,
 } from './control-flow-operations';
+
+// Extrusion Operations Service
+export { ExtrusionOperationsService } from './extrusion-operations';
+export type {
+  Profile2DPoint,
+  OpenSCADLinearExtrudeParams,
+  OpenSCADRotateExtrudeParams,
+  ExtrusionError,
+} from './extrusion-operations';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,
