@@ -188,13 +188,19 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleSceneReady = useCallback(
     async (scene: BabylonSceneType) => {
       logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
-      logger.info(`[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`);
+      logger.info(
+        `[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`
+      );
 
       sceneRef.current = scene;
 
       if (scene) {
-        logger.info(`[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`);
-        logger.info(`[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine().getRenderingCanvas() ? 'exists' : 'missing'}`);
+        logger.info(
+          `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`
+        );
+        logger.info(
+          `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine().getRenderingCanvas() ? 'exists' : 'missing'}`
+        );
       }
 
       logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
@@ -208,7 +214,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleEngineReady = useCallback(
     (engine: BabylonEngineType) => {
       logger.info('[INFO][StoreConnectedRenderer] 🚀 Engine ready callback triggered!');
-      logger.info(`[INFO][StoreConnectedRenderer] Engine details: ${engine ? 'Engine object exists' : 'Engine is null'}`);
+      logger.info(
+        `[INFO][StoreConnectedRenderer] Engine details: ${engine ? 'Engine object exists' : 'Engine is null'}`
+      );
 
       // Start performance monitoring
       updatePerformanceMetrics();
@@ -292,7 +300,15 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         clearTimeout(renderTimeoutRef.current);
       }
     };
-  }, [ast, isRendering, safeRenderAST, safeClearScene, meshes.length, onRenderComplete, onRenderError]);
+  }, [
+    ast,
+    isRendering,
+    safeRenderAST,
+    safeClearScene,
+    meshes.length,
+    onRenderComplete,
+    onRenderError,
+  ]);
 
   /**
    * Handle inspector toggle

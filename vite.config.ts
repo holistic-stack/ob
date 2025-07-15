@@ -43,12 +43,7 @@ export default defineConfig({
           // Monaco Editor - large code editor dependency
           monaco: ['monaco-editor', '@monaco-editor/react'],
           // BabylonJS - 3D rendering engine
-          babylon: [
-            '@babylonjs/core',
-            '@babylonjs/materials',
-            '@babylonjs/loaders',
-            'react-babylonjs',
-          ],
+          babylon: ['@babylonjs/core', '@babylonjs/materials', '@babylonjs/loaders'],
           // Parsing libraries
           parsing: ['web-tree-sitter'],
           // React ecosystem

@@ -1,6 +1,6 @@
 /**
  * @file React Error Boundary Component
- * 
+ *
  * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI instead of crashing.
  */
@@ -27,9 +27,9 @@ interface ErrorBoundaryProps {
 /**
  * Default fallback component for error display
  */
-const DefaultErrorFallback: React.FC<{ error: Error; errorInfo: React.ErrorInfo }> = ({ 
-  error, 
-  errorInfo 
+const DefaultErrorFallback: React.FC<{ error: Error; errorInfo: React.ErrorInfo }> = ({
+  error,
+  errorInfo,
 }) => (
   <div
     style={{
@@ -42,38 +42,36 @@ const DefaultErrorFallback: React.FC<{ error: Error; errorInfo: React.ErrorInfo 
       fontFamily: 'monospace',
     }}
   >
-    <h2 style={{ margin: '0 0 16px 0', color: '#d63031' }}>
-      🚨 Component Error
-    </h2>
+    <h2 style={{ margin: '0 0 16px 0', color: '#d63031' }}>🚨 Component Error</h2>
     <details style={{ marginBottom: '16px' }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
-        Error Details
-      </summary>
-      <pre style={{ 
-        marginTop: '8px', 
-        padding: '12px', 
-        backgroundColor: '#fff', 
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        overflow: 'auto',
-        fontSize: '12px'
-      }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>Error Details</summary>
+      <pre
+        style={{
+          marginTop: '8px',
+          padding: '12px',
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          overflow: 'auto',
+          fontSize: '12px',
+        }}
+      >
         {error.message}
       </pre>
     </details>
     <details>
-      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
-        Component Stack
-      </summary>
-      <pre style={{ 
-        marginTop: '8px', 
-        padding: '12px', 
-        backgroundColor: '#fff', 
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        overflow: 'auto',
-        fontSize: '12px'
-      }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>Component Stack</summary>
+      <pre
+        style={{
+          marginTop: '8px',
+          padding: '12px',
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          overflow: 'auto',
+          fontSize: '12px',
+        }}
+      >
         {errorInfo.componentStack}
       </pre>
     </details>
@@ -82,7 +80,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; errorInfo: React.ErrorInfo 
 
 /**
  * React Error Boundary Component
- * 
+ *
  * Catches and handles errors in child components following React error boundary patterns.
  * Provides detailed error logging and customizable fallback UI.
  */
@@ -106,7 +104,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     const componentName = this.props.componentName || 'Unknown';
-    
+
     // Log the error with full details
     logger.error(`[ERROR][ErrorBoundary] Error caught in ${componentName}:`, {
       error: {
@@ -130,13 +128,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   override render(): React.ReactNode {
     if (this.state.hasError && this.state.error && this.state.errorInfo) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      
-      return (
-        <FallbackComponent 
-          error={this.state.error} 
-          errorInfo={this.state.errorInfo} 
-        />
-      );
+
+      return <FallbackComponent error={this.state.error} errorInfo={this.state.errorInfo} />;
     }
 
     return this.props.children;
@@ -155,8 +148,8 @@ export const withErrorBoundary = <P extends object>(
       <Component {...props} />
     </ErrorBoundary>
   );
-  
+
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 };

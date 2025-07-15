@@ -9,7 +9,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { StoreConnectedRenderer } from './features/babylon-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
-import { ErrorBoundary } from './shared/components/error-boundary';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { useAppStore } from './features/store/app-store';
 import {
@@ -20,6 +19,7 @@ import {
   selectRenderingIsRendering,
   selectRenderingMeshes,
 } from './features/store/selectors';
+import { ErrorBoundary } from './shared/components/error-boundary';
 import { createLogger } from './shared/services/logger.service';
 
 /**

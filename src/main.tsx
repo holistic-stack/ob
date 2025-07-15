@@ -37,7 +37,7 @@ logger.debug('Rendering application');
 root.render(
   // Temporarily disable StrictMode to debug snapshot caching issues
   // <React.StrictMode>
-    <App />
+  <App />
   // </React.StrictMode>
 );
 

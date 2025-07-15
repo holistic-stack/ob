@@ -11,13 +11,14 @@ import {
   Color3,
   Color4,
   DirectionalLight,
+  Engine,
   HemisphericLight,
   MeshBuilder,
-  Vector3
+  Scene,
+  Vector3,
 } from '@babylonjs/core';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Engine, Scene } from 'react-babylonjs';
+import { useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
 
@@ -153,7 +154,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   config: userConfig,
   camera: userCamera,
   lighting: userLighting,
-  children,
   onSceneReady,
   onEngineReady,
   onRenderLoop,
@@ -194,187 +194,153 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const { inspectorService, hideInspector } = useBabylonInspector();
 
   /**
-   * Handle scene ready callback
-   */
-  const handleSceneReady = useCallback(
-    async (sceneEventArgs: { scene: BabylonSceneType }) => {
-      const scene = sceneEventArgs.scene;
-      logger.info('[INFO][BabylonScene] 🎬 Scene ready - creating camera and lights manually');
-      sceneRef.current = scene;
-
-      // Configure scene properties
-      scene.clearColor = new Color4(
-        config.backgroundColor.r,
-        config.backgroundColor.g,
-        config.backgroundColor.b,
-        1.0
-      );
-      scene.environmentIntensity = config.environmentIntensity;
-      scene.imageProcessingConfiguration.isEnabled = config.imageProcessingEnabled;
-
-      // Create camera manually since JSX components aren't working
-      if (camera.type === 'arcRotate') {
-        const arcCamera = new ArcRotateCamera(
-          'camera',
-          camera.alpha ?? -Math.PI / 2,
-          camera.beta ?? Math.PI / 2.5,
-          camera.radius ?? 10,
-          camera.target ? new Vector3(camera.target.x, camera.target.y, camera.target.z) : Vector3.Zero(),
-          scene
-        );
-        arcCamera.fov = camera.fov ?? Math.PI / 4;
-        arcCamera.minZ = camera.minZ ?? 0.1;
-        arcCamera.maxZ = camera.maxZ ?? 1000;
-        arcCamera.setActiveOnSceneIfNoneActive = true;
-        logger.info('[INFO][BabylonScene] ✅ ArcRotate camera created');
-      }
-
-      // Create lights manually
-      if (lighting.ambient.enabled) {
-        const ambientLight = new HemisphericLight(
-          'ambient-light',
-          lighting.ambient.direction || new Vector3(0, 1, 0),
-          scene
-        );
-        ambientLight.diffuse = lighting.ambient.color || new Color3(1, 1, 1);
-        ambientLight.intensity = lighting.ambient.intensity || 0.6;
-        logger.info('[INFO][BabylonScene] ✅ Ambient light created');
-      }
-
-      if (lighting.directional.enabled) {
-        const directionalLight = new DirectionalLight(
-          'directional-light',
-          lighting.directional.direction || new Vector3(-1, -1, -1),
-          scene
-        );
-        directionalLight.diffuse = lighting.directional.color || new Color3(1, 1, 1);
-        directionalLight.intensity = lighting.directional.intensity || 1.0;
-        logger.info('[INFO][BabylonScene] ✅ Directional light created');
-      }
-
-      // Create test cube manually
-      const testCube = MeshBuilder.CreateBox(
-        'test-cube',
-        { size: 2 },
-        scene
-      );
-      testCube.position = new Vector3(0, 0, 0);
-      logger.info('[INFO][BabylonScene] ✅ Test cube created');
-
-      // Initialize inspector if enabled (async operation)
-      if (config.enableInspector && inspectorService) {
-        inspectorService.show(scene).then((result) => {
-          if (!result.success) {
-            logger.warn(`[WARN][BabylonScene] Failed to show inspector: ${result.error.message}`);
-          }
-        });
-      }
-
-      logger.info(`[INFO][BabylonScene] Scene setup complete - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`);
-
-      // Call user callback
-      onSceneReady?.(scene);
-    },
-    [config, camera, lighting, inspectorService, onSceneReady]
-  );
-
-  /**
-   * Handle engine ready callback
-   */
-  const _handleEngineReady = useCallback(
-    (engine: BabylonEngineType) => {
-      logger.debug('[DEBUG][BabylonScene] Engine ready');
-      engineRef.current = engine;
-
-      // Call user callback
-      onEngineReady?.(engine);
-    },
-    [onEngineReady]
-  );
-
-  /**
-   * Handle render loop callback
-   */
-  const _handleRenderLoop = useCallback(() => {
-    // Call user callback
-    onRenderLoop?.();
-  }, [onRenderLoop]);
-
-  /**
-   * Engine initialization is handled by react-babylonjs Engine component
-   * No manual initialization needed
-   */
-
-  /**
-   * Cleanup on unmount
+   * Initialize BabylonJS engine and scene
    */
   useEffect(() => {
+    if (!canvasRef.current) return;
+
+    logger.init('[INIT][BabylonScene] Initializing BabylonJS engine and scene');
+
+    // Create engine
+    const engine = new Engine(
+      canvasRef.current,
+      config.antialias,
+      {
+        preserveDrawingBuffer: true,
+        stencil: true,
+        loseContextOnDispose: true,
+      },
+      config.adaptToDeviceRatio
+    );
+
+    engineRef.current = engine;
+
+    // Create scene
+    const scene = new Scene(engine);
+
+    sceneRef.current = scene;
+
+    // Configure scene
+    scene.clearColor = new Color4(
+      config.backgroundColor.r,
+      config.backgroundColor.g,
+      config.backgroundColor.b,
+      1
+    );
+
+    // Create camera
+    if (camera.type === 'arcRotate') {
+      const arcCamera = new ArcRotateCamera(
+        'camera',
+        camera.alpha ?? -Math.PI / 2,
+        camera.beta ?? Math.PI / 2.5,
+        camera.radius ?? 10,
+        camera.target
+          ? new Vector3(camera.target.x, camera.target.y, camera.target.z)
+          : Vector3.Zero(),
+        scene
+      );
+
+      if (camera.position) {
+        arcCamera.position = new Vector3(camera.position.x, camera.position.y, camera.position.z);
+      }
+
+      arcCamera.fov = camera.fov ?? Math.PI / 4;
+      arcCamera.minZ = camera.minZ ?? 0.1;
+      arcCamera.maxZ = camera.maxZ ?? 1000;
+      scene.setActiveCameraByName('camera');
+    }
+
+    // Create lighting
+    if (lighting.ambient.enabled) {
+      const ambientLight = new HemisphericLight(
+        'ambient-light',
+        lighting.ambient.direction || new Vector3(0, 1, 0),
+        scene
+      );
+      ambientLight.diffuse = lighting.ambient.color;
+      ambientLight.intensity = lighting.ambient.intensity;
+    }
+
+    if (lighting.directional.enabled) {
+      const directionalLight = new DirectionalLight(
+        'directional-light',
+        lighting.directional.direction,
+        scene
+      );
+      directionalLight.diffuse = lighting.directional.color;
+      directionalLight.intensity = lighting.directional.intensity;
+    }
+
+    // Create test cube to verify rendering pipeline
+    const testCube = MeshBuilder.CreateBox('test-cube', { size: 2 }, scene);
+    testCube.position = Vector3.Zero();
+
+    // Setup render loop
+    engine.runRenderLoop(() => {
+      if (onRenderLoop) {
+        onRenderLoop();
+      }
+      scene.render();
+    });
+
+    // Handle resize
+    const handleResize = () => {
+      engine.resize();
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Call callbacks
+    if (onEngineReady) {
+      onEngineReady(engine);
+    }
+
+    if (onSceneReady) {
+      onSceneReady(scene);
+    }
+
+    logger.info('[INFO][BabylonScene] ✅ BabylonJS engine and scene initialized');
+
+    // Cleanup
     return () => {
-      // Cleanup on unmount
+      logger.debug('[DEBUG][BabylonScene] Cleaning up BabylonJS resources');
+      window.removeEventListener('resize', handleResize);
+
       if (config.enableInspector && inspectorService) {
         hideInspector();
       }
+
+      scene.dispose();
+      engine.dispose();
+
+      sceneRef.current = null;
+      engineRef.current = null;
+
+      logger.end('[END][BabylonScene] Cleanup complete');
     };
-  }, [config.enableInspector, inspectorService, hideInspector]);
+  }, [
+    config,
+    camera,
+    lighting,
+    onEngineReady,
+    onSceneReady,
+    onRenderLoop,
+    inspectorService,
+    hideInspector,
+  ]);
 
   /**
-   * Render the BabylonJS scene
+   * Render the canvas element
    */
-
   return (
     <div className={className} style={style}>
-            <Engine antialias={config.antialias} adaptToDeviceRatio={config.adaptToDeviceRatio}>
-        <Scene onSceneMount={handleSceneReady}>
-          {/* Camera */}
-          {camera.type === 'arcRotate' && (
-            <arcRotateCamera
-              name="camera"
-              position={
-                camera.position
-                  ? new Vector3(camera.position.x, camera.position.y, camera.position.z)
-                  : new Vector3(10, 10, 10)
-              }
-              target={
-                camera.target
-                  ? new Vector3(camera.target.x, camera.target.y, camera.target.z)
-                  : Vector3.Zero()
-              }
-              radius={camera.radius ?? 10}
-              alpha={camera.alpha ?? -Math.PI / 2}
-              beta={camera.beta ?? Math.PI / 2.5}
-              fov={camera.fov ?? Math.PI / 4}
-              minZ={camera.minZ ?? 0.1}
-              maxZ={camera.maxZ ?? 1000}
-              setActiveOnSceneIfNoneActive={true}
-            />
-          )}
-
-          {/* Lighting */}
-          {lighting.ambient.enabled && (
-            <hemisphericLight
-              name="ambient-light"
-              direction={lighting.ambient.direction || new Vector3(0, 1, 0)}
-              diffuse={lighting.ambient.color}
-              intensity={lighting.ambient.intensity}
-            />
-          )}
-
-          {lighting.directional.enabled && (
-            <directionalLight
-              name="directional-light"
-              direction={lighting.directional.direction}
-              diffuse={lighting.directional.color}
-              intensity={lighting.directional.intensity}
-            />
-          )}
-
-          {/* Test cube to verify rendering pipeline */}
-          <box name="test-cube" size={2} position={new Vector3(0, 0, 0)} />
-
-          {/* User content */}
-          {children}
-        </Scene>
-      </Engine>
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        data-testid="babylon-canvas"
+        aria-label="BabylonJS 3D Scene"
+        role="img"
+      />
     </div>
   );
 };

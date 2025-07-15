@@ -65,7 +65,8 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     }))
   );
 
-  const { code, selection, isDirty, parsingErrors, parsingWarnings, enableRealTimeParsing } = storeState;
+  const { code, selection, isDirty, parsingErrors, parsingWarnings, enableRealTimeParsing } =
+    storeState;
 
   // Store actions - use useShallow for actions
   const storeActions = useAppStore(
@@ -78,7 +79,13 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     }))
   );
 
-  const { updateCode, updateSelection, updateCursorPosition, markDirty, parseAST: _parseAST } = storeActions;
+  const {
+    updateCode,
+    updateSelection,
+    updateCursorPosition,
+    markDirty,
+    parseAST: _parseAST,
+  } = storeActions;
 
   /**
    * Handle code changes - update store with 300ms debouncing
