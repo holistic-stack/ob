@@ -6,21 +6,17 @@
  */
 
 import type { Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
-import {
-  ArcRotateCamera,
-  Color3,
-  Color4,
-  DirectionalLight,
-  Engine,
-  HemisphericLight,
-  MeshBuilder,
-  Scene,
-  Vector3,
-} from '@babylonjs/core';
+import { Color3, Engine, Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
+import type {
+  SceneCameraConfig as ServiceCameraConfig,
+  SceneLightingConfig as ServiceLightingConfig,
+  BabylonSceneConfig as ServiceSceneConfig,
+} from '../../services/babylon-scene-service';
+import { createBabylonSceneService } from '../../services/babylon-scene-service';
 
 const logger = createLogger('BabylonScene');
 
@@ -194,7 +190,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const { inspectorService, hideInspector } = useBabylonInspector();
 
   /**
-   * Initialize BabylonJS engine and scene
+   * Initialize BabylonJS engine and scene using Scene Management Service
    */
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -215,73 +211,63 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     engineRef.current = engine;
 
-    // Create scene
-    const scene = new Scene(engine);
+    // Create scene service and initialize
+    const sceneService = createBabylonSceneService();
 
-    sceneRef.current = scene;
+    // Convert component config to service config
+    const serviceConfig: ServiceSceneConfig = {
+      autoClear: false,
+      autoClearDepthAndStencil: false,
+      backgroundColor: config.backgroundColor,
+      environmentIntensity: config.environmentIntensity,
+      enablePhysics: config.enablePhysics,
+      enableInspector: config.enableInspector,
+      imageProcessingEnabled: config.imageProcessingEnabled,
+    };
 
-    // Configure scene
-    scene.clearColor = new Color4(
-      config.backgroundColor.r,
-      config.backgroundColor.g,
-      config.backgroundColor.b,
-      1
-    );
+    const serviceCameraConfig: Partial<ServiceCameraConfig> = {
+      type: camera.type,
+      position: camera.position,
+      target: camera.target,
+      ...(camera.radius !== undefined && { radius: camera.radius }),
+      ...(camera.alpha !== undefined && { alpha: camera.alpha }),
+      ...(camera.beta !== undefined && { beta: camera.beta }),
+      ...(camera.fov !== undefined && { fov: camera.fov }),
+      ...(camera.minZ !== undefined && { minZ: camera.minZ }),
+      ...(camera.maxZ !== undefined && { maxZ: camera.maxZ }),
+    };
 
-    // Create camera
-    if (camera.type === 'arcRotate') {
-      const arcCamera = new ArcRotateCamera(
-        'camera',
-        camera.alpha ?? -Math.PI / 2,
-        camera.beta ?? Math.PI / 2.5,
-        camera.radius ?? 10,
-        camera.target
-          ? new Vector3(camera.target.x, camera.target.y, camera.target.z)
-          : Vector3.Zero(),
-        scene
-      );
+    const serviceLightingConfig: ServiceLightingConfig = {
+      ambient: lighting.ambient,
+      directional: lighting.directional,
+    };
 
-      if (camera.position) {
-        arcCamera.position = new Vector3(camera.position.x, camera.position.y, camera.position.z);
-      }
+    const initOptions = {
+      engine,
+      config: serviceConfig,
+      camera: serviceCameraConfig,
+      lighting: serviceLightingConfig,
+      onSceneReady: (scene: BabylonSceneType) => {
+        sceneRef.current = scene;
+        onSceneReady?.(scene);
+      },
+      ...(onRenderLoop && { onRenderLoop }),
+    };
 
-      arcCamera.fov = camera.fov ?? Math.PI / 4;
-      arcCamera.minZ = camera.minZ ?? 0.1;
-      arcCamera.maxZ = camera.maxZ ?? 1000;
-      scene.setActiveCameraByName('camera');
+    const result = sceneService.init(initOptions);
+
+    if (!result.success) {
+      logger.error('[ERROR][BabylonScene] Scene initialization failed:', result.error);
+      return;
     }
 
-    // Create lighting
-    if (lighting.ambient.enabled) {
-      const ambientLight = new HemisphericLight(
-        'ambient-light',
-        lighting.ambient.direction || new Vector3(0, 1, 0),
-        scene
-      );
-      ambientLight.diffuse = lighting.ambient.color;
-      ambientLight.intensity = lighting.ambient.intensity;
-    }
-
-    if (lighting.directional.enabled) {
-      const directionalLight = new DirectionalLight(
-        'directional-light',
-        lighting.directional.direction,
-        scene
-      );
-      directionalLight.diffuse = lighting.directional.color;
-      directionalLight.intensity = lighting.directional.intensity;
-    }
-
-    // Create test cube to verify rendering pipeline
-    const testCube = MeshBuilder.CreateBox('test-cube', { size: 2 }, scene);
-    testCube.position = Vector3.Zero();
+    logger.debug('[DEBUG][BabylonScene] Scene initialized successfully');
 
     // Setup render loop
     engine.runRenderLoop(() => {
-      if (onRenderLoop) {
-        onRenderLoop();
+      if (sceneRef.current) {
+        sceneRef.current.render();
       }
-      scene.render();
     });
 
     // Handle resize
@@ -290,14 +276,8 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
     };
     window.addEventListener('resize', handleResize);
 
-    // Call callbacks
-    if (onEngineReady) {
-      onEngineReady(engine);
-    }
-
-    if (onSceneReady) {
-      onSceneReady(scene);
-    }
+    // Call engine ready callback
+    onEngineReady?.(engine);
 
     logger.info('[INFO][BabylonScene] ✅ BabylonJS engine and scene initialized');
 
@@ -310,7 +290,10 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         hideInspector();
       }
 
-      scene.dispose();
+      // Dispose scene service
+      sceneService.dispose();
+
+      // Dispose engine
       engine.dispose();
 
       sceneRef.current = null;

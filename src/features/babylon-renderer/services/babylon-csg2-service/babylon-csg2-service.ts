@@ -9,6 +9,7 @@ import type { CSG2, Mesh, Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+
 import {
   type CSGDifferenceResult,
   type CSGError,
@@ -22,6 +23,7 @@ import {
   type CSGUnionResult,
   DEFAULT_CSG_CONFIG,
 } from '../../types/babylon-csg.types';
+
 
 const logger = createLogger('BabylonCSG2Service');
 
@@ -387,32 +389,7 @@ export class BabylonCSG2Service {
     logger.debug('[DEBUG][BabylonCSG2Service] Configuration updated');
   }
 
-  /**
-   * Convert an AST node to CSG result
-   */
-  async convertNode(
-    astNode: { type: string },
-    _options: Record<string, unknown>
-  ): Promise<Result<{ mesh: Mesh | null; metadata: Record<string, unknown> }, CSGError>> {
-    logger.debug(`[DEBUG][BabylonCSG2Service] Converting AST node: ${astNode.type}`);
 
-    return tryCatch(
-      () => {
-        // Basic conversion logic - this is a placeholder
-        // In a real implementation, this would convert AST nodes to meshes
-        // and perform CSG operations as needed
-        return {
-          mesh: null, // Placeholder
-          metadata: {
-            nodeType: astNode.type,
-            timestamp: new Date(),
-          },
-        };
-      },
-      (error) =>
-        this.createError(CSGErrorCode.OPERATION_FAILED, `Failed to convert AST node: ${error}`)
-    );
-  }
 
   /**
    * Dispose the service and clean up resources

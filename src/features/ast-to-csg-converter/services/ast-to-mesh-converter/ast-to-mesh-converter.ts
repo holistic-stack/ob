@@ -16,7 +16,7 @@ import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
-import { BabylonCSG2Service } from '../../../babylon-renderer/services/babylon-csg2-service';
+
 import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
 import type {
   ASTToMeshConverter,

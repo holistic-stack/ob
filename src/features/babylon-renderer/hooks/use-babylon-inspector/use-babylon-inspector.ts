@@ -6,7 +6,7 @@
  */
 
 import type { Scene } from '@babylonjs/core';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useRef, useState, useTransition } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   InspectorConfig,
@@ -37,11 +37,12 @@ export interface InspectorOptions {
 }
 
 /**
- * Hook return type
+ * Hook return type with React 19 concurrent features
  */
 export interface UseBabylonInspectorReturn {
   readonly inspectorService: BabylonInspectorService | null;
   readonly inspectorState: InspectorState;
+  readonly deferredInspectorState: InspectorState;
   readonly showInspector: (
     scene?: Scene,
     options?: InspectorOptions
@@ -49,6 +50,8 @@ export interface UseBabylonInspectorReturn {
   readonly hideInspector: () => InspectorHideResult;
   readonly switchTab: (tabName: InspectorTab) => Promise<InspectorTabSwitchResult>;
   readonly isInspectorAvailable: boolean;
+  readonly isPending: boolean;
+  readonly startTransition: (callback: () => void) => void;
 }
 
 /**
@@ -87,6 +90,10 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   const inspectorServiceRef = useRef<BabylonInspectorService | null>(null);
   const currentSceneRef = useRef<Scene | null>(null);
 
+  // React 19 concurrent features
+  const [isPending, startTransition] = useTransition();
+  const deferredInspectorState = useDeferredValue(inspectorState);
+
   /**
    * Initialize inspector service if not already created
    */
@@ -115,7 +122,7 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   }, []);
 
   /**
-   * Show BabylonJS inspector
+   * Show BabylonJS inspector with React 19 concurrent features
    */
   const showInspector = useCallback(
     async (scene?: Scene, options: InspectorOptions = {}): Promise<InspectorShowResult> => {
@@ -131,11 +138,14 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
           timestamp: new Date(),
         };
 
-        setInspectorState((prev) => ({
-          ...prev,
-          error,
-          lastUpdated: new Date(),
-        }));
+        // Use startTransition for non-blocking state updates
+        startTransition(() => {
+          setInspectorState((prev) => ({
+            ...prev,
+            error,
+            lastUpdated: new Date(),
+          }));
+        });
 
         if (options.onInspectorError) {
           options.onInspectorError(new Error(error.message));
@@ -158,9 +168,11 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       const result = await inspectorService.show(targetScene, config);
 
       if (result.success) {
-        // Update state with successful show
+        // Update state with successful show using startTransition for non-blocking updates
         const newState = inspectorService.getState();
-        setInspectorState(newState);
+        startTransition(() => {
+          setInspectorState(newState);
+        });
         currentSceneRef.current = targetScene;
 
         // Call success callback
@@ -170,12 +182,14 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
 
         logger.debug('[DEBUG][useBabylonInspector] Inspector shown successfully');
       } else {
-        // Update state with error
-        setInspectorState((prev) => ({
-          ...prev,
-          error: result.error,
-          lastUpdated: new Date(),
-        }));
+        // Update state with error using startTransition for non-blocking updates
+        startTransition(() => {
+          setInspectorState((prev) => ({
+            ...prev,
+            error: result.error,
+            lastUpdated: new Date(),
+          }));
+        });
 
         // Call error callback
         if (options.onInspectorError) {
@@ -191,7 +205,7 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   );
 
   /**
-   * Hide BabylonJS inspector
+   * Hide BabylonJS inspector with React 19 concurrent features
    */
   const hideInspector = useCallback((): InspectorHideResult => {
     logger.debug('[DEBUG][useBabylonInspector] Hiding inspector...');
@@ -206,9 +220,11 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
     const result = inspectorServiceRef.current.hide();
 
     if (result.success) {
-      // Update state
+      // Update state using startTransition for non-blocking updates
       const newState = inspectorServiceRef.current.getState();
-      setInspectorState(newState);
+      startTransition(() => {
+        setInspectorState(newState);
+      });
       logger.debug('[DEBUG][useBabylonInspector] Inspector hidden successfully');
     } else {
       logger.error(`[ERROR][useBabylonInspector] Inspector hide failed: ${result.error.message}`);
@@ -240,9 +256,11 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       const result = await inspectorServiceRef.current.switchTab(tabName);
 
       if (result.success) {
-        // Update state
+        // Update state using startTransition for non-blocking updates
         const newState = inspectorServiceRef.current.getState();
-        setInspectorState(newState);
+        startTransition(() => {
+          setInspectorState(newState);
+        });
         logger.debug(`[DEBUG][useBabylonInspector] Switched to tab: ${tabName}`);
       } else {
         logger.error(`[ERROR][useBabylonInspector] Tab switch failed: ${result.error.message}`);
@@ -254,7 +272,7 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   );
 
   /**
-   * Update inspector state periodically when visible
+   * Update inspector state periodically when visible with React 19 concurrent features
    */
   useEffect(() => {
     if (!inspectorServiceRef.current || !inspectorState.isVisible) {
@@ -264,7 +282,10 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
     const updateInterval = setInterval(() => {
       const newState = inspectorServiceRef.current?.getState();
       if (newState) {
-        setInspectorState(newState);
+        // Use startTransition for non-blocking periodic updates
+        startTransition(() => {
+          setInspectorState(newState);
+        });
       }
     }, 2000); // Update every 2 seconds
 
@@ -290,9 +311,12 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   return {
     inspectorService: inspectorServiceRef.current,
     inspectorState,
+    deferredInspectorState,
     showInspector,
     hideInspector,
     switchTab,
     isInspectorAvailable: isInspectorAvailable(),
+    isPending,
+    startTransition,
   };
 };

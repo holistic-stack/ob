@@ -70,7 +70,7 @@ export type EngineErrorCode =
 /**
  * Result type for engine operations
  */
-export type EngineResult<T> = 
+export type EngineResult<T> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: EngineError };
 

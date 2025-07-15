@@ -12,7 +12,7 @@ import {
   Vector3,
 } from '@babylonjs/core';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
@@ -55,6 +55,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   onRenderError,
 }) => {
   const sceneRef = useRef<BabylonSceneType | null>(null);
+  const [isSceneReady, setIsSceneReady] = useState(false);
   const lastASTRef = useRef<readonly ASTNode[]>([]);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -193,13 +194,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       );
 
       sceneRef.current = scene;
+      setIsSceneReady(!!scene);
 
       if (scene) {
         logger.info(
-          `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`
+          `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes?.length ?? 0}, cameras: ${scene.cameras?.length ?? 0}, lights: ${scene.lights?.length ?? 0}`
         );
         logger.info(
-          `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine().getRenderingCanvas() ? 'exists' : 'missing'}`
+          `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine()?.getRenderingCanvas() ? 'exists' : 'missing'}`
         );
       }
 
@@ -314,7 +316,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Handle inspector toggle
    */
   useEffect(() => {
-    if (enableInspector && sceneRef.current) {
+    if (enableInspector && isSceneReady) {
       safeShowInspector().then((result) => {
         if (!result.success) {
           logger.warn(
@@ -330,7 +332,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         );
       }
     }
-  }, [enableInspector, safeShowInspector, safeHideInspector]);
+  }, [enableInspector, isSceneReady, safeShowInspector, safeHideInspector]);
 
   /**
    * Log render errors

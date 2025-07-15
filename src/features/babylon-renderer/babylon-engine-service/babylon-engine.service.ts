@@ -61,7 +61,7 @@ const createErrorResult = <T>(error: EngineError): EngineResult<T> => ({
 
 /**
  * BabylonJS Engine Management Service Implementation
- * 
+ *
  * Provides singleton pattern for engine management with:
  * - WebGL context loss prevention
  * - Performance monitoring for <16ms render targets
@@ -205,10 +205,7 @@ class BabylonEngineServiceImpl implements BabylonEngineService {
    */
   resize(): EngineResult<void> {
     if (!this.engine || !this.isInitialized) {
-      const error = createEngineError(
-        'ENGINE_INITIALIZATION_FAILED',
-        'Engine not initialized'
-      );
+      const error = createEngineError('ENGINE_INITIALIZATION_FAILED', 'Engine not initialized');
       return createErrorResult(error);
     }
 
@@ -230,10 +227,7 @@ class BabylonEngineServiceImpl implements BabylonEngineService {
    */
   startRenderLoop(callback?: () => void): EngineResult<void> {
     if (!this.engine || !this.isInitialized) {
-      const error = createEngineError(
-        'ENGINE_INITIALIZATION_FAILED',
-        'Engine not initialized'
-      );
+      const error = createEngineError('ENGINE_INITIALIZATION_FAILED', 'Engine not initialized');
       return createErrorResult(error);
     }
 
@@ -260,10 +254,7 @@ class BabylonEngineServiceImpl implements BabylonEngineService {
    */
   stopRenderLoop(): EngineResult<void> {
     if (!this.engine || !this.isInitialized) {
-      const error = createEngineError(
-        'ENGINE_INITIALIZATION_FAILED',
-        'Engine not initialized'
-      );
+      const error = createEngineError('ENGINE_INITIALIZATION_FAILED', 'Engine not initialized');
       return createErrorResult(error);
     }
 
