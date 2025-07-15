@@ -38,9 +38,6 @@ importers:
       react:
         specifier: 19.0.0
         version: 19.0.0
-      react-babylonjs:
-        specifier: 3.2.5-beta.2
-        version: 3.2.5-beta.2(@babylonjs/core@8.16.1)(@babylonjs/gui@8.16.1(@babylonjs/core@8.16.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0)
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
@@ -2271,19 +2268,6 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-  react-babylonjs@3.2.5-beta.2:
-    resolution: {integrity: sha512-loYNlDCVj9MK8ftd5Tmyzp/iZtmVM7jk314kCQOSDubnw63OvOiwlPeY8s8bptLLIHSnSLyYQB8Tos6A275o8A==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@babylonjs/core': 5.x || 6.x || 7.x || 8.x
-      '@babylonjs/gui': 5.x || 6.x || 7.x || 8.x
-      react: '>=17'
-      react-dom: '>=17'
-      react-reconciler: 0.29.2 || 0.31.0
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-
   react-docgen-typescript@2.4.0:
     resolution: {integrity: sha512-ZtAp5XTO5HRzQctjPU0ybY0RRCQO19X/8fxn3w7y2VVTUbGHDKULPTL4ky3vB05euSgG5NpALhEhDPvQ56wvXg==}
     peerDependencies:
@@ -2308,12 +2292,6 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
-
-  react-reconciler@0.31.0:
-    resolution: {integrity: sha512-7Ob7Z+URmesIsIVRjnLoDGwBEG/tVitidU0nMsqX/eeJaLY89RISO/10ERe0MqmzuKUUB1rmY+h1itMbUHg9BQ==}
-    engines: {node: '>=0.10.0'}
-    peerDependencies:
-      react: ^19.0.0
 
   react-refresh@0.17.0:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
@@ -4899,15 +4877,6 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  react-babylonjs@3.2.5-beta.2(@babylonjs/core@8.16.1)(@babylonjs/gui@8.16.1(@babylonjs/core@8.16.1))(react-dom@19.0.0(react@19.0.0))(react-reconciler@0.31.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      '@babylonjs/core': 8.16.1
-      '@babylonjs/gui': 8.16.1(@babylonjs/core@8.16.1)
-      react: 19.0.0
-      react-reconciler: 0.31.0(react@19.0.0)
-    optionalDependencies:
-      react-dom: 19.0.0(react@19.0.0)
-
   react-docgen-typescript@2.4.0(typescript@5.8.3):
     dependencies:
       typescript: 5.8.3
@@ -4940,11 +4909,6 @@ snapshots:
   react-is@17.0.2: {}
 
   react-is@18.3.1: {}
-
-  react-reconciler@0.31.0(react@19.0.0):
-    dependencies:
-      react: 19.0.0
-      scheduler: 0.25.0
 
   react-refresh@0.17.0: {}
 

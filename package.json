@@ -54,7 +54,6 @@
     "monaco-editor": "0.52.2",
     "ollama": "^0.5.16",
     "react": "19.0.0",
-    "react-babylonjs": "3.2.5-beta.2",
     "react-dom": "19.0.0",
     "react-error-boundary": "^6.0.0",
     "reselect": "^5.1.1",
