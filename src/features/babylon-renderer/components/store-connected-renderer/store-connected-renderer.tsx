@@ -13,6 +13,7 @@ import {
 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
 import { useAppStore } from '../../../store/app-store';
@@ -57,78 +58,73 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const lastASTRef = useRef<readonly ASTNode[]>([]);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Store selectors
+  // Store selectors - use individual primitive selectors to avoid infinite loops
   const ast = useAppStore(selectParsingAST);
   const isRendering = useAppStore(selectRenderingIsRendering);
   const renderErrors = useAppStore(selectRenderingErrors);
   const meshes = useAppStore(selectRenderingMeshes);
 
-  // Store actions
-  const {
-    initializeEngine,
-    renderAST,
-    clearScene,
-    updatePerformanceMetrics,
-    showInspector,
-    hideInspector,
-  } = useAppStore((state) => ({
-    initializeEngine:
-      state.initializeEngine ||
-      (() =>
-        Promise.resolve({
-          success: false,
-          error: {
-            code: 'NOT_IMPLEMENTED',
-            message: 'BabylonJS rendering not implemented',
-            timestamp: new Date(),
-            service: 'renderer',
-          },
-        })),
-    renderAST:
-      state.renderAST ||
-      (() =>
-        Promise.resolve({
-          success: false,
-          error: {
-            code: 'NOT_IMPLEMENTED',
-            message: 'BabylonJS rendering not implemented',
-            timestamp: new Date(),
-            service: 'renderer',
-          },
-        })),
-    clearScene:
-      state.clearScene ||
-      (() => {
-        /* no-op */
-      }),
-    updatePerformanceMetrics:
-      state.updatePerformanceMetrics ||
-      (() => {
-        /* no-op */
-      }),
-    showInspector:
-      state.showInspector ||
-      (() => ({
+  // Store actions - use individual selectors to avoid infinite loops
+  const renderAST = useAppStore((state) => state.renderAST);
+  const clearScene = useAppStore((state) => state.clearScene);
+  const updatePerformanceMetrics = useAppStore((state) => state.updatePerformanceMetrics);
+  const showInspector = useAppStore((state) => state.showInspector);
+  const hideInspector = useAppStore((state) => state.hideInspector);
+
+  // Create stable fallback functions to prevent infinite loops
+  const safeRenderAST = useCallback(
+    async (astNodes: any[]) => {
+      if (renderAST) {
+        return await renderAST(astNodes);
+      }
+      return {
         success: false,
         error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Inspector not implemented',
+          code: 'NOT_IMPLEMENTED' as const,
+          message: 'BabylonJS rendering not implemented',
           timestamp: new Date(),
-          service: 'inspector',
+          service: 'renderer' as const,
         },
-      })),
-    hideInspector:
-      state.hideInspector ||
-      (() => ({
-        success: false,
-        error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Inspector not implemented',
-          timestamp: new Date(),
-          service: 'inspector',
-        },
-      })),
-  }));
+      };
+    },
+    [renderAST]
+  );
+
+  const safeClearScene = useCallback(() => {
+    if (clearScene) {
+      clearScene();
+    }
+  }, [clearScene]);
+
+  const safeShowInspector = useCallback(async () => {
+    if (showInspector) {
+      return await showInspector();
+    }
+    return {
+      success: false,
+      error: {
+        code: 'NOT_IMPLEMENTED' as const,
+        message: 'Inspector not implemented',
+        timestamp: new Date(),
+        service: 'inspector' as const,
+      },
+    };
+  }, [showInspector]);
+
+  const safeHideInspector = useCallback(() => {
+    if (hideInspector) {
+      return hideInspector();
+    }
+    return {
+      success: false,
+      error: {
+        code: 'NOT_IMPLEMENTED' as const,
+        message: 'Inspector not implemented',
+        timestamp: new Date(),
+        service: 'inspector' as const,
+      },
+    };
+  }, [hideInspector]);
 
   /**
    * Scene configuration
@@ -191,32 +187,28 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   const handleSceneReady = useCallback(
     async (scene: BabylonSceneType) => {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Scene ready, initializing engine...');
+      logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
+      logger.info(`[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`);
+
       sceneRef.current = scene;
 
-      // Initialize BabylonJS engine through store
-      const canvas = scene.getEngine().getRenderingCanvas();
-      if (canvas) {
-        const result = await initializeEngine(canvas);
-        if (!result.success) {
-          logger.error(
-            `[ERROR][StoreConnectedRenderer] Engine initialization failed: ${result.error.message}`
-          );
-          onRenderError?.(new Error(result.error.message));
-        } else {
-          logger.debug('[DEBUG][StoreConnectedRenderer] Engine initialized successfully');
-        }
+      if (scene) {
+        logger.info(`[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`);
+        logger.info(`[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine().getRenderingCanvas() ? 'exists' : 'missing'}`);
       }
+
+      logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
     },
-    [initializeEngine, onRenderError]
+    [onRenderError]
   );
 
   /**
    * Handle engine ready
    */
   const handleEngineReady = useCallback(
-    (_engine: BabylonEngineType) => {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Engine ready');
+    (engine: BabylonEngineType) => {
+      logger.info('[INFO][StoreConnectedRenderer] 🚀 Engine ready callback triggered!');
+      logger.info(`[INFO][StoreConnectedRenderer] Engine details: ${engine ? 'Engine object exists' : 'Engine is null'}`);
 
       // Start performance monitoring
       updatePerformanceMetrics();
@@ -263,7 +255,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     // Skip if no AST
     if (!ast || ast.length === 0) {
       logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
-      clearScene();
+      safeClearScene();
       lastASTRef.current = ast;
       return;
     }
@@ -277,7 +269,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       logger.debug(`[DEBUG][StoreConnectedRenderer] Rendering AST with ${ast.length} nodes...`);
 
       const startTime = performance.now();
-      const result = await renderAST(ast);
+      const result = await safeRenderAST([...ast]);
       const renderTime = performance.now() - startTime;
 
       if (result.success) {
@@ -300,14 +292,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         clearTimeout(renderTimeoutRef.current);
       }
     };
-  }, [ast, isRendering, renderAST, clearScene, meshes.length, onRenderComplete, onRenderError]);
+  }, [ast, isRendering, safeRenderAST, safeClearScene, meshes.length, onRenderComplete, onRenderError]);
 
   /**
    * Handle inspector toggle
    */
   useEffect(() => {
     if (enableInspector && sceneRef.current) {
-      showInspector().then((result) => {
+      safeShowInspector().then((result) => {
         if (!result.success) {
           logger.warn(
             `[WARN][StoreConnectedRenderer] Failed to show inspector: ${result.error.message}`
@@ -315,14 +307,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         }
       });
     } else if (!enableInspector) {
-      const result = hideInspector();
+      const result = safeHideInspector();
       if (!result.success) {
         logger.warn(
           `[WARN][StoreConnectedRenderer] Failed to hide inspector: ${result.error.message}`
         );
       }
     }
-  }, [enableInspector, showInspector, hideInspector]);
+  }, [enableInspector, safeShowInspector, safeHideInspector]);
 
   /**
    * Log render errors

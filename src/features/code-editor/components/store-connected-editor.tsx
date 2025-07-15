@@ -7,6 +7,7 @@
 
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
@@ -52,20 +53,32 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   const heightStyle = typeof height === 'number' ? `${height}px` : height;
   const widthStyle = typeof width === 'number' ? `${width}px` : width;
 
-  // Store selectors - all data comes from Zustand
-  const code = useAppStore(selectEditorCode);
-  const selection = useAppStore(selectEditorSelection);
-  const isDirty = useAppStore(selectEditorIsDirty);
-  const parsingErrors = useAppStore(selectParsingErrors);
-  const parsingWarnings = useAppStore(selectParsingWarnings);
-  const enableRealTimeParsing = useAppStore(selectConfigEnableRealTimeParsing);
+  // Store selectors - use useShallow to avoid snapshot caching issues
+  const storeState = useAppStore(
+    useShallow((state) => ({
+      code: selectEditorCode(state),
+      selection: selectEditorSelection(state),
+      isDirty: selectEditorIsDirty(state),
+      parsingErrors: selectParsingErrors(state),
+      parsingWarnings: selectParsingWarnings(state),
+      enableRealTimeParsing: selectConfigEnableRealTimeParsing(state),
+    }))
+  );
 
-  // Store actions - all mutations go through Zustand
-  const updateCode = useAppStore((state: AppStore) => state.updateCode);
-  const updateSelection = useAppStore((state: AppStore) => state.updateSelection);
-  const updateCursorPosition = useAppStore((state: AppStore) => state.updateCursorPosition);
-  const markDirty = useAppStore((state: AppStore) => state.markDirty);
-  const _parseAST = useAppStore((state: AppStore) => state.parseAST);
+  const { code, selection, isDirty, parsingErrors, parsingWarnings, enableRealTimeParsing } = storeState;
+
+  // Store actions - use useShallow for actions
+  const storeActions = useAppStore(
+    useShallow((state: AppStore) => ({
+      updateCode: state.updateCode,
+      updateSelection: state.updateSelection,
+      updateCursorPosition: state.updateCursorPosition,
+      markDirty: state.markDirty,
+      parseAST: state.parseAST,
+    }))
+  );
+
+  const { updateCode, updateSelection, updateCursorPosition, markDirty, parseAST: _parseAST } = storeActions;
 
   /**
    * Handle code changes - update store with 300ms debouncing

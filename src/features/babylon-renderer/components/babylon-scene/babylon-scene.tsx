@@ -6,12 +6,19 @@
  */
 
 import type { Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
-import { Color3, Color4, Vector3 } from '@babylonjs/core';
+import {
+  ArcRotateCamera,
+  Color3,
+  Color4,
+  DirectionalLight,
+  HemisphericLight,
+  MeshBuilder,
+  Vector3
+} from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Engine, Scene } from 'react-babylonjs';
 import { createLogger } from '../../../../shared/services/logger.service';
-import { useBabylonEngine } from '../../hooks/use-babylon-engine';
 import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
 
 const logger = createLogger('BabylonScene');
@@ -184,17 +191,15 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   );
 
   // Initialize BabylonJS services
-  const { engineService, engineState, initializeEngine, disposeEngine } = useBabylonEngine();
-
   const { inspectorService, hideInspector } = useBabylonInspector();
 
   /**
    * Handle scene ready callback
    */
   const handleSceneReady = useCallback(
-    (sceneEventArgs: { scene: BabylonSceneType }) => {
+    async (sceneEventArgs: { scene: BabylonSceneType }) => {
       const scene = sceneEventArgs.scene;
-      logger.debug('[DEBUG][BabylonScene] Scene ready');
+      logger.info('[INFO][BabylonScene] 🎬 Scene ready - creating camera and lights manually');
       sceneRef.current = scene;
 
       // Configure scene properties
@@ -207,6 +212,55 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       scene.environmentIntensity = config.environmentIntensity;
       scene.imageProcessingConfiguration.isEnabled = config.imageProcessingEnabled;
 
+      // Create camera manually since JSX components aren't working
+      if (camera.type === 'arcRotate') {
+        const arcCamera = new ArcRotateCamera(
+          'camera',
+          camera.alpha ?? -Math.PI / 2,
+          camera.beta ?? Math.PI / 2.5,
+          camera.radius ?? 10,
+          camera.target ? new Vector3(camera.target.x, camera.target.y, camera.target.z) : Vector3.Zero(),
+          scene
+        );
+        arcCamera.fov = camera.fov ?? Math.PI / 4;
+        arcCamera.minZ = camera.minZ ?? 0.1;
+        arcCamera.maxZ = camera.maxZ ?? 1000;
+        arcCamera.setActiveOnSceneIfNoneActive = true;
+        logger.info('[INFO][BabylonScene] ✅ ArcRotate camera created');
+      }
+
+      // Create lights manually
+      if (lighting.ambient.enabled) {
+        const ambientLight = new HemisphericLight(
+          'ambient-light',
+          lighting.ambient.direction || new Vector3(0, 1, 0),
+          scene
+        );
+        ambientLight.diffuse = lighting.ambient.color || new Color3(1, 1, 1);
+        ambientLight.intensity = lighting.ambient.intensity || 0.6;
+        logger.info('[INFO][BabylonScene] ✅ Ambient light created');
+      }
+
+      if (lighting.directional.enabled) {
+        const directionalLight = new DirectionalLight(
+          'directional-light',
+          lighting.directional.direction || new Vector3(-1, -1, -1),
+          scene
+        );
+        directionalLight.diffuse = lighting.directional.color || new Color3(1, 1, 1);
+        directionalLight.intensity = lighting.directional.intensity || 1.0;
+        logger.info('[INFO][BabylonScene] ✅ Directional light created');
+      }
+
+      // Create test cube manually
+      const testCube = MeshBuilder.CreateBox(
+        'test-cube',
+        { size: 2 },
+        scene
+      );
+      testCube.position = new Vector3(0, 0, 0);
+      logger.info('[INFO][BabylonScene] ✅ Test cube created');
+
       // Initialize inspector if enabled (async operation)
       if (config.enableInspector && inspectorService) {
         inspectorService.show(scene).then((result) => {
@@ -216,10 +270,12 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         });
       }
 
+      logger.info(`[INFO][BabylonScene] Scene setup complete - meshes: ${scene.meshes.length}, cameras: ${scene.cameras.length}, lights: ${scene.lights.length}`);
+
       // Call user callback
       onSceneReady?.(scene);
     },
-    [config, inspectorService, onSceneReady]
+    [config, camera, lighting, inspectorService, onSceneReady]
   );
 
   /**
@@ -245,79 +301,29 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   }, [onRenderLoop]);
 
   /**
-   * Initialize engine when canvas is available
+   * Engine initialization is handled by react-babylonjs Engine component
+   * No manual initialization needed
+   */
+
+  /**
+   * Cleanup on unmount
    */
   useEffect(() => {
-    if (canvasRef.current && engineService) {
-      const initEngine = async () => {
-        if (!canvasRef.current) return;
-        const result = await initializeEngine(canvasRef.current, {
-          enableWebGPU: config.enableWebGPU,
-          antialias: config.antialias,
-          adaptToDeviceRatio: config.adaptToDeviceRatio,
-        });
-
-        if (!result.success) {
-          logger.error(
-            `[ERROR][BabylonScene] Failed to initialize engine: ${result.error.message}`
-          );
-        }
-      };
-
-      initEngine();
-    }
-
     return () => {
       // Cleanup on unmount
       if (config.enableInspector && inspectorService) {
         hideInspector();
       }
-      disposeEngine();
     };
-  }, [
-    engineService,
-    inspectorService,
-    config.enableWebGPU,
-    config.antialias,
-    config.adaptToDeviceRatio,
-    config.enableInspector,
-    initializeEngine,
-    disposeEngine,
-    hideInspector,
-  ]);
+  }, [config.enableInspector, inspectorService, hideInspector]);
 
   /**
    * Render the BabylonJS scene
    */
-  if (!engineState.isInitialized || !engineState.engine) {
-    return (
-      <div
-        className={className}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          backgroundColor: '#1a1a1a',
-          color: '#ffffff',
-          ...style,
-        }}
-      >
-        <div>
-          <div>Initializing BabylonJS Engine...</div>
-          {engineState.error && (
-            <div style={{ color: '#ff6b6b', marginTop: '8px', fontSize: '14px' }}>
-              Error: {engineState.error.message}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={className} style={style}>
-      <Engine antialias={config.antialias} adaptToDeviceRatio={config.adaptToDeviceRatio}>
+            <Engine antialias={config.antialias} adaptToDeviceRatio={config.adaptToDeviceRatio}>
         <Scene onSceneMount={handleSceneReady}>
           {/* Camera */}
           {camera.type === 'arcRotate' && (
@@ -361,6 +367,9 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
               intensity={lighting.directional.intensity}
             />
           )}
+
+          {/* Test cube to verify rendering pipeline */}
+          <box name="test-cube" size={2} position={new Vector3(0, 0, 0)} />
 
           {/* User content */}
           {children}

@@ -768,16 +768,23 @@ export const createBabylonRenderingSlice = (
       logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene...');
 
       set((state: any) => {
-        // Dispose of existing meshes
-        state.babylonRendering.meshes.forEach((mesh: any) => {
-          if (mesh && typeof mesh.dispose === 'function') {
-            mesh.dispose();
-          }
-        });
+        // Dispose of existing meshes if they exist
+        if (state.babylonRendering?.meshes && Array.isArray(state.babylonRendering.meshes)) {
+          state.babylonRendering.meshes.forEach((mesh: any) => {
+            if (mesh && typeof mesh.dispose === 'function') {
+              mesh.dispose();
+            }
+          });
+        }
 
-        state.babylonRendering.meshes = [];
-        state.babylonRendering.renderErrors = [];
-        state.babylonRendering.lastRendered = null;
+        // Ensure babylonRendering state exists
+        if (!state.babylonRendering) {
+          state.babylonRendering = createInitialBabylonRenderingState();
+        } else {
+          state.babylonRendering.meshes = [];
+          state.babylonRendering.renderErrors = [];
+          state.babylonRendering.lastRendered = null;
+        }
       });
     },
 

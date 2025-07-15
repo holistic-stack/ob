@@ -35,9 +35,10 @@ const root = ReactDOM.createRoot(rootElement);
 
 logger.debug('Rendering application');
 root.render(
-  <React.StrictMode>
+  // Temporarily disable StrictMode to debug snapshot caching issues
+  // <React.StrictMode>
     <App />
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 logger.init('Application initialized successfully');
