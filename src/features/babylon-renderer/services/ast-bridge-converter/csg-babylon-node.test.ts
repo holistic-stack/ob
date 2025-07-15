@@ -8,8 +8,12 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type {
+  DifferenceNode,
+  IntersectionNode,
+  UnionNode,
+} from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
-import type { UnionNode, DifferenceNode, IntersectionNode } from '../../../openscad-parser/ast/ast-types';
 import { CSGBabylonNode } from './csg-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -21,7 +25,7 @@ describe('CSGBabylonNode', () => {
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
     parser = createTestParser();
-    
+
     // Initialize the parser
     await parser.init();
 
@@ -41,11 +45,11 @@ describe('CSGBabylonNode', () => {
     it('should create union CSG operation with multiple children', async () => {
       const openscadCode = 'union() { cube([1, 1, 1]); sphere(r=0.5); }';
       const ast = parser.parseAST(openscadCode);
-      
+
       expect(ast).toBeDefined();
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThan(0);
-      
+
       const unionNode = ast[0] as UnionNode;
       expect(unionNode).toBeDefined();
       expect(unionNode.type).toBe('union');
@@ -61,16 +65,11 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_union',
-        scene,
-        unionNode,
-        [cubeNode, sphereNode]
-      );
+      const csgNode = new CSGBabylonNode('test_union', scene, unionNode, [cubeNode, sphereNode]);
 
       const result = await csgNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -102,16 +101,15 @@ describe('CSGBabylonNode', () => {
       expect(cylinderAst.length).toBeGreaterThan(0);
       const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_union_three',
-        scene,
-        unionNode,
-        [cubeNode, sphereNode, cylinderNode]
-      );
+      const csgNode = new CSGBabylonNode('test_union_three', scene, unionNode, [
+        cubeNode,
+        sphereNode,
+        cylinderNode,
+      ]);
 
       const result = await csgNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -137,16 +135,14 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_difference',
-        scene,
-        differenceNode,
-        [cubeNode, sphereNode]
-      );
+      const csgNode = new CSGBabylonNode('test_difference', scene, differenceNode, [
+        cubeNode,
+        sphereNode,
+      ]);
 
       const result = await csgNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -177,16 +173,15 @@ describe('CSGBabylonNode', () => {
       expect(cylinderAst.length).toBeGreaterThan(0);
       const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_difference_multiple',
-        scene,
-        differenceNode,
-        [cubeNode, sphereNode, cylinderNode]
-      );
+      const csgNode = new CSGBabylonNode('test_difference_multiple', scene, differenceNode, [
+        cubeNode,
+        sphereNode,
+        cylinderNode,
+      ]);
 
       const result = await csgNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -212,16 +207,14 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_intersection',
-        scene,
-        intersectionNode,
-        [cubeNode, sphereNode]
-      );
+      const csgNode = new CSGBabylonNode('test_intersection', scene, intersectionNode, [
+        cubeNode,
+        sphereNode,
+      ]);
 
       const result = await csgNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -249,12 +242,10 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'test_union_validation',
-        scene,
-        unionNode,
-        [cubeNode, sphereNode]
-      );
+      const csgNode = new CSGBabylonNode('test_union_validation', scene, unionNode, [
+        cubeNode,
+        sphereNode,
+      ]);
 
       const validationResult = await csgNode.validateNode();
       expect(validationResult.success).toBe(true);
@@ -324,15 +315,13 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const originalNode = new CSGBabylonNode(
-        'original_intersection',
-        scene,
-        intersectionNode,
-        [cubeNode, sphereNode]
-      );
+      const originalNode = new CSGBabylonNode('original_intersection', scene, intersectionNode, [
+        cubeNode,
+        sphereNode,
+      ]);
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_intersection_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -379,15 +368,13 @@ describe('CSGBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const csgNode = new CSGBabylonNode(
-        'debug_difference',
-        scene,
-        differenceNode,
-        [cubeNode, sphereNode]
-      );
+      const csgNode = new CSGBabylonNode('debug_difference', scene, differenceNode, [
+        cubeNode,
+        sphereNode,
+      ]);
 
       const debugInfo = csgNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isCSGOperation).toBe(true);
       expect(debugInfo.csgType).toBe('difference');

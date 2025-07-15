@@ -4,7 +4,7 @@
  * Implements the Bridge Pattern to convert OpenSCAD AST nodes to BabylonJS-Extended AST nodes.
  * This service preserves the existing OpenSCAD parser unchanged while providing conversion
  * to BabylonJS-compatible AST that extends BABYLON.AbstractMesh.
- * 
+ *
  * Architecture: OpenscadAST → ASTBridgeConverter → BabylonJS-Extended AST → BabylonJS Meshes
  */
 
@@ -44,7 +44,7 @@ export const DEFAULT_BRIDGE_CONFIG: BridgeConversionConfig = {
 
 /**
  * AST Bridge Converter Service
- * 
+ *
  * Converts OpenSCAD AST nodes to BabylonJS-Extended AST nodes using the Bridge Pattern.
  * This allows the existing OpenSCAD parser to remain unchanged while providing
  * BabylonJS-compatible AST nodes that extend BABYLON.AbstractMesh.
@@ -76,13 +76,14 @@ export class ASTBridgeConverter {
         this.isInitialized = true;
         logger.debug('[DEBUG][ASTBridgeConverter] Bridge converter initialized successfully');
       },
-      (error) => this.createError('INITIALIZATION_FAILED', `Failed to initialize bridge converter: ${error}`)
+      (error) =>
+        this.createError('INITIALIZATION_FAILED', `Failed to initialize bridge converter: ${error}`)
     );
   }
 
   /**
    * Convert OpenSCAD AST nodes to BabylonJS-Extended AST nodes
-   * 
+   *
    * This is the main bridge conversion method that implements the Bridge Pattern.
    * It takes OpenSCAD AST nodes and converts them to BabylonJS-compatible AST nodes.
    */
@@ -93,14 +94,19 @@ export class ASTBridgeConverter {
     if (!this.isInitialized || !this.scene) {
       return {
         success: false,
-        error: this.createError('NOT_INITIALIZED', 'Bridge converter not initialized. Call initialize() first.'),
+        error: this.createError(
+          'NOT_INITIALIZED',
+          'Bridge converter not initialized. Call initialize() first.'
+        ),
       };
     }
 
     const startTime = performance.now();
     const effectiveConfig = config ? { ...this.config, ...config } : this.config;
 
-    logger.debug(`[CONVERT] Converting ${openscadNodes.length} OpenSCAD AST nodes to BabylonJS AST`);
+    logger.debug(
+      `[CONVERT] Converting ${openscadNodes.length} OpenSCAD AST nodes to BabylonJS AST`
+    );
 
     return tryCatchAsync(
       async () => {
@@ -108,16 +114,20 @@ export class ASTBridgeConverter {
 
         for (const openscadNode of openscadNodes) {
           const conversionResult = await this.convertSingleNode(openscadNode, effectiveConfig);
-          
+
           if (!conversionResult.success) {
-            throw new Error(`Failed to convert node ${openscadNode.type}: ${conversionResult.error.message}`);
+            throw new Error(
+              `Failed to convert node ${openscadNode.type}: ${conversionResult.error.message}`
+            );
           }
 
           babylonNodes.push(conversionResult.data);
         }
 
         const conversionTime = performance.now() - startTime;
-        logger.debug(`[CONVERT] Converted ${babylonNodes.length} nodes in ${conversionTime.toFixed(2)}ms`);
+        logger.debug(
+          `[CONVERT] Converted ${babylonNodes.length} nodes in ${conversionTime.toFixed(2)}ms`
+        );
 
         return babylonNodes;
       },
@@ -165,7 +175,11 @@ export class ASTBridgeConverter {
 
         return babylonNode;
       },
-      (error) => this.createError('NODE_CONVERSION_FAILED', `Failed to convert ${openscadNode.type} node: ${error}`)
+      (error) =>
+        this.createError(
+          'NODE_CONVERSION_FAILED',
+          `Failed to convert ${openscadNode.type} node: ${error}`
+        )
     );
   }
 
@@ -178,12 +192,7 @@ export class ASTBridgeConverter {
     // Check if this is a primitive type
     if (this.isPrimitiveType(openscadNode.type)) {
       const { PrimitiveBabylonNode } = await import('./primitive-babylon-node');
-      return new PrimitiveBabylonNode(
-        nodeId,
-        this.scene,
-        openscadNode,
-        openscadNode.location
-      );
+      return new PrimitiveBabylonNode(nodeId, this.scene, openscadNode, openscadNode.location);
     }
 
     // Check if this is a transformation type
@@ -274,19 +283,23 @@ export class ASTBridgeConverter {
 
     // For other types, use placeholder for now
     const { PlaceholderBabylonNode } = await import('./placeholder-babylon-node');
-    return new PlaceholderBabylonNode(
-      nodeId,
-      this.scene,
-      openscadNode,
-      openscadNode.location
-    );
+    return new PlaceholderBabylonNode(nodeId, this.scene, openscadNode, openscadNode.location);
   }
 
   /**
    * Check if the node type is a primitive type
    */
   private isPrimitiveType(nodeType: string): boolean {
-    const primitiveTypes = ['cube', 'sphere', 'cylinder', 'polyhedron', 'circle', 'square', 'polygon', 'text'];
+    const primitiveTypes = [
+      'cube',
+      'sphere',
+      'cylinder',
+      'polyhedron',
+      'circle',
+      'square',
+      'polygon',
+      'text',
+    ];
     return primitiveTypes.includes(nodeType);
   }
 

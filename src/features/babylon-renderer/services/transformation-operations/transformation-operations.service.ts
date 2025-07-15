@@ -4,7 +4,7 @@
  * Service for applying OpenSCAD transformation operations to GenericMeshData.
  * Implements translation, rotation, scale, mirror, matrix, and color operations
  * with OpenSCAD-compatible semantics.
- * 
+ *
  * @example
  * ```typescript
  * const transformService = new TransformationOperationsService();
@@ -13,17 +13,17 @@
  * ```
  */
 
-import { Matrix, Vector3, Color3, BoundingBox } from '@babylonjs/core';
+import { BoundingBox, Color3, Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
-  GenericMeshData,
   GenericGeometry,
   GenericMaterialConfig,
+  GenericMeshData,
   GenericMeshMetadata,
 } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 
 const logger = createLogger('TransformationOperations');
@@ -66,7 +66,7 @@ export interface OpenSCADMatrixParams {
     readonly [number, number, number, number],
     readonly [number, number, number, number],
     readonly [number, number, number, number],
-    readonly [number, number, number, number]
+    readonly [number, number, number, number],
   ];
 }
 
@@ -74,7 +74,10 @@ export interface OpenSCADMatrixParams {
  * OpenSCAD color parameters
  */
 export interface OpenSCADColorParams {
-  readonly color: string | readonly [number, number, number] | readonly [number, number, number, number];
+  readonly color:
+    | string
+    | readonly [number, number, number]
+    | readonly [number, number, number, number];
   readonly alpha?: number;
 }
 
@@ -82,7 +85,11 @@ export interface OpenSCADColorParams {
  * Transformation operation error
  */
 export interface TransformationError {
-  readonly code: 'INVALID_PARAMETERS' | 'TRANSFORMATION_FAILED' | 'GEOMETRY_INVALID' | 'MATRIX_INVALID';
+  readonly code:
+    | 'INVALID_PARAMETERS'
+    | 'TRANSFORMATION_FAILED'
+    | 'GEOMETRY_INVALID'
+    | 'MATRIX_INVALID';
   readonly message: string;
   readonly operationType: string;
   readonly timestamp: Date;
@@ -91,7 +98,7 @@ export interface TransformationError {
 
 /**
  * BabylonJS Transformation Operations Service
- * 
+ *
  * Applies OpenSCAD transformation operations to GenericMeshData with
  * proper parameter handling and OpenSCAD-compatible semantics.
  */
@@ -114,11 +121,19 @@ export class TransformationOperationsService {
       async () => {
         // Validate parameters
         if (!params.vector || params.vector.length !== 3) {
-          throw this.createError('INVALID_PARAMETERS', 'translate', 'Translation vector must have 3 components');
+          throw this.createError(
+            'INVALID_PARAMETERS',
+            'translate',
+            'Translation vector must have 3 components'
+          );
         }
 
         // Create translation matrix
-        const translationMatrix = Matrix.Translation(params.vector[0], params.vector[1], params.vector[2]);
+        const translationMatrix = Matrix.Translation(
+          params.vector[0],
+          params.vector[1],
+          params.vector[2]
+        );
 
         // Apply transformation to geometry
         const transformedGeometry = this.transformGeometry(meshData.geometry, translationMatrix);
@@ -132,10 +147,13 @@ export class TransformationOperationsService {
           performance.now() - startTime
         );
 
-        logger.debug(`[TRANSLATE] Translation applied in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[TRANSLATE] Translation applied in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return transformedMeshData;
       },
-      (error) => this.createError('TRANSFORMATION_FAILED', 'translate', `Translation failed: ${error}`)
+      (error) =>
+        this.createError('TRANSFORMATION_FAILED', 'translate', `Translation failed: ${error}`)
     );
   }
 
@@ -166,7 +184,9 @@ export class TransformationOperationsService {
           performance.now() - startTime
         );
 
-        logger.debug(`[ROTATE] Rotation applied in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[ROTATE] Rotation applied in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return transformedMeshData;
       },
       (error) => this.createError('TRANSFORMATION_FAILED', 'rotate', `Rotation failed: ${error}`)
@@ -221,7 +241,11 @@ export class TransformationOperationsService {
       async () => {
         // Validate normal vector
         if (!params.normal || params.normal.length !== 3) {
-          throw this.createError('INVALID_PARAMETERS', 'mirror', 'Mirror normal must have 3 components');
+          throw this.createError(
+            'INVALID_PARAMETERS',
+            'mirror',
+            'Mirror normal must have 3 components'
+          );
         }
 
         // Create mirror matrix
@@ -281,10 +305,17 @@ export class TransformationOperationsService {
           performance.now() - startTime
         );
 
-        logger.debug(`[MULTMATRIX] Matrix transformation applied in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[MULTMATRIX] Matrix transformation applied in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return transformedMeshData;
       },
-      (error) => this.createError('TRANSFORMATION_FAILED', 'multmatrix', `Matrix transformation failed: ${error}`)
+      (error) =>
+        this.createError(
+          'TRANSFORMATION_FAILED',
+          'multmatrix',
+          `Matrix transformation failed: ${error}`
+        )
     );
   }
 
@@ -322,7 +353,8 @@ export class TransformationOperationsService {
         logger.debug(`[COLOR] Color applied in ${(performance.now() - startTime).toFixed(2)}ms`);
         return coloredMeshData;
       },
-      (error) => this.createError('TRANSFORMATION_FAILED', 'color', `Color transformation failed: ${error}`)
+      (error) =>
+        this.createError('TRANSFORMATION_FAILED', 'color', `Color transformation failed: ${error}`)
     );
   }
 
@@ -375,10 +407,22 @@ export class TransformationOperationsService {
 
     // Create reflection matrix: I - 2 * n * n^T
     const values = [
-      1 - 2 * n.x * n.x,  -2 * n.x * n.y,     -2 * n.x * n.z,     0,
-      -2 * n.y * n.x,     1 - 2 * n.y * n.y,  -2 * n.y * n.z,     0,
-      -2 * n.z * n.x,     -2 * n.z * n.y,     1 - 2 * n.z * n.z,  0,
-      0,                  0,                  0,                  1,
+      1 - 2 * n.x * n.x,
+      -2 * n.x * n.y,
+      -2 * n.x * n.z,
+      0,
+      -2 * n.y * n.x,
+      1 - 2 * n.y * n.y,
+      -2 * n.y * n.z,
+      0,
+      -2 * n.z * n.x,
+      -2 * n.z * n.y,
+      1 - 2 * n.z * n.z,
+      0,
+      0,
+      0,
+      0,
+      1,
     ];
 
     return Matrix.FromArray(values);
@@ -387,19 +431,33 @@ export class TransformationOperationsService {
   /**
    * Create BabylonJS matrix from OpenSCAD 4x4 matrix array
    */
-  private createMatrixFromArray(matrixArray: readonly [
-    readonly [number, number, number, number],
-    readonly [number, number, number, number],
-    readonly [number, number, number, number],
-    readonly [number, number, number, number]
-  ]): Matrix {
+  private createMatrixFromArray(
+    matrixArray: readonly [
+      readonly [number, number, number, number],
+      readonly [number, number, number, number],
+      readonly [number, number, number, number],
+      readonly [number, number, number, number],
+    ]
+  ): Matrix {
     // BabylonJS uses column-major order, OpenSCAD uses row-major
     // Convert from row-major to column-major
     const values = [
-      matrixArray[0][0], matrixArray[1][0], matrixArray[2][0], matrixArray[3][0],
-      matrixArray[0][1], matrixArray[1][1], matrixArray[2][1], matrixArray[3][1],
-      matrixArray[0][2], matrixArray[1][2], matrixArray[2][2], matrixArray[3][2],
-      matrixArray[0][3], matrixArray[1][3], matrixArray[2][3], matrixArray[3][3],
+      matrixArray[0][0],
+      matrixArray[1][0],
+      matrixArray[2][0],
+      matrixArray[3][0],
+      matrixArray[0][1],
+      matrixArray[1][1],
+      matrixArray[2][1],
+      matrixArray[3][1],
+      matrixArray[0][2],
+      matrixArray[1][2],
+      matrixArray[2][2],
+      matrixArray[3][2],
+      matrixArray[0][3],
+      matrixArray[1][3],
+      matrixArray[2][3],
+      matrixArray[3][3],
     ];
 
     return Matrix.FromArray(values);
@@ -447,7 +505,7 @@ export class TransformationOperationsService {
         indices: geometry.indices,
         vertexCount: geometry.vertexCount,
         triangleCount: geometry.triangleCount,
-        boundingBox: geometry.boundingBox
+        boundingBox: geometry.boundingBox,
       }),
       ...(normals && { normals }),
       ...(geometry.uvs && { uvs: new Float32Array(geometry.uvs) }),

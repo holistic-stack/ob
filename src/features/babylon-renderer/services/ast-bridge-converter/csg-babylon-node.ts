@@ -11,11 +11,11 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
-  UnionNode,
+  ASTNode,
   DifferenceNode,
   IntersectionNode,
-  ASTNode,
   SourceLocation,
+  UnionNode,
 } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
@@ -30,7 +30,7 @@ const logger = createLogger('CSGBabylonNode');
 
 /**
  * CSG BabylonJS Node
- * 
+ *
  * Handles proper CSG operations for OpenSCAD CSG types with
  * accurate parameter mapping and OpenSCAD-compatible behavior.
  */
@@ -53,16 +53,16 @@ export class CSGBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.csgType = originalOpenscadNode.type;
     this.childNodes = childNodes;
     this.csgService = new BabylonCSG2Service();
-    
+
     // Initialize CSG service with scene
     if (scene) {
       this.csgService.init(scene);
     }
-    
+
     logger.debug(`[INIT] Created CSG BabylonJS node for ${this.csgType}`);
   }
 
@@ -79,7 +79,10 @@ export class CSGBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length < 2) {
-          throw this.createError('INSUFFICIENT_CHILDREN', `CSG ${this.csgType} operation requires at least 2 child nodes`);
+          throw this.createError(
+            'INSUFFICIENT_CHILDREN',
+            `CSG ${this.csgType} operation requires at least 2 child nodes`
+          );
         }
 
         // Generate child meshes first
@@ -94,11 +97,11 @@ export class CSGBabylonNode extends BabylonJSNode {
 
         // Apply CSG operation to child meshes
         const resultMesh = await this.applyCSGOperation(childMeshes);
-        
+
         // Set basic properties
         resultMesh.id = `${this.name}_${Date.now()}`;
         resultMesh.name = this.name;
-        
+
         // Add metadata
         resultMesh.metadata = {
           isCSGOperation: true,
@@ -113,7 +116,10 @@ export class CSGBabylonNode extends BabylonJSNode {
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.csgType} CSG operation: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.csgType} CSG operation: ${errorMessage}`
+        );
       }
     );
   }
@@ -127,10 +133,12 @@ export class CSGBabylonNode extends BabylonJSNode {
     }
 
     // Convert AbstractMesh to Mesh for CSG operations
-    const meshes = childMeshes.map(mesh => {
+    const meshes = childMeshes.map((mesh) => {
       // Ensure we have proper Mesh instances for CSG operations
       if (!('geometry' in mesh)) {
-        throw new Error(`Child mesh ${(mesh as any).name || 'unknown'} is not a valid Mesh for CSG operations`);
+        throw new Error(
+          `Child mesh ${(mesh as any).name || 'unknown'} is not a valid Mesh for CSG operations`
+        );
       }
       return mesh as any; // Type assertion for CSG operations
     });
@@ -152,21 +160,21 @@ export class CSGBabylonNode extends BabylonJSNode {
    */
   private async applyUnionOperation(meshes: any[]): Promise<AbstractMesh> {
     logger.debug(`[UNION] Applying union operation to ${meshes.length} meshes`);
-    
+
     // Start with the first mesh
     let result = meshes[0];
-    
+
     // Union with each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
       const unionResult = await this.csgService.union(result, meshes[i]);
-      
+
       if (!unionResult.success) {
         throw new Error(`Union operation failed: ${unionResult.error.message}`);
       }
-      
+
       result = unionResult.data.resultMesh;
     }
-    
+
     return result;
   }
 
@@ -175,21 +183,21 @@ export class CSGBabylonNode extends BabylonJSNode {
    */
   private async applyDifferenceOperation(meshes: any[]): Promise<AbstractMesh> {
     logger.debug(`[DIFFERENCE] Applying difference operation to ${meshes.length} meshes`);
-    
+
     // Start with the first mesh
     let result = meshes[0];
-    
+
     // Subtract each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
       const differenceResult = await this.csgService.difference(result, meshes[i]);
-      
+
       if (!differenceResult.success) {
         throw new Error(`Difference operation failed: ${differenceResult.error.message}`);
       }
-      
+
       result = differenceResult.data.resultMesh;
     }
-    
+
     return result;
   }
 
@@ -198,21 +206,21 @@ export class CSGBabylonNode extends BabylonJSNode {
    */
   private async applyIntersectionOperation(meshes: any[]): Promise<AbstractMesh> {
     logger.debug(`[INTERSECTION] Applying intersection operation to ${meshes.length} meshes`);
-    
+
     // Start with the first mesh
     let result = meshes[0];
-    
+
     // Intersect with each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
       const intersectionResult = await this.csgService.intersection(result, meshes[i]);
-      
+
       if (!intersectionResult.success) {
         throw new Error(`Intersection operation failed: ${intersectionResult.error.message}`);
       }
-      
+
       result = intersectionResult.data.resultMesh;
     }
-    
+
     return result;
   }
 
@@ -231,7 +239,10 @@ export class CSGBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length < 2) {
-          throw this.createError('INSUFFICIENT_CHILDREN', `CSG ${this.csgType} operation requires at least 2 child nodes`);
+          throw this.createError(
+            'INSUFFICIENT_CHILDREN',
+            `CSG ${this.csgType} operation requires at least 2 child nodes`
+          );
         }
 
         // Validate all child nodes
@@ -255,8 +266,8 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Clone the CSG node
    */
   clone(): CSGBabylonNode {
-    const clonedChildNodes = this.childNodes.map(child => child.clone());
-    
+    const clonedChildNodes = this.childNodes.map((child) => child.clone());
+
     const clonedNode = new CSGBabylonNode(
       `${this.name}_clone_${Date.now()}`,
       this.scene,
@@ -292,11 +303,11 @@ export class CSGBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

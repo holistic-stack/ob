@@ -5,14 +5,11 @@
  * Uses real BabylonJS NullEngine and CSG2 (no mocks).
  */
 
-import { NullEngine, Scene, Vector3, BoundingBox, Matrix } from '@babylonjs/core';
+import { BoundingBox, Matrix, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  CSGOperationsService,
-  type CSGOperationParams,
-} from './csg-operations.service';
 import type { GenericMeshData } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
+import { type CSGOperationParams, CSGOperationsService } from './csg-operations.service';
 
 describe('CSGOperationsService', () => {
   let engine: NullEngine;
@@ -21,8 +18,6 @@ describe('CSGOperationsService', () => {
   let testCube1: GenericMeshData;
   let testCube2: GenericMeshData;
   let testSphere: GenericMeshData;
-
-
 
   beforeEach(() => {
     // Create BabylonJS NullEngine for headless testing
@@ -85,7 +80,7 @@ describe('CSGOperationsService', () => {
     it('should fail with empty mesh array', async () => {
       const result = await csgService.union([]);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(['INVALID_MESHES', 'OPERATION_FAILED']).toContain(result.error.code);
       }
@@ -255,24 +250,70 @@ describe('CSGOperationsService', () => {
     // Simple cube vertices (8 vertices, 12 triangles)
     const positions = new Float32Array([
       // Front face
-      -0.5 + position[0], -0.5 + position[1],  0.5 + position[2],
-       0.5 + position[0], -0.5 + position[1],  0.5 + position[2],
-       0.5 + position[0],  0.5 + position[1],  0.5 + position[2],
-      -0.5 + position[0],  0.5 + position[1],  0.5 + position[2],
+      -0.5 + position[0],
+      -0.5 + position[1],
+      0.5 + position[2],
+      0.5 + position[0],
+      -0.5 + position[1],
+      0.5 + position[2],
+      0.5 + position[0],
+      0.5 + position[1],
+      0.5 + position[2],
+      -0.5 + position[0],
+      0.5 + position[1],
+      0.5 + position[2],
       // Back face
-      -0.5 + position[0], -0.5 + position[1], -0.5 + position[2],
-       0.5 + position[0], -0.5 + position[1], -0.5 + position[2],
-       0.5 + position[0],  0.5 + position[1], -0.5 + position[2],
-      -0.5 + position[0],  0.5 + position[1], -0.5 + position[2],
+      -0.5 + position[0],
+      -0.5 + position[1],
+      -0.5 + position[2],
+      0.5 + position[0],
+      -0.5 + position[1],
+      -0.5 + position[2],
+      0.5 + position[0],
+      0.5 + position[1],
+      -0.5 + position[2],
+      -0.5 + position[0],
+      0.5 + position[1],
+      -0.5 + position[2],
     ]);
 
     const indices = new Uint32Array([
-      0, 1, 2,  0, 2, 3,  // Front
-      4, 6, 5,  4, 7, 6,  // Back
-      0, 4, 5,  0, 5, 1,  // Bottom
-      2, 6, 7,  2, 7, 3,  // Top
-      0, 3, 7,  0, 7, 4,  // Left
-      1, 5, 6,  1, 6, 2,  // Right
+      0,
+      1,
+      2,
+      0,
+      2,
+      3, // Front
+      4,
+      6,
+      5,
+      4,
+      7,
+      6, // Back
+      0,
+      4,
+      5,
+      0,
+      5,
+      1, // Bottom
+      2,
+      6,
+      7,
+      2,
+      7,
+      3, // Top
+      0,
+      3,
+      7,
+      0,
+      7,
+      4, // Left
+      1,
+      5,
+      6,
+      1,
+      6,
+      2, // Right
     ]);
 
     return {
@@ -308,17 +349,51 @@ describe('CSGOperationsService', () => {
   function createTestSphere(id: string, position: [number, number, number]): GenericMeshData {
     // Simplified sphere as octahedron (6 vertices, 8 triangles)
     const positions = new Float32Array([
-       0.0 + position[0],  0.5 + position[1],  0.0 + position[2], // Top
-       0.5 + position[0],  0.0 + position[1],  0.0 + position[2], // Right
-       0.0 + position[0],  0.0 + position[1],  0.5 + position[2], // Front
-      -0.5 + position[0],  0.0 + position[1],  0.0 + position[2], // Left
-       0.0 + position[0],  0.0 + position[1], -0.5 + position[2], // Back
-       0.0 + position[0], -0.5 + position[1],  0.0 + position[2], // Bottom
+      0.0 + position[0],
+      0.5 + position[1],
+      0.0 + position[2], // Top
+      0.5 + position[0],
+      0.0 + position[1],
+      0.0 + position[2], // Right
+      0.0 + position[0],
+      0.0 + position[1],
+      0.5 + position[2], // Front
+      -0.5 + position[0],
+      0.0 + position[1],
+      0.0 + position[2], // Left
+      0.0 + position[0],
+      0.0 + position[1],
+      -0.5 + position[2], // Back
+      0.0 + position[0],
+      -0.5 + position[1],
+      0.0 + position[2], // Bottom
     ]);
 
     const indices = new Uint32Array([
-      0, 1, 2,  0, 2, 3,  0, 3, 4,  0, 4, 1,  // Top faces
-      5, 2, 1,  5, 3, 2,  5, 4, 3,  5, 1, 4,  // Bottom faces
+      0,
+      1,
+      2,
+      0,
+      2,
+      3,
+      0,
+      3,
+      4,
+      0,
+      4,
+      1, // Top faces
+      5,
+      2,
+      1,
+      5,
+      3,
+      2,
+      5,
+      4,
+      3,
+      5,
+      1,
+      4, // Bottom faces
     ]);
 
     return {

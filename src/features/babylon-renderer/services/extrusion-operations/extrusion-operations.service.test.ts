@@ -9,9 +9,9 @@ import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   ExtrusionOperationsService,
-  type Profile2DPoint,
   type OpenSCADLinearExtrudeParams,
   type OpenSCADRotateExtrudeParams,
+  type Profile2DPoint,
 } from './extrusion-operations.service';
 
 describe('ExtrusionOperationsService', () => {
@@ -46,7 +46,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.id).toBeDefined();
@@ -65,7 +65,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.center).toBe(true);
@@ -81,7 +81,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.twist).toBe(45);
@@ -96,7 +96,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.scale).toEqual([1.5, 2.0]);
@@ -111,7 +111,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.scale).toBe(2.0);
@@ -125,7 +125,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PARAMETERS');
         expect(result.error.operationType).toBe('linear_extrude');
@@ -139,7 +139,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PARAMETERS');
       }
@@ -153,7 +153,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PARAMETERS');
       }
@@ -166,7 +166,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.rotateExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.id).toBeDefined();
@@ -183,7 +183,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.rotateExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.angle).toBe(180);
@@ -197,7 +197,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.rotateExtrude(circleProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.openscadParameters.$fn).toBe(32);
@@ -211,7 +211,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.rotateExtrude(squareProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PARAMETERS');
         expect(result.error.operationType).toBe('rotate_extrude');
@@ -225,7 +225,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.rotateExtrude(squareProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PARAMETERS');
       }
@@ -242,7 +242,7 @@ describe('ExtrusionOperationsService', () => {
       const params: OpenSCADLinearExtrudeParams = { height: 5 };
       const result = await extrusionService.linearExtrude(invalidProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PROFILE');
       }
@@ -259,7 +259,7 @@ describe('ExtrusionOperationsService', () => {
       const params: OpenSCADLinearExtrudeParams = { height: 5 };
       const result = await extrusionService.linearExtrude(invalidProfile, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_PROFILE');
       }
@@ -271,7 +271,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(complexProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.geometry.vertexCount).toBeGreaterThan(0);
@@ -284,7 +284,7 @@ describe('ExtrusionOperationsService', () => {
       const params: OpenSCADLinearExtrudeParams = { height: 5 };
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         expect(extrudedMesh.metadata.generationTime).toBeGreaterThan(0);
@@ -302,7 +302,7 @@ describe('ExtrusionOperationsService', () => {
 
       const result = await extrusionService.linearExtrude(squareProfile, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const extrudedMesh = result.data;
         const openscadParams = extrudedMesh.metadata.openscadParameters;
@@ -318,10 +318,10 @@ describe('ExtrusionOperationsService', () => {
   // Helper function to create square profile
   function createSquareProfile(size: number): Profile2DPoint[] {
     return [
-      { x: -size/2, y: -size/2 },
-      { x: size/2, y: -size/2 },
-      { x: size/2, y: size/2 },
-      { x: -size/2, y: size/2 },
+      { x: -size / 2, y: -size / 2 },
+      { x: size / 2, y: -size / 2 },
+      { x: size / 2, y: size / 2 },
+      { x: -size / 2, y: size / 2 },
     ];
   }
 
@@ -339,7 +339,11 @@ describe('ExtrusionOperationsService', () => {
   }
 
   // Helper function to create star profile
-  function createStarProfile(outerRadius: number, innerRadius: number, points: number): Profile2DPoint[] {
+  function createStarProfile(
+    outerRadius: number,
+    innerRadius: number,
+    points: number
+  ): Profile2DPoint[] {
     const profile: Profile2DPoint[] = [];
     for (let i = 0; i < points * 2; i++) {
       const angle = (i / (points * 2)) * 2 * Math.PI;

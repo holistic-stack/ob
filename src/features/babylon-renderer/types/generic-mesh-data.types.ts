@@ -6,7 +6,7 @@
  * and editor integration. This implements Task 1.3 from the architecture.
  */
 
-import type { Matrix, Vector3, BoundingBox } from '@babylonjs/core';
+import type { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 
 /**
@@ -33,25 +33,25 @@ export interface GenericMaterialConfig {
   readonly alpha: number; // Transparency (0-1)
   readonly emissiveColor?: readonly [number, number, number]; // RGB
   readonly specularColor?: readonly [number, number, number]; // RGB
-  
+
   // PBR properties
   readonly metallicFactor: number; // 0-1
   readonly roughnessFactor: number; // 0-1
   readonly normalScale: number; // Normal map intensity
   readonly occlusionStrength: number; // AO intensity
-  
+
   // Rendering properties
   readonly transparent: boolean;
   readonly wireframe: boolean;
   readonly backFaceCulling: boolean;
   readonly side: 'front' | 'back' | 'double';
-  
+
   // OpenSCAD-specific properties
   readonly isDebugMaterial: boolean; // For # modifier
   readonly isBackgroundMaterial: boolean; // For % modifier
   readonly isShowOnlyMaterial: boolean; // For ! modifier
   readonly isDisabled: boolean; // For * modifier
-  
+
   // Texture references (optional)
   readonly textures?: {
     readonly diffuse?: string;
@@ -71,41 +71,41 @@ export interface GenericMeshMetadata {
   readonly meshId: string;
   readonly name: string;
   readonly nodeType: string; // OpenSCAD node type (cube, sphere, etc.)
-  
+
   // Geometry metrics
   readonly vertexCount: number;
   readonly triangleCount: number;
   readonly boundingBox: BoundingBox;
   readonly surfaceArea: number;
   readonly volume: number;
-  
+
   // Performance metrics
   readonly generationTime: number; // Time to generate mesh (ms)
   readonly optimizationTime: number; // Time spent optimizing (ms)
   readonly memoryUsage: number; // Memory used (bytes)
   readonly complexity: number; // Complexity score
-  
+
   // Source tracking for editor integration
   readonly sourceLocation?: SourceLocation;
   readonly originalOpenscadCode?: string;
   readonly astNodeId?: string;
-  
+
   // Debugging information
   readonly isOptimized: boolean;
   readonly hasErrors: boolean;
   readonly warnings: readonly string[];
   readonly debugInfo: Record<string, unknown>;
-  
+
   // Timestamps
   readonly createdAt: Date;
   readonly lastModified: Date;
   readonly lastAccessed: Date;
-  
+
   // Hierarchy information
   readonly parentId?: string;
   readonly childIds: readonly string[];
   readonly depth: number; // Nesting depth in AST
-  
+
   // OpenSCAD-specific metadata
   readonly openscadParameters: Record<string, unknown>;
   readonly modifiers: readonly string[]; // Applied modifiers (*, !, #, %)
@@ -131,7 +131,11 @@ export interface GenericMeshCollection {
   readonly id: string;
   readonly meshes: readonly GenericMeshData[];
   readonly metadata: {
-    readonly collectionType: 'csg_result' | 'transformation_group' | 'extrusion_result' | 'control_flow_result';
+    readonly collectionType:
+      | 'csg_result'
+      | 'transformation_group'
+      | 'extrusion_result'
+      | 'control_flow_result';
     readonly totalVertices: number;
     readonly totalTriangles: number;
     readonly boundingBox: BoundingBox;
@@ -160,7 +164,7 @@ export const MATERIAL_PRESETS = {
     isShowOnlyMaterial: false,
     isDisabled: false,
   },
-  
+
   DEBUG: {
     diffuseColor: [1.0, 0.0, 0.0] as const, // Bright red
     alpha: 1.0,
@@ -178,7 +182,7 @@ export const MATERIAL_PRESETS = {
     isShowOnlyMaterial: false,
     isDisabled: false,
   },
-  
+
   BACKGROUND: {
     diffuseColor: [0.7, 0.7, 0.7] as const, // Light gray
     alpha: 0.3, // Transparent
@@ -195,7 +199,7 @@ export const MATERIAL_PRESETS = {
     isShowOnlyMaterial: false,
     isDisabled: false,
   },
-  
+
   SHOW_ONLY: {
     diffuseColor: [1.0, 1.0, 0.0] as const, // Bright yellow
     alpha: 1.0,
@@ -213,7 +217,7 @@ export const MATERIAL_PRESETS = {
     isShowOnlyMaterial: true,
     isDisabled: false,
   },
-  
+
   DISABLED: {
     diffuseColor: [0.5, 0.5, 0.5] as const, // Gray
     alpha: 0.0, // Invisible
@@ -283,7 +287,10 @@ export const isGenericMeshCollection = (obj: unknown): obj is GenericMeshCollect
 /**
  * Default values for creating mesh metadata
  */
-export const DEFAULT_MESH_METADATA: Omit<GenericMeshMetadata, 'meshId' | 'name' | 'nodeType' | 'vertexCount' | 'triangleCount' | 'boundingBox'> = {
+export const DEFAULT_MESH_METADATA: Omit<
+  GenericMeshMetadata,
+  'meshId' | 'name' | 'nodeType' | 'vertexCount' | 'triangleCount' | 'boundingBox'
+> = {
   surfaceArea: 0,
   volume: 0,
   generationTime: 0,

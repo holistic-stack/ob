@@ -4,12 +4,12 @@
  * Exports for the control flow operations service.
  */
 
-export { ControlFlowOperationsService } from './control-flow-operations.service';
 export type {
+  ControlFlowError,
   OpenSCADForLoopParams,
   OpenSCADIfParams,
-  OpenSCADLetParams,
   OpenSCADIntersectionForParams,
+  OpenSCADLetParams,
   VariableContext,
-  ControlFlowError,
 } from './control-flow-operations.service';
+export { ControlFlowOperationsService } from './control-flow-operations.service';

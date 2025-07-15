@@ -5,7 +5,7 @@
  * Following TDD principles with real BabylonJS NullEngine (no mocks).
  */
 
-import { Color3, CreateBox, Mesh, NullEngine, Scene, Vector3 } from '@babylonjs/core';
+import { Color3, CreateBox, type Mesh, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { act, type RenderHookResult, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type UseBabylonSceneReturn, useBabylonScene } from './use-babylon-scene';

@@ -4,10 +4,10 @@
  * Exports for the extrusion operations service.
  */
 
-export { ExtrusionOperationsService } from './extrusion-operations.service';
 export type {
-  Profile2DPoint,
+  ExtrusionError,
   OpenSCADLinearExtrudeParams,
   OpenSCADRotateExtrudeParams,
-  ExtrusionError,
+  Profile2DPoint,
 } from './extrusion-operations.service';
+export { ExtrusionOperationsService } from './extrusion-operations.service';

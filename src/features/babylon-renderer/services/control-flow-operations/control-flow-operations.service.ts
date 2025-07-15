@@ -4,7 +4,7 @@
  * Service for processing OpenSCAD control flow constructs (for, if, let).
  * Handles loop expansion, conditional rendering, and variable scoping
  * with GenericMeshData integration.
- * 
+ *
  * @example
  * ```typescript
  * const controlFlowService = new ControlFlowOperationsService();
@@ -20,10 +20,7 @@ import { BoundingBox, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type {
-  GenericMeshData,
-  GenericMeshCollection,
-} from '../../types/generic-mesh-data.types';
+import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
 import { createMeshCollection } from '../../utils/generic-mesh-utils';
 
 const logger = createLogger('ControlFlowOperations');
@@ -39,7 +36,10 @@ export interface OpenSCADForLoopParams {
     readonly step?: number;
   };
   readonly list?: readonly unknown[];
-  readonly body: (value: unknown, context: VariableContext) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
+  readonly body: (
+    value: unknown,
+    context: VariableContext
+  ) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
 }
 
 /**
@@ -47,8 +47,12 @@ export interface OpenSCADForLoopParams {
  */
 export interface OpenSCADIfParams {
   readonly condition: boolean | ((context: VariableContext) => boolean);
-  readonly thenBody: (context: VariableContext) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
-  readonly elseBody?: (context: VariableContext) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
+  readonly thenBody: (
+    context: VariableContext
+  ) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
+  readonly elseBody?: (
+    context: VariableContext
+  ) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
 }
 
 /**
@@ -56,7 +60,9 @@ export interface OpenSCADIfParams {
  */
 export interface OpenSCADLetParams {
   readonly bindings: Record<string, unknown>;
-  readonly body: (context: VariableContext) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
+  readonly body: (
+    context: VariableContext
+  ) => Promise<Result<GenericMeshData | GenericMeshCollection, ControlFlowError>>;
 }
 
 /**
@@ -70,7 +76,10 @@ export interface OpenSCADIntersectionForParams {
     readonly step?: number;
   };
   readonly list?: readonly unknown[];
-  readonly body: (value: unknown, context: VariableContext) => Promise<Result<GenericMeshData, ControlFlowError>>;
+  readonly body: (
+    value: unknown,
+    context: VariableContext
+  ) => Promise<Result<GenericMeshData, ControlFlowError>>;
 }
 
 /**
@@ -85,7 +94,12 @@ export interface VariableContext {
  * Control flow operation error
  */
 export interface ControlFlowError {
-  readonly code: 'INVALID_PARAMETERS' | 'EVALUATION_FAILED' | 'SCOPE_ERROR' | 'ITERATION_FAILED' | 'CONDITION_ERROR';
+  readonly code:
+    | 'INVALID_PARAMETERS'
+    | 'EVALUATION_FAILED'
+    | 'SCOPE_ERROR'
+    | 'ITERATION_FAILED'
+    | 'CONDITION_ERROR';
   readonly message: string;
   readonly operationType: string;
   readonly timestamp: Date;
@@ -95,7 +109,7 @@ export interface ControlFlowError {
 
 /**
  * Control Flow Operations Service
- * 
+ *
  * Processes OpenSCAD control flow constructs with proper variable scoping
  * and mesh collection management.
  */
@@ -118,7 +132,11 @@ export class ControlFlowOperationsService {
       async () => {
         // Validate parameters
         if (!params.variable || (!params.range && !params.list)) {
-          throw this.createError('INVALID_PARAMETERS', 'for_loop', 'For loop requires variable and range or list');
+          throw this.createError(
+            'INVALID_PARAMETERS',
+            'for_loop',
+            'For loop requires variable and range or list'
+          );
         }
 
         // Generate iteration values
@@ -128,7 +146,7 @@ export class ControlFlowOperationsService {
         // Execute body for each iteration
         for (const value of iterationValues) {
           const iterationContext = this.createChildContext(context, { [params.variable]: value });
-          
+
           try {
             const bodyResult = await params.body(value, iterationContext);
             if (bodyResult.success) {
@@ -139,7 +157,9 @@ export class ControlFlowOperationsService {
                 meshes.push(...bodyResult.data.meshes);
               }
             } else {
-              logger.warn(`[FOR_LOOP] Iteration failed for value ${value}: ${bodyResult.error.message}`);
+              logger.warn(
+                `[FOR_LOOP] Iteration failed for value ${value}: ${bodyResult.error.message}`
+              );
             }
           } catch (error) {
             logger.warn(`[FOR_LOOP] Iteration error for value ${value}: ${error}`);
@@ -161,7 +181,9 @@ export class ControlFlowOperationsService {
             },
           };
 
-          logger.debug(`[FOR_LOOP] Empty for loop expanded in ${(performance.now() - startTime).toFixed(2)}ms`);
+          logger.debug(
+            `[FOR_LOOP] Empty for loop expanded in ${(performance.now() - startTime).toFixed(2)}ms`
+          );
           return emptyCollection;
         }
 
@@ -175,10 +197,15 @@ export class ControlFlowOperationsService {
           throw new Error(`Failed to create mesh collection: ${collectionResult.error.message}`);
         }
 
-        logger.debug(`[FOR_LOOP] For loop expanded in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[FOR_LOOP] For loop expanded in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return collectionResult.data;
       },
-      (error) => this.createError('EVALUATION_FAILED', 'for_loop', `For loop expansion failed: ${error}`, { context })
+      (error) =>
+        this.createError('EVALUATION_FAILED', 'for_loop', `For loop expansion failed: ${error}`, {
+          context,
+        })
     );
   }
 
@@ -196,12 +223,14 @@ export class ControlFlowOperationsService {
       async () => {
         // Evaluate condition
         const conditionResult = this.evaluateCondition(params.condition, context);
-        
+
         if (conditionResult) {
           // Execute then body
           const thenResult = await params.thenBody(context);
           if (thenResult.success) {
-            logger.debug(`[IF] Then branch executed in ${(performance.now() - startTime).toFixed(2)}ms`);
+            logger.debug(
+              `[IF] Then branch executed in ${(performance.now() - startTime).toFixed(2)}ms`
+            );
             return thenResult.data;
           } else {
             throw new Error(`Then branch failed: ${thenResult.error.message}`);
@@ -210,18 +239,25 @@ export class ControlFlowOperationsService {
           // Execute else body
           const elseResult = await params.elseBody(context);
           if (elseResult.success) {
-            logger.debug(`[IF] Else branch executed in ${(performance.now() - startTime).toFixed(2)}ms`);
+            logger.debug(
+              `[IF] Else branch executed in ${(performance.now() - startTime).toFixed(2)}ms`
+            );
             return elseResult.data;
           } else {
             throw new Error(`Else branch failed: ${elseResult.error.message}`);
           }
         } else {
           // No else branch and condition is false
-          logger.debug(`[IF] Condition false, no else branch in ${(performance.now() - startTime).toFixed(2)}ms`);
+          logger.debug(
+            `[IF] Condition false, no else branch in ${(performance.now() - startTime).toFixed(2)}ms`
+          );
           return null;
         }
       },
-      (error) => this.createError('EVALUATION_FAILED', 'if_statement', `If statement failed: ${error}`, { context })
+      (error) =>
+        this.createError('EVALUATION_FAILED', 'if_statement', `If statement failed: ${error}`, {
+          context,
+        })
     );
   }
 
@@ -239,17 +275,22 @@ export class ControlFlowOperationsService {
       async () => {
         // Create new context with bindings
         const letContext = this.createChildContext(context, params.bindings);
-        
+
         // Execute body with new context
         const bodyResult = await params.body(letContext);
         if (!bodyResult.success) {
           throw new Error(`Let body failed: ${bodyResult.error.message}`);
         }
 
-        logger.debug(`[LET] Let statement processed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[LET] Let statement processed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return bodyResult.data;
       },
-      (error) => this.createError('EVALUATION_FAILED', 'let_statement', `Let statement failed: ${error}`, { context })
+      (error) =>
+        this.createError('EVALUATION_FAILED', 'let_statement', `Let statement failed: ${error}`, {
+          context,
+        })
     );
   }
 
@@ -267,7 +308,11 @@ export class ControlFlowOperationsService {
       async () => {
         // Validate parameters
         if (!params.variable || (!params.range && !params.list)) {
-          throw this.createError('INVALID_PARAMETERS', 'intersection_for', 'Intersection_for requires variable and range or list');
+          throw this.createError(
+            'INVALID_PARAMETERS',
+            'intersection_for',
+            'Intersection_for requires variable and range or list'
+          );
         }
 
         // Generate iteration values
@@ -277,17 +322,23 @@ export class ControlFlowOperationsService {
         // Execute body for each iteration
         for (const value of iterationValues) {
           const iterationContext = this.createChildContext(context, { [params.variable]: value });
-          
+
           const bodyResult = await params.body(value, iterationContext);
           if (bodyResult.success) {
             meshes.push(bodyResult.data);
           } else {
-            logger.warn(`[INTERSECTION_FOR] Iteration failed for value ${value}: ${bodyResult.error.message}`);
+            logger.warn(
+              `[INTERSECTION_FOR] Iteration failed for value ${value}: ${bodyResult.error.message}`
+            );
           }
         }
 
         if (meshes.length === 0) {
-          throw this.createError('ITERATION_FAILED', 'intersection_for', 'No valid meshes generated for intersection');
+          throw this.createError(
+            'ITERATION_FAILED',
+            'intersection_for',
+            'No valid meshes generated for intersection'
+          );
         }
 
         // Perform intersection of all meshes
@@ -295,21 +346,32 @@ export class ControlFlowOperationsService {
         // For now, return the first mesh as a placeholder
         const resultMesh = meshes[0]!;
 
-        logger.debug(`[INTERSECTION_FOR] Intersection_for processed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[INTERSECTION_FOR] Intersection_for processed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return resultMesh;
       },
-      (error) => this.createError('EVALUATION_FAILED', 'intersection_for', `Intersection_for failed: ${error}`, { context })
+      (error) =>
+        this.createError(
+          'EVALUATION_FAILED',
+          'intersection_for',
+          `Intersection_for failed: ${error}`,
+          { context }
+        )
     );
   }
 
   /**
    * Generate iteration values from range or list
    */
-  private generateIterationValues(params: { range?: { start: number; end: number; step?: number }; list?: readonly unknown[] }): unknown[] {
+  private generateIterationValues(params: {
+    range?: { start: number; end: number; step?: number };
+    list?: readonly unknown[];
+  }): unknown[] {
     if (params.range) {
       const { start, end, step = 1 } = params.range;
       const values: number[] = [];
-      
+
       if (step > 0) {
         for (let i = start; i <= end; i += step) {
           values.push(i);
@@ -319,25 +381,28 @@ export class ControlFlowOperationsService {
           values.push(i);
         }
       }
-      
+
       return values;
     }
-    
+
     if (params.list) {
       return [...params.list];
     }
-    
+
     return [];
   }
 
   /**
    * Evaluate boolean condition
    */
-  private evaluateCondition(condition: boolean | ((context: VariableContext) => boolean), context: VariableContext): boolean {
+  private evaluateCondition(
+    condition: boolean | ((context: VariableContext) => boolean),
+    context: VariableContext
+  ): boolean {
     if (typeof condition === 'boolean') {
       return condition;
     }
-    
+
     try {
       return condition(context);
     } catch (error) {
@@ -349,7 +414,10 @@ export class ControlFlowOperationsService {
   /**
    * Create child context with new variables
    */
-  private createChildContext(parent: VariableContext, newVariables: Record<string, unknown>): VariableContext {
+  private createChildContext(
+    parent: VariableContext,
+    newVariables: Record<string, unknown>
+  ): VariableContext {
     return {
       variables: { ...parent.variables, ...newVariables },
       parent,
@@ -386,11 +454,11 @@ export class ControlFlowOperationsService {
       operationType,
       timestamp: new Date(),
     };
-    
+
     if (details) {
       (error as any).details = details;
     }
-    
+
     return error;
   }
 }

@@ -5,20 +5,25 @@
  * Supports translate, rotate, scale, mirror, and color with OpenSCAD-compatible parameters.
  */
 
-import type { AbstractMesh, Scene, Vector3, Matrix } from '@babylonjs/core';
-import { Vector3 as BabylonVector3, Matrix as BabylonMatrix, Color3, StandardMaterial } from '@babylonjs/core';
+import type { AbstractMesh, Matrix, Scene, Vector3 } from '@babylonjs/core';
+import {
+  Matrix as BabylonMatrix,
+  Vector3 as BabylonVector3,
+  Color3,
+  StandardMaterial,
+} from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
-  TranslateNode,
+  ASTNode,
+  ColorNode,
+  MirrorNode,
   RotateNode,
   ScaleNode,
-  MirrorNode,
-  ColorNode,
-  ASTNode,
   SourceLocation,
+  TranslateNode,
 } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
@@ -32,7 +37,7 @@ const logger = createLogger('TransformationBabylonNode');
 
 /**
  * Transformation BabylonJS Node
- * 
+ *
  * Handles proper transformation application for OpenSCAD transformation types with
  * accurate parameter mapping and OpenSCAD-compatible behavior.
  */
@@ -55,11 +60,11 @@ export class TransformationBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.transformationType = originalOpenscadNode.type;
     this.parameters = this.extractParameters(originalOpenscadNode);
     this.childNodes = childNodes;
-    
+
     logger.debug(`[INIT] Created transformation BabylonJS node for ${this.transformationType}`);
   }
 
@@ -87,11 +92,11 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
         // Apply transformation to child meshes
         const transformedMesh = this.applyTransformation(childMeshes);
-        
+
         // Set basic properties
         transformedMesh.id = `${this.name}_${Date.now()}`;
         transformedMesh.name = this.name;
-        
+
         // Add metadata
         transformedMesh.metadata = {
           isTransformation: true,
@@ -107,7 +112,10 @@ export class TransformationBabylonNode extends BabylonJSNode {
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.transformationType} transformation: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.transformationType} transformation: ${errorMessage}`
+        );
       }
     );
   }
@@ -141,20 +149,20 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyTranslateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const translation = this.extractTranslationVector();
-    
+
     // Create a parent mesh to hold the transformed children
     const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
-    
+
     // Apply translation to parent
     parentMesh.position = translation;
-    
+
     // Parent all child meshes to the translated parent
     for (const childMesh of childMeshes) {
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -163,24 +171,24 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyRotateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const rotation = this.extractRotationAngles();
-    
+
     // Create a parent mesh to hold the rotated children
     const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
-    
+
     // Apply rotation to parent (convert degrees to radians)
     parentMesh.rotation = new BabylonVector3(
-      rotation.x * Math.PI / 180,
-      rotation.y * Math.PI / 180,
-      rotation.z * Math.PI / 180
+      (rotation.x * Math.PI) / 180,
+      (rotation.y * Math.PI) / 180,
+      (rotation.z * Math.PI) / 180
     );
-    
+
     // Parent all child meshes to the rotated parent
     for (const childMesh of childMeshes) {
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -189,20 +197,20 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyScaleTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const scale = this.extractScaleVector();
-    
+
     // Create a parent mesh to hold the scaled children
     const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
-    
+
     // Apply scaling to parent
     parentMesh.scaling = scale;
-    
+
     // Parent all child meshes to the scaled parent
     for (const childMesh of childMeshes) {
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -211,23 +219,23 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyMirrorTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const normal = this.extractMirrorNormal();
-    
+
     // Create a parent mesh to hold the mirrored children
     const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
-    
+
     // Create mirror matrix based on normal vector
     const mirrorMatrix = this.createMirrorMatrix(normal);
-    
+
     // Apply mirror transformation to parent
     parentMesh.setPreTransformMatrix(mirrorMatrix);
-    
+
     // Parent all child meshes to the mirrored parent
     for (const childMesh of childMeshes) {
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -237,12 +245,12 @@ export class TransformationBabylonNode extends BabylonJSNode {
   private applyColorTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const color = this.extractColor();
     const alpha = this.extractAlpha();
-    
+
     // Create a parent mesh to hold the colored children
     const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
-    
+
     // Apply color to all child meshes
     for (const childMesh of childMeshes) {
       const material = new StandardMaterial(`${childMesh.name}_colored`, this.scene!);
@@ -251,7 +259,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
       childMesh.material = material;
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -375,30 +383,15 @@ export class TransformationBabylonNode extends BabylonJSNode {
   private createMirrorMatrix(normal: Vector3): Matrix {
     // Normalize the normal vector
     const n = normal.normalize();
-    
+
     // Create reflection matrix: I - 2 * n * n^T
     const matrix = BabylonMatrix.Identity();
-    
-    matrix.setRowFromFloats(0, 
-      1 - 2 * n.x * n.x, 
-      -2 * n.x * n.y, 
-      -2 * n.x * n.z, 
-      0
-    );
-    matrix.setRowFromFloats(1, 
-      -2 * n.y * n.x, 
-      1 - 2 * n.y * n.y, 
-      -2 * n.y * n.z, 
-      0
-    );
-    matrix.setRowFromFloats(2, 
-      -2 * n.z * n.x, 
-      -2 * n.z * n.y, 
-      1 - 2 * n.z * n.z, 
-      0
-    );
+
+    matrix.setRowFromFloats(0, 1 - 2 * n.x * n.x, -2 * n.x * n.y, -2 * n.x * n.z, 0);
+    matrix.setRowFromFloats(1, -2 * n.y * n.x, 1 - 2 * n.y * n.y, -2 * n.y * n.z, 0);
+    matrix.setRowFromFloats(2, -2 * n.z * n.x, -2 * n.z * n.y, 1 - 2 * n.z * n.z, 0);
     matrix.setRowFromFloats(3, 0, 0, 0, 1);
-    
+
     return matrix;
   }
 
@@ -407,29 +400,34 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private extractParameters(node: ASTNode): Record<string, unknown> {
     const params: Record<string, unknown> = { type: node.type };
-    
+
     switch (node.type) {
-      case 'translate':
+      case 'translate': {
         const translateNode = node as TranslateNode;
         params.v = translateNode.v; // Use 'v' property
         break;
-      case 'rotate':
+      }
+      case 'rotate': {
         const rotateNode = node as RotateNode;
         params.a = rotateNode.a; // Use 'a' property for angle
         params.v = rotateNode.v; // Use 'v' property for axis
         break;
-      case 'scale':
+      }
+      case 'scale': {
         const scaleNode = node as ScaleNode;
         params.v = scaleNode.v; // Use 'v' property
         break;
-      case 'mirror':
+      }
+      case 'mirror': {
         const mirrorNode = node as MirrorNode;
         params.v = mirrorNode.v; // Use 'v' property
         break;
-      case 'color':
+      }
+      case 'color': {
         const colorNode = node as ColorNode;
         params.c = colorNode.c; // Use 'c' property
         break;
+      }
     }
 
     return params;
@@ -452,7 +450,9 @@ export class TransformationBabylonNode extends BabylonJSNode {
         // Validate type-specific parameters
         this.validateTransformationParameters();
 
-        logger.debug(`[VALIDATE] Transformation node ${this.name} (${this.transformationType}) validated successfully`);
+        logger.debug(
+          `[VALIDATE] Transformation node ${this.name} (${this.transformationType}) validated successfully`
+        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -472,18 +472,20 @@ export class TransformationBabylonNode extends BabylonJSNode {
       case 'rotate':
         // Rotation validation logic
         break;
-      case 'scale':
+      case 'scale': {
         const scale = this.extractScaleVector();
         if (scale.x === 0 || scale.y === 0 || scale.z === 0) {
           throw new Error('Scale factors cannot be zero');
         }
         break;
-      case 'mirror':
+      }
+      case 'mirror': {
         const normal = this.extractMirrorNormal();
         if (normal.length() === 0) {
           throw new Error('Mirror normal vector cannot be zero');
         }
         break;
+      }
       case 'color':
         // Color validation logic
         break;
@@ -494,8 +496,8 @@ export class TransformationBabylonNode extends BabylonJSNode {
    * Clone the transformation node
    */
   clone(): TransformationBabylonNode {
-    const clonedChildNodes = this.childNodes.map(child => child.clone());
-    
+    const clonedChildNodes = this.childNodes.map((child) => child.clone());
+
     const clonedNode = new TransformationBabylonNode(
       `${this.name}_clone_${Date.now()}`,
       this.scene,
@@ -531,11 +533,11 @@ export class TransformationBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

@@ -8,10 +8,10 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  PrimitiveShapeGeneratorService,
   type OpenSCADCubeParams,
-  type OpenSCADSphereParams,
   type OpenSCADCylinderParams,
+  type OpenSCADSphereParams,
+  PrimitiveShapeGeneratorService,
 } from './primitive-shape-generator.service';
 
 describe('PrimitiveShapeGeneratorService', () => {
@@ -41,7 +41,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCube(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.id).toBeDefined();
@@ -60,7 +60,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCube(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('cube');
@@ -76,7 +76,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCube(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MESH_GENERATION_FAILED');
         expect(result.error.primitiveType).toBe('cube');
@@ -92,7 +92,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('sphere');
@@ -108,7 +108,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('sphere');
@@ -123,7 +123,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('sphere');
@@ -136,7 +136,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('sphere');
@@ -150,7 +150,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MESH_GENERATION_FAILED');
         expect(result.error.primitiveType).toBe('sphere');
@@ -168,7 +168,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('cylinder');
@@ -187,7 +187,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('cylinder');
@@ -203,7 +203,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('cylinder');
@@ -220,7 +220,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.metadata.nodeType).toBe('cylinder');
@@ -236,7 +236,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MESH_GENERATION_FAILED');
         expect(result.error.primitiveType).toBe('cylinder');
@@ -252,7 +252,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCylinder(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MESH_GENERATION_FAILED');
         expect(result.error.primitiveType).toBe('cylinder');
@@ -269,7 +269,7 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         // Should use the specified fragment number for tessellation
@@ -281,12 +281,12 @@ describe('PrimitiveShapeGeneratorService', () => {
       const params: OpenSCADSphereParams = {
         radius: 10,
         fa: 30, // Fragment angle
-        fs: 1,  // Fragment size
+        fs: 1, // Fragment size
       };
 
       const result = await generator.generateSphere(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
         expect(meshData.geometry.vertexCount).toBeGreaterThan(0);
@@ -303,23 +303,23 @@ describe('PrimitiveShapeGeneratorService', () => {
 
       const result = await generator.generateCube(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const meshData = result.data;
-        
+
         // Check structure
         expect(meshData.id).toBeDefined();
         expect(meshData.geometry).toBeDefined();
         expect(meshData.material).toBeDefined();
         expect(meshData.transform).toBeDefined();
         expect(meshData.metadata).toBeDefined();
-        
+
         // Check geometry
         expect(meshData.geometry.positions).toBeInstanceOf(Float32Array);
         expect(meshData.geometry.indices).toBeInstanceOf(Uint32Array);
         expect(meshData.geometry.vertexCount).toBeGreaterThan(0);
         expect(meshData.geometry.triangleCount).toBeGreaterThan(0);
-        
+
         // Check metadata
         expect(meshData.metadata.meshId).toBe(meshData.id);
         expect(meshData.metadata.nodeType).toBe('cube');

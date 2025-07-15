@@ -8,10 +8,15 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type {
+  ColorNode,
+  RotateNode,
+  ScaleNode,
+  TranslateNode,
+} from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
-import type { TranslateNode, RotateNode, ScaleNode, ColorNode } from '../../../openscad-parser/ast/ast-types';
-import { TransformationBabylonNode } from './transformation-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
+import { TransformationBabylonNode } from './transformation-babylon-node';
 
 describe('TransformationBabylonNode', () => {
   let parser: OpenscadParser;
@@ -21,7 +26,7 @@ describe('TransformationBabylonNode', () => {
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
     parser = createTestParser();
-    
+
     // Initialize the parser
     await parser.init();
 
@@ -41,11 +46,11 @@ describe('TransformationBabylonNode', () => {
     it('should create translate transformation with vector parameter', async () => {
       const openscadCode = 'translate([10, 5, 2]) cube([1, 1, 1]);';
       const ast = parser.parseAST(openscadCode);
-      
+
       expect(ast).toBeDefined();
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThan(0);
-      
+
       const translateNode = ast[0] as TranslateNode;
       expect(translateNode).toBeDefined();
       expect(translateNode.type).toBe('translate');
@@ -65,7 +70,7 @@ describe('TransformationBabylonNode', () => {
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -95,11 +100,11 @@ describe('TransformationBabylonNode', () => {
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // Check that translation was applied
         expect(mesh.position.x).toBeCloseTo(5);
         expect(mesh.position.y).toBeCloseTo(0);
@@ -120,16 +125,13 @@ describe('TransformationBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const transformationNode = new TransformationBabylonNode(
-        'test_rotate',
-        scene,
-        rotateNode,
-        [cubeNode]
-      );
+      const transformationNode = new TransformationBabylonNode('test_rotate', scene, rotateNode, [
+        cubeNode,
+      ]);
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -158,11 +160,11 @@ describe('TransformationBabylonNode', () => {
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // Check that rotation was applied (90 degrees = π/2 radians)
         expect(mesh.rotation.z).toBeCloseTo(Math.PI / 2, 2);
       }
@@ -181,16 +183,13 @@ describe('TransformationBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const transformationNode = new TransformationBabylonNode(
-        'test_scale',
-        scene,
-        scaleNode,
-        [cubeNode]
-      );
+      const transformationNode = new TransformationBabylonNode('test_scale', scene, scaleNode, [
+        cubeNode,
+      ]);
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -219,11 +218,11 @@ describe('TransformationBabylonNode', () => {
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // Check that scaling was applied
         expect(mesh.scaling.x).toBeCloseTo(2);
         expect(mesh.scaling.y).toBeCloseTo(2);
@@ -244,16 +243,13 @@ describe('TransformationBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const transformationNode = new TransformationBabylonNode(
-        'test_color',
-        scene,
-        colorNode,
-        [cubeNode]
-      );
+      const transformationNode = new TransformationBabylonNode('test_color', scene, colorNode, [
+        cubeNode,
+      ]);
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -282,7 +278,7 @@ describe('TransformationBabylonNode', () => {
 
       const result = await transformationNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -341,15 +337,12 @@ describe('TransformationBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const originalNode = new TransformationBabylonNode(
-        'original_scale',
-        scene,
-        scaleNode,
-        [cubeNode]
-      );
+      const originalNode = new TransformationBabylonNode('original_scale', scene, scaleNode, [
+        cubeNode,
+      ]);
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_scale_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -391,15 +384,12 @@ describe('TransformationBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const transformationNode = new TransformationBabylonNode(
-        'debug_rotate',
-        scene,
-        rotateNode,
-        [cubeNode]
-      );
+      const transformationNode = new TransformationBabylonNode('debug_rotate', scene, rotateNode, [
+        cubeNode,
+      ]);
 
       const debugInfo = transformationNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isTransformation).toBe(true);
       expect(debugInfo.transformationType).toBe('rotate');

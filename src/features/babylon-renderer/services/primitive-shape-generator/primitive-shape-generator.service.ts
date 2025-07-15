@@ -14,17 +14,17 @@
  * ```
  */
 
-import { MeshBuilder, Scene, Vector3, BoundingBox, Matrix } from '@babylonjs/core';
+import { BoundingBox, Matrix, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
-  GenericMeshData,
   GenericGeometry,
   GenericMaterialConfig,
+  GenericMeshData,
   GenericMeshMetadata,
 } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 
 const logger = createLogger('PrimitiveShapeGenerator');
@@ -78,7 +78,11 @@ export interface OpenSCADPolyhedronParams {
  * Primitive generation error
  */
 export interface PrimitiveGenerationError {
-  readonly code: 'INVALID_PARAMETERS' | 'MESH_GENERATION_FAILED' | 'SCENE_REQUIRED' | 'GEOMETRY_CONVERSION_FAILED';
+  readonly code:
+    | 'INVALID_PARAMETERS'
+    | 'MESH_GENERATION_FAILED'
+    | 'SCENE_REQUIRED'
+    | 'GEOMETRY_CONVERSION_FAILED';
   readonly message: string;
   readonly primitiveType: string;
   readonly timestamp: Date;
@@ -102,7 +106,9 @@ export class PrimitiveShapeGeneratorService {
   /**
    * Generate cube mesh with OpenSCAD-compatible parameters
    */
-  async generateCube(params: OpenSCADCubeParams): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
+  async generateCube(
+    params: OpenSCADCubeParams
+  ): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
     logger.debug('[GENERATE] Generating cube mesh...');
     const startTime = performance.now();
 
@@ -117,12 +123,16 @@ export class PrimitiveShapeGeneratorService {
         const sizeVector = this.convertSizeToVector3(params.size);
 
         // Create BabylonJS box
-        const babylonMesh = MeshBuilder.CreateBox(`cube_${Date.now()}`, {
-          width: sizeVector.x,
-          height: sizeVector.y,
-          depth: sizeVector.z,
-          updatable: false,
-        }, this.scene);
+        const babylonMesh = MeshBuilder.CreateBox(
+          `cube_${Date.now()}`,
+          {
+            width: sizeVector.x,
+            height: sizeVector.y,
+            depth: sizeVector.z,
+            updatable: false,
+          },
+          this.scene
+        );
 
         // Handle OpenSCAD center parameter
         if (!params.center) {
@@ -143,17 +153,22 @@ export class PrimitiveShapeGeneratorService {
         // Clean up BabylonJS mesh (we only need the data)
         babylonMesh.dispose();
 
-        logger.debug(`[GENERATE] Cube generated in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[GENERATE] Cube generated in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericMeshData;
       },
-      (error) => this.createError('MESH_GENERATION_FAILED', 'cube', `Failed to generate cube: ${error}`)
+      (error) =>
+        this.createError('MESH_GENERATION_FAILED', 'cube', `Failed to generate cube: ${error}`)
     );
   }
 
   /**
    * Generate sphere mesh with OpenSCAD fragment control
    */
-  async generateSphere(params: OpenSCADSphereParams): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
+  async generateSphere(
+    params: OpenSCADSphereParams
+  ): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
     logger.debug('[GENERATE] Generating sphere mesh...');
     const startTime = performance.now();
 
@@ -166,14 +181,23 @@ export class PrimitiveShapeGeneratorService {
         }
 
         // Calculate tessellation based on OpenSCAD fragment parameters
-        const tessellation = this.calculateFragmentTessellation(radius, params.fn, params.fa, params.fs);
+        const tessellation = this.calculateFragmentTessellation(
+          radius,
+          params.fn,
+          params.fa,
+          params.fs
+        );
 
         // Create BabylonJS sphere
-        const babylonMesh = MeshBuilder.CreateSphere(`sphere_${Date.now()}`, {
-          diameter: radius * 2,
-          segments: tessellation,
-          updatable: false,
-        }, this.scene);
+        const babylonMesh = MeshBuilder.CreateSphere(
+          `sphere_${Date.now()}`,
+          {
+            diameter: radius * 2,
+            segments: tessellation,
+            updatable: false,
+          },
+          this.scene
+        );
 
         // Convert to GenericMeshData
         const genericMeshData = await this.convertBabylonMeshToGeneric(
@@ -186,17 +210,22 @@ export class PrimitiveShapeGeneratorService {
         // Clean up BabylonJS mesh
         babylonMesh.dispose();
 
-        logger.debug(`[GENERATE] Sphere generated in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[GENERATE] Sphere generated in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericMeshData;
       },
-      (error) => this.createError('MESH_GENERATION_FAILED', 'sphere', `Failed to generate sphere: ${error}`)
+      (error) =>
+        this.createError('MESH_GENERATION_FAILED', 'sphere', `Failed to generate sphere: ${error}`)
     );
   }
 
   /**
    * Generate cylinder mesh with OpenSCAD radius variants
    */
-  async generateCylinder(params: OpenSCADCylinderParams): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
+  async generateCylinder(
+    params: OpenSCADCylinderParams
+  ): Promise<Result<GenericMeshData, PrimitiveGenerationError>> {
     logger.debug('[GENERATE] Generating cylinder mesh...');
     const startTime = performance.now();
 
@@ -219,13 +248,17 @@ export class PrimitiveShapeGeneratorService {
         );
 
         // Create BabylonJS cylinder
-        const babylonMesh = MeshBuilder.CreateCylinder(`cylinder_${Date.now()}`, {
-          height: params.height,
-          diameterTop: topRadius * 2,
-          diameterBottom: bottomRadius * 2,
-          tessellation: tessellation,
-          updatable: false,
-        }, this.scene);
+        const babylonMesh = MeshBuilder.CreateCylinder(
+          `cylinder_${Date.now()}`,
+          {
+            height: params.height,
+            diameterTop: topRadius * 2,
+            diameterBottom: bottomRadius * 2,
+            tessellation: tessellation,
+            updatable: false,
+          },
+          this.scene
+        );
 
         // Handle OpenSCAD center parameter
         if (!params.center) {
@@ -245,10 +278,17 @@ export class PrimitiveShapeGeneratorService {
         // Clean up BabylonJS mesh
         babylonMesh.dispose();
 
-        logger.debug(`[GENERATE] Cylinder generated in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[GENERATE] Cylinder generated in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericMeshData;
       },
-      (error) => this.createError('MESH_GENERATION_FAILED', 'cylinder', `Failed to generate cylinder: ${error}`)
+      (error) =>
+        this.createError(
+          'MESH_GENERATION_FAILED',
+          'cylinder',
+          `Failed to generate cylinder: ${error}`
+        )
     );
   }
 
@@ -278,7 +318,10 @@ export class PrimitiveShapeGeneratorService {
   /**
    * Calculate cylinder radii from various parameter combinations
    */
-  private calculateCylinderRadii(params: OpenSCADCylinderParams): { topRadius: number; bottomRadius: number } {
+  private calculateCylinderRadii(params: OpenSCADCylinderParams): {
+    topRadius: number;
+    bottomRadius: number;
+  } {
     // Handle radius1/radius2 (top/bottom)
     if (params.radius1 !== undefined || params.radius2 !== undefined) {
       return {
@@ -371,7 +414,7 @@ export class PrimitiveShapeGeneratorService {
         indices,
         vertexCount: positions.length / 3,
         triangleCount: indices.length / 3,
-        boundingBox: new BoundingBox(Vector3.Zero(), Vector3.One())
+        boundingBox: new BoundingBox(Vector3.Zero(), Vector3.One()),
       }),
       ...(normals && { normals }),
       ...(uvs && { uvs }),

@@ -10,10 +10,7 @@ import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
-import type {
-  ASTNode,
-  SourceLocation,
-} from '../../../openscad-parser/ast/ast-types';
+import type { ASTNode, SourceLocation } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
   BabylonJSNode,
@@ -31,7 +28,7 @@ export type ModifierType = 'disable' | 'show_only' | 'debug' | 'background';
 
 /**
  * Modifier BabylonJS Node
- * 
+ *
  * Handles proper modifier operations for OpenSCAD modifier types with
  * accurate rendering control and OpenSCAD-compatible behavior.
  */
@@ -55,11 +52,11 @@ export class ModifierBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.modifierType = modifierType;
     this.childNodes = childNodes;
     this.parameters = this.extractParameters(originalOpenscadNode);
-    
+
     logger.debug(`[INIT] Created modifier BabylonJS node for ${this.modifierType}`);
   }
 
@@ -76,7 +73,10 @@ export class ModifierBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length === 0) {
-          throw this.createError('NO_CHILDREN', `Modifier ${this.modifierType} operation requires at least 1 child node`);
+          throw this.createError(
+            'NO_CHILDREN',
+            `Modifier ${this.modifierType} operation requires at least 1 child node`
+          );
         }
 
         // Generate child meshes first
@@ -91,11 +91,11 @@ export class ModifierBabylonNode extends BabylonJSNode {
 
         // Apply modifier operation to child meshes
         const resultMesh = await this.applyModifierOperation(childMeshes);
-        
+
         // Set basic properties
         resultMesh.id = `${this.name}_${Date.now()}`;
         resultMesh.name = this.name;
-        
+
         // Add metadata
         resultMesh.metadata = {
           isModifier: true,
@@ -111,7 +111,10 @@ export class ModifierBabylonNode extends BabylonJSNode {
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.modifierType} modifier: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.modifierType} modifier: ${errorMessage}`
+        );
       }
     );
   }
@@ -139,21 +142,21 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async applyDisableModifier(childMeshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug('[DISABLE] Applying disable modifier - hiding meshes');
-    
+
     // Create a parent mesh to hold all children
     const parentMesh = await this.createParentMesh('disable');
-    
+
     // Disable all child meshes
     for (const childMesh of childMeshes) {
       childMesh.isVisible = false;
       childMesh.setEnabled(false);
       childMesh.parent = parentMesh;
     }
-    
+
     // Also disable the parent mesh
     parentMesh.isVisible = false;
     parentMesh.setEnabled(false);
-    
+
     return parentMesh;
   }
 
@@ -162,20 +165,20 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async applyShowOnlyModifier(childMeshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug('[SHOW_ONLY] Applying show only modifier - highlighting meshes');
-    
+
     // Create a parent mesh to hold all children
     const parentMesh = await this.createParentMesh('show_only');
-    
+
     // Apply special show-only material to child meshes
     for (const childMesh of childMeshes) {
       const showOnlyMaterial = await this.createShowOnlyMaterial();
       childMesh.material = showOnlyMaterial;
       childMesh.parent = parentMesh;
     }
-    
+
     // TODO: Implement scene-level logic to hide other meshes
     // This would require scene-level management which is beyond the scope of individual nodes
-    
+
     return parentMesh;
   }
 
@@ -184,17 +187,17 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async applyDebugModifier(childMeshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug('[DEBUG] Applying debug modifier - highlighting meshes');
-    
+
     // Create a parent mesh to hold all children
     const parentMesh = await this.createParentMesh('debug');
-    
+
     // Apply debug material to child meshes
     for (const childMesh of childMeshes) {
       const debugMaterial = await this.createDebugMaterial();
       childMesh.material = debugMaterial;
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -203,17 +206,17 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async applyBackgroundModifier(childMeshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug('[BACKGROUND] Applying background modifier - making meshes transparent');
-    
+
     // Create a parent mesh to hold all children
     const parentMesh = await this.createParentMesh('background');
-    
+
     // Apply transparent material to child meshes
     for (const childMesh of childMeshes) {
       const backgroundMaterial = await this.createBackgroundMaterial();
       childMesh.material = backgroundMaterial;
       childMesh.parent = parentMesh;
     }
-    
+
     return parentMesh;
   }
 
@@ -222,11 +225,15 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async createParentMesh(modifierType: string): Promise<AbstractMesh> {
     const { MeshBuilder } = await import('@babylonjs/core');
-    
+
     // Create an invisible parent mesh
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_${modifierType}_parent`, { size: 0.001 }, this.scene!);
+    const parentMesh = MeshBuilder.CreateBox(
+      `${this.name}_${modifierType}_parent`,
+      { size: 0.001 },
+      this.scene!
+    );
     parentMesh.isVisible = false;
-    
+
     return parentMesh;
   }
 
@@ -235,12 +242,12 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async createDebugMaterial(): Promise<StandardMaterial> {
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
-    
+
     const material = new StandardMaterial(`${this.name}_debug_material`, this.scene!);
     material.diffuseColor = new Color3(1, 0, 0); // Bright red
     material.emissiveColor = new Color3(0.2, 0, 0); // Slight glow
     material.specularColor = new Color3(0.5, 0.5, 0.5);
-    
+
     return material;
   }
 
@@ -249,12 +256,12 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async createShowOnlyMaterial(): Promise<StandardMaterial> {
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
-    
+
     const material = new StandardMaterial(`${this.name}_show_only_material`, this.scene!);
     material.diffuseColor = new Color3(1, 1, 0); // Bright yellow
     material.emissiveColor = new Color3(0.3, 0.3, 0); // Yellow glow
     material.specularColor = new Color3(0.8, 0.8, 0.8);
-    
+
     return material;
   }
 
@@ -263,12 +270,12 @@ export class ModifierBabylonNode extends BabylonJSNode {
    */
   private async createBackgroundMaterial(): Promise<StandardMaterial> {
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
-    
+
     const material = new StandardMaterial(`${this.name}_background_material`, this.scene!);
     material.diffuseColor = new Color3(0.7, 0.7, 0.7); // Light gray
     material.alpha = 0.3; // Transparent
     material.specularColor = new Color3(0.2, 0.2, 0.2);
-    
+
     return material;
   }
 
@@ -276,14 +283,14 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Extract parameters from the original OpenSCAD node
    */
   private extractParameters(node: ASTNode): Record<string, unknown> {
-    const params: Record<string, unknown> = { 
+    const params: Record<string, unknown> = {
       type: node.type,
       modifierType: this.modifierType,
     };
-    
+
     // Modifiers typically don't have additional parameters
     // They just affect rendering behavior
-    
+
     return params;
   }
 
@@ -302,7 +309,10 @@ export class ModifierBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length === 0) {
-          throw this.createError('NO_CHILDREN', `Modifier ${this.modifierType} operation requires at least 1 child node`);
+          throw this.createError(
+            'NO_CHILDREN',
+            `Modifier ${this.modifierType} operation requires at least 1 child node`
+          );
         }
 
         // Validate all child nodes
@@ -313,7 +323,9 @@ export class ModifierBabylonNode extends BabylonJSNode {
           }
         }
 
-        logger.debug(`[VALIDATE] Modifier node ${this.name} (${this.modifierType}) validated successfully`);
+        logger.debug(
+          `[VALIDATE] Modifier node ${this.name} (${this.modifierType}) validated successfully`
+        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -326,8 +338,8 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Clone the modifier node
    */
   clone(): ModifierBabylonNode {
-    const clonedChildNodes = this.childNodes.map(child => child.clone());
-    
+    const clonedChildNodes = this.childNodes.map((child) => child.clone());
+
     const clonedNode = new ModifierBabylonNode(
       `${this.name}_clone_${Date.now()}`,
       this.scene,
@@ -364,11 +376,11 @@ export class ModifierBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

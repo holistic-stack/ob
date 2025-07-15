@@ -3,7 +3,7 @@
  *
  * Service for performing CSG operations on GenericMeshData objects.
  * Integrates with BabylonJS CSG2 service while maintaining GenericMeshData interface.
- * 
+ *
  * @example
  * ```typescript
  * const csgService = new CSGOperationsService(scene);
@@ -12,17 +12,20 @@
  * ```
  */
 
-import { MeshBuilder, Scene, Mesh, Matrix } from '@babylonjs/core';
+import { Matrix, Mesh, MeshBuilder, type Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
-  GenericMeshData,
   GenericGeometry,
   GenericMeshCollection,
+  GenericMeshData,
 } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
-import { createBoundingBoxFromGeometry, createMeshCollection } from '../../utils/generic-mesh-utils';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
+import {
+  createBoundingBoxFromGeometry,
+  createMeshCollection,
+} from '../../utils/generic-mesh-utils';
 import { BabylonCSG2Service } from '../babylon-csg2-service';
 
 const logger = createLogger('CSGOperations');
@@ -41,7 +44,12 @@ export interface CSGOperationParams {
  * CSG operation error
  */
 export interface CSGOperationError {
-  readonly code: 'INVALID_MESHES' | 'OPERATION_FAILED' | 'SCENE_REQUIRED' | 'GEOMETRY_INVALID' | 'NO_INTERSECTION';
+  readonly code:
+    | 'INVALID_MESHES'
+    | 'OPERATION_FAILED'
+    | 'SCENE_REQUIRED'
+    | 'GEOMETRY_INVALID'
+    | 'NO_INTERSECTION';
   readonly message: string;
   readonly operationType: string;
   readonly timestamp: Date;
@@ -50,7 +58,7 @@ export interface CSGOperationError {
 
 /**
  * CSG Operations Service
- * 
+ *
  * Performs CSG operations on GenericMeshData objects using BabylonJS CSG2
  * with proper error handling and performance optimization.
  */
@@ -61,13 +69,13 @@ export class CSGOperationsService {
   constructor(scene: Scene) {
     this.scene = scene;
     this.csgService = new BabylonCSG2Service();
-    
+
     // Initialize the CSG service with the scene
     const initResult = this.csgService.init(scene);
     if (!initResult.success) {
       logger.error(`[ERROR] Failed to initialize CSG service: ${initResult.error.message}`);
     }
-    
+
     logger.init('[INIT] CSGOperations service initialized');
   }
 
@@ -90,7 +98,7 @@ export class CSGOperationsService {
 
         // Convert GenericMeshData to BabylonJS meshes
         const babylonMeshes = await Promise.all(
-          meshes.map(meshData => this.convertGenericMeshToBabylon(meshData))
+          meshes.map((meshData) => this.convertGenericMeshToBabylon(meshData))
         );
 
         // Perform union operations sequentially
@@ -100,7 +108,7 @@ export class CSGOperationsService {
           if (!unionResult.success) {
             throw new Error(`Union operation failed: ${unionResult.error.message}`);
           }
-          
+
           // Clean up intermediate mesh
           if (resultMesh !== babylonMeshes[0]) {
             resultMesh.dispose();
@@ -117,10 +125,12 @@ export class CSGOperationsService {
         );
 
         // Clean up BabylonJS meshes
-        babylonMeshes.forEach(mesh => mesh.dispose());
+        babylonMeshes.forEach((mesh) => mesh.dispose());
         resultMesh.dispose();
 
-        logger.debug(`[UNION] Union operation completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[UNION] Union operation completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericResult;
       },
       (error) => this.createError('OPERATION_FAILED', 'union', `Union operation failed: ${error}`)
@@ -163,10 +173,13 @@ export class CSGOperationsService {
         babylonMeshB.dispose();
         differenceResult.data.resultMesh.dispose();
 
-        logger.debug(`[DIFFERENCE] Difference operation completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[DIFFERENCE] Difference operation completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericResult;
       },
-      (error) => this.createError('OPERATION_FAILED', 'difference', `Difference operation failed: ${error}`)
+      (error) =>
+        this.createError('OPERATION_FAILED', 'difference', `Difference operation failed: ${error}`)
     );
   }
 
@@ -196,7 +209,11 @@ export class CSGOperationsService {
         // Check if intersection produced valid geometry
         const resultMesh = intersectionResult.data.resultMesh;
         if (!resultMesh || intersectionResult.data.triangleCount === 0) {
-          throw this.createError('NO_INTERSECTION', 'intersection', 'No intersection found between meshes');
+          throw this.createError(
+            'NO_INTERSECTION',
+            'intersection',
+            'No intersection found between meshes'
+          );
         }
 
         // Convert result back to GenericMeshData
@@ -212,10 +229,17 @@ export class CSGOperationsService {
         babylonMeshB.dispose();
         resultMesh.dispose();
 
-        logger.debug(`[INTERSECTION] Intersection operation completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[INTERSECTION] Intersection operation completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericResult;
       },
-      (error) => this.createError('OPERATION_FAILED', 'intersection', `Intersection operation failed: ${error}`)
+      (error) =>
+        this.createError(
+          'OPERATION_FAILED',
+          'intersection',
+          `Intersection operation failed: ${error}`
+        )
     );
   }
 
@@ -224,15 +248,15 @@ export class CSGOperationsService {
    */
   private async convertGenericMeshToBabylon(meshData: GenericMeshData): Promise<Mesh> {
     const mesh = new Mesh(`csg_temp_${Date.now()}`, this.scene);
-    
+
     // Set vertex data
     mesh.setVerticesData('position', meshData.geometry.positions);
     mesh.setIndices(Array.from(meshData.geometry.indices));
-    
+
     if (meshData.geometry.normals) {
       mesh.setVerticesData('normal', meshData.geometry.normals);
     }
-    
+
     if (meshData.geometry.uvs) {
       mesh.setVerticesData('uv', meshData.geometry.uvs);
     }
@@ -269,12 +293,12 @@ export class CSGOperationsService {
       indices,
       vertexCount: positions.length / 3,
       triangleCount: indices.length / 3,
-      boundingBox: createBoundingBoxFromGeometry({ 
-        positions, 
-        indices, 
-        vertexCount: positions.length / 3, 
-        triangleCount: indices.length / 3, 
-        boundingBox: inputMeshes[0]!.geometry.boundingBox 
+      boundingBox: createBoundingBoxFromGeometry({
+        positions,
+        indices,
+        vertexCount: positions.length / 3,
+        triangleCount: indices.length / 3,
+        boundingBox: inputMeshes[0]!.geometry.boundingBox,
       }),
       ...(normals && { normals }),
       ...(uvs && { uvs }),
@@ -286,7 +310,10 @@ export class CSGOperationsService {
     // Create metadata combining information from input meshes
     const totalVertices = inputMeshes.reduce((sum, mesh) => sum + mesh.metadata.vertexCount, 0);
     const totalTriangles = inputMeshes.reduce((sum, mesh) => sum + mesh.metadata.triangleCount, 0);
-    const totalGenerationTime = inputMeshes.reduce((sum, mesh) => sum + mesh.metadata.generationTime, 0);
+    const totalGenerationTime = inputMeshes.reduce(
+      (sum, mesh) => sum + mesh.metadata.generationTime,
+      0
+    );
 
     const metadata = {
       ...DEFAULT_MESH_METADATA,
@@ -330,11 +357,11 @@ export class CSGOperationsService {
       operationType,
       timestamp: new Date(),
     };
-    
+
     if (details) {
       (error as any).details = details;
     }
-    
+
     return error;
   }
 }

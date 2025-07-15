@@ -40,7 +40,7 @@ describe('ASTBridgeConverter', () => {
   describe('Initialization', () => {
     it('should initialize with default configuration', () => {
       expect(bridgeConverter).toBeDefined();
-      
+
       const stats = bridgeConverter.getStats();
       expect(stats.isInitialized).toBe(false);
       expect(stats.hasScene).toBe(false);
@@ -56,16 +56,16 @@ describe('ASTBridgeConverter', () => {
 
       const customConverter = new ASTBridgeConverter(customConfig);
       const stats = customConverter.getStats();
-      
+
       expect(stats.config).toEqual(customConfig);
       customConverter.dispose();
     });
 
     it('should initialize successfully with valid scene', async () => {
       const result = await bridgeConverter.initialize(scene);
-      
+
       expect(result.success).toBe(true);
-      
+
       const stats = bridgeConverter.getStats();
       expect(stats.isInitialized).toBe(true);
       expect(stats.hasScene).toBe(true);
@@ -89,7 +89,7 @@ describe('ASTBridgeConverter', () => {
 
     it('should convert simple cube OpenSCAD AST to BabylonJS AST', async () => {
       const openscadCode = 'cube([2, 3, 4]);';
-      
+
       // Parse OpenSCAD code to AST
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
@@ -117,7 +117,7 @@ describe('ASTBridgeConverter', () => {
 
     it('should convert sphere OpenSCAD AST to BabylonJS AST', async () => {
       const openscadCode = 'sphere(r=5);';
-      
+
       // Parse OpenSCAD code to AST
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
@@ -146,7 +146,7 @@ describe('ASTBridgeConverter', () => {
         sphere(r=2);
         cylinder(h=3, r=1);
       `;
-      
+
       // Parse OpenSCAD code to AST
       const ast = parser.parseAST(openscadCode);
       expect(ast).toBeDefined();
@@ -182,7 +182,7 @@ describe('ASTBridgeConverter', () => {
       if (!conversionResult.success) {
         expect(conversionResult.error.code).toBe('NOT_INITIALIZED');
       }
-      
+
       uninitializedConverter.dispose();
     });
 
@@ -227,7 +227,7 @@ describe('ASTBridgeConverter', () => {
 
       // Convert to populate cache
       await bridgeConverter.convertAST(ast);
-      
+
       const statsBefore = bridgeConverter.getStats();
       expect(statsBefore.cacheSize).toBeGreaterThan(0);
 
@@ -245,12 +245,10 @@ describe('ASTBridgeConverter', () => {
     });
 
     it('should handle malformed AST nodes gracefully', async () => {
-      const malformedAST = [
-        { type: 'unknown_type', invalidProperty: true } as any,
-      ];
+      const malformedAST = [{ type: 'unknown_type', invalidProperty: true } as any];
 
       const conversionResult = await bridgeConverter.convertAST(malformedAST);
-      
+
       // Should still attempt conversion but may fail gracefully
       // The exact behavior depends on implementation details
       expect(conversionResult).toBeDefined();
@@ -261,7 +259,7 @@ describe('ASTBridgeConverter', () => {
   describe('Resource Management', () => {
     it('should dispose resources properly', async () => {
       await bridgeConverter.initialize(scene);
-      
+
       const statsBefore = bridgeConverter.getStats();
       expect(statsBefore.isInitialized).toBe(true);
 

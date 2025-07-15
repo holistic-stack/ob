@@ -11,13 +11,13 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
+  ASTNode,
+  ExpressionNode,
   ForLoopNode,
   IfNode,
   LetNode,
-  ExpressionNode,
-  ASTNode,
-  SourceLocation,
   ParameterValue,
+  SourceLocation,
 } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
@@ -31,7 +31,7 @@ const logger = createLogger('ControlFlowBabylonNode');
 
 /**
  * Control Flow BabylonJS Node
- * 
+ *
  * Handles proper control flow operations for OpenSCAD control flow types with
  * accurate parameter mapping and OpenSCAD-compatible behavior.
  */
@@ -54,11 +54,11 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.controlFlowType = originalOpenscadNode.type;
     this.childNodes = childNodes;
     this.parameters = this.extractParameters(originalOpenscadNode);
-    
+
     logger.debug(`[INIT] Created control flow BabylonJS node for ${this.controlFlowType}`);
   }
 
@@ -76,14 +76,14 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
 
         // Apply control flow logic to generate meshes
         const resultMeshes = await this.applyControlFlow();
-        
+
         // Combine result meshes into a single mesh
         const combinedMesh = await this.combineMeshes(resultMeshes);
-        
+
         // Set basic properties
         combinedMesh.id = `${this.name}_${Date.now()}`;
         combinedMesh.name = this.name;
-        
+
         // Add metadata
         combinedMesh.metadata = {
           isControlFlow: true,
@@ -95,12 +95,17 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
           generatedAt: new Date().toISOString(),
         };
 
-        logger.debug(`[GENERATE] Generated ${this.controlFlowType} control flow operation successfully`);
+        logger.debug(
+          `[GENERATE] Generated ${this.controlFlowType} control flow operation successfully`
+        );
         return combinedMesh;
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.controlFlowType} control flow: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.controlFlowType} control flow: ${errorMessage}`
+        );
       }
     );
   }
@@ -133,13 +138,15 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     // For now, implement a simple range-based for loop
     // TODO: Implement proper expression evaluation for complex ranges
     const iterations = this.evaluateForLoopRange(forLoopNode);
-    
+
     for (let i = 0; i < iterations; i++) {
       // Generate child meshes for this iteration
       for (const childNode of this.childNodes) {
         const childResult = await childNode.generateMesh();
         if (!childResult.success) {
-          throw new Error(`Failed to generate child mesh in for loop iteration ${i}: ${childResult.error.message}`);
+          throw new Error(
+            `Failed to generate child mesh in for loop iteration ${i}: ${childResult.error.message}`
+          );
         }
         resultMeshes.push(childResult.data);
       }
@@ -159,13 +166,15 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
 
     // Evaluate the condition
     const conditionResult = this.evaluateCondition(ifNode.condition);
-    
+
     if (conditionResult) {
       // Process then branch (child nodes)
       for (const childNode of this.childNodes) {
         const childResult = await childNode.generateMesh();
         if (!childResult.success) {
-          throw new Error(`Failed to generate child mesh in if then branch: ${childResult.error.message}`);
+          throw new Error(
+            `Failed to generate child mesh in if then branch: ${childResult.error.message}`
+          );
         }
         resultMeshes.push(childResult.data);
       }
@@ -182,14 +191,18 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     const letNode = this.originalOpenscadNode as LetNode;
     const resultMeshes: AbstractMesh[] = [];
 
-    logger.debug(`[LET_EXPRESSION] Processing let expression with ${Object.keys(letNode.assignments).length} assignments`);
+    logger.debug(
+      `[LET_EXPRESSION] Processing let expression with ${Object.keys(letNode.assignments).length} assignments`
+    );
 
     // TODO: Implement proper variable scoping and context management
     // For now, just process child nodes without variable context
     for (const childNode of this.childNodes) {
       const childResult = await childNode.generateMesh();
       if (!childResult.success) {
-        throw new Error(`Failed to generate child mesh in let expression: ${childResult.error.message}`);
+        throw new Error(
+          `Failed to generate child mesh in let expression: ${childResult.error.message}`
+        );
       }
       resultMeshes.push(childResult.data);
     }
@@ -252,23 +265,26 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
    */
   private extractParameters(node: ASTNode): Record<string, unknown> {
     const params: Record<string, unknown> = { type: node.type };
-    
+
     switch (node.type) {
-      case 'for_loop':
+      case 'for_loop': {
         const forLoopNode = node as ForLoopNode;
         params.variables = forLoopNode.variables;
         params.variableCount = forLoopNode.variables.length;
         break;
-      case 'if':
+      }
+      case 'if': {
         const ifNode = node as IfNode;
         params.condition = ifNode.condition;
         params.hasElseBranch = !!ifNode.elseBranch;
         break;
-      case 'let':
+      }
+      case 'let': {
         const letNode = node as LetNode;
         params.assignments = letNode.assignments;
         params.assignmentCount = Object.keys(letNode.assignments).length;
         break;
+      }
     }
 
     return params;
@@ -299,7 +315,9 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
           }
         }
 
-        logger.debug(`[VALIDATE] Control flow node ${this.name} (${this.controlFlowType}) validated successfully`);
+        logger.debug(
+          `[VALIDATE] Control flow node ${this.name} (${this.controlFlowType}) validated successfully`
+        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -313,24 +331,27 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
    */
   private validateControlFlowParameters(): void {
     switch (this.controlFlowType) {
-      case 'for_loop':
+      case 'for_loop': {
         const forLoopNode = this.originalOpenscadNode as ForLoopNode;
         if (forLoopNode.variables.length === 0) {
           throw new Error('For loop must have at least one variable');
         }
         break;
-      case 'if':
+      }
+      case 'if': {
         const ifNode = this.originalOpenscadNode as IfNode;
         if (!ifNode.condition) {
           throw new Error('If statement must have a condition');
         }
         break;
-      case 'let':
+      }
+      case 'let': {
         const letNode = this.originalOpenscadNode as LetNode;
         if (Object.keys(letNode.assignments).length === 0) {
           throw new Error('Let expression must have at least one assignment');
         }
         break;
+      }
     }
   }
 
@@ -338,8 +359,8 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
    * Clone the control flow node
    */
   clone(): ControlFlowBabylonNode {
-    const clonedChildNodes = this.childNodes.map(child => child.clone());
-    
+    const clonedChildNodes = this.childNodes.map((child) => child.clone());
+
     const clonedNode = new ControlFlowBabylonNode(
       `${this.name}_clone_${Date.now()}`,
       this.scene,
@@ -375,11 +396,11 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

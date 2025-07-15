@@ -8,11 +8,7 @@
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
-import type {
-  CubeNode,
-  CylinderNode,
-  SphereNode,
-} from '../../../openscad-parser/ast/ast-types';
+import type { CubeNode, CylinderNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
 import type { GenericMeshData, MaterialConfig, MeshMetadata } from '../../types/conversion.types';
 
 const logger = createLogger('GenericPrimitiveGenerator');
@@ -180,7 +176,9 @@ export class GenericPrimitiveGeneratorService {
   /**
    * Generate cylinder geometry from CylinderNode
    */
-  generateCylinder(node: CylinderNode): Result<PrimitiveGenerationResult, PrimitiveGenerationError> {
+  generateCylinder(
+    node: CylinderNode
+  ): Result<PrimitiveGenerationResult, PrimitiveGenerationError> {
     const startTime = performance.now();
     logger.debug('[DEBUG][GenericPrimitiveGenerator] Generating cylinder geometry...');
 
@@ -235,7 +233,7 @@ export class GenericPrimitiveGeneratorService {
       return [
         typeof node.size[0] === 'number' ? node.size[0] : 1,
         typeof node.size[1] === 'number' ? node.size[1] : 1,
-        typeof node.size[2] === 'number' ? node.size[2] : 1
+        typeof node.size[2] === 'number' ? node.size[2] : 1,
       ];
     }
     if (typeof node.size === 'number') {
@@ -270,7 +268,7 @@ export class GenericPrimitiveGeneratorService {
     center: boolean;
   } {
     const height = node.h || 1;
-    
+
     let radius1 = 1;
     if (node.r1 !== undefined) radius1 = node.r1;
     else if (node.r !== undefined) radius1 = node.r;
@@ -303,25 +301,87 @@ export class GenericPrimitiveGeneratorService {
     // Create 8 vertices for a cube
     const vertices: GenericVertex[] = [
       // Front face
-      { position: [-halfWidth + offsetX, -halfHeight + offsetY, halfDepth + offsetZ], normal: [0, 0, 1], uv: [0, 0] },
-      { position: [halfWidth + offsetX, -halfHeight + offsetY, halfDepth + offsetZ], normal: [0, 0, 1], uv: [1, 0] },
-      { position: [halfWidth + offsetX, halfHeight + offsetY, halfDepth + offsetZ], normal: [0, 0, 1], uv: [1, 1] },
-      { position: [-halfWidth + offsetX, halfHeight + offsetY, halfDepth + offsetZ], normal: [0, 0, 1], uv: [0, 1] },
+      {
+        position: [-halfWidth + offsetX, -halfHeight + offsetY, halfDepth + offsetZ],
+        normal: [0, 0, 1],
+        uv: [0, 0],
+      },
+      {
+        position: [halfWidth + offsetX, -halfHeight + offsetY, halfDepth + offsetZ],
+        normal: [0, 0, 1],
+        uv: [1, 0],
+      },
+      {
+        position: [halfWidth + offsetX, halfHeight + offsetY, halfDepth + offsetZ],
+        normal: [0, 0, 1],
+        uv: [1, 1],
+      },
+      {
+        position: [-halfWidth + offsetX, halfHeight + offsetY, halfDepth + offsetZ],
+        normal: [0, 0, 1],
+        uv: [0, 1],
+      },
       // Back face
-      { position: [-halfWidth + offsetX, -halfHeight + offsetY, -halfDepth + offsetZ], normal: [0, 0, -1], uv: [1, 0] },
-      { position: [-halfWidth + offsetX, halfHeight + offsetY, -halfDepth + offsetZ], normal: [0, 0, -1], uv: [1, 1] },
-      { position: [halfWidth + offsetX, halfHeight + offsetY, -halfDepth + offsetZ], normal: [0, 0, -1], uv: [0, 1] },
-      { position: [halfWidth + offsetX, -halfHeight + offsetY, -halfDepth + offsetZ], normal: [0, 0, -1], uv: [0, 0] },
+      {
+        position: [-halfWidth + offsetX, -halfHeight + offsetY, -halfDepth + offsetZ],
+        normal: [0, 0, -1],
+        uv: [1, 0],
+      },
+      {
+        position: [-halfWidth + offsetX, halfHeight + offsetY, -halfDepth + offsetZ],
+        normal: [0, 0, -1],
+        uv: [1, 1],
+      },
+      {
+        position: [halfWidth + offsetX, halfHeight + offsetY, -halfDepth + offsetZ],
+        normal: [0, 0, -1],
+        uv: [0, 1],
+      },
+      {
+        position: [halfWidth + offsetX, -halfHeight + offsetY, -halfDepth + offsetZ],
+        normal: [0, 0, -1],
+        uv: [0, 0],
+      },
     ];
 
     // Create indices for 12 triangles (6 faces * 2 triangles each)
     const indices = [
-      0, 1, 2, 0, 2, 3, // Front face
-      4, 5, 6, 4, 6, 7, // Back face
-      8, 9, 10, 8, 10, 11, // Top face
-      12, 13, 14, 12, 14, 15, // Bottom face
-      16, 17, 18, 16, 18, 19, // Right face
-      20, 21, 22, 20, 22, 23, // Left face
+      0,
+      1,
+      2,
+      0,
+      2,
+      3, // Front face
+      4,
+      5,
+      6,
+      4,
+      6,
+      7, // Back face
+      8,
+      9,
+      10,
+      8,
+      10,
+      11, // Top face
+      12,
+      13,
+      14,
+      12,
+      14,
+      15, // Bottom face
+      16,
+      17,
+      18,
+      16,
+      18,
+      19, // Right face
+      20,
+      21,
+      22,
+      20,
+      22,
+      23, // Left face
     ];
 
     // Calculate bounding box
@@ -364,14 +424,30 @@ export class GenericPrimitiveGeneratorService {
 
     // Create triangular faces
     indices.push(
-      0, 2, 4, // Top-right-front
-      0, 4, 3, // Top-front-left
-      0, 3, 5, // Top-left-back
-      0, 5, 2, // Top-back-right
-      1, 4, 2, // Bottom-front-right
-      1, 3, 4, // Bottom-left-front
-      1, 5, 3, // Bottom-back-left
-      1, 2, 5  // Bottom-right-back
+      0,
+      2,
+      4, // Top-right-front
+      0,
+      4,
+      3, // Top-front-left
+      0,
+      3,
+      5, // Top-left-back
+      0,
+      5,
+      2, // Top-back-right
+      1,
+      4,
+      2, // Bottom-front-right
+      1,
+      3,
+      4, // Bottom-left-front
+      1,
+      5,
+      3, // Bottom-back-left
+      1,
+      2,
+      5 // Bottom-right-back
     );
 
     return {

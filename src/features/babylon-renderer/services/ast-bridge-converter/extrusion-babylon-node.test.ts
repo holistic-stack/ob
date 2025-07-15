@@ -8,8 +8,8 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import type { LinearExtrudeNode, RotateExtrudeNode } from '../../../openscad-parser/ast/ast-types';
+import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ExtrusionBabylonNode } from './extrusion-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -21,7 +21,7 @@ describe('ExtrusionBabylonNode', () => {
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
     parser = createTestParser();
-    
+
     // Initialize the parser
     await parser.init();
 
@@ -41,11 +41,11 @@ describe('ExtrusionBabylonNode', () => {
     it('should create linear extrude operation with height parameter', async () => {
       const openscadCode = 'linear_extrude(height=10) { circle(r=5); }';
       const ast = parser.parseAST(openscadCode);
-      
+
       expect(ast).toBeDefined();
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThan(0);
-      
+
       const linearExtrudeNode = ast[0] as LinearExtrudeNode;
       expect(linearExtrudeNode).toBeDefined();
       expect(linearExtrudeNode.type).toBe('linear_extrude');
@@ -65,7 +65,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -96,7 +96,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -125,7 +125,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -155,7 +155,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -185,7 +185,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -214,7 +214,7 @@ describe('ExtrusionBabylonNode', () => {
 
       const result = await extrusionNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -307,7 +307,7 @@ describe('ExtrusionBabylonNode', () => {
       );
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_linear_extrude_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -357,7 +357,7 @@ describe('ExtrusionBabylonNode', () => {
       );
 
       const debugInfo = extrusionNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isExtrusion).toBe(true);
       expect(debugInfo.extrusionType).toBe('rotate_extrude');

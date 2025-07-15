@@ -11,15 +11,15 @@ import type { Result } from '../../../shared/types/result.types';
 import { tryCatch } from '../../../shared/utils/functional/result';
 import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 import type {
-  GenericMeshData,
-  GenericMeshCollection,
-  GenericMaterialConfig,
-  GenericMeshMetadata,
   GenericGeometry,
+  GenericMaterialConfig,
+  GenericMeshCollection,
+  GenericMeshData,
+  GenericMeshMetadata,
   MaterialConfigBuilder,
   MeshMetadataBuilder,
 } from '../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../types/generic-mesh-data.types';
 
 const logger = createLogger('GenericMeshUtils');
 
@@ -131,10 +131,7 @@ export const createBoundingBoxFromGeometry = (geometry: GenericGeometry): Boundi
     maxZ = Math.max(maxZ, z);
   }
 
-  return new BoundingBox(
-    new Vector3(minX, minY, minZ),
-    new Vector3(maxX, maxY, maxZ)
-  );
+  return new BoundingBox(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
 };
 
 /**
@@ -197,7 +194,11 @@ export const calculateVolume = (geometry: GenericGeometry): number => {
 export const createMeshCollection = (
   id: string,
   meshes: readonly GenericMeshData[],
-  collectionType: 'csg_result' | 'transformation_group' | 'extrusion_result' | 'control_flow_result',
+  collectionType:
+    | 'csg_result'
+    | 'transformation_group'
+    | 'extrusion_result'
+    | 'control_flow_result',
   sourceLocation?: SourceLocation
 ): Result<GenericMeshCollection, MeshUtilsError> => {
   return tryCatch(
@@ -294,7 +295,7 @@ export const mergeMeshCollections = (
       }
 
       // Flatten all meshes from all collections
-      const allMeshes = collections.flatMap(collection => collection.meshes);
+      const allMeshes = collections.flatMap((collection) => collection.meshes);
 
       const result = createMeshCollection(id, allMeshes, collectionType);
       if (!result.success) {
@@ -324,7 +325,10 @@ export const validateMeshData = (meshData: GenericMeshData): Result<boolean, Mes
       }
 
       if (geometry.positions.length % 3 !== 0) {
-        throw { code: 'INVALID_GEOMETRY', message: 'Positions array length must be divisible by 3' };
+        throw {
+          code: 'INVALID_GEOMETRY',
+          message: 'Positions array length must be divisible by 3',
+        };
       }
 
       if (geometry.indices.length % 3 !== 0) {

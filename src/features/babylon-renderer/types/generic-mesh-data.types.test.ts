@@ -5,24 +5,24 @@
  * Tests type guards, material presets, and utility functions.
  */
 
-import { describe, expect, it } from 'vitest';
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
+import { describe, expect, it } from 'vitest';
 import {
-  type GenericMeshData,
-  type GenericMeshCollection,
-  type GenericMaterialConfig,
-  type GenericMeshMetadata,
-  MATERIAL_PRESETS,
-  isGenericMeshData,
-  isGenericMeshCollection,
   DEFAULT_MESH_METADATA,
+  type GenericMaterialConfig,
+  type GenericMeshCollection,
+  type GenericMeshData,
+  type GenericMeshMetadata,
+  isGenericMeshCollection,
+  isGenericMeshData,
+  MATERIAL_PRESETS,
 } from './generic-mesh-data.types';
 
 describe('Generic Mesh Data Types', () => {
   describe('Material Presets', () => {
     it('should have DEFAULT material preset with correct properties', () => {
       const defaultMaterial = MATERIAL_PRESETS.DEFAULT;
-      
+
       expect(defaultMaterial.diffuseColor).toEqual([0.8, 0.8, 0.8]);
       expect(defaultMaterial.alpha).toBe(1.0);
       expect(defaultMaterial.metallicFactor).toBe(0.1);
@@ -37,7 +37,7 @@ describe('Generic Mesh Data Types', () => {
 
     it('should have DEBUG material preset with bright red color', () => {
       const debugMaterial = MATERIAL_PRESETS.DEBUG;
-      
+
       expect(debugMaterial.diffuseColor).toEqual([1.0, 0.0, 0.0]);
       expect(debugMaterial.emissiveColor).toEqual([0.2, 0.0, 0.0]);
       expect(debugMaterial.isDebugMaterial).toBe(true);
@@ -48,7 +48,7 @@ describe('Generic Mesh Data Types', () => {
 
     it('should have BACKGROUND material preset with transparency', () => {
       const backgroundMaterial = MATERIAL_PRESETS.BACKGROUND;
-      
+
       expect(backgroundMaterial.diffuseColor).toEqual([0.7, 0.7, 0.7]);
       expect(backgroundMaterial.alpha).toBe(0.3);
       expect(backgroundMaterial.transparent).toBe(true);
@@ -60,7 +60,7 @@ describe('Generic Mesh Data Types', () => {
 
     it('should have SHOW_ONLY material preset with bright yellow color', () => {
       const showOnlyMaterial = MATERIAL_PRESETS.SHOW_ONLY;
-      
+
       expect(showOnlyMaterial.diffuseColor).toEqual([1.0, 1.0, 0.0]);
       expect(showOnlyMaterial.emissiveColor).toEqual([0.3, 0.3, 0.0]);
       expect(showOnlyMaterial.isDebugMaterial).toBe(false);
@@ -71,7 +71,7 @@ describe('Generic Mesh Data Types', () => {
 
     it('should have DISABLED material preset with zero alpha', () => {
       const disabledMaterial = MATERIAL_PRESETS.DISABLED;
-      
+
       expect(disabledMaterial.diffuseColor).toEqual([0.5, 0.5, 0.5]);
       expect(disabledMaterial.alpha).toBe(0.0);
       expect(disabledMaterial.transparent).toBe(true);

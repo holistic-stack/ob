@@ -12,12 +12,12 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 
 import type {
+  ASTNode,
   CubeNode,
-  SphereNode,
   CylinderNode,
   PolyhedronNode,
-  ASTNode,
   SourceLocation,
+  SphereNode,
 } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
@@ -31,7 +31,7 @@ const logger = createLogger('PrimitiveBabylonNode');
 
 /**
  * Primitive BabylonJS Node
- * 
+ *
  * Handles proper mesh generation for OpenSCAD primitive types with
  * accurate parameter mapping and OpenSCAD-compatible behavior.
  */
@@ -52,10 +52,10 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.primitiveType = originalOpenscadNode.type;
     this.parameters = this.extractParameters(originalOpenscadNode);
-    
+
     logger.debug(`[INIT] Created primitive BabylonJS node for ${this.primitiveType}`);
   }
 
@@ -72,11 +72,11 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         }
 
         const mesh = this.createPrimitiveMesh();
-        
+
         // Set basic properties
         mesh.id = `${this.name}_${Date.now()}`;
         mesh.name = this.name;
-        
+
         // Add metadata
         mesh.metadata = {
           isPrimitive: true,
@@ -91,7 +91,10 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.primitiveType} mesh: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.primitiveType} mesh: ${errorMessage}`
+        );
       }
     );
   }
@@ -126,11 +129,15 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const size = this.extractCubeSize();
     const center = this.extractCubeCenter();
 
-    const mesh = MeshBuilder.CreateBox(this.name, {
-      width: size.x,
-      height: size.y,
-      depth: size.z,
-    }, scene);
+    const mesh = MeshBuilder.CreateBox(
+      this.name,
+      {
+        width: size.x,
+        height: size.y,
+        depth: size.z,
+      },
+      scene
+    );
 
     // Apply OpenSCAD center behavior
     if (!center) {
@@ -151,10 +158,14 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const radius = this.extractSphereRadius();
     const segments = this.extractSphereSegments();
 
-    return MeshBuilder.CreateSphere(this.name, {
-      diameter: radius * 2,
-      segments: segments,
-    }, scene);
+    return MeshBuilder.CreateSphere(
+      this.name,
+      {
+        diameter: radius * 2,
+        segments: segments,
+      },
+      scene
+    );
   }
 
   /**
@@ -166,12 +177,16 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const center = this.extractCylinderCenter();
     const segments = this.extractCylinderSegments();
 
-    const mesh = MeshBuilder.CreateCylinder(this.name, {
-      height: height,
-      diameterTop: radius * 2,
-      diameterBottom: radius * 2,
-      tessellation: segments,
-    }, scene);
+    const mesh = MeshBuilder.CreateCylinder(
+      this.name,
+      {
+        height: height,
+        diameterTop: radius * 2,
+        diameterBottom: radius * 2,
+        tessellation: segments,
+      },
+      scene
+    );
 
     // Apply OpenSCAD center behavior
     if (!center) {
@@ -189,12 +204,18 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   private createPolyhedronMesh(scene: Scene): AbstractMesh {
     // For now, create a simple tetrahedron as placeholder
     // TODO: Implement proper polyhedron creation from points and faces
-    logger.warn('[WARN] Polyhedron mesh generation not fully implemented, using tetrahedron placeholder');
-    
-    return MeshBuilder.CreatePolyhedron(this.name, {
-      type: 0, // Tetrahedron
-      size: 1,
-    }, scene);
+    logger.warn(
+      '[WARN] Polyhedron mesh generation not fully implemented, using tetrahedron placeholder'
+    );
+
+    return MeshBuilder.CreatePolyhedron(
+      this.name,
+      {
+        type: 0, // Tetrahedron
+        size: 1,
+      },
+      scene
+    );
   }
 
   /**
@@ -211,7 +232,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         z: typeof size[2] === 'number' ? size[2] : 1,
       } as Vector3;
     }
-    
+
     if (typeof size === 'number') {
       return { x: size, y: size, z: size } as Vector3;
     }
@@ -232,11 +253,11 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    */
   private extractSphereRadius(): number {
     const sphereNode = this.originalOpenscadNode as SphereNode;
-    
+
     if (sphereNode.radius !== undefined) {
       return sphereNode.radius;
     }
-    
+
     if (sphereNode.diameter !== undefined) {
       return sphereNode.diameter / 2;
     }
@@ -265,11 +286,11 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    */
   private extractCylinderRadius(): number {
     const cylinderNode = this.originalOpenscadNode as CylinderNode;
-    
+
     if (cylinderNode.r !== undefined) {
       return cylinderNode.r;
     }
-    
+
     if (cylinderNode.d !== undefined) {
       return cylinderNode.d / 2;
     }
@@ -299,21 +320,23 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   private extractParameters(node: ASTNode): Record<string, unknown> {
     // Extract all relevant parameters based on node type
     const params: Record<string, unknown> = { type: node.type };
-    
+
     // Add type-specific parameters
     switch (node.type) {
-      case 'cube':
+      case 'cube': {
         const cubeNode = node as CubeNode;
         params.size = cubeNode.size;
         params.center = cubeNode.center;
         break;
-      case 'sphere':
+      }
+      case 'sphere': {
         const sphereNode = node as SphereNode;
         params.radius = sphereNode.radius;
         params.diameter = sphereNode.diameter;
         params.fn = sphereNode.fn;
         break;
-      case 'cylinder':
+      }
+      case 'cylinder': {
         const cylinderNode = node as CylinderNode;
         params.h = cylinderNode.h;
         params.r = cylinderNode.r;
@@ -321,12 +344,14 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         params.center = cylinderNode.center;
         params.fn = cylinderNode.$fn;
         break;
-      case 'polyhedron':
+      }
+      case 'polyhedron': {
         const polyhedronNode = node as PolyhedronNode;
         params.points = polyhedronNode.points;
         params.faces = polyhedronNode.faces;
         params.convexity = polyhedronNode.convexity;
         break;
+      }
     }
 
     return params;
@@ -349,7 +374,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         // Validate type-specific parameters
         this.validatePrimitiveParameters();
 
-        logger.debug(`[VALIDATE] Primitive node ${this.name} (${this.primitiveType}) validated successfully`);
+        logger.debug(
+          `[VALIDATE] Primitive node ${this.name} (${this.primitiveType}) validated successfully`
+        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -366,13 +393,14 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       case 'cube':
         // Cube validation logic
         break;
-      case 'sphere':
+      case 'sphere': {
         const radius = this.extractSphereRadius();
         if (radius <= 0) {
           throw new Error('Sphere radius must be positive');
         }
         break;
-      case 'cylinder':
+      }
+      case 'cylinder': {
         const height = this.extractCylinderHeight();
         const cylinderRadius = this.extractCylinderRadius();
         if (height <= 0) {
@@ -382,6 +410,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
           throw new Error('Cylinder radius must be positive');
         }
         break;
+      }
       case 'polyhedron':
         // Polyhedron validation logic
         break;
@@ -425,11 +454,11 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

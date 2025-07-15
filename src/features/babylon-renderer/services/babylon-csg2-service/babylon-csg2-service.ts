@@ -24,7 +24,6 @@ import {
   DEFAULT_CSG_CONFIG,
 } from '../../types/babylon-csg.types';
 
-
 const logger = createLogger('BabylonCSG2Service');
 
 /**
@@ -388,8 +387,6 @@ export class BabylonCSG2Service {
     this.config = { ...this.config, ...config };
     logger.debug('[DEBUG][BabylonCSG2Service] Configuration updated');
   }
-
-
 
   /**
    * Dispose the service and clean up resources

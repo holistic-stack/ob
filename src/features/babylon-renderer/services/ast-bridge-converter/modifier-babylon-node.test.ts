@@ -20,7 +20,7 @@ describe('ModifierBabylonNode', () => {
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
     parser = createTestParser();
-    
+
     // Initialize the parser
     await parser.init();
 
@@ -40,7 +40,7 @@ describe('ModifierBabylonNode', () => {
     it('should create disable modifier operation with child nodes', async () => {
       // Since modifiers might not be parsed yet, create a mock AST node
       const mockASTNode = { type: 'disable', children: [] };
-      
+
       // Create child nodes for the modifier
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
@@ -57,7 +57,7 @@ describe('ModifierBabylonNode', () => {
 
       const result = await modifierNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -72,7 +72,7 @@ describe('ModifierBabylonNode', () => {
 
     it('should disable all child meshes', async () => {
       const mockASTNode = { type: 'disable', children: [] };
-      
+
       // Create multiple child nodes
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
@@ -94,7 +94,7 @@ describe('ModifierBabylonNode', () => {
 
       const result = await modifierNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -107,7 +107,7 @@ describe('ModifierBabylonNode', () => {
   describe('Show Only Modifier (!)', () => {
     it('should create show only modifier operation with highlighting', async () => {
       const mockASTNode = { type: 'show_only', children: [] };
-      
+
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
@@ -123,7 +123,7 @@ describe('ModifierBabylonNode', () => {
 
       const result = await modifierNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -137,7 +137,7 @@ describe('ModifierBabylonNode', () => {
   describe('Debug Modifier (#)', () => {
     it('should create debug modifier operation with highlighting material', async () => {
       const mockASTNode = { type: 'debug', children: [] };
-      
+
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
@@ -153,7 +153,7 @@ describe('ModifierBabylonNode', () => {
 
       const result = await modifierNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -167,7 +167,7 @@ describe('ModifierBabylonNode', () => {
   describe('Background Modifier (%)', () => {
     it('should create background modifier operation with transparency', async () => {
       const mockASTNode = { type: 'background', children: [] };
-      
+
       const cylinderCode = 'cylinder(h=10, r=5);';
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
@@ -183,7 +183,7 @@ describe('ModifierBabylonNode', () => {
 
       const result = await modifierNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -197,7 +197,7 @@ describe('ModifierBabylonNode', () => {
   describe('Node Validation', () => {
     it('should validate modifier node successfully with valid parameters', async () => {
       const mockASTNode = { type: 'debug', children: [] };
-      
+
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
@@ -257,7 +257,7 @@ describe('ModifierBabylonNode', () => {
   describe('Node Cloning', () => {
     it('should clone modifier node successfully', async () => {
       const mockASTNode = { type: 'show_only', children: [] };
-      
+
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
@@ -272,7 +272,7 @@ describe('ModifierBabylonNode', () => {
       );
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_show_only_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -304,7 +304,7 @@ describe('ModifierBabylonNode', () => {
   describe('Debug Information', () => {
     it('should provide comprehensive debug information', async () => {
       const mockASTNode = { type: 'background', children: [] };
-      
+
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
@@ -319,7 +319,7 @@ describe('ModifierBabylonNode', () => {
       );
 
       const debugInfo = modifierNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isModifier).toBe(true);
       expect(debugInfo.modifierType).toBe('background');

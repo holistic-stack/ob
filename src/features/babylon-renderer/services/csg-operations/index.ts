@@ -4,8 +4,8 @@
  * Exports for the CSG operations service.
  */
 
-export { CSGOperationsService } from './csg-operations.service';
 export type {
-  CSGOperationParams,
   CSGOperationError,
+  CSGOperationParams,
 } from './csg-operations.service';
+export { CSGOperationsService } from './csg-operations.service';

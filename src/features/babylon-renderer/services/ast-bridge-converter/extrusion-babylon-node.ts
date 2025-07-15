@@ -11,9 +11,9 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
+  ASTNode,
   LinearExtrudeNode,
   RotateExtrudeNode,
-  ASTNode,
   SourceLocation,
   Vector2D,
 } from '../../../openscad-parser/ast/ast-types';
@@ -29,7 +29,7 @@ const logger = createLogger('ExtrusionBabylonNode');
 
 /**
  * Extrusion BabylonJS Node
- * 
+ *
  * Handles proper extrusion operations for OpenSCAD extrusion types with
  * accurate parameter mapping and OpenSCAD-compatible behavior.
  */
@@ -52,11 +52,11 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
       originalOpenscadNode,
       sourceLocation
     );
-    
+
     this.extrusionType = originalOpenscadNode.type;
     this.childNodes = childNodes;
     this.parameters = this.extractParameters(originalOpenscadNode);
-    
+
     logger.debug(`[INIT] Created extrusion BabylonJS node for ${this.extrusionType}`);
   }
 
@@ -73,19 +73,22 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length === 0) {
-          throw this.createError('NO_CHILDREN', `Extrusion ${this.extrusionType} operation requires at least 1 child node`);
+          throw this.createError(
+            'NO_CHILDREN',
+            `Extrusion ${this.extrusionType} operation requires at least 1 child node`
+          );
         }
 
         // Generate 2D profile from child nodes
         const profile2D = await this.extract2DProfile();
-        
+
         // Apply extrusion operation to create 3D mesh
         const resultMesh = await this.applyExtrusionOperation(profile2D);
-        
+
         // Set basic properties
         resultMesh.id = `${this.name}_${Date.now()}`;
         resultMesh.name = this.name;
-        
+
         // Add metadata
         resultMesh.metadata = {
           isExtrusion: true,
@@ -101,7 +104,10 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError('MESH_GENERATION_FAILED', `Failed to generate ${this.extrusionType} extrusion: ${errorMessage}`);
+        return this.createError(
+          'MESH_GENERATION_FAILED',
+          `Failed to generate ${this.extrusionType} extrusion: ${errorMessage}`
+        );
       }
     );
   }
@@ -112,19 +118,19 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
   private async extract2DProfile(): Promise<Vector3[]> {
     // For now, create a simple default 2D profile
     // TODO: Implement proper 2D profile extraction from child nodes (circles, squares, polygons)
-    
+
     // Default circle profile for testing
     const radius = 1;
     const segments = 16;
     const profile: Vector3[] = [];
-    
+
     for (let i = 0; i < segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
       profile.push({ x, y, z: 0 } as Vector3);
     }
-    
+
     return profile;
   }
 
@@ -149,31 +155,37 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
     const linearExtrudeNode = this.originalOpenscadNode as LinearExtrudeNode;
     const height = linearExtrudeNode.height || 1;
     const center = linearExtrudeNode.center || false;
-    
-    logger.debug(`[LINEAR_EXTRUDE] Applying linear extrusion with height: ${height}, center: ${center}`);
-    
+
+    logger.debug(
+      `[LINEAR_EXTRUDE] Applying linear extrusion with height: ${height}, center: ${center}`
+    );
+
     // Import BabylonJS modules dynamically
     const { MeshBuilder, Vector3: BabylonVector3 } = await import('@babylonjs/core');
-    
+
     // Create extrusion path (straight line along Z-axis)
     const path: Vector3[] = [];
     const startZ = center ? -height / 2 : 0;
     const endZ = center ? height / 2 : height;
-    
+
     path.push(new BabylonVector3(0, 0, startZ));
     path.push(new BabylonVector3(0, 0, endZ));
-    
+
     // Convert profile to BabylonJS Vector3 array
-    const babylonProfile = profile2D.map(p => new BabylonVector3(p.x, p.y, 0));
-    
+    const babylonProfile = profile2D.map((p) => new BabylonVector3(p.x, p.y, 0));
+
     // Create extruded mesh
-    const extrudedMesh = MeshBuilder.ExtrudeShape(`${this.name}_linear_extrude`, {
-      shape: babylonProfile,
-      path: path,
-      cap: 3, // CAP_ALL equivalent
-      updatable: false,
-    }, this.scene!);
-    
+    const extrudedMesh = MeshBuilder.ExtrudeShape(
+      `${this.name}_linear_extrude`,
+      {
+        shape: babylonProfile,
+        path: path,
+        cap: 3, // CAP_ALL equivalent
+        updatable: false,
+      },
+      this.scene!
+    );
+
     return extrudedMesh;
   }
 
@@ -184,25 +196,31 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
     const rotateExtrudeNode = this.originalOpenscadNode as RotateExtrudeNode;
     const angle = rotateExtrudeNode.angle || 360;
     const segments = rotateExtrudeNode.$fn || 16;
-    
-    logger.debug(`[ROTATE_EXTRUDE] Applying rotate extrusion with angle: ${angle}, segments: ${segments}`);
-    
+
+    logger.debug(
+      `[ROTATE_EXTRUDE] Applying rotate extrusion with angle: ${angle}, segments: ${segments}`
+    );
+
     // Import BabylonJS modules dynamically
     const { MeshBuilder, Vector3: BabylonVector3 } = await import('@babylonjs/core');
-    
+
     // Convert profile to BabylonJS Vector3 array (assuming profile is in XY plane)
-    const babylonProfile = profile2D.map(p => new BabylonVector3(p.x, p.y, 0));
-    
+    const babylonProfile = profile2D.map((p) => new BabylonVector3(p.x, p.y, 0));
+
     // Create lathe mesh (rotational extrusion)
-    const latheMesh = MeshBuilder.CreateLathe(`${this.name}_rotate_extrude`, {
-      shape: babylonProfile,
-      radius: 1,
-      tessellation: segments,
-      arc: (angle / 360) * Math.PI * 2, // Convert degrees to radians
-      cap: 3, // CAP_ALL equivalent
-      updatable: false,
-    }, this.scene!);
-    
+    const latheMesh = MeshBuilder.CreateLathe(
+      `${this.name}_rotate_extrude`,
+      {
+        shape: babylonProfile,
+        radius: 1,
+        tessellation: segments,
+        arc: (angle / 360) * Math.PI * 2, // Convert degrees to radians
+        cap: 3, // CAP_ALL equivalent
+        updatable: false,
+      },
+      this.scene!
+    );
+
     return latheMesh;
   }
 
@@ -211,9 +229,9 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
    */
   private extractParameters(node: ASTNode): Record<string, unknown> {
     const params: Record<string, unknown> = { type: node.type };
-    
+
     switch (node.type) {
-      case 'linear_extrude':
+      case 'linear_extrude': {
         const linearExtrudeNode = node as LinearExtrudeNode;
         params.height = linearExtrudeNode.height;
         params.center = linearExtrudeNode.center;
@@ -223,7 +241,8 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         params.scale = linearExtrudeNode.scale;
         params.$fn = linearExtrudeNode.$fn;
         break;
-      case 'rotate_extrude':
+      }
+      case 'rotate_extrude': {
         const rotateExtrudeNode = node as RotateExtrudeNode;
         params.angle = rotateExtrudeNode.angle;
         params.convexity = rotateExtrudeNode.convexity;
@@ -231,6 +250,7 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         params.$fa = rotateExtrudeNode.$fa;
         params.$fs = rotateExtrudeNode.$fs;
         break;
+      }
     }
 
     return params;
@@ -251,7 +271,10 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         }
 
         if (this.childNodes.length === 0) {
-          throw this.createError('NO_CHILDREN', `Extrusion ${this.extrusionType} operation requires at least 1 child node`);
+          throw this.createError(
+            'NO_CHILDREN',
+            `Extrusion ${this.extrusionType} operation requires at least 1 child node`
+          );
         }
 
         // Validate type-specific parameters
@@ -265,7 +288,9 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
           }
         }
 
-        logger.debug(`[VALIDATE] Extrusion node ${this.name} (${this.extrusionType}) validated successfully`);
+        logger.debug(
+          `[VALIDATE] Extrusion node ${this.name} (${this.extrusionType}) validated successfully`
+        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -279,18 +304,23 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
    */
   private validateExtrusionParameters(): void {
     switch (this.extrusionType) {
-      case 'linear_extrude':
+      case 'linear_extrude': {
         const linearExtrudeNode = this.originalOpenscadNode as LinearExtrudeNode;
         if (!linearExtrudeNode.height || linearExtrudeNode.height <= 0) {
           throw new Error('Linear extrude must have a positive height');
         }
         break;
-      case 'rotate_extrude':
+      }
+      case 'rotate_extrude': {
         const rotateExtrudeNode = this.originalOpenscadNode as RotateExtrudeNode;
-        if (rotateExtrudeNode.angle && (rotateExtrudeNode.angle <= 0 || rotateExtrudeNode.angle > 360)) {
+        if (
+          rotateExtrudeNode.angle &&
+          (rotateExtrudeNode.angle <= 0 || rotateExtrudeNode.angle > 360)
+        ) {
           throw new Error('Rotate extrude angle must be between 0 and 360 degrees');
         }
         break;
+      }
     }
   }
 
@@ -298,8 +328,8 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
    * Clone the extrusion node
    */
   clone(): ExtrusionBabylonNode {
-    const clonedChildNodes = this.childNodes.map(child => child.clone());
-    
+    const clonedChildNodes = this.childNodes.map((child) => child.clone());
+
     const clonedNode = new ExtrusionBabylonNode(
       `${this.name}_clone_${Date.now()}`,
       this.scene,
@@ -335,11 +365,11 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
       nodeType: this.nodeType,
       timestamp: new Date(),
     };
-    
+
     if (this.sourceLocation) {
       (error as any).sourceLocation = this.sourceLocation;
     }
-    
+
     return error;
   }
 }

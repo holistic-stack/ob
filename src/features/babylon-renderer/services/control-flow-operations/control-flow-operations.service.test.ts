@@ -5,19 +5,19 @@
  * Tests control flow constructs without external dependencies.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { success } from '../../../../shared/utils/functional/result';
+import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import {
   ControlFlowOperationsService,
   type OpenSCADForLoopParams,
   type OpenSCADIfParams,
-  type OpenSCADLetParams,
   type OpenSCADIntersectionForParams,
+  type OpenSCADLetParams,
   type VariableContext,
 } from './control-flow-operations.service';
-import type { GenericMeshData, GenericMeshCollection } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
-import { success } from '../../../../shared/utils/functional/result';
 
 describe('ControlFlowOperationsService', () => {
   let controlFlowService: ControlFlowOperationsService;
@@ -25,7 +25,7 @@ describe('ControlFlowOperationsService', () => {
 
   beforeEach(() => {
     controlFlowService = new ControlFlowOperationsService();
-    
+
     // Create test mesh data
     testMesh = createTestMesh('test-mesh');
   });
@@ -43,7 +43,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3); // 0, 1, 2
@@ -66,7 +66,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3);
@@ -88,7 +88,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3); // 5, 4, 3
@@ -110,7 +110,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(0);
@@ -125,7 +125,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(['INVALID_PARAMETERS', 'EVALUATION_FAILED']).toContain(result.error.code);
         expect(result.error.operationType).toBe('for_loop');
@@ -146,7 +146,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(2); // Should skip the failed iteration
@@ -166,7 +166,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIf(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success && result.data) {
         expect((result.data as GenericMeshData).id).toBe('then-mesh');
       }
@@ -181,7 +181,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIf(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success && result.data) {
         expect((result.data as GenericMeshData).id).toBe('else-mesh');
       }
@@ -214,7 +214,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIf(params, context);
       expect(result.success).toBe(true);
-      
+
       if (result.success && result.data) {
         expect((result.data as GenericMeshData).id).toBe('condition-true');
       }
@@ -231,7 +231,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIf(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success && result.data) {
         // Should default to false and execute else branch
         expect((result.data as GenericMeshData).id).toBe('else-mesh');
@@ -252,7 +252,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processLet(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         expect((result.data as GenericMeshData).id).toBe('result_30');
       }
@@ -275,7 +275,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processLet(params, parentContext);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         expect((result.data as GenericMeshData).id).toBe('result_30');
       }
@@ -296,7 +296,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processLet(params, parentContext);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         expect((result.data as GenericMeshData).id).toBe('result_10');
       }
@@ -315,7 +315,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIntersectionFor(params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         // For now, returns first mesh as placeholder
         expect(result.data.id).toBe('mesh_0');
@@ -333,7 +333,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.processIntersectionFor(params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(['ITERATION_FAILED', 'EVALUATION_FAILED']).toContain(result.error.code);
       }
@@ -359,7 +359,7 @@ describe('ControlFlowOperationsService', () => {
 
       const result = await controlFlowService.expandForLoop(forParams, outerContext);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes[0]!.id).toBe('outer_value_0');

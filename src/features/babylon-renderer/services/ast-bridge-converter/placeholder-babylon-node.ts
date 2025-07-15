@@ -25,7 +25,7 @@ const logger = createLogger('PlaceholderBabylonNode');
 
 /**
  * Placeholder BabylonJS Node
- * 
+ *
  * Temporary implementation that creates simple placeholder meshes for all OpenSCAD node types.
  * This allows the Bridge Pattern infrastructure to be tested while proper node implementations
  * are developed incrementally.
@@ -53,7 +53,7 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
 
   /**
    * Generate a placeholder BabylonJS mesh
-   * 
+   *
    * Creates simple geometric shapes based on the OpenSCAD node type.
    * This is a temporary implementation that will be replaced with proper
    * node-specific mesh generation.
@@ -72,7 +72,7 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
         // Set basic properties
         mesh.id = `${this.name}_${Date.now()}`;
         mesh.name = this.name;
-        
+
         // Add metadata to identify this as a placeholder
         mesh.metadata = {
           isPlaceholder: true,
@@ -102,26 +102,26 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
     switch (this.openscadNodeType) {
       case 'cube':
         return MeshBuilder.CreateBox(this.name, { size: 1 }, scene);
-      
+
       case 'sphere':
         return MeshBuilder.CreateSphere(this.name, { diameter: 1 }, scene);
-      
+
       case 'cylinder':
         return MeshBuilder.CreateCylinder(this.name, { height: 1, diameter: 1 }, scene);
-      
+
       case 'circle':
         return MeshBuilder.CreateDisc(this.name, { radius: 0.5 }, scene);
-      
+
       case 'square':
         return MeshBuilder.CreatePlane(this.name, { size: 1 }, scene);
-      
+
       case 'polygon':
         return MeshBuilder.CreatePlane(this.name, { size: 1 }, scene);
-      
+
       case 'text':
         // For text, create a simple plane as placeholder
         return MeshBuilder.CreatePlane(this.name, { size: 1 }, scene);
-      
+
       case 'translate':
       case 'rotate':
       case 'scale':
@@ -129,21 +129,21 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
       case 'color':
         // For transformations, create a small marker cube
         return MeshBuilder.CreateBox(this.name, { size: 0.1 }, scene);
-      
+
       case 'union':
       case 'difference':
       case 'intersection':
         // For CSG operations, create a compound shape indicator
         return MeshBuilder.CreateSphere(this.name, { diameter: 0.5 }, scene);
-      
+
       case 'linear_extrude':
       case 'rotate_extrude':
         // For extrusions, create a cylinder as placeholder
         return MeshBuilder.CreateCylinder(this.name, { height: 1, diameter: 0.5 }, scene);
-      
+
       case 'for_loop':
       case 'if':
-      case 'let':
+      case 'let': {
         // For control flow, create a wireframe box
         const wireframe = MeshBuilder.CreateBox(this.name, { size: 0.2 }, scene);
         // Create a simple material for wireframe
@@ -151,7 +151,8 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
         material.wireframe = true;
         wireframe.material = material;
         return wireframe;
-      
+      }
+
       default:
         // Default placeholder: a small tetrahedron
         return MeshBuilder.CreatePolyhedron(this.name, { type: 0, size: 0.5 }, scene);
@@ -160,7 +161,7 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
 
   /**
    * Validate the placeholder node
-   * 
+   *
    * Performs basic validation to ensure the node is properly constructed.
    */
   validateNode(): NodeValidationResult {
@@ -171,7 +172,10 @@ export class PlaceholderBabylonNode extends BabylonJSNode {
         }
 
         if (!this.originalOpenscadNode) {
-          throw this.createError('MISSING_ORIGINAL_NODE', 'Original OpenSCAD node reference is required');
+          throw this.createError(
+            'MISSING_ORIGINAL_NODE',
+            'Original OpenSCAD node reference is required'
+          );
         }
 
         if (!this.openscadNodeType) {

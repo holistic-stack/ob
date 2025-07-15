@@ -8,8 +8,8 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import type { CubeNode, CylinderNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
-import type { CubeNode, SphereNode, CylinderNode } from '../../../openscad-parser/ast/ast-types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
 describe('PrimitiveBabylonNode', () => {
@@ -49,15 +49,11 @@ describe('PrimitiveBabylonNode', () => {
       expect(cubeNode).toBeDefined();
       expect(cubeNode.type).toBe('cube');
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cube',
-        scene,
-        cubeNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cube', scene, cubeNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -72,20 +68,16 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cubeNode = ast[0] as CubeNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cube_sized',
-        scene,
-        cubeNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cube_sized', scene, cubeNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
         expect(mesh.metadata?.parameters).toBeDefined();
-        
+
         // Verify the mesh has correct scaling
         // Note: BabylonJS CreateBox uses width/height/depth parameters
         expect(mesh.scaling.x).toBeCloseTo(1); // BabylonJS handles size in creation
@@ -97,19 +89,15 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cubeNode = ast[0] as CubeNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cube_centered',
-        scene,
-        cubeNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cube_centered', scene, cubeNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // When center=true, cube should be centered at origin
         expect(mesh.position.x).toBeCloseTo(0);
         expect(mesh.position.y).toBeCloseTo(0);
@@ -122,19 +110,15 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cubeNode = ast[0] as CubeNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cube_not_centered',
-        scene,
-        cubeNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cube_not_centered', scene, cubeNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // When center=false, cube should be positioned with corner at origin
         expect(mesh.position.x).toBeCloseTo(1); // size/2
         expect(mesh.position.y).toBeCloseTo(1); // size/2
@@ -149,15 +133,11 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const sphereNode = ast[0] as SphereNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_sphere',
-        scene,
-        sphereNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_sphere', scene, sphereNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -172,15 +152,11 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const sphereNode = ast[0] as SphereNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_sphere_diameter',
-        scene,
-        sphereNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_sphere_diameter', scene, sphereNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -195,15 +171,11 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cylinderNode = ast[0] as CylinderNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cylinder',
-        scene,
-        cylinderNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cylinder', scene, cylinderNode);
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -226,11 +198,11 @@ describe('PrimitiveBabylonNode', () => {
 
       const result = await primitiveNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
-        
+
         // When center=false, cylinder base should be at z=0
         expect(mesh.position.z).toBeCloseTo(2); // height/2
       }
@@ -243,11 +215,7 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cubeNode = ast[0] as CubeNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'test_cube_validation',
-        scene,
-        cubeNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('test_cube_validation', scene, cubeNode);
 
       const validationResult = primitiveNode.validateNode();
       expect(validationResult.success).toBe(true);
@@ -280,14 +248,10 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const cubeNode = ast[0] as CubeNode;
 
-      const originalNode = new PrimitiveBabylonNode(
-        'original_cube',
-        scene,
-        cubeNode
-      );
+      const originalNode = new PrimitiveBabylonNode('original_cube', scene, cubeNode);
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_cube_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -323,14 +287,10 @@ describe('PrimitiveBabylonNode', () => {
       const ast = parser.parseAST(openscadCode);
       const sphereNode = ast[0] as SphereNode;
 
-      const primitiveNode = new PrimitiveBabylonNode(
-        'debug_sphere',
-        scene,
-        sphereNode
-      );
+      const primitiveNode = new PrimitiveBabylonNode('debug_sphere', scene, sphereNode);
 
       const debugInfo = primitiveNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isPrimitive).toBe(true);
       expect(debugInfo.primitiveType).toBe('sphere');

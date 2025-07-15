@@ -4,7 +4,7 @@
  * Service for performing OpenSCAD extrusion operations on 2D profiles.
  * Supports linear_extrude and rotate_extrude with proper geometry generation,
  * surface normals, and UV mapping.
- * 
+ *
  * @example
  * ```typescript
  * const extrusionService = new ExtrusionOperationsService(scene);
@@ -16,15 +16,12 @@
  * ```
  */
 
-import { MeshBuilder, Scene, Vector3, Matrix, BoundingBox } from '@babylonjs/core';
+import { BoundingBox, Matrix, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type {
-  GenericMeshData,
-  GenericGeometry,
-} from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import type { GenericGeometry, GenericMeshData } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 
 const logger = createLogger('ExtrusionOperations');
@@ -65,7 +62,11 @@ export interface OpenSCADRotateExtrudeParams {
  * Extrusion operation error
  */
 export interface ExtrusionError {
-  readonly code: 'INVALID_PROFILE' | 'INVALID_PARAMETERS' | 'GEOMETRY_GENERATION_FAILED' | 'SCENE_REQUIRED';
+  readonly code:
+    | 'INVALID_PROFILE'
+    | 'INVALID_PARAMETERS'
+    | 'GEOMETRY_GENERATION_FAILED'
+    | 'SCENE_REQUIRED';
   readonly message: string;
   readonly operationType: string;
   readonly timestamp: Date;
@@ -74,7 +75,7 @@ export interface ExtrusionError {
 
 /**
  * Extrusion Operations Service
- * 
+ *
  * Performs OpenSCAD extrusion operations on 2D profiles using BabylonJS
  * with proper geometry generation and OpenSCAD-compatible parameters.
  */
@@ -106,20 +107,23 @@ export class ExtrusionOperationsService {
 
     return tryCatchAsync(
       async () => {
-
         // Convert profile to BabylonJS Vector3 array
-        const babylonProfile = profile.map(p => new Vector3(p.x, p.y, 0));
+        const babylonProfile = profile.map((p) => new Vector3(p.x, p.y, 0));
 
         // Create extrusion path
         const path = this.createLinearExtrusionPath(params);
 
         // Create extruded mesh
-        const extrudedMesh = MeshBuilder.ExtrudeShape(`linear_extrude_${Date.now()}`, {
-          shape: babylonProfile,
-          path: path,
-          cap: 3, // CAP_ALL
-          updatable: false,
-        }, this.scene);
+        const extrudedMesh = MeshBuilder.ExtrudeShape(
+          `linear_extrude_${Date.now()}`,
+          {
+            shape: babylonProfile,
+            path: path,
+            cap: 3, // CAP_ALL
+            updatable: false,
+          },
+          this.scene
+        );
 
         // Apply twist and scale if specified
         if (params.twist || params.scale) {
@@ -137,10 +141,17 @@ export class ExtrusionOperationsService {
         // Clean up BabylonJS mesh
         extrudedMesh.dispose();
 
-        logger.debug(`[LINEAR_EXTRUDE] Linear extrusion completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[LINEAR_EXTRUDE] Linear extrusion completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericMeshData;
       },
-      (error) => this.createError('GEOMETRY_GENERATION_FAILED', 'linear_extrude', `Linear extrusion failed: ${error}`)
+      (error) =>
+        this.createError(
+          'GEOMETRY_GENERATION_FAILED',
+          'linear_extrude',
+          `Linear extrusion failed: ${error}`
+        )
     );
   }
 
@@ -164,9 +175,8 @@ export class ExtrusionOperationsService {
 
     return tryCatchAsync(
       async () => {
-
         // Convert profile to BabylonJS Vector3 array
-        const babylonProfile = profile.map(p => new Vector3(p.x, p.y, 0));
+        const babylonProfile = profile.map((p) => new Vector3(p.x, p.y, 0));
 
         // Calculate tessellation
         const tessellation = params.$fn || 16;
@@ -174,14 +184,18 @@ export class ExtrusionOperationsService {
         const arc = (angle / 360) * Math.PI * 2;
 
         // Create lathe mesh (rotational extrusion)
-        const latheMesh = MeshBuilder.CreateLathe(`rotate_extrude_${Date.now()}`, {
-          shape: babylonProfile,
-          radius: 1,
-          tessellation: tessellation,
-          arc: arc,
-          cap: angle < 360 ? 3 : 0, // Cap only if partial revolution
-          updatable: false,
-        }, this.scene);
+        const latheMesh = MeshBuilder.CreateLathe(
+          `rotate_extrude_${Date.now()}`,
+          {
+            shape: babylonProfile,
+            radius: 1,
+            tessellation: tessellation,
+            arc: arc,
+            cap: angle < 360 ? 3 : 0, // Cap only if partial revolution
+            updatable: false,
+          },
+          this.scene
+        );
 
         // Convert to GenericMeshData
         const genericMeshData = await this.convertBabylonMeshToGeneric(
@@ -194,10 +208,17 @@ export class ExtrusionOperationsService {
         // Clean up BabylonJS mesh
         latheMesh.dispose();
 
-        logger.debug(`[ROTATE_EXTRUDE] Rotate extrusion completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[ROTATE_EXTRUDE] Rotate extrusion completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return genericMeshData;
       },
-      (error) => this.createError('GEOMETRY_GENERATION_FAILED', 'rotate_extrude', `Rotate extrusion failed: ${error}`)
+      (error) =>
+        this.createError(
+          'GEOMETRY_GENERATION_FAILED',
+          'rotate_extrude',
+          `Rotate extrusion failed: ${error}`
+        )
     );
   }
 
@@ -206,13 +227,21 @@ export class ExtrusionOperationsService {
    */
   private validateProfile(profile: readonly Profile2DPoint[]): void {
     if (!profile || profile.length < 3) {
-      throw this.createError('INVALID_PROFILE', 'validation', 'Profile must have at least 3 points');
+      throw this.createError(
+        'INVALID_PROFILE',
+        'validation',
+        'Profile must have at least 3 points'
+      );
     }
 
     // Check for valid coordinates
     for (const point of profile) {
       if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
-        throw this.createError('INVALID_PROFILE', 'validation', 'Profile points must have finite coordinates');
+        throw this.createError(
+          'INVALID_PROFILE',
+          'validation',
+          'Profile points must have finite coordinates'
+        );
       }
     }
   }
@@ -226,7 +255,11 @@ export class ExtrusionOperationsService {
     }
 
     if (params.twist && !Number.isFinite(params.twist)) {
-      throw this.createError('INVALID_PARAMETERS', 'linear_extrude', 'Twist must be a finite number');
+      throw this.createError(
+        'INVALID_PARAMETERS',
+        'linear_extrude',
+        'Twist must be a finite number'
+      );
     }
 
     if (params.scale) {
@@ -234,10 +267,12 @@ export class ExtrusionOperationsService {
         if (params.scale <= 0) {
           throw this.createError('INVALID_PARAMETERS', 'linear_extrude', 'Scale must be positive');
         }
-      } else {
-        if (params.scale[0] <= 0 || params.scale[1] <= 0) {
-          throw this.createError('INVALID_PARAMETERS', 'linear_extrude', 'Scale values must be positive');
-        }
+      } else if (params.scale[0] <= 0 || params.scale[1] <= 0) {
+        throw this.createError(
+          'INVALID_PARAMETERS',
+          'linear_extrude',
+          'Scale values must be positive'
+        );
       }
     }
   }
@@ -247,7 +282,11 @@ export class ExtrusionOperationsService {
    */
   private validateRotateExtrudeParams(params: OpenSCADRotateExtrudeParams): void {
     if (params.angle && (params.angle <= 0 || params.angle > 360)) {
-      throw this.createError('INVALID_PARAMETERS', 'rotate_extrude', 'Angle must be between 0 and 360 degrees');
+      throw this.createError(
+        'INVALID_PARAMETERS',
+        'rotate_extrude',
+        'Angle must be between 0 and 360 degrees'
+      );
     }
 
     if (params.$fn && params.$fn < 3) {
@@ -276,10 +315,7 @@ export class ExtrusionOperationsService {
   /**
    * Apply linear extrude transformations (twist, scale)
    */
-  private applyLinearExtrudeTransformations(
-    mesh: any,
-    params: OpenSCADLinearExtrudeParams
-  ): void {
+  private applyLinearExtrudeTransformations(mesh: any, params: OpenSCADLinearExtrudeParams): void {
     // Note: BabylonJS ExtrudeShape doesn't directly support twist and scale
     // This would require custom geometry generation for full OpenSCAD compatibility
     // For now, we'll log that these features need custom implementation
@@ -317,12 +353,12 @@ export class ExtrusionOperationsService {
       indices,
       vertexCount: positions.length / 3,
       triangleCount: indices.length / 3,
-      boundingBox: createBoundingBoxFromGeometry({ 
-        positions, 
-        indices, 
-        vertexCount: positions.length / 3, 
-        triangleCount: indices.length / 3, 
-        boundingBox: new BoundingBox(Vector3.Zero(), Vector3.One())
+      boundingBox: createBoundingBoxFromGeometry({
+        positions,
+        indices,
+        vertexCount: positions.length / 3,
+        triangleCount: indices.length / 3,
+        boundingBox: new BoundingBox(Vector3.Zero(), Vector3.One()),
       }),
       ...(normals && { normals }),
       ...(uvs && { uvs }),
@@ -367,11 +403,11 @@ export class ExtrusionOperationsService {
       operationType,
       timestamp: new Date(),
     };
-    
+
     if (details) {
       (error as any).details = details;
     }
-    
+
     return error;
   }
 }

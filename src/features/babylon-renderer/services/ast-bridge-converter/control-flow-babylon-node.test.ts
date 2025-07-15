@@ -8,8 +8,8 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import type { ForLoopNode, IfNode, LetNode } from '../../../openscad-parser/ast/ast-types';
+import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ControlFlowBabylonNode } from './control-flow-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -21,7 +21,7 @@ describe('ControlFlowBabylonNode', () => {
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
     parser = createTestParser();
-    
+
     // Initialize the parser
     await parser.init();
 
@@ -41,11 +41,11 @@ describe('ControlFlowBabylonNode', () => {
     it('should create for loop control flow with child nodes', async () => {
       const openscadCode = 'for (i = [0:2]) { cube(10); }';
       const ast = parser.parseAST(openscadCode);
-      
+
       expect(ast).toBeDefined();
       expect(Array.isArray(ast)).toBe(true);
       expect(ast.length).toBeGreaterThan(0);
-      
+
       const forLoopNode = ast[0] as ForLoopNode;
       expect(forLoopNode).toBeDefined();
       expect(forLoopNode.type).toBe('for_loop');
@@ -56,16 +56,13 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'test_for_loop',
-        scene,
-        forLoopNode,
-        [cubeNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('test_for_loop', scene, forLoopNode, [
+        cubeNode,
+      ]);
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -96,7 +93,7 @@ describe('ControlFlowBabylonNode', () => {
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -117,16 +114,13 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'test_if_statement',
-        scene,
-        ifNode,
-        [cubeNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('test_if_statement', scene, ifNode, [
+        cubeNode,
+      ]);
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -147,16 +141,13 @@ describe('ControlFlowBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'test_if_complex',
-        scene,
-        ifNode,
-        [sphereNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('test_if_complex', scene, ifNode, [
+        sphereNode,
+      ]);
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -177,16 +168,13 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'test_let_expression',
-        scene,
-        letNode,
-        [cubeNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('test_let_expression', scene, letNode, [
+        cubeNode,
+      ]);
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -207,16 +195,13 @@ describe('ControlFlowBabylonNode', () => {
       expect(cylinderAst.length).toBeGreaterThan(0);
       const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'test_let_multi',
-        scene,
-        letNode,
-        [cylinderNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('test_let_multi', scene, letNode, [
+        cylinderNode,
+      ]);
 
       const result = await controlFlowNode.generateMesh();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const mesh = result.data;
         expect(mesh).toBeDefined();
@@ -281,15 +266,10 @@ describe('ControlFlowBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
 
-      const originalNode = new ControlFlowBabylonNode(
-        'original_let',
-        scene,
-        letNode,
-        [sphereNode]
-      );
+      const originalNode = new ControlFlowBabylonNode('original_let', scene, letNode, [sphereNode]);
 
       const clonedNode = originalNode.clone();
-      
+
       expect(clonedNode).toBeDefined();
       expect(clonedNode.name).toContain('original_let_clone_');
       expect(clonedNode.nodeType).toBe(originalNode.nodeType);
@@ -331,15 +311,10 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
 
-      const controlFlowNode = new ControlFlowBabylonNode(
-        'debug_if',
-        scene,
-        ifNode,
-        [cubeNode]
-      );
+      const controlFlowNode = new ControlFlowBabylonNode('debug_if', scene, ifNode, [cubeNode]);
 
       const debugInfo = controlFlowNode.getDebugInfo();
-      
+
       expect(debugInfo).toBeDefined();
       expect(debugInfo.isControlFlow).toBe(true);
       expect(debugInfo.controlFlowType).toBe('if');

@@ -2150,16 +2150,76 @@ Based on the current codebase analysis, here are the structured tasks to complet
     - [x] Performance optimization with operation timing
     - [x] GenericMeshData integration for consistency
     - [x] TypeScript compliance with zero compilation errors
-- [ ] **Task 3.3: Module System Support**
-  - [ ] User-defined module instantiation
-  - [ ] Parameter passing and default values
-  - [ ] Children() directive support
-  - [ ] Module scoping and variable inheritance
-- [ ] **Task 3.4: Import/Include Operations**
-  - [ ] STL file import using Babylon.js loaders
-  - [ ] 3MF file import support
-  - [ ] SVG import for 2D profiles
-  - [ ] Include/use directive for modular OpenSCAD files
+- [x] **Task 3.3: Module System Support**
+  - [x] User-defined module instantiation
+    - [x] Created ModuleSystemService with comprehensive module support
+    - [x] Module registry for definition storage and retrieval
+    - [x] Module instantiation with parameter binding and context management
+    - [x] Integration with existing AST types (ModuleDefinitionNode, ModuleInstantiationNode)
+    - [x] Error handling for undefined modules and parameter mismatches
+  - [x] Parameter passing and default values
+    - [x] Positional parameter binding with argument order preservation
+    - [x] Named parameter binding with flexible argument order
+    - [x] Default value support for optional parameters
+    - [x] Parameter validation and type handling
+    - [x] Mixed positional and named argument support
+  - [x] Children() directive support
+    - [x] Children() processing with child element access
+    - [x] Specific child index support (children(0), children(1), etc.)
+    - [x] All children processing for module body execution
+    - [x] Empty children handling with proper collection creation
+    - [x] Child execution context with index tracking
+  - [x] Module scoping and variable inheritance
+    - [x] Module-local variable scoping with parameter isolation
+    - [x] Parent context inheritance for nested modules
+    - [x] Variable override support for module parameters
+    - [x] Integration with existing VariableContext system
+    - [x] Scope management for complex module hierarchies
+  - [x] **Core Implementation Complete**:
+    - [x] Module registry with registration and retrieval
+    - [x] Comprehensive test coverage (16 tests, all passing)
+    - [x] OpenSCAD module semantics compatibility
+    - [x] Integration with existing control flow and AST processing
+    - [x] Error handling with Result<T,E> patterns and specific error codes
+    - [x] Performance optimization with efficient parameter binding
+    - [x] TypeScript compliance with zero compilation errors
+- [x] **Task 3.4: Import/Include Operations**
+  - [x] STL file import using Babylon.js loaders
+    - [x] Created ImportOperationsService with comprehensive file import support
+    - [x] BabylonJS ImportMeshAsync integration for STL file loading
+    - [x] Automatic mesh conversion to GenericMeshData format
+    - [x] Support for scaling, centering, and coordinate system transformations
+    - [x] Multiple mesh handling with collection creation
+    - [x] Proper resource cleanup and memory management
+  - [x] 3MF file import support
+    - [x] BabylonJS ImportMeshAsync integration for 3MF file loading
+    - [x] 3D Manufacturing Format support with material preservation
+    - [x] Unit conversion support (mm, cm, m, in)
+    - [x] Multi-mesh 3MF file handling with proper collection management
+    - [x] Error handling for unsupported 3MF features
+  - [x] SVG import for 2D profiles
+    - [x] SVG file loading and text parsing with scene._loadFile integration
+    - [x] SVG path data extraction and 2D profile point generation
+    - [x] Support for basic SVG path commands (M, L, Z)
+    - [x] Scaling and coordinate system transformation
+    - [x] Integration with Profile2DPoint format for extrusion operations
+    - [x] Error handling for invalid SVG content and missing path data
+  - [x] Include/use directive for modular OpenSCAD files
+    - [x] OpenSCAD file loading and content processing
+    - [x] Include directive support for file content inclusion
+    - [x] Use directive support with variable scoping
+    - [x] Variable context management for parametric includes
+    - [x] File path resolution and error handling
+    - [x] Foundation for recursive include processing and cycle detection
+  - [x] **Core Implementation Complete**:
+    - [x] Comprehensive file format support (STL, 3MF, SVG, OpenSCAD)
+    - [x] BabylonJS loader integration with proper error handling
+    - [x] GenericMeshData output format consistency
+    - [x] Comprehensive test coverage (16 tests, all passing)
+    - [x] Result<T,E> error handling patterns with specific error codes
+    - [x] Performance optimization with operation timing tracking
+    - [x] TypeScript compliance with zero compilation errors
+    - [x] Memory management with proper resource cleanup
 
 ### Phase 4: Scene Integration and UI
 - [ ] **Task 4.1: Scene Management**

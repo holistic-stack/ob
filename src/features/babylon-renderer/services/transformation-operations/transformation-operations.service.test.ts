@@ -5,19 +5,19 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, Vector3, BoundingBox, Matrix } from '@babylonjs/core';
+import { BoundingBox, Matrix, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { GenericMeshData } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import {
-  TransformationOperationsService,
-  type OpenSCADTranslateParams,
+  type OpenSCADColorParams,
+  type OpenSCADMatrixParams,
+  type OpenSCADMirrorParams,
   type OpenSCADRotateParams,
   type OpenSCADScaleParams,
-  type OpenSCADMirrorParams,
-  type OpenSCADMatrixParams,
-  type OpenSCADColorParams,
+  type OpenSCADTranslateParams,
+  TransformationOperationsService,
 } from './transformation-operations.service';
-import type { GenericMeshData } from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
 
 describe('TransformationOperationsService', () => {
   let engine: NullEngine;
@@ -69,16 +69,16 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.translate(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.id).toBe(testMeshData.id);
         expect(transformedMesh.metadata.transformations).toContain('translate');
-        
+
         // Check that positions were translated
         const positions = transformedMesh.geometry.positions;
         expect(positions[0]).toBeCloseTo(10); // x + 10
-        expect(positions[1]).toBeCloseTo(5);  // y + 5
+        expect(positions[1]).toBeCloseTo(5); // y + 5
         expect(positions[2]).toBeCloseTo(-3); // z + -3
       }
     });
@@ -90,7 +90,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.translate(testMeshData, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('TRANSFORMATION_FAILED');
         expect(result.error.operationType).toBe('translate');
@@ -106,11 +106,11 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.rotate(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('rotate');
-        
+
         // Check that geometry was rotated
         expect(transformedMesh.geometry.vertexCount).toBe(testMeshData.geometry.vertexCount);
         expect(transformedMesh.geometry.triangleCount).toBe(testMeshData.geometry.triangleCount);
@@ -124,7 +124,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.rotate(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('rotate');
@@ -139,7 +139,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.rotate(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('rotate');
@@ -155,11 +155,11 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.scale(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('scale');
-        
+
         // Check that positions were scaled
         const positions = transformedMesh.geometry.positions;
         expect(positions[3]).toBeCloseTo(2); // Second vertex x: 1 * 2 = 2
@@ -173,7 +173,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.scale(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('scale');
@@ -189,11 +189,11 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.mirror(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('mirror');
-        
+
         // Check that positions were mirrored
         const positions = transformedMesh.geometry.positions;
         expect(positions[3]).toBeCloseTo(-1); // Second vertex x: 1 -> -1
@@ -207,7 +207,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.mirror(testMeshData, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('TRANSFORMATION_FAILED');
         expect(result.error.operationType).toBe('mirror');
@@ -219,7 +219,7 @@ describe('TransformationOperationsService', () => {
     it('should apply matrix transformation', async () => {
       const params: OpenSCADMatrixParams = {
         matrix: [
-          [1, 0, 0, 5],  // Translation by 5 in X
+          [1, 0, 0, 5], // Translation by 5 in X
           [0, 1, 0, 0],
           [0, 0, 1, 0],
           [0, 0, 0, 1],
@@ -228,11 +228,11 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.multmatrix(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
         expect(transformedMesh.metadata.transformations).toContain('multmatrix');
-        
+
         // Check that positions were transformed
         const positions = transformedMesh.geometry.positions;
         expect(positions[0]).toBeCloseTo(5); // First vertex x: 0 + 5 = 5
@@ -242,7 +242,7 @@ describe('TransformationOperationsService', () => {
     it('should fail with invalid matrix', async () => {
       const params: OpenSCADMatrixParams = {
         matrix: [
-          [1, 0, 0],  // Invalid: not 4x4
+          [1, 0, 0], // Invalid: not 4x4
           [0, 1, 0],
           [0, 0, 1],
         ] as any,
@@ -250,7 +250,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.multmatrix(testMeshData, params);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('TRANSFORMATION_FAILED');
         expect(result.error.operationType).toBe('multmatrix');
@@ -266,7 +266,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.color(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const coloredMesh = result.data;
         expect(coloredMesh.metadata.transformations).toContain('color');
@@ -282,7 +282,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.color(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const coloredMesh = result.data;
         expect(coloredMesh.material.diffuseColor).toEqual([0, 1, 0]);
@@ -298,7 +298,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.color(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const coloredMesh = result.data;
         expect(coloredMesh.material.diffuseColor).toEqual([0, 0, 1]);
@@ -312,12 +312,12 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.color(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const coloredMesh = result.data;
-        expect(coloredMesh.material.diffuseColor[0]).toBeCloseTo(1.0);   // Red component
-        expect(coloredMesh.material.diffuseColor[1]).toBeCloseTo(0.5);   // Green component
-        expect(coloredMesh.material.diffuseColor[2]).toBeCloseTo(0.0);   // Blue component
+        expect(coloredMesh.material.diffuseColor[0]).toBeCloseTo(1.0); // Red component
+        expect(coloredMesh.material.diffuseColor[1]).toBeCloseTo(0.5); // Green component
+        expect(coloredMesh.material.diffuseColor[2]).toBeCloseTo(0.0); // Blue component
       }
     });
 
@@ -329,7 +329,7 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.color(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const coloredMesh = result.data;
         expect(coloredMesh.material.alpha).toBe(0.3);
@@ -346,13 +346,15 @@ describe('TransformationOperationsService', () => {
 
       const result = await transformService.translate(testMeshData, params);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const transformedMesh = result.data;
-        
+
         // Check metadata updates
         expect(transformedMesh.metadata.transformations).toContain('translate');
-        expect(transformedMesh.metadata.generationTime).toBeGreaterThan(testMeshData.metadata.generationTime);
+        expect(transformedMesh.metadata.generationTime).toBeGreaterThan(
+          testMeshData.metadata.generationTime
+        );
         expect(transformedMesh.metadata.lastModified).toBeInstanceOf(Date);
         expect(transformedMesh.metadata.openscadParameters.translate).toEqual(params);
       }

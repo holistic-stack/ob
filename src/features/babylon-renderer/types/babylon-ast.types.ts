@@ -3,7 +3,7 @@
  *
  * Type definitions for BabylonJS-extended AST nodes that extend BABYLON.AbstractMesh.
  * This implements the Bridge Pattern to convert OpenSCAD AST to BabylonJS-compatible AST.
- * 
+ *
  * Following the architecture outlined in tasks/refactory-architecture.md:
  * - All AST nodes extend BABYLON.AbstractMesh
  * - Complete OpenSCAD syntax support
@@ -24,34 +24,34 @@ export enum BabylonJSNodeType {
   Sphere = 'babylon_sphere',
   Cylinder = 'babylon_cylinder',
   Polyhedron = 'babylon_polyhedron',
-  
+
   // 2D Primitives
   Circle = 'babylon_circle',
   Square = 'babylon_square',
   Polygon = 'babylon_polygon',
   Text = 'babylon_text',
-  
+
   // Transformations
   Translate = 'babylon_translate',
   Rotate = 'babylon_rotate',
   Scale = 'babylon_scale',
   Mirror = 'babylon_mirror',
   Color = 'babylon_color',
-  
+
   // CSG Operations
   Union = 'babylon_union',
   Difference = 'babylon_difference',
   Intersection = 'babylon_intersection',
-  
+
   // Extrusions
   LinearExtrude = 'babylon_linear_extrude',
   RotateExtrude = 'babylon_rotate_extrude',
-  
+
   // Control Flow
   For = 'babylon_for',
   If = 'babylon_if',
   Let = 'babylon_let',
-  
+
   // Modifiers
   Disable = 'babylon_disable',
   ShowOnly = 'babylon_show_only',
@@ -266,7 +266,7 @@ export enum BabylonJSPrimitiveType {
 /**
  * Union type for all BabylonJS parameter types
  */
-export type BabylonJSParameters = 
+export type BabylonJSParameters =
   | BabylonJSCubeParameters
   | BabylonJSSphereParameters
   | BabylonJSCylinderParameters

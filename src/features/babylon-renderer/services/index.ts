@@ -4,6 +4,19 @@
  * Centralized exports for all BabylonJS services and their types.
  */
 
+export type { BridgeConversionConfig } from './ast-bridge-converter';
+// AST Bridge Converter Service
+export {
+  ASTBridgeConverter,
+  ControlFlowBabylonNode,
+  CSGBabylonNode,
+  DEFAULT_BRIDGE_CONFIG,
+  ExtrusionBabylonNode,
+  ModifierBabylonNode,
+  PlaceholderBabylonNode,
+  PrimitiveBabylonNode,
+  TransformationBabylonNode,
+} from './ast-bridge-converter';
 export type {
   CSG2Config,
   CSG2DisposeResult,
@@ -14,69 +27,6 @@ export type {
 } from './babylon-csg2-service';
 // CSG2 Service
 export { BabylonCSG2Service, CSG2ErrorCode, DEFAULT_CSG2_CONFIG } from './babylon-csg2-service';
-
-// AST Bridge Converter Service
-export {
-  ASTBridgeConverter,
-  DEFAULT_BRIDGE_CONFIG,
-  PlaceholderBabylonNode,
-  PrimitiveBabylonNode,
-  TransformationBabylonNode,
-  CSGBabylonNode,
-  ControlFlowBabylonNode,
-  ExtrusionBabylonNode,
-  ModifierBabylonNode,
-} from './ast-bridge-converter';
-export type { BridgeConversionConfig } from './ast-bridge-converter';
-
-// Primitive Shape Generator Service
-export { PrimitiveShapeGeneratorService } from './primitive-shape-generator';
-export type {
-  OpenSCADCubeParams,
-  OpenSCADSphereParams,
-  OpenSCADCylinderParams,
-  OpenSCADPolyhedronParams,
-  PrimitiveGenerationError,
-} from './primitive-shape-generator';
-
-// Transformation Operations Service
-export { TransformationOperationsService } from './transformation-operations';
-export type {
-  OpenSCADTranslateParams,
-  OpenSCADRotateParams,
-  OpenSCADScaleParams,
-  OpenSCADMirrorParams,
-  OpenSCADMatrixParams,
-  OpenSCADColorParams,
-  TransformationError,
-} from './transformation-operations';
-
-// CSG Operations Service
-export { CSGOperationsService } from './csg-operations';
-export type {
-  CSGOperationParams,
-  CSGOperationError,
-} from './csg-operations';
-
-// Control Flow Operations Service
-export { ControlFlowOperationsService } from './control-flow-operations';
-export type {
-  OpenSCADForLoopParams,
-  OpenSCADIfParams,
-  OpenSCADLetParams,
-  OpenSCADIntersectionForParams,
-  VariableContext,
-  ControlFlowError,
-} from './control-flow-operations';
-
-// Extrusion Operations Service
-export { ExtrusionOperationsService } from './extrusion-operations';
-export type {
-  Profile2DPoint,
-  OpenSCADLinearExtrudeParams,
-  OpenSCADRotateExtrudeParams,
-  ExtrusionError,
-} from './extrusion-operations';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,
@@ -171,3 +121,65 @@ export {
   RenderGraphBlockType,
   RenderGraphErrorCode,
 } from './babylon-render-graph-service';
+export type {
+  ControlFlowError,
+  OpenSCADForLoopParams,
+  OpenSCADIfParams,
+  OpenSCADIntersectionForParams,
+  OpenSCADLetParams,
+  VariableContext,
+} from './control-flow-operations';
+// Control Flow Operations Service
+export { ControlFlowOperationsService } from './control-flow-operations';
+export type {
+  CSGOperationError,
+  CSGOperationParams,
+} from './csg-operations';
+// CSG Operations Service
+export { CSGOperationsService } from './csg-operations';
+export type {
+  ExtrusionError,
+  OpenSCADLinearExtrudeParams,
+  OpenSCADRotateExtrudeParams,
+  Profile2DPoint,
+} from './extrusion-operations';
+// Extrusion Operations Service
+export { ExtrusionOperationsService } from './extrusion-operations';
+export type {
+  ImportError,
+  ImportOperationParams,
+  IncludeParams,
+  STLImportParams,
+  SVGImportParams,
+  ThreeMFImportParams,
+} from './import-operations';
+// Import Operations Service
+export { ImportOperationsService } from './import-operations';
+export type {
+  ModuleExecutionContext,
+  ModuleInstantiationContext,
+  ModuleSystemError,
+  ResolvedModuleDefinition,
+} from './module-system';
+// Module System Service
+export { ModuleSystemService } from './module-system';
+export type {
+  OpenSCADCubeParams,
+  OpenSCADCylinderParams,
+  OpenSCADPolyhedronParams,
+  OpenSCADSphereParams,
+  PrimitiveGenerationError,
+} from './primitive-shape-generator';
+// Primitive Shape Generator Service
+export { PrimitiveShapeGeneratorService } from './primitive-shape-generator';
+export type {
+  OpenSCADColorParams,
+  OpenSCADMatrixParams,
+  OpenSCADMirrorParams,
+  OpenSCADRotateParams,
+  OpenSCADScaleParams,
+  OpenSCADTranslateParams,
+  TransformationError,
+} from './transformation-operations';
+// Transformation Operations Service
+export { TransformationOperationsService } from './transformation-operations';

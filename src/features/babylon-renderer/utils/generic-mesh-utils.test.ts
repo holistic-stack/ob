@@ -5,25 +5,25 @@
  * Tests mesh creation, validation, and utility functions.
  */
 
-import { describe, expect, it } from 'vitest';
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
+import { describe, expect, it } from 'vitest';
+import type {
+  GenericGeometry,
+  GenericMeshCollection,
+  GenericMeshData,
+} from '../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../types/generic-mesh-data.types';
 import {
-  createGenericMeshData,
-  createMaterialConfig,
-  createBoundingBoxFromGeometry,
+  applyModifierToMaterial,
   calculateSurfaceArea,
   calculateVolume,
+  createBoundingBoxFromGeometry,
+  createGenericMeshData,
+  createMaterialConfig,
   createMeshCollection,
-  applyModifierToMaterial,
   mergeMeshCollections,
   validateMeshData,
 } from './generic-mesh-utils';
-import type {
-  GenericGeometry,
-  GenericMeshData,
-  GenericMeshCollection,
-} from '../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS, DEFAULT_MESH_METADATA } from '../types/generic-mesh-data.types';
 
 describe('Generic Mesh Utils', () => {
   // Test geometry for a simple triangle
@@ -167,7 +167,7 @@ describe('Generic Mesh Utils', () => {
   describe('calculateSurfaceArea', () => {
     it('should calculate surface area for triangle', () => {
       const area = calculateSurfaceArea(testGeometry);
-      
+
       // Triangle with vertices at (0,0,0), (1,0,0), (0,1,0) has area 0.5
       expect(area).toBeCloseTo(0.5, 2);
     });
@@ -176,7 +176,7 @@ describe('Generic Mesh Utils', () => {
   describe('calculateVolume', () => {
     it('should calculate volume for simple geometry', () => {
       const volume = calculateVolume(testGeometry);
-      
+
       // Single triangle has minimal volume
       expect(volume).toBeGreaterThanOrEqual(0);
     });
