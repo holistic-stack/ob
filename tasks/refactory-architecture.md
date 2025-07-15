@@ -1,217 +1,2050 @@
-# OpenSCAD-to-Babylon.js Refactoring Guide
+# OpenSCAD BabylonJS AST Architecture - Refactory Implementation Plan
 
-## 1. Introduction for Junior Developers
+## Executive Summary
 
-### What Are We Doing?
+This document provides a comprehensive implementation plan for the OpenSCAD BabylonJS AST Architecture following the Product Requirement Description (PRD). The architecture extends BabylonJS types to create an Abstract Syntax Tree (AST) that serves as an abstract mesh layer, enabling seamless conversion to renderable meshes for BabylonJS while maintaining extensibility for future Three.js compatibility.
 
-Our goal is to take text-based OpenSCAD code (like `cube(10);`) and render it as a 3D model in the browser using the Babylon.js library.
+## Table of Contents
 
-### The Challenge
+1. [Architecture Overview](#architecture-overview)
+2. [Implementation Phases](#implementation-phases)
+3. [Developer Guidelines](#developer-guidelines)
+4. [Quality Standards](#quality-standards)
+5. [Testing Strategy](#testing-strategy)
+6. [File Removal Plan](#file-removal-plan)
+7. [Task Instructions](#task-instructions)
+8. [Success Metrics](#success-metrics)
 
-We already have a powerful `openscad-parser` that reads the code and turns it into a structured format called an **AST (Abstract Syntax Tree)**. However, this AST is generic and doesn't know anything about Babylon.js.
+## Architecture Overview
 
-### Our Solution: The "Bridge Pattern"
+### Core Architecture Principle: BabylonJS-Extended AST
 
-Instead of rewriting the existing parser (which is complex and works well), we will build a **"Bridge"**. This bridge will be a translator that converts the parser's generic AST into a new, specialized **Babylon.js-ready AST**.
-
-Think of it like this:
-*   **Parser AST**: A universal blueprint of the 3D model.
-*   **Bridge (Converter)**: A contractor who reads the blueprint and translates it into specific instructions for the construction crew.
-*   **Babylon.js AST**: The step-by-step instructions the construction crew (Babylon.js) can understand and use to build the 3D model.
-
-This approach is safe, fast, and keeps our code clean by separating the "what" (the model's structure) from the "how" (the rendering details).
-
----
-
-## 2. The 4-Layer Architecture (As Implemented)
-
-Our application is divided into four distinct layers. This separation makes the code easier to manage, test, and upgrade.
+Following the PRD requirements, the AST extends `BABYLON.AbstractMesh` as the base class, creating a unified abstract mesh layer that bridges OpenSCAD syntax and 3D rendering capabilities. The AST supports the complete OpenSCAD syntax as defined in the official cheat sheet.
 
 ```mermaid
 graph TD
-    subgraph "Layer 1: Parsing"
-        A[OpenSCAD Code (.scad)] --> B{openscad-parser};
-        B --> C[Generic OpenscadAST];
+    A[OpenSCAD Script] --> B[openscad-parser]
+    B --> C[BabylonJS-Extended AST]
+    C --> D[Abstract Mesh Layer]
+    D --> E[BabylonJS Renderer]
+    D --> F[Three.js Placeholder - Future]
+    C --> G[Extensibility Layer]
+    G --> H[Custom Node Types]
+
+    subgraph "Core Architecture - Complete OpenSCAD Support"
+        C1[OpenSCADNode extends BABYLON.AbstractMesh]
+        C2[PrimitiveNode: 3D & 2D Primitives]
+        C3[TransformNode: All Transformations]
+        C4[CSGNode: Boolean Operations]
+        C5[ControlFlowNode: for, if, let]
+        C6[FunctionNode: Built-in Functions]
+        C7[ModuleNode: User-defined Modules]
+        C8[ExtrusionNode: linear_extrude, rotate_extrude]
+        C9[ModifierNode: *, !, #, %]
+        C10[ImportNode: import(), include(), use()]
     end
 
-    subgraph "Layer 2: The Bridge (AST Conversion)"
-        C --> D{AST-to-CSG Converter};
-        D --> E[Babylon.js-Extended AST];
-    end
-
-    subgraph "Layer 3: Mesh Generation"
-        E --> F{Babylon.js Mesh Engine};
-        F --> G[Renderable Meshes];
-    end
-
-    subgraph "Layer 4: Scene & UI"
-        G --> H{Babylon.js Scene};
-        H --> I[React UI Components];
+    subgraph "BabylonJS Integration"
+        E1[BABYLON.MeshBuilder Integration]
+        E2[BABYLON.CSG Operations]
+        E3[BABYLON.Scene Integration]
+        E4[BABYLON.TransformNode Utilization]
+        E5[Animation Support for $t]
+        E6[Material System for color()]
     end
 ```
 
-| Layer | Component | Responsibility | Location |
-| :--- | :--- | :--- | :--- |
-| **1. Parsing** | `openscad-parser` | Converts raw OpenSCAD code into a generic `OpenscadAST`. | `src/features/openscad-parser/` |
-| **2. The Bridge** | `ast-to-csg-converter` | Translates the `OpenscadAST` into the `Babylon.js-Extended AST`. | `src/features/ast-to-csg-converter/` |
-| **3. Mesh Generation**| `babylon-renderer` | Traverses the `Babylon.js-Extended AST` and uses Babylon.js to create visible 3D meshes. | `src/features/babylon-renderer/` |
-| **4. Scene & UI** | `babylon-canvas` | Manages the Babylon.js scene, camera, lights, and displays it in a React component. | `src/features/babylon-renderer/babylon-canvas/` |
+### Enhanced 4-Layer Architecture
+
+```mermaid
+graph TD
+    subgraph "Layer 1: OpenSCAD Parser"
+        L1A[Tree-sitter Grammar]
+        L1B[Visitor Pattern]
+        L1C[Error Recovery]
+    end
+
+    subgraph "Layer 2: BabylonJS-Extended AST"
+        L2A[OpenSCADNode extends BABYLON.AbstractMesh]
+        L2B[PrimitiveNode: 3D & 2D Primitives]
+        L2C[TransformNode: All Transformations]
+        L2D[CSGNode: Boolean Operations]
+        L2E[ControlFlowNode: for, if, let, intersection_for]
+        L2F[FunctionNode: Mathematical & Utility Functions]
+        L2G[ModuleNode: User-defined Modules]
+        L2H[ExtrusionNode: linear_extrude, rotate_extrude]
+        L2I[ModifierNode: *, !, #, %]
+        L2J[ImportNode: import(), include(), use()]
+        L2K[AbstractMesh Layer Interface]
+    end
+
+    subgraph "Layer 3: Mesh Generation"
+        L3A[BabylonJS Mesh Builder]
+        L3B[BABYLON.CSG Integration]
+        L3C[Three.js Placeholder - Future]
+        L3D[Generic Mesh Interface]
+    end
+
+    subgraph "Layer 4: Scene Management"
+        L4A[BABYLON.Scene Integration]
+        L4B[Camera Controls]
+        L4C[Lighting & Materials]
+        L4D[Performance Optimization]
+    end
+
+    L1A --> L2A
+    L1B --> L2B
+    L1C --> L2C
+    L2A --> L3A
+    L2B --> L3B
+    L2C --> L3C
+    L3A --> L4A
+    L3B --> L4B
+```
+
+## Implementation Strategy: Bridge Pattern with OpenscadAST
+
+### Architecture Decision: Preserve Existing Parser with Bridge Converter
+
+After comprehensive analysis of the existing OpenSCAD parser implementation, we've identified that the current parser has excellent architecture with:
+
+- **Sophisticated visitor-based CST to AST conversion** with 20+ specialized visitors
+- **Complete OpenSCAD syntax support** including primitives, transforms, CSG operations, control flow, functions, modules, and modifiers  
+- **Robust parameter extraction systems** for all primitive types
+- **Result<T,E> error handling patterns** throughout
+- **Comprehensive test coverage** with isolated unit tests
+
+**Decision**: Implement **Bridge Pattern** to preserve existing parser unchanged and add conversion layer for BabylonJS-extended AST.
+
+```mermaid
+graph TD
+    A[OpenSCAD Script] --> B[Existing openscad-parser]
+    B --> C[OpenscadAST - Current Interface-based AST]
+    C --> D[ASTBridgeConverter - NEW]
+    D --> E[BabylonJS-Extended AST - NEW]
+    E --> F[BabylonJS Mesh Generation]
+    
+    subgraph "Preserved - No Changes"
+        B1[VisitorASTGenerator]
+        B2[20+ Specialized Visitors]
+        B3[Parameter Extractors]
+        B4[Error Handling System]
+        B5[Complete OpenSCAD Support]
+    end
+    
+    subgraph "New Bridge Layer"
+        D1[OpenscadASTConverter]
+        D2[BabylonJS Node Factory]
+        D3[Parameter Mappers]
+        D4[Type Guards & Validators]
+    end
+    
+    subgraph "New BabylonJS Layer"
+        E1[OpenSCADNode extends BABYLON.AbstractMesh]
+        E2[Mesh Generation Methods]
+        E3[Scene Integration]
+    end
+```
+
+## Implementation Phases
+
+### Phase 1: Bridge Converter Development (Week 1)
+
+#### Priority 1: Analyze & Map Existing AST Structure
+
+**Critical Action: Understand Current OpenscadAST Schema**
+
+The existing parser uses interface-based AST nodes in `src/features/openscad-parser/ast/ast-types.ts`:
+
+```typescript
+// Current OpenscadAST Structure Analysis
+interface BaseNode {
+  type: string;
+  location?: SourceLocation;
+}
+
+// Examples of Current AST Nodes:
+- CubeNode extends BaseNode
+- SphereNode extends BaseNode  
+- TranslateNode extends BaseNode
+- UnionNode extends BaseNode
+- ExpressionNode extends BaseNode
+// ... 40+ node types with complete OpenSCAD coverage
+```
+
+#### Task 1.1: BabylonJS-Extended AST Target Types
+
+**Objective**: Define BabylonJS-extended AST that maintains compatibility with existing OpenscadAST
+
+**Files to Create (Following Bulletproof-React Structure)**:
+```
+src/features/babylon-renderer/
+├── components/
+│   ├── babylon-scene.tsx                # Main BabylonJS scene component
+│   ├── babylon-scene.test.tsx           # Co-located tests (REQUIRED)
+│   ├── mesh-viewer.tsx                  # Individual mesh viewer component
+│   ├── mesh-viewer.test.tsx             # Co-located tests (REQUIRED)
+│   └── index.ts                         # Component barrel exports
+├── hooks/
+│   ├── use-babylon-renderer.ts          # Main BabylonJS rendering hook
+│   ├── use-babylon-renderer.test.ts     # Co-located tests (REQUIRED)
+│   ├── use-ast-bridge-converter.ts      # Bridge converter hook
+│   ├── use-ast-bridge-converter.test.ts # Co-located tests (REQUIRED)
+│   └── index.ts                         # Hook barrel exports
+├── services/
+│   ├── ast-bridge-converter.ts          # Main converter OpenscadAST → BabylonJS AST
+│   ├── ast-bridge-converter.test.ts     # Co-located tests (REQUIRED)
+│   ├── babylon-node-factory.ts          # BabylonJS node creation
+│   ├── babylon-node-factory.test.ts     # Co-located tests (REQUIRED)
+│   ├── parameter-mapper.ts              # Parameter conversion utilities
+│   ├── parameter-mapper.test.ts         # Co-located tests (REQUIRED)
+│   ├── mesh-generation.service.ts       # Scene & mesh generation
+│   ├── mesh-generation.service.test.ts  # Co-located tests (REQUIRED)
+│   └── index.ts                         # Service barrel exports
+├── types/
+│   ├── babylon-node.types.ts            # BabylonJS-extended AST types
+│   ├── conversion.types.ts              # Bridge conversion types
+│   └── index.ts                         # Type barrel exports
+├── utils/
+│   ├── babylon-utils.ts                 # BabylonJS utility functions
+│   ├── babylon-utils.test.ts            # Co-located tests (REQUIRED)
+│   ├── type-guards.ts                   # Type checking utilities
+│   ├── type-guards.test.ts              # Co-located tests (REQUIRED)
+│   └── index.ts                         # Utility barrel exports
+└── index.ts                             # Feature barrel exports
+```
+
+**Implementation Strategy - Bridge Pattern Components**:
+
+**Objective**: Create TypeScript interfaces and base classes that extend BABYLON.AbstractMesh
+
+**Files to Create**:
+```
+src/features/babylonjs-ast/
+├── types/
+│   ├── openscad-node.types.ts          # Core AST node types
+│   ├── primitive-node.types.ts         # 3D & 2D primitive types
+│   ├── transform-node.types.ts         # Transformation types
+│   ├── csg-node.types.ts              # CSG operation types
+│   ├── control-flow-node.types.ts     # Flow control types
+│   ├── function-node.types.ts         # Function types
+│   ├── module-node.types.ts           # Module types
+│   ├── extrusion-node.types.ts        # Extrusion types
+│   ├── modifier-node.types.ts         # Modifier types
+│   ├── import-node.types.ts           # Import/Include types
+│   └── index.ts                       # Type exports
+├── core/
+│   ├── openscad-node.ts               # Base OpenSCADNode class
+│   ├── primitive-node.ts              # 3D & 2D primitive implementations
+│   ├── transform-node.ts              # Transform node implementations
+│   ├── csg-node.ts                    # CSG node implementations
+│   ├── control-flow-node.ts           # Flow control implementations
+│   ├── function-node.ts               # Function implementations
+│   ├── module-node.ts                 # Module implementations
+│   ├── extrusion-node.ts              # Extrusion implementations
+│   ├── modifier-node.ts               # Modifier implementations
+│   ├── import-node.ts                 # Import/Include implementations
+│   └── index.ts                       # Core exports
+└── index.ts                           # Feature exports
+```
+
+**Implementation Requirements**:
+
+1. **Base OpenSCADNode Class**:
+```typescript
+// openscad-node.ts
+import { AbstractMesh, Vector3, Quaternion, Matrix } from '@babylonjs/core';
+
+export abstract class OpenSCADNode extends AbstractMesh {
+  // Extend BabylonJS AbstractMesh with OpenSCAD-specific properties
+  public readonly nodeType: OpenSCADNodeType;
+  public readonly sourceLocation: SourceLocation;
+  
+  constructor(
+    name: string,
+    scene: Scene | null,
+    nodeType: OpenSCADNodeType,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene);
+    this.nodeType = nodeType;
+    this.sourceLocation = sourceLocation;
+  }
+
+  // Abstract mesh layer interface
+  abstract generateMesh(): Promise<Result<Mesh, OpenSCADError>>;
+  abstract validateNode(): Result<void, ValidationError>;
+  abstract clone(): OpenSCADNode;
+}
+```
+
+2. **Primitive Node Implementation**:
+```typescript
+// primitive-node.ts
+export class PrimitiveNode extends OpenSCADNode {
+  public readonly primitiveType: PrimitiveType;
+  public readonly parameters: PrimitiveParameters;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    primitiveType: PrimitiveType,
+    parameters: PrimitiveParameters,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, OpenSCADNodeType.Primitive, sourceLocation);
+    this.primitiveType = primitiveType;
+    this.parameters = parameters;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      switch (this.primitiveType) {
+        case PrimitiveType.Cube:
+          return this.generateCubeMesh();
+        case PrimitiveType.Sphere:
+          return this.generateSphereMesh();
+        case PrimitiveType.Cylinder:
+          return this.generateCylinderMesh();
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported primitive: ${this.primitiveType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Mesh generation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  private generateCubeMesh(): Result<Mesh, OpenSCADError> {
+    const size = this.parameters.size || Vector3.One();
+    const mesh = MeshBuilder.CreateBox(this.name, {
+      width: size.x,
+      height: size.y,
+      depth: size.z
+    }, this.getScene());
+    
+    return { success: true, data: mesh };
+  }
+}
+```
+
+**Quality Requirements**:
+- ✅ All classes extend BABYLON.AbstractMesh
+- ✅ TypeScript strict mode compliance
+- ✅ Result<T,E> error handling patterns
+- ✅ Comprehensive JSDoc documentation
+- ✅ Co-located unit tests with 95% coverage
+
+#### Complete OpenSCAD Syntax Type Definitions
+
+**Core Types Supporting All OpenSCAD Syntax**:
+
+```typescript
+// openscad-node.types.ts - Complete OpenSCAD syntax support
+export enum OpenSCADNodeType {
+  // 3D Primitives
+  Cube = 'cube',
+  Sphere = 'sphere',
+  Cylinder = 'cylinder',
+  Polyhedron = 'polyhedron',
+  
+  // 2D Primitives
+  Circle = 'circle',
+  Square = 'square',
+  Polygon = 'polygon',
+  Text = 'text',
+  
+  // Transformations
+  Translate = 'translate',
+  Rotate = 'rotate',
+  Scale = 'scale',
+  Resize = 'resize',
+  Mirror = 'mirror',
+  Multmatrix = 'multmatrix',
+  Color = 'color',
+  Offset = 'offset',
+  Hull = 'hull',
+  Minkowski = 'minkowski',
+  
+  // Boolean Operations
+  Union = 'union',
+  Difference = 'difference',
+  Intersection = 'intersection',
+  
+  // Extrusions
+  LinearExtrude = 'linear_extrude',
+  RotateExtrude = 'rotate_extrude',
+  
+  // Flow Control
+  For = 'for',
+  IntersectionFor = 'intersection_for',
+  If = 'if',
+  Let = 'let',
+  Assign = 'assign',
+  
+  // Functions
+  MathFunction = 'math_function',
+  StringFunction = 'string_function',
+  TypeTestFunction = 'type_test_function',
+  UtilityFunction = 'utility_function',
+  
+  // User-defined
+  Module = 'module',
+  Function = 'function',
+  
+  // Import/Include
+  Import = 'import',
+  Include = 'include',
+  Use = 'use',
+  
+  // Modifiers
+  Disable = 'disable',      // *
+  ShowOnly = 'show_only',   // !
+  Debug = 'debug',          // #
+  Background = 'background', // %
+  
+  // Other
+  Echo = 'echo',
+  Assert = 'assert',
+  Render = 'render',
+  Children = 'children',
+  Projection = 'projection',
+  Surface = 'surface'
+}
+
+// 3D Primitive Parameters
+export interface CubeParameters {
+  readonly size?: Vector3 | number;
+  readonly center?: boolean;
+}
+
+export interface SphereParameters {
+  readonly r?: number;
+  readonly d?: number;
+  readonly $fn?: number;
+  readonly $fa?: number;
+  readonly $fs?: number;
+}
+
+export interface CylinderParameters {
+  readonly h?: number;
+  readonly r?: number;
+  readonly r1?: number;
+  readonly r2?: number;
+  readonly d?: number;
+  readonly d1?: number;
+  readonly d2?: number;
+  readonly center?: boolean;
+  readonly $fn?: number;
+  readonly $fa?: number;
+  readonly $fs?: number;
+}
+
+export interface PolyhedronParameters {
+  readonly points: Vector3[];
+  readonly faces: number[][];
+  readonly convexity?: number;
+}
+
+// 2D Primitive Parameters
+export interface CircleParameters {
+  readonly r?: number;
+  readonly d?: number;
+  readonly $fn?: number;
+  readonly $fa?: number;
+  readonly $fs?: number;
+}
+
+export interface SquareParameters {
+  readonly size?: Vector2 | number;
+  readonly center?: boolean;
+}
+
+export interface PolygonParameters {
+  readonly points: Vector2[];
+  readonly paths?: number[][];
+  readonly convexity?: number;
+}
+
+export interface TextParameters {
+  readonly text: string;
+  readonly size?: number;
+  readonly font?: string;
+  readonly halign?: 'left' | 'center' | 'right';
+  readonly valign?: 'top' | 'center' | 'baseline' | 'bottom';
+  readonly spacing?: number;
+  readonly direction?: 'ltr' | 'rtl' | 'ttb' | 'btt';
+  readonly language?: string;
+  readonly script?: string;
+  readonly $fn?: number;
+}
+
+// Transformation Parameters
+export interface TranslateParameters {
+  readonly v: Vector3;
+}
+
+export interface RotateParameters {
+  readonly a?: number | Vector3;
+  readonly v?: Vector3;
+}
+
+export interface ScaleParameters {
+  readonly v: Vector3 | number;
+}
+
+export interface ResizeParameters {
+  readonly newsize: Vector3;
+  readonly auto?: boolean | Vector3;
+  readonly convexity?: number;
+}
+
+export interface MirrorParameters {
+  readonly v: Vector3;
+}
+
+export interface MultmatrixParameters {
+  readonly m: Matrix;
+}
+
+export interface ColorParameters {
+  readonly c?: string | Vector3 | Vector4;
+  readonly alpha?: number;
+}
+
+export interface OffsetParameters {
+  readonly r?: number;
+  readonly delta?: number;
+  readonly chamfer?: boolean;
+}
+
+// Extrusion Parameters
+export interface LinearExtrudeParameters {
+  readonly height: number;
+  readonly center?: boolean;
+  readonly convexity?: number;
+  readonly twist?: number;
+  readonly slices?: number;
+  readonly scale?: number | Vector2;
+  readonly $fn?: number;
+}
+
+export interface RotateExtrudeParameters {
+  readonly angle?: number;
+  readonly convexity?: number;
+  readonly $fn?: number;
+}
+
+// Flow Control Parameters
+export interface ForParameters {
+  readonly variable: string;
+  readonly range?: [number, number] | [number, number, number];
+  readonly list?: any[];
+}
+
+export interface IfParameters {
+  readonly condition: boolean | string; // Expression as string for evaluation
+}
+
+export interface LetParameters {
+  readonly assignments: Record<string, any>;
+}
+
+// Function Parameters
+export interface MathFunctionParameters {
+  readonly function: 'abs' | 'sign' | 'sin' | 'cos' | 'tan' | 'acos' | 'asin' | 'atan' | 'atan2' |
+                    'floor' | 'round' | 'ceil' | 'ln' | 'log' | 'pow' | 'sqrt' | 'exp' | 'rands' |
+                    'min' | 'max' | 'norm' | 'cross';
+  readonly arguments: any[];
+}
+
+export interface StringFunctionParameters {
+  readonly function: 'str' | 'chr' | 'ord';
+  readonly arguments: any[];
+}
+
+export interface TypeTestFunctionParameters {
+  readonly function: 'is_undef' | 'is_bool' | 'is_num' | 'is_string' | 'is_list' | 'is_function';
+  readonly argument: any;
+}
+
+// Import Parameters
+export interface ImportParameters {
+  readonly file: string;
+  readonly convexity?: number;
+  readonly layer?: string;
+  readonly origin?: Vector2;
+  readonly scale?: number;
+}
+
+export interface IncludeParameters {
+  readonly file: string;
+}
+
+export interface UseParameters {
+  readonly file: string;
+}
+
+// Special Variables
+export interface SpecialVariables {
+  readonly $fa?: number;   // minimum angle
+  readonly $fs?: number;   // minimum size
+  readonly $fn?: number;   // number of fragments
+  readonly $t?: number;    // animation step
+  readonly $vpr?: Vector3; // viewport rotation angles
+  readonly $vpt?: Vector3; // viewport translation
+  readonly $vpd?: number;  // viewport camera distance
+  readonly $vpf?: number;  // viewport camera field of view
+  readonly $children?: number; // number of module children
+  readonly $preview?: boolean; // true in F5 preview, false for F6
+}
+
+// Modifier Parameters
+export interface ModifierParameters {
+  readonly type: 'disable' | 'show_only' | 'debug' | 'background';
+}
+
+// Surface Parameters
+export interface SurfaceParameters {
+  readonly file: string;
+  readonly center?: boolean;
+  readonly invert?: boolean;
+  readonly convexity?: number;
+}
+
+// Projection Parameters
+export interface ProjectionParameters {
+  readonly cut?: boolean;
+}
+
+// Other Parameters
+export interface EchoParameters {
+  readonly values: any[];
+}
+
+export interface AssertParameters {
+  readonly condition: boolean | string;
+  readonly message?: string;
+}
+
+export interface RenderParameters {
+  readonly convexity?: number;
+}
+
+export interface ChildrenParameters {
+  readonly index?: number | number[];
+}
+```
+
+**Complete Node Type Definitions**:
+
+```typescript
+// Comprehensive primitive node supporting all OpenSCAD primitives
+export class PrimitiveNode extends OpenSCADNode {
+  public readonly primitiveType: OpenSCADNodeType;
+  public readonly parameters: 
+    CubeParameters | SphereParameters | CylinderParameters | PolyhedronParameters |
+    CircleParameters | SquareParameters | PolygonParameters | TextParameters;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    primitiveType: OpenSCADNodeType,
+    parameters: any,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, primitiveType, sourceLocation);
+    this.primitiveType = primitiveType;
+    this.parameters = parameters;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      switch (this.primitiveType) {
+        // 3D Primitives
+        case OpenSCADNodeType.Cube:
+          return this.generateCubeMesh(this.parameters as CubeParameters);
+        case OpenSCADNodeType.Sphere:
+          return this.generateSphereMesh(this.parameters as SphereParameters);
+        case OpenSCADNodeType.Cylinder:
+          return this.generateCylinderMesh(this.parameters as CylinderParameters);
+        case OpenSCADNodeType.Polyhedron:
+          return this.generatePolyhedronMesh(this.parameters as PolyhedronParameters);
+        
+        // 2D Primitives (will be converted to 3D with minimal thickness)
+        case OpenSCADNodeType.Circle:
+          return this.generateCircleMesh(this.parameters as CircleParameters);
+        case OpenSCADNodeType.Square:
+          return this.generateSquareMesh(this.parameters as SquareParameters);
+        case OpenSCADNodeType.Polygon:
+          return this.generatePolygonMesh(this.parameters as PolygonParameters);
+        case OpenSCADNodeType.Text:
+          return this.generateTextMesh(this.parameters as TextParameters);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported primitive: ${this.primitiveType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Mesh generation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for all primitive types
+  private generateCubeMesh(params: CubeParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS MeshBuilder.CreateBox
+  }
+
+  private generateSphereMesh(params: SphereParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS MeshBuilder.CreateSphere
+  }
+
+  private generateCylinderMesh(params: CylinderParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS MeshBuilder.CreateCylinder
+  }
+
+  private generatePolyhedronMesh(params: PolyhedronParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS custom mesh creation
+  }
+
+  private generateCircleMesh(params: CircleParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS MeshBuilder.CreateDisc + extrusion
+  }
+
+  private generateSquareMesh(params: SquareParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS MeshBuilder.CreatePlane + extrusion
+  }
+
+  private generatePolygonMesh(params: PolygonParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS polygon creation + extrusion
+  }
+
+  private generateTextMesh(params: TextParameters): Result<Mesh, OpenSCADError> {
+    // Implementation with BabylonJS text mesh creation
+  }
+}
+
+// Transform node supporting all OpenSCAD transformations
+export class TransformNode extends OpenSCADNode {
+  public readonly transformType: OpenSCADNodeType;
+  public readonly parameters: 
+    TranslateParameters | RotateParameters | ScaleParameters | ResizeParameters |
+    MirrorParameters | MultmatrixParameters | ColorParameters | OffsetParameters;
+  public readonly child: OpenSCADNode;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    transformType: OpenSCADNodeType,
+    parameters: any,
+    child: OpenSCADNode,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, transformType, sourceLocation);
+    this.transformType = transformType;
+    this.parameters = parameters;
+    this.child = child;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      // Generate child mesh first
+      const childResult = await this.child.generateMesh();
+      if (!childResult.success) {
+        return childResult;
+      }
+
+      const childMesh = childResult.data;
+
+      // Apply transformation based on type
+      switch (this.transformType) {
+        case OpenSCADNodeType.Translate:
+          return this.applyTranslation(childMesh, this.parameters as TranslateParameters);
+        case OpenSCADNodeType.Rotate:
+          return this.applyRotation(childMesh, this.parameters as RotateParameters);
+        case OpenSCADNodeType.Scale:
+          return this.applyScale(childMesh, this.parameters as ScaleParameters);
+        case OpenSCADNodeType.Resize:
+          return this.applyResize(childMesh, this.parameters as ResizeParameters);
+        case OpenSCADNodeType.Mirror:
+          return this.applyMirror(childMesh, this.parameters as MirrorParameters);
+        case OpenSCADNodeType.Multmatrix:
+          return this.applyMultmatrix(childMesh, this.parameters as MultmatrixParameters);
+        case OpenSCADNodeType.Color:
+          return this.applyColor(childMesh, this.parameters as ColorParameters);
+        case OpenSCADNodeType.Offset:
+          return this.applyOffset(childMesh, this.parameters as OffsetParameters);
+        case OpenSCADNodeType.Hull:
+          return this.applyHull([childMesh]);
+        case OpenSCADNodeType.Minkowski:
+          return this.applyMinkowski(childMesh);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported transform: ${this.transformType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Transform application failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for all transformation types
+  private applyTranslation(mesh: Mesh, params: TranslateParameters): Result<Mesh, OpenSCADError> {
+    // Implementation using BabylonJS transformation
+  }
+
+  private applyRotation(mesh: Mesh, params: RotateParameters): Result<Mesh, OpenSCADError> {
+    // Implementation using BabylonJS rotation
+  }
+
+  // ... other transformation implementations
+}
+
+// Control flow node for for, if, let, intersection_for
+export class ControlFlowNode extends OpenSCADNode {
+  public readonly flowType: OpenSCADNodeType;
+  public readonly parameters: ForParameters | IfParameters | LetParameters;
+  public readonly children: OpenSCADNode[];
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    flowType: OpenSCADNodeType,
+    parameters: any,
+    children: OpenSCADNode[],
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, flowType, sourceLocation);
+    this.flowType = flowType;
+    this.parameters = parameters;
+    this.children = children;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      switch (this.flowType) {
+        case OpenSCADNodeType.For:
+          return this.evaluateForLoop(this.parameters as ForParameters);
+        case OpenSCADNodeType.IntersectionFor:
+          return this.evaluateIntersectionFor(this.parameters as ForParameters);
+        case OpenSCADNodeType.If:
+          return this.evaluateIf(this.parameters as IfParameters);
+        case OpenSCADNodeType.Let:
+          return this.evaluateLet(this.parameters as LetParameters);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported flow control: ${this.flowType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Flow control evaluation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for control flow
+  private async evaluateForLoop(params: ForParameters): Promise<Result<Mesh, OpenSCADError>> {
+    // Implementation of for loop evaluation
+  }
+
+  private async evaluateIntersectionFor(params: ForParameters): Promise<Result<Mesh, OpenSCADError>> {
+    // Implementation of intersection_for evaluation
+  }
+
+  private async evaluateIf(params: IfParameters): Promise<Result<Mesh, OpenSCADError>> {
+    // Implementation of if statement evaluation
+  }
+
+  private async evaluateLet(params: LetParameters): Promise<Result<Mesh, OpenSCADError>> {
+    // Implementation of let statement evaluation
+  }
+}
+
+// Function node for mathematical, string, and utility functions
+export class FunctionNode extends OpenSCADNode {
+  public readonly functionType: OpenSCADNodeType;
+  public readonly parameters: 
+    MathFunctionParameters | StringFunctionParameters | 
+    TypeTestFunctionParameters | any;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    functionType: OpenSCADNodeType,
+    parameters: any,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, functionType, sourceLocation);
+    this.functionType = functionType;
+    this.parameters = parameters;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    // Functions typically don't generate meshes directly
+    // They return values that are used by other nodes
+    return { 
+      success: false, 
+      error: new OpenSCADError('Functions do not generate meshes directly') 
+    };
+  }
+
+  evaluateFunction(): Result<any, OpenSCADError> {
+    try {
+      switch (this.functionType) {
+        case OpenSCADNodeType.MathFunction:
+          return this.evaluateMathFunction(this.parameters as MathFunctionParameters);
+        case OpenSCADNodeType.StringFunction:
+          return this.evaluateStringFunction(this.parameters as StringFunctionParameters);
+        case OpenSCADNodeType.TypeTestFunction:
+          return this.evaluateTypeTestFunction(this.parameters as TypeTestFunctionParameters);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported function: ${this.functionType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Function evaluation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for all function types
+  private evaluateMathFunction(params: MathFunctionParameters): Result<any, OpenSCADError> {
+    // Implementation of all mathematical functions
+  }
+
+  private evaluateStringFunction(params: StringFunctionParameters): Result<any, OpenSCADError> {
+    // Implementation of string functions
+  }
+
+  private evaluateTypeTestFunction(params: TypeTestFunctionParameters): Result<any, OpenSCADError> {
+    // Implementation of type test functions
+  }
+}
+
+// Extrusion node for linear_extrude and rotate_extrude
+export class ExtrusionNode extends OpenSCADNode {
+  public readonly extrusionType: OpenSCADNodeType;
+  public readonly parameters: LinearExtrudeParameters | RotateExtrudeParameters;
+  public readonly child: OpenSCADNode;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    extrusionType: OpenSCADNodeType,
+    parameters: any,
+    child: OpenSCADNode,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, extrusionType, sourceLocation);
+    this.extrusionType = extrusionType;
+    this.parameters = parameters;
+    this.child = child;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      // Generate 2D child mesh first
+      const childResult = await this.child.generateMesh();
+      if (!childResult.success) {
+        return childResult;
+      }
+
+      const childMesh = childResult.data;
+
+      switch (this.extrusionType) {
+        case OpenSCADNodeType.LinearExtrude:
+          return this.applyLinearExtrude(childMesh, this.parameters as LinearExtrudeParameters);
+        case OpenSCADNodeType.RotateExtrude:
+          return this.applyRotateExtrude(childMesh, this.parameters as RotateExtrudeParameters);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported extrusion: ${this.extrusionType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Extrusion failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for extrusion types
+  private applyLinearExtrude(mesh: Mesh, params: LinearExtrudeParameters): Result<Mesh, OpenSCADError> {
+    // Implementation using BabylonJS extrusion
+  }
+
+  private applyRotateExtrude(mesh: Mesh, params: RotateExtrudeParameters): Result<Mesh, OpenSCADError> {
+    // Implementation using BabylonJS lathe/revolution
+  }
+}
+
+// Modifier node for *, !, #, %
+export class ModifierNode extends OpenSCADNode {
+  public readonly modifierType: OpenSCADNodeType;
+  public readonly child: OpenSCADNode;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    modifierType: OpenSCADNodeType,
+    child: OpenSCADNode,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, modifierType, sourceLocation);
+    this.modifierType = modifierType;
+    this.child = child;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      const childResult = await this.child.generateMesh();
+      if (!childResult.success) {
+        return childResult;
+      }
+
+      const childMesh = childResult.data;
+
+      switch (this.modifierType) {
+        case OpenSCADNodeType.Disable:
+          return this.applyDisable(childMesh);
+        case OpenSCADNodeType.ShowOnly:
+          return this.applyShowOnly(childMesh);
+        case OpenSCADNodeType.Debug:
+          return this.applyDebug(childMesh);
+        case OpenSCADNodeType.Background:
+          return this.applyBackground(childMesh);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported modifier: ${this.modifierType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Modifier application failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for modifiers
+  private applyDisable(mesh: Mesh): Result<Mesh, OpenSCADError> {
+    // Disable modifier - hide mesh
+    mesh.setEnabled(false);
+    return { success: true, data: mesh };
+  }
+
+  private applyShowOnly(mesh: Mesh): Result<Mesh, OpenSCADError> {
+    // Show only modifier - special rendering mode
+    mesh.material = this.createShowOnlyMaterial();
+    return { success: true, data: mesh };
+  }
+
+  private applyDebug(mesh: Mesh): Result<Mesh, OpenSCADError> {
+    // Debug modifier - highlight mesh
+    mesh.material = this.createDebugMaterial();
+    return { success: true, data: mesh };
+  }
+
+  private applyBackground(mesh: Mesh): Result<Mesh, OpenSCADError> {
+    // Background modifier - make transparent
+    mesh.material = this.createBackgroundMaterial();
+    return { success: true, data: mesh };
+  }
+}
+
+// Import node for import(), include(), use()
+export class ImportNode extends OpenSCADNode {
+  public readonly importType: OpenSCADNodeType;
+  public readonly parameters: ImportParameters | IncludeParameters | UseParameters;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    importType: OpenSCADNodeType,
+    parameters: any,
+    sourceLocation: SourceLocation
+  ) {
+    super(name, scene, importType, sourceLocation);
+    this.importType = importType;
+    this.parameters = parameters;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, OpenSCADError>> {
+    try {
+      switch (this.importType) {
+        case OpenSCADNodeType.Import:
+          return this.performImport(this.parameters as ImportParameters);
+        case OpenSCADNodeType.Include:
+          return this.performInclude(this.parameters as IncludeParameters);
+        case OpenSCADNodeType.Use:
+          return this.performUse(this.parameters as UseParameters);
+        
+        default:
+          return { 
+            success: false, 
+            error: new OpenSCADError(`Unsupported import type: ${this.importType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new OpenSCADError(`Import failed: ${error.message}`) 
+      };
+    }
+  }
+
+  // Implementation methods for import types
+  private async performImport(params: ImportParameters): Result<Mesh, OpenSCADError> {
+    // Implementation using BabylonJS asset loaders
+  }
+
+  private async performInclude(params: IncludeParameters): Result<Mesh, OpenSCADError> {
+    // Implementation for including OpenSCAD files
+  }
+
+  private async performUse(params: UseParameters): Result<Mesh, OpenSCADError> {
+    // Implementation for using OpenSCAD modules
+  }
+}
+```
+
+### Phase 2: BabylonJS Mesh Generation Integration (Week 2)
+
+#### Task 2.1: Mesh Generation from BabylonJS-Extended AST
+
+**Objective**: Implement mesh generation using BABYLON.MeshBuilder and BABYLON.CSG
+
+**Key Advantages of Bridge Pattern**:
+- ✅ **Zero Risk**: Existing parser remains completely unchanged
+- ✅ **Incremental Development**: Can develop bridge converter with full test coverage
+- ✅ **Backward Compatibility**: OpenscadAST continues to work for any other features
+- ✅ **Performance**: No modification overhead to existing parsing pipeline
+- ✅ **Maintainability**: Clear separation of concerns between parsing and rendering
+
+**Implementation Requirements**:
+
+1. **Mesh Generation Service Integration**:
+```typescript
+// mesh-generation.service.ts
+export class MeshGenerationService {
+  private scene: Scene;
+  private bridgeConverter: ASTBridgeConverter;
+
+  constructor(scene: Scene) {
+    this.scene = scene;
+    this.bridgeConverter = new ASTBridgeConverter(scene);
+  }
+
+  async generateMeshFromOpenscadAST(
+    openscadNodes: OpenscadASTNode[]
+  ): Promise<Result<Mesh[], MeshGenerationError>> {
+    try {
+      // Step 1: Convert OpenscadAST to BabylonJS-extended AST
+      const conversionResult = await this.bridgeConverter.convertAST(openscadNodes);
+      if (!conversionResult.success) {
+        return { 
+          success: false, 
+          error: new MeshGenerationError(`AST conversion failed: ${conversionResult.error.message}`)
+        };
+      }
+
+      const babylonNodes = conversionResult.data;
+
+      // Step 2: Generate meshes from BabylonJS-extended AST
+      const meshes: Mesh[] = [];
+      for (const node of babylonNodes) {
+        const meshResult = await node.generateMesh();
+        if (!meshResult.success) {
+          return { success: false, error: new MeshGenerationError(meshResult.error.message) };
+        }
+        meshes.push(meshResult.data);
+      }
+
+      return { success: true, data: meshes };
+    } catch (error) {
+      return {
+        success: false,
+        error: new MeshGenerationError(`Mesh generation failed: ${error.message}`)
+      };
+    }
+  }
+}
+```
+
+2. **Full Integration with Existing Parser**:
+```typescript
+// Integration example showing complete pipeline
+import { OpenSCADParserService } from '../openscad-parser/services/parsing.service.js';
+import { MeshGenerationService } from './services/mesh-generation.service.js';
+
+export class OpenSCADBabylonRenderer {
+  private parserService: OpenSCADParserService;
+  private meshService: MeshGenerationService;
+
+  constructor(scene: Scene) {
+    this.parserService = new OpenSCADParserService();
+    this.meshService = new MeshGenerationService(scene);
+  }
+
+  async renderOpenSCADCode(code: string): Promise<Result<Mesh[], RenderError>> {
+    try {
+      // Step 1: Parse OpenSCAD code to OpenscadAST (existing system)
+      const parseResult = await this.parserService.parseToAST(code);
+      if (!parseResult.success) {
+        return { success: false, error: new RenderError(`Parse failed: ${parseResult.error.message}`) };
+      }
+
+      // Step 2: Generate BabylonJS meshes via bridge converter
+      const meshResult = await this.meshService.generateMeshFromOpenscadAST(parseResult.data);
+      if (!meshResult.success) {
+        return { success: false, error: new RenderError(`Mesh generation failed: ${meshResult.error.message}`) };
+      }
+
+      return { success: true, data: meshResult.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: new RenderError(`Rendering failed: ${error.message}`)
+      };
+    }
+  }
+}
+```
+
+#### Task 2.2: BabylonJS-Extended Node Implementations
+
+**Implementation showing complete node type coverage**:
+
+```typescript
+// primitive-babylon-node.ts - Handles all OpenscadAST primitive types
+export class PrimitiveBabylonNode extends OpenSCADBabylonNode {
+  public readonly primitiveType: BabylonJSPrimitiveType;
+  public readonly parameters: BabylonJSPrimitiveParameters;
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    primitiveType: BabylonJSPrimitiveType,
+    parameters: BabylonJSPrimitiveParameters,
+    originalOpenscadNode: OpenscadASTNode,
+    sourceLocation?: SourceLocation
+  ) {
+    super(name, scene, BabylonJSNodeType.Primitive, originalOpenscadNode, sourceLocation);
+    this.primitiveType = primitiveType;
+    this.parameters = parameters;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, BabylonJSError>> {
+    try {
+      switch (this.primitiveType) {
+        case BabylonJSPrimitiveType.Cube:
+          return this.generateCubeMesh(this.parameters as BabylonJSCubeParameters);
+        case BabylonJSPrimitiveType.Sphere:
+          return this.generateSphereMesh(this.parameters as BabylonJSSphereParameters);
+        case BabylonJSPrimitiveType.Cylinder:
+          return this.generateCylinderMesh(this.parameters as BabylonJSCylinderParameters);
+        case BabylonJSPrimitiveType.Polyhedron:
+          return this.generatePolyhedronMesh(this.parameters as BabylonJSPolyhedronParameters);
+        // Handle all primitive types from OpenscadAST...
+        
+        default:
+          return { 
+            success: false, 
+            error: new BabylonJSError(`Unsupported primitive: ${this.primitiveType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new BabylonJSError(`Mesh generation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  private generateCubeMesh(params: BabylonJSCubeParameters): Result<Mesh, BabylonJSError> {
+    try {
+      const mesh = MeshBuilder.CreateBox(this.name, {
+        width: params.size.x,
+        height: params.size.y,
+        depth: params.size.z
+      }, this.getScene());
+
+      // Apply center parameter (matching OpenSCAD behavior exactly)
+      if (!params.center) {
+        mesh.position = new Vector3(
+          params.size.x / 2,
+          params.size.y / 2,
+          params.size.z / 2
+        );
+      }
+
+      return { success: true, data: mesh };
+    } catch (error) {
+      return {
+        success: false,
+        error: new BabylonJSError(`Cube mesh generation failed: ${error.message}`)
+      };
+    }
+  }
+
+  private generateSphereMesh(params: BabylonJSSphereParameters): Result<Mesh, BabylonJSError> {
+    try {
+      const mesh = MeshBuilder.CreateSphere(this.name, {
+        diameter: params.radius * 2,
+        segments: params.segments
+      }, this.getScene());
+
+      return { success: true, data: mesh };
+    } catch (error) {
+      return {
+        success: false,
+        error: new BabylonJSError(`Sphere mesh generation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  private generateCylinderMesh(params: BabylonJSCylinderParameters): Result<Mesh, BabylonJSError> {
+    try {
+      const mesh = MeshBuilder.CreateCylinder(this.name, {
+        height: params.height,
+        diameterTop: params.radius * 2,
+        diameterBottom: params.radius * 2,
+        tessellation: params.segments || 32
+      }, this.getScene());
+
+      return { success: true, data: mesh };
+    } catch (error) {
+      return {
+        success: false,
+        error: new BabylonJSError(`Cylinder mesh generation failed: ${error.message}`)
+      };
+    }
+  }
+
+  private generatePolyhedronMesh(params: BabylonJSPolyhedronParameters): Result<Mesh, BabylonJSError> {
+    try {
+      const positions: number[] = [];
+      const indices: number[] = [];
+
+      // Convert Vector3 points to flat array
+      for (const point of params.points) {
+        positions.push(point.x, point.y, point.z);
+      }
+
+      // Convert face indices with proper triangulation
+      for (const face of params.faces) {
+        if (face.length === 3) {
+          indices.push(face[0], face[1], face[2]);
+        } else if (face.length === 4) {
+          // Triangulate quad
+          indices.push(face[0], face[1], face[2]);
+          indices.push(face[0], face[2], face[3]);
+        } else {
+          // Triangulate polygon using fan triangulation
+          for (let i = 1; i < face.length - 1; i++) {
+            indices.push(face[0], face[i], face[i + 1]);
+          }
+        }
+      }
+
+      const mesh = new Mesh(`polyhedron_${Date.now()}`, this.scene);
+      const vertexData = new VertexData();
+      
+      vertexData.positions = positions;
+      vertexData.indices = indices;
+      
+      // Calculate normals
+      VertexData.ComputeNormals(positions, indices, vertexData.normals);
+      
+      vertexData.applyToMesh(mesh);
+
+      return { success: true, data: mesh };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new BabylonJSError(`Polyhedron generation failed: ${error.message}`) 
+      };
+    }
+  }
+}
+
+// transform-babylon-node.ts - Handles all OpenscadAST transform types
+export class TransformBabylonNode extends OpenSCADBabylonNode {
+  public readonly transformType: BabylonJSTransformType;
+  public readonly parameters: BabylonJSTransformParameters;
+  public readonly children: OpenSCADBabylonNode[];
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    transformType: BabylonJSTransformType,
+    parameters: BabylonJSTransformParameters,
+    children: OpenSCADBabylonNode[],
+    originalOpenscadNode: OpenscadASTNode,
+    sourceLocation?: SourceLocation
+  ) {
+    super(name, scene, BabylonJSNodeType.Transform, originalOpenscadNode, sourceLocation);
+    this.transformType = transformType;
+    this.parameters = parameters;
+    this.children = children;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, BabylonJSError>> {
+    try {
+      // Generate child meshes first
+      const childMeshResults = await Promise.all(
+        this.children.map(child => child.generateMesh())
+      );
+
+      // Check for child generation errors
+      const failedChild = childMeshResults.find(result => !result.success);
+      if (failedChild) {
+        return { success: false, error: failedChild.error as BabylonJSError };
+      }
+
+      const childMeshes = childMeshResults.map(result => result.data) as Mesh[];
+
+      // Apply transformation based on type
+      switch (this.transformType) {
+        case BabylonJSTransformType.Translate:
+          return this.applyTranslation(childMeshes, this.parameters as BabylonJSTranslateParameters);
+        case BabylonJSTransformType.Rotate:
+          return this.applyRotation(childMeshes, this.parameters as BabylonJSRotateParameters);
+        case BabylonJSTransformType.Scale:
+          return this.applyScale(childMeshes, this.parameters as BabylonJSScaleParameters);
+        // Handle all transform types from OpenscadAST...
+        
+        default:
+          return { 
+            success: false, 
+            error: new BabylonJSError(`Unsupported transform: ${this.transformType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new BabylonJSError(`Transform application failed: ${error.message}`) 
+      };
+    }
+  }
+
+  private applyTranslation(
+    meshes: Mesh[], 
+    params: BabylonJSTranslateParameters
+  ): Result<Mesh, BabylonJSError> {
+    try {
+      // Create parent node for translated children
+      const parentNode = new TransformNode(this.name, this.getScene());
+      parentNode.position = params.translation;
+
+      // Parent all child meshes to the transform node
+      for (const mesh of meshes) {
+        mesh.setParent(parentNode);
+      }
+
+      // Return the first mesh as the primary mesh (BabylonJS pattern)
+      const primaryMesh = meshes[0];
+      return { success: true, data: primaryMesh };
+    } catch (error) {
+      return {
+        success: false,
+        error: new BabylonJSError(`Translation application failed: ${error.message}`)
+      };
+    }
+  }
+}
+
+// csg-babylon-node.ts - Handles all OpenscadAST CSG operations
+export class CSGBabylonNode extends OpenSCADBabylonNode {
+  public readonly csgType: BabylonJSCSGType;
+  public readonly children: OpenSCADBabylonNode[];
+
+  constructor(
+    name: string,
+    scene: Scene | null,
+    csgType: BabylonJSCSGType,
+    children: OpenSCADNode[],
+    originalOpenscadNode: OpenscadASTNode,
+    sourceLocation?: SourceLocation
+  ) {
+    super(name, scene, BabylonJSNodeType.CSG, originalOpenscadNode, sourceLocation);
+    this.csgType = csgType;
+    this.children = children;
+  }
+
+  async generateMesh(): Promise<Result<Mesh, BabylonJSError>> {
+    try {
+      // Generate child meshes
+      const childMeshResults = await Promise.all(
+        this.children.map(child => child.generateMesh())
+      );
+
+      const failedChild = childMeshResults.find(result => !result.success);
+      if (failedChild) {
+        return { success: false, error: failedChild.error as BabylonJSError };
+      }
+
+      const childMeshes = childMeshResults.map(result => result.data) as Mesh[];
+
+      // Perform CSG operation
+      switch (this.csgType) {
+        case BabylonJSCSGType.Union:
+          return this.performUnion(childMeshes);
+        case BabylonJSCSGType.Difference:
+          return this.performDifference(childMeshes);
+        case BabylonJSCSGType.Intersection:
+          return this.performIntersection(childMeshes);
+        
+        default:
+          return { 
+            success: false, 
+            error: new BabylonJSError(`Unsupported CSG operation: ${this.csgType}`) 
+          };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: new BabylonJSError(`CSG operation failed: ${error.message}`) 
+      };
+    }
+  }
+
+  private performUnion(meshes: Mesh[]): Result<Mesh, BabylonJSError> {
+    try {
+      if (meshes.length < 2) {
+        return { success: true, data: meshes[0] };
+      }
+
+      let resultCSG = CSG.FromMesh(meshes[0]);
+      
+      for (let i = 1; i < meshes.length; i++) {
+        const meshCSG = CSG.FromMesh(meshes[i]);
+        resultCSG = resultCSG.union(meshCSG);
+        meshCSG.dispose();
+      }
+
+      const resultMesh = resultCSG.toMesh(this.name, null, this.getScene());
+      resultCSG.dispose();
+
+      return { success: true, data: resultMesh };
+    } catch (error) {
+      return {
+        success: false,
+        error: new BabylonJSError(`Union operation failed: ${error.message}`)
+      };
+    }
+  }
+}
+```
+
+### Phase 3: Integration Testing & Validation (Week 3)
+
+#### Task 3.1: Bridge Pattern Validation Testing
+
+**Objective**: Comprehensive testing to ensure bridge converter maintains full fidelity
+
+**Test Strategy - Complete Coverage**:
+
+1. **Bridge Converter Tests**:
+```typescript
+// ast-bridge-converter.test.ts
+describe('ASTBridgeConverter', () => {
+  let converter: ASTBridgeConverter;
+  let scene: Scene;
+
+  beforeEach(() => {
+    scene = new Scene(new NullEngine());
+    converter = new ASTBridgeConverter(scene);
+  });
+
+  describe('Primitive Conversion', () => {
+    it('should convert OpenscadAST CubeNode to BabylonJS PrimitiveBabylonNode', async () => {
+      const openscadCube: CubeNode = {
+        type: 'cube',
+        size: [2, 3, 4],
+        center: true,
+        location: {
+          start: { line: 0, column: 0, offset: 0 },
+          end: { line: 0, column: 12, offset: 12 }
+        }
+      };
+
+      const result = await converter.convertAST([openscadCube]);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      
+      const babylonNode = result.data[0] as PrimitiveBabylonNode;
+      expect(babylonNode).toBeInstanceOf(PrimitiveBabylonNode);
+      expect(babylonNode.primitiveType).toBe(BabylonJSPrimitiveType.Cube);
+      expect(babylonNode.parameters.size).toEqual(new Vector3(2, 3, 4));
+      expect(babylonNode.parameters.center).toBe(true);
+      expect(babylonNode.getOriginalOpenscadNode()).toBe(openscadCube);
+    });
+
+    it('should convert all OpenscadAST primitive types', async () => {
+      const primitives: OpenscadASTNode[] = [
+        { type: 'cube', size: 10 },
+        { type: 'sphere', radius: 5 },
+        { type: 'cylinder', h: 10, r: 3 },
+        { type: 'polyhedron', points: [[0,0,0], [1,0,0], [0,1,0]], faces: [[0,1,2]] }
+      ];
+
+      const result = await converter.convertAST(primitives);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(4);
+      
+      // Verify each conversion maintains type integrity
+      expect(result.data[0]).toBeInstanceOf(PrimitiveBabylonNode);
+      expect(result.data[1]).toBeInstanceOf(PrimitiveBabylonNode);
+      expect(result.data[2]).toBeInstanceOf(PrimitiveBabylonNode);
+      expect(result.data[3]).toBeInstanceOf(PrimitiveBabylonNode);
+    });
+  });
+
+  describe('Transform Conversion', () => {
+    it('should convert OpenscadAST TranslateNode with children', async () => {
+      const openscadTranslate: TranslateNode = {
+        type: 'translate',
+        v: [1, 2, 3],
+        children: [
+          { type: 'cube', size: 10 }
+        ]
+      };
+
+      const result = await converter.convertAST([openscadTranslate]);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      
+      const babylonNode = result.data[0] as TransformBabylonNode;
+      expect(babylonNode).toBeInstanceOf(TransformBabylonNode);
+      expect(babylonNode.transformType).toBe(BabylonJSTransformType.Translate);
+      expect(babylonNode.children).toHaveLength(1);
+      expect(babylonNode.children[0]).toBeInstanceOf(PrimitiveBabylonNode);
+    });
+  });
+
+  describe('CSG Conversion', () => {
+    it('should convert OpenscadAST UnionNode with multiple children', async () => {
+      const openscadUnion: UnionNode = {
+        type: 'union',
+        children: [
+          { type: 'cube', size: 10 },
+          { type: 'sphere', radius: 5 }
+        ]
+      };
+
+      const result = await converter.convertAST([openscadUnion]);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      
+      const babylonNode = result.data[0] as CSGBabylonNode;
+      expect(babylonNode).toBeInstanceOf(CSGBabylonNode);
+      expect(babylonNode.csgType).toBe(BabylonJSCSGType.Union);
+      expect(babylonNode.children).toHaveLength(2);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should preserve error information from OpenscadAST', async () => {
+      const openscadError: ErrorNode = {
+        type: 'error',
+        errorCode: 'MISSING_PARAMETER',
+        message: 'Missing required parameter',
+        originalNodeType: 'cube'
+      };
+
+      const result = await converter.convertAST([openscadError]);
+      
+      expect(result.success).toBe(false);
+      expect(result.error.message).toContain('Missing required parameter');
+    });
+  });
+});
+```
+
+2. **Integration Tests with Existing Parser**:
+```typescript
+// end-to-end-integration.test.ts
+describe('OpenSCAD to BabylonJS End-to-End', () => {
+  let renderer: OpenSCADBabylonRenderer;
+  let scene: Scene;
+
+  beforeEach(() => {
+    scene = new Scene(new NullEngine());
+    renderer = new OpenSCADBabylonRenderer(scene);
+  });
+
+  it('should render complete OpenSCAD script to BabylonJS meshes', async () => {
+    const openscadCode = `
+      difference() {
+        cube([10, 10, 10], center = true);
+        translate([0, 0, 0])
+          sphere(r = 6);
+      }
+    `;
+
+    const result = await renderer.renderOpenSCADCode(openscadCode);
+    
+    expect(result.success).toBe(true);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toBeInstanceOf(Mesh);
+    expect(result.data[0].getTotalVertices()).toBeGreaterThan(0);
+  });
+
+  it('should preserve source location information throughout pipeline', async () => {
+    const openscadCode = 'cube(10);';
+
+    // Test that source locations are preserved through entire pipeline
+    const result = await renderer.renderOpenSCADCode(openscadCode);
+    
+    expect(result.success).toBe(true);
+    // Verify that generated mesh retains source location reference
+    // This enables editor integration and error reporting
+  });
+
+  it('should handle complex nested structures', async () => {
+    const openscadCode = `
+      for (i = [0:2]) {
+        translate([i*15, 0, 0])
+          rotate([0, 0, i*30])
+            cube([10, 5, 2]);
+      }
+    `;
+
+    const result = await renderer.renderOpenSCADCode(openscadCode);
+    
+    expect(result.success).toBe(true);
+    expect(result.data.length).toBeGreaterThan(0);
+  });
+});
+```
+
+#### Task 3.2: Performance Validation
+
+**Performance Requirements for Bridge Pattern**:
+
+1. **Conversion Performance**:
+```typescript
+// performance-validation.test.ts
+describe('Bridge Pattern Performance', () => {
+  it('should convert large AST within performance targets', async () => {
+    const startTime = performance.now();
+    
+    // Generate large OpenscadAST (1000+ nodes)
+    const largeAST = generateLargeOpenscadAST(1000);
+    
+    const converter = new ASTBridgeConverter(scene);
+    const result = await converter.convertAST(largeAST);
+    
+    const conversionTime = performance.now() - startTime;
+    
+    expect(result.success).toBe(true);
+    expect(conversionTime).toBeLessThan(100); // 100ms target for 1000 nodes
+  });
+
+  it('should not increase memory usage significantly', async () => {
+    const initialMemory = performance.memory?.usedJSHeapSize || 0;
+    
+    const converter = new ASTBridgeConverter(scene);
+    await converter.convertAST(generateLargeOpenscadAST(500));
+    
+    const finalMemory = performance.memory?.usedJSHeapSize || 0;
+    const memoryIncrease = finalMemory - initialMemory;
+    
+    // Memory increase should be reasonable (< 50MB for 500 nodes)
+    expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
+  });
+});
+```
+
+### Phase 4: Documentation & Three.js Placeholder (Week 4)
+
+#### Task 4.1: Bridge Pattern Documentation
+
+**Comprehensive Documentation Strategy**:
+
+1. **Architecture Documentation**:
+```markdown
+# OpenSCAD BabylonJS Bridge Architecture
+
+## Overview
+The bridge pattern implementation provides seamless conversion from OpenscadAST 
+(interface-based) to BabylonJS-extended AST (class-based extending BABYLON.AbstractMesh)
+while preserving the existing parser completely unchanged.
+
+## Key Benefits
+- **Zero Risk**: Existing parser untouched
+- **Full Compatibility**: OpenscadAST continues working for other features  
+- **Extensibility**: Bridge pattern allows future renderer implementations
+- **Performance**: No overhead on existing parsing pipeline
+- **Maintainability**: Clear separation of parsing vs rendering concerns
+
+## Usage Examples
+[Comprehensive examples showing integration]
+
+## Migration Guide
+[Steps for migrating from OpenscadAST to BabylonJS-extended AST]
+```
+
+#### Task 4.2: Three.js Placeholder Implementation
+
+**Three.js Future Compatibility**:
+
+```typescript
+// three-js-placeholder.ts
+export class ThreeJSRenderer {
+  // Placeholder implementation for future Three.js support
+  // Uses same bridge pattern approach with ThreeJSBridgeConverter
+  
+  constructor() {
+    throw new Error(
+      'Three.js renderer not yet implemented. ' +
+      'Use BabylonJSRenderer for current 3D rendering capabilities. ' +
+      'Three.js support planned for future release.'
+    );
+  }
+}
+
+export class ThreeJSBridgeConverter {
+  // Future implementation will follow same pattern as ASTBridgeConverter
+  // Converting OpenscadAST → Three.js-extended AST
+  
+  async convertAST(openscadNodes: OpenscadASTNode[]): Promise<Result<ThreeJSNode[], ConversionError>> {
+    throw new Error('Three.js bridge converter not yet implemented');
+  }
+}
+```
+
+## Refined Implementation Plan Summary
+
+### Bridge Pattern Benefits Analysis
+
+| Aspect | Bridge Pattern | Direct Rewrite | 
+|--------|---------------|----------------|
+| **Risk Level** | ✅ Zero - existing parser untouched | ❌ High - complete parser rewrite |
+| **Development Time** | ✅ 4 weeks - focused on bridge only | ❌ 12+ weeks - reimplement all parsing |
+| **Backward Compatibility** | ✅ Perfect - OpenscadAST still works | ❌ Breaking - all existing integrations break |
+| **Testing Coverage** | ✅ Focused - only test bridge converter | ❌ Extensive - retest entire parser |
+| **Maintenance Burden** | ✅ Low - two separate, clear concerns | ❌ High - merged parsing + rendering logic |
+| **Future Extensibility** | ✅ Excellent - bridge pattern reusable | ❌ Limited - locked into specific approach |
+
+### Success Metrics & Validation
+
+1. **Functional Requirements**:
+   - ✅ All OpenscadAST node types converted to BabylonJS-extended AST
+   - ✅ All parameter semantics preserved exactly
+   - ✅ Source location information maintained for error reporting
+   - ✅ Generated meshes match OpenSCAD behavior precisely
+
+2. **Performance Requirements**:
+   - ✅ Conversion time: < 1ms per AST node
+   - ✅ Memory overhead: < 50% increase over OpenscadAST  
+   - ✅ Mesh generation: Meet existing 16ms render target
+   - ✅ No impact on existing parser performance
+
+3. **Quality Requirements**:
+   - ✅ Bridge converter: 95% test coverage
+   - ✅ BabylonJS nodes: 95% test coverage  
+   - ✅ Integration tests: All major OpenSCAD constructs
+   - ✅ TypeScript strict mode compliance
+   - ✅ Result<T,E> error handling throughout
+
+The bridge pattern approach provides the optimal balance of low risk, high compatibility, and excellent extensibility while meeting all PRD requirements for BabylonJS-extended AST architecture.
 
 ---
 
-## 3. Step-by-Step Implementation Plan
+## Implementation Task Checklist
 
-This plan is broken down into manageable tasks. Each step builds upon the last.
+Based on the current codebase analysis, here are the structured tasks to complete the OpenSCAD-to-Babylon.js refactory architecture:
 
-### Phase 1: Define the Babylon.js-Extended AST
+### Phase 1: Core AST Bridge Infrastructure
+- [x] **Task 1.1: Basic AST Types and Parser Integration**
+  - [x] OpenSCAD AST types defined in `src/features/openscad-parser/ast/ast-types.ts`
+  - [x] Base parser infrastructure with 20+ specialized visitors
+  - [x] Result<T,E> error handling patterns throughout parser
+  - [x] Comprehensive test coverage for parser
+- [ ] **Task 1.2: Bridge Converter Service Enhancement**
+  - [x] Basic AST-to-mesh converter service exists in `ast-to-csg-converter/services/ast-to-mesh-converter/`
+  - [ ] Complete mapping for all OpenSCAD primitive types (cube, sphere, cylinder, polyhedron)
+  - [ ] Complete mapping for all transformation types (translate, rotate, scale, mirror, etc.)
+  - [ ] Complete mapping for all CSG operation types (union, difference, intersection)
+  - [ ] Support for control flow nodes (for, if, let, intersection_for)
+  - [ ] Support for extrusion operations (linear_extrude, rotate_extrude)
+  - [ ] Support for modifier operations (*, !, #, %)
+- [ ] **Task 1.3: Generic Mesh Data Types**
+  - [x] Basic conversion types exist in `ast-to-csg-converter/types/`
+  - [ ] Complete GenericMeshData interface for all OpenSCAD constructs
+  - [ ] Material configuration types for color() and surface properties
+  - [ ] Metadata preservation for debugging and editor integration
 
-**Goal:** Create the new set of AST node types that are tailored for Babylon.js.
+### Phase 2: Babylon.js Mesh Generation
+- [ ] **Task 2.1: Primitive Mesh Generators**
+  - [x] Basic primitive shape generator exists in `babylon-renderer/services/primitive-shape-generator/`
+  - [ ] Cube mesh generation with OpenSCAD-compatible `center` parameter behavior
+  - [ ] Sphere mesh generation with radius/diameter and fragment parameters ($fn, $fa, $fs)
+  - [ ] Cylinder mesh generation with height, radius variants (r1/r2, d1/d2)
+  - [ ] Polyhedron mesh generation from points and faces arrays
+  - [ ] 2D primitive support (circle, square, polygon) as extruded meshes
+  - [ ] Text mesh generation with font and alignment parameters
+- [ ] **Task 2.2: Transformation Mesh Operations**
+  - [ ] Translation operations using Babylon.js TransformNode
+  - [ ] Rotation operations with OpenSCAD angle/axis semantics
+  - [ ] Scale operations with uniform and non-uniform scaling
+  - [ ] Mirror operations using matrix transformations
+  - [ ] Matrix transformation support (multmatrix)
+  - [ ] Color application using Babylon.js materials
+  - [ ] Hull and Minkowski sum operations
+- [ ] **Task 2.3: CSG Operations Integration**
+  - [x] Basic CSG service exists in `babylon-renderer/services/babylon-csg2-service/`
+  - [ ] Union operations for combining multiple meshes
+  - [ ] Difference operations for subtractive modeling
+  - [ ] Intersection operations for overlapping geometry
+  - [ ] Performance optimization for complex CSG trees
+  - [ ] Error handling for degenerate CSG cases
 
-**Location:** `src/features/babylon-renderer/types/`
+### Phase 3: Advanced Features and Control Flow
+- [ ] **Task 3.1: Control Flow Implementation**
+  - [ ] For loop expansion with range and list iterations
+  - [ ] Conditional rendering with if statements
+  - [ ] Variable binding with let statements
+  - [ ] Intersection_for operation for complex intersections
+  - [ ] Scope management for nested variable declarations
+- [ ] **Task 3.2: Extrusion Operations**
+  - [ ] Linear extrude from 2D profiles with height, twist, scale parameters
+  - [ ] Rotate extrude (lathe) operations for rotational symmetry
+  - [ ] Surface normal calculation for proper extrusion
+  - [ ] UV mapping preservation through extrusion
+- [ ] **Task 3.3: Module System Support**
+  - [ ] User-defined module instantiation
+  - [ ] Parameter passing and default values
+  - [ ] Children() directive support
+  - [ ] Module scoping and variable inheritance
+- [ ] **Task 3.4: Import/Include Operations**
+  - [ ] STL file import using Babylon.js loaders
+  - [ ] 3MF file import support
+  - [ ] SVG import for 2D profiles
+  - [ ] Include/use directive for modular OpenSCAD files
 
-**Key Tasks:**
+### Phase 4: Scene Integration and UI
+- [ ] **Task 4.1: Scene Management**
+  - [x] Basic Babylon.js scene service exists in `babylon-renderer/services/babylon-scene-service/`
+  - [x] Engine service for Babylon.js initialization
+  - [ ] Camera controls optimized for CAD viewing (orbit, pan, zoom)
+  - [ ] Lighting setup for technical visualization
+  - [ ] Grid and axis display for spatial reference
+- [ ] **Task 4.2: Material and Rendering**
+  - [x] Basic material service exists in `babylon-renderer/services/babylon-material-service/`
+  - [ ] OpenSCAD color() directive to Babylon.js material conversion
+  - [ ] Modifier visualization (debug=#, background=%, etc.)
+  - [ ] Wireframe and solid rendering modes
+  - [ ] Shadow and ambient occlusion for depth perception
+- [ ] **Task 4.3: Performance and Optimization**
+  - [ ] Level-of-detail (LOD) for complex scenes
+  - [ ] Instancing for repeated geometry
+  - [ ] Frustum culling and occlusion
+  - [ ] Memory management for large models
+- [ ] **Task 4.4: React Component Integration**
+  - [x] Basic Babylon canvas component exists in `babylon-renderer/babylon-canvas/`
+  - [ ] Error boundary handling for rendering failures
+  - [ ] Progress indication for long operations
+  - [ ] Interactive selection and highlighting
+  - [ ] Export functionality (STL, 3MF, GLTF)
 
-1.  **Create the Base Class (`OpenSCADNode`):**
-    *   This is the foundation for all other nodes in our new AST.
-    *   It **must** extend `BABYLON.AbstractMesh`. This is the magic that lets Babylon.js understand our nodes directly.
-    *   **File:** `src/features/babylon-renderer/types/openscad-node.types.ts`
-    *   **Code:**
-        ```typescript
-        import { AbstractMesh, Scene } from '@babylonjs/core';
-        import { Result } from 'neverthrow';
+### Phase 5: Testing and Documentation
+- [ ] **Task 5.1: Comprehensive Testing**
+  - [x] Basic unit tests exist for core services
+  - [ ] Integration tests for complete OpenSCAD→Babylon.js pipeline
+  - [ ] Performance benchmarks for complex models
+  - [ ] Visual regression tests for rendering accuracy
+  - [ ] Error handling tests for malformed input
+- [ ] **Task 5.2: Documentation and Examples**
+  - [ ] API documentation for all public interfaces
+  - [ ] Architecture decision records (ADRs)
+  - [ ] Migration guide from current implementation
+  - [ ] Example gallery showcasing all OpenSCAD features
+  - [ ] Performance optimization guide
+- [ ] **Task 5.3: Developer Experience**
+  - [ ] TypeScript strict mode compliance
+  - [ ] ESLint and Prettier configuration
+  - [ ] VS Code debugging configuration
+  - [ ] Hot reload for development workflow
+  - [ ] Error message improvements with source location
 
-        // An enum to identify each type of node
-        export enum OpenSCADNodeType {
-          Cube = 'cube',
-          Sphere = 'sphere',
-          // ... all other OpenSCAD types
-        }
+### Phase 6: Production Readiness
+- [ ] **Task 6.1: Error Handling and Resilience**
+  - [ ] Graceful degradation for unsupported features
+  - [ ] User-friendly error messages with suggestions
+  - [ ] Rollback mechanisms for failed operations
+  - [ ] Telemetry for production monitoring
+- [ ] **Task 6.2: Accessibility and Usability**
+  - [ ] Keyboard navigation for 3D viewport
+  - [ ] Screen reader support for key features
+  - [ ] High contrast mode support
+  - [ ] Mobile/touch device optimization
+- [ ] **Task 6.3: Extensibility Framework**
+  - [ ] Plugin system for custom OpenSCAD functions
+  - [ ] Renderer abstraction for future Three.js support
+  - [ ] Custom primitive registration system
+  - [ ] Event system for editor integration
 
-        // The base class for all our nodes
-        export abstract class OpenSCADNode extends AbstractMesh {
-          public readonly nodeType: OpenSCADNodeType;
+## Success Criteria
 
-          constructor(name: string, scene: Scene | null, nodeType: OpenSCADNodeType) {
-            super(name, scene);
-            this.nodeType = nodeType;
-          }
+Each phase should meet these criteria before proceeding:
 
-          // Every node must know how to generate its own mesh
-          abstract generateMesh(): Promise<Result<Mesh, Error>>;
-        }
-        ```
+1. **Functional**: All features work correctly with edge cases handled
+2. **Performance**: Meets benchmarks for typical OpenSCAD models (<100ms for simple primitives, <5s for complex CSG)
+3. **Quality**: >95% test coverage, no TypeScript errors, passes all linting
+4. **Documentation**: Clear API docs and examples for new features
+5. **Integration**: Seamless integration with existing codebase without breaking changes
 
-2.  **Implement Concrete Node Classes:**
-    *   Create a class for each OpenSCAD operation (e.g., `CubeNode`, `SphereNode`, `TranslateNode`, `UnionNode`).
-    *   Each class will extend `OpenSCADNode`.
-    *   The `generateMesh` method will contain the specific Babylon.js code to create that shape or perform that operation.
-    *   **Example (`CubeNode`):**
-        ```typescript
-        import { MeshBuilder, Vector3 } from '@babylonjs/core';
-        import { OpenSCADNode, OpenSCADNodeType } from './openscad-node.types';
+## Current Status Assessment
 
-        export class CubeNode extends OpenSCADNode {
-          constructor(
-            name: string,
-            scene: Scene | null,
-            private parameters: { size: Vector3, center: boolean }
-          ) {
-            super(name, scene, OpenSCADNodeType.Cube);
-          }
+**✅ Completed:**
+- OpenSCAD parser with complete AST support
+- Basic AST-to-mesh conversion framework
+- Babylon.js rendering infrastructure
+- Core services architecture
 
-          async generateMesh(): Promise<Result<Mesh, Error>> {
-            try {
-              const mesh = MeshBuilder.CreateBox(this.name, {
-                width: this.parameters.size.x,
-                height: this.parameters.size.y,
-                depth: this.parameters.size.z
-              }, this.getScene());
+**🚧 In Progress:**
+- Primitive mesh generation
+- CSG operations integration
+- Scene management
 
-              // OpenSCAD's `center=false` behavior is different from Babylon's default
-              if (!this.parameters.center) {
-                mesh.position.addInPlace(this.parameters.size.scale(0.5));
-              }
-              return ok(mesh);
-            } catch (e) {
-              return err(new Error('Failed to create cube mesh'));
-            }
-          }
-        }
-        ```
-
-### Phase 2: Build the Bridge (AST Converter)
-
-**Goal:** Create the service that translates from the `OpenscadAST` to our new `Babylon.js-Extended AST`.
-
-**Location:** `src/features/ast-to-csg-converter/services/`
-
-**Key Tasks:**
-
-1.  **Create the `AstToCsgConverterService`:**
-    *   This service will have one main method, `convert(node: GenericAstNode)`.
-    *   It will use a `switch` statement on the `node.type` to determine which kind of generic node it is.
-    *   For each case, it will call a dedicated private method (e.g., `convertCube`, `convertTranslate`) to handle the specific translation.
-
-2.  **Implement Conversion Logic:**
-    *   Each private method will extract the parameters from the generic AST node.
-    *   It will then instantiate the corresponding `Babylon.js-Extended AST` node class with those parameters.
-    *   For nodes with children (like `union` or `translate`), it will recursively call `convert` on its children.
-    *   **Example:**
-        ```typescript
-        // In AstToCsgConverterService.ts
-
-        import { CubeNode as GenericCubeNode } from 'src/features/openscad-parser/ast/ast-types';
-        import { CubeNode as BabylonCubeNode } from 'src/features/babylon-renderer/types/cube-node.types';
-
-        export class AstToCsgConverterService {
-          public convert(node: GenericAstNode): BabylonNode {
-            switch (node.type) {
-              case 'cube':
-                return this.convertCube(node as GenericCubeNode);
-              // ... other cases
-            }
-          }
-
-          private convertCube(genericNode: GenericCubeNode): BabylonCubeNode {
-            // 1. Extract and validate parameters
-            const size = new Vector3(
-              genericNode.size[0],
-              genericNode.size[1],
-              genericNode.size[2]
-            );
-            const center = genericNode.center || false;
-
-            // 2. Create the new Babylon.js-ready node
-            return new BabylonCubeNode('cube', this.scene, { size, center });
-          }
-        }
-        ```
-
-### Phase 3: The Rendering Pipeline
-
-**Goal:** Tie everything together to render the final 3D model.
-
-**Location:** `src/features/babylon-renderer/services/`
-
-**Key Tasks:**
-
-1.  **Create a `MeshGenerationService`:**
-    *   This service orchestrates the entire process.
-    *   It takes the raw OpenSCAD code as input.
-    *   **Step 1:** It calls the `openscad-parser` to get the generic `OpenscadAST`.
-    *   **Step 2:** It passes the generic AST to our `AstToCsgConverterService` to get the `Babylon.js-Extended AST`.
-    *   **Step 3:** It calls the `generateMesh()` method on the root node of the `Babylon.js-Extended AST`. This triggers the entire mesh generation process down the tree.
-    *   The final result is a `BABYLON.Mesh` that can be added to the scene.
-
----
-
-## 4. Quality and Testing
-
-To ensure our implementation is robust:
-
-*   **Unit Tests are Required:** Every new class or service must have a corresponding `.test.ts` file.
-*   **Test Coverage:** Aim for over 95% test coverage for all new code.
-*   **Error Handling:** Use the `neverthrow` library for `Result<T, E>` style error handling to avoid runtime exceptions.
-*   **Strict TypeScript:** All code must comply with the strict TypeScript settings defined in `tsconfig.json`.
-
-By following this updated guide, any developer should be able to understand the architecture and contribute effectively to the project.
+**📋 Pending:**
+- Control flow implementation
+- Advanced features (modules, extrusions)
+- Comprehensive testing
+- Production optimization
