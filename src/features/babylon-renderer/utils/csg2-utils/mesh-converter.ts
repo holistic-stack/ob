@@ -5,7 +5,7 @@
  * Following functional programming patterns with Result<T,E> error handling.
  */
 
-import { Mesh, type Scene, VertexData, type FloatArray } from '@babylonjs/core';
+import { type FloatArray, Mesh, type Scene, VertexData } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
@@ -68,11 +68,17 @@ export const convertGenericMeshToBabylon = (
     () => {
       // Validate input
       if (!meshData || !meshData.geometry) {
-        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Invalid mesh data provided');
+        throw createConversionError(
+          MeshConversionErrorCode.INVALID_MESH_DATA,
+          'Invalid mesh data provided'
+        );
       }
 
       if (!scene) {
-        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Scene is required for mesh creation');
+        throw createConversionError(
+          MeshConversionErrorCode.INVALID_MESH_DATA,
+          'Scene is required for mesh creation'
+        );
       }
 
       // Create new mesh
@@ -90,7 +96,10 @@ export const convertGenericMeshToBabylon = (
           ? new Float32Array(geometry.positions)
           : geometry.positions;
       } else {
-        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh geometry must have positions');
+        throw createConversionError(
+          MeshConversionErrorCode.INVALID_MESH_DATA,
+          'Mesh geometry must have positions'
+        );
       }
 
       // Set indices (required for CSG operations)
@@ -99,7 +108,10 @@ export const convertGenericMeshToBabylon = (
           ? new Uint32Array(geometry.indices)
           : geometry.indices;
       } else {
-        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh geometry must have indices');
+        throw createConversionError(
+          MeshConversionErrorCode.INVALID_MESH_DATA,
+          'Mesh geometry must have indices'
+        );
       }
 
       // Set normals if available or generate them
@@ -163,7 +175,11 @@ export const convertGenericMeshToBabylon = (
       logger.debug('[DEBUG][CSG2MeshConverter] Generic mesh converted successfully');
       return mesh;
     },
-    (error) => createConversionError(MeshConversionErrorCode.CONVERSION_FAILED, `Failed to convert mesh: ${error}`)
+    (error) =>
+      createConversionError(
+        MeshConversionErrorCode.CONVERSION_FAILED,
+        `Failed to convert mesh: ${error}`
+      )
   );
 };
 
@@ -190,7 +206,10 @@ export const convertBabylonMeshToGeneric = (
       const uvs = mesh.getVerticesData('uv');
 
       if (!positions || !indices) {
-        throw createConversionError(MeshConversionErrorCode.INVALID_MESH_DATA, 'Mesh must have positions and indices');
+        throw createConversionError(
+          MeshConversionErrorCode.INVALID_MESH_DATA,
+          'Mesh must have positions and indices'
+        );
       }
 
       // Create generic mesh data
@@ -227,7 +246,11 @@ export const convertBabylonMeshToGeneric = (
       logger.debug('[DEBUG][CSG2MeshConverter] BabylonJS mesh converted successfully');
       return genericMeshData;
     },
-    (error) => createConversionError(MeshConversionErrorCode.CONVERSION_FAILED, `Failed to convert mesh: ${error}`)
+    (error) =>
+      createConversionError(
+        MeshConversionErrorCode.CONVERSION_FAILED,
+        `Failed to convert mesh: ${error}`
+      )
   );
 };
 
@@ -327,13 +350,20 @@ export const optimizeMeshForCSG = (
       if (options.validateManifold) {
         const isValid = validateManifoldGeometry(mesh);
         if (!isValid) {
-          throw createConversionError(MeshConversionErrorCode.VALIDATION_FAILED, 'Mesh is not valid');
+          throw createConversionError(
+            MeshConversionErrorCode.VALIDATION_FAILED,
+            'Mesh is not valid'
+          );
         }
       }
 
       logger.debug('[DEBUG][CSG2MeshConverter] Mesh optimization completed');
       return mesh;
     },
-    (error) => createConversionError(MeshConversionErrorCode.OPTIMIZATION_FAILED, `Failed to optimize mesh: ${error}`)
+    (error) =>
+      createConversionError(
+        MeshConversionErrorCode.OPTIMIZATION_FAILED,
+        `Failed to optimize mesh: ${error}`
+      )
   );
 };

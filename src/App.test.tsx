@@ -9,8 +9,36 @@ import { render, screen } from '@testing-library/react';
 // TODO: Replace with BabylonJS types
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { InspectorTab } from './features/babylon-renderer/services/babylon-inspector-service/babylon-inspector-service';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { appStoreInstance, DEFAULT_CAMERA } from './features/store/app-store';
+
+// Mock the store-connected components to avoid complex rendering
+vi.mock('./features/code-editor/components/store-connected-editor/store-connected-editor', () => ({
+  StoreConnectedEditor: () => <div data-testid="store-connected-editor">Editor</div>,
+}));
+
+vi.mock(
+  './features/babylon-renderer/components/store-connected-renderer/store-connected-renderer',
+  () => ({
+    StoreConnectedRenderer: (props: { 'data-testid'?: string }) => (
+      <div data-testid={props['data-testid'] || 'store-connected-renderer'}>Renderer</div>
+    ),
+  })
+);
+
+// Mock BabylonJS components to avoid canvas context issues
+vi.mock('./features/babylon-renderer/components/babylon-scene/babylon-scene', () => ({
+  BabylonScene: () => <div data-testid="babylon-scene">BabylonScene</div>,
+}));
+
+vi.mock('./features/babylon-renderer/hooks/use-babylon-engine/use-babylon-engine', () => ({
+  useBabylonEngine: () => ({
+    engine: null,
+    scene: null,
+    canvas: null,
+  }),
+}));
 
 describe('App', () => {
   beforeEach(() => {
@@ -58,7 +86,7 @@ describe('App', () => {
         inspector: {
           isVisible: false,
           isEmbedded: false,
-          currentTab: 'scene' as any,
+          currentTab: InspectorTab.SCENE,
           scene: null,
           lastUpdated: new Date(),
         },

@@ -382,7 +382,7 @@ describe('BaseASTVisitor', () => {
         ): ast.ASTNode | null {
           return null;
         }
-      })('', undefined, new MockErrorHandler());
+      })('', new MockErrorHandler(), new Map());
 
       // Create a mock result for the first statement
       const mockResult: ast.CubeNode = {

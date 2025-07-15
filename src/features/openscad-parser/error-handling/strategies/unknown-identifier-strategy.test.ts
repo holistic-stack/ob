@@ -87,15 +87,15 @@ describe('UnknownIdentifierStrategy', () => {
       // @ts-expect-error - Accessing private method for testing
       const suggestions = strategy.findSimilarIdentifiers('lenght');
       expect(suggestions).toHaveLength(2);
-      expect(suggestions[0].name).toBe('height'); // 'height' comes before 'length' alphabetically with same distance
-      expect(suggestions[1].name).toBe('length');
+      expect(suggestions[0]?.name).toBe('height'); // 'height' comes before 'length' alphabetically with same distance
+      expect(suggestions[1]?.name).toBe('length');
     });
 
     it('should find similar function names', () => {
       // @ts-expect-error - Accessing private method for testing
       const suggestions = strategy.findSimilarIdentifiers('rendr');
       expect(suggestions).toHaveLength(1); // Only 'render' is within edit distance 2
-      expect(suggestions[0].name).toBe('render');
+      expect(suggestions[0]?.name).toBe('render');
     });
 
     it('should respect max suggestions limit', () => {

@@ -145,7 +145,7 @@ describe('CSG2 Mesh Converter', () => {
     it('should handle mesh data without positions', () => {
       const invalidMeshData = {
         ...mockGenericMeshData,
-        geometry: { ...mockGenericMeshData.geometry, positions: null },
+        geometry: { ...(mockGenericMeshData.geometry as any), positions: null },
       };
       const result = convertGenericMeshToBabylon(invalidMeshData as any, mockScene);
 
@@ -159,7 +159,7 @@ describe('CSG2 Mesh Converter', () => {
     it('should handle mesh data without indices', () => {
       const invalidMeshData = {
         ...mockGenericMeshData,
-        geometry: { ...mockGenericMeshData.geometry, indices: null },
+        geometry: { ...(mockGenericMeshData.geometry as any), indices: null },
       };
       const result = convertGenericMeshToBabylon(invalidMeshData as any, mockScene);
 

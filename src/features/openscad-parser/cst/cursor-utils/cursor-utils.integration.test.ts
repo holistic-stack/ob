@@ -84,6 +84,7 @@ describe('Cursor Utils Integration', () => {
       expect(tree).not.toBeNull();
 
       const cursor = tree?.walk();
+      if (!cursor) throw new Error('No cursor available');
       cursor.gotoFirstChild();
 
       // Verify source file node

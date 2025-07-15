@@ -32,9 +32,9 @@ describe('Error Handling Integration', () => {
 
       const errors = errorHandler.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].message).toBe('Missing semicolon');
-      expect(errors[0].code).toBe(ErrorCode.SYNTAX_ERROR);
-      expect(errors[0].severity).toBe(Severity.ERROR);
+      expect(errors[0]?.message).toBe('Missing semicolon');
+      expect(errors[0]?.code).toBe(ErrorCode.SYNTAX_ERROR);
+      expect(errors[0]?.severity).toBe(Severity.ERROR);
     });
 
     it('should create and report type errors', () => {
@@ -49,8 +49,8 @@ describe('Error Handling Integration', () => {
 
       const errors = errorHandler.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].message).toBe('Type mismatch');
-      expect(errors[0].code).toBe(ErrorCode.TYPE_ERROR);
+      expect(errors[0]?.message).toBe('Type mismatch');
+      expect(errors[0]?.code).toBe(ErrorCode.TYPE_ERROR);
     });
 
     it('should filter errors by severity', () => {
@@ -79,7 +79,7 @@ describe('Error Handling Integration', () => {
 
       const criticalErrors = errorHandler.getErrorsBySeverity(Severity.ERROR);
       expect(criticalErrors).toHaveLength(1);
-      expect(criticalErrors[0].message).toBe('Error message');
+      expect(criticalErrors[0]?.message).toBe('Error message');
     });
 
     it('should clear errors', () => {

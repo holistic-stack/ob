@@ -10,12 +10,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   InspectorConfig,
+  InspectorError,
   InspectorHideResult,
   InspectorShowResult,
   InspectorState,
-  InspectorSwitchTabResult,
+  InspectorTabSwitchResult,
 } from '../../services/babylon-inspector-service';
-import { BabylonInspectorService } from '../../services/babylon-inspector-service';
+import {
+  BabylonInspectorService,
+  InspectorErrorCode,
+  InspectorTab,
+} from '../../services/babylon-inspector-service';
 
 const logger = createLogger('useBabylonInspector');
 
@@ -37,9 +42,12 @@ export interface InspectorOptions {
 export interface UseBabylonInspectorReturn {
   readonly inspectorService: BabylonInspectorService | null;
   readonly inspectorState: InspectorState;
-  readonly showInspector: (scene?: Scene, options?: InspectorOptions) => InspectorShowResult;
+  readonly showInspector: (
+    scene?: Scene,
+    options?: InspectorOptions
+  ) => Promise<InspectorShowResult>;
   readonly hideInspector: () => InspectorHideResult;
-  readonly switchTab: (tabName: string) => InspectorSwitchTabResult;
+  readonly switchTab: (tabName: InspectorTab) => Promise<InspectorTabSwitchResult>;
   readonly isInspectorAvailable: boolean;
 }
 
@@ -47,18 +55,14 @@ export interface UseBabylonInspectorReturn {
  * Default inspector configuration
  */
 const DEFAULT_INSPECTOR_CONFIG: InspectorConfig = {
+  enableInspector: true,
   enablePopup: false,
-  enableOverlay: true,
-  enableEmbedMode: false,
-  enableGlobalInspector: true,
-  enableSceneExplorer: true,
-  enablePropertyInspector: true,
-  enableDebugLayer: true,
-  enableStatistics: true,
-  enableConsole: true,
-  initialTab: 'scene',
-  theme: 'dark',
-  language: 'en',
+  enableEmbedded: false,
+  initialTab: InspectorTab.SCENE,
+  showExplorer: true,
+  showInspector: true,
+  showActions: true,
+  showStats: true,
 } as const;
 
 /**
@@ -66,11 +70,9 @@ const DEFAULT_INSPECTOR_CONFIG: InspectorConfig = {
  */
 const INITIAL_INSPECTOR_STATE: InspectorState = {
   isVisible: false,
-  isInitialized: false,
-  currentTab: 'scene',
-  availableTabs: ['scene', 'debug', 'statistics', 'console'],
+  isEmbedded: false,
+  currentTab: InspectorTab.SCENE,
   scene: null,
-  error: null,
   lastUpdated: new Date(),
 } as const;
 
@@ -105,7 +107,7 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       return (
         typeof window !== 'undefined' &&
         'BABYLON' in window &&
-        'Inspector' in (window as any).BABYLON
+        'Inspector' in (window as { BABYLON: { Inspector?: unknown } }).BABYLON
       );
     } catch {
       return false;
@@ -116,15 +118,15 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
    * Show BabylonJS inspector
    */
   const showInspector = useCallback(
-    (scene?: Scene, options: InspectorOptions = {}): InspectorShowResult => {
+    async (scene?: Scene, options: InspectorOptions = {}): Promise<InspectorShowResult> => {
       logger.debug('[DEBUG][useBabylonInspector] Showing inspector...');
 
       const inspectorService = getInspectorService();
       const targetScene = scene || currentSceneRef.current;
 
       if (!targetScene) {
-        const error = {
-          code: 'SCENE_NOT_PROVIDED' as const,
+        const error: InspectorError = {
+          code: InspectorErrorCode.SCENE_NOT_PROVIDED,
           message: 'Scene is required to show inspector',
           timestamp: new Date(),
         };
@@ -149,12 +151,11 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       const config: InspectorConfig = {
         ...DEFAULT_INSPECTOR_CONFIG,
         enablePopup: options.enablePopup ?? DEFAULT_INSPECTOR_CONFIG.enablePopup,
-        enableOverlay: options.enableOverlay ?? DEFAULT_INSPECTOR_CONFIG.enableOverlay,
-        enableEmbedMode: options.enableEmbedMode ?? DEFAULT_INSPECTOR_CONFIG.enableEmbedMode,
-        initialTab: options.initialTab ?? DEFAULT_INSPECTOR_CONFIG.initialTab,
+        enableEmbedded: options.enableEmbedMode ?? DEFAULT_INSPECTOR_CONFIG.enableEmbedded,
+        initialTab: (options.initialTab as InspectorTab) ?? DEFAULT_INSPECTOR_CONFIG.initialTab,
       };
 
-      const result = inspectorService.show(targetScene, config);
+      const result = await inspectorService.show(targetScene, config);
 
       if (result.success) {
         // Update state with successful show
@@ -219,35 +220,38 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   /**
    * Switch inspector tab
    */
-  const switchTab = useCallback((tabName: string): InspectorSwitchTabResult => {
-    logger.debug(`[DEBUG][useBabylonInspector] Switching to tab: ${tabName}`);
+  const switchTab = useCallback(
+    async (tabName: InspectorTab): Promise<InspectorTabSwitchResult> => {
+      logger.debug(`[DEBUG][useBabylonInspector] Switching to tab: ${tabName}`);
 
-    if (!inspectorServiceRef.current) {
-      const error = {
-        code: 'TAB_SWITCH_FAILED' as const,
-        message: 'Inspector service not initialized',
-        timestamp: new Date(),
-      };
+      if (!inspectorServiceRef.current) {
+        const error: InspectorError = {
+          code: InspectorErrorCode.TAB_SWITCH_FAILED,
+          message: 'Inspector service not initialized',
+          timestamp: new Date(),
+        };
 
-      return {
-        success: false,
-        error,
-      };
-    }
+        return {
+          success: false,
+          error,
+        };
+      }
 
-    const result = inspectorServiceRef.current.switchTab(tabName);
+      const result = await inspectorServiceRef.current.switchTab(tabName);
 
-    if (result.success) {
-      // Update state
-      const newState = inspectorServiceRef.current.getState();
-      setInspectorState(newState);
-      logger.debug(`[DEBUG][useBabylonInspector] Switched to tab: ${tabName}`);
-    } else {
-      logger.error(`[ERROR][useBabylonInspector] Tab switch failed: ${result.error.message}`);
-    }
+      if (result.success) {
+        // Update state
+        const newState = inspectorServiceRef.current.getState();
+        setInspectorState(newState);
+        logger.debug(`[DEBUG][useBabylonInspector] Switched to tab: ${tabName}`);
+      } else {
+        logger.error(`[ERROR][useBabylonInspector] Tab switch failed: ${result.error.message}`);
+      }
 
-    return result;
-  }, []);
+      return result;
+    },
+    []
+  );
 
   /**
    * Update inspector state periodically when visible
@@ -259,7 +263,9 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
 
     const updateInterval = setInterval(() => {
       const newState = inspectorServiceRef.current?.getState();
-      setInspectorState(newState);
+      if (newState) {
+        setInspectorState(newState);
+      }
     }, 2000); // Update every 2 seconds
 
     return () => {
@@ -273,9 +279,10 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
   useEffect(() => {
     return () => {
       if (inspectorServiceRef.current && inspectorState.isVisible) {
-        inspectorServiceRef.current.hide().catch((error) => {
-          logger.error(`[ERROR][useBabylonInspector] Cleanup hide failed: ${error}`);
-        });
+        const result = inspectorServiceRef.current.hide();
+        if (!result.success) {
+          logger.error(`[ERROR][useBabylonInspector] Cleanup hide failed: ${result.error.message}`);
+        }
       }
     };
   }, [inspectorState.isVisible]);

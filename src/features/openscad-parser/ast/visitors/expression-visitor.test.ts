@@ -661,12 +661,12 @@ describe('ExpressionVisitor', () => {
         expect(result.expressionType).toBe('array');
       }
       expect((result as ast.ArrayExpressionNode).items.length).toBe(3);
-      expect((result as ast.ArrayExpressionNode).items[0].expressionType).toBe('literal');
-      expect((result as ast.ArrayExpressionNode).items[0].value).toBe(1);
-      expect((result as ast.ArrayExpressionNode).items[1].expressionType).toBe('literal');
-      expect((result as ast.ArrayExpressionNode).items[1].value).toBe(2);
-      expect((result as ast.ArrayExpressionNode).items[2].expressionType).toBe('literal');
-      expect((result as ast.ArrayExpressionNode).items[2].value).toBe(3);
+      expect((result as ast.ArrayExpressionNode).items[0]?.expressionType).toBe('literal');
+      expect((result as ast.ArrayExpressionNode).items[0]?.value).toBe(1);
+      expect((result as ast.ArrayExpressionNode).items[1]?.expressionType).toBe('literal');
+      expect((result as ast.ArrayExpressionNode).items[1]?.value).toBe(2);
+      expect((result as ast.ArrayExpressionNode).items[2]?.expressionType).toBe('literal');
+      expect((result as ast.ArrayExpressionNode).items[2]?.value).toBe(3);
     });
   });
 

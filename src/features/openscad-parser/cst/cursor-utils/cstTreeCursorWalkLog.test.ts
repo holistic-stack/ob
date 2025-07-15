@@ -5,7 +5,7 @@ import { cstTreeCursorWalkLog } from './cstTreeCursorWalkLog.js';
 
 describe('cstTreeCursorWalkLog', () => {
   let parser: OpenscadParser;
-  let consoleSpy: vi.SpyInstance;
+  let consoleSpy: any;
 
   beforeEach(async () => {
     consoleSpy = vi.spyOn(console, 'log');

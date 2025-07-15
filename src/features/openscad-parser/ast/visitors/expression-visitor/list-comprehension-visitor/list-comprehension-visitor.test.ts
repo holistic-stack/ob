@@ -21,7 +21,7 @@
  * ```
  */
 
-import { afterEach, beforeEach, describe, expect, fail, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ErrorHandler } from '../../../../error-handling/index.js';
 import { OpenscadParser } from '../../../../openscad-parser';
 import type { ErrorNode, IdentifierExpressionNode } from '../../../ast-types.js';
@@ -68,7 +68,7 @@ describe('ListComprehensionVisitor', () => {
 
         if (result?.type === 'error') {
           const errorNode = result;
-          fail(`visitListComprehension returned an ErrorNode: 
+          throw new Error(`visitListComprehension returned an ErrorNode:
     Message: ${errorNode.message}
     ErrorCode: ${errorNode.errorCode}
     CST Node Text: ${errorNode.cstNodeText}
@@ -87,7 +87,9 @@ describe('ListComprehensionVisitor', () => {
           }
           expect(result.condition).toBeUndefined();
         } else {
-          fail(`Expected ListComprehensionExpressionNode, but got: ${JSON.stringify(result)}`);
+          throw new Error(
+            `Expected ListComprehensionExpressionNode, but got: ${JSON.stringify(result)}`
+          );
         }
       }
     });
@@ -113,7 +115,7 @@ describe('ListComprehensionVisitor', () => {
           expect(result.expression?.expressionType).toBe('binary_expression');
           expect(result.condition).toBeUndefined();
         } else if (result?.type === 'error') {
-          fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+          throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
         }
       }
     });
@@ -131,7 +133,7 @@ describe('ListComprehensionVisitor', () => {
         expect(result).toBeTruthy();
         if (result && 'type' in result) {
           if (result.type === 'error') {
-            fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+            throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'expression') {
             expect(result.expressionType).toBe('list_comprehension_expression');
             expect(result.variable).toBe('x');
@@ -144,10 +146,10 @@ describe('ListComprehensionVisitor', () => {
             expect(result.condition).toBeTruthy();
             expect(result.condition?.expressionType).toBe('binary_expression');
           } else {
-            fail('Result is not an ErrorNode or an ExpressionNode');
+            throw new Error('Result is not an ErrorNode or an ExpressionNode');
           }
         } else if (result === null) {
-          fail('Result is null, expected ListComprehensionExpressionNode');
+          throw new Error('Result is null, expected ListComprehensionExpressionNode');
         }
       }
     });
@@ -160,7 +162,8 @@ describe('ListComprehensionVisitor', () => {
       expect(tree).toBeTruthy();
 
       // Find the list comprehension node within the assignment
-      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const listCompNode = findDescendantOfType(tree.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -169,7 +172,7 @@ describe('ListComprehensionVisitor', () => {
 
         if (result?.type === 'error') {
           const errorNode = result; // ErrorNode is ast.ErrorNode from import
-          fail(`visitListComprehension returned an ErrorNode: 
+          throw new Error(`visitListComprehension returned an ErrorNode:
     Message: ${errorNode.message}
     ErrorCode: ${errorNode.errorCode}
     CST Node Text: ${errorNode.cstNodeText}
@@ -191,7 +194,9 @@ describe('ListComprehensionVisitor', () => {
           }
           expect(result.condition).toBeUndefined();
         } else {
-          fail(`Expected ListComprehensionExpressionNode, but got: ${JSON.stringify(result)}`);
+          throw new Error(
+            `Expected ListComprehensionExpressionNode, but got: ${JSON.stringify(result)}`
+          );
         }
       }
     });
@@ -201,7 +206,8 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const listCompNode = findDescendantOfType(tree.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -209,7 +215,7 @@ describe('ListComprehensionVisitor', () => {
         expect(result).toBeTruthy();
         if (result && 'type' in result) {
           if (result.type === 'error') {
-            fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+            throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'expression') {
             expect(result.expressionType).toBe('list_comprehension_expression');
             expect(result.variable).toBe('x');
@@ -222,10 +228,10 @@ describe('ListComprehensionVisitor', () => {
             expect(result.condition).toBeTruthy();
             expect(result.condition?.expressionType).toBe('binary');
           } else {
-            fail('Result is not an ErrorNode or an ExpressionNode');
+            throw new Error('Result is not an ErrorNode or an ExpressionNode');
           }
         } else if (result === null) {
-          fail('Result is null, expected ListComprehensionExpressionNode');
+          throw new Error('Result is null, expected ListComprehensionExpressionNode');
         }
       }
     });
@@ -237,7 +243,8 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const listCompNode = findDescendantOfType(tree.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -245,7 +252,7 @@ describe('ListComprehensionVisitor', () => {
         expect(result).toBeTruthy();
         if (result && 'type' in result) {
           if (result.type === 'error') {
-            fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+            throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'expression') {
             expect(result.expressionType).toBe('list_comprehension_expression');
             expect(result.variable).toBe('i');
@@ -256,10 +263,10 @@ describe('ListComprehensionVisitor', () => {
             expect(result.condition).toBeTruthy();
             expect(result.condition?.expressionType).toBe('binary'); // Complex condition is binary expression
           } else {
-            fail('Result is not an ErrorNode or an ExpressionNode');
+            throw new Error('Result is not an ErrorNode or an ExpressionNode');
           }
         } else if (result === null) {
-          fail('Result is null, expected ListComprehensionExpressionNode');
+          throw new Error('Result is null, expected ListComprehensionExpressionNode');
         }
       }
     });
@@ -269,7 +276,8 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const listCompNode = findDescendantOfType(tree.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -285,7 +293,7 @@ describe('ListComprehensionVisitor', () => {
           expect(result.expression?.expressionType).toBe('function_call'); // a_function(i) is a function call
           expect(result.condition).toBeUndefined();
         } else if (result?.type === 'error') {
-          fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+          throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
         }
       }
     });
@@ -295,7 +303,8 @@ describe('ListComprehensionVisitor', () => {
       const tree = parser.parse(code);
       expect(tree).toBeTruthy();
 
-      const listCompNode = findDescendantOfType(tree?.rootNode, 'list_comprehension');
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const listCompNode = findDescendantOfType(tree.rootNode, 'list_comprehension');
       expect(listCompNode).toBeTruthy();
 
       if (listCompNode) {
@@ -311,7 +320,7 @@ describe('ListComprehensionVisitor', () => {
           expect(result.expression?.expressionType).toBe('vector'); // [i, i*2] is a vector expression
           expect(result.condition).toBeUndefined();
         } else if (result?.type === 'error') {
-          fail('Expected ListComprehensionExpressionNode, got ErrorNode');
+          throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
         }
       }
     });
@@ -334,13 +343,7 @@ describe('ListComprehensionVisitor', () => {
           );
         } else {
           const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
-          if (typeof fail === 'function') {
-            // Check if fail is defined to avoid Vitest crash
-            fail(message);
-          } else {
-            console.error(`[TEST ERROR] ${message}`); // Log error if fail is not available
-            throw new Error(message); // Ensure test actually fails
-          }
+          throw new Error(message);
         }
       }
     });
@@ -365,13 +368,7 @@ describe('ListComprehensionVisitor', () => {
           );
         } else {
           const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
-          if (typeof fail === 'function') {
-            // Check if fail is defined to avoid Vitest crash
-            fail(message);
-          } else {
-            console.error(`[TEST ERROR] ${message}`); // Log error if fail is not available
-            throw new Error(message); // Ensure test actually fails
-          }
+          throw new Error(message);
         }
       }
     });
@@ -396,7 +393,7 @@ describe('ListComprehensionVisitor', () => {
             "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
           );
         } else {
-          fail(`Expected error, got expression: ${JSON.stringify(result)}`);
+          throw new Error(`Expected error, got expression: ${JSON.stringify(result)}`);
         }
       }
     });
@@ -423,7 +420,7 @@ describe('ListComprehensionVisitor', () => {
           // If it's an expression but not a list comprehension, it might be a partially parsed node or an error wrapped as expression.
           // This test is primarily about not crashing and returning *something* sensible or an error.
         } else if (result && result.type !== 'error' && result.type !== 'expression') {
-          fail(
+          throw new Error(
             'Expected ErrorNode, null, or partial ListComprehensionExpressionNode for malformed input'
           );
         }

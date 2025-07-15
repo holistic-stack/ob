@@ -91,7 +91,7 @@ describe('CSGVisitor', () => {
       hull: [
         {
           type: 'translate',
-          vector: [0, 0, 0],
+          v: [0, 0, 0],
           children: [
             {
               type: 'sphere',
@@ -103,13 +103,13 @@ describe('CSGVisitor', () => {
             },
           ],
           location: {
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
+            start: { line: 0, column: 0, offset: 0 },
+            end: { line: 0, column: 0, offset: 0 },
           },
         },
         {
           type: 'translate',
-          vector: [20, 0, 0],
+          v: [20, 0, 0],
           children: [
             {
               type: 'sphere',

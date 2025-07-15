@@ -114,7 +114,10 @@ export class BabylonInspectorService {
     return tryCatchAsync(
       async () => {
         if (!scene) {
-          throw this.createError(InspectorErrorCode.SCENE_NOT_PROVIDED, 'Scene is required to show inspector');
+          throw this.createError(
+            InspectorErrorCode.SCENE_NOT_PROVIDED,
+            'Scene is required to show inspector'
+          );
         }
 
         // Merge config if provided
@@ -122,7 +125,10 @@ export class BabylonInspectorService {
 
         // Check if inspector is available
         if (!this.isInspectorAvailable()) {
-          throw this.createError(InspectorErrorCode.INSPECTOR_NOT_AVAILABLE, 'BabylonJS Inspector is not available');
+          throw this.createError(
+            InspectorErrorCode.INSPECTOR_NOT_AVAILABLE,
+            'BabylonJS Inspector is not available'
+          );
         }
 
         // Import inspector dynamically
@@ -130,14 +136,14 @@ export class BabylonInspectorService {
 
         // Show inspector with configuration
         await Inspector.Show(scene, {
-          popup: effectiveConfig.enablePopup,
+          // popup: effectiveConfig.enablePopup, // Property not available in current BabylonJS version
           embedMode: effectiveConfig.enableEmbedded,
           showExplorer: effectiveConfig.showExplorer,
           showInspector: effectiveConfig.showInspector,
           enableClose: true,
           enablePopup: effectiveConfig.enablePopup,
           explorerExtensibility: [],
-          inspectorExtensibility: [],
+          // inspectorExtensibility: [], // Property not available in current BabylonJS version
           globalRoot: document.body,
           initialTab: this.mapTabToInspectorTab(effectiveConfig.initialTab),
         });
@@ -155,7 +161,10 @@ export class BabylonInspectorService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as InspectorError;
         }
-        return this.createError(InspectorErrorCode.SHOW_FAILED, `Failed to show inspector: ${error}`);
+        return this.createError(
+          InspectorErrorCode.SHOW_FAILED,
+          `Failed to show inspector: ${error}`
+        );
       }
     );
   }
@@ -183,7 +192,8 @@ export class BabylonInspectorService {
 
         logger.debug('[DEBUG][BabylonInspectorService] Inspector hidden successfully');
       },
-      (error) => this.createError(InspectorErrorCode.HIDE_FAILED, `Failed to hide inspector: ${error}`)
+      (error) =>
+        this.createError(InspectorErrorCode.HIDE_FAILED, `Failed to hide inspector: ${error}`)
     );
   }
 
@@ -196,11 +206,14 @@ export class BabylonInspectorService {
     return tryCatchAsync(
       async () => {
         if (!this.isVisible || !this.scene) {
-          throw this.createError(InspectorErrorCode.TAB_SWITCH_FAILED, 'Inspector must be visible to switch tabs');
+          throw this.createError(
+            InspectorErrorCode.TAB_SWITCH_FAILED,
+            'Inspector must be visible to switch tabs'
+          );
         }
 
         // Import inspector and switch tab
-        const { Inspector } = await import('@babylonjs/inspector');
+        await import('@babylonjs/inspector');
 
         // Note: BabylonJS Inspector doesn't have a direct tab switching API
         // This would need to be implemented through the inspector's internal API
@@ -215,7 +228,10 @@ export class BabylonInspectorService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as InspectorError;
         }
-        return this.createError(InspectorErrorCode.TAB_SWITCH_FAILED, `Failed to switch tab: ${error}`);
+        return this.createError(
+          InspectorErrorCode.TAB_SWITCH_FAILED,
+          `Failed to switch tab: ${error}`
+        );
       }
     );
   }
@@ -230,10 +246,23 @@ export class BabylonInspectorService {
       if (!scene && !this.scene) {
         return {
           success: false,
-          error: this.createError(InspectorErrorCode.SCENE_NOT_PROVIDED, 'Scene is required to show inspector'),
+          error: this.createError(
+            InspectorErrorCode.SCENE_NOT_PROVIDED,
+            'Scene is required to show inspector'
+          ),
         };
       }
-      return this.show(scene || this.scene!);
+      const targetScene = scene || this.scene;
+      if (!targetScene) {
+        return {
+          success: false,
+          error: this.createError(
+            InspectorErrorCode.SCENE_NOT_PROVIDED,
+            'No scene available for tab switching'
+          ),
+        };
+      }
+      return this.show(targetScene);
     }
   }
 

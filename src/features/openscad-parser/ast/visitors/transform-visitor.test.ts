@@ -180,7 +180,7 @@ describe('TransformVisitor', () => {
       if (!transformCstNode) return;
 
       const argsNode = transformCstNode.childForFieldName('arguments');
-      const _params = argsNode ? extractArguments(argsNode, code, variableScope) : [];
+      const _params = argsNode ? extractArguments(argsNode, errorHandler, code, new Map()) : [];
 
       // Force the right vector for this test specifically
       const mockParams: ast.Parameter[] = [
@@ -214,7 +214,7 @@ describe('TransformVisitor', () => {
         loc: mockLocation,
         childForFieldName: () => null,
         children: [],
-      } as TSNode;
+      } as unknown as TSNode;
       const mockAngleParam: ast.Parameter = {
         name: 'a',
         value: {
@@ -225,11 +225,9 @@ describe('TransformVisitor', () => {
         } as ast.LiteralNode,
       };
       // Access protected method for testing
-      const result = (visitor as TransformVisitor).createASTNodeForFunction(
-        mockRotateCstNode,
-        'rotate',
-        [mockAngleParam]
-      ) as ast.RotateNode | null;
+      const result = (visitor as any).createASTNodeForFunction(mockRotateCstNode, 'rotate', [
+        mockAngleParam,
+      ]) as ast.RotateNode | null;
       expect(result?.type).toBe('rotate');
       // expect(result?.angle).toBe(90); // or result.a depending on ast-types
       // expect(result?.v).toBeUndefined(); // or some default if applicable
@@ -248,7 +246,7 @@ describe('TransformVisitor', () => {
       } as unknown;
       // @ts-expect-error Accessing protected method for testing purposes
       const result = visitor.createASTNodeForFunction(
-        mockSphereCstNode,
+        mockSphereCstNode as TSNode,
         'sphere',
         []
       ) as ast.SphereNode | null;

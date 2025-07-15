@@ -135,10 +135,14 @@ describe('Difference AST Generation', () => {
       expect((differenceNode as ast.DifferenceNode).children).toHaveLength(2);
       expect((differenceNode as ast.DifferenceNode).children[0]?.type).toBe('cube');
       expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode)?.size).toBe(20);
-      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode)?.center).toBe(true);
+      expect(((differenceNode as ast.DifferenceNode).children[0] as ast.CubeNode)?.center).toBe(
+        true
+      );
 
       expect((differenceNode as ast.DifferenceNode).children[1]?.type).toBe('sphere');
-      expect(((differenceNode as ast.DifferenceNode).children[1] as ast.SphereNode)?.radius).toBe(10);
+      expect(((differenceNode as ast.DifferenceNode).children[1] as ast.SphereNode)?.radius).toBe(
+        10
+      );
     });
 
     it('should parse difference with nested transformations', () => {

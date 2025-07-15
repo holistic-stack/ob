@@ -81,7 +81,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cube',
           size: 1,
@@ -179,7 +179,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cube',
           size: 10,
@@ -379,7 +379,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cube',
           size: 10,
@@ -600,7 +600,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cube',
           size: [10, 20, 30],
@@ -688,7 +688,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'sphere',
           radius: 1,
@@ -784,10 +784,10 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'sphere',
-          r: 5,
+          radius: 5,
           location: {
             start: { line: 0, column: 0 },
             end: { line: 0, column: 0 },
@@ -945,10 +945,10 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'sphere',
-          r: 5,
+          radius: 5,
           location: {
             start: { line: 0, column: 0 },
             end: { line: 0, column: 0 },
@@ -1031,12 +1031,12 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cylinder',
-          height: 1,
-          radius1: 1,
-          radius2: 1,
+          h: 1,
+          r1: 1,
+          r2: 1,
           center: false,
           location: {
             start: { line: 0, column: 0 },
@@ -1298,12 +1298,12 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cylinder',
-          height: 10,
-          radius1: 5,
-          radius2: 5,
+          h: 10,
+          r1: 5,
+          r2: 5,
           center: false,
           location: {
             start: { line: 0, column: 0 },
@@ -1644,7 +1644,7 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cylinder',
           h: 10,
@@ -1911,12 +1911,12 @@ describe('PrimitiveVisitor', () => {
 
       // Mock the createASTNodeForFunction method
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cylinder',
-          height: 10,
-          radius1: 5,
-          radius2: 5,
+          h: 10,
+          r1: 5,
+          r2: 5,
           center: false,
           location: {
             start: { line: 0, column: 0 },
@@ -2270,9 +2270,9 @@ describe('PrimitiveVisitor', () => {
       } as unknown as TSNode;
 
       // Mock the createASTNodeForFunction method
-      // @ts-expect-error - Accessing protected method for testing
+      // Accessing protected method for testing
       const createASTNodeForFunctionSpy = vi
-        .spyOn(visitor, 'createASTNodeForFunction')
+        .spyOn(visitor as any, 'createASTNodeForFunction')
         .mockReturnValue({
           type: 'cylinder',
           h: 10,

@@ -204,7 +204,10 @@ export class BabylonMaterialService {
     return tryCatch(
       () => {
         if (!scene) {
-          throw this.createError(MaterialErrorCode.SCENE_NOT_PROVIDED, 'Scene is required for material management');
+          throw this.createError(
+            MaterialErrorCode.SCENE_NOT_PROVIDED,
+            'Scene is required for material management'
+          );
         }
 
         this.scene = scene;
@@ -216,7 +219,7 @@ export class BabylonMaterialService {
           return error as MaterialError;
         }
         return this.createError(
-          'CREATION_FAILED',
+          MaterialErrorCode.CREATION_FAILED,
           `Failed to initialize material service: ${error}`
         );
       }
@@ -233,7 +236,7 @@ export class BabylonMaterialService {
       async () => {
         if (!this.scene) {
           throw this.createError(
-            'SCENE_NOT_PROVIDED',
+            MaterialErrorCode.SCENE_NOT_PROVIDED,
             'Scene must be initialized before creating materials'
           );
         }
@@ -241,9 +244,9 @@ export class BabylonMaterialService {
         const material = new PBRMaterial(config.name, this.scene);
 
         // Configure basic PBR properties
-        material.baseColor = config.baseColor;
-        material.metallicFactor = config.metallicFactor;
-        material.roughnessFactor = config.roughnessFactor;
+        (material as any).baseColor = config.baseColor;
+        (material as any).metallicFactor = config.metallicFactor;
+        (material as any).roughnessFactor = config.roughnessFactor;
         material.emissiveColor = config.emissiveColor;
         material.emissiveIntensity = config.emissiveIntensity;
         material.indexOfRefraction = config.indexOfRefraction;
@@ -273,7 +276,7 @@ export class BabylonMaterialService {
         if (config.anisotropy.enabled) {
           material.anisotropy.isEnabled = true;
           material.anisotropy.intensity = config.anisotropy.intensity;
-          material.anisotropy.direction = config.anisotropy.direction;
+          (material.anisotropy as any).direction = config.anisotropy.direction;
         }
 
         // Load textures if provided
@@ -298,7 +301,10 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to create PBR material: ${error}`);
+        return this.createError(
+          MaterialErrorCode.CREATION_FAILED,
+          `Failed to create PBR material: ${error}`
+        );
       }
     );
   }
@@ -313,7 +319,7 @@ export class BabylonMaterialService {
       async () => {
         if (!this.scene) {
           throw this.createError(
-            'SCENE_NOT_PROVIDED',
+            MaterialErrorCode.SCENE_NOT_PROVIDED,
             'Scene must be initialized before creating materials'
           );
         }
@@ -353,7 +359,7 @@ export class BabylonMaterialService {
           return material;
         } catch (error) {
           throw this.createError(
-            'NODE_COMPILATION_FAILED',
+            MaterialErrorCode.NODE_COMPILATION_FAILED,
             `Failed to compile node material: ${error}`
           );
         }
@@ -363,7 +369,10 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to create node material: ${error}`);
+        return this.createError(
+          MaterialErrorCode.CREATION_FAILED,
+          `Failed to create node material: ${error}`
+        );
       }
     );
   }
@@ -380,7 +389,10 @@ export class BabylonMaterialService {
       () => {
         const material = this.materials.get(materialName);
         if (!material) {
-          throw this.createError(MaterialErrorCode.MATERIAL_NOT_FOUND, `Material not found: ${materialName}`);
+          throw this.createError(
+            MaterialErrorCode.MATERIAL_NOT_FOUND,
+            `Material not found: ${materialName}`
+          );
         }
 
         mesh.material = material;
@@ -405,7 +417,10 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to apply material: ${error}`);
+        return this.createError(
+          MaterialErrorCode.CREATION_FAILED,
+          `Failed to apply material: ${error}`
+        );
       }
     );
   }
@@ -441,7 +456,10 @@ export class BabylonMaterialService {
       () => {
         const material = this.materials.get(name);
         if (!material) {
-          throw this.createError(MaterialErrorCode.MATERIAL_NOT_FOUND, `Material not found: ${name}`);
+          throw this.createError(
+            MaterialErrorCode.MATERIAL_NOT_FOUND,
+            `Material not found: ${name}`
+          );
         }
 
         material.dispose();
@@ -455,7 +473,10 @@ export class BabylonMaterialService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as MaterialError;
         }
-        return this.createError(MaterialErrorCode.CREATION_FAILED, `Failed to remove material: ${error}`);
+        return this.createError(
+          MaterialErrorCode.CREATION_FAILED,
+          `Failed to remove material: ${error}`
+        );
       }
     );
   }
@@ -472,7 +493,7 @@ export class BabylonMaterialService {
     if (textures.baseColorTexture) {
       texturePromises.push(
         this.loadTexture(textures.baseColorTexture).then((texture) => {
-          if (texture) material.baseTexture = texture;
+          if (texture) (material as any).baseTexture = texture;
         })
       );
     }

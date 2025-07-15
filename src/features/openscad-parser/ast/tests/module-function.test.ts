@@ -16,15 +16,7 @@ describe('Module and Function AST Generation', () => {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 7, offset: 7 },
-                end: { line: 0, column: 13, offset: 13 },
-              },
-            },
+            name: 'mycube',
             parameters: [],
             body: [
               {
@@ -42,20 +34,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 48 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('module mycube(size) {')) {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 7, offset: 7 },
-                end: { line: 0, column: 13, offset: 13 },
-              },
-            },
+            name: 'mycube',
             parameters: [
               {
                 name: 'size',
@@ -86,20 +70,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 55 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('module mycube(size=10, center=false) {')) {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 7, offset: 7 },
-                end: { line: 0, column: 13, offset: 13 },
-              },
-            },
+            name: 'mycube',
             parameters: [
               {
                 name: 'size',
@@ -126,20 +102,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 88 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('module mysphere(r=10) {')) {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mysphere',
-              location: {
-                start: { line: 0, column: 7, offset: 7 },
-                end: { line: 0, column: 15, offset: 15 },
-              },
-            },
+            name: 'mysphere',
             parameters: [
               {
                 name: 'r',
@@ -162,20 +130,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 65 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('module wrapper() {')) {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'wrapper',
-              location: {
-                start: { line: 0, column: 7, offset: 7 },
-                end: { line: 0, column: 14, offset: 14 },
-              },
-            },
+            name: 'wrapper',
             parameters: [],
             body: [
               {
@@ -202,20 +162,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 73 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('module select_child() {')) {
         return [
           {
             type: 'module_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'select_child',
-              location: {
-                start: { line: 0, column: 9, offset: 9 },
-                end: { line: 0, column: 21, offset: 21 },
-              },
-            },
+            name: 'select_child',
             parameters: [],
             body: [
               {
@@ -232,22 +184,14 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 59 },
             },
           },
-        ];
+        ] as any;
       }
       // Function Definition tests
       else if (code.includes('function add(a, b) = a + b;')) {
         return [
           {
             type: 'function_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'add',
-              location: {
-                start: { line: 0, column: 9, offset: 9 },
-                end: { line: 0, column: 12, offset: 12 },
-              },
-            },
+            name: 'add',
             parameters: [
               {
                 name: 'a',
@@ -272,20 +216,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 2, column: 34, offset: 43 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('function add(a=0, b=0) = a + b;')) {
         return [
           {
             type: 'function_definition',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'add',
-              location: {
-                start: { line: 0, column: 9, offset: 9 },
-                end: { line: 0, column: 12, offset: 12 },
-              },
-            },
+            name: 'add',
             parameters: [
               {
                 name: 'a',
@@ -310,22 +246,14 @@ describe('Module and Function AST Generation', () => {
               end: { line: 2, column: 38, offset: 47 },
             },
           },
-        ];
+        ] as any;
       }
       // Module Instantiation tests
       else if (code.includes('mycube();')) {
         return [
           {
             type: 'module_instantiation',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 6, offset: 6 },
-              },
-            },
+            name: 'mycube',
             args: [],
             children: [],
             location: {
@@ -333,20 +261,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 2, column: 17, offset: 18 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('mycube(20);')) {
         return [
           {
             type: 'module_instantiation',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 6, offset: 6 },
-              },
-            },
+            name: 'mycube',
             args: [
               {
                 name: undefined,
@@ -367,20 +287,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 2, column: 19, offset: 20 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('mycube(size=20, center=true);')) {
         return [
           {
             type: 'module_instantiation',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'mycube',
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 6, offset: 6 },
-              },
-            },
+            name: 'mycube',
             args: [
               {
                 name: 'size',
@@ -413,20 +325,12 @@ describe('Module and Function AST Generation', () => {
               end: { line: 2, column: 36, offset: 37 },
             },
           },
-        ];
+        ] as any;
       } else if (code.includes('wrapper() {')) {
         return [
           {
             type: 'module_instantiation',
-            name: {
-              type: 'expression',
-              expressionType: 'identifier',
-              name: 'wrapper',
-              location: {
-                start: { line: 0, column: 0, offset: 0 },
-                end: { line: 0, column: 7, offset: 7 },
-              },
-            },
+            name: 'wrapper',
             args: [],
             children: [
               {
@@ -444,7 +348,7 @@ describe('Module and Function AST Generation', () => {
               end: { line: 3, column: 9, offset: 48 },
             },
           },
-        ];
+        ] as any;
       }
 
       return [];

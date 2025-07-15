@@ -52,7 +52,7 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      
+
       const ifResult = result as ast.IfNode;
       expect(ifResult.condition).toBeDefined();
       expect(ifResult.condition.expressionType).toBe('literal');
@@ -80,7 +80,7 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      
+
       const ifResult = result as ast.IfNode;
       expect(ifResult.condition).toBeDefined();
       expect(ifResult.thenBranch).toBeDefined();
@@ -108,7 +108,7 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      
+
       const ifResult = result as ast.IfNode;
       expect(ifResult.condition).toBeDefined();
       expect(ifResult.thenBranch).toBeDefined();
@@ -145,7 +145,7 @@ describe('IfElseVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('if');
-      
+
       const ifResult = result as ast.IfNode;
       expect(ifResult.condition).toBeDefined();
       // For complex conditions, the expression type can be 'binary', 'literal', or 'variable'

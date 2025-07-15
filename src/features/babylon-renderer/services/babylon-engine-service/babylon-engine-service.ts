@@ -14,12 +14,11 @@ import type {
   BabylonEngineState,
   EngineDisposeResult,
   EngineError,
-  EngineErrorCode,
   EngineInitOptions,
   EngineInitResult,
   EnginePerformanceMetrics,
 } from '../../types/babylon-engine.types';
-import { DEFAULT_ENGINE_CONFIG } from '../../types/babylon-engine.types';
+import { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from '../../types/babylon-engine.types';
 
 const logger = createLogger('BabylonEngineService');
 
@@ -49,7 +48,10 @@ export class BabylonEngineService {
     return tryCatchAsync(
       async () => {
         if (this.engine) {
-          throw this.createError(EngineErrorCode.INITIALIZATION_FAILED, 'Engine already initialized');
+          throw this.createError(
+            EngineErrorCode.INITIALIZATION_FAILED,
+            'Engine already initialized'
+          );
         }
 
         this.canvas = options.canvas;
@@ -80,7 +82,10 @@ export class BabylonEngineService {
         );
       },
       (error) =>
-        this.createError(EngineErrorCode.INITIALIZATION_FAILED, `Engine initialization failed: ${error}`)
+        this.createError(
+          EngineErrorCode.INITIALIZATION_FAILED,
+          `Engine initialization failed: ${error}`
+        )
     );
   }
 
@@ -92,14 +97,20 @@ export class BabylonEngineService {
   ): Promise<Result<WebGPUEngine, EngineError>> {
     return tryCatchAsync(
       async () => {
-        if (!WebGPUEngine.IsSupported()) {
-          throw this.createError(EngineErrorCode.WEBGPU_NOT_SUPPORTED, 'WebGPU is not supported in this browser');
+        if (!WebGPUEngine.IsSupported) {
+          throw this.createError(
+            EngineErrorCode.WEBGPU_NOT_SUPPORTED,
+            'WebGPU is not supported in this browser'
+          );
         }
 
-        const webgpuEngine = new WebGPUEngine(this.canvas!, {
+        if (!this.canvas) {
+          throw new Error('Canvas is required for WebGPU engine initialization');
+        }
+        const webgpuEngine = new WebGPUEngine(this.canvas, {
           antialias: this.config.antialias,
           adaptToDeviceRatio: this.config.adaptToDeviceRatio,
-          powerPreference: this.config.powerPreference,
+          powerPreference: this.config.powerPreference as GPUPowerPreference,
         });
 
         await webgpuEngine.initAsync();
@@ -107,11 +118,15 @@ export class BabylonEngineService {
         this.engine = webgpuEngine;
         this.setupEngineEvents();
 
-        options.onEngineReady?.(webgpuEngine);
+        options.onEngineReady?.(webgpuEngine as unknown as Engine);
 
         return webgpuEngine;
       },
-      (error) => this.createError(EngineErrorCode.WEBGPU_NOT_SUPPORTED, `WebGPU initialization failed: ${error}`)
+      (error) =>
+        this.createError(
+          EngineErrorCode.WEBGPU_NOT_SUPPORTED,
+          `WebGPU initialization failed: ${error}`
+        )
     );
   }
 
@@ -121,7 +136,10 @@ export class BabylonEngineService {
   private async initWebGLEngine(options: EngineInitOptions): Promise<Result<Engine, EngineError>> {
     return tryCatch(
       () => {
-        const webglEngine = new Engine(this.canvas!, this.config.antialias, {
+        if (!this.canvas) {
+          throw new Error('Canvas is required for WebGL engine initialization');
+        }
+        const webglEngine = new Engine(this.canvas, this.config.antialias, {
           preserveDrawingBuffer: this.config.preserveDrawingBuffer,
           stencil: this.config.stencil,
           antialias: this.config.antialias,
@@ -137,7 +155,11 @@ export class BabylonEngineService {
 
         return webglEngine;
       },
-      (error) => this.createError(EngineErrorCode.WEBGL_NOT_SUPPORTED, `WebGL2 initialization failed: ${error}`)
+      (error) =>
+        this.createError(
+          EngineErrorCode.WEBGL_NOT_SUPPORTED,
+          `WebGL2 initialization failed: ${error}`
+        )
     );
   }
 
@@ -190,9 +212,12 @@ export class BabylonEngineService {
       fps: this.engine.getFps(),
       deltaTime: this.engine.getDeltaTime(),
       renderTime: this.engine.getTimeStep(),
-      drawCalls: this.engine.drawCalls,
-      triangleCount: this.engine.drawCallsPerfCounter?.current || 0,
-      memoryUsage: (performance as any).memory?.usedJSHeapSize || 0,
+      drawCalls: (this.engine as { _drawCalls?: { current: number } })._drawCalls?.current || 0,
+      triangleCount:
+        (this.engine as { drawCallsPerfCounter?: { current: number } }).drawCallsPerfCounter
+          ?.current || 0,
+      memoryUsage:
+        (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0,
       gpuMemoryUsage: 0, // Not available in current BabylonJS API
     };
   }
@@ -236,7 +261,8 @@ export class BabylonEngineService {
 
         logger.end('[END][BabylonEngineService] Engine disposed successfully');
       },
-      (error) => this.createError(EngineErrorCode.DISPOSAL_FAILED, `Engine disposal failed: ${error}`)
+      (error) =>
+        this.createError(EngineErrorCode.DISPOSAL_FAILED, `Engine disposal failed: ${error}`)
     );
   }
 
@@ -245,7 +271,7 @@ export class BabylonEngineService {
    */
   private createEngineState(isWebGPU: boolean): BabylonEngineState {
     return {
-      engine: this.engine,
+      engine: this.engine as Engine,
       isInitialized: this.isInitialized(),
       isDisposed: this.isDisposed,
       isWebGPU,
@@ -254,6 +280,8 @@ export class BabylonEngineService {
       deltaTime: this.engine?.getDeltaTime() || 0,
       renderTime: this.engine?.getTimeStep() || 0,
       lastUpdated: new Date(),
+      error: null,
+      performanceMetrics: this.getPerformanceMetrics(),
     };
   }
 

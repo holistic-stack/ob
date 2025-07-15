@@ -142,7 +142,7 @@ describe('App Store Parser Integration', () => {
       // Should fail gracefully
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toContain('PARSER_INIT_FAILED');
+        expect((result.error as any).code).toContain('PARSER_INIT_FAILED');
       }
 
       // Store should reflect the error

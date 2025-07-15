@@ -5,7 +5,12 @@
  * Provides seamless integration between OpenSCAD AST and 3D visualization.
  */
 
-import { Color3, Vector3 } from '@babylonjs/core';
+import {
+  type Engine as BabylonEngineType,
+  type Scene as BabylonSceneType,
+  Color3,
+  Vector3,
+} from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
@@ -48,7 +53,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   onRenderComplete,
   onRenderError,
 }) => {
-  const sceneRef = useRef<any>(null);
+  const sceneRef = useRef<BabylonSceneType | null>(null);
   const lastASTRef = useRef<readonly ASTNode[]>([]);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -91,8 +96,16 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
             service: 'renderer',
           },
         })),
-    clearScene: state.clearScene || (() => {}),
-    updatePerformanceMetrics: state.updatePerformanceMetrics || (() => {}),
+    clearScene:
+      state.clearScene ||
+      (() => {
+        /* no-op */
+      }),
+    updatePerformanceMetrics:
+      state.updatePerformanceMetrics ||
+      (() => {
+        /* no-op */
+      }),
     showInspector:
       state.showInspector ||
       (() => ({
@@ -177,7 +190,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Handle scene ready
    */
   const handleSceneReady = useCallback(
-    async (scene: any) => {
+    async (scene: BabylonSceneType) => {
       logger.debug('[DEBUG][StoreConnectedRenderer] Scene ready, initializing engine...');
       sceneRef.current = scene;
 
@@ -202,7 +215,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Handle engine ready
    */
   const handleEngineReady = useCallback(
-    (_engine: any) => {
+    (_engine: BabylonEngineType) => {
       logger.debug('[DEBUG][StoreConnectedRenderer] Engine ready');
 
       // Start performance monitoring
@@ -294,12 +307,13 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   useEffect(() => {
     if (enableInspector && sceneRef.current) {
-      const result = showInspector();
-      if (!result.success) {
-        logger.warn(
-          `[WARN][StoreConnectedRenderer] Failed to show inspector: ${result.error.message}`
-        );
-      }
+      showInspector().then((result) => {
+        if (!result.success) {
+          logger.warn(
+            `[WARN][StoreConnectedRenderer] Failed to show inspector: ${result.error.message}`
+          );
+        }
+      });
     } else if (!enableInspector) {
       const result = hideInspector();
       if (!result.success) {

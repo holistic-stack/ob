@@ -65,7 +65,7 @@ vi.mock('@babylonjs/core', async () => {
   const Vector3Mock = vi
     .fn()
     .mockImplementation((x: number, y: number, z: number) => ({ x, y, z }));
-  Vector3Mock.Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
+  (Vector3Mock as any).Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
 
   // Mock Color3 constructor
   const Color3Mock = vi.fn().mockImplementation((r: number, g: number, b: number) => ({ r, g, b }));

@@ -14,7 +14,10 @@ import { BabylonScene } from './babylon-scene';
 
 // Mock BabylonJS components
 vi.mock('react-babylonjs', () => ({
-  Engine: React.forwardRef<any, any>(({ children, onEngineReady }, _ref) => {
+  Engine: React.forwardRef<
+    HTMLDivElement,
+    { children?: React.ReactNode; onEngineReady?: (engine: Record<string, unknown>) => void }
+  >(({ children, onEngineReady }, _ref) => {
     // Simulate engine ready after a short delay
     React.useEffect(() => {
       const timer = setTimeout(() => {
@@ -29,7 +32,10 @@ vi.mock('react-babylonjs', () => ({
 
     return <div data-testid="babylon-engine">{children}</div>;
   }),
-  Scene: React.forwardRef<any, any>(({ children, onSceneReady, onRender }, _ref) => {
+  Scene: React.forwardRef<
+    HTMLDivElement,
+    { children?: React.ReactNode; onSceneReady?: (scene: Record<string, unknown>) => void }
+  >(({ children, onSceneReady }, _ref) => {
     // Simulate scene ready after a short delay
     React.useEffect(() => {
       const timer = setTimeout(() => {
@@ -51,7 +57,7 @@ vi.mock('react-babylonjs', () => ({
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', () => {
   const Vector3Mock = vi.fn().mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z }));
-  (Vector3Mock as any).Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
+  (Vector3Mock as unknown as { Zero: unknown }).Zero = vi.fn(() => ({ x: 0, y: 0, z: 0 }));
 
   const Color3Mock = vi.fn().mockImplementation((r = 1, g = 1, b = 1) => ({
     r,

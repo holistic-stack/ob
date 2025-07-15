@@ -121,13 +121,16 @@ export class BabylonIBLShadowsService {
     return tryCatchAsync(
       async () => {
         if (!scene) {
-          throw this.createError(IBLShadowErrorCode.SCENE_NOT_PROVIDED, 'Scene is required for IBL shadows');
+          throw this.createError(
+            IBLShadowErrorCode.SCENE_NOT_PROVIDED,
+            'Scene is required for IBL shadows'
+          );
         }
 
         // Check if IBL shadows are supported
         if (!this.isIBLShadowsSupported(scene)) {
           throw this.createError(
-            'IBL_NOT_SUPPORTED',
+            IBLShadowErrorCode.IBL_NOT_SUPPORTED,
             'IBL shadows are not supported in this environment'
           );
         }
@@ -157,7 +160,7 @@ export class BabylonIBLShadowsService {
           return error as IBLShadowError;
         }
         return this.createError(
-          'INITIALIZATION_FAILED',
+          IBLShadowErrorCode.INITIALIZATION_FAILED,
           `Failed to initialize IBL shadows: ${error}`
         );
       }
@@ -174,7 +177,7 @@ export class BabylonIBLShadowsService {
       async () => {
         if (!this.scene) {
           throw this.createError(
-            'SCENE_NOT_PROVIDED',
+            IBLShadowErrorCode.SCENE_NOT_PROVIDED,
             'Scene must be initialized before loading textures'
           );
         }
@@ -213,8 +216,12 @@ export class BabylonIBLShadowsService {
           if (texture.isReady()) {
             resolve();
           } else {
-            texture.onLoadObservable.addOnce(() => resolve());
-            texture.onErrorObservable.addOnce(() => reject(new Error('Failed to load texture')));
+            (
+              texture as { onLoadObservable?: { addOnce: (callback: () => void) => void } }
+            ).onLoadObservable?.addOnce(() => resolve());
+            (
+              texture as { onErrorObservable?: { addOnce: (callback: () => void) => void } }
+            ).onErrorObservable?.addOnce(() => reject(new Error('Failed to load texture')));
           }
         });
 
@@ -225,7 +232,8 @@ export class BabylonIBLShadowsService {
 
         // Configure environment rotation
         if (this.config.environmentRotation) {
-          this.scene.environmentRotationY = this.config.environmentRotation.y;
+          (this.scene as unknown as { environmentRotationY: number }).environmentRotationY =
+            this.config.environmentRotation.y;
         }
 
         // Configure environment intensity
@@ -240,7 +248,7 @@ export class BabylonIBLShadowsService {
           return error as IBLShadowError;
         }
         return this.createError(
-          'TEXTURE_LOAD_FAILED',
+          IBLShadowErrorCode.TEXTURE_LOAD_FAILED,
           `Failed to load environment texture: ${error}`
         );
       }
@@ -257,7 +265,7 @@ export class BabylonIBLShadowsService {
       () => {
         if (!this.scene || !this.environmentTexture) {
           throw this.createError(
-            'INVALID_CONFIG',
+            IBLShadowErrorCode.INVALID_CONFIG,
             'IBL shadows must be initialized before applying to meshes'
           );
         }
@@ -279,16 +287,22 @@ export class BabylonIBLShadowsService {
         const pbrMaterial = mesh.material as PBRMaterial;
 
         // Configure PBR material for IBL shadows
-        pbrMaterial.environmentTexture = this.environmentTexture;
+        (pbrMaterial as unknown as { environmentTexture: unknown }).environmentTexture =
+          this.environmentTexture;
         pbrMaterial.environmentIntensity = this.config.environmentIntensity;
 
         // Enable IBL shadows if supported
         if ('enableIBLShadows' in pbrMaterial) {
-          (pbrMaterial as any).enableIBLShadows = this.config.enabled;
-          (pbrMaterial as any).iblShadowIntensity = this.config.shadowIntensity;
-          (pbrMaterial as any).iblShadowBias = this.config.shadowBias;
-          (pbrMaterial as any).iblShadowNormalBias = this.config.shadowNormalBias;
-          (pbrMaterial as any).iblShadowRadius = this.config.shadowRadius;
+          (pbrMaterial as unknown as { enableIBLShadows: boolean }).enableIBLShadows =
+            this.config.enabled;
+          (pbrMaterial as unknown as { iblShadowIntensity: number }).iblShadowIntensity =
+            this.config.shadowIntensity;
+          (pbrMaterial as unknown as { iblShadowBias: number }).iblShadowBias =
+            this.config.shadowBias;
+          (pbrMaterial as unknown as { iblShadowNormalBias: number }).iblShadowNormalBias =
+            this.config.shadowNormalBias;
+          (pbrMaterial as unknown as { iblShadowRadius: number }).iblShadowRadius =
+            this.config.shadowRadius;
         }
 
         // Track affected mesh
@@ -302,7 +316,7 @@ export class BabylonIBLShadowsService {
           return error as IBLShadowError;
         }
         return this.createError(
-          'MESH_APPLICATION_FAILED',
+          IBLShadowErrorCode.MESH_APPLICATION_FAILED,
           `Failed to apply IBL shadows to mesh: ${error}`
         );
       }
@@ -336,7 +350,7 @@ export class BabylonIBLShadowsService {
           return error as IBLShadowError;
         }
         return this.createError(
-          'MESH_APPLICATION_FAILED',
+          IBLShadowErrorCode.MESH_APPLICATION_FAILED,
           `Failed to apply IBL shadows to meshes: ${error}`
         );
       }
@@ -360,7 +374,8 @@ export class BabylonIBLShadowsService {
           }
 
           if (newConfig.environmentRotation !== undefined) {
-            this.scene.environmentRotationY = newConfig.environmentRotation.y;
+            (this.scene as unknown as { environmentRotationY: number }).environmentRotationY =
+              newConfig.environmentRotation.y;
           }
         }
 
@@ -374,7 +389,10 @@ export class BabylonIBLShadowsService {
         );
       },
       (error) =>
-        this.createError(IBLShadowErrorCode.INVALID_CONFIG, `Failed to update IBL shadow configuration: ${error}`)
+        this.createError(
+          IBLShadowErrorCode.INVALID_CONFIG,
+          `Failed to update IBL shadow configuration: ${error}`
+        )
     );
   }
 
@@ -407,8 +425,9 @@ export class BabylonIBLShadowsService {
     const engine = scene.getEngine();
 
     // IBL shadows require WebGL2 or WebGPU
-    const isWebGL2Supported = 'webGLVersion' in engine && (engine as any).webGLVersion >= 2;
-    const isWebGPUSupported = 'isWebGPU' in engine && (engine as any).isWebGPU;
+    const isWebGL2Supported =
+      'webGLVersion' in engine && (engine as { webGLVersion: number }).webGLVersion >= 2;
+    const isWebGPUSupported = 'isWebGPU' in engine && (engine as { isWebGPU: boolean }).isWebGPU;
     return isWebGL2Supported || isWebGPUSupported;
   }
 

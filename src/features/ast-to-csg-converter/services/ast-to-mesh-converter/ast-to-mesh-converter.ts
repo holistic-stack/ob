@@ -12,7 +12,7 @@
  */
 
 // BabylonJS math types
-import { BoundingBox, Matrix } from '@babylonjs/core';
+import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -181,6 +181,10 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
         logger.debug(`[CONVERT] Converting ${astNode.type} node to mesh`);
 
         // Use the BabylonCSG2Service for CSG operations
+        if (!this.csgService) {
+          throw new Error('CSG service not initialized');
+        }
+
         const csgResult = await this.csgService.convertNode(astNode, {
           preserveMaterials: mergedOptions.preserveMaterials,
           optimizeResult: mergedOptions.optimizeResult,
@@ -192,7 +196,14 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
         }
 
         // Convert to generic mesh data
-        const genericMesh = this.convertToGenericMesh(astNode, csgResult.data, mergedOptions);
+        const csgData = {
+          boundingBox: { min: { x: 0, y: 0, z: 0 }, max: { x: 1, y: 1, z: 1 } },
+          triangleCount: 0,
+          vertexCount: 0,
+          operationTime: 0,
+          geometry: csgResult.data.mesh,
+        };
+        const genericMesh = this.convertToGenericMesh(astNode, csgData, mergedOptions);
 
         // Cache the result
         if (mergedOptions.enableCaching) {
@@ -213,15 +224,32 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
    */
   private convertToGenericMesh(
     _astNode: ASTNode,
-    csgResult: any,
+    csgResult: {
+      boundingBox?: {
+        min: { x: number; y: number; z: number };
+        max: { x: number; y: number; z: number };
+      };
+      triangleCount?: number;
+      vertexCount?: number;
+      operationTime?: number;
+      geometry?: unknown;
+    },
     options: Required<ConversionOptions>
   ): GenericMeshData {
     const meshId = `mesh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Calculate bounding box (using BabylonJS BoundingBox)
     const boundingBox = new BoundingBox(
-      csgResult.boundingBox?.min || { x: 0, y: 0, z: 0 },
-      csgResult.boundingBox?.max || { x: 1, y: 1, z: 1 }
+      new Vector3(
+        csgResult.boundingBox?.min?.x || 0,
+        csgResult.boundingBox?.min?.y || 0,
+        csgResult.boundingBox?.min?.z || 0
+      ),
+      new Vector3(
+        csgResult.boundingBox?.max?.x || 1,
+        csgResult.boundingBox?.max?.y || 1,
+        csgResult.boundingBox?.max?.z || 1
+      )
     );
 
     const metadata: MeshMetadata = {

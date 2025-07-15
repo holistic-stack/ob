@@ -47,7 +47,7 @@ describe('QueryVisitor', () => {
     queryVisitor = new QueryVisitor(
       code,
       tree,
-      parser.getLanguage(),
+      parser.getLanguage()!,
       compositeVisitor,
       errorHandler
     );
@@ -84,7 +84,7 @@ describe('QueryVisitor', () => {
     queryVisitor = new QueryVisitor(
       code,
       tree,
-      parser.getLanguage(),
+      parser.getLanguage()!,
       compositeVisitor,
       errorHandler
     );
@@ -124,7 +124,7 @@ describe('QueryVisitor', () => {
     queryVisitor = new QueryVisitor(
       code,
       tree,
-      parser.getLanguage(),
+      parser.getLanguage()!,
       compositeVisitor,
       errorHandler
     );
@@ -168,7 +168,7 @@ describe('QueryVisitor', () => {
     queryVisitor = new QueryVisitor(
       code,
       tree,
-      parser.getLanguage(),
+      parser.getLanguage()!,
       compositeVisitor,
       errorHandler
     );

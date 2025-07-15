@@ -5,6 +5,7 @@
  * Following TDD principles with real implementations where possible.
  */
 
+import type { Mesh, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CSGOperationConfig } from '../../types/babylon-csg.types';
 import { CSGOperationType, DEFAULT_CSG_CONFIG } from '../../types/babylon-csg.types';
@@ -17,7 +18,7 @@ const createMockScene = () =>
     render: vi.fn(),
     registerBeforeRender: vi.fn(),
     unregisterBeforeRender: vi.fn(),
-  }) as any;
+  }) as unknown;
 
 const createMockMesh = (id: string) =>
   ({
@@ -36,7 +37,7 @@ const createMockMesh = (id: string) =>
     getIndices: vi.fn(() => new Uint32Array([0, 1, 2])),
     createNormals: vi.fn(),
     optimizeIndices: vi.fn(),
-  }) as any;
+  }) as unknown;
 
 // Mock BabylonJS core
 vi.mock('@babylonjs/core', async () => {
@@ -60,24 +61,24 @@ vi.mock('@babylonjs/core', async () => {
 
 describe('BabylonCSG2Service', () => {
   let csgService: BabylonCSG2Service;
-  let mockScene: any;
-  let mockMeshA: any;
-  let mockMeshB: any;
+  let mockScene: Partial<Scene>;
+  let mockMeshA: Partial<Mesh>;
+  let mockMeshB: Partial<Mesh>;
 
   beforeEach(async () => {
     // Create fresh instances for each test
     csgService = new BabylonCSG2Service();
-    mockScene = createMockScene();
-    mockMeshA = createMockMesh('meshA');
-    mockMeshB = createMockMesh('meshB');
+    mockScene = createMockScene() as Partial<Scene>;
+    mockMeshA = createMockMesh('meshA') as Partial<Mesh>;
+    mockMeshB = createMockMesh('meshB') as Partial<Mesh>;
 
     // Reset mocks
     vi.clearAllMocks();
 
     // Setup mock CSG2 behavior
     const { CSG2 } = await import('@babylonjs/core');
-    const mockInstance = CSG2.FromMesh(mockMeshA);
-    mockInstance.toMesh.mockReturnValue(createMockMesh('result'));
+    const mockInstance = CSG2.FromMesh(mockMeshA as Mesh);
+    vi.spyOn(mockInstance, 'toMesh').mockReturnValue(createMockMesh('result') as Mesh);
   });
 
   afterEach(() => {
@@ -112,13 +113,13 @@ describe('BabylonCSG2Service', () => {
 
   describe('init', () => {
     it('should initialize with valid scene', () => {
-      const result = csgService.init(mockScene);
+      const result = csgService.init(mockScene as Scene);
 
       expect(result.success).toBe(true);
     });
 
     it('should handle null scene gracefully', () => {
-      const result = csgService.init(null as any);
+      const result = csgService.init(null as never);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -130,11 +131,11 @@ describe('BabylonCSG2Service', () => {
 
   describe('union', () => {
     beforeEach(() => {
-      csgService.init(mockScene);
+      csgService.init(mockScene as Scene);
     });
 
     it('should perform union operation successfully', async () => {
-      const result = await csgService.union(mockMeshA, mockMeshB);
+      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -150,7 +151,7 @@ describe('BabylonCSG2Service', () => {
     });
 
     it('should handle invalid meshes gracefully', async () => {
-      const result = await csgService.union(null as any, mockMeshB);
+      const result = await csgService.union(null as never, mockMeshB as never);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -164,7 +165,7 @@ describe('BabylonCSG2Service', () => {
         optimizeResult: false,
       };
 
-      const result = await csgService.union(mockMeshA, mockMeshB, customConfig);
+      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh, customConfig);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -175,11 +176,11 @@ describe('BabylonCSG2Service', () => {
 
   describe('difference', () => {
     beforeEach(() => {
-      csgService.init(mockScene);
+      csgService.init(mockScene as Scene);
     });
 
     it('should perform difference operation successfully', async () => {
-      const result = await csgService.difference(mockMeshA, mockMeshB);
+      const result = await csgService.difference(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -195,11 +196,11 @@ describe('BabylonCSG2Service', () => {
 
   describe('intersection', () => {
     beforeEach(() => {
-      csgService.init(mockScene);
+      csgService.init(mockScene as Scene);
     });
 
     it('should perform intersection operation successfully', async () => {
-      const result = await csgService.intersection(mockMeshA, mockMeshB);
+      const result = await csgService.intersection(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -248,7 +249,7 @@ describe('BabylonCSG2Service', () => {
 
   describe('dispose', () => {
     it('should dispose service cleanly', () => {
-      csgService.init(mockScene);
+      csgService.init(mockScene as Scene);
 
       // Should not throw
       expect(() => csgService.dispose()).not.toThrow();
@@ -262,11 +263,11 @@ describe('BabylonCSG2Service', () => {
 
   describe('performance metrics', () => {
     beforeEach(() => {
-      csgService.init(mockScene);
+      csgService.init(mockScene as Scene);
     });
 
     it('should include performance metrics in operation result', async () => {
-      const result = await csgService.union(mockMeshA, mockMeshB);
+      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -279,7 +280,7 @@ describe('BabylonCSG2Service', () => {
     });
 
     it('should track triangle and vertex counts', async () => {
-      const result = await csgService.union(mockMeshA, mockMeshB);
+      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {

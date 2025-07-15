@@ -16,7 +16,7 @@ const logger = createLogger('OpenSCADPipelineTest');
 describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
   let engine: BABYLON.NullEngine;
   let scene: BABYLON.Scene;
-  let parser: any; // OpenSCAD parser instance
+  let parser: { parseAST: (code: string) => ASTNode[] }; // OpenSCAD parser instance
 
   beforeAll(async () => {
     logger.debug('[DEBUG][OpenSCADPipelineTest] Initializing OpenSCAD parser...');
@@ -81,9 +81,12 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       const cubeNode = ast[0];
 
       // Verify AST structure
-      expect(cubeNode.type).toBe('cube');
-      expect(cubeNode.size).toEqual([2, 3, 4]);
-      expect(cubeNode.center).toBe(false);
+      expect(cubeNode).toBeDefined();
+      if (cubeNode && cubeNode.type === 'cube') {
+        expect(cubeNode.type).toBe('cube');
+        expect((cubeNode as { size: number[] }).size).toEqual([2, 3, 4]);
+        expect((cubeNode as { center: boolean }).center).toBe(false);
+      }
 
       // Create BabylonJS mesh manually (since conversion service has compilation errors)
       // This tests the target BabylonJS functionality
@@ -116,8 +119,11 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       const sphereNode = ast[0];
 
       // Verify AST structure
-      expect(sphereNode.type).toBe('sphere');
-      expect(sphereNode.radius).toBe(5);
+      expect(sphereNode).toBeDefined();
+      if (sphereNode && sphereNode.type === 'sphere') {
+        expect(sphereNode.type).toBe('sphere');
+        expect((sphereNode as { radius: number }).radius).toBe(5);
+      }
 
       // Create BabylonJS mesh manually
       const babylonSphere = BABYLON.MeshBuilder.CreateSphere(
@@ -149,10 +155,13 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       const cylinderNode = ast[0];
 
       // Verify AST structure
-      expect(cylinderNode.type).toBe('cylinder');
-      expect(cylinderNode.h).toBe(6);
-      expect(cylinderNode.r1).toBe(3);
-      expect(cylinderNode.r2).toBe(3);
+      expect(cylinderNode).toBeDefined();
+      if (cylinderNode && cylinderNode.type === 'cylinder') {
+        expect(cylinderNode.type).toBe('cylinder');
+        expect((cylinderNode as { h: number }).h).toBe(6);
+        expect((cylinderNode as { r1: number }).r1).toBe(3);
+        expect((cylinderNode as { r2: number }).r2).toBe(3);
+      }
 
       // Create BabylonJS mesh manually
       const babylonCylinder = BABYLON.MeshBuilder.CreateCylinder(

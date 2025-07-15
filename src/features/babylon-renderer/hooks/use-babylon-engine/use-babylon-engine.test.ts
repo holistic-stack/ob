@@ -301,7 +301,7 @@ describe('useBabylonEngine', () => {
       const metrics = result.current.getPerformanceMetrics();
 
       expect(metrics.fps).toBe(0);
-      expect(metrics.frameTime).toBe(0);
+      expect(metrics.renderTime).toBe(0);
       expect(metrics.drawCalls).toBe(0);
     });
   });

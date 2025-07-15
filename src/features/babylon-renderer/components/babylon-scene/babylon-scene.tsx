@@ -186,13 +186,13 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   // Initialize BabylonJS services
   const { engineService, engineState, initializeEngine, disposeEngine } = useBabylonEngine();
 
-  const { inspectorService, inspectorState, showInspector, hideInspector } = useBabylonInspector();
+  const { inspectorService, hideInspector } = useBabylonInspector();
 
   /**
    * Handle scene ready callback
    */
   const handleSceneReady = useCallback(
-    (sceneEventArgs: any) => {
+    (sceneEventArgs: { scene: BabylonSceneType }) => {
       const scene = sceneEventArgs.scene;
       logger.debug('[DEBUG][BabylonScene] Scene ready');
       sceneRef.current = scene;
@@ -225,7 +225,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   /**
    * Handle engine ready callback
    */
-  const handleEngineReady = useCallback(
+  const _handleEngineReady = useCallback(
     (engine: BabylonEngineType) => {
       logger.debug('[DEBUG][BabylonScene] Engine ready');
       engineRef.current = engine;
@@ -239,7 +239,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   /**
    * Handle render loop callback
    */
-  const handleRenderLoop = useCallback(() => {
+  const _handleRenderLoop = useCallback(() => {
     // Call user callback
     onRenderLoop?.();
   }, [onRenderLoop]);
@@ -250,7 +250,8 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   useEffect(() => {
     if (canvasRef.current && engineService) {
       const initEngine = async () => {
-        const result = await initializeEngine(canvasRef.current!, {
+        if (!canvasRef.current) return;
+        const result = await initializeEngine(canvasRef.current, {
           enableWebGPU: config.enableWebGPU,
           antialias: config.antialias,
           adaptToDeviceRatio: config.adaptToDeviceRatio,
@@ -316,12 +317,8 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
   return (
     <div className={className} style={style}>
-      <Engine
-        antialias={config.antialias}
-        adaptToDeviceRatio={config.adaptToDeviceRatio}
-        onEngineReady={handleEngineReady}
-      >
-        <Scene onSceneMount={handleSceneReady} onRender={handleRenderLoop}>
+      <Engine antialias={config.antialias} adaptToDeviceRatio={config.adaptToDeviceRatio}>
+        <Scene onSceneMount={handleSceneReady}>
           {/* Camera */}
           {camera.type === 'arcRotate' && (
             <arcRotateCamera

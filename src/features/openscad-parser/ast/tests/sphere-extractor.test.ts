@@ -1,4 +1,4 @@
-import type { Node as TSNode, Tree } from 'web-tree-sitter';
+import type { Tree, Node as TSNode } from 'web-tree-sitter';
 
 // Mock the TSNode for testing
 const _createMockNode = (text: string): TSNode => {
@@ -22,8 +22,9 @@ let parser: OpenscadParser;
 let currentTree: Tree | null = null; // Track current tree for cleanup
 
 describe('Sphere Extractor', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     parser = new OpenscadParser();
+    await parser.init();
   });
 
   afterEach(() => {
@@ -108,6 +109,6 @@ describe('Sphere Extractor', () => {
     }
 
     const sphereNode = extractSphereNode(moduleInstantiationNode);
-    expect(sphereNode).toBeUndefined();
+    expect(sphereNode).toBeNull();
   });
 });

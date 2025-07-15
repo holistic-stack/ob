@@ -55,7 +55,7 @@ describe('ForLoopVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
-      
+
       const forLoopResult = result as ast.ForLoopNode;
       expect(forLoopResult.variables).toBeDefined();
       expect(forLoopResult.variables.length).toBe(1);
@@ -94,14 +94,14 @@ describe('ForLoopVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
-      
+
       const forLoopResult = result as ast.ForLoopNode;
       expect(forLoopResult.variables).toBeDefined();
       expect(forLoopResult.variables.length).toBe(1);
-      expect(forLoopResult.variables[0].variable).toBe('i');
+      expect(forLoopResult.variables[0]?.variable).toBe('i');
 
       // Check the range and step
-      const range = forLoopResult.variables[0].range;
+      const range = forLoopResult.variables[0]?.range;
       if (Array.isArray(range)) {
         expect(range[0]).toBe(0);
         expect(range[1]).toBe(5);
@@ -110,7 +110,7 @@ describe('ForLoopVisitor', () => {
         expect(range).toBeDefined();
       }
 
-      const stepNode = forLoopResult.variables[0].step;
+      const stepNode = forLoopResult.variables[0]?.step;
       expect(stepNode).toBeDefined();
       expect(stepNode?.type).toBe('expression');
       const literalStepNode = stepNode as ast.LiteralNode;
@@ -150,7 +150,7 @@ describe('ForLoopVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
-      
+
       const forLoopResult = result as ast.ForLoopNode;
       expect(forLoopResult.variables).toBeDefined();
       expect(forLoopResult.variables.length).toBe(2);
@@ -200,7 +200,7 @@ describe('ForLoopVisitor', () => {
       // Verify the result
       expect(result).not.toBeNull();
       expect(result?.type).toBe('for_loop');
-      
+
       const forLoopResult = result as ast.ForLoopNode;
       expect(forLoopResult.variables).toBeDefined();
       expect(forLoopResult.variables.length).toBe(1);

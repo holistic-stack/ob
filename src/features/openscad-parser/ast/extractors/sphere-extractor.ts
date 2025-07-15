@@ -15,6 +15,12 @@ export function extractSphereNode(
   errorHandler?: ErrorHandler,
   sourceCode?: string
 ): ast.SphereNode | null {
+  // Check if this is actually a sphere node
+  const nameNode = node.childForFieldName('name');
+  if (!nameNode || nameNode.text !== 'sphere') {
+    return null;
+  }
+
   // Default values
   let radius: number = 1;
   let diameter: number | undefined;

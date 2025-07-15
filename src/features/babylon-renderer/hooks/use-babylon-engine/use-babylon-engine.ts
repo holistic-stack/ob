@@ -5,6 +5,7 @@
  * Provides declarative engine management with React 19 compatibility.
  */
 
+import type { Engine } from '@babylonjs/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type {
@@ -13,7 +14,12 @@ import type {
   EngineDisposeResult,
   EngineInitResult,
 } from '../../services/babylon-engine-service';
-import { BabylonEngineService } from '../../services/babylon-engine-service';
+import { BabylonEngineService, EngineErrorCode } from '../../services/babylon-engine-service';
+import type {
+  EngineError,
+  EnginePerformanceMetrics,
+  EngineInitOptions as ServiceEngineInitOptions,
+} from '../../types/babylon-engine.types';
 
 const logger = createLogger('useBabylonEngine');
 
@@ -25,8 +31,8 @@ export interface EngineInitOptions {
   readonly antialias?: boolean;
   readonly adaptToDeviceRatio?: boolean;
   readonly powerPreference?: 'default' | 'high-performance' | 'low-power';
-  readonly onEngineReady?: (engine: any) => void;
-  readonly onEngineError?: (error: Error) => void;
+  readonly onEngineReady?: (engine: Engine) => void;
+  readonly onEngineError?: (error: EngineError) => void;
 }
 
 /**
@@ -40,7 +46,7 @@ export interface UseBabylonEngineReturn {
     options?: EngineInitOptions
   ) => Promise<EngineInitResult>;
   readonly disposeEngine: () => Promise<EngineDisposeResult>;
-  readonly getPerformanceMetrics: () => any;
+  readonly getPerformanceMetrics: () => EnginePerformanceMetrics;
   readonly isWebGPUSupported: boolean;
   readonly isWebGLSupported: boolean;
 }
@@ -52,14 +58,12 @@ const DEFAULT_ENGINE_CONFIG: BabylonEngineConfig = {
   enableWebGPU: true,
   antialias: true,
   adaptToDeviceRatio: true,
+  stencil: true,
   powerPreference: 'high-performance',
   enableOfflineSupport: false,
   enableInspector: false,
   preserveDrawingBuffer: false,
-  doNotHandleContextLost: false,
-  audioEngine: true,
-  deterministicLockstep: false,
-  lockstepMaxSteps: 4,
+  failIfMajorPerformanceCaveat: false,
 } as const;
 
 /**
@@ -67,9 +71,13 @@ const DEFAULT_ENGINE_CONFIG: BabylonEngineConfig = {
  */
 const INITIAL_ENGINE_STATE: BabylonEngineState = {
   isInitialized: false,
+  isDisposed: false,
   isWebGPU: false,
   engine: null,
   canvas: null,
+  fps: 0,
+  deltaTime: 0,
+  renderTime: 0,
   performanceMetrics: {
     fps: 0,
     deltaTime: 0,
@@ -164,7 +172,14 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
         };
 
         // Initialize engine
-        const result = await engineService.init(canvas, config);
+        const initOptions: ServiceEngineInitOptions = {
+          canvas,
+          config,
+          ...(options.onEngineReady && { onEngineReady: options.onEngineReady }),
+          ...(options.onEngineError && { onEngineError: options.onEngineError }),
+        };
+
+        const result = await engineService.init(initOptions);
 
         if (result.success) {
           // Update state with successful initialization
@@ -187,7 +202,7 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
 
           // Call error callback
           if (options.onEngineError) {
-            options.onEngineError(new Error(result.error.message));
+            options.onEngineError(result.error);
           }
 
           logger.error(
@@ -252,7 +267,9 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
 
     const updateInterval = setInterval(() => {
       const newState = engineServiceRef.current?.getState();
-      setEngineState(newState);
+      if (newState) {
+        setEngineState(newState);
+      }
     }, 1000); // Update every second
 
     return () => {
@@ -266,9 +283,12 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
   useEffect(() => {
     return () => {
       if (engineServiceRef.current) {
-        engineServiceRef.current.dispose().catch((error) => {
-          logger.error(`[ERROR][useBabylonEngine] Cleanup disposal failed: ${error}`);
-        });
+        const result = engineServiceRef.current.dispose();
+        if (!result.success) {
+          logger.error(
+            `[ERROR][useBabylonEngine] Cleanup disposal failed: ${result.error.message}`
+          );
+        }
       }
     };
   }, []);

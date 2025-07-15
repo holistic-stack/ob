@@ -13,42 +13,48 @@ import { StoreConnectedRenderer } from './store-connected-renderer';
 
 // Mock BabylonScene component
 vi.mock('../babylon-scene', () => ({
-  BabylonScene: React.forwardRef<any, any>(
-    ({ onSceneReady, onEngineReady, onRenderLoop, children, className }, _ref) => {
-      // Simulate scene ready after a short delay
-      React.useEffect(() => {
-        const timer = setTimeout(() => {
-          const mockScene = {
-            getEngine: vi.fn(() => ({
-              getRenderingCanvas: vi.fn(() => document.createElement('canvas')),
-            })),
-          };
-          onSceneReady?.(mockScene);
-
-          const mockEngine = {
-            dispose: vi.fn(),
-            runRenderLoop: vi.fn(),
-          };
-          onEngineReady?.(mockEngine);
-        }, 100);
-        return () => clearTimeout(timer);
-      }, [onSceneReady, onEngineReady]);
-
-      return (
-        <div data-testid="babylon-scene" className={className}>
-          {children}
-        </div>
-      );
+  BabylonScene: React.forwardRef<
+    HTMLDivElement,
+    {
+      onSceneReady?: (scene: Record<string, unknown>) => void;
+      onEngineReady?: (engine: Record<string, unknown>) => void;
+      children?: React.ReactNode;
+      className?: string;
     }
-  ),
+  >(({ onSceneReady, onEngineReady, children, className }, _ref) => {
+    // Simulate scene ready after a short delay
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        const mockScene = {
+          getEngine: vi.fn(() => ({
+            getRenderingCanvas: vi.fn(() => document.createElement('canvas')),
+          })),
+        };
+        onSceneReady?.(mockScene);
+
+        const mockEngine = {
+          dispose: vi.fn(),
+          runRenderLoop: vi.fn(),
+        };
+        onEngineReady?.(mockEngine);
+      }, 100);
+      return () => clearTimeout(timer);
+    }, [onSceneReady, onEngineReady]);
+
+    return (
+      <div data-testid="babylon-scene" className={className}>
+        {children}
+      </div>
+    );
+  }),
 }));
 
 // Mock app store
 const mockStoreState = {
-  ast: [] as any[],
+  ast: [] as Record<string, unknown>[],
   isRendering: false,
-  renderErrors: [] as any[],
-  meshes: [] as any[],
+  renderErrors: [] as Record<string, unknown>[],
+  meshes: [] as Record<string, unknown>[],
   initializeEngine: vi.fn().mockResolvedValue({ success: true }),
   renderAST: vi.fn().mockResolvedValue({ success: true }),
   clearScene: vi.fn(),

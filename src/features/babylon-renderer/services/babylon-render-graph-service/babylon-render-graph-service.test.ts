@@ -297,7 +297,7 @@ describe('BabylonRenderGraphService', () => {
 
       mockSourceBlock.getOutputByName.mockReturnValue(mockSourceOutput);
       mockTargetBlock.getInputByName.mockReturnValue(mockTargetInput);
-      mockRenderGraph?.getBlockByName.mockImplementation((name: string) => {
+      (mockRenderGraph?.getBlockByName as any)?.mockImplementation((name: string) => {
         if (name === 'source-block') return mockSourceBlock;
         if (name === 'target-block') return mockTargetBlock;
         return null;
@@ -363,7 +363,7 @@ describe('BabylonRenderGraphService', () => {
 
     it('should handle build failure', () => {
       const mockRenderGraph = renderGraphService.getRenderGraph('test-graph');
-      mockRenderGraph?.build.mockImplementation(() => {
+      (mockRenderGraph?.build as any)?.mockImplementation(() => {
         throw new Error('Build failed');
       });
 

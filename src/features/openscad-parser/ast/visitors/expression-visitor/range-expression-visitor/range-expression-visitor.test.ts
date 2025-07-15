@@ -20,7 +20,7 @@
  * ```
  */
 
-import { afterEach, beforeEach, describe, expect, fail, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ErrorHandler } from '../../../../error-handling/index.js';
 import { OpenscadParser } from '../../../../openscad-parser';
 import type * as ast from '../../../ast-types.js';
@@ -121,7 +121,7 @@ describe('RangeExpressionVisitor', () => {
           // If result is not null/undefined (checked by expect(result).toBeTruthy()) and not a RangeExpressionNode,
           // it must be an ErrorNode given RangeExpressionVisitor's return signature.
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -155,7 +155,7 @@ describe('RangeExpressionVisitor', () => {
           expect(result.step).toBeUndefined();
         } else {
           // Fail the test if an ErrorNode is returned instead of a RangeExpressionNode
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode, got ErrorNode: ${result?.errorCode ?? 'unknown error'}`
           );
         }
@@ -191,7 +191,7 @@ describe('RangeExpressionVisitor', () => {
           expect(result.step).toBeTruthy(); // Has step in stepped range
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -222,7 +222,7 @@ describe('RangeExpressionVisitor', () => {
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -253,7 +253,7 @@ describe('RangeExpressionVisitor', () => {
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -284,7 +284,7 @@ describe('RangeExpressionVisitor', () => {
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -317,7 +317,7 @@ describe('RangeExpressionVisitor', () => {
           // Optionally, add more specific checks for the step's value or type if needed for the test case
         } else {
           const errorNode = result as ast.ErrorNode; // Safe cast after isRangeExpressionNode is false and result is truthy
-          fail(
+          throw new Error(
             `Expected RangeExpressionNode for code '${code}', but got ErrorNode: code=${errorNode.errorCode}, msg='${errorNode.message}'. Original CST node text: '${errorNode.cstNodeText}'`
           );
         }
@@ -349,7 +349,7 @@ describe('RangeExpressionVisitor', () => {
           expect(result.end).toBeTruthy();
           expect(result.step).toBeUndefined();
         } else {
-          fail(
+          throw new Error(
             `Expected a RangeExpressionNode. Got: ${
               result?.type === 'error' ? result.message : JSON.stringify(result)
             }`
@@ -381,7 +381,7 @@ describe('RangeExpressionVisitor', () => {
           expect(result.end).toBeTruthy();
           expect(result.step).toBeUndefined();
         } else {
-          fail(
+          throw new Error(
             `Expected a RangeExpressionNode. Got: ${
               result?.type === 'error' ? result.message : JSON.stringify(result)
             }`
@@ -497,6 +497,7 @@ describe('RangeExpressionVisitor', () => {
         expect(valueNode).toBeTruthy(); // Ensure valueNode is found
         expect(valueNode?.type).toBe(tc.expectedValueNodeType);
 
+        if (!valueNode) throw new Error('No value node found');
         const result = visitor.visitNode(valueNode);
         expect(result?.type).toBe('error');
         const errorNode = result as ast.ErrorNode;

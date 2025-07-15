@@ -77,7 +77,7 @@ describe('BabylonEngineService', () => {
 
     it('should handle initialization failure gracefully', async () => {
       // Use invalid canvas to trigger failure
-      const invalidCanvas = null as any;
+      const invalidCanvas = null as never;
 
       const initOptions: EngineInitOptions = {
         canvas: invalidCanvas,

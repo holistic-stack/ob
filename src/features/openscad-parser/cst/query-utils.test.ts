@@ -31,7 +31,7 @@ describe('QueryManager', () => {
         setProperties: [],
         assertedProperties: [],
         refutedProperties: [],
-        matchLimit: undefined,
+        matchLimit: 0,
         delete: vi.fn(),
         predicatesForPattern: vi.fn(() => []),
         disableCapture: vi.fn(),
@@ -59,7 +59,7 @@ describe('QueryManager', () => {
       setProperties: [],
       assertedProperties: [],
       refutedProperties: [],
-      matchLimit: undefined,
+      matchLimit: 0,
       delete: vi.fn(),
       predicatesForPattern: vi.fn(() => []),
       disableCapture: vi.fn(),
@@ -71,7 +71,7 @@ describe('QueryManager', () => {
       captureIndexForName: vi.fn(() => 0),
       isPatternRooted: vi.fn(() => false),
       isPatternNonLocal: vi.fn(() => false),
-      isPatternGuaranteedAtStep: vi.fn(() => false)
+      isPatternGuaranteedAtStep: vi.fn(() => false),
     } as Query);
   });
 

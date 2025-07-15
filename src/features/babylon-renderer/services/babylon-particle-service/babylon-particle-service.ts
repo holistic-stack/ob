@@ -160,7 +160,10 @@ export class BabylonParticleService {
     return tryCatch(
       () => {
         if (!scene) {
-          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, 'Scene is required for particle systems');
+          throw this.createError(
+            ParticleSystemErrorCode.INVALID_CONFIG,
+            'Scene is required for particle systems'
+          );
         }
 
         this.scene = scene;
@@ -244,7 +247,10 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to create particle system: ${error}`);
+        return this.createError(
+          ParticleSystemErrorCode.CREATION_FAILED,
+          `Failed to create particle system: ${error}`
+        );
       }
     );
   }
@@ -259,7 +265,10 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
+          throw this.createError(
+            ParticleSystemErrorCode.INVALID_CONFIG,
+            `Particle system not found: ${name}`
+          );
         }
 
         particleSystem.start();
@@ -281,7 +290,10 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to start particle system: ${error}`);
+        return this.createError(
+          ParticleSystemErrorCode.CREATION_FAILED,
+          `Failed to start particle system: ${error}`
+        );
       }
     );
   }
@@ -296,7 +308,10 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
+          throw this.createError(
+            ParticleSystemErrorCode.INVALID_CONFIG,
+            `Particle system not found: ${name}`
+          );
         }
 
         particleSystem.stop();
@@ -318,7 +333,10 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError(ParticleSystemErrorCode.CREATION_FAILED, `Failed to stop particle system: ${error}`);
+        return this.createError(
+          ParticleSystemErrorCode.CREATION_FAILED,
+          `Failed to stop particle system: ${error}`
+        );
       }
     );
   }
@@ -354,7 +372,10 @@ export class BabylonParticleService {
       () => {
         const particleSystem = this.particleSystems.get(name);
         if (!particleSystem) {
-          throw this.createError(ParticleSystemErrorCode.INVALID_CONFIG, `Particle system not found: ${name}`);
+          throw this.createError(
+            ParticleSystemErrorCode.INVALID_CONFIG,
+            `Particle system not found: ${name}`
+          );
         }
 
         particleSystem.dispose();
@@ -368,7 +389,10 @@ export class BabylonParticleService {
         if (error && typeof error === 'object' && 'code' in error) {
           return error as ParticleSystemError;
         }
-        return this.createError(ParticleSystemErrorCode.DISPOSAL_FAILED, `Failed to remove particle system: ${error}`);
+        return this.createError(
+          ParticleSystemErrorCode.DISPOSAL_FAILED,
+          `Failed to remove particle system: ${error}`
+        );
       }
     );
   }

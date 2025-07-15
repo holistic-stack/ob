@@ -242,7 +242,10 @@ describe('Control Structures AST Generation', () => {
                   expressionType: 'range',
                   start: 0,
                   end: 5,
-                  location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
+                  location: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 },
+                  },
                 } as any,
               },
             ],
@@ -285,13 +288,19 @@ describe('Control Structures AST Generation', () => {
                   expressionType: 'range',
                   start: 0,
                   end: 5,
-                  location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
+                  location: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 },
+                  },
                 } as any,
                 step: {
                   type: 'expression',
                   expressionType: 'literal',
                   value: 0.5,
-                  location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
+                  location: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 },
+                  },
                 } as any,
               },
             ],
@@ -334,7 +343,10 @@ describe('Control Structures AST Generation', () => {
                   expressionType: 'range',
                   start: 0,
                   end: 5,
-                  location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
+                  location: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 },
+                  },
                 } as any,
               },
               {
@@ -344,7 +356,10 @@ describe('Control Structures AST Generation', () => {
                   expressionType: 'range',
                   start: 0,
                   end: 5,
-                  location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
+                  location: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 },
+                  },
                 } as any,
               },
             ],

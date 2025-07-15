@@ -394,7 +394,7 @@ describe('BabylonRenderingSlice', () => {
       expect(state.babylonRendering.meshes).toEqual([]);
       expect(state.babylonRendering.renderErrors).toEqual([]);
       expect(state.babylonRendering.lastRendered).toBeNull();
-      expect(mockMeshes[0].dispose).toHaveBeenCalled();
+      expect(mockMeshes[0]?.dispose).toHaveBeenCalled();
     });
 
     it('should update performance metrics', () => {
