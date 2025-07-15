@@ -14,6 +14,42 @@ export type {
 } from './babylon-csg2-service';
 // CSG2 Service
 export { BabylonCSG2Service, CSG2ErrorCode, DEFAULT_CSG2_CONFIG } from './babylon-csg2-service';
+
+// AST Bridge Converter Service
+export {
+  ASTBridgeConverter,
+  DEFAULT_BRIDGE_CONFIG,
+  PlaceholderBabylonNode,
+  PrimitiveBabylonNode,
+  TransformationBabylonNode,
+  CSGBabylonNode,
+  ControlFlowBabylonNode,
+  ExtrusionBabylonNode,
+  ModifierBabylonNode,
+} from './ast-bridge-converter';
+export type { BridgeConversionConfig } from './ast-bridge-converter';
+
+// Primitive Shape Generator Service
+export { PrimitiveShapeGeneratorService } from './primitive-shape-generator';
+export type {
+  OpenSCADCubeParams,
+  OpenSCADSphereParams,
+  OpenSCADCylinderParams,
+  OpenSCADPolyhedronParams,
+  PrimitiveGenerationError,
+} from './primitive-shape-generator';
+
+// Transformation Operations Service
+export { TransformationOperationsService } from './transformation-operations';
+export type {
+  OpenSCADTranslateParams,
+  OpenSCADRotateParams,
+  OpenSCADScaleParams,
+  OpenSCADMirrorParams,
+  OpenSCADMatrixParams,
+  OpenSCADColorParams,
+  TransformationError,
+} from './transformation-operations';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,

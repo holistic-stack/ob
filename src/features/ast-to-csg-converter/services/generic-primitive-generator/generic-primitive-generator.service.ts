@@ -228,8 +228,15 @@ export class GenericPrimitiveGeneratorService {
    * Extract cube size from CubeNode
    */
   private extractCubeSize(node: CubeNode): [number, number, number] {
+    if (!node.size) {
+      return [1, 1, 1]; // Default size when undefined
+    }
     if (Array.isArray(node.size) && node.size.length >= 3) {
-      return [node.size[0], node.size[1], node.size[2]];
+      return [
+        typeof node.size[0] === 'number' ? node.size[0] : 1,
+        typeof node.size[1] === 'number' ? node.size[1] : 1,
+        typeof node.size[2] === 'number' ? node.size[2] : 1
+      ];
     }
     if (typeof node.size === 'number') {
       return [node.size, node.size, node.size];

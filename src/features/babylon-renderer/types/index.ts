@@ -32,6 +32,7 @@ export type {
 } from './babylon-engine.types';
 
 export { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from './babylon-engine.types';
+
 // Scene types
 export type {
   BabylonSceneConfig,
@@ -43,3 +44,39 @@ export type {
   SceneUpdateResult,
 } from './babylon-scene.types';
 export { DEFAULT_SCENE_CONFIG, SceneErrorCode } from './babylon-scene.types';
+
+// BabylonJS-Extended AST types
+export type {
+  BabylonJSCubeParameters,
+  BabylonJSCylinderParameters,
+  BabylonJSError,
+  BabylonJSNode,
+  BabylonJSParameters,
+  BabylonJSSphereParameters,
+  BridgeConversionResult,
+  NodeGenerationResult,
+  NodeValidationResult,
+} from './babylon-ast.types';
+export {
+  BabylonJSCSGType,
+  BabylonJSNodeType,
+  BabylonJSPrimitiveType,
+  BabylonJSTransformType,
+} from './babylon-ast.types';
+
+// Generic Mesh Data types
+export type {
+  GenericGeometry,
+  GenericMaterialConfig,
+  GenericMeshMetadata,
+  GenericMeshData,
+  GenericMeshCollection,
+  MaterialConfigBuilder,
+  MeshMetadataBuilder,
+} from './generic-mesh-data.types';
+export {
+  MATERIAL_PRESETS,
+  isGenericMeshData,
+  isGenericMeshCollection,
+  DEFAULT_MESH_METADATA,
+} from './generic-mesh-data.types';

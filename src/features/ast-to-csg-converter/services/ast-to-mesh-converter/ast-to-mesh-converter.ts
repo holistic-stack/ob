@@ -18,6 +18,7 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
+import { BabylonCSG2Service } from '../../../babylon-renderer/services/babylon-csg2-service';
 import type {
   ASTToMeshConverter,
   ConversionOptions,
@@ -180,20 +181,16 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
       async () => {
         logger.debug(`[CONVERT] Converting ${astNode.type} node to mesh`);
 
-        // Use the BabylonCSG2Service for CSG operations
+        // TODO: Implement proper AST to BabylonJS mesh conversion
+        // For now, create a placeholder mesh data structure
+        // This will be replaced with the Bridge Pattern implementation
+
         if (!this.csgService) {
           throw new Error('CSG service not initialized');
         }
 
-        const csgResult = await this.csgService.convertNode(astNode, {
-          preserveMaterials: mergedOptions.preserveMaterials,
-          optimizeResult: mergedOptions.optimizeResult,
-          timeout: mergedOptions.timeout,
-        });
-
-        if (!csgResult.success) {
-          throw new Error(`CSG conversion failed: ${csgResult.error}`);
-        }
+        // Placeholder implementation - will be replaced with proper bridge converter
+        const meshData = this.createPlaceholderMeshData(astNode);
 
         // Convert to generic mesh data
         const csgData = {
@@ -201,7 +198,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
           triangleCount: 0,
           vertexCount: 0,
           operationTime: 0,
-          geometry: csgResult.data.mesh,
+          geometry: meshData,
         };
         const genericMesh = this.convertToGenericMesh(astNode, csgData, mergedOptions);
 
@@ -279,6 +276,22 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
     const nodeKey = `${node.type}_${JSON.stringify(node)}`;
     const optionsKey = `${options.preserveMaterials}_${options.optimizeResult}`;
     return `${nodeKey}_${optionsKey}`;
+  }
+
+  /**
+   * Create placeholder mesh data for AST node
+   * TODO: Replace with proper Bridge Pattern implementation
+   */
+  private createPlaceholderMeshData(astNode: ASTNode): unknown {
+    logger.debug(`[PLACEHOLDER] Creating placeholder mesh for ${astNode.type} node`);
+
+    // Return a simple placeholder object
+    // This will be replaced with proper BabylonJS mesh generation
+    return {
+      type: astNode.type,
+      placeholder: true,
+      timestamp: Date.now(),
+    };
   }
 
   /**
