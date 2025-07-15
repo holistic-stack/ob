@@ -50,6 +50,24 @@ export type {
   OpenSCADColorParams,
   TransformationError,
 } from './transformation-operations';
+
+// CSG Operations Service
+export { CSGOperationsService } from './csg-operations';
+export type {
+  CSGOperationParams,
+  CSGOperationError,
+} from './csg-operations';
+
+// Control Flow Operations Service
+export { ControlFlowOperationsService } from './control-flow-operations';
+export type {
+  OpenSCADForLoopParams,
+  OpenSCADIfParams,
+  OpenSCADLetParams,
+  OpenSCADIntersectionForParams,
+  VariableContext,
+  ControlFlowError,
+} from './control-flow-operations';
 export type {
   BabylonEngineConfig,
   BabylonEngineState,

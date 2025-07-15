@@ -2055,21 +2055,71 @@ Based on the current codebase analysis, here are the structured tasks to complet
     - [x] Performance optimization with efficient matrix operations
     - [x] Error handling with Result<T,E> patterns
     - [x] TypeScript compliance with zero compilation errors
-- [ ] **Task 2.3: CSG Operations Integration**
+- [x] **Task 2.3: CSG Operations Integration**
   - [x] Basic CSG service exists in `babylon-renderer/services/babylon-csg2-service/`
-  - [ ] Union operations for combining multiple meshes
-  - [ ] Difference operations for subtractive modeling
-  - [ ] Intersection operations for overlapping geometry
-  - [ ] Performance optimization for complex CSG trees
-  - [ ] Error handling for degenerate CSG cases
+  - [x] Union operations for combining multiple meshes
+    - [x] Created CSGOperationsService with comprehensive CSG support
+    - [x] Sequential union operations for multiple meshes
+    - [x] Proper mesh conversion between GenericMeshData and BabylonJS
+    - [x] Material inheritance and metadata aggregation
+  - [x] Difference operations for subtractive modeling
+    - [x] Boolean subtraction with proper mesh ordering
+    - [x] Material preservation from primary mesh
+    - [x] Error handling for invalid operations
+  - [x] Intersection operations for overlapping geometry
+    - [x] Geometric intersection with overlap detection
+    - [x] Handling of non-overlapping meshes
+    - [x] Proper result validation and error reporting
+  - [x] Performance optimization for complex CSG trees
+    - [x] Efficient mesh conversion and cleanup
+    - [x] Memory management with automatic disposal
+    - [x] Operation timing and performance metrics
+  - [x] Error handling for degenerate CSG cases
+    - [x] Comprehensive error types and codes
+    - [x] Graceful handling of invalid geometry
+    - [x] Proper error propagation and reporting
+  - [x] **Core Implementation Complete**:
+    - [x] GenericMeshData integration for consistency
+    - [x] BabylonJS CSG2 service integration
+    - [x] Comprehensive test coverage (14 tests, all passing)
+    - [x] Complex CSG tree support with nested operations
+    - [x] Metadata preservation and operation tracking
+    - [x] TypeScript compliance with zero compilation errors
 
 ### Phase 3: Advanced Features and Control Flow
-- [ ] **Task 3.1: Control Flow Implementation**
-  - [ ] For loop expansion with range and list iterations
-  - [ ] Conditional rendering with if statements
-  - [ ] Variable binding with let statements
-  - [ ] Intersection_for operation for complex intersections
-  - [ ] Scope management for nested variable declarations
+- [x] **Task 3.1: Control Flow Implementation**
+  - [x] For loop expansion with range and list iterations
+    - [x] Created ControlFlowOperationsService with comprehensive control flow support
+    - [x] Range iterations with start, end, and step parameters (for i = [0:2:10])
+    - [x] List iterations with arbitrary values (for item = [1, 2, 3])
+    - [x] Negative step support for reverse iterations
+    - [x] Empty iteration handling and graceful error recovery
+  - [x] Conditional rendering with if statements
+    - [x] Boolean condition evaluation with then/else branches
+    - [x] Function-based conditions with variable context access
+    - [x] Null return for false conditions without else branch
+    - [x] Error handling for condition evaluation failures
+  - [x] Variable binding with let statements
+    - [x] Local variable binding with scope isolation
+    - [x] Parent context inheritance for nested scopes
+    - [x] Variable override support for local bindings
+    - [x] Proper scope management for complex expressions
+  - [x] Intersection_for operation for complex intersections
+    - [x] For loop with automatic intersection of all results
+    - [x] Integration foundation for CSG operations
+    - [x] Error handling for empty iteration results
+  - [x] Scope management for nested variable declarations
+    - [x] Hierarchical variable context system
+    - [x] Parent-child context relationships
+    - [x] Variable lookup with proper inheritance
+    - [x] Scope isolation for control flow constructs
+  - [x] **Core Implementation Complete**:
+    - [x] GenericMeshData and GenericMeshCollection integration
+    - [x] Comprehensive test coverage (17 tests, all passing)
+    - [x] OpenSCAD control flow semantics compatibility
+    - [x] Nested control flow support with proper scoping
+    - [x] Error handling with Result<T,E> patterns
+    - [x] TypeScript compliance with zero compilation errors
 - [ ] **Task 3.2: Extrusion Operations**
   - [ ] Linear extrude from 2D profiles with height, twist, scale parameters
   - [ ] Rotate extrude (lathe) operations for rotational symmetry
