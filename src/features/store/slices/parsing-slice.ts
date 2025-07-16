@@ -41,12 +41,7 @@ export const createParsingSlice = (
         { priority: 'normal', tags: ['parsing', 'ast', 'unified'] }
       );
 
-      set((state) => {
-        state.parsing.isLoading = true;
-        state.parsing.errors = [];
-      });
-
-      // Cache check
+      // Cache check BEFORE setting loading state
       const currentState = get();
       if (
         !currentState.parsing.isLoading &&
@@ -54,8 +49,18 @@ export const createParsingSlice = (
         currentState.parsing.errors.length === 0
       ) {
         logger.debug('Code unchanged since last successful parse, returning cached AST.');
+
+        // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
+        logger.debug('[DEBUG][ParsingSlice] Returning cached AST - StoreConnectedRenderer will handle rendering');
+
         return operationUtils.createSuccess(currentState.parsing.ast, metadata);
       }
+
+      // Set loading state for fresh parsing
+      set((state) => {
+        state.parsing.isLoading = true;
+        state.parsing.errors = [];
+      });
 
       // Delegate all parsing logic to the unified service
       const parseResult = await unifiedParseOpenSCAD(code);
@@ -72,12 +77,8 @@ export const createParsingSlice = (
           state.parsing.errors = [];
         });
 
-        // Trigger 3D rendering if enabled
-        const { config } = get();
-        if (config.enableRealTimeRendering && ast.length > 0) {
-          logger.debug('Triggering real-time rendering after unified parsing.');
-          void get().renderAST(ast);
-        }
+        // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
+        logger.debug(`[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`);
         return operationUtils.createSuccess(ast, metadata);
       } else {
         // Handle parsing failure

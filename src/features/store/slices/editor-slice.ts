@@ -13,8 +13,11 @@ import type {
 } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { AppStore, EditorSlice } from '../types/store.types.js';
+
+const logger = createLogger('EditorSlice');
 
 interface EditorSliceConfig {
   debounceConfig: DebounceConfig;
@@ -27,9 +30,19 @@ export const createEditorSlice = (
 ): Omit<EditorSlice, keyof AppStore['editor']> => {
   // Editor slice delegates parsing to the parsing slice via store.parseCode()
   // Debounced functions
-  const debouncedParseInternal = debounce((code: string) => {
+  const debouncedParseInternal = debounce(async (code: string) => {
     const store = get();
-    void store.parseCode(code);
+    try {
+      logger.debug(`[DEBUG][EditorSlice] Triggering debounced parse for ${code.length} chars`);
+      const result = await store.parseCode(code);
+      if (result.success) {
+        logger.debug(`[DEBUG][EditorSlice] Debounced parse successful: ${result.data.length} AST nodes`);
+      } else {
+        logger.error(`[ERROR][EditorSlice] Debounced parse failed: ${result.error.message}`);
+      }
+    } catch (error) {
+      logger.error(`[ERROR][EditorSlice] Exception during debounced parse:`, error);
+    }
   }, debounceConfig.parseDelayMs);
 
   const debouncedSaveInternal = debounce(async () => {

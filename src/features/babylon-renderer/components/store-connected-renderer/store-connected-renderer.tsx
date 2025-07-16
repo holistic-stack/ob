@@ -53,6 +53,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   onRenderComplete,
   onRenderError,
 }) => {
+  // Debug component mounting
+  logger.debug('[DEBUG][StoreConnectedRenderer] Component is mounting/rendering');
+
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const [isSceneReady, setIsSceneReady] = useState(false);
   const lastASTRef = useRef<readonly ASTNode[]>([]);
@@ -64,8 +67,26 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const renderErrors = useAppStore(selectRenderingErrors);
   const meshes = useAppStore(selectRenderingMeshes);
 
+  // Debug initial AST value on mount
+  useEffect(() => {
+    logger.debug(`[DEBUG][StoreConnectedRenderer] Component mounted with AST: ${ast.length} nodes`);
+    logger.debug(`[DEBUG][StoreConnectedRenderer] Initial AST reference: ${ast}`);
+    logger.debug(`[DEBUG][StoreConnectedRenderer] Initial AST content: ${JSON.stringify(ast)}`);
+  }, []); // Empty dependency array - runs only on mount
+
+  // Debug AST changes
+  console.log(`[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}, AST reference:`, ast);
+  logger.debug(`[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}`);
+
+  // Debug AST changes - use length and JSON to force dependency detection
+  useEffect(() => {
+    console.log(`[DEBUG][StoreConnectedRenderer] AST useEffect triggered - length: ${ast.length}`);
+    logger.debug(`[DEBUG][StoreConnectedRenderer] AST changed: ${ast.length} nodes`);
+  }, [ast.length, JSON.stringify(ast)]);
+
   // Store actions - use individual selectors to avoid infinite loops
   const renderAST = useAppStore((state) => state.renderAST);
+  const setScene = useAppStore((state) => state.setScene);
   const clearScene = useAppStore((state) => state.clearScene);
   const updatePerformanceMetrics = useAppStore((state) => state.updatePerformanceMetrics);
   const showInspector = useAppStore((state) => state.showInspector);
@@ -74,9 +95,15 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   // Create stable fallback functions to prevent infinite loops
   const safeRenderAST = useCallback(
     async (astNodes: any[]) => {
+      logger.debug(`[DEBUG][StoreConnectedRenderer] safeRenderAST called with ${astNodes.length} nodes`);
+
       if (renderAST) {
-        return await renderAST(astNodes);
+        const result = await renderAST(astNodes);
+        logger.debug(`[DEBUG][StoreConnectedRenderer] renderAST completed with success: ${result.success}`);
+        return result;
       }
+
+      logger.error(`[ERROR][StoreConnectedRenderer] renderAST function not available`);
       return {
         success: false,
         error: {
@@ -194,6 +221,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     sceneRef.current = scene;
     setIsSceneReady(!!scene);
 
+    // Set scene reference in the store for AST rendering
+    if (setScene) {
+      setScene(scene);
+    }
+
     if (scene) {
       logger.info(
         `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes?.length ?? 0}, cameras: ${scene.cameras?.length ?? 0}, lights: ${scene.lights?.length ?? 0}`
@@ -247,10 +279,36 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Render AST when it changes
    */
   useEffect(() => {
-    // Skip if AST hasn't changed
-    if (ast === lastASTRef.current) {
+    console.log(`[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
+    logger.debug(`[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
+
+    // CRITICAL FIX: Prevent infinite loop when both ASTs are empty
+    // If both current and last AST are empty, skip rendering to prevent infinite loop
+    if (ast.length === 0 && lastASTRef.current.length === 0) {
+      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - both ASTs are empty');
       return;
     }
+
+    // Skip if AST hasn't changed (check content only, not reference)
+
+    // For non-empty ASTs, do a content check
+    if (lastASTRef.current.length > 0 && ast.length === lastASTRef.current.length && ast.length > 0) {
+      const currentASTString = JSON.stringify(ast);
+      const lastASTString = JSON.stringify(lastASTRef.current);
+      const astChanged = currentASTString !== lastASTString;
+
+      console.log(`[DEBUG][StoreConnectedRenderer] AST content comparison:`);
+      console.log(`[DEBUG][StoreConnectedRenderer] Current AST:`, currentASTString.substring(0, 200));
+      console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, lastASTString.substring(0, 200));
+      console.log(`[DEBUG][StoreConnectedRenderer] AST changed:`, astChanged);
+
+      if (!astChanged) {
+        logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged');
+        return;
+      }
+    }
+
+    logger.debug(`[DEBUG][StoreConnectedRenderer] AST change detected - proceeding with render`);
 
     // Skip if already rendering
     if (isRendering) {
@@ -260,8 +318,13 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
     // Skip if no AST
     if (!ast || ast.length === 0) {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
-      safeClearScene();
+      // Only clear scene if there are meshes to clear (prevent infinite loop)
+      if (meshes.length > 0) {
+        logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
+        safeClearScene();
+      } else {
+        logger.debug('[DEBUG][StoreConnectedRenderer] Scene already clear - no AST');
+      }
       lastASTRef.current = ast;
       return;
     }
@@ -299,11 +362,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       }
     };
   }, [
-    ast,
+    ast.length,
+    JSON.stringify(ast),
     isRendering,
     safeRenderAST,
     safeClearScene,
-    meshes.length,
     onRenderComplete,
     onRenderError,
   ]);

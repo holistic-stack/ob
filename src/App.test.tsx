@@ -62,6 +62,7 @@ describe('App', () => {
         parseTime: 0,
       },
       babylonRendering: {
+        scene: null,
         engine: {
           engine: null,
           isInitialized: false,

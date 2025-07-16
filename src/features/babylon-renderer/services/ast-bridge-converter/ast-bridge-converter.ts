@@ -157,7 +157,7 @@ export class ASTBridgeConverter {
     return tryCatchAsync(
       async () => {
         // Create appropriate BabylonJS node based on type
-        const babylonNode = await this.createBabylonNode(openscadNode);
+        const babylonNode = await this.createBabylonNode(openscadNode, config);
 
         // Validate the converted node if validation is enabled
         if (config.validateNodes) {
@@ -186,7 +186,7 @@ export class ASTBridgeConverter {
   /**
    * Create appropriate BabylonJS node based on OpenSCAD node type
    */
-  private async createBabylonNode(openscadNode: ASTNode): Promise<BabylonJSNode> {
+  private async createBabylonNode(openscadNode: ASTNode, config: BridgeConversionConfig): Promise<BabylonJSNode> {
     const nodeId = `${openscadNode.type}_${Date.now()}`;
 
     // Check if this is a primitive type
@@ -216,9 +216,21 @@ export class ASTBridgeConverter {
     if (this.isCSGOperationType(openscadNode.type)) {
       const { CSGBabylonNode } = await import('./csg-babylon-node');
 
-      // TODO: Extract child nodes from the CSG operation
-      // For now, create with empty children array
+      // Extract child nodes from the CSG operation
       const childNodes: BabylonJSNode[] = [];
+
+      if ('children' in openscadNode && Array.isArray(openscadNode.children)) {
+        for (const childOpenscadNode of openscadNode.children) {
+          const childConversionResult = await this.convertSingleNode(childOpenscadNode, config);
+          if (childConversionResult.success) {
+            childNodes.push(childConversionResult.data);
+          } else {
+            logger.warn(
+              `[CONVERT] Failed to convert child node for CSG operation: ${childConversionResult.error.message}`
+            );
+          }
+        }
+      }
 
       return new CSGBabylonNode(
         nodeId,
@@ -233,9 +245,21 @@ export class ASTBridgeConverter {
     if (this.isControlFlowType(openscadNode.type)) {
       const { ControlFlowBabylonNode } = await import('./control-flow-babylon-node');
 
-      // TODO: Extract child nodes from the control flow operation
-      // For now, create with empty children array
+      // Extract child nodes from the control flow operation
       const childNodes: BabylonJSNode[] = [];
+
+      if ('children' in openscadNode && Array.isArray(openscadNode.children)) {
+        for (const childOpenscadNode of openscadNode.children) {
+          const childConversionResult = await this.convertSingleNode(childOpenscadNode, config);
+          if (childConversionResult.success) {
+            childNodes.push(childConversionResult.data);
+          } else {
+            logger.warn(
+              `[CONVERT] Failed to convert child node for control flow operation: ${childConversionResult.error.message}`
+            );
+          }
+        }
+      }
 
       return new ControlFlowBabylonNode(
         nodeId,
@@ -267,9 +291,21 @@ export class ASTBridgeConverter {
     if (this.isModifierType(openscadNode.type)) {
       const { ModifierBabylonNode } = await import('./modifier-babylon-node');
 
-      // TODO: Extract child nodes from the modifier operation
-      // For now, create with empty children array
+      // Extract child nodes from the modifier operation
       const childNodes: BabylonJSNode[] = [];
+
+      if ('children' in openscadNode && Array.isArray(openscadNode.children)) {
+        for (const childOpenscadNode of openscadNode.children) {
+          const childConversionResult = await this.convertSingleNode(childOpenscadNode, config);
+          if (childConversionResult.success) {
+            childNodes.push(childConversionResult.data);
+          } else {
+            logger.warn(
+              `[CONVERT] Failed to convert child node for modifier operation: ${childConversionResult.error.message}`
+            );
+          }
+        }
+      }
 
       return new ModifierBabylonNode(
         nodeId,

@@ -48,6 +48,20 @@ export function App(): React.JSX.Element {
     }
   }, [renderErrors]);
 
+  // Debug: App component rendering - direct console.log to ensure it's called
+  console.log('[DEBUG][App] App component rendering - AST length:', ast.length, 'Meshes:', renderingStateMeshes.length);
+
+  // Debug: App component rendering
+  useEffect(() => {
+    logger.debug('[DEBUG][App] App component mounted and about to render StoreConnectedRenderer');
+    logger.debug(`[DEBUG][App] AST length: ${ast.length}, Meshes: ${renderingStateMeshes.length}`);
+  }, []);
+
+  // Debug: Track AST changes in App
+  useEffect(() => {
+    logger.debug(`[DEBUG][App] AST changed in App component: ${ast.length} nodes`);
+  }, [ast]);
+
   // Local state for layout
   const [editorWidth, setEditorWidth] = useState(50); // Percentage
   const [isResizing, setIsResizing] = useState(false);
