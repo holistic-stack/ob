@@ -33,3 +33,15 @@ export type {
   ProgressBarSize,
   ProgressBarColor,
 } from './progress-bar';
+
+// Selection Info Component
+export { SelectionInfo } from './selection-info';
+export type {
+  SelectionInfoProps,
+} from './selection-info';
+
+// Export Dialog Component
+export { ExportDialog } from './export-dialog';
+export type {
+  ExportDialogProps,
+} from './export-dialog';

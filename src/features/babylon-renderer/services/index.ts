@@ -268,3 +268,46 @@ export {
   useAsyncProgress,
   useProgressStore,
 } from './progress';
+
+// Selection Service
+export { SelectionService } from './selection';
+export type {
+  SelectionMode,
+  SelectionHighlightType,
+  SelectionConfig,
+  SelectionOptions,
+  SelectedMeshInfo,
+  SelectionState,
+  SelectionError,
+  SelectionEventListener,
+  UseSelectionReturn,
+} from './selection';
+
+// Selection Hooks
+export {
+  useSelection,
+  useSelectionStats,
+  useSelectionShortcuts,
+  useInteractiveSelection,
+  cleanupSelectionServices,
+} from './selection';
+
+// Export Service
+export { ExportService } from './export';
+export type {
+  ExportFormat,
+  ExportQuality,
+  ExportConfig,
+  ExportResult,
+  ExportError,
+  ExportProgressCallback,
+  UseExportReturn,
+} from './export';
+
+// Export Hooks
+export {
+  useExport,
+  useExportStats,
+  useQuickExport,
+  cleanupExportServices,
+} from './export';
