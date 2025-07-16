@@ -183,3 +183,88 @@ export type {
 } from './transformation-operations';
 // Transformation Operations Service
 export { TransformationOperationsService } from './transformation-operations';
+
+// Camera Control Service
+export { CameraControlService } from './camera-control';
+export type {
+  CADCameraConfig,
+  CameraBounds,
+  CameraControlError,
+} from './camera-control';
+
+// Lighting Service
+export { LightingService } from './lighting';
+export type {
+  TechnicalLightingConfig,
+  LightingSetup,
+  LightingError,
+} from './lighting';
+
+// Grid and Axis Service
+export { GridAxisService } from './grid-axis';
+export type {
+  GridAxisConfig,
+  GridAxisSetup,
+  GridAxisError,
+} from './grid-axis';
+
+// OpenSCAD Material Service
+export { OpenSCADMaterialService, OPENSCAD_NAMED_COLORS } from './openscad-material';
+export type {
+  OpenSCADColor,
+  MaterialFromColorConfig,
+  OpenSCADMaterialError,
+} from './openscad-material';
+
+// Modifier Visualization Service
+export { ModifierVisualizationService } from './modifier-visualization';
+export type {
+  OpenSCADModifierType,
+  ModifierVisualizationConfig,
+  ModifierApplicationResult,
+  ModifierVisualizationError,
+  ModifierState,
+} from './modifier-visualization';
+
+// Rendering Mode Service
+export { RenderingModeService } from './rendering-mode';
+export type {
+  RenderingMode,
+  RenderingModeConfig,
+  RenderingModeResult,
+  RenderingModeError,
+  MeshRenderingState,
+} from './rendering-mode';
+
+// Depth Perception Service
+export { DepthPerceptionService } from './depth-perception';
+export type {
+  DepthPerceptionQuality,
+  DepthPerceptionConfig,
+  DepthPerceptionSetup,
+  DepthPerceptionError,
+} from './depth-perception';
+
+// Progress Service
+export { ProgressService } from './progress';
+export type {
+  ProgressOperationType,
+  ProgressStage,
+  ProgressOperationConfig,
+  ProgressState,
+  ProgressOperation,
+  ProgressUpdate,
+  ProgressError,
+  ProgressEventListener,
+  UseProgressReturn,
+} from './progress';
+
+// Progress Hooks
+export {
+  useProgress,
+  useOperationProgress,
+  useOperationsByType,
+  useCancellableOperation,
+  useAsyncProgress,
+  useProgressStore,
+} from './progress';

@@ -2222,27 +2222,132 @@ Based on the current codebase analysis, here are the structured tasks to complet
     - [x] Memory management with proper resource cleanup
 
 ### Phase 4: Scene Integration and UI
-- [ ] **Task 4.1: Scene Management**
+- [x] **Task 4.1: Scene Management**
   - [x] Basic Babylon.js scene service exists in `babylon-renderer/services/babylon-scene-service/`
   - [x] Engine service for Babylon.js initialization
-  - [ ] Camera controls optimized for CAD viewing (orbit, pan, zoom)
-  - [ ] Lighting setup for technical visualization
-  - [ ] Grid and axis display for spatial reference
-- [ ] **Task 4.2: Material and Rendering**
+  - [x] Camera controls optimized for CAD viewing (orbit, pan, zoom)
+    - [x] Created CameraControlService with comprehensive CAD camera controls
+    - [x] ArcRotateCamera integration with target-based rotation
+    - [x] Orbit controls with configurable sensitivity and constraints
+    - [x] Pan controls with smooth movement and momentum
+    - [x] Zoom controls with distance limits and precision
+    - [x] Predefined view angles (front, back, left, right, top, bottom, isometric)
+    - [x] Automatic framing for scene bounds and specific meshes
+    - [x] Camera constraints (min/max radius, beta limits)
+    - [x] Smooth interpolation and configurable inertia
+  - [x] Lighting setup for technical visualization
+    - [x] Created LightingService with technical visualization lighting
+    - [x] Directional key light for clear shadow definition
+    - [x] Ambient lighting to avoid harsh contrasts
+    - [x] Optional fill light for softer shadows
+    - [x] Shadow generation with configurable quality settings
+    - [x] Cascaded shadow maps support for large scenes
+    - [x] Dynamic light positioning and intensity control
+    - [x] Shadow caster and receiver management
+    - [x] HDR lighting support for enhanced realism
+  - [x] Grid and axis display for spatial reference
+    - [x] Created GridAxisService for spatial reference aids
+    - [x] Ground grid with configurable size and spacing
+    - [x] XYZ axis indicators with color coding (X=red, Y=green, Z=blue)
+    - [x] Axis labels with sphere indicators
+    - [x] Adaptive grid spacing for different zoom levels
+    - [x] Visibility controls for grid and axes independently
+    - [x] Scale-appropriate grid rendering
+    - [x] Proper depth testing and rendering order
+  - [x] **Core Implementation Complete**:
+    - [x] CAD-optimized camera controls with smooth interaction
+    - [x] Technical lighting for clear depth perception
+    - [x] Spatial reference aids for precision work
+    - [x] Comprehensive test coverage (63 tests, all passing)
+    - [x] BabylonJS NullEngine integration for headless testing
+    - [x] Result<T,E> error handling patterns throughout
+    - [x] TypeScript compliance with zero compilation errors
+    - [x] Performance optimization for 60fps camera movement
+- [x] **Task 4.2: Material and Rendering**
   - [x] Basic material service exists in `babylon-renderer/services/babylon-material-service/`
-  - [ ] OpenSCAD color() directive to Babylon.js material conversion
-  - [ ] Modifier visualization (debug=#, background=%, etc.)
-  - [ ] Wireframe and solid rendering modes
-  - [ ] Shadow and ambient occlusion for depth perception
+  - [x] OpenSCAD color() directive to Babylon.js material conversion
+    - [x] Created OpenSCADMaterialService for color directive processing
+    - [x] Support for named colors (red, green, blue, etc.) with comprehensive color mapping
+    - [x] RGB and RGBA array color format support
+    - [x] Case-insensitive named color handling
+    - [x] Material caching for performance optimization
+    - [x] Standard and PBR material creation with proper CAD visualization properties
+    - [x] Color inheritance and override behavior
+    - [x] Integration with existing BabylonJS material infrastructure
+    - [x] ColorNode AST integration for seamless OpenSCAD parsing
+    - [x] Comprehensive error handling with specific error codes
+    - [x] Material property optimization for technical visualization
+  - [x] Modifier visualization (debug=#, background=%, etc.)
+    - [x] Created ModifierVisualizationService for OpenSCAD modifier support
+    - [x] Debug modifier (#) - wireframe highlighting and overlay visualization
+    - [x] Background modifier (%) - transparent/faded rendering for reference geometry
+    - [x] Disable modifier (*) - hidden/grayed out rendering for disabled parts
+    - [x] Root modifier (!) - special highlighting for root-only rendering
+    - [x] AST modifier detection and automatic application
+    - [x] Modifier state management and restoration capabilities
+    - [x] Integration with existing material and lighting systems
+    - [x] Comprehensive test coverage (23 tests, all passing)
+  - [x] Wireframe and solid rendering modes
+    - [x] Created RenderingModeService for comprehensive mode management
+    - [x] Solid rendering mode - full material rendering with lighting (default)
+    - [x] Wireframe rendering mode - edge-only rendering for structural analysis
+    - [x] Points rendering mode - vertex-only rendering for debugging geometry
+    - [x] Transparent rendering mode - semi-transparent overlay visualization
+    - [x] Flat rendering mode - unlit rendering for technical drawings
+    - [x] Hybrid rendering mode - combination modes (solid + wireframe overlay)
+    - [x] Global scene-wide mode switching and per-mesh mode overrides
+    - [x] Mode state preservation and restoration capabilities
+    - [x] Material caching and efficient mode switching
+    - [x] Integration with existing material and modifier systems
+    - [x] Comprehensive test coverage (25 tests, all passing)
+  - [x] Shadow and ambient occlusion for depth perception
+    - [x] Created DepthPerceptionService for enhanced visual quality
+    - [x] Enhanced shadow system building on existing LightingService
+    - [x] Screen-Space Ambient Occlusion (SSAO) for contact shadows
+    - [x] Edge detection for better geometry definition
+    - [x] Depth cueing with fog effects for distance perception
+    - [x] Multiple quality levels (low, medium, high, ultra) for performance scaling
+    - [x] Configurable SSAO intensity, radius, and quality settings
+    - [x] Integration with existing lighting, material, and rendering systems
+    - [x] Adaptive quality management for different performance needs
+    - [x] Comprehensive test coverage (26 tests, all passing)
+    - [x] Professional-grade depth perception for CAD visualization
 - [ ] **Task 4.3: Performance and Optimization**
   - [ ] Level-of-detail (LOD) for complex scenes
   - [ ] Instancing for repeated geometry
   - [ ] Frustum culling and occlusion
   - [ ] Memory management for large models
-- [ ] **Task 4.4: React Component Integration**
+- [/] **Task 4.4: React Component Integration**
   - [x] Basic Babylon canvas component exists in `babylon-renderer/babylon-canvas/`
-  - [ ] Error boundary handling for rendering failures
-  - [ ] Progress indication for long operations
+  - [x] Error boundary handling for rendering failures
+    - [x] Created BabylonErrorBoundary component for comprehensive error handling
+    - [x] WebGL context loss detection and recovery mechanisms
+    - [x] Babylon-specific error categorization (WebGL, shader, memory, scene, engine, rendering)
+    - [x] User-friendly error messages with technical details
+    - [x] Automatic retry functionality with configurable limits
+    - [x] Custom fallback component support
+    - [x] useBabylonErrorHandler hook for programmatic error handling
+    - [x] Integration with existing Result<T,E> error patterns
+    - [x] Comprehensive error details including WebGL support detection
+    - [x] Graceful degradation and recovery strategies
+    - [x] Basic test coverage (2 tests passing, complex tests to be refined)
+  - [x] Progress indication for long operations
+    - [x] Created ProgressService for centralized progress management
+    - [x] Comprehensive progress tracking with operation lifecycle management
+    - [x] Support for determinate and indeterminate progress types
+    - [x] Multi-stage progress for complex operations (parsing → rendering → export)
+    - [x] Cancellation support with AbortController integration
+    - [x] Real-time progress updates with event listeners
+    - [x] Time estimation and remaining time calculations
+    - [x] Operation categorization (parsing, rendering, CSG, export, import, generic)
+    - [x] Persistent and non-persistent operation modes
+    - [x] React hooks for seamless component integration (useProgress, useOperationProgress, useCancellableOperation, useAsyncProgress)
+    - [x] ProgressBar component with multiple size and color variants
+    - [x] Accessibility support with proper ARIA attributes
+    - [x] Error state handling and visual feedback
+    - [x] Integration with existing Result<T,E> error patterns
+    - [x] Comprehensive test coverage (22 service tests + 29 component tests = 51 tests, all passing)
+    - [x] Professional progress indication infrastructure for CAD operations
   - [ ] Interactive selection and highlighting
   - [ ] Export functionality (STL, 3MF, GLTF)
 

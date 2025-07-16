@@ -16,3 +16,20 @@
 
 // Store bridge components (to be implemented)
 // export * from './store-babylon-bridge';
+
+// Babylon Error Boundary Component
+export { BabylonErrorBoundary, useBabylonErrorHandler } from './babylon-error-boundary';
+export type {
+  BabylonErrorType,
+  BabylonErrorDetails,
+  BabylonErrorBoundaryState,
+  BabylonErrorBoundaryProps,
+} from './babylon-error-boundary';
+
+// Progress Bar Component
+export { ProgressBar } from './progress-bar';
+export type {
+  ProgressBarProps,
+  ProgressBarSize,
+  ProgressBarColor,
+} from './progress-bar';
