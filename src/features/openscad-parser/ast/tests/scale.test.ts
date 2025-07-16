@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
-import * as ast from '../ast-types.js';
 
 describe('Scale AST Generation', () => {
   let parser: OpenscadParser;

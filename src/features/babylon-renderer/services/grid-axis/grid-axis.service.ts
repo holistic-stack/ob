@@ -3,11 +3,11 @@
  *
  * Service for displaying spatial reference aids including ground grid and XYZ axes.
  * Provides scale-adaptive grid and color-coded axis indicators for CAD precision.
- * 
+ *
  * @example
  * ```typescript
  * const gridAxisService = new GridAxisService(scene);
- * 
+ *
  * // Setup grid and axes
  * const result = await gridAxisService.setupGridAndAxes({
  *   gridSize: 20,
@@ -18,21 +18,20 @@
  * ```
  */
 
-import { 
-  Scene, 
-  Mesh,
-  Vector3, 
+import {
   Color3,
-  StandardMaterial,
-  CreateGround,
-  CreateLines,
   CreateCylinder,
+  CreateLines,
   CreateSphere,
-  TransformNode
+  type Mesh,
+  type Scene,
+  StandardMaterial,
+  TransformNode,
+  Vector3,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 const logger = createLogger('GridAxis');
 
@@ -83,7 +82,7 @@ export interface GridAxisError {
 
 /**
  * Grid and Axis Service
- * 
+ *
  * Provides spatial reference aids for CAD precision work.
  * Handles ground grid and XYZ axis indicators with adaptive scaling.
  */
@@ -174,7 +173,9 @@ export class GridAxisService {
           ...(zAxis && { zAxis }),
         };
 
-        logger.debug(`[GRID_AXES] Grid and axes setup completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[GRID_AXES] Grid and axes setup completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return this.gridAxisSetup;
       },
       (error) => this.createError('SETUP_FAILED', `Grid and axes setup failed: ${error}`)
@@ -228,7 +229,7 @@ export class GridAxisService {
       this.gridAxisSetup.xAxis?.setEnabled(visible);
       this.gridAxisSetup.yAxis?.setEnabled(visible);
       this.gridAxisSetup.zAxis?.setEnabled(visible);
-      this.gridAxisSetup.axisLabels?.forEach(label => label.setEnabled(visible));
+      this.gridAxisSetup.axisLabels?.forEach((label) => label.setEnabled(visible));
       logger.debug(`[AXES_VISIBILITY] Axes visibility set to: ${visible}`);
     }
   }
@@ -251,18 +252,12 @@ export class GridAxisService {
 
     // Vertical lines (parallel to Z-axis)
     for (let x = -halfSize; x <= halfSize; x += spacing) {
-      lines.push([
-        new Vector3(x, 0, -halfSize),
-        new Vector3(x, 0, halfSize)
-      ]);
+      lines.push([new Vector3(x, 0, -halfSize), new Vector3(x, 0, halfSize)]);
     }
 
     // Horizontal lines (parallel to X-axis)
     for (let z = -halfSize; z <= halfSize; z += spacing) {
-      lines.push([
-        new Vector3(-halfSize, 0, z),
-        new Vector3(halfSize, 0, z)
-      ]);
+      lines.push([new Vector3(-halfSize, 0, z), new Vector3(halfSize, 0, z)]);
     }
 
     const gridMesh = CreateLines('grid', { points: lines.flat() }, this.scene);
@@ -276,7 +271,10 @@ export class GridAxisService {
   /**
    * Create XYZ axes
    */
-  private createAxes(config: Required<GridAxisConfig>, parent: TransformNode): {
+  private createAxes(
+    config: Required<GridAxisConfig>,
+    parent: TransformNode
+  ): {
     xAxis: Mesh;
     yAxis: Mesh;
     zAxis: Mesh;
@@ -285,13 +283,17 @@ export class GridAxisService {
     const thickness = config.axisThickness;
 
     // X-axis (Red)
-    const xAxis = CreateCylinder('xAxis', {
-      height: axisLength,
-      diameter: thickness,
-    }, this.scene);
+    const xAxis = CreateCylinder(
+      'xAxis',
+      {
+        height: axisLength,
+        diameter: thickness,
+      },
+      this.scene
+    );
     xAxis.rotation.z = Math.PI / 2;
     xAxis.position.x = axisLength / 2;
-    
+
     const xMaterial = new StandardMaterial('xAxisMaterial', this.scene);
     xMaterial.diffuseColor = config.xAxisColor;
     xMaterial.emissiveColor = config.xAxisColor.scale(0.2);
@@ -299,12 +301,16 @@ export class GridAxisService {
     xAxis.parent = parent;
 
     // Y-axis (Green)
-    const yAxis = CreateCylinder('yAxis', {
-      height: axisLength,
-      diameter: thickness,
-    }, this.scene);
+    const yAxis = CreateCylinder(
+      'yAxis',
+      {
+        height: axisLength,
+        diameter: thickness,
+      },
+      this.scene
+    );
     yAxis.position.y = axisLength / 2;
-    
+
     const yMaterial = new StandardMaterial('yAxisMaterial', this.scene);
     yMaterial.diffuseColor = config.yAxisColor;
     yMaterial.emissiveColor = config.yAxisColor.scale(0.2);
@@ -312,13 +318,17 @@ export class GridAxisService {
     yAxis.parent = parent;
 
     // Z-axis (Blue)
-    const zAxis = CreateCylinder('zAxis', {
-      height: axisLength,
-      diameter: thickness,
-    }, this.scene);
+    const zAxis = CreateCylinder(
+      'zAxis',
+      {
+        height: axisLength,
+        diameter: thickness,
+      },
+      this.scene
+    );
     zAxis.rotation.x = Math.PI / 2;
     zAxis.position.z = axisLength / 2;
-    
+
     const zMaterial = new StandardMaterial('zAxisMaterial', this.scene);
     zMaterial.diffuseColor = config.zAxisColor;
     zMaterial.emissiveColor = config.zAxisColor.scale(0.2);
@@ -390,7 +400,7 @@ export class GridAxisService {
       timestamp: new Date(),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

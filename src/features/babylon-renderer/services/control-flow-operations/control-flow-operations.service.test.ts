@@ -8,7 +8,7 @@
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { success } from '../../../../shared/utils/functional/result';
-import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
+import type { GenericMeshData } from '../../types/generic-mesh-data.types';
 import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import {
   ControlFlowOperationsService,
@@ -35,7 +35,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADForLoopParams = {
         variable: 'i',
         range: { start: 0, end: 2, step: 1 },
-        body: async (value, context) => {
+        body: async (value, _context) => {
           const mesh = createTestMesh(`mesh_${value}`);
           return success(mesh);
         },
@@ -48,9 +48,9 @@ describe('ControlFlowOperationsService', () => {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3); // 0, 1, 2
         expect(collection.metadata.collectionType).toBe('control_flow_result');
-        expect(collection.meshes[0]!.id).toBe('mesh_0');
-        expect(collection.meshes[1]!.id).toBe('mesh_1');
-        expect(collection.meshes[2]!.id).toBe('mesh_2');
+        expect(collection.meshes[0]?.id).toBe('mesh_0');
+        expect(collection.meshes[1]?.id).toBe('mesh_1');
+        expect(collection.meshes[2]?.id).toBe('mesh_2');
       }
     });
 
@@ -58,7 +58,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADForLoopParams = {
         variable: 'item',
         list: ['a', 'b', 'c'],
-        body: async (value, context) => {
+        body: async (value, _context) => {
           const mesh = createTestMesh(`mesh_${value}`);
           return success(mesh);
         },
@@ -70,9 +70,9 @@ describe('ControlFlowOperationsService', () => {
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3);
-        expect(collection.meshes[0]!.id).toBe('mesh_a');
-        expect(collection.meshes[1]!.id).toBe('mesh_b');
-        expect(collection.meshes[2]!.id).toBe('mesh_c');
+        expect(collection.meshes[0]?.id).toBe('mesh_a');
+        expect(collection.meshes[1]?.id).toBe('mesh_b');
+        expect(collection.meshes[2]?.id).toBe('mesh_c');
       }
     });
 
@@ -80,7 +80,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADForLoopParams = {
         variable: 'i',
         range: { start: 5, end: 3, step: -1 },
-        body: async (value, context) => {
+        body: async (value, _context) => {
           const mesh = createTestMesh(`mesh_${value}`);
           return success(mesh);
         },
@@ -92,9 +92,9 @@ describe('ControlFlowOperationsService', () => {
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(3); // 5, 4, 3
-        expect(collection.meshes[0]!.id).toBe('mesh_5');
-        expect(collection.meshes[1]!.id).toBe('mesh_4');
-        expect(collection.meshes[2]!.id).toBe('mesh_3');
+        expect(collection.meshes[0]?.id).toBe('mesh_5');
+        expect(collection.meshes[1]?.id).toBe('mesh_4');
+        expect(collection.meshes[2]?.id).toBe('mesh_3');
       }
     });
 
@@ -102,7 +102,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADForLoopParams = {
         variable: 'i',
         range: { start: 5, end: 3, step: 1 }, // Invalid range
-        body: async (value, context) => {
+        body: async (value, _context) => {
           const mesh = createTestMesh(`mesh_${value}`);
           return success(mesh);
         },
@@ -120,7 +120,7 @@ describe('ControlFlowOperationsService', () => {
     it('should fail with invalid parameters', async () => {
       const params: OpenSCADForLoopParams = {
         variable: '',
-        body: async (value, context) => success(testMesh),
+        body: async (_value, _context) => success(testMesh),
       };
 
       const result = await controlFlowService.expandForLoop(params);
@@ -136,7 +136,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADForLoopParams = {
         variable: 'i',
         range: { start: 0, end: 2 },
-        body: async (value, context) => {
+        body: async (value, _context) => {
           if (value === 1) {
             throw new Error('Body error');
           }
@@ -150,8 +150,8 @@ describe('ControlFlowOperationsService', () => {
       if (result.success) {
         const collection = result.data;
         expect(collection.meshes.length).toBe(2); // Should skip the failed iteration
-        expect(collection.meshes[0]!.id).toBe('mesh_0');
-        expect(collection.meshes[1]!.id).toBe('mesh_2');
+        expect(collection.meshes[0]?.id).toBe('mesh_0');
+        expect(collection.meshes[1]?.id).toBe('mesh_2');
       }
     });
   });
@@ -160,8 +160,8 @@ describe('ControlFlowOperationsService', () => {
     it('should execute then branch when condition is true', async () => {
       const params: OpenSCADIfParams = {
         condition: true,
-        thenBody: async (context) => success(createTestMesh('then-mesh')),
-        elseBody: async (context) => success(createTestMesh('else-mesh')),
+        thenBody: async (_context) => success(createTestMesh('then-mesh')),
+        elseBody: async (_context) => success(createTestMesh('else-mesh')),
       };
 
       const result = await controlFlowService.processIf(params);
@@ -175,8 +175,8 @@ describe('ControlFlowOperationsService', () => {
     it('should execute else branch when condition is false', async () => {
       const params: OpenSCADIfParams = {
         condition: false,
-        thenBody: async (context) => success(createTestMesh('then-mesh')),
-        elseBody: async (context) => success(createTestMesh('else-mesh')),
+        thenBody: async (_context) => success(createTestMesh('then-mesh')),
+        elseBody: async (_context) => success(createTestMesh('else-mesh')),
       };
 
       const result = await controlFlowService.processIf(params);
@@ -190,7 +190,7 @@ describe('ControlFlowOperationsService', () => {
     it('should return null when condition is false and no else branch', async () => {
       const params: OpenSCADIfParams = {
         condition: false,
-        thenBody: async (context) => success(createTestMesh('then-mesh')),
+        thenBody: async (_context) => success(createTestMesh('then-mesh')),
       };
 
       const result = await controlFlowService.processIf(params);
@@ -208,8 +208,8 @@ describe('ControlFlowOperationsService', () => {
 
       const params: OpenSCADIfParams = {
         condition: (ctx) => (ctx.variables.x as number) > (ctx.variables.y as number),
-        thenBody: async (context) => success(createTestMesh('condition-true')),
-        elseBody: async (context) => success(createTestMesh('condition-false')),
+        thenBody: async (_context) => success(createTestMesh('condition-true')),
+        elseBody: async (_context) => success(createTestMesh('condition-false')),
       };
 
       const result = await controlFlowService.processIf(params, context);
@@ -222,11 +222,11 @@ describe('ControlFlowOperationsService', () => {
 
     it('should handle condition evaluation errors', async () => {
       const params: OpenSCADIfParams = {
-        condition: (ctx) => {
+        condition: (_ctx) => {
           throw new Error('Condition error');
         },
-        thenBody: async (context) => success(createTestMesh('then-mesh')),
-        elseBody: async (context) => success(createTestMesh('else-mesh')),
+        thenBody: async (_context) => success(createTestMesh('then-mesh')),
+        elseBody: async (_context) => success(createTestMesh('else-mesh')),
       };
 
       const result = await controlFlowService.processIf(params);
@@ -308,7 +308,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADIntersectionForParams = {
         variable: 'i',
         range: { start: 0, end: 2 },
-        body: async (value, context) => {
+        body: async (value, _context) => {
           return success(createTestMesh(`mesh_${value}`));
         },
       };
@@ -326,7 +326,7 @@ describe('ControlFlowOperationsService', () => {
       const params: OpenSCADIntersectionForParams = {
         variable: 'i',
         range: { start: 5, end: 3 }, // Empty range
-        body: async (value, context) => {
+        body: async (value, _context) => {
           return success(createTestMesh(`mesh_${value}`));
         },
       };
@@ -349,7 +349,7 @@ describe('ControlFlowOperationsService', () => {
       const forParams: OpenSCADForLoopParams = {
         variable: 'i',
         range: { start: 0, end: 1 },
-        body: async (value, context) => {
+        body: async (_value, context) => {
           // Should have access to both outer variable and loop variable
           const outer = context.variables.outer as string;
           const i = context.variables.i as number;
@@ -362,8 +362,8 @@ describe('ControlFlowOperationsService', () => {
 
       if (result.success) {
         const collection = result.data;
-        expect(collection.meshes[0]!.id).toBe('outer_value_0');
-        expect(collection.meshes[1]!.id).toBe('outer_value_1');
+        expect(collection.meshes[0]?.id).toBe('outer_value_0');
+        expect(collection.meshes[1]?.id).toBe('outer_value_1');
       }
     });
   });

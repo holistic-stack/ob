@@ -5,14 +5,14 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, CreateBox, FreeCamera, Vector3 } from '@babylonjs/core';
+import { CreateBox, FreeCamera, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { LightingService } from '../lighting/lighting.service';
 import {
-  DepthPerceptionService,
   type DepthPerceptionConfig,
   type DepthPerceptionQuality,
+  DepthPerceptionService,
 } from './depth-perception.service';
-import { LightingService } from '../lighting/lighting.service';
 
 describe('DepthPerceptionService', () => {
   let engine: NullEngine;
@@ -25,18 +25,18 @@ describe('DepthPerceptionService', () => {
     // Create BabylonJS NullEngine for headless testing
     engine = new NullEngine();
     scene = new Scene(engine);
-    
+
     // Create camera
     camera = new FreeCamera('camera', new Vector3(0, 5, -10), scene);
     camera.setTarget(Vector3.Zero());
     scene.activeCamera = camera;
-    
+
     // Create lighting service
     lightingService = new LightingService(scene);
-    
+
     // Create depth perception service
     depthService = new DepthPerceptionService(scene, lightingService);
-    
+
     // Create a test mesh
     CreateBox('testBox', { size: 1 }, scene);
   });
@@ -66,7 +66,7 @@ describe('DepthPerceptionService', () => {
     it('should setup depth perception with default configuration', async () => {
       const result = await depthService.setupDepthPerception();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.shadowsEnabled).toBeDefined();
@@ -95,7 +95,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.qualityLevel).toBe('high');
@@ -112,7 +112,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.ssaoEnabled).toBe(false);
@@ -132,7 +132,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.shadowsEnabled).toBe(false);
@@ -142,10 +142,10 @@ describe('DepthPerceptionService', () => {
 
     it('should fail without active camera', async () => {
       scene.activeCamera = null;
-      
+
       const result = await depthService.setupDepthPerception();
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SETUP_FAILED');
       }
@@ -155,7 +155,7 @@ describe('DepthPerceptionService', () => {
   describe('Quality Levels', () => {
     const qualityLevels: DepthPerceptionQuality[] = ['low', 'medium', 'high', 'ultra'];
 
-    qualityLevels.forEach(quality => {
+    qualityLevels.forEach((quality) => {
       it(`should setup with ${quality} quality`, async () => {
         const config: DepthPerceptionConfig = {
           shadowQuality: quality,
@@ -164,7 +164,7 @@ describe('DepthPerceptionService', () => {
 
         const result = await depthService.setupDepthPerception(config);
         expect(result.success).toBe(true);
-        
+
         if (result.success) {
           const setup = result.data;
           expect(setup.qualityLevel).toBe(quality);
@@ -182,7 +182,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.ssaoEnabled).toBe(true);
@@ -197,7 +197,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.ssaoEnabled).toBe(true);
@@ -214,7 +214,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.edgeDetectionEnabled).toBe(true);
@@ -232,7 +232,7 @@ describe('DepthPerceptionService', () => {
 
       const result = await depthService.setupDepthPerception(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.depthCueingEnabled).toBe(true);
@@ -283,12 +283,12 @@ describe('DepthPerceptionService', () => {
 
     it('should fail to update without initialization', async () => {
       depthService.dispose();
-      
+
       const result = await depthService.updateDepthPerception({
         ssaoIntensity: 0.5,
       });
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SETUP_FAILED');
       }
@@ -303,13 +303,13 @@ describe('DepthPerceptionService', () => {
         enableDepthCueing: true,
       });
       expect(scene.fogEnabled).toBe(true);
-      
+
       // Second setup with different configuration
       await depthService.setupDepthPerception({
         enableSSAO: false,
         enableDepthCueing: false,
       });
-      
+
       const setup = depthService.getDepthPerceptionSetup();
       expect(setup?.ssaoEnabled).toBe(false);
       expect(setup?.depthCueingEnabled).toBe(false);
@@ -319,31 +319,31 @@ describe('DepthPerceptionService', () => {
   describe('Integration with Lighting Service', () => {
     it('should work without lighting service', async () => {
       const standaloneService = new DepthPerceptionService(scene);
-      
+
       const result = await standaloneService.setupDepthPerception({
         enableShadows: true,
       });
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         // Shadows should be disabled when no lighting service is available
         expect(setup.shadowsEnabled).toBe(false);
       }
-      
+
       standaloneService.dispose();
     });
 
     it('should enhance shadows when lighting service is available', async () => {
       // Setup lighting first
       await lightingService.setupTechnicalLighting({ enableShadows: true });
-      
+
       const result = await depthService.setupDepthPerception({
         enableShadows: true,
         shadowQuality: 'high',
       });
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.shadowsEnabled).toBe(true);
@@ -359,7 +359,7 @@ describe('DepthPerceptionService', () => {
       });
       expect(depthService.getDepthPerceptionSetup()).not.toBeNull();
       expect(scene.fogEnabled).toBe(true);
-      
+
       depthService.dispose();
       expect(depthService.getDepthPerceptionSetup()).toBeNull();
       expect(scene.fogEnabled).toBe(false);
@@ -376,10 +376,10 @@ describe('DepthPerceptionService', () => {
     it('should handle setup errors gracefully', async () => {
       // Force an error by disposing the scene
       scene.dispose();
-      
+
       const result = await depthService.setupDepthPerception();
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SETUP_FAILED');
         expect(result.error.message).toBeDefined();

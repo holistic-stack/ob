@@ -5,12 +5,9 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, Vector3, Mesh, CreateBox } from '@babylonjs/core';
+import { CreateBox, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  CameraControlService,
-  type CADCameraConfig,
-} from './camera-control.service';
+import { type CADCameraConfig, CameraControlService } from './camera-control.service';
 
 describe('CameraControlService', () => {
   let engine: NullEngine;
@@ -42,7 +39,7 @@ describe('CameraControlService', () => {
     it('should setup CAD camera with default configuration', async () => {
       const result = await cameraService.setupCADCamera();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera).toBeDefined();
@@ -72,7 +69,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.target).toEqual(config.target);
@@ -94,7 +91,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.inputs.attached.pointers).toBeUndefined();
@@ -110,7 +107,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.inputs.attached.mousewheel).toBeUndefined();
@@ -124,7 +121,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.inertia).toBe(0);
@@ -140,7 +137,7 @@ describe('CameraControlService', () => {
     it('should set front view', async () => {
       const result = await cameraService.setView('front');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(0);
       expect(camera?.beta).toBe(Math.PI / 2);
@@ -149,7 +146,7 @@ describe('CameraControlService', () => {
     it('should set back view', async () => {
       const result = await cameraService.setView('back');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(Math.PI);
       expect(camera?.beta).toBe(Math.PI / 2);
@@ -158,7 +155,7 @@ describe('CameraControlService', () => {
     it('should set left view', async () => {
       const result = await cameraService.setView('left');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(-Math.PI / 2);
       expect(camera?.beta).toBe(Math.PI / 2);
@@ -167,7 +164,7 @@ describe('CameraControlService', () => {
     it('should set right view', async () => {
       const result = await cameraService.setView('right');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(Math.PI / 2);
       expect(camera?.beta).toBe(Math.PI / 2);
@@ -176,7 +173,7 @@ describe('CameraControlService', () => {
     it('should set top view', async () => {
       const result = await cameraService.setView('top');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(0);
       expect(camera?.beta).toBe(0.01);
@@ -185,7 +182,7 @@ describe('CameraControlService', () => {
     it('should set bottom view', async () => {
       const result = await cameraService.setView('bottom');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(0);
       expect(camera?.beta).toBe(Math.PI - 0.01);
@@ -194,7 +191,7 @@ describe('CameraControlService', () => {
     it('should set isometric view', async () => {
       const result = await cameraService.setView('isometric');
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.alpha).toBe(Math.PI / 4);
       expect(camera?.beta).toBe(Math.PI / 3);
@@ -202,10 +199,10 @@ describe('CameraControlService', () => {
 
     it('should fail to set view without camera', async () => {
       cameraService.dispose();
-      
+
       const result = await cameraService.setView('front');
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SETUP_FAILED');
       }
@@ -221,16 +218,16 @@ describe('CameraControlService', () => {
       // Create test meshes
       const box1 = CreateBox('box1', { size: 2 }, scene);
       box1.position = new Vector3(0, 0, 0);
-      
+
       const box2 = CreateBox('box2', { size: 1 }, scene);
       box2.position = new Vector3(5, 5, 5);
 
       const result = await cameraService.frameAll();
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       expect(camera?.radius).toBeGreaterThan(0);
-      
+
       // Camera target should be set (exact position may vary in headless environment)
       const target = camera?.target;
       expect(target).toBeDefined();
@@ -241,14 +238,14 @@ describe('CameraControlService', () => {
       // Create test meshes
       const box1 = CreateBox('box1', { size: 2 }, scene);
       box1.position = new Vector3(0, 0, 0);
-      
+
       const box2 = CreateBox('box2', { size: 1 }, scene);
       box2.position = new Vector3(10, 10, 10);
 
       // Frame only the first box
       const result = await cameraService.frameMeshes([box1]);
       expect(result.success).toBe(true);
-      
+
       const camera = cameraService.getCamera();
       const target = camera?.target;
 
@@ -260,7 +257,7 @@ describe('CameraControlService', () => {
     it('should fail to frame all with no meshes', async () => {
       const result = await cameraService.frameAll();
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('BOUNDS_CALCULATION_FAILED');
       }
@@ -269,7 +266,7 @@ describe('CameraControlService', () => {
     it('should fail to frame empty mesh array', async () => {
       const result = await cameraService.frameMeshes([]);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('BOUNDS_CALCULATION_FAILED');
       }
@@ -277,10 +274,10 @@ describe('CameraControlService', () => {
 
     it('should fail to frame without camera', async () => {
       cameraService.dispose();
-      
+
       const result = await cameraService.frameAll();
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('BOUNDS_CALCULATION_FAILED');
       }
@@ -297,7 +294,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.lowerRadiusLimit).toBe(2);
@@ -314,7 +311,7 @@ describe('CameraControlService', () => {
 
       const result = await cameraService.setupCADCamera(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const camera = result.data;
         expect(camera.lowerBetaLimit).toBe(0.1);
@@ -327,7 +324,7 @@ describe('CameraControlService', () => {
     it('should dispose camera properly', async () => {
       await cameraService.setupCADCamera();
       expect(cameraService.getCamera()).not.toBeNull();
-      
+
       cameraService.dispose();
       expect(cameraService.getCamera()).toBeNull();
     });

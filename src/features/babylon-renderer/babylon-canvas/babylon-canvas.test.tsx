@@ -5,9 +5,7 @@
  * Follows TDD principles with comprehensive test coverage.
  */
 
-import { NullEngine, Scene } from '@babylonjs/core';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { BabylonCanvas } from './babylon-canvas';
 import type { BabylonCanvasProps } from './babylon-canvas.types';

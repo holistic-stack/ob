@@ -5,11 +5,19 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, CreateBox, CreateSphere, Mesh, Color3, StandardMaterial } from '@babylonjs/core';
+import {
+  Color3,
+  CreateBox,
+  CreateSphere,
+  type Mesh,
+  NullEngine,
+  Scene,
+  type StandardMaterial,
+} from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  ModifierVisualizationService,
   type ModifierVisualizationConfig,
+  ModifierVisualizationService,
   type OpenSCADModifierType,
 } from './modifier-visualization.service';
 
@@ -24,7 +32,7 @@ describe('ModifierVisualizationService', () => {
     engine = new NullEngine();
     scene = new Scene(engine);
     modifierService = new ModifierVisualizationService(scene);
-    
+
     // Create a test mesh
     testMesh = CreateBox('testBox', { size: 1 }, scene);
   });
@@ -53,7 +61,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.modifierType).toBe('debug');
@@ -73,12 +81,12 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.modifierType).toBe('debug');
         expect(applicationResult.wireframeMesh).toBeDefined();
-        
+
         // Check that material was applied
         expect(testMesh.material).toBeDefined();
         expect((testMesh.material as StandardMaterial).wireframe).toBe(true);
@@ -93,7 +101,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.wireframeMesh).toBeDefined();
@@ -110,12 +118,12 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.modifierType).toBe('background');
         expect(applicationResult.applied).toBe(true);
-        
+
         // Check transparency was applied
         expect(testMesh.material).toBeDefined();
         expect((testMesh.material as StandardMaterial).alpha).toBe(0.5);
@@ -129,7 +137,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = testMesh.material as StandardMaterial;
         expect(material.alpha).toBe(0.7); // 1.0 - 0.3 (default transparency)
@@ -149,12 +157,12 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.modifierType).toBe('disable');
         expect(applicationResult.applied).toBe(true);
-        
+
         // Check mesh is hidden
         expect(testMesh.isVisible).toBe(false);
         expect(testMesh.isEnabled()).toBe(false);
@@ -171,13 +179,13 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const applicationResult = result.data;
         expect(applicationResult.modifierType).toBe('root');
         expect(applicationResult.applied).toBe(true);
         expect(applicationResult.wireframeMesh).toBeDefined();
-        
+
         // Check highlighting material was applied
         expect(testMesh.material).toBeDefined();
         const material = testMesh.material as StandardMaterial;
@@ -194,7 +202,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = testMesh.material as StandardMaterial;
         expect(material.diffuseColor).toEqual(customColor);
@@ -209,7 +217,7 @@ describe('ModifierVisualizationService', () => {
       };
 
       await modifierService.applyModifier(testMesh, config);
-      
+
       const state = modifierService.getModifierState(testMesh.id);
       expect(state).toBeDefined();
       expect(state?.modifierType).toBe('debug');
@@ -219,16 +227,16 @@ describe('ModifierVisualizationService', () => {
 
     it('should track multiple modifier states', async () => {
       const sphere = CreateSphere('testSphere', { diameter: 1 }, scene);
-      
+
       await modifierService.applyModifier(testMesh, { type: 'debug' });
       await modifierService.applyModifier(sphere, { type: 'background' });
-      
+
       const allStates = modifierService.getAllModifierStates();
       expect(allStates.length).toBe(2);
-      
-      const debugState = allStates.find(s => s.modifierType === 'debug');
-      const backgroundState = allStates.find(s => s.modifierType === 'background');
-      
+
+      const debugState = allStates.find((s) => s.modifierType === 'debug');
+      const backgroundState = allStates.find((s) => s.modifierType === 'background');
+
       expect(debugState).toBeDefined();
       expect(backgroundState).toBeDefined();
     });
@@ -237,7 +245,7 @@ describe('ModifierVisualizationService', () => {
   describe('Modifier Removal', () => {
     it('should remove modifier and restore original state', async () => {
       const originalMaterial = testMesh.material;
-      
+
       const config: ModifierVisualizationConfig = {
         type: 'background',
         transparency: 0.5,
@@ -246,11 +254,11 @@ describe('ModifierVisualizationService', () => {
       // Apply modifier
       await modifierService.applyModifier(testMesh, config);
       expect(testMesh.material).not.toBe(originalMaterial);
-      
+
       // Remove modifier
       const result = await modifierService.removeModifier(testMesh);
       expect(result.success).toBe(true);
-      
+
       // Check state was restored
       expect(testMesh.material).toBe(originalMaterial);
       expect(modifierService.getModifierState(testMesh.id)).toBeUndefined();
@@ -261,7 +269,7 @@ describe('ModifierVisualizationService', () => {
       await modifierService.applyModifier(testMesh, { type: 'disable' });
       expect(testMesh.isVisible).toBe(false);
       expect(testMesh.isEnabled()).toBe(false);
-      
+
       // Remove modifier
       await modifierService.removeModifier(testMesh);
       expect(testMesh.isVisible).toBe(true);
@@ -314,7 +322,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(testMesh, config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('APPLICATION_FAILED');
       }
@@ -327,7 +335,7 @@ describe('ModifierVisualizationService', () => {
 
       const result = await modifierService.applyModifier(null as any, config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('APPLICATION_FAILED');
       }
@@ -338,7 +346,7 @@ describe('ModifierVisualizationService', () => {
     it('should dispose all resources and clear state', async () => {
       await modifierService.applyModifier(testMesh, { type: 'debug' });
       expect(modifierService.getAllModifierStates().length).toBe(1);
-      
+
       modifierService.dispose();
       expect(modifierService.getAllModifierStates().length).toBe(0);
     });

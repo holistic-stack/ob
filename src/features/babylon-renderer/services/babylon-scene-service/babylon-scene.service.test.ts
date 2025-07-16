@@ -104,8 +104,8 @@ describe('BabylonSceneService', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.scene).toBeDefined();
-        expect(result.data.scene!.autoClear).toBe(true);
-        expect(result.data.scene!.autoClearDepthAndStencil).toBe(true);
+        expect(result.data.scene?.autoClear).toBe(true);
+        expect(result.data.scene?.autoClearDepthAndStencil).toBe(true);
       }
     });
 
@@ -240,8 +240,8 @@ describe('BabylonSceneService', () => {
       expect(result.success).toBe(true);
 
       const state = sceneService.getState();
-      expect(state.scene!.autoClear).toBe(true);
-      expect(state.scene!.autoClearDepthAndStencil).toBe(true);
+      expect(state.scene?.autoClear).toBe(true);
+      expect(state.scene?.autoClearDepthAndStencil).toBe(true);
     });
 
     it('should handle update when scene not initialized', () => {

@@ -5,12 +5,10 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { NullEngine, Scene, CreateBox, CreateSphere, AbstractMesh } from '@babylonjs/core';
+import { type AbstractMesh, CreateBox, CreateSphere, NullEngine, Scene } from '@babylonjs/core';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SelectionInfo } from './selection-info';
-import { SelectionService } from '../../services/selection/selection.service';
 
 // Mock the selection hooks to control the test data
 vi.mock('../../services/selection/use-selection.hook', () => ({
@@ -33,11 +31,11 @@ describe('SelectionInfo', () => {
     // Create BabylonJS NullEngine for headless testing
     engine = new NullEngine();
     scene = new Scene(engine);
-    
+
     // Create test meshes
     testMesh1 = CreateBox('testBox1', { size: 1 }, scene);
     testMesh1.metadata = { type: 'box', material: 'metal' };
-    
+
     testMesh2 = CreateSphere('testSphere1', { diameter: 1 }, scene);
     testMesh2.metadata = { type: 'sphere', material: 'plastic' };
 
@@ -67,13 +65,13 @@ describe('SelectionInfo', () => {
   describe('Basic Rendering', () => {
     it('should render with no scene', () => {
       render(<SelectionInfo scene={null} />);
-      
+
       expect(screen.getByText('No scene available')).toBeInTheDocument();
     });
 
     it('should render with no selection', () => {
       render(<SelectionInfo scene={scene} />);
-      
+
       expect(screen.getByText('No objects selected')).toBeInTheDocument();
       expect(screen.getByText('Click on a 3D object to select it')).toBeInTheDocument();
     });
@@ -88,7 +86,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} showStatistics={true} />);
-      
+
       expect(screen.getByText('Selection')).toBeInTheDocument();
       expect(screen.getByText('0')).toBeInTheDocument(); // Count
       expect(screen.getByText('Single')).toBeInTheDocument(); // Mode
@@ -98,14 +96,16 @@ describe('SelectionInfo', () => {
   describe('Selection Display', () => {
     it('should display selected mesh information', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: testMesh1.metadata,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: testMesh1.metadata,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
@@ -119,7 +119,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} />);
-      
+
       expect(screen.getByText('testBox1')).toBeInTheDocument();
       expect(screen.getByText('Mesh')).toBeInTheDocument(); // Type
       expect(screen.getByText('Yes')).toBeInTheDocument(); // Visible
@@ -127,7 +127,7 @@ describe('SelectionInfo', () => {
 
     it('should display multiple selected meshes', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1, testMesh2],
         selectedMeshInfos: [
@@ -147,7 +147,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} />);
-      
+
       expect(screen.getByText('testBox1')).toBeInTheDocument();
       expect(screen.getByText('testSphere1')).toBeInTheDocument();
       expect(screen.getByTestId('selected-mesh-0')).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} />);
-      
+
       expect(screen.getByText('Hovering')).toBeInTheDocument();
       expect(screen.getByText('testBox1')).toBeInTheDocument();
       expect(screen.getByText('Type: Mesh')).toBeInTheDocument();
@@ -173,14 +173,16 @@ describe('SelectionInfo', () => {
   describe('Mesh Properties', () => {
     it('should display basic mesh properties', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: testMesh1.metadata,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: testMesh1.metadata,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
@@ -194,26 +196,28 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} />);
-      
+
       // Check for position, rotation, scaling
       expect(screen.getByText('Position:')).toBeInTheDocument();
       expect(screen.getByText('Rotation:')).toBeInTheDocument();
       expect(screen.getByText('Scaling:')).toBeInTheDocument();
-      
+
       // Check for vector format (x, y, z)
       expect(screen.getByText('(0.00, 0.00, 0.00)')).toBeInTheDocument();
     });
 
     it('should display bounding box information when enabled', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: testMesh1.metadata,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: testMesh1.metadata,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
@@ -227,7 +231,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} showBoundingBox={true} />);
-      
+
       expect(screen.getByText('Bounding Box')).toBeInTheDocument();
       expect(screen.getByText('Min:')).toBeInTheDocument();
       expect(screen.getByText('Max:')).toBeInTheDocument();
@@ -238,20 +242,22 @@ describe('SelectionInfo', () => {
 
     it('should hide bounding box when disabled', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: testMesh1.metadata,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: testMesh1.metadata,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
 
       render(<SelectionInfo scene={scene} showBoundingBox={false} />);
-      
+
       expect(screen.queryByText('Bounding Box')).not.toBeInTheDocument();
     });
   });
@@ -259,20 +265,22 @@ describe('SelectionInfo', () => {
   describe('Metadata Display', () => {
     it('should display mesh metadata when enabled', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: { type: 'box', material: 'metal', count: 42 },
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: { type: 'box', material: 'metal', count: 42 },
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
 
       render(<SelectionInfo scene={scene} showMetadata={true} />);
-      
+
       expect(screen.getByText('Metadata')).toBeInTheDocument();
       expect(screen.getByText('type:')).toBeInTheDocument();
       expect(screen.getByText('box')).toBeInTheDocument();
@@ -284,20 +292,22 @@ describe('SelectionInfo', () => {
 
     it('should hide metadata when disabled', () => {
       const selectionTime = new Date();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: { type: 'box' },
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: { type: 'box' },
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
 
       render(<SelectionInfo scene={scene} showMetadata={false} />);
-      
+
       expect(screen.queryByText('Metadata')).not.toBeInTheDocument();
     });
 
@@ -308,20 +318,22 @@ describe('SelectionInfo', () => {
         nested: { x: 1, y: 2 },
         array: [1, 2, 3],
       };
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime,
-          metadata: complexMetadata,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime,
+            metadata: complexMetadata,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
 
       render(<SelectionInfo scene={scene} showMetadata={true} />);
-      
+
       expect(screen.getByText('simple:')).toBeInTheDocument();
       expect(screen.getByText('value')).toBeInTheDocument();
       expect(screen.getByText('nested:')).toBeInTheDocument();
@@ -333,7 +345,7 @@ describe('SelectionInfo', () => {
     it('should call clearSelection when clear button is clicked', () => {
       const mockClearSelection = vi.fn();
       const mockOnClearSelection = vi.fn();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
         selectedMeshInfos: [{ mesh: testMesh1, selectionTime: new Date(), metadata: {} }],
@@ -349,23 +361,18 @@ describe('SelectionInfo', () => {
         selectionMode: 'single',
       });
 
-      render(
-        <SelectionInfo 
-          scene={scene} 
-          onClearSelection={mockOnClearSelection}
-        />
-      );
-      
+      render(<SelectionInfo scene={scene} onClearSelection={mockOnClearSelection} />);
+
       const clearButton = screen.getByTestId('clear-selection-button');
       fireEvent.click(clearButton);
-      
+
       expect(mockClearSelection).toHaveBeenCalledTimes(1);
       expect(mockOnClearSelection).toHaveBeenCalledTimes(1);
     });
 
     it('should call onSelectMesh when focus button is clicked', () => {
       const mockOnSelectMesh = vi.fn();
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
         selectedMeshInfos: [{ mesh: testMesh1, selectionTime: new Date(), metadata: {} }],
@@ -381,16 +388,11 @@ describe('SelectionInfo', () => {
         selectionMode: 'single',
       });
 
-      render(
-        <SelectionInfo 
-          scene={scene} 
-          onSelectMesh={mockOnSelectMesh}
-        />
-      );
-      
+      render(<SelectionInfo scene={scene} onSelectMesh={mockOnSelectMesh} />);
+
       const focusButton = screen.getByTestId('focus-mesh-0');
       fireEvent.click(focusButton);
-      
+
       expect(mockOnSelectMesh).toHaveBeenCalledTimes(1);
       expect(mockOnSelectMesh).toHaveBeenCalledWith(testMesh1);
     });
@@ -407,7 +409,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} showStatistics={true} />);
-      
+
       expect(screen.getByText('Selection')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument(); // Count
       expect(screen.getByText('Multi')).toBeInTheDocument(); // Mode
@@ -416,7 +418,7 @@ describe('SelectionInfo', () => {
 
     it('should hide statistics when disabled', () => {
       render(<SelectionInfo scene={scene} showStatistics={false} />);
-      
+
       expect(screen.queryByText('Selection')).not.toBeInTheDocument();
     });
   });
@@ -424,23 +426,15 @@ describe('SelectionInfo', () => {
   describe('Accessibility and Props', () => {
     it('should apply custom className', () => {
       const { container } = render(
-        <SelectionInfo 
-          scene={scene} 
-          className="custom-selection-info"
-        />
+        <SelectionInfo scene={scene} className="custom-selection-info" />
       );
-      
+
       expect(container.firstChild).toHaveClass('custom-selection-info');
     });
 
     it('should apply custom data-testid', () => {
-      render(
-        <SelectionInfo 
-          scene={scene} 
-          data-testid="custom-selection-info"
-        />
-      );
-      
+      render(<SelectionInfo scene={scene} data-testid="custom-selection-info" />);
+
       expect(screen.getByTestId('custom-selection-info')).toBeInTheDocument();
     });
   });
@@ -449,14 +443,16 @@ describe('SelectionInfo', () => {
     it('should handle mesh without name', () => {
       const meshWithoutName = CreateBox('', { size: 1 }, scene);
       meshWithoutName.name = '';
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [meshWithoutName],
-        selectedMeshInfos: [{
-          mesh: meshWithoutName,
-          selectionTime: new Date(),
-          metadata: {},
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: meshWithoutName,
+            selectionTime: new Date(),
+            metadata: {},
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
@@ -470,7 +466,7 @@ describe('SelectionInfo', () => {
       });
 
       render(<SelectionInfo scene={scene} />);
-      
+
       // Should display the mesh ID when name is empty
       expect(screen.getByText(meshWithoutName.id)).toBeInTheDocument();
     });
@@ -478,17 +474,19 @@ describe('SelectionInfo', () => {
     it('should handle mesh without metadata', () => {
       mockUseSelection.mockReturnValue({
         selectedMeshes: [testMesh1],
-        selectedMeshInfos: [{
-          mesh: testMesh1,
-          selectionTime: new Date(),
-          metadata: undefined,
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: testMesh1,
+            selectionTime: new Date(),
+            metadata: undefined,
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });
 
       render(<SelectionInfo scene={scene} showMetadata={true} />);
-      
+
       // Should not show metadata section when no metadata
       expect(screen.queryByText('Metadata')).not.toBeInTheDocument();
     });
@@ -496,14 +494,16 @@ describe('SelectionInfo', () => {
     it('should handle bounding box calculation errors', () => {
       // Create a mesh that might cause bounding box errors
       const problematicMesh = CreateBox('problematic', { size: 1 }, scene);
-      
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [problematicMesh],
-        selectedMeshInfos: [{
-          mesh: problematicMesh,
-          selectionTime: new Date(),
-          metadata: {},
-        }],
+        selectedMeshInfos: [
+          {
+            mesh: problematicMesh,
+            selectionTime: new Date(),
+            metadata: {},
+          },
+        ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
       });

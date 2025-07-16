@@ -5,43 +5,30 @@
  * Following SRP principles with co-located tests.
  */
 
-// Scene components (to be implemented)
-// export * from './babylon-scene';
-
-// Engine components (to be implemented)
-// export * from './babylon-engine';
-
-// Camera components (to be implemented)
-// export * from './babylon-camera';
-
-// Store bridge components (to be implemented)
-// export * from './store-babylon-bridge';
-
-// Babylon Error Boundary Component
-export { BabylonErrorBoundary, useBabylonErrorHandler } from './babylon-error-boundary';
 export type {
-  BabylonErrorType,
-  BabylonErrorDetails,
-  BabylonErrorBoundaryState,
   BabylonErrorBoundaryProps,
+  BabylonErrorBoundaryState,
+  BabylonErrorDetails,
+  BabylonErrorType,
 } from './babylon-error-boundary';
-
-// Progress Bar Component
-export { ProgressBar } from './progress-bar';
-export type {
-  ProgressBarProps,
-  ProgressBarSize,
-  ProgressBarColor,
-} from './progress-bar';
-
-// Selection Info Component
-export { SelectionInfo } from './selection-info';
-export type {
-  SelectionInfoProps,
-} from './selection-info';
-
+// Error Boundary Component
+export { BabylonErrorBoundary, useBabylonErrorHandler } from './babylon-error-boundary';
+export type { BabylonSceneProps } from './babylon-scene';
+// Scene Components
+export { BabylonScene } from './babylon-scene';
+export type { ExportDialogProps } from './export-dialog';
 // Export Dialog Component
 export { ExportDialog } from './export-dialog';
 export type {
-  ExportDialogProps,
-} from './export-dialog';
+  ProgressBarColor,
+  ProgressBarProps,
+  ProgressBarSize,
+} from './progress-bar';
+// Progress Bar Component
+export { ProgressBar } from './progress-bar';
+export type { SelectionInfoProps } from './selection-info';
+// Selection Info Component
+export { SelectionInfo } from './selection-info';
+export type { StoreConnectedRendererProps } from './store-connected-renderer';
+// Store Connected Renderer
+export { StoreConnectedRenderer } from './store-connected-renderer';

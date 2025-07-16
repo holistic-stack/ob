@@ -3,11 +3,11 @@
  *
  * Service for applying OpenSCAD modifier visualizations to BabylonJS meshes.
  * Handles debug (#), background (%), disable (*), and root (!) modifiers.
- * 
+ *
  * @example
  * ```typescript
  * const modifierService = new ModifierVisualizationService(scene);
- * 
+ *
  * // Apply debug modifier visualization
  * const result = await modifierService.applyModifier(mesh, {
  *   type: 'debug',
@@ -18,15 +18,15 @@
  */
 
 import {
-  Scene,
-  Mesh,
-  AbstractMesh,
-  StandardMaterial,
+  type AbstractMesh,
   Color3,
-  Material,
-  LinesMesh,
   CreateLines,
-  Vector3
+  type LinesMesh,
+  Material,
+  Mesh,
+  type Scene,
+  StandardMaterial,
+  Vector3,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
@@ -67,7 +67,11 @@ export interface ModifierApplicationResult {
  * Modifier visualization error
  */
 export interface ModifierVisualizationError {
-  readonly code: 'INVALID_MODIFIER' | 'MESH_NOT_PROVIDED' | 'MATERIAL_CREATION_FAILED' | 'APPLICATION_FAILED';
+  readonly code:
+    | 'INVALID_MODIFIER'
+    | 'MESH_NOT_PROVIDED'
+    | 'MATERIAL_CREATION_FAILED'
+    | 'APPLICATION_FAILED';
   readonly message: string;
   readonly timestamp: Date;
   readonly modifierType?: OpenSCADModifierType;
@@ -87,7 +91,7 @@ export interface ModifierState {
 
 /**
  * Modifier Visualization Service
- * 
+ *
  * Provides OpenSCAD modifier visualization capabilities for BabylonJS meshes.
  * Handles all four OpenSCAD modifier types with appropriate visual treatments.
  */
@@ -115,15 +119,17 @@ export class ModifierVisualizationService {
           throw this.createError('MESH_NOT_PROVIDED', 'Mesh is required for modifier application');
         }
 
-        logger.debug(`[APPLY_MODIFIER] Applying ${config.type} modifier to mesh: ${mesh?.name || 'unknown'}`);
+        logger.debug(
+          `[APPLY_MODIFIER] Applying ${config.type} modifier to mesh: ${mesh?.name || 'unknown'}`
+        );
         const startTime = performance.now();
 
         // Store original state
         const originalMaterial = mesh.material;
-        
+
         // Apply modifier based on type
         let result: ModifierApplicationResult;
-        
+
         switch (config.type) {
           case 'debug':
             result = await this.applyDebugModifier(mesh, config);
@@ -138,7 +144,11 @@ export class ModifierVisualizationService {
             result = await this.applyRootModifier(mesh, config);
             break;
           default:
-            throw this.createError('INVALID_MODIFIER', `Unknown modifier type: ${config.type}`, config.type);
+            throw this.createError(
+              'INVALID_MODIFIER',
+              `Unknown modifier type: ${config.type}`,
+              config.type
+            );
         }
 
         // Store modifier state
@@ -150,10 +160,13 @@ export class ModifierVisualizationService {
           originalMaterial, // Store even if null
         });
 
-        logger.debug(`[APPLY_MODIFIER] Applied ${config.type} modifier in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[APPLY_MODIFIER] Applied ${config.type} modifier in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return result;
       },
-      (error) => this.createError('APPLICATION_FAILED', `Failed to apply modifier: ${error}`, config.type)
+      (error) =>
+        this.createError('APPLICATION_FAILED', `Failed to apply modifier: ${error}`, config.type)
     );
   }
 
@@ -169,13 +182,13 @@ export class ModifierVisualizationService {
 
     // Create debug material
     const debugMaterial = this.createDebugMaterial(debugColor, intensity);
-    
+
     let wireframeMesh: LinesMesh | undefined;
-    
+
     if (mesh instanceof Mesh) {
       // Create wireframe overlay
       wireframeMesh = this.createWireframeOverlay(mesh, debugColor);
-      
+
       if (!config.wireframeOnly) {
         // Apply debug material to original mesh
         mesh.material = debugMaterial;
@@ -201,7 +214,7 @@ export class ModifierVisualizationService {
     config: ModifierVisualizationConfig
   ): Promise<ModifierApplicationResult> {
     const transparency = config.transparency || 0.3;
-    
+
     // Create transparent material
     const backgroundMaterial = this.createBackgroundMaterial(transparency);
     mesh.material = backgroundMaterial;
@@ -284,15 +297,19 @@ export class ModifierVisualizationService {
         }
 
         // Remove wireframe overlays
-        const wireframes = this.scene.meshes.filter(m => m.name.startsWith(`${mesh.name}_wireframe`));
+        const wireframes = this.scene.meshes.filter((m) =>
+          m.name.startsWith(`${mesh.name}_wireframe`)
+        );
         for (const wireframe of wireframes) {
           wireframe.dispose();
         }
 
         // Clean up state
         this.modifierStates.delete(mesh.id);
-        
-        logger.debug(`[REMOVE_MODIFIER] Removed ${state.modifierType} modifier from mesh: ${mesh.name}`);
+
+        logger.debug(
+          `[REMOVE_MODIFIER] Removed ${state.modifierType} modifier from mesh: ${mesh.name}`
+        );
       },
       (error) => this.createError('APPLICATION_FAILED', `Failed to remove modifier: ${error}`)
     );
@@ -453,7 +470,7 @@ export class ModifierVisualizationService {
       ...(modifierType && { modifierType }),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

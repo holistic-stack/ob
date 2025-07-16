@@ -4,22 +4,19 @@
  * Exports for the export service and hooks.
  */
 
-export { ExportService } from './export.service';
 export type {
-  ExportFormat,
-  ExportQuality,
   ExportConfig,
-  ExportResult,
   ExportError,
+  ExportFormat,
   ExportProgressCallback,
+  ExportQuality,
+  ExportResult,
 } from './export.service';
-
+export { ExportService } from './export.service';
+export type { UseExportReturn } from './use-export.hook';
 export {
+  cleanupExportServices,
   useExport,
   useExportStats,
   useQuickExport,
-  cleanupExportServices,
-} from './use-export.hook';
-export type {
-  UseExportReturn,
 } from './use-export.hook';

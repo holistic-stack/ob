@@ -25,8 +25,8 @@ describe('Real Parser Integration Tests', () => {
 
       const rootNode = tree?.rootNode;
       expect(rootNode).not.toBeNull();
-      expect(rootNode!.type).toBe('source_file');
-      expect(rootNode!.childCount).toBeGreaterThan(0);
+      expect(rootNode?.type).toBe('source_file');
+      expect(rootNode?.childCount).toBeGreaterThan(0);
     });
 
     it('should parse OpenSCAD code and return valid tree structure', () => {
@@ -38,7 +38,7 @@ describe('Real Parser Integration Tests', () => {
 
       const rootNode = tree?.rootNode;
       expect(rootNode).not.toBeNull();
-      expect(rootNode!.type).toBe('source_file');
+      expect(rootNode?.type).toBe('source_file');
 
       // Find statement nodes
       function findStatements(node: TSNode): TSNode[] {
@@ -72,7 +72,7 @@ describe('Real Parser Integration Tests', () => {
 
       const rootNode = tree?.rootNode;
       expect(rootNode).not.toBeNull();
-      expect(rootNode!.type).toBe('source_file');
+      expect(rootNode?.type).toBe('source_file');
 
       // Count statement nodes
       function countStatements(node: TSNode): number {

@@ -7,7 +7,6 @@
 
 import { Color3, Vector3 } from '@babylonjs/core';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { BabylonScene } from './babylon-scene';
 

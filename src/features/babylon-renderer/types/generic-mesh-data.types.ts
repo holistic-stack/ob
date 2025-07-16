@@ -6,7 +6,7 @@
  * and editor integration. This implements Task 1.3 from the architecture.
  */
 
-import type { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
+import type { BoundingBox, Matrix } from '@babylonjs/core';
 import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 
 /**

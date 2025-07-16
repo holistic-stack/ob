@@ -4,21 +4,21 @@
  * Service for managing progress state across long-running operations.
  * Provides centralized progress tracking, cancellation support, and integration
  * with React components through hooks.
- * 
+ *
  * @example
  * ```typescript
  * const progressService = new ProgressService();
- * 
+ *
  * // Start a new operation
  * const operationId = progressService.startOperation({
  *   type: 'parsing',
  *   title: 'Parsing OpenSCAD file',
  *   total: 100
  * });
- * 
+ *
  * // Update progress
  * progressService.updateProgress(operationId, { current: 50 });
- * 
+ *
  * // Complete operation
  * progressService.completeOperation(operationId);
  * ```
@@ -33,7 +33,7 @@ const logger = createLogger('Progress');
 /**
  * Progress operation types
  */
-export type ProgressOperationType = 
+export type ProgressOperationType =
   | 'parsing'
   | 'rendering'
   | 'csg-operation'
@@ -106,7 +106,11 @@ export interface ProgressUpdate {
  * Progress service error
  */
 export interface ProgressError {
-  readonly code: 'OPERATION_NOT_FOUND' | 'INVALID_UPDATE' | 'OPERATION_CANCELLED' | 'OPERATION_FAILED';
+  readonly code:
+    | 'OPERATION_NOT_FOUND'
+    | 'INVALID_UPDATE'
+    | 'OPERATION_CANCELLED'
+    | 'OPERATION_FAILED';
   readonly message: string;
   readonly operationId?: string;
   readonly timestamp: Date;
@@ -119,7 +123,7 @@ export type ProgressEventListener = (operation: ProgressOperation) => void;
 
 /**
  * Progress Service
- * 
+ *
  * Manages progress state for long-running operations with support for
  * cancellation, multi-stage operations, and real-time updates.
  */
@@ -140,7 +144,7 @@ export class ProgressService {
       () => {
         const operationId = `progress_${this.nextOperationId++}`;
         const abortController = config.cancellable ? new AbortController() : undefined;
-        
+
         const initialState: ProgressState = {
           current: 0,
           total: config.total,
@@ -180,23 +184,34 @@ export class ProgressService {
       () => {
         const operation = this.operations.get(operationId);
         if (!operation) {
-          throw this.createError('OPERATION_NOT_FOUND', `Operation not found: ${operationId}`, operationId);
+          throw this.createError(
+            'OPERATION_NOT_FOUND',
+            `Operation not found: ${operationId}`,
+            operationId
+          );
         }
 
         if (operation.state.isCompleted || operation.state.isCancelled) {
-          throw this.createError('INVALID_UPDATE', `Cannot update completed/cancelled operation: ${operationId}`, operationId);
+          throw this.createError(
+            'INVALID_UPDATE',
+            `Cannot update completed/cancelled operation: ${operationId}`,
+            operationId
+          );
         }
 
         // Calculate new state
         const newCurrent = update.current ?? operation.state.current;
         const newTotal = update.total ?? operation.state.total;
-        const newPercentage = newTotal ? Math.min(100, Math.max(0, (newCurrent / newTotal) * 100)) : 0;
-        
+        const newPercentage = newTotal
+          ? Math.min(100, Math.max(0, (newCurrent / newTotal) * 100))
+          : 0;
+
         // Calculate estimated time remaining
         const elapsed = Date.now() - operation.state.startTime.getTime();
-        const estimatedTimeRemaining = newPercentage > 0 && newPercentage < 100
-          ? (elapsed / newPercentage) * (100 - newPercentage)
-          : undefined;
+        const estimatedTimeRemaining =
+          newPercentage > 0 && newPercentage < 100
+            ? (elapsed / newPercentage) * (100 - newPercentage)
+            : undefined;
 
         const updatedState: ProgressState = {
           ...operation.state,
@@ -218,9 +233,12 @@ export class ProgressService {
         this.operations.set(operationId, updatedOperation);
         this.notifyListeners(updatedOperation);
 
-        logger.debug(`[UPDATE_PROGRESS] Updated operation ${operationId}: ${newPercentage.toFixed(1)}%`);
+        logger.debug(
+          `[UPDATE_PROGRESS] Updated operation ${operationId}: ${newPercentage.toFixed(1)}%`
+        );
       },
-      (error) => this.createError('INVALID_UPDATE', `Failed to update progress: ${error}`, operationId)
+      (error) =>
+        this.createError('INVALID_UPDATE', `Failed to update progress: ${error}`, operationId)
     );
   }
 
@@ -232,7 +250,11 @@ export class ProgressService {
       () => {
         const operation = this.operations.get(operationId);
         if (!operation) {
-          throw this.createError('OPERATION_NOT_FOUND', `Operation not found: ${operationId}`, operationId);
+          throw this.createError(
+            'OPERATION_NOT_FOUND',
+            `Operation not found: ${operationId}`,
+            operationId
+          );
         }
 
         const completedState: ProgressState = {
@@ -260,7 +282,8 @@ export class ProgressService {
           }, 2000);
         }
       },
-      (error) => this.createError('OPERATION_FAILED', `Failed to complete operation: ${error}`, operationId)
+      (error) =>
+        this.createError('OPERATION_FAILED', `Failed to complete operation: ${error}`, operationId)
     );
   }
 
@@ -272,7 +295,11 @@ export class ProgressService {
       () => {
         const operation = this.operations.get(operationId);
         if (!operation) {
-          throw this.createError('OPERATION_NOT_FOUND', `Operation not found: ${operationId}`, operationId);
+          throw this.createError(
+            'OPERATION_NOT_FOUND',
+            `Operation not found: ${operationId}`,
+            operationId
+          );
         }
 
         // Abort the operation if it has an abort controller
@@ -301,7 +328,8 @@ export class ProgressService {
           this.operations.delete(operationId);
         }, 1000);
       },
-      (error) => this.createError('OPERATION_CANCELLED', `Failed to cancel operation: ${error}`, operationId)
+      (error) =>
+        this.createError('OPERATION_CANCELLED', `Failed to cancel operation: ${error}`, operationId)
     );
   }
 
@@ -317,7 +345,7 @@ export class ProgressService {
    */
   getActiveOperations(): readonly ProgressOperation[] {
     return Array.from(this.operations.values()).filter(
-      op => !op.state.isCompleted && !op.state.isCancelled
+      (op) => !op.state.isCompleted && !op.state.isCancelled
     );
   }
 
@@ -325,7 +353,7 @@ export class ProgressService {
    * Get all operations of a specific type
    */
   getOperationsByType(type: ProgressOperationType): readonly ProgressOperation[] {
-    return Array.from(this.operations.values()).filter(op => op.config.type === type);
+    return Array.from(this.operations.values()).filter((op) => op.config.type === type);
   }
 
   /**

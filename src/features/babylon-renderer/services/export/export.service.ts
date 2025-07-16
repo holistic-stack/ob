@@ -3,18 +3,18 @@
  *
  * Service for exporting 3D models to various formats (STL, 3MF, GLTF).
  * Provides comprehensive export management with progress tracking and format-specific options.
- * 
+ *
  * @example
  * ```typescript
  * const exportService = new ExportService(scene);
- * 
+ *
  * // Export selected meshes to STL
  * const result = await exportService.exportMeshes(selectedMeshes, {
  *   format: 'stl',
  *   filename: 'my-model.stl',
  *   binary: true
  * });
- * 
+ *
  * if (result.success) {
  *   // File download initiated
  *   console.log('Export completed');
@@ -22,11 +22,11 @@
  * ```
  */
 
-import { Scene, AbstractMesh, Mesh } from '@babylonjs/core';
+import { type AbstractMesh, Mesh, type Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import { ProgressService } from '../progress/progress.service';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
+import type { ProgressService } from '../progress/progress.service';
 
 const logger = createLogger('Export');
 
@@ -72,7 +72,12 @@ export interface ExportResult {
  * Export error
  */
 export interface ExportError {
-  readonly code: 'EXPORT_FAILED' | 'UNSUPPORTED_FORMAT' | 'NO_MESHES' | 'INVALID_CONFIG' | 'DOWNLOAD_FAILED';
+  readonly code:
+    | 'EXPORT_FAILED'
+    | 'UNSUPPORTED_FORMAT'
+    | 'NO_MESHES'
+    | 'INVALID_CONFIG'
+    | 'DOWNLOAD_FAILED';
   readonly message: string;
   readonly timestamp: Date;
   readonly format?: ExportFormat;
@@ -86,7 +91,7 @@ export type ExportProgressCallback = (progress: number, message?: string) => voi
 
 /**
  * Export Service
- * 
+ *
  * Manages 3D model export to various formats with progress tracking,
  * quality options, and browser download handling.
  */
@@ -117,7 +122,7 @@ export class ExportService {
         this.validateConfig(config);
 
         // Filter valid meshes
-        const validMeshes = meshes.filter(mesh => mesh instanceof Mesh) as Mesh[];
+        const validMeshes = meshes.filter((mesh) => mesh instanceof Mesh) as Mesh[];
         if (validMeshes.length === 0) {
           throw this.createError('NO_MESHES', 'No valid meshes to export');
         }
@@ -132,7 +137,7 @@ export class ExportService {
             total: 100,
             cancellable: true,
           });
-          
+
           if (progressResult.success) {
             operationId = progressResult.data;
           }
@@ -165,7 +170,10 @@ export class ExportService {
               mimeType = 'model/gltf-binary';
               break;
             default:
-              throw this.createError('UNSUPPORTED_FORMAT', `Unsupported export format: ${config.format}`);
+              throw this.createError(
+                'UNSUPPORTED_FORMAT',
+                `Unsupported export format: ${config.format}`
+              );
           }
 
           // Update progress
@@ -174,11 +182,10 @@ export class ExportService {
 
           // Create download
           const downloadUrl = this.createDownload(exportData, config.filename, mimeType);
-          
+
           // Calculate file size
-          const fileSize = typeof exportData === 'string' 
-            ? new Blob([exportData]).size 
-            : exportData.byteLength;
+          const fileSize =
+            typeof exportData === 'string' ? new Blob([exportData]).size : exportData.byteLength;
 
           const exportTime = performance.now() - startTime;
 
@@ -201,12 +208,11 @@ export class ExportService {
 
           logger.debug(`[EXPORT_MESHES] Export completed in ${exportTime.toFixed(2)}ms`);
           return result;
-
         } catch (error) {
           // Handle export errors
           if (this.progressService && operationId) {
-            this.progressService.updateProgress(operationId, { 
-              error: error instanceof Error ? error.message : 'Export failed' 
+            this.progressService.updateProgress(operationId, {
+              error: error instanceof Error ? error.message : 'Export failed',
             });
           }
           throw error;
@@ -223,7 +229,7 @@ export class ExportService {
     config: ExportConfig,
     onProgress?: ExportProgressCallback
   ): Promise<Result<ExportResult, ExportError>> {
-    const allMeshes = this.scene.meshes.filter(mesh => mesh instanceof Mesh);
+    const allMeshes = this.scene.meshes.filter((mesh) => mesh instanceof Mesh);
     return this.exportMeshes(allMeshes, config, onProgress);
   }
 
@@ -281,8 +287,8 @@ export class ExportService {
    * Export to STL format
    */
   private async exportSTL(
-    meshes: Mesh[],
-    config: ExportConfig,
+    _meshes: Mesh[],
+    _config: ExportConfig,
     operationId?: string,
     onProgress?: ExportProgressCallback
   ): Promise<string> {
@@ -298,8 +304,8 @@ export class ExportService {
    * Export to 3MF format
    */
   private async export3MF(
-    meshes: Mesh[],
-    config: ExportConfig,
+    _meshes: Mesh[],
+    _config: ExportConfig,
     operationId?: string,
     onProgress?: ExportProgressCallback
   ): Promise<string> {
@@ -315,8 +321,8 @@ export class ExportService {
    * Export to GLTF format
    */
   private async exportGLTF(
-    meshes: Mesh[],
-    config: ExportConfig,
+    _meshes: Mesh[],
+    _config: ExportConfig,
     operationId?: string,
     onProgress?: ExportProgressCallback
   ): Promise<string> {
@@ -332,8 +338,8 @@ export class ExportService {
    * Export to GLB format
    */
   private async exportGLB(
-    meshes: Mesh[],
-    config: ExportConfig,
+    _meshes: Mesh[],
+    _config: ExportConfig,
     operationId?: string,
     onProgress?: ExportProgressCallback
   ): Promise<ArrayBuffer> {
@@ -352,7 +358,7 @@ export class ExportService {
     try {
       const blob = new Blob([data], { type: mimeType });
       const url = URL.createObjectURL(blob);
-      
+
       // Trigger download
       const link = document.createElement('a');
       link.href = url;
@@ -360,10 +366,10 @@ export class ExportService {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up URL after a delay
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      
+
       return url;
     } catch (error) {
       throw this.createError('DOWNLOAD_FAILED', `Failed to create download: ${error}`);
@@ -390,7 +396,11 @@ export class ExportService {
   /**
    * Update progress if progress service is available
    */
-  private updateProgress(operationId: string | undefined, progress: number, message?: string): void {
+  private updateProgress(
+    operationId: string | undefined,
+    progress: number,
+    message?: string
+  ): void {
     if (this.progressService && operationId) {
       this.progressService.updateProgress(operationId, {
         current: progress,
@@ -413,15 +423,15 @@ export class ExportService {
       message,
       timestamp: new Date(),
     };
-    
+
     if (format !== undefined) {
       (error as ExportError & { format: ExportFormat }).format = format;
     }
-    
+
     if (details !== undefined) {
       (error as ExportError & { details: Record<string, unknown> }).details = details;
     }
-    
+
     return error;
   }
 

@@ -3,10 +3,10 @@
  *
  * Component for configuring and initiating 3D model exports.
  * Provides format selection, configuration options, and progress tracking.
- * 
+ *
  * @example
  * ```tsx
- * <ExportDialog 
+ * <ExportDialog
  *   scene={scene}
  *   selectedMeshes={selectedMeshes}
  *   isOpen={showExportDialog}
@@ -16,12 +16,18 @@
  * ```
  */
 
-import React, { useState, useEffect } from 'react';
-import { Scene, AbstractMesh } from '@babylonjs/core';
+import type { AbstractMesh, Scene } from '@babylonjs/core';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
+import type {
+  ExportConfig,
+  ExportFormat,
+  ExportQuality,
+  ExportResult,
+} from '../../services/export/export.service';
 import { useExport } from '../../services/export/use-export.hook';
 import { ProgressBar } from '../progress-bar/progress-bar';
-import type { ExportConfig, ExportFormat, ExportQuality, ExportResult } from '../../services/export/export.service';
 
 const logger = createLogger('ExportDialog');
 
@@ -41,7 +47,7 @@ export interface ExportDialogProps {
 
 /**
  * Export Dialog Component
- * 
+ *
  * Provides a comprehensive interface for configuring and initiating 3D model exports
  * with format selection, quality options, and real-time progress tracking.
  */
@@ -86,7 +92,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       const baseName = filename.substring(0, filename.lastIndexOf('.'));
       setFilename(`${baseName}.${format}`);
     }
-  }, [format]);
+  }, [format, filename]);
 
   // Update export selected based on selected meshes
   useEffect(() => {
@@ -148,7 +154,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   }
 
   return (
-    <div className={`export-dialog-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${className}`} data-testid={dataTestId}>
+    <div
+      className={`export-dialog-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${className}`}
+      data-testid={dataTestId}
+    >
       <div className="export-dialog bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="dialog-header p-6 border-b border-gray-200">
@@ -163,7 +172,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
               ×
             </button>
           </div>
-          
+
           {selectedMeshes.length > 0 && (
             <div className="mt-2 text-sm text-gray-600">
               {selectedMeshes.length} object{selectedMeshes.length !== 1 ? 's' : ''} selected
@@ -175,9 +184,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         <div className="dialog-content p-6 space-y-4">
           {/* Export Target */}
           <div className="form-group">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Export Target
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Export Target</label>
             <div className="space-y-2">
               <label className="flex items-center">
                 <input
@@ -197,9 +204,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                   className="mr-2"
                   disabled={isExporting || selectedMeshes.length === 0}
                 />
-                <span className="text-sm">
-                  Selected Objects ({selectedMeshes.length})
-                </span>
+                <span className="text-sm">Selected Objects ({selectedMeshes.length})</span>
               </label>
             </div>
           </div>
@@ -227,7 +232,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
           {/* Filename */}
           <div className="form-group">
-            <label htmlFor="filename-input" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="filename-input"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Filename
             </label>
             <input
@@ -243,7 +251,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
           {/* Quality */}
           <div className="form-group">
-            <label htmlFor="quality-select" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="quality-select"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Quality
             </label>
             <select
@@ -289,7 +300,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 />
                 <span className="text-sm">Include textures</span>
               </label>
-              
+
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -318,7 +329,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
           {format === '3mf' && (
             <div className="form-group">
-              <label htmlFor="units-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="units-select"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Units
               </label>
               <select
@@ -339,7 +353,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
           {/* Precision */}
           <div className="form-group">
-            <label htmlFor="precision-input" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="precision-input"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Precision (decimal places)
             </label>
             <input

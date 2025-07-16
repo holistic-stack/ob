@@ -19,7 +19,7 @@
 import { BoundingBox, Matrix, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type { GenericGeometry, GenericMeshData } from '../../types/generic-mesh-data.types';
 import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
@@ -315,7 +315,7 @@ export class ExtrusionOperationsService {
   /**
    * Apply linear extrude transformations (twist, scale)
    */
-  private applyLinearExtrudeTransformations(mesh: any, params: OpenSCADLinearExtrudeParams): void {
+  private applyLinearExtrudeTransformations(_mesh: any, params: OpenSCADLinearExtrudeParams): void {
     // Note: BabylonJS ExtrudeShape doesn't directly support twist and scale
     // This would require custom geometry generation for full OpenSCAD compatibility
     // For now, we'll log that these features need custom implementation

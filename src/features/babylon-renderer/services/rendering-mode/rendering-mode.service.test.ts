@@ -5,12 +5,20 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, CreateBox, CreateSphere, Mesh, Color3, StandardMaterial } from '@babylonjs/core';
+import {
+  Color3,
+  CreateBox,
+  CreateSphere,
+  type Mesh,
+  NullEngine,
+  Scene,
+  StandardMaterial,
+} from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  RenderingModeService,
-  type RenderingModeConfig,
   type RenderingMode,
+  type RenderingModeConfig,
+  RenderingModeService,
 } from './rendering-mode.service';
 
 describe('RenderingModeService', () => {
@@ -24,7 +32,7 @@ describe('RenderingModeService', () => {
     engine = new NullEngine();
     scene = new Scene(engine);
     renderingService = new RenderingModeService(scene);
-    
+
     // Create a test mesh
     testMesh = CreateBox('testBox', { size: 1 }, scene);
   });
@@ -53,7 +61,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('solid');
@@ -65,11 +73,11 @@ describe('RenderingModeService', () => {
     it('should ensure wireframe is disabled in solid mode', async () => {
       // First set wireframe mode
       await renderingService.setRenderingMode(testMesh, { mode: 'wireframe' });
-      
+
       // Then switch to solid mode
       const result = await renderingService.setRenderingMode(testMesh, { mode: 'solid' });
       expect(result.success).toBe(true);
-      
+
       if (testMesh.material instanceof StandardMaterial) {
         expect(testMesh.material.wireframe).toBe(false);
       }
@@ -85,12 +93,12 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('wireframe');
         expect(modeResult.applied).toBe(true);
-        
+
         // Check wireframe material was applied
         expect(testMesh.material).toBeDefined();
         if (testMesh.material instanceof StandardMaterial) {
@@ -107,7 +115,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (testMesh.material instanceof StandardMaterial) {
         expect(testMesh.material.wireframe).toBe(true);
         expect(testMesh.material.diffuseColor).toEqual(new Color3(1, 1, 1));
@@ -124,12 +132,12 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('points');
         expect(modeResult.applied).toBe(true);
-        
+
         // Check points material was applied
         if (testMesh.material instanceof StandardMaterial) {
           expect((testMesh.material as any)._isPointsMode).toBe(true);
@@ -146,7 +154,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (testMesh.material instanceof StandardMaterial) {
         expect((testMesh.material as any)._isPointsMode).toBe(true);
         expect(testMesh.material.pointSize).toBe(2.0);
@@ -163,12 +171,12 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('transparent');
         expect(modeResult.applied).toBe(true);
-        
+
         // Check transparency was applied
         if (testMesh.material instanceof StandardMaterial) {
           expect(testMesh.material.alpha).toBeCloseTo(0.3, 2); // 1.0 - 0.7
@@ -184,7 +192,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (testMesh.material instanceof StandardMaterial) {
         expect(testMesh.material.alpha).toBe(0.5); // 1.0 - 0.5 (default)
       }
@@ -201,12 +209,12 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('flat');
         expect(modeResult.applied).toBe(true);
-        
+
         // Check flat material was applied
         if (testMesh.material instanceof StandardMaterial) {
           expect(testMesh.material.disableLighting).toBe(true);
@@ -224,7 +232,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (testMesh.material instanceof StandardMaterial) {
         expect(testMesh.material.disableLighting).toBe(true);
         expect(testMesh.material.emissiveColor).toEqual(new Color3(0.8, 0.8, 0.8));
@@ -241,13 +249,13 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.mode).toBe('hybrid');
         expect(modeResult.applied).toBe(true);
         expect(modeResult.wireframeMesh).toBeDefined();
-        
+
         // Check solid material is applied to original mesh
         if (testMesh.material instanceof StandardMaterial) {
           expect(testMesh.material.wireframe).toBe(false);
@@ -262,11 +270,11 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const modeResult = result.data;
         expect(modeResult.wireframeMesh).toBeDefined();
-        
+
         // Check wireframe overlay material
         const wireframeMesh = modeResult.wireframeMesh;
         if (wireframeMesh?.material instanceof StandardMaterial) {
@@ -284,10 +292,10 @@ describe('RenderingModeService', () => {
       };
 
       await renderingService.setRenderingMode(testMesh, config);
-      
+
       const currentMode = renderingService.getCurrentMode(testMesh.id);
       expect(currentMode).toBe('wireframe');
-      
+
       const meshState = renderingService.getMeshState(testMesh.id);
       expect(meshState).toBeDefined();
       expect(meshState?.currentMode).toBe('wireframe');
@@ -296,16 +304,16 @@ describe('RenderingModeService', () => {
 
     it('should track multiple mesh states', async () => {
       const sphere = CreateSphere('testSphere', { diameter: 1 }, scene);
-      
+
       await renderingService.setRenderingMode(testMesh, { mode: 'wireframe' });
       await renderingService.setRenderingMode(sphere, { mode: 'points' });
-      
+
       const allStates = renderingService.getAllMeshStates();
       expect(allStates.length).toBe(2);
-      
-      const wireframeState = allStates.find(s => s.currentMode === 'wireframe');
-      const pointsState = allStates.find(s => s.currentMode === 'points');
-      
+
+      const wireframeState = allStates.find((s) => s.currentMode === 'wireframe');
+      const pointsState = allStates.find((s) => s.currentMode === 'points');
+
       expect(wireframeState).toBeDefined();
       expect(pointsState).toBeDefined();
     });
@@ -314,11 +322,11 @@ describe('RenderingModeService', () => {
       // Apply wireframe mode
       await renderingService.setRenderingMode(testMesh, { mode: 'wireframe' });
       expect(renderingService.getCurrentMode(testMesh.id)).toBe('wireframe');
-      
+
       // Change to points mode
       await renderingService.setRenderingMode(testMesh, { mode: 'points' });
       expect(renderingService.getCurrentMode(testMesh.id)).toBe('points');
-      
+
       // Should still have only one state entry
       expect(renderingService.getAllMeshStates().length).toBe(1);
     });
@@ -333,7 +341,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setGlobalRenderingMode(config);
       expect(result.success).toBe(true);
-      
+
       expect(renderingService.getGlobalMode()).toBe('wireframe');
       expect(renderingService.getCurrentMode(testMesh.id)).toBe('wireframe');
       expect(renderingService.getCurrentMode(sphere.id)).toBe('wireframe');
@@ -342,7 +350,7 @@ describe('RenderingModeService', () => {
     it('should handle global mode with no meshes', async () => {
       // Remove test mesh
       testMesh.dispose();
-      
+
       const config: RenderingModeConfig = {
         mode: 'points',
       };
@@ -356,15 +364,15 @@ describe('RenderingModeService', () => {
   describe('Mode Restoration', () => {
     it('should restore original mode and material', async () => {
       const originalMaterial = testMesh.material;
-      
+
       // Apply wireframe mode
       await renderingService.setRenderingMode(testMesh, { mode: 'wireframe' });
       expect(testMesh.material).not.toBe(originalMaterial);
-      
+
       // Restore original mode
       const result = await renderingService.restoreOriginalMode(testMesh);
       expect(result.success).toBe(true);
-      
+
       // Check state was restored (original material was null)
       expect(testMesh.material).toBe(originalMaterial); // Should be null
       expect(renderingService.getCurrentMode(testMesh.id)).toBeNull();
@@ -379,10 +387,10 @@ describe('RenderingModeService', () => {
       // Apply hybrid mode
       await renderingService.setRenderingMode(testMesh, { mode: 'hybrid' });
       const initialMeshCount = scene.meshes.length;
-      
+
       // Restore original mode
       await renderingService.restoreOriginalMode(testMesh);
-      
+
       // Should have cleaned up wireframe overlay
       expect(scene.meshes.length).toBeLessThanOrEqual(initialMeshCount);
     });
@@ -396,7 +404,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(testMesh, config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MODE_APPLICATION_FAILED');
       }
@@ -409,7 +417,7 @@ describe('RenderingModeService', () => {
 
       const result = await renderingService.setRenderingMode(null as any, config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MODE_APPLICATION_FAILED');
       }
@@ -420,7 +428,7 @@ describe('RenderingModeService', () => {
     it('should dispose all resources and clear state', async () => {
       await renderingService.setRenderingMode(testMesh, { mode: 'wireframe' });
       expect(renderingService.getAllMeshStates().length).toBe(1);
-      
+
       renderingService.dispose();
       expect(renderingService.getAllMeshStates().length).toBe(0);
     });

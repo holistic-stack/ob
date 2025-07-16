@@ -5,7 +5,6 @@
  * Follows TDD principles with comprehensive test coverage and no mocks for core functionality.
  */
 
-import { NullEngine } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createBabylonEngineService, resetBabylonEngineService } from './babylon-engine.service';
 import type { BabylonEngineService, EngineInitOptions } from './babylon-engine.types';

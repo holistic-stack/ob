@@ -36,8 +36,8 @@ describe('ChangeTracker', () => {
     const changes = tracker.getChanges();
 
     expect(changes.length).toBe(2);
-    expect(changes[0]!.startIndex).toBe(15);
-    expect(changes[1]!.startIndex).toBe(20);
+    expect(changes[0]?.startIndex).toBe(15);
+    expect(changes[1]?.startIndex).toBe(20);
   });
 
   it('should get changes since a specific time', () => {
@@ -56,7 +56,7 @@ describe('ChangeTracker', () => {
       const changesSince = tracker.getChangesSince(change1.timestamp);
 
       expect(changesSince.length).toBe(1);
-      expect(changesSince[0]!.startIndex).toBe(20);
+      expect(changesSince[0]?.startIndex).toBe(20);
     } finally {
       // Restore original Date.now
       Date.now = originalDateNow;

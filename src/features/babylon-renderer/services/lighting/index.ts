@@ -4,9 +4,9 @@
  * Exports for the lighting service.
  */
 
-export { LightingService } from './lighting.service';
 export type {
-  TechnicalLightingConfig,
-  LightingSetup,
   LightingError,
+  LightingSetup,
+  TechnicalLightingConfig,
 } from './lighting.service';
+export { LightingService } from './lighting.service';

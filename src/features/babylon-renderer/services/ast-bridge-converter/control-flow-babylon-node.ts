@@ -7,7 +7,6 @@
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
@@ -16,7 +15,6 @@ import type {
   ForLoopNode,
   IfNode,
   LetNode,
-  ParameterValue,
   SourceLocation,
 } from '../../../openscad-parser/ast/ast-types';
 import {
@@ -227,7 +225,7 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
   /**
    * Evaluate if condition
    */
-  private evaluateCondition(condition: ExpressionNode): boolean {
+  private evaluateCondition(_condition: ExpressionNode): boolean {
     // TODO: Implement proper expression evaluation
     // For now, return true for testing
     return true;

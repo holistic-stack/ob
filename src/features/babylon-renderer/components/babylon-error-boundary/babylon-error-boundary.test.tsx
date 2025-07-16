@@ -5,14 +5,13 @@
  * Tests error detection, categorization, recovery, and user interaction.
  */
 
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import type React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BabylonErrorBoundary,
-  useBabylonErrorHandler,
   type BabylonErrorDetails,
-  type BabylonErrorType,
+  useBabylonErrorHandler,
 } from './babylon-error-boundary';
 
 // Mock component that throws errors for testing
@@ -44,17 +43,14 @@ const ErrorThrowingComponent: React.FC<{ errorType?: string; shouldThrow?: boole
 };
 
 // Test component for hook testing
-const HookTestComponent: React.FC = () => {
+const _HookTestComponent: React.FC = () => {
   const { error, handleError, clearError, hasError } = useBabylonErrorHandler();
 
   return (
     <div>
       <div data-testid="has-error">{hasError.toString()}</div>
       {error && <div data-testid="error-type">{error.type}</div>}
-      <button
-        data-testid="trigger-error"
-        onClick={() => handleError(new Error('Test error'))}
-      >
+      <button data-testid="trigger-error" onClick={() => handleError(new Error('Test error'))}>
         Trigger Error
       </button>
       <button data-testid="clear-error" onClick={clearError}>
@@ -114,7 +110,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should catch and categorize WebGL context lost errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="webgl-context-lost" />
@@ -123,14 +119,14 @@ describe('BabylonErrorBoundary', () => {
 
       expect(screen.getByText('3D Rendering Error')).toBeInTheDocument();
       expect(onError).toHaveBeenCalled();
-      
+
       const [, , errorDetails] = onError.mock.calls[0];
       expect(errorDetails.type).toBe('WEBGL_CONTEXT_LOST');
     });
 
     it('should categorize WebGL not supported errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="webgl-not-supported" />
@@ -138,14 +134,14 @@ describe('BabylonErrorBoundary', () => {
       );
 
       expect(screen.getByText(/does not support WebGL/)).toBeInTheDocument();
-      
+
       const [, , errorDetails] = onError.mock.calls[0];
       expect(errorDetails.type).toBe('WEBGL_NOT_SUPPORTED');
     });
 
     it('should categorize shader compilation errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="shader-error" />
@@ -158,7 +154,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should categorize memory errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="memory-error" />
@@ -171,7 +167,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should categorize scene initialization errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="scene-error" />
@@ -184,7 +180,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should categorize engine initialization errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="engine-error" />
@@ -197,7 +193,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should categorize rendering errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="render-error" />
@@ -210,7 +206,7 @@ describe('BabylonErrorBoundary', () => {
 
     it('should categorize unknown errors', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent errorType="generic" />
@@ -225,7 +221,7 @@ describe('BabylonErrorBoundary', () => {
   describe.skip('Error Details', () => {
     it('should include comprehensive error details', () => {
       const onError = vi.fn();
-      
+
       render(
         <BabylonErrorBoundary onError={onError}>
           <ErrorThrowingComponent />
@@ -263,7 +259,7 @@ describe('BabylonErrorBoundary', () => {
   describe.skip('Custom Fallback', () => {
     it('should render custom fallback component', () => {
       const CustomFallback = () => <div data-testid="custom-fallback">Custom Error UI</div>;
-      
+
       render(
         <BabylonErrorBoundary fallback={<CustomFallback />}>
           <ErrorThrowingComponent />
@@ -276,11 +272,9 @@ describe('BabylonErrorBoundary', () => {
 
     it('should render custom fallback function', () => {
       const customFallback = (errorDetails: BabylonErrorDetails) => (
-        <div data-testid="custom-fallback-function">
-          Error Type: {errorDetails.type}
-        </div>
+        <div data-testid="custom-fallback-function">Error Type: {errorDetails.type}</div>
       );
-      
+
       render(
         <BabylonErrorBoundary fallback={customFallback}>
           <ErrorThrowingComponent errorType="webgl-context-lost" />

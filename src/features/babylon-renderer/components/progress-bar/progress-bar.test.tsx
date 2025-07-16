@@ -5,11 +5,10 @@
  * Tests rendering, interaction, and integration with progress operations.
  */
 
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ProgressBar } from './progress-bar';
 import type { ProgressOperation } from '../../services/progress/progress.service';
+import { ProgressBar } from './progress-bar';
 
 // Mock progress operation for testing
 const createMockOperation = (overrides: Partial<ProgressOperation> = {}): ProgressOperation => {
@@ -46,11 +45,7 @@ describe('ProgressBar', () => {
   describe('Basic Rendering', () => {
     it('should render with manual props', () => {
       render(
-        <ProgressBar
-          percentage={50}
-          title="Manual Progress"
-          description="Test description"
-        />
+        <ProgressBar percentage={50} title="Manual Progress" description="Test description" />
       );
 
       expect(screen.getByText('Manual Progress')).toBeInTheDocument();
@@ -85,13 +80,7 @@ describe('ProgressBar', () => {
         state: { percentage: 60 },
       });
 
-      render(
-        <ProgressBar
-          operation={operation}
-          percentage={30}
-          title="Prop Title"
-        />
-      );
+      render(<ProgressBar operation={operation} percentage={30} title="Prop Title" />);
 
       expect(screen.getByText('Operation Title')).toBeInTheDocument();
       expect(screen.getByText('60%')).toBeInTheDocument();
@@ -112,11 +101,7 @@ describe('ProgressBar', () => {
 
     it('should show indeterminate progress', () => {
       render(
-        <ProgressBar
-          isIndeterminate={true}
-          title="Indeterminate Progress"
-          showPercentage={false}
-        />
+        <ProgressBar isIndeterminate={true} title="Indeterminate Progress" showPercentage={false} />
       );
 
       const progressBar = screen.getByRole('progressbar');
@@ -126,21 +111,11 @@ describe('ProgressBar', () => {
 
     it('should handle percentage bounds correctly', () => {
       const { rerender } = render(
-        <ProgressBar
-          percentage={-10}
-          title="Test Progress"
-          showPercentage={true}
-        />
+        <ProgressBar percentage={-10} title="Test Progress" showPercentage={true} />
       );
       expect(screen.getByText('0%')).toBeInTheDocument();
 
-      rerender(
-        <ProgressBar
-          percentage={150}
-          title="Test Progress"
-          showPercentage={true}
-        />
-      );
+      rerender(<ProgressBar percentage={150} title="Test Progress" showPercentage={true} />);
       expect(screen.getByText('100%')).toBeInTheDocument();
     });
   });
@@ -148,7 +123,7 @@ describe('ProgressBar', () => {
   describe('Size Variants', () => {
     it('should apply small size classes', () => {
       render(<ProgressBar size="sm" title="Small Progress" data-testid="small-progress" />);
-      
+
       const container = screen.getByTestId('small-progress');
       expect(container.querySelector('.h-2')).toBeInTheDocument();
       expect(container.querySelector('.text-xs')).toBeInTheDocument();
@@ -156,7 +131,7 @@ describe('ProgressBar', () => {
 
     it('should apply medium size classes (default)', () => {
       render(<ProgressBar title="Medium Progress" data-testid="medium-progress" />);
-      
+
       const container = screen.getByTestId('medium-progress');
       expect(container.querySelector('.h-3')).toBeInTheDocument();
       expect(container.querySelector('.text-sm')).toBeInTheDocument();
@@ -164,7 +139,7 @@ describe('ProgressBar', () => {
 
     it('should apply large size classes', () => {
       render(<ProgressBar size="lg" title="Large Progress" data-testid="large-progress" />);
-      
+
       const container = screen.getByTestId('large-progress');
       expect(container.querySelector('.h-4')).toBeInTheDocument();
       expect(container.querySelector('.text-base')).toBeInTheDocument();
@@ -174,7 +149,7 @@ describe('ProgressBar', () => {
   describe('Color Variants', () => {
     it('should apply blue color (default)', () => {
       render(<ProgressBar title="Blue Progress" data-testid="blue-progress" />);
-      
+
       const container = screen.getByTestId('blue-progress');
       expect(container.querySelector('.bg-blue-500')).toBeInTheDocument();
       expect(container.querySelector('.bg-blue-100')).toBeInTheDocument();
@@ -182,7 +157,7 @@ describe('ProgressBar', () => {
 
     it('should apply green color', () => {
       render(<ProgressBar color="green" title="Green Progress" data-testid="green-progress" />);
-      
+
       const container = screen.getByTestId('green-progress');
       expect(container.querySelector('.bg-green-500')).toBeInTheDocument();
       expect(container.querySelector('.bg-green-100')).toBeInTheDocument();
@@ -194,7 +169,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} data-testid="error-progress" />);
-      
+
       const container = screen.getByTestId('error-progress');
       expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
       expect(screen.getByText('Error: Something went wrong')).toBeInTheDocument();
@@ -206,7 +181,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} data-testid="completed-progress" />);
-      
+
       const container = screen.getByTestId('completed-progress');
       expect(container.querySelector('.bg-green-500')).toBeInTheDocument();
       expect(screen.getByText('Completed')).toBeInTheDocument();
@@ -218,7 +193,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} data-testid="cancelled-progress" />);
-      
+
       const container = screen.getByTestId('cancelled-progress');
       expect(container.querySelector('.bg-gray-500')).toBeInTheDocument();
       expect(screen.getByText('Cancelled')).toBeInTheDocument();
@@ -235,7 +210,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showTimeRemaining={true} />);
-      
+
       expect(screen.getByText('30s remaining')).toBeInTheDocument();
     });
 
@@ -248,7 +223,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showTimeRemaining={true} />);
-      
+
       expect(screen.getByText('1m 30s remaining')).toBeInTheDocument();
     });
 
@@ -261,7 +236,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showTimeRemaining={true} />);
-      
+
       expect(screen.getByText('1h 5m remaining')).toBeInTheDocument();
     });
 
@@ -274,7 +249,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showTimeRemaining={false} />);
-      
+
       expect(screen.queryByText('remaining')).not.toBeInTheDocument();
     });
   });
@@ -286,7 +261,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showCancelButton={true} />);
-      
+
       expect(screen.getByTestId('cancel-button')).toBeInTheDocument();
     });
 
@@ -296,7 +271,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showCancelButton={true} />);
-      
+
       expect(screen.queryByTestId('cancel-button')).not.toBeInTheDocument();
     });
 
@@ -307,7 +282,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showCancelButton={true} />);
-      
+
       expect(screen.queryByTestId('cancel-button')).not.toBeInTheDocument();
     });
 
@@ -317,29 +292,18 @@ describe('ProgressBar', () => {
         config: { cancellable: true },
       });
 
-      render(
-        <ProgressBar
-          operation={operation}
-          showCancelButton={true}
-          onCancel={onCancel}
-        />
-      );
-      
+      render(<ProgressBar operation={operation} showCancelButton={true} onCancel={onCancel} />);
+
       const cancelButton = screen.getByTestId('cancel-button');
       fireEvent.click(cancelButton);
-      
+
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('Accessibility', () => {
     it('should have proper ARIA attributes', () => {
-      render(
-        <ProgressBar
-          percentage={60}
-          title="Accessible Progress"
-        />
-      );
+      render(<ProgressBar percentage={60} title="Accessible Progress" />);
 
       const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toHaveAttribute('aria-valuenow', '60');
@@ -354,7 +318,7 @@ describe('ProgressBar', () => {
       });
 
       render(<ProgressBar operation={operation} showCancelButton={true} />);
-      
+
       const cancelButton = screen.getByTestId('cancel-button');
       expect(cancelButton).toHaveAttribute('aria-label', 'Cancel operation');
     });
@@ -375,12 +339,7 @@ describe('ProgressBar', () => {
     });
 
     it('should apply custom data-testid', () => {
-      render(
-        <ProgressBar
-          title="Test Progress"
-          data-testid="custom-test-id"
-        />
-      );
+      render(<ProgressBar title="Test Progress" data-testid="custom-test-id" />);
 
       expect(screen.getByTestId('custom-test-id')).toBeInTheDocument();
     });
@@ -389,7 +348,7 @@ describe('ProgressBar', () => {
   describe('Edge Cases', () => {
     it('should handle missing operation gracefully', () => {
       render(<ProgressBar operation={undefined} />);
-      
+
       expect(screen.getByText('Processing...')).toBeInTheDocument();
       expect(screen.getByText('0%')).toBeInTheDocument();
     });
@@ -406,14 +365,12 @@ describe('ProgressBar', () => {
     });
 
     it('should show percentage display toggle', () => {
-      const { rerender } = render(
-        <ProgressBar percentage={75} showPercentage={true} />
-      );
-      
+      const { rerender } = render(<ProgressBar percentage={75} showPercentage={true} />);
+
       expect(screen.getByText('75%')).toBeInTheDocument();
 
       rerender(<ProgressBar percentage={75} showPercentage={false} />);
-      
+
       expect(screen.queryByText('75%')).not.toBeInTheDocument();
     });
   });

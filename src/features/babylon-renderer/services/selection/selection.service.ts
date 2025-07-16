@@ -3,29 +3,23 @@
  *
  * Service for managing 3D object selection and highlighting in BabylonJS scenes.
  * Provides comprehensive selection management with visual feedback and interaction support.
- * 
+ *
  * @example
  * ```typescript
  * const selectionService = new SelectionService(scene);
- * 
+ *
  * // Setup selection system
  * await selectionService.initialize();
- * 
+ *
  * // Select a mesh
  * const result = selectionService.selectMesh(mesh, { addToSelection: false });
- * 
+ *
  * // Get selected meshes
  * const selected = selectionService.getSelectedMeshes();
  * ```
  */
 
-import {
-  Scene,
-  AbstractMesh,
-  Mesh,
-  PickingInfo,
-  Color3,
-} from '@babylonjs/core';
+import { type AbstractMesh, Color3, Mesh, type PickingInfo, type Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -90,7 +84,12 @@ export interface SelectionState {
  * Selection error
  */
 export interface SelectionError {
-  readonly code: 'INITIALIZATION_FAILED' | 'MESH_NOT_FOUND' | 'SELECTION_FAILED' | 'HIGHLIGHT_FAILED' | 'INVALID_OPERATION';
+  readonly code:
+    | 'INITIALIZATION_FAILED'
+    | 'MESH_NOT_FOUND'
+    | 'SELECTION_FAILED'
+    | 'HIGHLIGHT_FAILED'
+    | 'INVALID_OPERATION';
   readonly message: string;
   readonly timestamp: Date;
   readonly meshId?: string;
@@ -104,7 +103,7 @@ export type SelectionEventListener = (state: SelectionState) => void;
 
 /**
  * Selection Service
- * 
+ *
  * Manages 3D object selection and highlighting with support for single/multi-selection,
  * hover effects, and various visual feedback modes.
  */
@@ -117,7 +116,7 @@ export class SelectionService {
 
   constructor(scene: Scene, config?: Partial<SelectionConfig>) {
     this.scene = scene;
-    
+
     // Default configuration optimized for CAD visualization
     const defaultConfig: SelectionConfig = {
       mode: 'single',
@@ -131,7 +130,7 @@ export class SelectionService {
     };
 
     this.config = { ...defaultConfig, ...config };
-    
+
     this.state = {
       selectedMeshes: [],
       hoveredMesh: null,
@@ -148,7 +147,7 @@ export class SelectionService {
    */
   async initialize(): Promise<Result<void, SelectionError>> {
     logger.debug('[INITIALIZE] Setting up selection system...');
-    
+
     return tryCatchAsync(
       async () => {
         // Setup outline renderer for highlight effects
@@ -168,17 +167,15 @@ export class SelectionService {
         this.isInitialized = true;
         logger.debug('[INITIALIZE] Selection system initialized successfully');
       },
-      (error) => this.createError('INITIALIZATION_FAILED', `Failed to initialize selection system: ${error}`)
+      (error) =>
+        this.createError('INITIALIZATION_FAILED', `Failed to initialize selection system: ${error}`)
     );
   }
 
   /**
    * Select a mesh with options
    */
-  selectMesh(
-    mesh: AbstractMesh, 
-    options: SelectionOptions = {}
-  ): Result<void, SelectionError> {
+  selectMesh(mesh: AbstractMesh, options: SelectionOptions = {}): Result<void, SelectionError> {
     return tryCatch(
       () => {
         if (!this.isInitialized) {
@@ -197,8 +194,8 @@ export class SelectionService {
         }
 
         // Check if mesh is already selected
-        const isAlreadySelected = this.state.selectedMeshes.some(info => info.mesh === mesh);
-        
+        const isAlreadySelected = this.state.selectedMeshes.some((info) => info.mesh === mesh);
+
         if (isAlreadySelected && addToSelection) {
           // Remove from selection if already selected (toggle behavior)
           this.deselectMesh(mesh, { triggerEvents: false });
@@ -207,11 +204,14 @@ export class SelectionService {
           const selectionInfo: SelectedMeshInfo = {
             mesh,
             selectionTime: new Date(),
-            metadata: mesh.metadata as Record<string, unknown> || {},
+            metadata: (mesh.metadata as Record<string, unknown>) || {},
           };
 
           // Check selection limit for multi-selection
-          if (this.config.maxSelections && this.state.selectedMeshes.length >= this.config.maxSelections) {
+          if (
+            this.config.maxSelections &&
+            this.state.selectedMeshes.length >= this.config.maxSelections
+          ) {
             // Remove oldest selection
             const oldestSelection = this.state.selectedMeshes[0];
             if (oldestSelection) {
@@ -243,7 +243,7 @@ export class SelectionService {
    * Deselect a specific mesh
    */
   deselectMesh(
-    mesh: AbstractMesh, 
+    mesh: AbstractMesh,
     options: { triggerEvents?: boolean } = {}
   ): Result<void, SelectionError> {
     return tryCatch(
@@ -252,7 +252,7 @@ export class SelectionService {
 
         this.state = {
           ...this.state,
-          selectedMeshes: this.state.selectedMeshes.filter(info => info.mesh !== mesh),
+          selectedMeshes: this.state.selectedMeshes.filter((info) => info.mesh !== mesh),
         };
 
         // Remove visual highlight
@@ -328,7 +328,8 @@ export class SelectionService {
 
         this.notifyListeners();
       },
-      (error) => this.createError('HIGHLIGHT_FAILED', `Failed to set hover mesh: ${error}`, mesh?.id)
+      (error) =>
+        this.createError('HIGHLIGHT_FAILED', `Failed to set hover mesh: ${error}`, mesh?.id)
     );
   }
 
@@ -349,7 +350,7 @@ export class SelectionService {
    * Get currently selected meshes
    */
   getSelectedMeshes(): readonly AbstractMesh[] {
-    return this.state.selectedMeshes.map(info => info.mesh);
+    return this.state.selectedMeshes.map((info) => info.mesh);
   }
 
   /**
@@ -363,7 +364,7 @@ export class SelectionService {
    * Check if a mesh is selected
    */
   isMeshSelected(mesh: AbstractMesh): boolean {
-    return this.state.selectedMeshes.some(info => info.mesh === mesh);
+    return this.state.selectedMeshes.some((info) => info.mesh === mesh);
   }
 
   /**
@@ -371,7 +372,7 @@ export class SelectionService {
    */
   updateConfig(newConfig: Partial<SelectionConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Update state if selection mode changed
     if (newConfig.mode && newConfig.mode !== this.state.selectionMode) {
       this.state = {
@@ -466,7 +467,11 @@ export class SelectionService {
    */
   private removeHoverHighlight(mesh: AbstractMesh): void {
     try {
-      if (this.config.highlightType === 'outline' && mesh instanceof Mesh && !this.isMeshSelected(mesh)) {
+      if (
+        this.config.highlightType === 'outline' &&
+        mesh instanceof Mesh &&
+        !this.isMeshSelected(mesh)
+      ) {
         mesh.renderOutline = false;
       }
     } catch (error) {
@@ -485,7 +490,7 @@ export class SelectionService {
             if (pointerInfo.pickInfo?.hit && pointerInfo.pickInfo.pickedMesh) {
               const mesh = pointerInfo.pickInfo.pickedMesh;
               const isCtrlPressed = pointerInfo.event.ctrlKey || pointerInfo.event.metaKey;
-              
+
               this.selectMesh(mesh, {
                 addToSelection: isCtrlPressed && this.config.mode === 'multi',
                 clearPrevious: !isCtrlPressed,
@@ -495,7 +500,7 @@ export class SelectionService {
               this.clearSelection();
             }
             break;
-            
+
           case 4: // POINTERMOVE
             if (this.config.enableHover && pointerInfo.pickInfo?.hit) {
               const mesh = pointerInfo.pickInfo.pickedMesh;

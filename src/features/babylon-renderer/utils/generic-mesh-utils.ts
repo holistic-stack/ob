@@ -5,7 +5,7 @@
  * and managing metadata. Provides helper functions for common operations.
  */
 
-import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
+import { BoundingBox, type Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
 import { tryCatch } from '../../../shared/utils/functional/result';
@@ -39,7 +39,7 @@ export const createGenericMeshData = (
   id: string,
   geometry: GenericGeometry,
   material: GenericMaterialConfig,
-  transform: Matrix = Matrix.Identity(),
+  transform: Matrix,
   metadata: MeshMetadataBuilder
 ): Result<GenericMeshData, MeshUtilsError> => {
   logger.debug(`[CREATE] Creating generic mesh data for ${id}`);

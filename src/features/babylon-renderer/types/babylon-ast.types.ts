@@ -11,7 +11,7 @@
  * - Immutable data structures
  */
 
-import type { AbstractMesh, Matrix, Scene, Vector3 } from '@babylonjs/core';
+import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
 import type { Result } from '../../../shared/types/result.types';
 import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 

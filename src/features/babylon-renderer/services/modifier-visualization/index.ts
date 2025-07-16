@@ -4,11 +4,11 @@
  * Exports for the modifier visualization service.
  */
 
-export { ModifierVisualizationService } from './modifier-visualization.service';
 export type {
-  OpenSCADModifierType,
-  ModifierVisualizationConfig,
   ModifierApplicationResult,
-  ModifierVisualizationError,
   ModifierState,
+  ModifierVisualizationConfig,
+  ModifierVisualizationError,
+  OpenSCADModifierType,
 } from './modifier-visualization.service';
+export { ModifierVisualizationService } from './modifier-visualization.service';

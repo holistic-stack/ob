@@ -4,25 +4,22 @@
  * Exports for the selection service and hooks.
  */
 
-export { SelectionService } from './selection.service';
 export type {
-  SelectionMode,
-  SelectionHighlightType,
-  SelectionConfig,
-  SelectionOptions,
   SelectedMeshInfo,
-  SelectionState,
+  SelectionConfig,
   SelectionError,
   SelectionEventListener,
+  SelectionHighlightType,
+  SelectionMode,
+  SelectionOptions,
+  SelectionState,
 } from './selection.service';
-
+export { SelectionService } from './selection.service';
+export type { UseSelectionReturn } from './use-selection.hook';
 export {
-  useSelection,
-  useSelectionStats,
-  useSelectionShortcuts,
-  useInteractiveSelection,
   cleanupSelectionServices,
-} from './use-selection.hook';
-export type {
-  UseSelectionReturn,
+  useInteractiveSelection,
+  useSelection,
+  useSelectionShortcuts,
+  useSelectionStats,
 } from './use-selection.hook';

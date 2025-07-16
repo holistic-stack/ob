@@ -3,11 +3,11 @@
  *
  * Service for technical visualization lighting setup optimized for CAD models.
  * Provides consistent, shadow-casting lighting for clear depth perception.
- * 
+ *
  * @example
  * ```typescript
  * const lightingService = new LightingService(scene);
- * 
+ *
  * // Setup technical lighting
  * const result = await lightingService.setupTechnicalLighting({
  *   enableShadows: true,
@@ -17,20 +17,20 @@
  * ```
  */
 
-import { 
-  Scene, 
-  DirectionalLight, 
-  HemisphericLight,
-  ShadowGenerator,
-  Vector3, 
+import {
+  CascadedShadowGenerator,
   Color3,
-  Light,
-  Mesh,
-  CascadedShadowGenerator
+  DirectionalLight,
+  HemisphericLight,
+  type Light,
+  type Mesh,
+  type Scene,
+  ShadowGenerator,
+  Vector3,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 const logger = createLogger('Lighting');
 
@@ -77,7 +77,7 @@ export interface LightingError {
 
 /**
  * Lighting Service
- * 
+ *
  * Provides technical visualization lighting optimized for CAD models.
  * Handles directional, ambient, and fill lighting with shadow support.
  */
@@ -130,7 +130,11 @@ export class LightingService {
         ambientLight.intensity = finalConfig.ambientIntensity;
 
         // Create key directional light (main light source)
-        const keyLight = new DirectionalLight('keyLight', finalConfig.keyLightDirection, this.scene);
+        const keyLight = new DirectionalLight(
+          'keyLight',
+          finalConfig.keyLightDirection,
+          this.scene
+        );
         keyLight.diffuse = finalConfig.directionalColor;
         keyLight.intensity = finalConfig.directionalIntensity;
         keyLight.position = finalConfig.keyLightDirection.scale(-20); // Position light far away
@@ -161,7 +165,9 @@ export class LightingService {
           ...(shadowGenerator && { shadowGenerator }),
         };
 
-        logger.debug(`[TECHNICAL_LIGHTING] Technical lighting setup completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[TECHNICAL_LIGHTING] Technical lighting setup completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return this.lightingSetup;
       },
       (error) => this.createError('SETUP_FAILED', `Technical lighting setup failed: ${error}`)
@@ -247,7 +253,7 @@ export class LightingService {
    * Setup shadow generation
    */
   private setupShadows(
-    light: DirectionalLight, 
+    light: DirectionalLight,
     config: Required<TechnicalLightingConfig>
   ): ShadowGenerator | CascadedShadowGenerator {
     let shadowGenerator: ShadowGenerator | CascadedShadowGenerator;
@@ -293,7 +299,7 @@ export class LightingService {
       timestamp: new Date(),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

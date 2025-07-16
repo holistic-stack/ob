@@ -5,12 +5,9 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, Vector3, Color3, CreateBox } from '@babylonjs/core';
+import { Color3, CreateBox, NullEngine, Scene, Vector3 } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  LightingService,
-  type TechnicalLightingConfig,
-} from './lighting.service';
+import { LightingService, type TechnicalLightingConfig } from './lighting.service';
 
 describe('LightingService', () => {
   let engine: NullEngine;
@@ -42,7 +39,7 @@ describe('LightingService', () => {
     it('should setup technical lighting with default configuration', async () => {
       const result = await lightingService.setupTechnicalLighting();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.keyLight).toBeDefined();
@@ -67,7 +64,7 @@ describe('LightingService', () => {
 
       const result = await lightingService.setupTechnicalLighting(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.ambientLight.intensity).toBe(0.5);
@@ -90,7 +87,7 @@ describe('LightingService', () => {
 
       const result = await lightingService.setupTechnicalLighting(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.shadowGenerator).toBeDefined();
@@ -125,7 +122,7 @@ describe('LightingService', () => {
       // Setup second lighting
       await lightingService.setupTechnicalLighting();
       const secondLightCount = scene.lights.length;
-      
+
       // Should have same number of lights (old ones cleared)
       expect(secondLightCount).toBe(firstLightCount);
     });
@@ -139,7 +136,7 @@ describe('LightingService', () => {
     it('should update ambient intensity', async () => {
       const result = await lightingService.updateIntensity(0.8);
       expect(result.success).toBe(true);
-      
+
       const setup = lightingService.getLightingSetup();
       expect(setup?.ambientLight.intensity).toBe(0.8);
     });
@@ -147,7 +144,7 @@ describe('LightingService', () => {
     it('should update directional intensity', async () => {
       const result = await lightingService.updateIntensity(undefined, 1.2);
       expect(result.success).toBe(true);
-      
+
       const setup = lightingService.getLightingSetup();
       expect(setup?.keyLight.intensity).toBe(1.2);
     });
@@ -155,7 +152,7 @@ describe('LightingService', () => {
     it('should update fill light intensity', async () => {
       const result = await lightingService.updateIntensity(undefined, undefined, 0.6);
       expect(result.success).toBe(true);
-      
+
       const setup = lightingService.getLightingSetup();
       expect(setup?.fillLight?.intensity).toBe(0.6);
     });
@@ -163,7 +160,7 @@ describe('LightingService', () => {
     it('should update all intensities at once', async () => {
       const result = await lightingService.updateIntensity(0.4, 0.9, 0.3);
       expect(result.success).toBe(true);
-      
+
       const setup = lightingService.getLightingSetup();
       expect(setup?.ambientLight.intensity).toBe(0.4);
       expect(setup?.keyLight.intensity).toBe(0.9);
@@ -172,10 +169,10 @@ describe('LightingService', () => {
 
     it('should fail to update intensity without lighting setup', async () => {
       lightingService.dispose();
-      
+
       const result = await lightingService.updateIntensity(0.5);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SETUP_FAILED');
       }
@@ -189,14 +186,14 @@ describe('LightingService', () => {
 
     it('should add shadow caster', async () => {
       const box = CreateBox('shadowCaster', { size: 1 }, scene);
-      
+
       const result = await lightingService.addShadowCaster(box);
       expect(result.success).toBe(true);
     });
 
     it('should add shadow receiver', async () => {
       const box = CreateBox('shadowReceiver', { size: 1 }, scene);
-      
+
       const result = await lightingService.addShadowReceiver(box);
       expect(result.success).toBe(true);
       expect(box.receiveShadows).toBe(true);
@@ -205,11 +202,11 @@ describe('LightingService', () => {
     it('should fail to add shadow caster without shadows enabled', async () => {
       lightingService.dispose();
       await lightingService.setupTechnicalLighting({ enableShadows: false });
-      
+
       const box = CreateBox('shadowCaster', { size: 1 }, scene);
       const result = await lightingService.addShadowCaster(box);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SHADOW_SETUP_FAILED');
       }
@@ -218,11 +215,11 @@ describe('LightingService', () => {
     it('should fail to add shadow receiver without shadows enabled', async () => {
       lightingService.dispose();
       await lightingService.setupTechnicalLighting({ enableShadows: false });
-      
+
       const box = CreateBox('shadowReceiver', { size: 1 }, scene);
       const result = await lightingService.addShadowReceiver(box);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('SHADOW_SETUP_FAILED');
       }
@@ -233,7 +230,7 @@ describe('LightingService', () => {
     it('should setup lighting with custom light directions', async () => {
       const keyDirection = new Vector3(1, 0, 0);
       const fillDirection = new Vector3(-1, 0, 0);
-      
+
       const config: TechnicalLightingConfig = {
         keyLightDirection: keyDirection,
         fillLightDirection: fillDirection,
@@ -241,7 +238,7 @@ describe('LightingService', () => {
 
       const result = await lightingService.setupTechnicalLighting(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.keyLight.direction).toEqual(keyDirection);
@@ -256,7 +253,7 @@ describe('LightingService', () => {
 
       const result = await lightingService.setupTechnicalLighting(config);
       expect(result.success).toBe(true);
-      
+
       // HDR configuration would be applied to scene
     });
   });
@@ -266,7 +263,7 @@ describe('LightingService', () => {
       await lightingService.setupTechnicalLighting();
       expect(scene.lights.length).toBeGreaterThan(0);
       expect(lightingService.getLightingSetup()).not.toBeNull();
-      
+
       lightingService.dispose();
       expect(scene.lights.length).toBe(0);
       expect(lightingService.getLightingSetup()).toBeNull();

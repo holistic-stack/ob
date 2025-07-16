@@ -9,12 +9,12 @@
  * 3D Scene → Object Selection → Export Configuration → File Generation
  */
 
-import { NullEngine, Scene, CreateBox, CreateSphere, AbstractMesh } from '@babylonjs/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SelectionService } from '../../features/babylon-renderer/services/selection';
-import { ExportService } from '../../features/babylon-renderer/services/export';
+import { type AbstractMesh, CreateBox, CreateSphere, NullEngine, Scene } from '@babylonjs/core';
 // Mock logger to avoid console output during tests
-import { vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, vi } from 'vitest';
+import { ExportService } from '../../features/babylon-renderer/services/export';
+import { SelectionService } from '../../features/babylon-renderer/services/selection';
+
 vi.mock('../../shared/services/logger.service', () => ({
   createLogger: vi.fn(() => ({
     init: vi.fn(),

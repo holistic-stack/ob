@@ -54,7 +54,7 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const binaryExprNode = findBinaryExpressionNode(tree!.rootNode);
+    const binaryExprNode = findBinaryExpressionNode(tree?.rootNode);
     console.log('Binary expression node search result:', binaryExprNode);
 
     if (binaryExprNode) {
@@ -83,8 +83,8 @@ describe('Enhanced Expression Evaluation', () => {
     const tree = parser.parse(code);
     console.log('Tree parsed successfully:', !!tree);
     expect(tree).toBeDefined();
-    console.log('Tree root node type:', tree!.rootNode.type);
-    console.log('Tree root node text:', tree!.rootNode.text);
+    console.log('Tree root node type:', tree?.rootNode.type);
+    console.log('Tree root node text:', tree?.rootNode.text);
 
     // Let's print the entire tree structure for debugging
     function printNodeRecursive(node: TSNode, depth = 0) {
@@ -97,7 +97,7 @@ describe('Enhanced Expression Evaluation', () => {
         }
       }
     }
-    printNodeRecursive(tree!.rootNode);
+    printNodeRecursive(tree?.rootNode);
 
     // Find the cube function call
     function findCubeNode(node: TSNode): TSNode | null {
@@ -118,11 +118,11 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree!.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode);
     console.log('Cube node search result:', cubeNode);
     expect(cubeNode).not.toBeNull();
 
-    console.log('Found cube node:', cubeNode!.type, cubeNode!.text);
+    console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
 
     // Extract the cube with enhanced expression evaluation
     const cubeAST = extractCubeNode(cubeNode!, errorHandler);
@@ -159,10 +159,10 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree!.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    console.log('Found cube node:', cubeNode!.type, cubeNode!.text);
+    console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
 
     // Extract the cube with enhanced expression evaluation
     const cubeAST = extractCubeNode(cubeNode!, errorHandler);
@@ -199,10 +199,10 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree!.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode);
     expect(cubeNode).not.toBeNull();
 
-    console.log('Found cube node:', cubeNode!.type, cubeNode!.text);
+    console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
 
     // Extract the cube with enhanced expression evaluation
     const cubeAST = extractCubeNode(cubeNode!, errorHandler);

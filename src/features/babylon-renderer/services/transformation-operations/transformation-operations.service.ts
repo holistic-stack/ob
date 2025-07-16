@@ -13,17 +13,17 @@
  * ```
  */
 
-import { BoundingBox, Color3, Matrix, Vector3 } from '@babylonjs/core';
+import { Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
   GenericGeometry,
   GenericMaterialConfig,
   GenericMeshData,
   GenericMeshMetadata,
 } from '../../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
+import { MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 
 const logger = createLogger('TransformationOperations');

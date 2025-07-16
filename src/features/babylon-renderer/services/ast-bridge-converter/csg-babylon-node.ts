@@ -7,16 +7,9 @@
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
-import type {
-  ASTNode,
-  DifferenceNode,
-  IntersectionNode,
-  SourceLocation,
-  UnionNode,
-} from '../../../openscad-parser/ast/ast-types';
+import type { ASTNode, SourceLocation } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,
   BabylonJSNode,

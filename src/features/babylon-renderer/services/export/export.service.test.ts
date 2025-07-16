@@ -5,13 +5,9 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, CreateBox, CreateSphere, AbstractMesh, Mesh } from '@babylonjs/core';
+import { type AbstractMesh, CreateBox, CreateSphere, NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  ExportService,
-  type ExportConfig,
-  type ExportFormat,
-} from './export.service';
+import { type ExportConfig, type ExportFormat, ExportService } from './export.service';
 
 // Mock logger to avoid console output during tests
 vi.mock('../../../../shared/services/logger.service', () => ({
@@ -36,8 +32,13 @@ Object.defineProperty(global, 'URL', {
 
 Object.defineProperty(global, 'Blob', {
   value: class MockBlob {
-    constructor(public data: any[], public options?: any) {}
-    get size() { return 1024; }
+    constructor(
+      public data: any[],
+      public options?: any
+    ) {}
+    get size() {
+      return 1024;
+    }
   },
 });
 
@@ -68,14 +69,14 @@ describe('ExportService', () => {
     // Create BabylonJS NullEngine for headless testing
     engine = new NullEngine();
     scene = new Scene(engine);
-    
+
     // Create test meshes
     testMesh1 = CreateBox('testBox1', { size: 1 }, scene);
     testMesh2 = CreateSphere('testSphere1', { diameter: 1 }, scene);
-    
+
     // Create export service
     exportService = new ExportService(scene);
-    
+
     // Clear mocks
     vi.clearAllMocks();
   });
@@ -286,7 +287,7 @@ describe('ExportService', () => {
     it('should filter out non-mesh objects', async () => {
       // Create a non-mesh object (camera, light, etc.)
       const nonMesh = scene.createDefaultCameraOrLight(true, true, true);
-      
+
       const config: ExportConfig = {
         format: 'stl',
         filename: 'test.stl',

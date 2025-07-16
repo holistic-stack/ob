@@ -78,7 +78,7 @@ export const BabylonCanvas: React.FC<BabylonCanvasProps> = ({
       ...engineOptions,
     };
 
-    const finalSceneOptions: BabylonSceneOptions = {
+    const _finalSceneOptions: BabylonSceneOptions = {
       ...DEFAULT_SCENE_OPTIONS,
       ...sceneOptions,
     };

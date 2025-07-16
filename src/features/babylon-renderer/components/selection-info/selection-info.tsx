@@ -3,10 +3,10 @@
  *
  * Component for displaying information about selected 3D objects.
  * Shows object properties, metadata, and selection statistics.
- * 
+ *
  * @example
  * ```tsx
- * <SelectionInfo 
+ * <SelectionInfo
  *   scene={scene}
  *   showMetadata={true}
  *   showStatistics={true}
@@ -15,8 +15,8 @@
  * ```
  */
 
-import React from 'react';
-import { Scene, AbstractMesh, Vector3 } from '@babylonjs/core';
+import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
+import type React from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { useSelection, useSelectionStats } from '../../services/selection/use-selection.hook';
 
@@ -76,27 +76,27 @@ const getMetadataEntries = (metadata: unknown): Array<[string, string]> => {
   }
 
   const entries: Array<[string, string]> = [];
-  
+
   for (const [key, value] of Object.entries(metadata)) {
     if (value !== null && value !== undefined) {
       let displayValue: string;
-      
+
       if (typeof value === 'object') {
         displayValue = JSON.stringify(value, null, 2);
       } else {
         displayValue = String(value);
       }
-      
+
       entries.push([key, displayValue]);
     }
   }
-  
+
   return entries;
 };
 
 /**
  * Selection Info Component
- * 
+ *
  * Displays comprehensive information about selected 3D objects including
  * properties, metadata, bounding box information, and selection statistics.
  */
@@ -147,7 +147,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
               </button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-gray-600">Count:</span>
@@ -158,7 +158,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
               <span className="ml-1 font-mono capitalize">{stats.selectionMode}</span>
             </div>
           </div>
-          
+
           {stats.lastSelectionTime && (
             <div className="text-xs text-gray-500 mt-1">
               Last: {stats.lastSelectionTime.toLocaleTimeString()}
@@ -173,9 +173,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
           <h3 className="text-sm font-semibold text-yellow-800 mb-2">Hovering</h3>
           <div className="text-sm text-yellow-700">
             <div className="font-mono">{hoveredMesh.name || hoveredMesh.id}</div>
-            <div className="text-xs text-yellow-600">
-              Type: {hoveredMesh.getClassName()}
-            </div>
+            <div className="text-xs text-yellow-600">Type: {hoveredMesh.getClassName()}</div>
           </div>
         </div>
       )}
@@ -196,9 +194,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
               >
                 {/* Mesh Header */}
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-blue-800">
-                    {mesh.name || mesh.id}
-                  </h4>
+                  <h4 className="text-sm font-semibold text-blue-800">{mesh.name || mesh.id}</h4>
                   <button
                     onClick={() => handleMeshClick(mesh)}
                     className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded"
@@ -228,17 +224,17 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
                       <span className="ml-1 font-mono">{mesh.isEnabled() ? 'Yes' : 'No'}</span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-2 text-xs">
                     <span className="text-gray-600">Position:</span>
                     <span className="ml-1 font-mono">{formatVector3(mesh.position)}</span>
                   </div>
-                  
+
                   <div className="text-xs">
                     <span className="text-gray-600">Rotation:</span>
                     <span className="ml-1 font-mono">{formatVector3(mesh.rotation)}</span>
                   </div>
-                  
+
                   <div className="text-xs">
                     <span className="text-gray-600">Scaling:</span>
                     <span className="ml-1 font-mono">{formatVector3(mesh.scaling)}</span>
@@ -302,9 +298,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
       ) : (
         <div className="no-selection text-center py-8">
           <div className="text-gray-400 text-sm">No objects selected</div>
-          <div className="text-gray-400 text-xs mt-1">
-            Click on a 3D object to select it
-          </div>
+          <div className="text-gray-400 text-xs mt-1">Click on a 3D object to select it</div>
         </div>
       )}
     </div>

@@ -3,16 +3,16 @@
  *
  * React hooks for managing selection state in components.
  * Provides reactive selection tracking with automatic cleanup.
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { selectedMeshes, selectMesh, clearSelection, hoveredMesh } = useSelection(scene);
- *   
+ *
  *   const handleMeshClick = (mesh: AbstractMesh) => {
  *     selectMesh(mesh, { addToSelection: false });
  *   };
- *   
+ *
  *   return (
  *     <div>
  *       <p>Selected: {selectedMeshes.length} objects</p>
@@ -23,15 +23,15 @@
  * ```
  */
 
+import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { useCallback, useEffect, useState } from 'react';
-import { Scene, AbstractMesh } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import {
-  SelectionService,
-  type SelectionState,
+  type SelectedMeshInfo,
   type SelectionConfig,
   type SelectionOptions,
-  type SelectedMeshInfo,
+  SelectionService,
+  type SelectionState,
 } from './selection.service';
 
 const logger = createLogger('SelectionHook');
@@ -44,19 +44,21 @@ const selectionServices = new Map<Scene, SelectionService>();
  */
 function getSelectionService(scene: Scene, config?: Partial<SelectionConfig>): SelectionService {
   let service = selectionServices.get(scene);
-  
+
   if (!service) {
     service = new SelectionService(scene, config);
     selectionServices.set(scene, service);
-    
+
     // Initialize the service
-    service.initialize().then(result => {
+    service.initialize().then((result) => {
       if (!result.success) {
-        logger.error(`[GET_SERVICE] Failed to initialize selection service: ${result.error.message}`);
+        logger.error(
+          `[GET_SERVICE] Failed to initialize selection service: ${result.error.message}`
+        );
       }
     });
   }
-  
+
   return service;
 }
 
@@ -113,33 +115,39 @@ export const useSelection = (
     return removeListener;
   }, [selectionService]);
 
-  const selectMesh = useCallback((mesh: AbstractMesh, options?: SelectionOptions): boolean => {
-    if (!selectionService) {
-      logger.warn('[SELECT_MESH] No selection service available');
-      return false;
-    }
+  const selectMesh = useCallback(
+    (mesh: AbstractMesh, options?: SelectionOptions): boolean => {
+      if (!selectionService) {
+        logger.warn('[SELECT_MESH] No selection service available');
+        return false;
+      }
 
-    const result = selectionService.selectMesh(mesh, options);
-    if (!result.success) {
-      logger.error(`[SELECT_MESH] Failed to select mesh: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [selectionService]);
+      const result = selectionService.selectMesh(mesh, options);
+      if (!result.success) {
+        logger.error(`[SELECT_MESH] Failed to select mesh: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [selectionService]
+  );
 
-  const deselectMesh = useCallback((mesh: AbstractMesh): boolean => {
-    if (!selectionService) {
-      logger.warn('[DESELECT_MESH] No selection service available');
-      return false;
-    }
+  const deselectMesh = useCallback(
+    (mesh: AbstractMesh): boolean => {
+      if (!selectionService) {
+        logger.warn('[DESELECT_MESH] No selection service available');
+        return false;
+      }
 
-    const result = selectionService.deselectMesh(mesh);
-    if (!result.success) {
-      logger.error(`[DESELECT_MESH] Failed to deselect mesh: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [selectionService]);
+      const result = selectionService.deselectMesh(mesh);
+      if (!result.success) {
+        logger.error(`[DESELECT_MESH] Failed to deselect mesh: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [selectionService]
+  );
 
   const clearSelection = useCallback((): boolean => {
     if (!selectionService) {
@@ -155,46 +163,58 @@ export const useSelection = (
     return true;
   }, [selectionService]);
 
-  const isMeshSelected = useCallback((mesh: AbstractMesh): boolean => {
-    if (!selectionService) {
-      return false;
-    }
-    return selectionService.isMeshSelected(mesh);
-  }, [selectionService]);
+  const isMeshSelected = useCallback(
+    (mesh: AbstractMesh): boolean => {
+      if (!selectionService) {
+        return false;
+      }
+      return selectionService.isMeshSelected(mesh);
+    },
+    [selectionService]
+  );
 
-  const setHoverMesh = useCallback((mesh: AbstractMesh | null): boolean => {
-    if (!selectionService) {
-      logger.warn('[SET_HOVER_MESH] No selection service available');
-      return false;
-    }
+  const setHoverMesh = useCallback(
+    (mesh: AbstractMesh | null): boolean => {
+      if (!selectionService) {
+        logger.warn('[SET_HOVER_MESH] No selection service available');
+        return false;
+      }
 
-    const result = selectionService.setHoverMesh(mesh);
-    if (!result.success) {
-      logger.error(`[SET_HOVER_MESH] Failed to set hover mesh: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [selectionService]);
+      const result = selectionService.setHoverMesh(mesh);
+      if (!result.success) {
+        logger.error(`[SET_HOVER_MESH] Failed to set hover mesh: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [selectionService]
+  );
 
-  const pickMeshAtCoordinates = useCallback((x: number, y: number): AbstractMesh | null => {
-    if (!selectionService) {
-      return null;
-    }
+  const pickMeshAtCoordinates = useCallback(
+    (x: number, y: number): AbstractMesh | null => {
+      if (!selectionService) {
+        return null;
+      }
 
-    const pickingInfo = selectionService.pickMeshAtCoordinates(x, y);
-    return pickingInfo?.pickedMesh || null;
-  }, [selectionService]);
+      const pickingInfo = selectionService.pickMeshAtCoordinates(x, y);
+      return pickingInfo?.pickedMesh || null;
+    },
+    [selectionService]
+  );
 
-  const updateConfig = useCallback((newConfig: Partial<SelectionConfig>): void => {
-    if (!selectionService) {
-      logger.warn('[UPDATE_CONFIG] No selection service available');
-      return;
-    }
+  const updateConfig = useCallback(
+    (newConfig: Partial<SelectionConfig>): void => {
+      if (!selectionService) {
+        logger.warn('[UPDATE_CONFIG] No selection service available');
+        return;
+      }
 
-    selectionService.updateConfig(newConfig);
-  }, [selectionService]);
+      selectionService.updateConfig(newConfig);
+    },
+    [selectionService]
+  );
 
-  const selectedMeshes = selectionState.selectedMeshes.map(info => info.mesh);
+  const selectedMeshes = selectionState.selectedMeshes.map((info) => info.mesh);
 
   return {
     selectedMeshes,
@@ -265,41 +285,47 @@ export const useSelectionShortcuts = (scene: Scene | null) => {
 export const useInteractiveSelection = (scene: Scene | null) => {
   const selection = useSelection(scene);
 
-  const handlePointerMove = useCallback((event: PointerEvent) => {
-    if (!scene) return;
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      if (!scene) return;
 
-    const canvas = scene.getEngine().getRenderingCanvas();
-    if (!canvas) return;
+      const canvas = scene.getEngine().getRenderingCanvas();
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
 
-    const mesh = selection.pickMeshAtCoordinates(x, y);
-    selection.setHoverMesh(mesh);
-  }, [scene, selection]);
+      const mesh = selection.pickMeshAtCoordinates(x, y);
+      selection.setHoverMesh(mesh);
+    },
+    [scene, selection]
+  );
 
-  const handlePointerClick = useCallback((event: PointerEvent) => {
-    if (!scene) return;
+  const handlePointerClick = useCallback(
+    (event: PointerEvent) => {
+      if (!scene) return;
 
-    const canvas = scene.getEngine().getRenderingCanvas();
-    if (!canvas) return;
+      const canvas = scene.getEngine().getRenderingCanvas();
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
 
-    const mesh = selection.pickMeshAtCoordinates(x, y);
-    if (mesh) {
-      const isCtrlPressed = event.ctrlKey || event.metaKey;
-      selection.selectMesh(mesh, {
-        addToSelection: isCtrlPressed,
-        clearPrevious: !isCtrlPressed,
-      });
-    } else {
-      selection.clearSelection();
-    }
-  }, [scene, selection]);
+      const mesh = selection.pickMeshAtCoordinates(x, y);
+      if (mesh) {
+        const isCtrlPressed = event.ctrlKey || event.metaKey;
+        selection.selectMesh(mesh, {
+          addToSelection: isCtrlPressed,
+          clearPrevious: !isCtrlPressed,
+        });
+      } else {
+        selection.clearSelection();
+      }
+    },
+    [scene, selection]
+  );
 
   useEffect(() => {
     if (!scene) return;

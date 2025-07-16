@@ -21,12 +21,12 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(3);
-      expect(result[0]!.name).toBe('a');
-      expect(result[0]!.defaultValue).toBeUndefined();
-      expect(result[1]!.name).toBe('b');
-      expect(result[1]!.defaultValue).toBeUndefined();
-      expect(result[2]!.name).toBe('c');
-      expect(result[2]!.defaultValue).toBeUndefined();
+      expect(result[0]?.name).toBe('a');
+      expect(result[0]?.defaultValue).toBeUndefined();
+      expect(result[1]?.name).toBe('b');
+      expect(result[1]?.defaultValue).toBeUndefined();
+      expect(result[2]?.name).toBe('c');
+      expect(result[2]?.defaultValue).toBeUndefined();
     });
 
     it('should extract parameters with default values', () => {
@@ -34,12 +34,12 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(3);
-      expect(result[0]!.name).toBe('a');
-      expect(result[0]!.defaultValue).toBe(10);
-      expect(result[1]!.name).toBe('b');
-      expect(result[1]!.defaultValue).toBe('test');
-      expect(result[2]!.name).toBe('c');
-      expect(result[2]!.defaultValue).toBe(true);
+      expect(result[0]?.name).toBe('a');
+      expect(result[0]?.defaultValue).toBe(10);
+      expect(result[1]?.name).toBe('b');
+      expect(result[1]?.defaultValue).toBe('test');
+      expect(result[2]?.name).toBe('c');
+      expect(result[2]?.defaultValue).toBe(true);
     });
 
     it('should extract parameters with mixed default values', () => {
@@ -47,12 +47,12 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(3);
-      expect(result[0]!.name).toBe('a');
-      expect(result[0]!.defaultValue).toBeUndefined();
-      expect(result[1]!.name).toBe('b');
-      expect(result[1]!.defaultValue).toBe(20);
-      expect(result[2]!.name).toBe('c');
-      expect(result[2]!.defaultValue).toBeUndefined();
+      expect(result[0]?.name).toBe('a');
+      expect(result[0]?.defaultValue).toBeUndefined();
+      expect(result[1]?.name).toBe('b');
+      expect(result[1]?.defaultValue).toBe(20);
+      expect(result[2]?.name).toBe('c');
+      expect(result[2]?.defaultValue).toBeUndefined();
     });
 
     it('should extract parameters with vector default values', () => {
@@ -60,10 +60,10 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(2);
-      expect(result[0]!.name).toBe('size');
-      expect(result[0]!.defaultValue).toEqual([10, 20, 30]);
-      expect(result[1]!.name).toBe('center');
-      expect(result[1]!.defaultValue).toBe(false);
+      expect(result[0]?.name).toBe('size');
+      expect(result[0]?.defaultValue).toEqual([10, 20, 30]);
+      expect(result[1]?.name).toBe('center');
+      expect(result[1]?.defaultValue).toBe(false);
     });
 
     it('should extract parameters with 2D vector default values', () => {
@@ -71,10 +71,10 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(2);
-      expect(result[0]!.name).toBe('size');
-      expect(result[0]!.defaultValue).toEqual([10, 20]);
-      expect(result[1]!.name).toBe('center');
-      expect(result[1]!.defaultValue).toBe(false);
+      expect(result[0]?.name).toBe('size');
+      expect(result[0]?.defaultValue).toEqual([10, 20]);
+      expect(result[1]?.name).toBe('center');
+      expect(result[1]?.defaultValue).toBe(false);
     });
 
     it('should handle empty parameter list', () => {
@@ -89,10 +89,10 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(2);
-      expect(result[0]!.name).toBe('a');
-      expect(result[0]!.defaultValue).toBe(10);
-      expect(result[1]!.name).toBe('b');
-      expect(result[1]!.defaultValue).toBe(20);
+      expect(result[0]?.name).toBe('a');
+      expect(result[0]?.defaultValue).toBe(10);
+      expect(result[1]?.name).toBe('b');
+      expect(result[1]?.defaultValue).toBe(20);
     });
 
     it('should handle negative numbers as default values', () => {
@@ -100,10 +100,10 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(2);
-      expect(result[0]!.name).toBe('x');
-      expect(result[0]!.defaultValue).toBe(-10);
-      expect(result[1]!.name).toBe('y');
-      expect(result[1]!.defaultValue).toBe(-20.5);
+      expect(result[0]?.name).toBe('x');
+      expect(result[0]?.defaultValue).toBe(-10);
+      expect(result[1]?.name).toBe('y');
+      expect(result[1]?.defaultValue).toBe(-20.5);
     });
 
     it('should handle vectors with negative numbers', () => {
@@ -111,8 +111,8 @@ describe('Module Parameter Extractor', () => {
       const result = extractModuleParametersFromText(paramsText);
 
       expect(result).toHaveLength(1);
-      expect(result[0]!.name).toBe('v');
-      expect(result[0]!.defaultValue).toEqual([-10, 20, -30]);
+      expect(result[0]?.name).toBe('v');
+      expect(result[0]?.defaultValue).toEqual([-10, 20, -30]);
     });
   });
 });

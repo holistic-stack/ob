@@ -3,11 +3,11 @@
  *
  * Service for CAD-optimized camera controls with orbit, pan, and zoom functionality.
  * Provides smooth, responsive camera movement optimized for 3D model inspection.
- * 
+ *
  * @example
  * ```typescript
  * const cameraService = new CameraControlService(scene);
- * 
+ *
  * // Setup CAD camera controls
  * const result = await cameraService.setupCADCamera({
  *   target: Vector3.Zero(),
@@ -19,18 +19,10 @@
  * ```
  */
 
-import { 
-  Scene, 
-  ArcRotateCamera, 
-  Vector3, 
-  Camera,
-  BoundingBox,
-  Mesh,
-  Tools
-} from '@babylonjs/core';
+import { ArcRotateCamera, type Mesh, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 const logger = createLogger('CameraControl');
 
@@ -70,7 +62,11 @@ export interface CameraBounds {
  * Camera control error
  */
 export interface CameraControlError {
-  readonly code: 'SETUP_FAILED' | 'CAMERA_NOT_FOUND' | 'INVALID_PARAMETERS' | 'BOUNDS_CALCULATION_FAILED';
+  readonly code:
+    | 'SETUP_FAILED'
+    | 'CAMERA_NOT_FOUND'
+    | 'INVALID_PARAMETERS'
+    | 'BOUNDS_CALCULATION_FAILED';
   readonly message: string;
   readonly timestamp: Date;
   readonly details?: Record<string, unknown>;
@@ -78,7 +74,7 @@ export interface CameraControlError {
 
 /**
  * Camera Control Service
- * 
+ *
  * Provides CAD-optimized camera controls for 3D model inspection.
  * Handles orbit, pan, zoom with smooth interpolation and constraints.
  */
@@ -107,7 +103,7 @@ export class CameraControlService {
           target: Vector3.Zero(),
           radius: 10,
           alpha: Math.PI / 4, // 45 degrees
-          beta: Math.PI / 3,  // 60 degrees
+          beta: Math.PI / 3, // 60 degrees
           enableOrbit: true,
           enablePan: true,
           enableZoom: true,
@@ -185,7 +181,9 @@ export class CameraControlService {
         // Set as active camera
         this.scene.activeCamera = this.camera;
 
-        logger.debug(`[CAD_CAMERA] CAD camera setup completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[CAD_CAMERA] CAD camera setup completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return this.camera;
       },
       (error) => this.createError('SETUP_FAILED', `CAD camera setup failed: ${error}`)
@@ -263,7 +261,9 @@ export class CameraControlService {
   /**
    * Set camera view to predefined angle
    */
-  async setView(view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'): Promise<Result<void, CameraControlError>> {
+  async setView(
+    view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'
+  ): Promise<Result<void, CameraControlError>> {
     logger.debug(`[SET_VIEW] Setting view to: ${view}`);
 
     return tryCatchAsync(
@@ -303,7 +303,7 @@ export class CameraControlService {
    * Calculate scene bounds
    */
   private calculateSceneBounds(): CameraBounds | null {
-    const meshes = this.scene.meshes.filter(mesh => mesh.isVisible && mesh.isEnabled());
+    const meshes = this.scene.meshes.filter((mesh) => mesh.isVisible && mesh.isEnabled());
     if (meshes.length === 0) {
       return null;
     }
@@ -357,7 +357,7 @@ export class CameraControlService {
       timestamp: new Date(),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

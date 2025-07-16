@@ -64,9 +64,9 @@ describe('extractValue - Vector Literals Regression Tests', () => {
     const code = `cube(${vectorCode});`;
     const tree = parser.parse(code);
     expect(tree).toBeDefined();
-    expect(tree!.rootNode).toBeDefined();
+    expect(tree?.rootNode).toBeDefined();
 
-    const arrayNode = findArrayLiteralNode(tree!.rootNode);
+    const arrayNode = findArrayLiteralNode(tree?.rootNode);
     expect(arrayNode).not.toBeNull();
 
     console.log(`[Test] Found array node: type='${arrayNode?.type}', text='${arrayNode?.text}'`);
@@ -195,7 +195,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const tree = parser.parse(code);
 
       // Find the array literal within the function call
-      const arrayNode = findArrayLiteralNode(tree!.rootNode);
+      const arrayNode = findArrayLiteralNode(tree?.rootNode);
       expect(arrayNode).not.toBeNull();
 
       const rawResult = extractValue(arrayNode as TSNode, code);
@@ -260,7 +260,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
           if (child) collectArrayNodes(child);
         }
       }
-      collectArrayNodes(tree!.rootNode);
+      collectArrayNodes(tree?.rootNode);
 
       expect(arrayNodes.length).toBeGreaterThanOrEqual(1);
 
@@ -340,7 +340,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       // For this test, we create the full code with trailing whitespace after the semicolon
       const code = `cube(${vectorCode});   `;
       const tree = parser.parse(code);
-      const arrayNode = findArrayLiteralNode(tree!.rootNode);
+      const arrayNode = findArrayLiteralNode(tree?.rootNode);
       expect(arrayNode).not.toBeNull();
       const rawResult = extractValue(arrayNode!, code);
 
@@ -383,7 +383,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       // For this test, we create the full code with newlines after the semicolon
       const code = `cube(${vectorCode});\n\n`;
       const tree = parser.parse(code);
-      const arrayNode = findArrayLiteralNode(tree!.rootNode);
+      const arrayNode = findArrayLiteralNode(tree?.rootNode);
       expect(arrayNode).not.toBeNull();
       const rawResult = extractValue(arrayNode!, code);
 
@@ -425,7 +425,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
       const code = 'module test() { cube([10, 10, 10]); }';
       const tree = parser.parse(code);
 
-      const arrayNode = findArrayLiteralNode(tree!.rootNode);
+      const arrayNode = findArrayLiteralNode(tree?.rootNode);
       expect(arrayNode).not.toBeNull();
 
       const rawResult = extractValue(arrayNode!, code);

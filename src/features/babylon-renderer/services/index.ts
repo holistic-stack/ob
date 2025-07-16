@@ -122,6 +122,13 @@ export {
   RenderGraphErrorCode,
 } from './babylon-render-graph-service';
 export type {
+  CADCameraConfig,
+  CameraBounds,
+  CameraControlError,
+} from './camera-control';
+// Camera Control Service
+export { CameraControlService } from './camera-control';
+export type {
   ControlFlowError,
   OpenSCADForLoopParams,
   OpenSCADIfParams,
@@ -138,6 +145,32 @@ export type {
 // CSG Operations Service
 export { CSGOperationsService } from './csg-operations';
 export type {
+  DepthPerceptionConfig,
+  DepthPerceptionError,
+  DepthPerceptionQuality,
+  DepthPerceptionSetup,
+} from './depth-perception';
+// Depth Perception Service
+export { DepthPerceptionService } from './depth-perception';
+export type {
+  ExportConfig,
+  ExportError,
+  ExportFormat,
+  ExportProgressCallback,
+  ExportQuality,
+  ExportResult,
+  UseExportReturn,
+} from './export';
+// Export Service
+// Export Hooks
+export {
+  cleanupExportServices,
+  ExportService,
+  useExport,
+  useExportStats,
+  useQuickExport,
+} from './export';
+export type {
   ExtrusionError,
   OpenSCADLinearExtrudeParams,
   OpenSCADRotateExtrudeParams,
@@ -145,6 +178,13 @@ export type {
 } from './extrusion-operations';
 // Extrusion Operations Service
 export { ExtrusionOperationsService } from './extrusion-operations';
+export type {
+  GridAxisConfig,
+  GridAxisError,
+  GridAxisSetup,
+} from './grid-axis';
+// Grid and Axis Service
+export { GridAxisService } from './grid-axis';
 export type {
   ImportError,
   ImportOperationParams,
@@ -156,6 +196,22 @@ export type {
 // Import Operations Service
 export { ImportOperationsService } from './import-operations';
 export type {
+  LightingError,
+  LightingSetup,
+  TechnicalLightingConfig,
+} from './lighting';
+// Lighting Service
+export { LightingService } from './lighting';
+export type {
+  ModifierApplicationResult,
+  ModifierState,
+  ModifierVisualizationConfig,
+  ModifierVisualizationError,
+  OpenSCADModifierType,
+} from './modifier-visualization';
+// Modifier Visualization Service
+export { ModifierVisualizationService } from './modifier-visualization';
+export type {
   ModuleExecutionContext,
   ModuleInstantiationContext,
   ModuleSystemError,
@@ -163,6 +219,45 @@ export type {
 } from './module-system';
 // Module System Service
 export { ModuleSystemService } from './module-system';
+export type {
+  MaterialFromColorConfig,
+  OpenSCADColor,
+  OpenSCADMaterialError,
+} from './openscad-material';
+// OpenSCAD Material Service
+export { OPENSCAD_NAMED_COLORS, OpenSCADMaterialService } from './openscad-material';
+export type {
+  OptimizationConfig,
+  OptimizedMeshGenerationOptions,
+  OptimizedMeshResult,
+} from './optimized-mesh-generator';
+// Optimized Mesh Generator Service
+export {
+  OptimizedMeshGenerationError,
+  OptimizedMeshGenerationErrorCode,
+  OptimizedMeshGeneratorService,
+} from './optimized-mesh-generator';
+export type {
+  CullingConfig,
+  CullingMethod,
+  CullingSetupResult,
+  CullingStats,
+  GeometrySignature,
+  InstanceGroup,
+  InstancingConfig,
+  InstancingSetupResult,
+  LODConfig,
+  LODQuality,
+  LODSetupResult,
+  PerformanceMetrics,
+  PerformanceOptimizationState,
+} from './performance-optimization';
+// Performance Optimization Service
+export {
+  PerformanceOptimizationError,
+  PerformanceOptimizationErrorCode,
+  PerformanceOptimizationService,
+} from './performance-optimization';
 export type {
   OpenSCADCubeParams,
   OpenSCADCylinderParams,
@@ -172,6 +267,58 @@ export type {
 } from './primitive-shape-generator';
 // Primitive Shape Generator Service
 export { PrimitiveShapeGeneratorService } from './primitive-shape-generator';
+export type {
+  ProgressError,
+  ProgressEventListener,
+  ProgressOperation,
+  ProgressOperationConfig,
+  ProgressOperationType,
+  ProgressStage,
+  ProgressState,
+  ProgressUpdate,
+  UseProgressReturn,
+} from './progress';
+// Progress Service
+// Progress Hooks
+export {
+  ProgressService,
+  useAsyncProgress,
+  useCancellableOperation,
+  useOperationProgress,
+  useOperationsByType,
+  useProgress,
+  useProgressStore,
+} from './progress';
+export type {
+  MeshRenderingState,
+  RenderingMode,
+  RenderingModeConfig,
+  RenderingModeError,
+  RenderingModeResult,
+} from './rendering-mode';
+// Rendering Mode Service
+export { RenderingModeService } from './rendering-mode';
+export type {
+  SelectedMeshInfo,
+  SelectionConfig,
+  SelectionError,
+  SelectionEventListener,
+  SelectionHighlightType,
+  SelectionMode,
+  SelectionOptions,
+  SelectionState,
+  UseSelectionReturn,
+} from './selection';
+// Selection Service
+// Selection Hooks
+export {
+  cleanupSelectionServices,
+  SelectionService,
+  useInteractiveSelection,
+  useSelection,
+  useSelectionShortcuts,
+  useSelectionStats,
+} from './selection';
 export type {
   OpenSCADColorParams,
   OpenSCADMatrixParams,
@@ -183,131 +330,3 @@ export type {
 } from './transformation-operations';
 // Transformation Operations Service
 export { TransformationOperationsService } from './transformation-operations';
-
-// Camera Control Service
-export { CameraControlService } from './camera-control';
-export type {
-  CADCameraConfig,
-  CameraBounds,
-  CameraControlError,
-} from './camera-control';
-
-// Lighting Service
-export { LightingService } from './lighting';
-export type {
-  TechnicalLightingConfig,
-  LightingSetup,
-  LightingError,
-} from './lighting';
-
-// Grid and Axis Service
-export { GridAxisService } from './grid-axis';
-export type {
-  GridAxisConfig,
-  GridAxisSetup,
-  GridAxisError,
-} from './grid-axis';
-
-// OpenSCAD Material Service
-export { OpenSCADMaterialService, OPENSCAD_NAMED_COLORS } from './openscad-material';
-export type {
-  OpenSCADColor,
-  MaterialFromColorConfig,
-  OpenSCADMaterialError,
-} from './openscad-material';
-
-// Modifier Visualization Service
-export { ModifierVisualizationService } from './modifier-visualization';
-export type {
-  OpenSCADModifierType,
-  ModifierVisualizationConfig,
-  ModifierApplicationResult,
-  ModifierVisualizationError,
-  ModifierState,
-} from './modifier-visualization';
-
-// Rendering Mode Service
-export { RenderingModeService } from './rendering-mode';
-export type {
-  RenderingMode,
-  RenderingModeConfig,
-  RenderingModeResult,
-  RenderingModeError,
-  MeshRenderingState,
-} from './rendering-mode';
-
-// Depth Perception Service
-export { DepthPerceptionService } from './depth-perception';
-export type {
-  DepthPerceptionQuality,
-  DepthPerceptionConfig,
-  DepthPerceptionSetup,
-  DepthPerceptionError,
-} from './depth-perception';
-
-// Progress Service
-export { ProgressService } from './progress';
-export type {
-  ProgressOperationType,
-  ProgressStage,
-  ProgressOperationConfig,
-  ProgressState,
-  ProgressOperation,
-  ProgressUpdate,
-  ProgressError,
-  ProgressEventListener,
-  UseProgressReturn,
-} from './progress';
-
-// Progress Hooks
-export {
-  useProgress,
-  useOperationProgress,
-  useOperationsByType,
-  useCancellableOperation,
-  useAsyncProgress,
-  useProgressStore,
-} from './progress';
-
-// Selection Service
-export { SelectionService } from './selection';
-export type {
-  SelectionMode,
-  SelectionHighlightType,
-  SelectionConfig,
-  SelectionOptions,
-  SelectedMeshInfo,
-  SelectionState,
-  SelectionError,
-  SelectionEventListener,
-  UseSelectionReturn,
-} from './selection';
-
-// Selection Hooks
-export {
-  useSelection,
-  useSelectionStats,
-  useSelectionShortcuts,
-  useInteractiveSelection,
-  cleanupSelectionServices,
-} from './selection';
-
-// Export Service
-export { ExportService } from './export';
-export type {
-  ExportFormat,
-  ExportQuality,
-  ExportConfig,
-  ExportResult,
-  ExportError,
-  ExportProgressCallback,
-  UseExportReturn,
-} from './export';
-
-// Export Hooks
-export {
-  useExport,
-  useExportStats,
-  useQuickExport,
-  cleanupExportServices,
-} from './export';

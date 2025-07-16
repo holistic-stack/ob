@@ -76,9 +76,9 @@ describe('ModuleSystemService', () => {
 
       const definition = moduleService.getModuleDefinition('parametric_box');
       expect(definition).toBeDefined();
-      expect(definition!.parameters.length).toBe(2);
-      expect(definition!.parameters[0]!.name).toBe('size');
-      expect(definition!.parameters[1]!.name).toBe('center');
+      expect(definition?.parameters.length).toBe(2);
+      expect(definition?.parameters[0]?.name).toBe('size');
+      expect(definition?.parameters[1]?.name).toBe('center');
     });
 
     it('should register multiple modules', async () => {
@@ -99,7 +99,7 @@ describe('ModuleSystemService', () => {
       await moduleService.registerModule(module2);
 
       const definition = moduleService.getModuleDefinition('test_module');
-      expect(definition!.parameters.length).toBe(1);
+      expect(definition?.parameters.length).toBe(1);
     });
   });
 
@@ -123,7 +123,7 @@ describe('ModuleSystemService', () => {
     it('should instantiate a simple module', async () => {
       const moduleInstNode = createModuleInstantiation('simple_box', [], []);
 
-      const bodyExecutor: BodyExecutor = async (body, context) => {
+      const bodyExecutor: BodyExecutor = async (_body, _context) => {
         return success(testMesh);
       };
 
@@ -146,7 +146,7 @@ describe('ModuleSystemService', () => {
       ];
       const moduleInstNode = createModuleInstantiation('parametric_box', args, []);
 
-      const bodyExecutor: BodyExecutor = async (body, context) => {
+      const bodyExecutor: BodyExecutor = async (_body, context) => {
         expect(context.moduleParameters.size).toEqual([20, 20, 20]);
         expect(context.moduleParameters.center).toBe(true);
         return success(testMesh);
@@ -167,7 +167,7 @@ describe('ModuleSystemService', () => {
       ];
       const moduleInstNode = createModuleInstantiation('parametric_box', args, []);
 
-      const bodyExecutor: BodyExecutor = async (body, context) => {
+      const bodyExecutor: BodyExecutor = async (_body, context) => {
         expect(context.moduleParameters.size).toEqual([15, 15, 15]);
         expect(context.moduleParameters.center).toBe(true);
         return success(testMesh);
@@ -188,7 +188,7 @@ describe('ModuleSystemService', () => {
       ];
       const moduleInstNode = createModuleInstantiation('parametric_box', args, []);
 
-      const bodyExecutor: BodyExecutor = async (body, context) => {
+      const bodyExecutor: BodyExecutor = async (_body, context) => {
         expect(context.moduleParameters.size).toEqual([25, 25, 25]);
         expect(context.moduleParameters.center).toBe(false); // Default value
         return success(testMesh);
@@ -227,7 +227,7 @@ describe('ModuleSystemService', () => {
 
       const moduleInstNode = createModuleInstantiation('simple_box', [], []);
 
-      const bodyExecutor: BodyExecutor = async (body, context) => {
+      const bodyExecutor: BodyExecutor = async (_body, context) => {
         expect(context.variables.global_var).toBe('global_value');
         expect(context.parent).toBe(parentContext);
         return success(testMesh);
@@ -275,7 +275,7 @@ describe('ModuleSystemService', () => {
         childrenNodes: childNodes,
       };
 
-      const childExecutor: ChildExecutor = async (child, ctx) => {
+      const childExecutor: ChildExecutor = async (child, _ctx) => {
         const mesh = createTestMesh(`mesh_${(child as any).name}`);
         return success(mesh);
       };
@@ -285,8 +285,8 @@ describe('ModuleSystemService', () => {
 
       if (result.success && 'meshes' in result.data) {
         expect(result.data.meshes.length).toBe(2);
-        expect(result.data.meshes[0]!.id).toBe('mesh_child1');
-        expect(result.data.meshes[1]!.id).toBe('mesh_child2');
+        expect(result.data.meshes[0]?.id).toBe('mesh_child1');
+        expect(result.data.meshes[1]?.id).toBe('mesh_child2');
       }
     });
 
@@ -416,7 +416,7 @@ describe('ModuleSystemService', () => {
     };
   }
 
-  function createModuleSystemError(
+  function _createModuleSystemError(
     message: string
   ): import('./module-system.service').ModuleSystemError {
     return {

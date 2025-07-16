@@ -9,7 +9,7 @@ import { BoundingBox, Matrix, NullEngine, Scene, Vector3 } from '@babylonjs/core
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { GenericMeshData } from '../../types/generic-mesh-data.types';
 import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
-import { type CSGOperationParams, CSGOperationsService } from './csg-operations.service';
+import { CSGOperationsService } from './csg-operations.service';
 
 describe('CSGOperationsService', () => {
   let engine: NullEngine;

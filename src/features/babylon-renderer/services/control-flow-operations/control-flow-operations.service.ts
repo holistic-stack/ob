@@ -19,7 +19,7 @@
 import { BoundingBox, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
 import { createMeshCollection } from '../../utils/generic-mesh-utils';
 

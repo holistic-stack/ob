@@ -6,12 +6,34 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // Enable fast refresh for better HMR
+      fastRefresh: true,
+      // Include .tsx files in fast refresh
+      include: '**/*.{jsx,tsx}',
+    }),
     // Monaco Editor plugin temporarily disabled for initial integration
     // monacoEditorPlugin(createViteMonacoPlugin(monacoConfig))
   ],
   define: {
     // Add any global defines here if needed
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+  },
+  server: {
+    // HMR optimization
+    hmr: {
+      overlay: true,
+    },
+    // File watching optimization
+    watch: {
+      // Ignore node_modules for better performance
+      ignored: ['**/node_modules/**', '**/dist/**'],
+    },
+    // Faster startup
+    fs: {
+      // Allow serving files from one level up to the project root
+      allow: ['..'],
+    },
   },
   resolve: {
     alias: {
@@ -26,9 +48,17 @@ export default defineConfig({
       'monaco-editor',
       '@monaco-editor/react',
       'tslog',
-      // TODO: Add BabylonJS dependencies
+      '@babylonjs/core',
+      '@babylonjs/materials',
+      '@babylonjs/loaders',
+      'web-tree-sitter',
+      'class-variance-authority',
     ],
-    // TODO: Add BabylonJS exclusions if needed
+    exclude: [
+      // Exclude WASM files from optimization
+      '@babylonjs/core/Engines/WebGPU',
+      '@babylonjs/core/ShadersWGSL',
+    ],
   },
   build: {
     outDir: 'dist',

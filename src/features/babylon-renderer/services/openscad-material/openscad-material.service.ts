@@ -3,11 +3,11 @@
  *
  * Service for converting OpenSCAD color() directives to BabylonJS materials.
  * Handles color inheritance, named colors, and material property mapping.
- * 
+ *
  * @example
  * ```typescript
  * const materialService = new OpenSCADMaterialService(scene);
- * 
+ *
  * // Convert OpenSCAD color to material
  * const result = await materialService.createMaterialFromColor({
  *   color: [1, 0, 0, 0.8], // Red with 80% opacity
@@ -16,18 +16,18 @@
  * ```
  */
 
-import { 
-  Scene, 
-  Color3, 
+import {
+  Color3,
   Color4,
-  StandardMaterial,
+  Material,
   PBRMaterial,
-  Material
+  type Scene,
+  StandardMaterial,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type { ColorNode, Vector4D } from '../../../openscad-parser/ast/ast-types';
+import type { ColorNode } from '../../../openscad-parser/ast/ast-types';
 
 const logger = createLogger('OpenSCADMaterial');
 
@@ -35,7 +35,10 @@ const logger = createLogger('OpenSCADMaterial');
  * OpenSCAD color specification
  */
 export interface OpenSCADColor {
-  readonly color: string | readonly [number, number, number] | readonly [number, number, number, number];
+  readonly color:
+    | string
+    | readonly [number, number, number]
+    | readonly [number, number, number, number];
   readonly alpha?: number;
   readonly name?: string;
 }
@@ -44,7 +47,10 @@ export interface OpenSCADColor {
  * Material creation configuration
  */
 export interface MaterialFromColorConfig {
-  readonly color: string | readonly [number, number, number] | readonly [number, number, number, number];
+  readonly color:
+    | string
+    | readonly [number, number, number]
+    | readonly [number, number, number, number];
   readonly alpha?: number;
   readonly name: string;
   readonly materialType?: 'standard' | 'pbr';
@@ -67,7 +73,7 @@ export const OPENSCAD_NAMED_COLORS: Record<string, readonly [number, number, num
   black: [0, 0, 0],
   gray: [0.5, 0.5, 0.5],
   grey: [0.5, 0.5, 0.5],
-  
+
   // Extended colors
   orange: [1, 0.5, 0],
   purple: [0.5, 0, 0.5],
@@ -85,7 +91,11 @@ export const OPENSCAD_NAMED_COLORS: Record<string, readonly [number, number, num
  * Material creation error
  */
 export interface OpenSCADMaterialError {
-  readonly code: 'INVALID_COLOR' | 'MATERIAL_CREATION_FAILED' | 'SCENE_NOT_PROVIDED' | 'COLOR_PARSING_FAILED';
+  readonly code:
+    | 'INVALID_COLOR'
+    | 'MATERIAL_CREATION_FAILED'
+    | 'SCENE_NOT_PROVIDED'
+    | 'COLOR_PARSING_FAILED';
   readonly message: string;
   readonly timestamp: Date;
   readonly colorValue?: unknown;
@@ -94,7 +104,7 @@ export interface OpenSCADMaterialError {
 
 /**
  * OpenSCAD Material Service
- * 
+ *
  * Converts OpenSCAD color() directives to BabylonJS materials with proper
  * color handling, transparency, and material inheritance.
  */
@@ -133,9 +143,10 @@ export class OpenSCADMaterialService {
         }
 
         // Create material based on type
-        const material = config.materialType === 'pbr' 
-          ? this.createPBRMaterial(config.name, rgba.data)
-          : this.createStandardMaterial(config.name, rgba.data);
+        const material =
+          config.materialType === 'pbr'
+            ? this.createPBRMaterial(config.name, rgba.data)
+            : this.createStandardMaterial(config.name, rgba.data);
 
         // Handle parent material inheritance
         if (config.inheritParent && config.parentMaterial) {
@@ -145,10 +156,17 @@ export class OpenSCADMaterialService {
         // Cache the material
         this.materialCache.set(cacheKey, material);
 
-        logger.debug(`[CREATE_MATERIAL] Material created in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[CREATE_MATERIAL] Material created in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return material;
       },
-      (error) => this.createError('MATERIAL_CREATION_FAILED', `Failed to create material: ${error}`, config.color)
+      (error) =>
+        this.createError(
+          'MATERIAL_CREATION_FAILED',
+          `Failed to create material: ${error}`,
+          config.color
+        )
     );
   }
 
@@ -177,7 +195,11 @@ export class OpenSCADMaterialService {
 
         return result.data;
       },
-      (error) => this.createError('MATERIAL_CREATION_FAILED', `Failed to create material from ColorNode: ${error}`)
+      (error) =>
+        this.createError(
+          'MATERIAL_CREATION_FAILED',
+          `Failed to create material from ColorNode: ${error}`
+        )
     );
   }
 
@@ -207,7 +229,11 @@ export class OpenSCADMaterialService {
             // RGBA format
             return new Color4(color[0], color[1], color[2], color[3]);
           } else {
-            throw this.createError('INVALID_COLOR', `Invalid color array length: ${color.length}`, color);
+            throw this.createError(
+              'INVALID_COLOR',
+              `Invalid color array length: ${color.length}`,
+              color
+            );
           }
         }
 
@@ -222,10 +248,10 @@ export class OpenSCADMaterialService {
    */
   private createStandardMaterial(name: string, color: Color4): StandardMaterial {
     const material = new StandardMaterial(name, this.scene);
-    
+
     // Set diffuse color (RGB)
     material.diffuseColor = new Color3(color.r, color.g, color.b);
-    
+
     // Handle transparency
     if (color.a < 1.0) {
       material.alpha = color.a;
@@ -245,10 +271,10 @@ export class OpenSCADMaterialService {
    */
   private createPBRMaterial(name: string, color: Color4): PBRMaterial {
     const material = new PBRMaterial(name, this.scene);
-    
+
     // Set base color (RGBA)
     material.albedoColor = new Color3(color.r, color.g, color.b);
-    
+
     // Handle transparency
     if (color.a < 1.0) {
       material.alpha = color.a;
@@ -281,9 +307,7 @@ export class OpenSCADMaterialService {
    * Generate cache key for material
    */
   private generateCacheKey(config: MaterialFromColorConfig): string {
-    const colorStr = Array.isArray(config.color) 
-      ? config.color.join(',') 
-      : config.color;
+    const colorStr = Array.isArray(config.color) ? config.color.join(',') : config.color;
     return `${config.materialType || 'standard'}_${colorStr}_${config.alpha || 1.0}`;
   }
 
@@ -328,7 +352,7 @@ export class OpenSCADMaterialService {
       ...(colorValue !== undefined && { colorValue }),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

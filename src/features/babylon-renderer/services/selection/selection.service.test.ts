@@ -5,13 +5,16 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, CreateBox, CreateSphere, AbstractMesh, Mesh } from '@babylonjs/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  SelectionService,
-  type SelectionConfig,
-  type SelectionOptions,
-} from './selection.service';
+  type AbstractMesh,
+  CreateBox,
+  CreateSphere,
+  Mesh,
+  NullEngine,
+  Scene,
+} from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type SelectionConfig, SelectionService } from './selection.service';
 
 describe('SelectionService', () => {
   let engine: NullEngine;
@@ -24,14 +27,14 @@ describe('SelectionService', () => {
     // Create BabylonJS NullEngine for headless testing
     engine = new NullEngine();
     scene = new Scene(engine);
-    
+
     // Create test meshes
     testMesh1 = CreateBox('testBox1', { size: 1 }, scene);
     testMesh2 = CreateSphere('testSphere1', { diameter: 1 }, scene);
-    
+
     // Create selection service
     selectionService = new SelectionService(scene);
-    
+
     // Initialize the service
     const result = await selectionService.initialize();
     expect(result.success).toBe(true);
@@ -48,11 +51,11 @@ describe('SelectionService', () => {
     it('should initialize selection service', async () => {
       const newService = new SelectionService(scene);
       const result = await newService.initialize();
-      
+
       expect(result.success).toBe(true);
       expect(newService.getSelectionState().selectedMeshes).toHaveLength(0);
       expect(newService.getSelectionState().hoveredMesh).toBeNull();
-      
+
       newService.dispose();
     });
 
@@ -62,13 +65,13 @@ describe('SelectionService', () => {
         enableHover: false,
         maxSelections: 10,
       };
-      
+
       const newService = new SelectionService(scene, config);
       await newService.initialize();
-      
+
       const state = newService.getSelectionState();
       expect(state.selectionMode).toBe('multi');
-      
+
       newService.dispose();
     });
   });
@@ -132,7 +135,7 @@ describe('SelectionService', () => {
 
     it('should respect maximum selection limit', () => {
       selectionService.updateConfig({ maxSelections: 1 });
-      
+
       selectionService.selectMesh(testMesh1);
       selectionService.selectMesh(testMesh2, { addToSelection: true });
 
@@ -233,7 +236,7 @@ describe('SelectionService', () => {
       // Note: In headless mode, picking might not work as expected
       // This test verifies the method exists and handles errors gracefully
       const pickingInfo = selectionService.pickMeshAtCoordinates(100, 100);
-      
+
       // In headless mode, this will likely return null
       expect(pickingInfo).toBeNull();
     });
@@ -248,7 +251,7 @@ describe('SelectionService', () => {
   describe('Configuration Updates', () => {
     it('should update selection mode', () => {
       selectionService.updateConfig({ mode: 'multi' });
-      
+
       const state = selectionService.getSelectionState();
       expect(state.selectionMode).toBe('multi');
     });
@@ -258,9 +261,9 @@ describe('SelectionService', () => {
         highlightColor: { r: 1, g: 0, b: 0 } as any,
         hoverColor: { r: 0, g: 1, b: 0 } as any,
       };
-      
+
       selectionService.updateConfig(newConfig);
-      
+
       // Configuration should be updated (we can't easily test the visual effect in headless mode)
       expect(() => selectionService.selectMesh(testMesh1)).not.toThrow();
     });
@@ -276,14 +279,12 @@ describe('SelectionService', () => {
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-          selectedMeshes: expect.arrayContaining([
-            expect.objectContaining({ mesh: testMesh1 })
-          ])
+          selectedMeshes: expect.arrayContaining([expect.objectContaining({ mesh: testMesh1 })]),
         })
       );
 
       removeListener();
-      
+
       selectionService.selectMesh(testMesh2);
       expect(listener).toHaveBeenCalledTimes(1); // Should not be called after removal
     });
@@ -292,9 +293,9 @@ describe('SelectionService', () => {
       const faultyListener = vi.fn(() => {
         throw new Error('Listener error');
       });
-      
+
       selectionService.addListener(faultyListener);
-      
+
       // Should not throw despite listener error
       expect(() => {
         selectionService.selectMesh(testMesh1);
@@ -310,8 +311,8 @@ describe('SelectionService', () => {
 
       const state = selectionService.getSelectionState();
       expect(state.lastSelectionTime).toBeDefined();
-      expect(state.lastSelectionTime!.getTime()).toBeGreaterThanOrEqual(beforeSelection.getTime());
-      expect(state.lastSelectionTime!.getTime()).toBeLessThanOrEqual(afterSelection.getTime());
+      expect(state.lastSelectionTime?.getTime()).toBeGreaterThanOrEqual(beforeSelection.getTime());
+      expect(state.lastSelectionTime?.getTime()).toBeLessThanOrEqual(afterSelection.getTime());
     });
 
     it('should include mesh metadata in selection info', () => {
@@ -351,7 +352,7 @@ describe('SelectionService', () => {
       // The disposed service should not call listeners anymore
       // (Note: we can't test this directly since the service is disposed)
       // Instead, we verify that the listener set is cleared
-      expect(selectionService['listeners'].size).toBe(0);
+      expect(selectionService.listeners.size).toBe(0);
     });
   });
 

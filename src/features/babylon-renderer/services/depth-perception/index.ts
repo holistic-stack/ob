@@ -4,10 +4,10 @@
  * Exports for the depth perception service.
  */
 
-export { DepthPerceptionService } from './depth-perception.service';
 export type {
-  DepthPerceptionQuality,
   DepthPerceptionConfig,
-  DepthPerceptionSetup,
   DepthPerceptionError,
+  DepthPerceptionQuality,
+  DepthPerceptionSetup,
 } from './depth-perception.service';
+export { DepthPerceptionService } from './depth-perception.service';

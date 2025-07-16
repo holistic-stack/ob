@@ -5,11 +5,12 @@
  * Following SRP principles with co-located tests.
  */
 
-// Scene hooks (to be implemented)
-// export * from './use-babylon-scene';
+// CSG2 hooks
+export * from './use-babylon-csg2';
 
-// Engine hooks (to be implemented)
-// export * from './use-babylon-engine';
-
-// CSG2 hooks (to be implemented)
-// export * from './use-babylon-csg2';
+// Engine hooks
+export * from './use-babylon-engine';
+// Inspector hooks
+export * from './use-babylon-inspector';
+// Scene hooks
+export * from './use-babylon-scene';

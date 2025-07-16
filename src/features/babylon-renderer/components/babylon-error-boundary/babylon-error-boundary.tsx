@@ -3,7 +3,7 @@
  *
  * React Error Boundary specifically designed for BabylonJS rendering failures.
  * Provides graceful error handling, recovery mechanisms, and user-friendly feedback.
- * 
+ *
  * @example
  * ```tsx
  * <BabylonErrorBoundary
@@ -18,14 +18,13 @@
 
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 
 const logger = createLogger('BabylonErrorBoundary');
 
 /**
  * Babylon-specific error types
  */
-export type BabylonErrorType = 
+export type BabylonErrorType =
   | 'WEBGL_CONTEXT_LOST'
   | 'WEBGL_NOT_SUPPORTED'
   | 'SHADER_COMPILATION_ERROR'
@@ -65,7 +64,11 @@ export interface BabylonErrorBoundaryState {
 export interface BabylonErrorBoundaryProps {
   readonly children: ReactNode;
   readonly fallback?: ReactNode | ((errorDetails: BabylonErrorDetails) => ReactNode);
-  readonly onError?: (error: Error, errorInfo: ErrorInfo, errorDetails: BabylonErrorDetails) => void;
+  readonly onError?: (
+    error: Error,
+    errorInfo: ErrorInfo,
+    errorDetails: BabylonErrorDetails
+  ) => void;
   readonly enableRecovery?: boolean;
   readonly maxRetries?: number;
   readonly recoveryDelay?: number;
@@ -76,22 +79,20 @@ export interface BabylonErrorBoundaryProps {
 /**
  * Default error fallback component
  */
-const DefaultErrorFallback: React.FC<{ errorDetails: BabylonErrorDetails; onRetry?: () => void }> = ({
-  errorDetails,
-  onRetry,
-}) => (
+const DefaultErrorFallback: React.FC<{
+  errorDetails: BabylonErrorDetails;
+  onRetry?: () => void;
+}> = ({ errorDetails, onRetry }) => (
   <div className="flex flex-col items-center justify-center h-full p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
     <div className="text-center max-w-md">
       <div className="text-6xl mb-4">🔧</div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-2">
-        3D Rendering Error
-      </h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-2">3D Rendering Error</h2>
       <p className="text-gray-600 mb-4">
-        {errorDetails.type === 'WEBGL_NOT_SUPPORTED' 
+        {errorDetails.type === 'WEBGL_NOT_SUPPORTED'
           ? 'Your browser does not support WebGL, which is required for 3D rendering.'
           : errorDetails.type === 'WEBGL_CONTEXT_LOST'
-          ? 'The WebGL context was lost. This can happen due to GPU driver issues or memory constraints.'
-          : 'An error occurred while initializing the 3D renderer.'}
+            ? 'The WebGL context was lost. This can happen due to GPU driver issues or memory constraints.'
+            : 'An error occurred while initializing the 3D renderer.'}
       </p>
       <details className="text-left text-sm text-gray-500 mb-4">
         <summary className="cursor-pointer font-medium">Technical Details</summary>
@@ -117,11 +118,14 @@ const DefaultErrorFallback: React.FC<{ errorDetails: BabylonErrorDetails; onRetr
 
 /**
  * Babylon Error Boundary Component
- * 
+ *
  * Provides comprehensive error handling for BabylonJS rendering failures.
  * Includes WebGL context loss detection, recovery mechanisms, and detailed error reporting.
  */
-export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, BabylonErrorBoundaryState> {
+export class BabylonErrorBoundary extends Component<
+  BabylonErrorBoundaryProps,
+  BabylonErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
   constructor(props: BabylonErrorBoundaryProps) {
@@ -153,7 +157,7 @@ export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, B
    */
   private createErrorDetails(error: Error): BabylonErrorDetails {
     const webglInfo = this.getWebGLInfo();
-    
+
     return {
       type: this.categorizeBabylonError(error),
       message: error.message,
@@ -170,16 +174,16 @@ export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, B
    */
   private handleRetry = (): void => {
     const { maxRetries = 3, recoveryDelay = 1000 } = this.props;
-    
+
     if (this.state.retryCount >= maxRetries) {
       logger.warn('[RETRY] Maximum retry attempts reached');
       return;
     }
 
     logger.debug(`[RETRY] Attempting recovery (${this.state.retryCount + 1}/${maxRetries})`);
-    
+
     this.setState({ isRecovering: true });
-    
+
     this.retryTimeoutId = setTimeout(() => {
       this.setState({
         hasError: false,
@@ -193,7 +197,7 @@ export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, B
   /**
    * React Error Boundary lifecycle method
    */
-  static getDerivedStateFromError(error: Error): Partial<BabylonErrorBoundaryState> {
+  static getDerivedStateFromError(_error: Error): Partial<BabylonErrorBoundaryState> {
     return {
       hasError: true,
     };
@@ -204,7 +208,7 @@ export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, B
    */
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const errorDetails = this.createErrorDetails(error);
-    
+
     logger.error('[ERROR] Babylon rendering error caught:', {
       error: errorDetails,
       errorInfo,
@@ -229,14 +233,23 @@ export class BabylonErrorBoundary extends Component<BabylonErrorBoundaryProps, B
    * Render error boundary
    */
   override render(): ReactNode {
-    const { children, fallback, enableRecovery = true, className, 'data-testid': dataTestId } = this.props;
+    const {
+      children,
+      fallback,
+      enableRecovery = true,
+      className,
+      'data-testid': dataTestId,
+    } = this.props;
     const { hasError, errorDetails, isRecovering } = this.state;
 
     if (hasError && errorDetails) {
       // Show recovery indicator
       if (isRecovering) {
         return (
-          <div className={`flex items-center justify-center h-full ${className || ''}`} data-testid={dataTestId}>
+          <div
+            className={`flex items-center justify-center h-full ${className || ''}`}
+            data-testid={dataTestId}
+          >
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
               <div className="text-gray-600">Recovering...</div>
@@ -305,11 +318,17 @@ function categorizeBabylonError(error: Error): BabylonErrorType {
   const message = error.message.toLowerCase();
   const stack = error.stack?.toLowerCase() || '';
 
-  if (message.includes('webgl') && (message.includes('context lost') || message.includes('context_lost'))) {
+  if (
+    message.includes('webgl') &&
+    (message.includes('context lost') || message.includes('context_lost'))
+  ) {
     return 'WEBGL_CONTEXT_LOST';
   }
 
-  if (message.includes('webgl') && (message.includes('not supported') || message.includes('unavailable'))) {
+  if (
+    message.includes('webgl') &&
+    (message.includes('not supported') || message.includes('unavailable'))
+  ) {
     return 'WEBGL_NOT_SUPPORTED';
   }
 

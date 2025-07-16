@@ -168,10 +168,12 @@ describe('ImportOperationsService', () => {
       // Mock scene._loadFile to simulate file loading failure
       scene._loadFile = vi
         .fn()
-        .mockImplementation((filePath, onSuccess, onProgress, useOffline, useArray, onError) => {
-          onError?.(undefined, { message: 'File not found' });
-          return {} as unknown as import('@babylonjs/core').IFileRequest;
-        });
+        .mockImplementation(
+          (_filePath, _onSuccess, _onProgress, _useOffline, _useArray, onError) => {
+            onError?.(undefined, { message: 'File not found' });
+            return {} as unknown as import('@babylonjs/core').IFileRequest;
+          }
+        );
 
       const result = await importService.importSVG('profile.svg', params);
       expect(result.success).toBe(false);
@@ -190,7 +192,7 @@ describe('ImportOperationsService', () => {
 
       // Mock scene._loadFile to simulate successful SVG loading
       const mockSVGContent = '<svg><path d="M 0 0 L 10 0 L 10 10 L 0 10 Z"/></svg>';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockSVGContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -208,7 +210,7 @@ describe('ImportOperationsService', () => {
     it('should handle SVG import with invalid path data', async () => {
       // Mock scene._loadFile to simulate SVG without path
       const mockSVGContent = '<svg><rect x="0" y="0" width="10" height="10"/></svg>';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockSVGContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -228,7 +230,7 @@ describe('ImportOperationsService', () => {
 
       // Mock scene._loadFile to simulate successful SVG loading
       const mockSVGContent = '<svg><path d="M 0 0 L 5 0 L 5 5 L 0 5 Z"/></svg>';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockSVGContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -255,10 +257,12 @@ describe('ImportOperationsService', () => {
       // Mock scene._loadFile to simulate file loading failure
       scene._loadFile = vi
         .fn()
-        .mockImplementation((filePath, onSuccess, onProgress, useOffline, useArray, onError) => {
-          onError?.(undefined, { message: 'File not found' });
-          return {} as unknown as import('@babylonjs/core').IFileRequest;
-        });
+        .mockImplementation(
+          (_filePath, _onSuccess, _onProgress, _useOffline, _useArray, onError) => {
+            onError?.(undefined, { message: 'File not found' });
+            return {} as unknown as import('@babylonjs/core').IFileRequest;
+          }
+        );
 
       const result = await importService.processInclude(params);
       expect(result.success).toBe(false);
@@ -277,7 +281,7 @@ describe('ImportOperationsService', () => {
 
       // Mock scene._loadFile to simulate successful file loading
       const mockOpenSCADContent = 'module test_module() { cube([10, 10, 10]); }';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockOpenSCADContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -302,7 +306,7 @@ describe('ImportOperationsService', () => {
 
       // Mock scene._loadFile to simulate successful file loading
       const mockContent = 'cube([width, height, depth]);';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -321,10 +325,12 @@ describe('ImportOperationsService', () => {
       // Mock scene._loadFile to simulate file not found
       scene._loadFile = vi
         .fn()
-        .mockImplementation((filePath, onSuccess, onProgress, useOffline, useArray, onError) => {
-          onError?.(undefined, { message: 'File not found' });
-          return {} as unknown as import('@babylonjs/core').IFileRequest;
-        });
+        .mockImplementation(
+          (_filePath, _onSuccess, _onProgress, _useOffline, _useArray, onError) => {
+            onError?.(undefined, { message: 'File not found' });
+            return {} as unknown as import('@babylonjs/core').IFileRequest;
+          }
+        );
 
       const result = await importService.importSVG('missing.svg');
       expect(result.success).toBe(false);
@@ -337,7 +343,7 @@ describe('ImportOperationsService', () => {
 
     it('should handle parsing errors gracefully', async () => {
       // Mock scene._loadFile to simulate corrupted file
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess('invalid content');
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });
@@ -355,7 +361,7 @@ describe('ImportOperationsService', () => {
     it('should track operation timing', async () => {
       // Mock scene._loadFile to simulate successful operation
       const mockSVGContent = '<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>';
-      scene._loadFile = vi.fn().mockImplementation((filePath, onSuccess) => {
+      scene._loadFile = vi.fn().mockImplementation((_filePath, onSuccess) => {
         onSuccess(mockSVGContent);
         return {} as unknown as import('@babylonjs/core').IFileRequest;
       });

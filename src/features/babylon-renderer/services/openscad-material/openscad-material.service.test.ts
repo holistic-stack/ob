@@ -5,14 +5,14 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, Color3, Color4, StandardMaterial, PBRMaterial } from '@babylonjs/core';
+import { Color3, NullEngine, PBRMaterial, Scene, StandardMaterial } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  OpenSCADMaterialService,
-  OPENSCAD_NAMED_COLORS,
-  type MaterialFromColorConfig,
-} from './openscad-material.service';
 import type { ColorNode } from '../../../openscad-parser/ast/ast-types';
+import {
+  type MaterialFromColorConfig,
+  OPENSCAD_NAMED_COLORS,
+  OpenSCADMaterialService,
+} from './openscad-material.service';
 
 describe('OpenSCADMaterialService', () => {
   let engine: NullEngine;
@@ -71,7 +71,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material).toBeInstanceOf(StandardMaterial);
@@ -90,7 +90,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as PBRMaterial;
         expect(material).toBeInstanceOf(PBRMaterial);
@@ -108,7 +108,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.diffuseColor.r).toBeCloseTo(0.5, 2);
@@ -126,7 +126,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.diffuseColor.r).toBeCloseTo(1, 2);
@@ -145,7 +145,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.diffuseColor).toEqual(new Color3(0, 1, 0));
@@ -161,7 +161,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.diffuseColor).toEqual(new Color3(1, 0, 0));
@@ -176,7 +176,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MATERIAL_CREATION_FAILED');
         expect(result.error.colorValue).toBe('unknown_color');
@@ -191,7 +191,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('MATERIAL_CREATION_FAILED');
       }
@@ -208,7 +208,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColorNode(colorNode, 'node_material');
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.name).toBe('node_material');
@@ -223,9 +223,13 @@ describe('OpenSCADMaterialService', () => {
         children: [],
       };
 
-      const result = await materialService.createMaterialFromColorNode(colorNode, 'rgba_node_material', 'pbr');
+      const result = await materialService.createMaterialFromColorNode(
+        colorNode,
+        'rgba_node_material',
+        'pbr'
+      );
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as PBRMaterial;
         expect(material).toBeInstanceOf(PBRMaterial);
@@ -324,7 +328,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as StandardMaterial;
         expect(material.specularColor).toEqual(new Color3(0.1, 0.1, 0.1));
@@ -342,7 +346,7 @@ describe('OpenSCADMaterialService', () => {
 
       const result = await materialService.createMaterialFromColor(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const material = result.data as PBRMaterial;
         expect(material.metallic).toBe(0.1);

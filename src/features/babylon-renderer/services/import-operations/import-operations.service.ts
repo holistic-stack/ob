@@ -20,7 +20,7 @@
 import { BoundingBox, ImportMeshAsync, Matrix, Mesh, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
   GenericGeometry,
   GenericMeshCollection,
@@ -333,7 +333,7 @@ export class ImportOperationsService {
         undefined, // onProgress
         false, // useOfflineSupport
         false, // useArrayBuffer
-        (request, exception) => {
+        (_request, exception) => {
           reject(
             new Error(`Failed to load file ${filePath}: ${exception?.message || 'Unknown error'}`)
           );
@@ -390,7 +390,7 @@ export class ImportOperationsService {
    */
   private applyImportTransformations(
     mesh: GenericMeshData,
-    params: ImportOperationParams
+    _params: ImportOperationParams
   ): GenericMeshData {
     // For now, return the mesh as-is
     // In a full implementation, this would apply scaling, centering, etc.

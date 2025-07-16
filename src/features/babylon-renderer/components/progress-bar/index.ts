@@ -4,9 +4,9 @@
  * Exports for the progress bar component.
  */
 
-export { ProgressBar } from './progress-bar';
 export type {
+  ProgressBarColor,
   ProgressBarProps,
   ProgressBarSize,
-  ProgressBarColor,
 } from './progress-bar';
+export { ProgressBar } from './progress-bar';

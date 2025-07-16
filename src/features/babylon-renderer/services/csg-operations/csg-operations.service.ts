@@ -12,20 +12,13 @@
  * ```
  */
 
-import { Matrix, Mesh, MeshBuilder, type Scene } from '@babylonjs/core';
+import { Matrix, Mesh, type Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type {
-  GenericGeometry,
-  GenericMeshCollection,
-  GenericMeshData,
-} from '../../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
-import {
-  createBoundingBoxFromGeometry,
-  createMeshCollection,
-} from '../../utils/generic-mesh-utils';
+import { tryCatchAsync } from '../../../../shared/utils/functional/result';
+import type { GenericGeometry, GenericMeshData } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 import { BabylonCSG2Service } from '../babylon-csg2-service';
 
 const logger = createLogger('CSGOperations');
@@ -84,7 +77,7 @@ export class CSGOperationsService {
    */
   async union(
     meshes: readonly GenericMeshData[],
-    params: CSGOperationParams = {}
+    _params: CSGOperationParams = {}
   ): Promise<Result<GenericMeshData, CSGOperationError>> {
     logger.debug('[UNION] Performing union operation...');
     const startTime = performance.now();
@@ -143,7 +136,7 @@ export class CSGOperationsService {
   async difference(
     meshA: GenericMeshData,
     meshB: GenericMeshData,
-    params: CSGOperationParams = {}
+    _params: CSGOperationParams = {}
   ): Promise<Result<GenericMeshData, CSGOperationError>> {
     logger.debug('[DIFFERENCE] Performing difference operation...');
     const startTime = performance.now();
@@ -189,7 +182,7 @@ export class CSGOperationsService {
   async intersection(
     meshA: GenericMeshData,
     meshB: GenericMeshData,
-    params: CSGOperationParams = {}
+    _params: CSGOperationParams = {}
   ): Promise<Result<GenericMeshData, CSGOperationError>> {
     logger.debug('[INTERSECTION] Performing intersection operation...');
     const startTime = performance.now();
@@ -298,14 +291,14 @@ export class CSGOperationsService {
         indices,
         vertexCount: positions.length / 3,
         triangleCount: indices.length / 3,
-        boundingBox: inputMeshes[0]!.geometry.boundingBox,
+        boundingBox: inputMeshes[0]?.geometry.boundingBox,
       }),
       ...(normals && { normals }),
       ...(uvs && { uvs }),
     };
 
     // Merge materials from input meshes (use first mesh's material as base)
-    const baseMaterial = inputMeshes[0]!.material;
+    const baseMaterial = inputMeshes[0]?.material;
 
     // Create metadata combining information from input meshes
     const totalVertices = inputMeshes.reduce((sum, mesh) => sum + mesh.metadata.vertexCount, 0);
@@ -324,7 +317,7 @@ export class CSGOperationsService {
       triangleCount: geometry.triangleCount,
       boundingBox: geometry.boundingBox,
       generationTime: totalGenerationTime + operationTime,
-      csgOperations: [...inputMeshes[0]!.metadata.csgOperations, operationType],
+      csgOperations: [...inputMeshes[0]?.metadata.csgOperations, operationType],
       openscadParameters: {
         operationType,
         inputMeshCount: inputMeshes.length,

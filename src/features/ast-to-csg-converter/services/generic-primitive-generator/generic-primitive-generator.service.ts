@@ -9,7 +9,7 @@ import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 import type { CubeNode, CylinderNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
-import type { GenericMeshData, MaterialConfig, MeshMetadata } from '../../types/conversion.types';
+import type { MaterialConfig, MeshMetadata } from '../../types/conversion.types';
 
 const logger = createLogger('GenericPrimitiveGenerator');
 

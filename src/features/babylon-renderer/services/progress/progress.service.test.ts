@@ -7,8 +7,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  ProgressService,
   type ProgressOperationConfig,
+  ProgressService,
   type ProgressUpdate,
 } from './progress.service';
 
@@ -36,11 +36,11 @@ describe('ProgressService', () => {
 
       const result = progressService.startOperation(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const operationId = result.data;
         expect(operationId).toMatch(/^progress_\d+$/);
-        
+
         const operation = progressService.getOperation(operationId);
         expect(operation).toBeDefined();
         expect(operation?.config.type).toBe('parsing');
@@ -61,7 +61,7 @@ describe('ProgressService', () => {
 
       const result = progressService.startOperation(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const operation = progressService.getOperation(result.data);
         expect(operation?.state.isIndeterminate).toBe(true);
@@ -78,7 +78,7 @@ describe('ProgressService', () => {
 
       const result = progressService.startOperation(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const operation = progressService.getOperation(result.data);
         expect(operation?.abortController).toBeDefined();
@@ -119,19 +119,19 @@ describe('ProgressService', () => {
 
     it('should calculate percentage correctly', () => {
       progressService.updateProgress(operationId, { current: 25 });
-      
+
       let operation = progressService.getOperation(operationId);
       expect(operation?.state.percentage).toBe(25);
 
       progressService.updateProgress(operationId, { current: 75 });
-      
+
       operation = progressService.getOperation(operationId);
       expect(operation?.state.percentage).toBe(75);
     });
 
     it('should handle total changes', () => {
       progressService.updateProgress(operationId, { current: 50, total: 200 });
-      
+
       const operation = progressService.getOperation(operationId);
       expect(operation?.state.current).toBe(50);
       expect(operation?.state.total).toBe(200);
@@ -141,9 +141,9 @@ describe('ProgressService', () => {
     it('should calculate estimated time remaining', () => {
       // Advance time to simulate elapsed time
       vi.advanceTimersByTime(1000);
-      
+
       progressService.updateProgress(operationId, { current: 25 });
-      
+
       const operation = progressService.getOperation(operationId);
       expect(operation?.state.estimatedTimeRemaining).toBeDefined();
       expect(operation?.state.estimatedTimeRemaining).toBeGreaterThan(0);
@@ -160,10 +160,10 @@ describe('ProgressService', () => {
 
     it('should fail to update completed operation', () => {
       progressService.completeOperation(operationId);
-      
+
       const result = progressService.updateProgress(operationId, { current: 50 });
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('INVALID_UPDATE');
       }
@@ -197,10 +197,10 @@ describe('ProgressService', () => {
 
     it('should clean up non-persistent operations', () => {
       progressService.completeOperation(operationId);
-      
+
       // Fast-forward past cleanup delay
       vi.advanceTimersByTime(3000);
-      
+
       const operation = progressService.getOperation(operationId);
       expect(operation).toBeNull();
     });
@@ -213,14 +213,14 @@ describe('ProgressService', () => {
         persistent: true,
       });
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const persistentId = result.data;
         progressService.completeOperation(persistentId);
-        
+
         // Fast-forward past cleanup delay
         vi.advanceTimersByTime(3000);
-        
+
         const operation = progressService.getOperation(persistentId);
         expect(operation).toBeDefined();
         expect(operation?.state.isCompleted).toBe(true);
@@ -258,18 +258,18 @@ describe('ProgressService', () => {
       expect(abortController).toBeDefined();
 
       const abortSpy = vi.spyOn(abortController!, 'abort');
-      
+
       progressService.cancelOperation(operationId, 'Test cancellation');
-      
+
       expect(abortSpy).toHaveBeenCalledWith('Test cancellation');
     });
 
     it('should clean up cancelled operations', () => {
       progressService.cancelOperation(operationId);
-      
+
       // Fast-forward past cleanup delay
       vi.advanceTimersByTime(2000);
-      
+
       const operation = progressService.getOperation(operationId);
       expect(operation).toBeNull();
     });
@@ -288,10 +288,10 @@ describe('ProgressService', () => {
         type: 'rendering',
         title: 'Rendering Operation',
       });
-      
+
       expect(parsingResult.success).toBe(true);
       expect(renderingResult.success).toBe(true);
-      
+
       if (parsingResult.success) parsingId = parsingResult.data;
       if (renderingResult.success) renderingId = renderingResult.data;
     });
@@ -299,8 +299,8 @@ describe('ProgressService', () => {
     it('should get active operations', () => {
       const activeOperations = progressService.getActiveOperations();
       expect(activeOperations).toHaveLength(2);
-      expect(activeOperations.map(op => op.id)).toContain(parsingId);
-      expect(activeOperations.map(op => op.id)).toContain(renderingId);
+      expect(activeOperations.map((op) => op.id)).toContain(parsingId);
+      expect(activeOperations.map((op) => op.id)).toContain(renderingId);
     });
 
     it('should filter operations by type', () => {
@@ -318,7 +318,7 @@ describe('ProgressService', () => {
 
     it('should exclude completed operations from active list', () => {
       progressService.completeOperation(parsingId);
-      
+
       const activeOperations = progressService.getActiveOperations();
       expect(activeOperations).toHaveLength(1);
       expect(activeOperations[0].id).toBe(renderingId);
@@ -334,7 +334,7 @@ describe('ProgressService', () => {
         type: 'parsing',
         title: 'Test Operation',
       });
-      
+
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -343,7 +343,7 @@ describe('ProgressService', () => {
       );
 
       removeListener();
-      
+
       if (result.success) {
         progressService.updateProgress(result.data, { current: 50 });
         expect(listener).toHaveBeenCalledTimes(1); // Should not be called after removal
@@ -354,9 +354,9 @@ describe('ProgressService', () => {
       const faultyListener = vi.fn(() => {
         throw new Error('Listener error');
       });
-      
+
       progressService.addListener(faultyListener);
-      
+
       // Should not throw despite listener error
       expect(() => {
         progressService.startOperation({
@@ -369,12 +369,12 @@ describe('ProgressService', () => {
 
   describe('Service Disposal', () => {
     it('should cancel all active operations on dispose', () => {
-      const operation1 = progressService.startOperation({
+      const _operation1 = progressService.startOperation({
         type: 'parsing',
         title: 'Operation 1',
         cancellable: true,
       });
-      const operation2 = progressService.startOperation({
+      const _operation2 = progressService.startOperation({
         type: 'rendering',
         title: 'Operation 2',
         cancellable: true,

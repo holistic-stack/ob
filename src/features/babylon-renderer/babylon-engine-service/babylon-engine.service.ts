@@ -20,7 +20,6 @@ import type {
   BabylonEngineService,
   EngineError,
   EngineErrorCode,
-  EngineId,
   EngineInitOptions,
   EnginePerformanceMetrics,
   EngineResult,

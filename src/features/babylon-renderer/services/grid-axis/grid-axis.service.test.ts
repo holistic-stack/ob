@@ -5,12 +5,9 @@
  * Uses real BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene, Vector3, Color3 } from '@babylonjs/core';
+import { Color3, NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  GridAxisService,
-  type GridAxisConfig,
-} from './grid-axis.service';
+import { type GridAxisConfig, GridAxisService } from './grid-axis.service';
 
 describe('GridAxisService', () => {
   let engine: NullEngine;
@@ -42,7 +39,7 @@ describe('GridAxisService', () => {
     it('should setup grid and axes with default configuration', async () => {
       const result = await gridAxisService.setupGridAndAxes();
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeDefined();
@@ -75,7 +72,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeDefined();
@@ -95,7 +92,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeDefined();
@@ -114,7 +111,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeUndefined();
@@ -133,7 +130,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.xAxis).toBeDefined();
@@ -152,7 +149,7 @@ describe('GridAxisService', () => {
       // Setup second grid and axes
       await gridAxisService.setupGridAndAxes();
       const secondMeshCount = scene.meshes.length;
-      
+
       // Should have same number of meshes (old ones cleared)
       expect(secondMeshCount).toBe(firstMeshCount);
     });
@@ -171,7 +168,7 @@ describe('GridAxisService', () => {
     it('should fail to update with invalid spacing', async () => {
       const result = await gridAxisService.updateGridSpacing(-1);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('UPDATE_FAILED');
       }
@@ -179,10 +176,10 @@ describe('GridAxisService', () => {
 
     it('should fail to update without grid', async () => {
       gridAxisService.dispose();
-      
+
       const result = await gridAxisService.updateGridSpacing(2.0);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error.code).toBe('UPDATE_FAILED');
       }
@@ -197,10 +194,10 @@ describe('GridAxisService', () => {
     it('should control grid visibility', () => {
       const setup = gridAxisService.getGridAxisSetup();
       expect(setup?.gridMesh?.isEnabled()).toBe(true);
-      
+
       gridAxisService.setGridVisibility(false);
       expect(setup?.gridMesh?.isEnabled()).toBe(false);
-      
+
       gridAxisService.setGridVisibility(true);
       expect(setup?.gridMesh?.isEnabled()).toBe(true);
     });
@@ -210,12 +207,12 @@ describe('GridAxisService', () => {
       expect(setup?.xAxis?.isEnabled()).toBe(true);
       expect(setup?.yAxis?.isEnabled()).toBe(true);
       expect(setup?.zAxis?.isEnabled()).toBe(true);
-      
+
       gridAxisService.setAxesVisibility(false);
       expect(setup?.xAxis?.isEnabled()).toBe(false);
       expect(setup?.yAxis?.isEnabled()).toBe(false);
       expect(setup?.zAxis?.isEnabled()).toBe(false);
-      
+
       gridAxisService.setAxesVisibility(true);
       expect(setup?.xAxis?.isEnabled()).toBe(true);
       expect(setup?.yAxis?.isEnabled()).toBe(true);
@@ -224,7 +221,7 @@ describe('GridAxisService', () => {
 
     it('should handle visibility controls without setup', () => {
       gridAxisService.dispose();
-      
+
       // Should not throw
       gridAxisService.setGridVisibility(false);
       gridAxisService.setAxesVisibility(false);
@@ -241,7 +238,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.xAxis?.material).toBeDefined();
@@ -258,13 +255,13 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.xAxis).toBeDefined();
         expect(setup.yAxis).toBeDefined();
         expect(setup.zAxis).toBeDefined();
-        
+
         // Check axis positioning (should be at half the axis length)
         expect(setup.xAxis?.position.x).toBeCloseTo(7.5, 1);
         expect(setup.yAxis?.position.y).toBeCloseTo(7.5, 1);
@@ -283,7 +280,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeDefined();
@@ -298,7 +295,7 @@ describe('GridAxisService', () => {
 
       const result = await gridAxisService.setupGridAndAxes(config);
       expect(result.success).toBe(true);
-      
+
       if (result.success) {
         const setup = result.data;
         expect(setup.gridMesh).toBeDefined();
@@ -312,7 +309,7 @@ describe('GridAxisService', () => {
       await gridAxisService.setupGridAndAxes();
       expect(scene.meshes.length).toBeGreaterThan(0);
       expect(gridAxisService.getGridAxisSetup()).not.toBeNull();
-      
+
       gridAxisService.dispose();
       expect(scene.meshes.length).toBe(0);
       expect(gridAxisService.getGridAxisSetup()).toBeNull();

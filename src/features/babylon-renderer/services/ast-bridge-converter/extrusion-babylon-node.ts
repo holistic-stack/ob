@@ -7,7 +7,6 @@
 
 import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type {
@@ -15,7 +14,6 @@ import type {
   LinearExtrudeNode,
   RotateExtrudeNode,
   SourceLocation,
-  Vector2D,
 } from '../../../openscad-parser/ast/ast-types';
 import {
   type BabylonJSError,

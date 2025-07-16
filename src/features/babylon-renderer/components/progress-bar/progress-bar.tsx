@@ -3,28 +3,28 @@
  *
  * A flexible progress bar component for displaying operation progress.
  * Supports determinate and indeterminate progress with customizable styling.
- * 
+ *
  * @example
  * ```tsx
  * // Basic usage with operation
  * <ProgressBar operation={progressOperation} />
- * 
+ *
  * // Manual progress
- * <ProgressBar 
- *   percentage={75} 
- *   title="Processing..." 
+ * <ProgressBar
+ *   percentage={75}
+ *   title="Processing..."
  *   showPercentage={true}
  * />
- * 
+ *
  * // Indeterminate progress
- * <ProgressBar 
+ * <ProgressBar
  *   isIndeterminate={true}
  *   title="Loading..."
  * />
  * ```
  */
 
-import React from 'react';
+import type React from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ProgressOperation } from '../../services/progress/progress.service';
 
@@ -64,32 +64,32 @@ export interface ProgressBarProps {
  */
 const formatTimeRemaining = (milliseconds: number): string => {
   const seconds = Math.ceil(milliseconds / 1000);
-  
+
   if (seconds < 60) {
     return `${seconds}s remaining`;
   }
-  
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  
+
   if (minutes < 60) {
-    return remainingSeconds > 0 
+    return remainingSeconds > 0
       ? `${minutes}m ${remainingSeconds}s remaining`
       : `${minutes}m remaining`;
   }
-  
+
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m remaining`
-    : `${hours}h remaining`;
+
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m remaining` : `${hours}h remaining`;
 };
 
 /**
  * Get size classes for progress bar
  */
-const getSizeClasses = (size: ProgressBarSize): { container: string; bar: string; text: string } => {
+const getSizeClasses = (
+  size: ProgressBarSize
+): { container: string; bar: string; text: string } => {
   switch (size) {
     case 'sm':
       return {
@@ -151,7 +151,7 @@ const getColorClasses = (color: ProgressBarColor): { bar: string; background: st
 
 /**
  * Progress Bar Component
- * 
+ *
  * Displays progress for long-running operations with support for
  * determinate and indeterminate progress, cancellation, and time estimates.
  */
@@ -180,11 +180,12 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const isCancelled = operation?.state?.isCancelled ?? false;
   const error = operation?.state?.error;
   const estimatedTimeRemaining = operation?.state?.estimatedTimeRemaining;
-  const canCancel = operation?.config?.cancellable && showCancelButton && !isCompleted && !isCancelled;
+  const canCancel =
+    operation?.config?.cancellable && showCancelButton && !isCompleted && !isCancelled;
 
   // Determine color based on state
   const effectiveColor = error ? 'red' : isCancelled ? 'gray' : isCompleted ? 'green' : color;
-  
+
   const sizeClasses = getSizeClasses(size);
   const colorClasses = getColorClasses(effectiveColor);
 
@@ -202,21 +203,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       {/* Header with title and actions */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex-1 min-w-0">
-          <h3 className={`font-medium text-gray-900 truncate ${sizeClasses.text}`}>
-            {title}
-          </h3>
+          <h3 className={`font-medium text-gray-900 truncate ${sizeClasses.text}`}>{title}</h3>
           {description && (
-            <p className={`text-gray-500 truncate ${sizeClasses.text}`}>
-              {description}
-            </p>
+            <p className={`text-gray-500 truncate ${sizeClasses.text}`}>{description}</p>
           )}
-          {error && (
-            <p className={`text-red-600 truncate ${sizeClasses.text}`}>
-              Error: {error}
-            </p>
-          )}
+          {error && <p className={`text-red-600 truncate ${sizeClasses.text}`}>Error: {error}</p>}
         </div>
-        
+
         <div className="flex items-center space-x-2 ml-4">
           {/* Percentage display */}
           {showPercentage && !isIndeterminate && (
@@ -224,14 +217,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
               {Math.round(percentage)}%
             </span>
           )}
-          
+
           {/* Time remaining */}
           {showTimeRemaining && estimatedTimeRemaining && !isCompleted && !isCancelled && (
             <span className={`text-gray-500 ${sizeClasses.text}`}>
               {formatTimeRemaining(estimatedTimeRemaining)}
             </span>
           )}
-          
+
           {/* Cancel button */}
           {canCancel && (
             <button
@@ -247,7 +240,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       </div>
 
       {/* Progress bar */}
-      <div 
+      <div
         className={`w-full ${colorClasses.background} rounded-full overflow-hidden ${sizeClasses.container}`}
         role="progressbar"
         aria-valuenow={isIndeterminate ? undefined : Math.round(percentage)}
@@ -257,13 +250,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       >
         {isIndeterminate ? (
           /* Indeterminate progress animation */
-          <div 
+          <div
             className={`${sizeClasses.bar} ${colorClasses.bar} rounded-full animate-pulse`}
             style={{ width: '100%' }}
           />
         ) : (
           /* Determinate progress */
-          <div 
+          <div
             className={`${sizeClasses.bar} ${colorClasses.bar} rounded-full transition-all duration-300 ease-out`}
             style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
           />
@@ -277,7 +270,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           <span>Completed</span>
         </div>
       )}
-      
+
       {isCancelled && (
         <div className={`flex items-center mt-1 text-gray-500 ${sizeClasses.text}`}>
           <span className="mr-1">✕</span>

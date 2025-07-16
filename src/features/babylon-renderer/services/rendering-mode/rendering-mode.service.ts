@@ -3,11 +3,11 @@
  *
  * Service for managing different rendering modes for BabylonJS meshes.
  * Supports solid, wireframe, points, transparent, and hybrid rendering modes.
- * 
+ *
  * @example
  * ```typescript
  * const renderingService = new RenderingModeService(scene);
- * 
+ *
  * // Switch to wireframe mode
  * const result = await renderingService.setRenderingMode(mesh, {
  *   mode: 'wireframe',
@@ -16,15 +16,13 @@
  * ```
  */
 
-import { 
-  Scene, 
-  Mesh,
-  AbstractMesh,
-  StandardMaterial,
+import {
+  type AbstractMesh,
   Color3,
   Material,
-  PointsCloudSystem,
-  Vector3
+  Mesh,
+  type Scene,
+  StandardMaterial,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
@@ -67,7 +65,11 @@ export interface RenderingModeResult {
  * Rendering mode error
  */
 export interface RenderingModeError {
-  readonly code: 'INVALID_MODE' | 'MESH_NOT_PROVIDED' | 'MODE_APPLICATION_FAILED' | 'MATERIAL_CREATION_FAILED';
+  readonly code:
+    | 'INVALID_MODE'
+    | 'MESH_NOT_PROVIDED'
+    | 'MODE_APPLICATION_FAILED'
+    | 'MATERIAL_CREATION_FAILED';
   readonly message: string;
   readonly timestamp: Date;
   readonly mode?: RenderingMode;
@@ -88,7 +90,7 @@ export interface MeshRenderingState {
 
 /**
  * Rendering Mode Service
- * 
+ *
  * Provides comprehensive rendering mode management for BabylonJS meshes.
  * Supports all major CAD visualization modes with efficient switching.
  */
@@ -127,7 +129,7 @@ export class RenderingModeService {
 
         // Apply rendering mode based on type
         let result: RenderingModeResult;
-        
+
         switch (config.mode) {
           case 'solid':
             result = await this.applySolidMode(mesh, config);
@@ -148,41 +150,61 @@ export class RenderingModeService {
             result = await this.applyHybridMode(mesh, config);
             break;
           default:
-            throw this.createError('INVALID_MODE', `Unknown rendering mode: ${config.mode}`, config.mode);
+            throw this.createError(
+              'INVALID_MODE',
+              `Unknown rendering mode: ${config.mode}`,
+              config.mode
+            );
         }
 
         // Update mesh state
         this.updateMeshState(mesh.id, config);
 
-        logger.debug(`[SET_MODE] Applied ${config.mode} mode in ${(performance.now() - startTime).toFixed(2)}ms`);
+        logger.debug(
+          `[SET_MODE] Applied ${config.mode} mode in ${(performance.now() - startTime).toFixed(2)}ms`
+        );
         return result;
       },
-      (error) => this.createError('MODE_APPLICATION_FAILED', `Failed to apply rendering mode: ${error}`, config.mode)
+      (error) =>
+        this.createError(
+          'MODE_APPLICATION_FAILED',
+          `Failed to apply rendering mode: ${error}`,
+          config.mode
+        )
     );
   }
 
   /**
    * Set global rendering mode for all meshes in scene
    */
-  async setGlobalRenderingMode(config: RenderingModeConfig): Promise<Result<void, RenderingModeError>> {
+  async setGlobalRenderingMode(
+    config: RenderingModeConfig
+  ): Promise<Result<void, RenderingModeError>> {
     logger.debug(`[GLOBAL_MODE] Setting global rendering mode: ${config.mode}`);
 
     return tryCatchAsync(
       async () => {
         this.globalMode = config.mode;
-        
+
         // Apply mode to all meshes in scene
-        const meshes = this.scene.meshes.filter(m => m instanceof Mesh);
+        const meshes = this.scene.meshes.filter((m) => m instanceof Mesh);
         for (const mesh of meshes) {
           const result = await this.setRenderingMode(mesh, config);
           if (!result.success) {
-            logger.warn(`[GLOBAL_MODE] Failed to apply mode to mesh ${mesh.name}: ${result.error.message}`);
+            logger.warn(
+              `[GLOBAL_MODE] Failed to apply mode to mesh ${mesh.name}: ${result.error.message}`
+            );
           }
         }
 
         logger.debug(`[GLOBAL_MODE] Applied global ${config.mode} mode to ${meshes.length} meshes`);
       },
-      (error) => this.createError('MODE_APPLICATION_FAILED', `Failed to apply global rendering mode: ${error}`, config.mode)
+      (error) =>
+        this.createError(
+          'MODE_APPLICATION_FAILED',
+          `Failed to apply global rendering mode: ${error}`,
+          config.mode
+        )
     );
   }
 
@@ -200,7 +222,11 @@ export class RenderingModeService {
 
         // Restore original material and wireframe state
         mesh.material = state.originalMaterial || null;
-        if (mesh instanceof Mesh && state.originalWireframe !== undefined && mesh.material instanceof StandardMaterial) {
+        if (
+          mesh instanceof Mesh &&
+          state.originalWireframe !== undefined &&
+          mesh.material instanceof StandardMaterial
+        ) {
           mesh.material.wireframe = state.originalWireframe;
         }
 
@@ -209,17 +235,21 @@ export class RenderingModeService {
 
         // Remove state tracking
         this.meshStates.delete(mesh.id);
-        
+
         logger.debug(`[RESTORE_MODE] Restored original mode for mesh: ${mesh.name}`);
       },
-      (error) => this.createError('MODE_APPLICATION_FAILED', `Failed to restore original mode: ${error}`)
+      (error) =>
+        this.createError('MODE_APPLICATION_FAILED', `Failed to restore original mode: ${error}`)
     );
   }
 
   /**
    * Apply solid rendering mode
    */
-  private async applySolidMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applySolidMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     // Restore to solid rendering
     if (mesh.material instanceof StandardMaterial) {
       mesh.material.wireframe = false;
@@ -242,7 +272,10 @@ export class RenderingModeService {
   /**
    * Apply wireframe rendering mode
    */
-  private async applyWireframeMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applyWireframeMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     const wireframeColor = config.wireframeColor || new Color3(1, 1, 1);
 
     // Create or modify material for wireframe
@@ -269,7 +302,10 @@ export class RenderingModeService {
   /**
    * Apply points rendering mode
    */
-  private async applyPointsMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applyPointsMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     const pointSize = config.pointSize || 2.0;
 
     // Create points material
@@ -299,7 +335,10 @@ export class RenderingModeService {
   /**
    * Apply transparent rendering mode
    */
-  private async applyTransparentMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applyTransparentMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     const transparency = config.transparency || 0.5;
 
     // Create transparent material
@@ -326,7 +365,10 @@ export class RenderingModeService {
   /**
    * Apply flat rendering mode (unlit)
    */
-  private async applyFlatMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applyFlatMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     const flatColor = config.flatColor || new Color3(0.8, 0.8, 0.8);
 
     // Create flat material
@@ -354,14 +396,17 @@ export class RenderingModeService {
   /**
    * Apply hybrid rendering mode (solid + wireframe)
    */
-  private async applyHybridMode(mesh: AbstractMesh, config: RenderingModeConfig): Promise<RenderingModeResult> {
+  private async applyHybridMode(
+    mesh: AbstractMesh,
+    config: RenderingModeConfig
+  ): Promise<RenderingModeResult> {
     // First apply solid mode
-    const solidResult = await this.applySolidMode(mesh, config);
-    
+    const _solidResult = await this.applySolidMode(mesh, config);
+
     // Then create wireframe overlay
     const wireframeColor = config.hybridWireframeColor || new Color3(0, 1, 0);
     let wireframeMesh: Mesh | undefined;
-    
+
     if (mesh instanceof Mesh) {
       wireframeMesh = mesh.clone(`${mesh.name}_wireframe_overlay`);
       if (wireframeMesh) {
@@ -387,8 +432,9 @@ export class RenderingModeService {
    * Store original mesh state
    */
   private storeOriginalState(mesh: AbstractMesh, config: RenderingModeConfig): void {
-    const originalWireframe = mesh.material instanceof StandardMaterial ? mesh.material.wireframe : false;
-    
+    const originalWireframe =
+      mesh.material instanceof StandardMaterial ? mesh.material.wireframe : false;
+
     this.meshStates.set(mesh.id, {
       meshId: mesh.id,
       currentMode: config.mode,
@@ -419,11 +465,12 @@ export class RenderingModeService {
    */
   private cleanupModeMeshes(mesh: AbstractMesh): void {
     // Remove wireframe overlays and other mode-specific meshes
-    const overlays = this.scene.meshes.filter(m => 
-      m.name.startsWith(`${mesh.name}_wireframe_overlay`) ||
-      m.name.startsWith(`${mesh.name}_points_overlay`)
+    const overlays = this.scene.meshes.filter(
+      (m) =>
+        m.name.startsWith(`${mesh.name}_wireframe_overlay`) ||
+        m.name.startsWith(`${mesh.name}_points_overlay`)
     );
-    
+
     for (const overlay of overlays) {
       overlay.dispose();
     }
@@ -503,7 +550,7 @@ export class RenderingModeService {
       ...(mode && { mode }),
       ...(details && { details }),
     };
-    
+
     return error;
   }
 

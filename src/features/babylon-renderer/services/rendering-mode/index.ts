@@ -4,11 +4,11 @@
  * Exports for the rendering mode service.
  */
 
-export { RenderingModeService } from './rendering-mode.service';
 export type {
+  MeshRenderingState,
   RenderingMode,
   RenderingModeConfig,
-  RenderingModeResult,
   RenderingModeError,
-  MeshRenderingState,
+  RenderingModeResult,
 } from './rendering-mode.service';
+export { RenderingModeService } from './rendering-mode.service';

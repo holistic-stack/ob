@@ -13,7 +13,6 @@ import {
 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
 import { useAppStore } from '../../../store/app-store';
@@ -186,29 +185,26 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   /**
    * Handle scene ready
    */
-  const handleSceneReady = useCallback(
-    async (scene: BabylonSceneType) => {
-      logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
+  const handleSceneReady = useCallback(async (scene: BabylonSceneType) => {
+    logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
+    logger.info(
+      `[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`
+    );
+
+    sceneRef.current = scene;
+    setIsSceneReady(!!scene);
+
+    if (scene) {
       logger.info(
-        `[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`
+        `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes?.length ?? 0}, cameras: ${scene.cameras?.length ?? 0}, lights: ${scene.lights?.length ?? 0}`
       );
+      logger.info(
+        `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine()?.getRenderingCanvas() ? 'exists' : 'missing'}`
+      );
+    }
 
-      sceneRef.current = scene;
-      setIsSceneReady(!!scene);
-
-      if (scene) {
-        logger.info(
-          `[INFO][StoreConnectedRenderer] Scene info - meshes: ${scene.meshes?.length ?? 0}, cameras: ${scene.cameras?.length ?? 0}, lights: ${scene.lights?.length ?? 0}`
-        );
-        logger.info(
-          `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine()?.getRenderingCanvas() ? 'exists' : 'missing'}`
-        );
-      }
-
-      logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
-    },
-    [onRenderError]
-  );
+    logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
+  }, []);
 
   /**
    * Handle engine ready

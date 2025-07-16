@@ -7,11 +7,7 @@
 
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import { describe, expect, it } from 'vitest';
-import type {
-  GenericGeometry,
-  GenericMeshCollection,
-  GenericMeshData,
-} from '../types/generic-mesh-data.types';
+import type { GenericGeometry, GenericMeshData } from '../types/generic-mesh-data.types';
 import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../types/generic-mesh-data.types';
 import {
   applyModifierToMaterial,
@@ -21,7 +17,6 @@ import {
   createGenericMeshData,
   createMaterialConfig,
   createMeshCollection,
-  mergeMeshCollections,
   validateMeshData,
 } from './generic-mesh-utils';
 

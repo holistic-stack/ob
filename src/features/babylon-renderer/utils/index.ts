@@ -5,8 +5,11 @@
  * Following SRP principles with co-located tests.
  */
 
-// BabylonJS utilities (to be implemented)
-// export * from './babylon-utils';
+// BabylonJS utilities
+export * from './babylon-utils';
 
-// CSG2 utilities (to be implemented)
-// export * from './csg2-utils';
+// CSG2 utilities
+export * from './csg2-utils';
+
+// Generic mesh utilities
+export * from './generic-mesh-utils';

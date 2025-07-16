@@ -4,26 +4,23 @@
  * Exports for the progress service and hooks.
  */
 
-export { ProgressService } from './progress.service';
 export type {
-  ProgressOperationType,
-  ProgressStage,
-  ProgressOperationConfig,
-  ProgressState,
-  ProgressOperation,
-  ProgressUpdate,
   ProgressError,
   ProgressEventListener,
+  ProgressOperation,
+  ProgressOperationConfig,
+  ProgressOperationType,
+  ProgressStage,
+  ProgressState,
+  ProgressUpdate,
 } from './progress.service';
-
+export { ProgressService } from './progress.service';
+export type { UseProgressReturn } from './use-progress.hook';
 export {
-  useProgress,
+  useAsyncProgress,
+  useCancellableOperation,
   useOperationProgress,
   useOperationsByType,
-  useCancellableOperation,
-  useAsyncProgress,
+  useProgress,
   useProgressStore,
-} from './use-progress.hook';
-export type {
-  UseProgressReturn,
 } from './use-progress.hook';

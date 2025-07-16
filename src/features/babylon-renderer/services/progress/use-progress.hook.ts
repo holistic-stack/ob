@@ -3,27 +3,27 @@
  *
  * React hooks for managing progress state in components.
  * Provides reactive progress tracking with automatic cleanup.
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { startOperation, updateProgress, completeOperation, operations } = useProgress();
- *   
+ *
  *   const handleLongOperation = async () => {
  *     const operationId = startOperation({
  *       type: 'parsing',
  *       title: 'Parsing file',
  *       total: 100
  *     });
- *     
+ *
  *     for (let i = 0; i <= 100; i += 10) {
  *       updateProgress(operationId, { current: i });
  *       await new Promise(resolve => setTimeout(resolve, 100));
  *     }
- *     
+ *
  *     completeOperation(operationId);
  *   };
- *   
+ *
  *   return (
  *     <div>
  *       {operations.map(op => (
@@ -37,14 +37,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 import {
-  ProgressService,
   type ProgressOperation,
   type ProgressOperationConfig,
   type ProgressOperationType,
+  ProgressService,
   type ProgressUpdate,
-  type ProgressError,
 } from './progress.service';
 
 const logger = createLogger('ProgressHook');
@@ -100,54 +98,74 @@ export const useProgress = (): UseProgressReturn => {
     return removeListener;
   }, [progressService]);
 
-  const startOperation = useCallback((config: ProgressOperationConfig): string | null => {
-    const result = progressService.startOperation(config);
-    if (result.success) {
-      logger.debug(`[START_OPERATION] Started operation: ${result.data}`);
-      return result.data;
-    } else {
-      logger.error(`[START_OPERATION] Failed to start operation: ${result.error.message}`);
-      return null;
-    }
-  }, [progressService]);
+  const startOperation = useCallback(
+    (config: ProgressOperationConfig): string | null => {
+      const result = progressService.startOperation(config);
+      if (result.success) {
+        logger.debug(`[START_OPERATION] Started operation: ${result.data}`);
+        return result.data;
+      } else {
+        logger.error(`[START_OPERATION] Failed to start operation: ${result.error.message}`);
+        return null;
+      }
+    },
+    [progressService]
+  );
 
-  const updateProgress = useCallback((operationId: string, update: ProgressUpdate): boolean => {
-    const result = progressService.updateProgress(operationId, update);
-    if (!result.success) {
-      logger.error(`[UPDATE_PROGRESS] Failed to update progress: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [progressService]);
+  const updateProgress = useCallback(
+    (operationId: string, update: ProgressUpdate): boolean => {
+      const result = progressService.updateProgress(operationId, update);
+      if (!result.success) {
+        logger.error(`[UPDATE_PROGRESS] Failed to update progress: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [progressService]
+  );
 
-  const completeOperation = useCallback((operationId: string, message?: string): boolean => {
-    const result = progressService.completeOperation(operationId, message);
-    if (!result.success) {
-      logger.error(`[COMPLETE_OPERATION] Failed to complete operation: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [progressService]);
+  const completeOperation = useCallback(
+    (operationId: string, message?: string): boolean => {
+      const result = progressService.completeOperation(operationId, message);
+      if (!result.success) {
+        logger.error(`[COMPLETE_OPERATION] Failed to complete operation: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [progressService]
+  );
 
-  const cancelOperation = useCallback((operationId: string, reason?: string): boolean => {
-    const result = progressService.cancelOperation(operationId, reason);
-    if (!result.success) {
-      logger.error(`[CANCEL_OPERATION] Failed to cancel operation: ${result.error.message}`);
-      return false;
-    }
-    return true;
-  }, [progressService]);
+  const cancelOperation = useCallback(
+    (operationId: string, reason?: string): boolean => {
+      const result = progressService.cancelOperation(operationId, reason);
+      if (!result.success) {
+        logger.error(`[CANCEL_OPERATION] Failed to cancel operation: ${result.error.message}`);
+        return false;
+      }
+      return true;
+    },
+    [progressService]
+  );
 
-  const getOperation = useCallback((operationId: string): ProgressOperation | null => {
-    return progressService.getOperation(operationId);
-  }, [progressService]);
+  const getOperation = useCallback(
+    (operationId: string): ProgressOperation | null => {
+      return progressService.getOperation(operationId);
+    },
+    [progressService]
+  );
 
-  const isOperationActive = useCallback((operationId: string): boolean => {
-    const operation = progressService.getOperation(operationId);
-    return operation ? !operation.state.isCompleted && !operation.state.isCancelled : false;
-  }, [progressService]);
+  const isOperationActive = useCallback(
+    (operationId: string): boolean => {
+      const operation = progressService.getOperation(operationId);
+      return operation ? !operation.state.isCompleted && !operation.state.isCancelled : false;
+    },
+    [progressService]
+  );
 
-  const activeOperations = operations.filter(op => !op.state.isCompleted && !op.state.isCancelled);
+  const activeOperations = operations.filter(
+    (op) => !op.state.isCompleted && !op.state.isCancelled
+  );
 
   return {
     operations,
@@ -227,30 +245,36 @@ export const useOperationsByType = (type: ProgressOperationType): readonly Progr
 export const useCancellableOperation = () => {
   const { startOperation, cancelOperation, getOperation } = useProgress();
 
-  const startCancellableOperation = useCallback((
-    config: Omit<ProgressOperationConfig, 'cancellable'>,
-    onAbort?: () => void
-  ): { operationId: string | null; abortController: AbortController | null } => {
-    const operationId = startOperation({ ...config, cancellable: true });
-    
-    if (!operationId) {
-      return { operationId: null, abortController: null };
-    }
+  const startCancellableOperation = useCallback(
+    (
+      config: Omit<ProgressOperationConfig, 'cancellable'>,
+      onAbort?: () => void
+    ): { operationId: string | null; abortController: AbortController | null } => {
+      const operationId = startOperation({ ...config, cancellable: true });
 
-    const operation = getOperation(operationId);
-    const abortController = operation?.abortController || null;
+      if (!operationId) {
+        return { operationId: null, abortController: null };
+      }
 
-    // Set up abort handler
-    if (abortController && onAbort) {
-      abortController.signal.addEventListener('abort', onAbort);
-    }
+      const operation = getOperation(operationId);
+      const abortController = operation?.abortController || null;
 
-    return { operationId, abortController };
-  }, [startOperation, getOperation]);
+      // Set up abort handler
+      if (abortController && onAbort) {
+        abortController.signal.addEventListener('abort', onAbort);
+      }
 
-  const cancelWithCleanup = useCallback((operationId: string, reason?: string): boolean => {
-    return cancelOperation(operationId, reason);
-  }, [cancelOperation]);
+      return { operationId, abortController };
+    },
+    [startOperation, getOperation]
+  );
+
+  const cancelWithCleanup = useCallback(
+    (operationId: string, reason?: string): boolean => {
+      return cancelOperation(operationId, reason);
+    },
+    [cancelOperation]
+  );
 
   return {
     startCancellableOperation,
@@ -264,39 +288,44 @@ export const useCancellableOperation = () => {
 export const useAsyncProgress = () => {
   const { startOperation, updateProgress, completeOperation, cancelOperation } = useProgress();
 
-  const runWithProgress = useCallback(async <T>(
-    config: ProgressOperationConfig,
-    asyncOperation: (
-      updateProgress: (update: ProgressUpdate) => void,
-      abortSignal?: AbortSignal
-    ) => Promise<T>
-  ): Promise<T | null> => {
-    const operationId = startOperation(config);
-    if (!operationId) {
-      return null;
-    }
-
-    try {
-      const operation = getProgressService().getOperation(operationId);
-      const abortSignal = operation?.abortController?.signal;
-
-      const progressUpdater = (update: ProgressUpdate) => {
-        updateProgress(operationId, update);
-      };
-
-      const result = await asyncOperation(progressUpdater, abortSignal);
-      completeOperation(operationId, 'Operation completed successfully');
-      return result;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        cancelOperation(operationId, 'Operation was cancelled');
-      } else {
-        updateProgress(operationId, { error: error instanceof Error ? error.message : 'Unknown error' });
-        completeOperation(operationId, 'Operation failed');
+  const runWithProgress = useCallback(
+    async <T>(
+      config: ProgressOperationConfig,
+      asyncOperation: (
+        updateProgress: (update: ProgressUpdate) => void,
+        abortSignal?: AbortSignal
+      ) => Promise<T>
+    ): Promise<T | null> => {
+      const operationId = startOperation(config);
+      if (!operationId) {
+        return null;
       }
-      return null;
-    }
-  }, [startOperation, updateProgress, completeOperation, cancelOperation]);
+
+      try {
+        const operation = getProgressService().getOperation(operationId);
+        const abortSignal = operation?.abortController?.signal;
+
+        const progressUpdater = (update: ProgressUpdate) => {
+          updateProgress(operationId, update);
+        };
+
+        const result = await asyncOperation(progressUpdater, abortSignal);
+        completeOperation(operationId, 'Operation completed successfully');
+        return result;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          cancelOperation(operationId, 'Operation was cancelled');
+        } else {
+          updateProgress(operationId, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          completeOperation(operationId, 'Operation failed');
+        }
+        return null;
+      }
+    },
+    [startOperation, updateProgress, completeOperation, cancelOperation]
+  );
 
   return { runWithProgress };
 };
@@ -314,9 +343,12 @@ export const useProgressStore = () => {
     };
   }, [progressService]);
 
-  const subscribeToProgress = useCallback((callback: () => void) => {
-    return progressService.addListener(callback);
-  }, [progressService]);
+  const subscribeToProgress = useCallback(
+    (callback: () => void) => {
+      return progressService.addListener(callback);
+    },
+    [progressService]
+  );
 
   return {
     getProgressSnapshot,
