@@ -26,6 +26,7 @@ import {
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
+import { CameraControlService } from '../camera-control/camera-control.service';
 
 const logger = createLogger('BabylonSceneService');
 
@@ -55,6 +56,17 @@ export interface SceneCameraConfig {
   readonly fov?: number;
   readonly minZ?: number;
   readonly maxZ?: number;
+  // Enhanced camera control options
+  readonly enableOrbit?: boolean;
+  readonly enablePan?: boolean;
+  readonly enableZoom?: boolean;
+  readonly orbitSensitivity?: number;
+  readonly panSensitivity?: number;
+  readonly zoomSensitivity?: number;
+  readonly minRadius?: number;
+  readonly maxRadius?: number;
+  readonly smoothing?: boolean;
+  readonly autoFrame?: boolean;
 }
 
 /**
@@ -96,6 +108,7 @@ export interface BabylonSceneState {
   readonly cameras: ReadonlyArray<Camera>;
   readonly lights: ReadonlyArray<Light>;
   readonly meshes: ReadonlyArray<Mesh>;
+  readonly cameraControlService: CameraControlService | null;
   readonly lastUpdated: Date;
 }
 
@@ -152,6 +165,17 @@ const DEFAULT_CAMERA_CONFIG: SceneCameraConfig = {
   fov: Math.PI / 3,
   minZ: 0.1,
   maxZ: 1000,
+  // Enhanced camera controls - optimized for OpenSCAD visualization
+  enableOrbit: true,
+  enablePan: true,
+  enableZoom: true,
+  orbitSensitivity: 1.2,
+  panSensitivity: 1.0,
+  zoomSensitivity: 1.5,
+  minRadius: 0.5,
+  maxRadius: 500,
+  smoothing: true,
+  autoFrame: true,
 } as const;
 
 /**
@@ -181,7 +205,7 @@ export interface BabylonSceneService {
   /**
    * Initialize scene with engine and configuration
    */
-  init(options: SceneInitOptions): SceneInitResult;
+  init(options: SceneInitOptions): Promise<SceneInitResult>;
 
   /**
    * Get current scene state
@@ -209,6 +233,21 @@ export interface BabylonSceneService {
   clearMeshes(): SceneUpdateResult;
 
   /**
+   * Get camera control service for advanced camera operations
+   */
+  getCameraControlService(): CameraControlService | null;
+
+  /**
+   * Frame all meshes in the scene
+   */
+  frameAll(): Promise<Result<void, SceneError>>;
+
+  /**
+   * Set camera view to predefined angle
+   */
+  setView(view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'): Promise<Result<void, SceneError>>;
+
+  /**
    * Dispose scene and cleanup resources
    */
   dispose(): SceneDisposeResult;
@@ -227,6 +266,7 @@ export function createBabylonSceneService(): BabylonSceneService {
     cameras: [],
     lights: [],
     meshes: [],
+    cameraControlService: null,
     lastUpdated: new Date(),
   };
 
@@ -252,33 +292,53 @@ export function createBabylonSceneService(): BabylonSceneService {
   });
 
   /**
-   * Setup camera in scene
+   * Setup camera in scene with enhanced controls
    */
-  const setupCamera = (scene: Scene, config: SceneCameraConfig): Result<Camera, SceneError> => {
+  const setupCamera = async (scene: Scene, config: SceneCameraConfig): Promise<Result<{ camera: Camera; cameraControlService: CameraControlService }, SceneError>> => {
     try {
-      logger.debug('[DEBUG][BabylonSceneService] Setting up camera');
+      logger.debug('[DEBUG][BabylonSceneService] Setting up enhanced camera controls');
 
-      const camera = new ArcRotateCamera(
-        'camera',
-        config.alpha ?? DEFAULT_CAMERA_CONFIG.alpha ?? -Math.PI / 2,
-        config.beta ?? DEFAULT_CAMERA_CONFIG.beta ?? Math.PI / 2.5,
-        config.radius ?? DEFAULT_CAMERA_CONFIG.radius ?? 10,
-        config.target,
-        scene
-      );
+      // Create camera control service
+      const cameraControlService = new CameraControlService(scene);
 
-      camera.position = config.position;
+      // Setup CAD camera with enhanced controls
+      const cameraResult = await cameraControlService.setupCADCamera({
+        target: config.target,
+        radius: config.radius ?? DEFAULT_CAMERA_CONFIG.radius ?? 10,
+        alpha: config.alpha ?? DEFAULT_CAMERA_CONFIG.alpha ?? -Math.PI / 2,
+        beta: config.beta ?? DEFAULT_CAMERA_CONFIG.beta ?? Math.PI / 2.5,
+        enableOrbit: config.enableOrbit ?? DEFAULT_CAMERA_CONFIG.enableOrbit ?? true,
+        enablePan: config.enablePan ?? DEFAULT_CAMERA_CONFIG.enablePan ?? true,
+        enableZoom: config.enableZoom ?? DEFAULT_CAMERA_CONFIG.enableZoom ?? true,
+        orbitSensitivity: config.orbitSensitivity ?? DEFAULT_CAMERA_CONFIG.orbitSensitivity ?? 1.2,
+        panSensitivity: config.panSensitivity ?? DEFAULT_CAMERA_CONFIG.panSensitivity ?? 1.0,
+        zoomSensitivity: config.zoomSensitivity ?? DEFAULT_CAMERA_CONFIG.zoomSensitivity ?? 1.5,
+        minRadius: config.minRadius ?? DEFAULT_CAMERA_CONFIG.minRadius ?? 0.5,
+        maxRadius: config.maxRadius ?? DEFAULT_CAMERA_CONFIG.maxRadius ?? 500,
+        smoothing: config.smoothing ?? DEFAULT_CAMERA_CONFIG.smoothing ?? true,
+        smoothingFactor: 0.1,
+      });
+
+      if (!cameraResult.success) {
+        logger.error('[ERROR][BabylonSceneService] CAD camera setup failed:', cameraResult.error);
+        return {
+          success: false,
+          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `CAD camera setup failed: ${cameraResult.error.message}`, cameraResult.error),
+        };
+      }
+
+      const camera = cameraResult.data;
+
+      // Apply additional camera settings
       camera.fov = config.fov ?? DEFAULT_CAMERA_CONFIG.fov ?? Math.PI / 3;
       camera.minZ = config.minZ ?? DEFAULT_CAMERA_CONFIG.minZ ?? 0.1;
       camera.maxZ = config.maxZ ?? DEFAULT_CAMERA_CONFIG.maxZ ?? 1000;
 
-      // Only attach controls if canvas is available (not in NullEngine tests)
-      const canvas = scene.getEngine().getRenderingCanvas();
-      if (canvas && camera.attachControl) {
-        camera.attachControl(true);
-      }
-
-      return { success: true, data: camera };
+      logger.debug('[DEBUG][BabylonSceneService] Enhanced camera controls setup completed');
+      return {
+        success: true,
+        data: { camera, cameraControlService }
+      };
     } catch (error) {
       logger.error('[ERROR][BabylonSceneService] Camera setup failed:', error);
       return {
@@ -331,7 +391,7 @@ export function createBabylonSceneService(): BabylonSceneService {
   };
 
   const service = {
-    init(options: SceneInitOptions): SceneInitResult {
+    async init(options: SceneInitOptions): Promise<SceneInitResult> {
       try {
         logger.init('[INIT][BabylonSceneService] Initializing scene');
 
@@ -363,8 +423,8 @@ export function createBabylonSceneService(): BabylonSceneService {
           1
         );
 
-        // Setup camera
-        const cameraResult = setupCamera(scene, cameraConfig);
+        // Setup camera with enhanced controls
+        const cameraResult = await setupCamera(scene, cameraConfig);
         if (!cameraResult.success) {
           scene.dispose();
           return { success: false, error: cameraResult.error };
@@ -387,9 +447,10 @@ export function createBabylonSceneService(): BabylonSceneService {
           scene,
           isInitialized: true,
           isDisposed: false,
-          cameras: [cameraResult.data],
+          cameras: [cameraResult.data.camera],
           lights: lightingResult.data,
           meshes: [],
+          cameraControlService: cameraResult.data.cameraControlService,
         });
 
         // Call ready callback
@@ -546,6 +607,62 @@ export function createBabylonSceneService(): BabylonSceneService {
       }
     },
 
+    getCameraControlService(): CameraControlService | null {
+      return state.cameraControlService;
+    },
+
+    async frameAll(): Promise<Result<void, SceneError>> {
+      try {
+        if (!state.cameraControlService) {
+          return {
+            success: false,
+            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Camera control service not available'),
+          };
+        }
+
+        const result = await state.cameraControlService.frameAll();
+        if (!result.success) {
+          return {
+            success: false,
+            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `Frame all failed: ${result.error.message}`, result.error),
+          };
+        }
+
+        return { success: true, data: undefined };
+      } catch (error) {
+        return {
+          success: false,
+          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Frame all operation failed', error),
+        };
+      }
+    },
+
+    async setView(view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'): Promise<Result<void, SceneError>> {
+      try {
+        if (!state.cameraControlService) {
+          return {
+            success: false,
+            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Camera control service not available'),
+          };
+        }
+
+        const result = await state.cameraControlService.setView(view);
+        if (!result.success) {
+          return {
+            success: false,
+            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `Set view failed: ${result.error.message}`, result.error),
+          };
+        }
+
+        return { success: true, data: undefined };
+      } catch (error) {
+        return {
+          success: false,
+          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Set view operation failed', error),
+        };
+      }
+    },
+
     dispose(): SceneDisposeResult {
       try {
         logger.debug('[DEBUG][BabylonSceneService] Disposing scene');
@@ -555,6 +672,11 @@ export function createBabylonSceneService(): BabylonSceneService {
           const clearResult = service.clearMeshes();
           if (!clearResult.success) {
             logger.warn('[WARN][BabylonSceneService] Failed to clear meshes during disposal');
+          }
+
+          // Dispose camera control service
+          if (state.cameraControlService) {
+            state.cameraControlService.dispose();
           }
 
           // Dispose scene
@@ -568,6 +690,7 @@ export function createBabylonSceneService(): BabylonSceneService {
           cameras: [],
           lights: [],
           meshes: [],
+          cameraControlService: null,
         });
 
         logger.end('[END][BabylonSceneService] Scene disposed successfully');

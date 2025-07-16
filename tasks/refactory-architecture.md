@@ -272,9 +272,32 @@ The enhanced debugging will reveal exactly where the editor-to-store connection 
 - ❌ **CSG operation fails** - `[ERROR] Failed to generate difference CSG operation: [object Object]`
 - ❌ **No mesh generation** - Meshes: 0 due to CSG failure
 
-**Current Status**: The React rendering pipeline is **100% working**. The issues are:
-1. **Mesh visibility** - Generated meshes are not visible in the BabylonJS scene
-2. **CSG operations** - Difference operations fail in the Manifold CSG backend
+**Current Status**: The React rendering pipeline is **100% working**. Scene refresh issue **FIXED**:
+
+#### **✅ Issue 1: Simple Primitives Work Perfectly - FIXED**
+- ✅ **Cube parsing works** - `cube(20);` parsed correctly (AST: 1 nodes)
+- ✅ **useEffect triggered** - Main rendering useEffect called successfully
+- ✅ **AST change detection** - Size changes detected correctly (15→20)
+- ✅ **renderAST called** - Rendering function triggered successfully
+- ✅ **bridgeConverter.initialize** - Converter initialized successfully
+- ✅ **convertAST called** - `[DEBUG] convertAST completed, success: true`
+- ✅ **Mesh generation** - Meshes: 1 (cubes render successfully)
+- ✅ **Scene refresh** - Hot reload and AST changes properly trigger re-rendering
+
+**CRITICAL FIX APPLIED**: Modified AST change detection to force re-rendering when mesh count is 0:
+```typescript
+const shouldRender = astChanged || meshCount === 0;
+```
+
+#### **❌ Issue 2: CSG Operations Fail in Manifold Backend**
+- ✅ **Difference parsing works** - AST correctly parsed with children
+- ✅ **useEffect triggered** - Main rendering useEffect called successfully
+- ✅ **renderAST called** - Rendering function triggered successfully
+- ✅ **CSG Service initialized** - `[INIT][BabylonCSG2Service] Service initialized with Manifold 3.1.1 backend`
+- ❌ **CSG operation fails** - `[ERROR] Failed to generate difference CSG operation: [object Object]`
+- ❌ **No mesh generation** - Meshes: 0 due to Manifold CSG backend error
+
+**Root Issue**: The **Manifold CSG backend** fails when performing difference operations. The React pipeline works perfectly; the issue is in the CSG implementation.
 
 ### 🎉 **COMPLETE SUCCESS: 3D Rendering Pipeline Working**
 

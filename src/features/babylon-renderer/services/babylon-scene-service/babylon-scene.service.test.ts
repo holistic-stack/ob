@@ -54,12 +54,12 @@ describe('BabylonSceneService', () => {
     }) as unknown as Mesh;
 
   describe('init', () => {
-    it('should initialize scene successfully with valid engine', () => {
+    it('should initialize scene successfully with valid engine', async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -72,12 +72,12 @@ describe('BabylonSceneService', () => {
       }
     });
 
-    it('should handle missing engine gracefully', () => {
+    it('should handle missing engine gracefully', async () => {
       const options: SceneInitOptions = {
         engine: null as unknown as NullEngine,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -86,7 +86,7 @@ describe('BabylonSceneService', () => {
       }
     });
 
-    it('should accept custom scene configuration', () => {
+    it('should accept custom scene configuration', async () => {
       const customConfig = {
         autoClear: true,
         autoClearDepthAndStencil: true,
@@ -99,7 +99,7 @@ describe('BabylonSceneService', () => {
         config: customConfig,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -109,7 +109,7 @@ describe('BabylonSceneService', () => {
       }
     });
 
-    it('should accept custom camera configuration', () => {
+    it('should accept custom camera configuration', async () => {
       const customCamera = {
         type: 'arcRotate' as const,
         position: new Vector3(5, 5, 5),
@@ -122,7 +122,7 @@ describe('BabylonSceneService', () => {
         camera: customCamera,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -131,7 +131,7 @@ describe('BabylonSceneService', () => {
       }
     });
 
-    it('should accept custom lighting configuration', () => {
+    it('should accept custom lighting configuration', async () => {
       const customLighting = {
         ambient: {
           enabled: true,
@@ -151,7 +151,7 @@ describe('BabylonSceneService', () => {
         lighting: customLighting,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -159,28 +159,28 @@ describe('BabylonSceneService', () => {
       }
     });
 
-    it('should call onSceneReady callback when provided', () => {
+    it('should call onSceneReady callback when provided', async () => {
       const onSceneReady = vi.fn();
       const options: SceneInitOptions = {
         engine: mockEngine,
         onSceneReady,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       expect(onSceneReady).toHaveBeenCalledOnce();
       expect(onSceneReady).toHaveBeenCalledWith(expect.any(Object));
     });
 
-    it('should register render loop callback when provided', () => {
+    it('should register render loop callback when provided', async () => {
       const onRenderLoop = vi.fn();
       const options: SceneInitOptions = {
         engine: mockEngine,
         onRenderLoop,
       };
 
-      const result = sceneService.init(options);
+      const result = await sceneService.init(options);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -203,12 +203,12 @@ describe('BabylonSceneService', () => {
       expect(state.lastUpdated).toBeInstanceOf(Date);
     });
 
-    it('should return updated state after initialization', () => {
+    it('should return updated state after initialization', async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
 
-      sceneService.init(options);
+      await sceneService.init(options);
       const state = sceneService.getState();
 
       expect(state.scene).toBeDefined();
@@ -221,11 +221,11 @@ describe('BabylonSceneService', () => {
   });
 
   describe('updateConfig', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
-      sceneService.init(options);
+      await sceneService.init(options);
     });
 
     it('should update scene configuration successfully', () => {
@@ -257,11 +257,11 @@ describe('BabylonSceneService', () => {
   });
 
   describe('mesh management', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
-      sceneService.init(options);
+      await sceneService.init(options);
     });
 
     it('should add mesh successfully', () => {
@@ -322,12 +322,12 @@ describe('BabylonSceneService', () => {
   });
 
   describe('dispose', () => {
-    it('should dispose scene successfully', () => {
+    it('should dispose scene successfully', async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
 
-      sceneService.init(options);
+      await sceneService.init(options);
       const result = sceneService.dispose();
 
       expect(result.success).toBe(true);
@@ -350,12 +350,12 @@ describe('BabylonSceneService', () => {
       expect(state.isDisposed).toBe(true);
     });
 
-    it('should dispose meshes before disposing scene', () => {
+    it('should dispose meshes before disposing scene', async () => {
       const options: SceneInitOptions = {
         engine: mockEngine,
       };
 
-      sceneService.init(options);
+      await sceneService.init(options);
 
       const mockMesh = createMockMesh();
       sceneService.addMesh(mockMesh);
@@ -368,7 +368,7 @@ describe('BabylonSceneService', () => {
   });
 
   describe('state immutability', () => {
-    it('should return immutable state objects', () => {
+    it('should return immutable state objects', async () => {
       const state1 = sceneService.getState();
       const state2 = sceneService.getState();
 
@@ -378,28 +378,28 @@ describe('BabylonSceneService', () => {
         engine: mockEngine,
       };
 
-      sceneService.init(options);
+      await sceneService.init(options);
       const state3 = sceneService.getState();
 
       expect(state3).not.toBe(state1); // Different reference after change
       expect(Object.isFrozen(state3)).toBe(true); // State should be frozen
     });
 
-    it('should update lastUpdated timestamp on state changes', () => {
+    it('should update lastUpdated timestamp on state changes', async () => {
       const initialState = sceneService.getState();
       const initialTime = initialState.lastUpdated;
 
       // Wait a bit to ensure timestamp difference
-      setTimeout(() => {
-        const options: SceneInitOptions = {
-          engine: mockEngine,
-        };
+      await new Promise(resolve => setTimeout(resolve, 10));
 
-        sceneService.init(options);
-        const updatedState = sceneService.getState();
+      const options: SceneInitOptions = {
+        engine: mockEngine,
+      };
 
-        expect(updatedState.lastUpdated.getTime()).toBeGreaterThan(initialTime.getTime());
-      }, 10);
+      await sceneService.init(options);
+      const updatedState = sceneService.getState();
+
+      expect(updatedState.lastUpdated.getTime()).toBeGreaterThan(initialTime.getTime());
     });
   });
 });

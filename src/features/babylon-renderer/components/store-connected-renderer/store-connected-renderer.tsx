@@ -24,6 +24,7 @@ import {
 } from '../../../store/selectors';
 import type { BabylonSceneProps } from '../babylon-scene';
 import { BabylonScene } from '../babylon-scene';
+import { CameraControls } from '../camera-controls';
 
 const logger = createLogger('StoreConnectedRenderer');
 
@@ -58,6 +59,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const [isSceneReady, setIsSceneReady] = useState(false);
+  const [sceneService, setSceneService] = useState<any>(null);
   const lastASTRef = useRef<readonly ASTNode[]>([]);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -221,6 +223,13 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     sceneRef.current = scene;
     setIsSceneReady(!!scene);
 
+    // Capture scene service for camera controls
+    const service = (scene as any)._sceneService;
+    if (service) {
+      setSceneService(service);
+      logger.debug('[DEBUG][StoreConnectedRenderer] Scene service captured for camera controls');
+    }
+
     // Set scene reference in the store for AST rendering
     if (setScene) {
       setScene(scene);
@@ -280,6 +289,8 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   useEffect(() => {
     console.log(`[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
+    console.log(`[DEBUG][StoreConnectedRenderer] Current AST:`, JSON.stringify(ast).substring(0, 100));
+    console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, JSON.stringify(lastASTRef.current).substring(0, 100));
     logger.debug(`[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
 
     // CRITICAL FIX: Prevent infinite loop when both ASTs are empty
@@ -296,14 +307,18 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       const currentASTString = JSON.stringify(ast);
       const lastASTString = JSON.stringify(lastASTRef.current);
       const astChanged = currentASTString !== lastASTString;
+      const meshCount = meshes.length;
+      const shouldRender = astChanged || meshCount === 0;
 
       console.log(`[DEBUG][StoreConnectedRenderer] AST content comparison:`);
       console.log(`[DEBUG][StoreConnectedRenderer] Current AST:`, currentASTString.substring(0, 200));
       console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, lastASTString.substring(0, 200));
       console.log(`[DEBUG][StoreConnectedRenderer] AST changed:`, astChanged);
+      console.log(`[DEBUG][StoreConnectedRenderer] Mesh count:`, meshCount);
+      console.log(`[DEBUG][StoreConnectedRenderer] Should render:`, shouldRender);
 
-      if (!astChanged) {
-        logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged');
+      if (!shouldRender) {
+        logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged and meshes exist');
         return;
       }
     }
@@ -456,6 +471,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         className="w-full h-full"
       />
       {renderStatusOverlay()}
+
+      {/* Camera Controls */}
+      {isSceneReady && sceneService && (
+        <CameraControls
+          sceneService={sceneService}
+          className="absolute top-4 right-4 z-10"
+        />
+      )}
     </div>
   );
 };

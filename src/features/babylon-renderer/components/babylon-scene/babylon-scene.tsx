@@ -249,19 +249,25 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       lighting: serviceLightingConfig,
       onSceneReady: (scene: BabylonSceneType) => {
         sceneRef.current = scene;
+        // Store scene service reference for camera controls
+        (scene as any)._sceneService = sceneService;
         onSceneReady?.(scene);
       },
       ...(onRenderLoop && { onRenderLoop }),
     };
 
-    const result = sceneService.init(initOptions);
+    const initializeScene = async () => {
+      const result = await sceneService.init(initOptions);
 
-    if (!result.success) {
-      logger.error('[ERROR][BabylonScene] Scene initialization failed:', result.error);
-      return;
-    }
+      if (!result.success) {
+        logger.error('[ERROR][BabylonScene] Scene initialization failed:', result.error);
+        return;
+      }
 
-    logger.debug('[DEBUG][BabylonScene] Scene initialized successfully');
+      logger.debug('[DEBUG][BabylonScene] Scene initialized successfully');
+    };
+
+    initializeScene();
 
     // Setup render loop
     engine.runRenderLoop(() => {

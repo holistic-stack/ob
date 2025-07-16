@@ -79,6 +79,7 @@ export function useBabylonScene(): UseBabylonSceneReturn {
     cameras: [],
     lights: [],
     meshes: [],
+    cameraControlService: null,
     lastUpdated: new Date(),
   });
 
@@ -98,6 +99,7 @@ export function useBabylonScene(): UseBabylonSceneReturn {
         cameras: [],
         lights: [],
         meshes: [],
+        cameraControlService: null,
         lastUpdated: new Date(),
       });
     }
@@ -157,7 +159,7 @@ export function useBabylonScene(): UseBabylonSceneReturn {
         };
 
         // Initialize scene
-        const result = sceneServiceRef.current.init(sceneInitOptions);
+        const result = await sceneServiceRef.current.init(sceneInitOptions);
 
         if (!result.success) {
           logger.error('[ERROR][useBabylonScene] Scene initialization failed:', result.error);

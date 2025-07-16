@@ -761,27 +761,49 @@ export const createBabylonRenderingSlice = (
 
       return tryCatchAsync(
         async () => {
+          // Clear existing meshes first
+          logger.debug('[DEBUG][BabylonRenderingSlice] Clearing existing meshes before rendering new AST...');
+          const existingMeshes = [...scene.meshes]; // Create a copy to avoid iteration issues
+          let clearedCount = 0;
+
+          existingMeshes.forEach((mesh: any) => {
+            // Skip system meshes (cameras, lights, etc.) but dispose all user-generated meshes
+            if (mesh && mesh.name &&
+                !mesh.name.toLowerCase().includes('camera') &&
+                !mesh.name.toLowerCase().includes('light') &&
+                !mesh.name.toLowerCase().includes('ground') &&
+                typeof mesh.dispose === 'function') {
+              try {
+                mesh.dispose();
+                clearedCount++;
+                logger.debug(`[DEBUG][BabylonRenderingSlice] Disposed mesh: ${mesh.name}`);
+              } catch (error) {
+                logger.warn(`[WARN][BabylonRenderingSlice] Failed to dispose mesh ${mesh.name}:`, error);
+              }
+            }
+          });
+
+          logger.debug(`[DEBUG][BabylonRenderingSlice] Cleared ${clearedCount} existing meshes`);
+
           set((state: any) => {
             state.babylonRendering.isRendering = true;
             state.babylonRendering.renderErrors = []; // Clear previous errors
+            state.babylonRendering.meshes = []; // Clear meshes array in store
           });
 
           const startTime = performance.now();
 
-          // Clear existing meshes
-          scene.meshes.forEach((mesh: any) => {
-            if (mesh.name !== 'camera' && mesh.name !== 'light') {
-              mesh.dispose();
-            }
-          });
-
           // Convert AST to BabylonJS meshes using the bridge converter
           logger.debug(`[DEBUG][BabylonRenderingSlice] Converting AST with ${ast.length} nodes to BabylonJS nodes...`);
           const bridgeConverter = new ASTBridgeConverter();
+          console.log(`[DEBUG][BabylonRenderingSlice] About to initialize bridgeConverter with scene`);
           await bridgeConverter.initialize(scene);
+          console.log(`[DEBUG][BabylonRenderingSlice] bridgeConverter.initialize completed successfully`);
 
+          console.log(`[DEBUG][BabylonRenderingSlice] About to call bridgeConverter.convertAST with ${ast.length} AST nodes`);
           logger.debug(`[DEBUG][BabylonRenderingSlice] About to call bridgeConverter.convertAST with ${ast.length} AST nodes`);
           const conversionResult = await bridgeConverter.convertAST(ast);
+          console.log(`[DEBUG][BabylonRenderingSlice] convertAST completed, success: ${conversionResult.success}`);
           logger.debug(`[DEBUG][BabylonRenderingSlice] convertAST completed, success: ${conversionResult.success}`);
 
           if (!conversionResult.success) {
@@ -823,6 +845,28 @@ export const createBabylonRenderingSlice = (
 
           // Log scene state after mesh generation
           logger.debug(`[DEBUG][BabylonRenderingSlice] Scene now has ${scene.meshes.length} meshes total`);
+
+          // Auto-frame the scene if meshes were generated and auto-framing is enabled
+          if (meshes.length > 0) {
+            try {
+              // Get the scene service to access camera controls
+              const sceneService = (scene as any)._sceneService;
+              if (sceneService && typeof sceneService.frameAll === 'function') {
+                logger.debug('[DEBUG][BabylonRenderingSlice] Auto-framing scene with new meshes');
+                sceneService.frameAll().then((frameResult: any) => {
+                  if (frameResult.success) {
+                    logger.debug('[DEBUG][BabylonRenderingSlice] Auto-framing completed successfully');
+                  } else {
+                    logger.warn('[WARN][BabylonRenderingSlice] Auto-framing failed:', frameResult.error?.message);
+                  }
+                }).catch((error: any) => {
+                  logger.warn('[WARN][BabylonRenderingSlice] Auto-framing error:', error);
+                });
+              }
+            } catch (error) {
+              logger.warn('[WARN][BabylonRenderingSlice] Auto-framing setup failed:', error);
+            }
+          }
 
           set((state: any) => {
             state.babylonRendering.meshes = meshes;
@@ -870,14 +914,45 @@ export const createBabylonRenderingSlice = (
       logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene...');
 
       set((state: any) => {
+        let clearedCount = 0;
+
         // Dispose of existing meshes if they exist
         if (state.babylonRendering?.meshes && Array.isArray(state.babylonRendering.meshes)) {
           state.babylonRendering.meshes.forEach((mesh: any) => {
             if (mesh && typeof mesh.dispose === 'function') {
-              mesh.dispose();
+              try {
+                mesh.dispose();
+                clearedCount++;
+                logger.debug(`[DEBUG][BabylonRenderingSlice] Disposed mesh during clearScene: ${mesh.name || 'unnamed'}`);
+              } catch (error) {
+                logger.warn(`[WARN][BabylonRenderingSlice] Failed to dispose mesh during clearScene:`, error);
+              }
             }
           });
         }
+
+        // Also clear meshes from the actual BabylonJS scene if available
+        if (state.babylonRendering?.scene) {
+          const scene = state.babylonRendering.scene;
+          const existingMeshes = [...scene.meshes];
+          existingMeshes.forEach((mesh: any) => {
+            if (mesh && mesh.name &&
+                !mesh.name.toLowerCase().includes('camera') &&
+                !mesh.name.toLowerCase().includes('light') &&
+                !mesh.name.toLowerCase().includes('ground') &&
+                typeof mesh.dispose === 'function') {
+              try {
+                mesh.dispose();
+                clearedCount++;
+                logger.debug(`[DEBUG][BabylonRenderingSlice] Disposed scene mesh during clearScene: ${mesh.name}`);
+              } catch (error) {
+                logger.warn(`[WARN][BabylonRenderingSlice] Failed to dispose scene mesh during clearScene:`, error);
+              }
+            }
+          });
+        }
+
+        logger.debug(`[DEBUG][BabylonRenderingSlice] Cleared ${clearedCount} total meshes during clearScene`);
 
         // Ensure babylonRendering state exists
         if (!state.babylonRendering) {
