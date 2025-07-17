@@ -2,18 +2,18 @@
  * @file Tests for Enhanced Error Utilities
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  EnhancedError,
   createEnhancedError,
-  withSourceLocation,
-  withContext,
-  errorToResult,
   createErrorResult,
+  EnhancedError,
+  type ErrorContext,
+  errorToResult,
+  type SourceLocation,
+  withContext,
   withEnhancedErrors,
   withEnhancedErrorsAsync,
-  type SourceLocation,
-  type ErrorContext,
+  withSourceLocation,
 } from './enhanced-error';
 
 describe('EnhancedError', () => {
@@ -139,7 +139,7 @@ describe('EnhancedError', () => {
       });
 
       const debugInfo = error.getDebugInfo();
-      
+
       expect(debugInfo).toMatchObject({
         message: 'Debug test error',
         code: 'DEBUG_ERROR',
@@ -148,7 +148,7 @@ describe('EnhancedError', () => {
         location: { file: 'debug.ts', line: 10 },
         context: expect.objectContaining({ operation: 'debugging' }),
       });
-      
+
       expect(debugInfo.timestamp).toBeDefined();
       expect(debugInfo.stack).toBeDefined();
     });
@@ -309,7 +309,7 @@ describe('withEnhancedErrors', () => {
 
     // Should enhance error when throwing
     expect(() => wrappedFunction(true)).toThrow(EnhancedError);
-    
+
     try {
       wrappedFunction(true);
     } catch (error) {
@@ -331,17 +331,17 @@ describe('withEnhancedErrorsAsync', () => {
       return 'async success';
     };
 
-    const wrappedFunction = withEnhancedErrorsAsync(
-      asyncThrowingFunction,
-      { file: 'async-wrapper.ts', function: 'wrappedAsyncFunction' }
-    );
+    const wrappedFunction = withEnhancedErrorsAsync(asyncThrowingFunction, {
+      file: 'async-wrapper.ts',
+      function: 'wrappedAsyncFunction',
+    });
 
     // Should work normally when not throwing
     await expect(wrappedFunction(false)).resolves.toBe('async success');
 
     // Should enhance error when throwing
     await expect(wrappedFunction(true)).rejects.toThrow(EnhancedError);
-    
+
     try {
       await wrappedFunction(true);
     } catch (error) {

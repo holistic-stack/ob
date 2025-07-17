@@ -1,16 +1,16 @@
 /**
  * @file User-Friendly Error Handler Service
- * 
+ *
  * Provides user-facing error messages with actionable suggestions and
  * context-aware help. Transforms technical errors into understandable
  * messages for end users.
- * 
+ *
  * @example
  * ```typescript
  * import { UserErrorHandlerService } from './user-error-handler.service';
- * 
+ *
  * const errorHandler = new UserErrorHandlerService();
- * 
+ *
  * try {
  *   // Some operation that might fail
  *   await parseOpenSCAD(code);
@@ -21,9 +21,9 @@
  * ```
  */
 
-import { createLogger } from '../logger.service';
-import type { EnhancedError } from '../../utils/error';
 import type { Result } from '../../types/result.types';
+import type { EnhancedError } from '../../utils/error';
+import { createLogger } from '../logger.service';
 
 const logger = createLogger('UserErrorHandler');
 
@@ -70,7 +70,7 @@ interface ErrorPattern {
 
 /**
  * User Error Handler Service
- * 
+ *
  * Transforms technical errors into user-friendly messages with
  * actionable suggestions and recovery guidance.
  */
@@ -81,7 +81,8 @@ export class UserErrorHandlerService {
       category: ErrorCategory.SYNTAX_ERROR,
       pattern: /syntax error|unexpected token|missing semicolon/i,
       title: 'Syntax Error in OpenSCAD Code',
-      messageTemplate: 'There\'s a syntax error in your OpenSCAD code. Please check your code for missing semicolons, brackets, or typos.',
+      messageTemplate:
+        "There's a syntax error in your OpenSCAD code. Please check your code for missing semicolons, brackets, or typos.",
       suggestions: [
         'Check for missing semicolons at the end of statements',
         'Ensure all brackets and parentheses are properly closed',
@@ -92,7 +93,7 @@ export class UserErrorHandlerService {
       canRetry: true,
       canRecover: true,
     },
-    
+
     // Feature Not Supported
     {
       category: ErrorCategory.FEATURE_NOT_SUPPORTED,
@@ -109,13 +110,14 @@ export class UserErrorHandlerService {
       canRetry: false,
       canRecover: true,
     },
-    
+
     // Browser Compatibility (check first, more specific)
     {
       category: ErrorCategory.BROWSER_COMPATIBILITY,
-      pattern: /not supported.*browser|webgl.*not supported|webgl.*not available|gpu.*not supported|webgl not supported/i,
+      pattern:
+        /not supported.*browser|webgl.*not supported|webgl.*not available|gpu.*not supported|webgl not supported/i,
       title: 'Browser Compatibility Issue',
-      messageTemplate: 'Your browser doesn\'t support all the features needed for 3D rendering.',
+      messageTemplate: "Your browser doesn't support all the features needed for 3D rendering.",
       suggestions: [
         'Use a modern browser (Chrome, Firefox, Safari, or Edge)',
         'Enable hardware acceleration in browser settings',
@@ -132,7 +134,8 @@ export class UserErrorHandlerService {
       category: ErrorCategory.RENDERING_ERROR,
       pattern: /webgl.*context lost|rendering.*failed|gpu.*error/i,
       title: 'Rendering Error',
-      messageTemplate: 'There was a problem rendering your 3D model. This might be due to graphics driver issues or browser limitations.',
+      messageTemplate:
+        'There was a problem rendering your 3D model. This might be due to graphics driver issues or browser limitations.',
       suggestions: [
         'Try refreshing the page',
         'Update your graphics drivers',
@@ -143,7 +146,7 @@ export class UserErrorHandlerService {
       canRetry: true,
       canRecover: true,
     },
-    
+
     // Performance Issues
     {
       category: ErrorCategory.PERFORMANCE_ISSUE,
@@ -159,13 +162,14 @@ export class UserErrorHandlerService {
       canRetry: true,
       canRecover: true,
     },
-    
+
     // Network Errors
     {
       category: ErrorCategory.NETWORK_ERROR,
       pattern: /network|fetch|connection|timeout.*request/i,
       title: 'Network Error',
-      messageTemplate: 'There was a problem connecting to the server. Please check your internet connection.',
+      messageTemplate:
+        'There was a problem connecting to the server. Please check your internet connection.',
       suggestions: [
         'Check your internet connection',
         'Try refreshing the page',
@@ -191,11 +195,11 @@ export class UserErrorHandlerService {
       const errorMessage = this.extractErrorMessage(error);
       const category = this.categorizeError(errorMessage);
       const pattern = this.findMatchingPattern(category, errorMessage);
-      
+
       if (pattern) {
         return this.createUserMessage(pattern, errorMessage, error);
       }
-      
+
       // Fallback for unknown errors
       return this.createFallbackMessage(errorMessage, error);
     } catch (handlingError) {
@@ -216,7 +220,7 @@ export class UserErrorHandlerService {
    * Get suggestions for a specific error category
    */
   getSuggestionsForCategory(category: ErrorCategory): readonly string[] {
-    const pattern = this.errorPatterns.find(p => p.category === category);
+    const pattern = this.errorPatterns.find((p) => p.category === category);
     return pattern?.suggestions || [];
   }
 
@@ -247,15 +251,15 @@ export class UserErrorHandlerService {
     if (error instanceof Error) {
       return error.message;
     }
-    
+
     if (typeof error === 'string') {
       return error;
     }
-    
+
     if (error && typeof error === 'object' && 'message' in error) {
       return String((error as any).message);
     }
-    
+
     return 'An unknown error occurred';
   }
 
@@ -275,22 +279,22 @@ export class UserErrorHandlerService {
    * Find matching error pattern
    */
   private findMatchingPattern(category: ErrorCategory, message: string): ErrorPattern | null {
-    return this.errorPatterns.find(p => 
-      p.category === category && p.pattern.test(message)
-    ) || null;
+    return (
+      this.errorPatterns.find((p) => p.category === category && p.pattern.test(message)) || null
+    );
   }
 
   /**
    * Create user-friendly message from pattern
    */
   private createUserMessage(
-    pattern: ErrorPattern, 
-    originalMessage: string, 
+    pattern: ErrorPattern,
+    originalMessage: string,
     originalError: unknown
   ): UserErrorMessage {
     const severity = this.determineSeverity(pattern.category);
     const technicalDetails = this.extractTechnicalDetails(originalError);
-    
+
     return {
       title: pattern.title,
       message: pattern.messageTemplate,
@@ -308,10 +312,11 @@ export class UserErrorHandlerService {
    */
   private createFallbackMessage(message: string, originalError: unknown): UserErrorMessage {
     const technicalDetails = this.extractTechnicalDetails(originalError);
-    
+
     return {
       title: 'Unexpected Error',
-      message: 'Something unexpected happened. Please try again or contact support if the problem persists.',
+      message:
+        'Something unexpected happened. Please try again or contact support if the problem persists.',
       severity: 'error',
       suggestions: [
         'Try refreshing the page',
@@ -371,30 +376,27 @@ export class UserErrorHandlerService {
    */
   private extractTechnicalDetails(error: unknown): string | undefined {
     if (error instanceof Error) {
-      const details = [
-        `Error: ${error.name}`,
-        `Message: ${error.message}`,
-      ];
-      
+      const details = [`Error: ${error.name}`, `Message: ${error.message}`];
+
       if (error.stack) {
         details.push(`Stack: ${error.stack.split('\n').slice(0, 3).join('\n')}`);
       }
-      
+
       // Enhanced error details
       if ('code' in error) {
         details.push(`Code: ${(error as any).code}`);
       }
-      
+
       if ('location' in error) {
         const location = (error as any).location;
         if (location) {
           details.push(`Location: ${JSON.stringify(location)}`);
         }
       }
-      
+
       return details.join('\n');
     }
-    
+
     return undefined;
   }
 

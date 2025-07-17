@@ -77,7 +77,10 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   }, []); // Empty dependency array - runs only on mount
 
   // Debug AST changes
-  console.log(`[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}, AST reference:`, ast);
+  console.log(
+    `[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}, AST reference:`,
+    ast
+  );
   logger.debug(`[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}`);
 
   // Debug AST changes - use length and JSON to force dependency detection
@@ -97,11 +100,15 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   // Create stable fallback functions to prevent infinite loops
   const safeRenderAST = useCallback(
     async (astNodes: any[]) => {
-      logger.debug(`[DEBUG][StoreConnectedRenderer] safeRenderAST called with ${astNodes.length} nodes`);
+      logger.debug(
+        `[DEBUG][StoreConnectedRenderer] safeRenderAST called with ${astNodes.length} nodes`
+      );
 
       if (renderAST) {
         const result = await renderAST(astNodes);
-        logger.debug(`[DEBUG][StoreConnectedRenderer] renderAST completed with success: ${result.success}`);
+        logger.debug(
+          `[DEBUG][StoreConnectedRenderer] renderAST completed with success: ${result.success}`
+        );
         return result;
       }
 
@@ -288,10 +295,20 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    * Render AST when it changes
    */
   useEffect(() => {
-    console.log(`[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
-    console.log(`[DEBUG][StoreConnectedRenderer] Current AST:`, JSON.stringify(ast).substring(0, 100));
-    console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, JSON.stringify(lastASTRef.current).substring(0, 100));
-    logger.debug(`[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`);
+    console.log(
+      `[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`
+    );
+    console.log(
+      `[DEBUG][StoreConnectedRenderer] Current AST:`,
+      JSON.stringify(ast).substring(0, 100)
+    );
+    console.log(
+      `[DEBUG][StoreConnectedRenderer] Last AST:`,
+      JSON.stringify(lastASTRef.current).substring(0, 100)
+    );
+    logger.debug(
+      `[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`
+    );
 
     // CRITICAL FIX: Prevent infinite loop when both ASTs are empty
     // If both current and last AST are empty, skip rendering to prevent infinite loop
@@ -303,7 +320,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     // Skip if AST hasn't changed (check content only, not reference)
 
     // For non-empty ASTs, do a content check
-    if (lastASTRef.current.length > 0 && ast.length === lastASTRef.current.length && ast.length > 0) {
+    if (
+      lastASTRef.current.length > 0 &&
+      ast.length === lastASTRef.current.length &&
+      ast.length > 0
+    ) {
       const currentASTString = JSON.stringify(ast);
       const lastASTString = JSON.stringify(lastASTRef.current);
       const astChanged = currentASTString !== lastASTString;
@@ -311,14 +332,19 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       const shouldRender = astChanged || meshCount === 0;
 
       console.log(`[DEBUG][StoreConnectedRenderer] AST content comparison:`);
-      console.log(`[DEBUG][StoreConnectedRenderer] Current AST:`, currentASTString.substring(0, 200));
+      console.log(
+        `[DEBUG][StoreConnectedRenderer] Current AST:`,
+        currentASTString.substring(0, 200)
+      );
       console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, lastASTString.substring(0, 200));
       console.log(`[DEBUG][StoreConnectedRenderer] AST changed:`, astChanged);
       console.log(`[DEBUG][StoreConnectedRenderer] Mesh count:`, meshCount);
       console.log(`[DEBUG][StoreConnectedRenderer] Should render:`, shouldRender);
 
       if (!shouldRender) {
-        logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged and meshes exist');
+        logger.debug(
+          '[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged and meshes exist'
+        );
         return;
       }
     }
@@ -474,10 +500,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
       {/* Camera Controls */}
       {isSceneReady && sceneService && (
-        <CameraControls
-          sceneService={sceneService}
-          className="absolute top-4 right-4 z-10"
-        />
+        <CameraControls sceneService={sceneService} className="absolute top-4 right-4 z-10" />
       )}
     </div>
   );

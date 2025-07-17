@@ -49,7 +49,12 @@ export function App(): React.JSX.Element {
   }, [renderErrors]);
 
   // Debug: App component rendering - direct console.log to ensure it's called
-  console.log('[DEBUG][App] App component rendering - AST length:', ast.length, 'Meshes:', renderingStateMeshes.length);
+  console.log(
+    '[DEBUG][App] App component rendering - AST length:',
+    ast.length,
+    'Meshes:',
+    renderingStateMeshes.length
+  );
 
   // Debug: App component rendering
   useEffect(() => {

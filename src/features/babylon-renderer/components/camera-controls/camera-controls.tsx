@@ -6,7 +6,7 @@
  *
  * @example
  * ```tsx
- * <CameraControls 
+ * <CameraControls
  *   sceneService={sceneService}
  *   className="absolute top-4 right-4"
  * />
@@ -63,29 +63,32 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   /**
    * Handle view preset selection
    */
-  const handleViewPreset = useCallback(async (view: typeof VIEW_PRESETS[number]['key']) => {
-    if (!sceneService || isLoading) return;
+  const handleViewPreset = useCallback(
+    async (view: (typeof VIEW_PRESETS)[number]['key']) => {
+      if (!sceneService || isLoading) return;
 
-    setIsLoading(true);
-    setActiveView(view);
-    
-    try {
-      logger.debug(`[DEBUG][CameraControls] Setting view to: ${view}`);
-      const result = await sceneService.setView(view);
-      
-      if (!result.success) {
-        logger.error(`[ERROR][CameraControls] Failed to set view: ${result.error.message}`);
-      } else {
-        logger.debug(`[DEBUG][CameraControls] View set to ${view} successfully`);
+      setIsLoading(true);
+      setActiveView(view);
+
+      try {
+        logger.debug(`[DEBUG][CameraControls] Setting view to: ${view}`);
+        const result = await sceneService.setView(view);
+
+        if (!result.success) {
+          logger.error(`[ERROR][CameraControls] Failed to set view: ${result.error.message}`);
+        } else {
+          logger.debug(`[DEBUG][CameraControls] View set to ${view} successfully`);
+        }
+      } catch (error) {
+        logger.error('[ERROR][CameraControls] View preset error:', error);
+      } finally {
+        setIsLoading(false);
+        // Keep active view for a short time to show feedback
+        setTimeout(() => setActiveView(null), 500);
       }
-    } catch (error) {
-      logger.error('[ERROR][CameraControls] View preset error:', error);
-    } finally {
-      setIsLoading(false);
-      // Keep active view for a short time to show feedback
-      setTimeout(() => setActiveView(null), 500);
-    }
-  }, [sceneService, isLoading]);
+    },
+    [sceneService, isLoading]
+  );
 
   /**
    * Handle frame all operation
@@ -94,11 +97,11 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
     if (!sceneService || isLoading) return;
 
     setIsLoading(true);
-    
+
     try {
       logger.debug('[DEBUG][CameraControls] Framing all meshes');
       const result = await sceneService.frameAll();
-      
+
       if (!result.success) {
         logger.error(`[ERROR][CameraControls] Failed to frame all: ${result.error.message}`);
       } else {
@@ -116,7 +119,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`flex flex-col gap-2 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 ${className}`}
       style={style}
     >
@@ -162,9 +165,15 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
       {/* Camera Instructions */}
       <div className="text-xs text-gray-500 border-t border-gray-200 pt-2 space-y-1">
-        <div>🖱️ <strong>Orbit:</strong> Left drag</div>
-        <div>🖱️ <strong>Pan:</strong> Right drag</div>
-        <div>🖱️ <strong>Zoom:</strong> Scroll wheel</div>
+        <div>
+          🖱️ <strong>Orbit:</strong> Left drag
+        </div>
+        <div>
+          🖱️ <strong>Pan:</strong> Right drag
+        </div>
+        <div>
+          🖱️ <strong>Zoom:</strong> Scroll wheel
+        </div>
       </div>
     </div>
   );

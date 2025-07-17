@@ -1,34 +1,34 @@
 /**
  * @file Telemetry Service
- * 
+ *
  * Provides comprehensive telemetry collection for production monitoring
  * including error tracking, performance metrics, user interactions, and
  * system health monitoring.
- * 
+ *
  * @example
  * ```typescript
  * import { TelemetryService } from './telemetry.service';
- * 
+ *
  * const telemetry = new TelemetryService({
  *   endpoint: 'https://api.example.com/telemetry',
  *   apiKey: 'your-api-key',
  *   enableInDevelopment: false,
  * });
- * 
+ *
  * // Track errors
  * telemetry.trackError(error, { context: 'parsing' });
- * 
+ *
  * // Track performance
  * telemetry.trackPerformance('render_time', 16.5, { model: 'cube' });
- * 
+ *
  * // Track user interactions
  * telemetry.trackEvent('code_edited', { lines: 50 });
  * ```
  */
 
-import { createLogger } from '../logger.service';
 import type { Result } from '../../types/result.types';
 import type { EnhancedError } from '../../utils/error';
+import { createLogger } from '../logger.service';
 
 const logger = createLogger('Telemetry');
 
@@ -138,7 +138,7 @@ export interface SystemEvent extends TelemetryEvent {
 
 /**
  * Telemetry Service
- * 
+ *
  * Comprehensive telemetry collection for production monitoring
  * with error tracking, performance metrics, and system health.
  */
@@ -341,7 +341,7 @@ export class TelemetryService {
       } else {
         // Log events to console in development
         console.group('📊 Telemetry Events');
-        events.forEach(event => {
+        events.forEach((event) => {
           console.log(`[${event.type.toUpperCase()}]`, event);
         });
         console.groupEnd();
@@ -403,7 +403,7 @@ export class TelemetryService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        Authorization: `Bearer ${this.config.apiKey}`,
       },
       body: JSON.stringify({ events }),
     });
@@ -441,11 +441,11 @@ export class TelemetryService {
    */
   private getBrowserInfo(): PerformanceEvent['context']['browserInfo'] {
     const userAgent = navigator.userAgent;
-    
+
     // Simple browser detection
     let name = 'Unknown';
     let version = 'Unknown';
-    
+
     if (userAgent.includes('Chrome')) {
       name = 'Chrome';
       const match = userAgent.match(/Chrome\/(\d+)/);

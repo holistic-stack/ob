@@ -2,10 +2,10 @@
  * @file Tests for Operation History Service
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  OperationHistoryService,
   type Operation,
+  OperationHistoryService,
   type OperationResult,
 } from './operation-history.service';
 
@@ -387,7 +387,7 @@ describe('OperationHistoryService', () => {
   describe('disposal', () => {
     it('should dispose cleanly', () => {
       expect(() => service.dispose()).not.toThrow();
-      
+
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(0);
     });

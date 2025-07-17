@@ -2,11 +2,11 @@
  * @file Tests for Feature Detection Service
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  type BrowserCapabilities,
   FeatureDetectionService,
   FeatureSupportLevel,
-  type BrowserCapabilities,
 } from './feature-detection.service';
 
 // Mock global objects for testing
@@ -295,11 +295,11 @@ describe('FeatureDetectionService', () => {
       mockWebGLContext.getParameter.mockReturnValue('WebGL 2.0');
 
       await service.initialize();
-      
+
       expect(service.getCapabilities()).toBeDefined();
-      
+
       service.dispose();
-      
+
       expect(service.getCapabilities()).toBe(null);
     });
   });

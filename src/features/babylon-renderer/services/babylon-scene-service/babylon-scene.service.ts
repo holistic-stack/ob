@@ -143,8 +143,8 @@ export type SceneDisposeResult = Result<void, SceneError>;
  * Default scene configuration
  */
 const DEFAULT_SCENE_CONFIG: BabylonSceneConfig = {
-  autoClear: false,
-  autoClearDepthAndStencil: false,
+  autoClear: true, // ✅ Enable automatic clearing of render buffer
+  autoClearDepthAndStencil: true, // ✅ Enable depth/stencil buffer clearing
   backgroundColor: new Color3(0.2, 0.2, 0.3),
   environmentIntensity: 1.0,
   enablePhysics: false,
@@ -245,7 +245,9 @@ export interface BabylonSceneService {
   /**
    * Set camera view to predefined angle
    */
-  setView(view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'): Promise<Result<void, SceneError>>;
+  setView(
+    view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'
+  ): Promise<Result<void, SceneError>>;
 
   /**
    * Dispose scene and cleanup resources
@@ -294,7 +296,12 @@ export function createBabylonSceneService(): BabylonSceneService {
   /**
    * Setup camera in scene with enhanced controls
    */
-  const setupCamera = async (scene: Scene, config: SceneCameraConfig): Promise<Result<{ camera: Camera; cameraControlService: CameraControlService }, SceneError>> => {
+  const setupCamera = async (
+    scene: Scene,
+    config: SceneCameraConfig
+  ): Promise<
+    Result<{ camera: Camera; cameraControlService: CameraControlService }, SceneError>
+  > => {
     try {
       logger.debug('[DEBUG][BabylonSceneService] Setting up enhanced camera controls');
 
@@ -323,7 +330,11 @@ export function createBabylonSceneService(): BabylonSceneService {
         logger.error('[ERROR][BabylonSceneService] CAD camera setup failed:', cameraResult.error);
         return {
           success: false,
-          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `CAD camera setup failed: ${cameraResult.error.message}`, cameraResult.error),
+          error: createError(
+            SceneErrorCode.CAMERA_SETUP_FAILED,
+            `CAD camera setup failed: ${cameraResult.error.message}`,
+            cameraResult.error
+          ),
         };
       }
 
@@ -337,7 +348,7 @@ export function createBabylonSceneService(): BabylonSceneService {
       logger.debug('[DEBUG][BabylonSceneService] Enhanced camera controls setup completed');
       return {
         success: true,
-        data: { camera, cameraControlService }
+        data: { camera, cameraControlService },
       };
     } catch (error) {
       logger.error('[ERROR][BabylonSceneService] Camera setup failed:', error);
@@ -527,7 +538,7 @@ export function createBabylonSceneService(): BabylonSceneService {
             error: createError(SceneErrorCode.UPDATE_FAILED, 'Scene not initialized'),
           };
         }
-
+        logger.info('[ERROR][BabylonSceneService] updateState mesh count:', state.meshes.length);
         updateState({
           meshes: [...state.meshes, mesh],
         });
@@ -616,7 +627,10 @@ export function createBabylonSceneService(): BabylonSceneService {
         if (!state.cameraControlService) {
           return {
             success: false,
-            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Camera control service not available'),
+            error: createError(
+              SceneErrorCode.CAMERA_SETUP_FAILED,
+              'Camera control service not available'
+            ),
           };
         }
 
@@ -624,7 +638,11 @@ export function createBabylonSceneService(): BabylonSceneService {
         if (!result.success) {
           return {
             success: false,
-            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `Frame all failed: ${result.error.message}`, result.error),
+            error: createError(
+              SceneErrorCode.CAMERA_SETUP_FAILED,
+              `Frame all failed: ${result.error.message}`,
+              result.error
+            ),
           };
         }
 
@@ -632,17 +650,26 @@ export function createBabylonSceneService(): BabylonSceneService {
       } catch (error) {
         return {
           success: false,
-          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Frame all operation failed', error),
+          error: createError(
+            SceneErrorCode.CAMERA_SETUP_FAILED,
+            'Frame all operation failed',
+            error
+          ),
         };
       }
     },
 
-    async setView(view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'): Promise<Result<void, SceneError>> {
+    async setView(
+      view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric'
+    ): Promise<Result<void, SceneError>> {
       try {
         if (!state.cameraControlService) {
           return {
             success: false,
-            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Camera control service not available'),
+            error: createError(
+              SceneErrorCode.CAMERA_SETUP_FAILED,
+              'Camera control service not available'
+            ),
           };
         }
 
@@ -650,7 +677,11 @@ export function createBabylonSceneService(): BabylonSceneService {
         if (!result.success) {
           return {
             success: false,
-            error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, `Set view failed: ${result.error.message}`, result.error),
+            error: createError(
+              SceneErrorCode.CAMERA_SETUP_FAILED,
+              `Set view failed: ${result.error.message}`,
+              result.error
+            ),
           };
         }
 
@@ -658,7 +689,11 @@ export function createBabylonSceneService(): BabylonSceneService {
       } catch (error) {
         return {
           success: false,
-          error: createError(SceneErrorCode.CAMERA_SETUP_FAILED, 'Set view operation failed', error),
+          error: createError(
+            SceneErrorCode.CAMERA_SETUP_FAILED,
+            'Set view operation failed',
+            error
+          ),
         };
       }
     },

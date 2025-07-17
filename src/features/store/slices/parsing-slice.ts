@@ -51,7 +51,9 @@ export const createParsingSlice = (
         logger.debug('Code unchanged since last successful parse, returning cached AST.');
 
         // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
-        logger.debug('[DEBUG][ParsingSlice] Returning cached AST - StoreConnectedRenderer will handle rendering');
+        logger.debug(
+          '[DEBUG][ParsingSlice] Returning cached AST - StoreConnectedRenderer will handle rendering'
+        );
 
         return operationUtils.createSuccess(currentState.parsing.ast, metadata);
       }
@@ -78,7 +80,9 @@ export const createParsingSlice = (
         });
 
         // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
-        logger.debug(`[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`);
+        logger.debug(
+          `[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`
+        );
         return operationUtils.createSuccess(ast, metadata);
       } else {
         // Handle parsing failure

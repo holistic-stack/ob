@@ -390,7 +390,7 @@ describe('BabylonSceneService', () => {
       const initialTime = initialState.lastUpdated;
 
       // Wait a bit to ensure timestamp difference
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const options: SceneInitOptions = {
         engine: mockEngine,

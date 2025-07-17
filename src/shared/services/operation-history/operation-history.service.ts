@@ -1,23 +1,23 @@
 /**
  * @file Operation History Service
- * 
+ *
  * Provides undo/redo functionality and transaction-like operations
  * that can be rolled back on failure. Maintains operation history
  * for graceful recovery in production environments.
- * 
+ *
  * @example
  * ```typescript
  * import { OperationHistoryService } from './operation-history.service';
- * 
+ *
  * const history = new OperationHistoryService();
- * 
+ *
  * // Execute an operation with automatic rollback on failure
  * const result = await history.executeOperation({
  *   name: 'Parse OpenSCAD',
  *   execute: async () => parseCode(code),
  *   rollback: async () => restorePreviousState(),
  * });
- * 
+ *
  * // Manual undo/redo
  * if (history.canUndo()) {
  *   await history.undo();
@@ -25,8 +25,8 @@
  * ```
  */
 
-import { createLogger } from '../logger.service';
 import type { Result } from '../../types/result.types';
+import { createLogger } from '../logger.service';
 
 const logger = createLogger('OperationHistory');
 
@@ -78,7 +78,7 @@ export interface ExecutionOptions {
 
 /**
  * Operation History Service
- * 
+ *
  * Manages operation history with undo/redo functionality and
  * automatic rollback capabilities for failed operations.
  */
@@ -99,11 +99,7 @@ export class OperationHistoryService {
     operation: Operation<T>,
     options: ExecutionOptions = {}
   ): Promise<Result<T, Error>> {
-    const {
-      autoRollbackOnFailure = true,
-      saveToHistory = true,
-      metadata = {},
-    } = options;
+    const { autoRollbackOnFailure = true, saveToHistory = true, metadata = {} } = options;
 
     logger.debug(`[EXECUTE] Starting operation: ${operation.name}`);
     const startTime = Date.now();
@@ -127,7 +123,6 @@ export class OperationHistoryService {
 
       logger.debug(`[EXECUTE] Operation completed: ${operation.name}`);
       return { success: true, data: operationResult };
-
     } catch (error) {
       logger.error(`[EXECUTE] Operation failed: ${operation.name}`, error);
 
@@ -182,10 +177,10 @@ export class OperationHistoryService {
     // For now, we don't have rollback functions stored in history
     // This would need to be enhanced to store rollback functions
     // or implement a state snapshot system
-    
+
     this.currentIndex--;
     logger.debug(`[UNDO] Operation undone: ${operation.name}`);
-    
+
     return { success: true, data: undefined };
   }
 
@@ -203,7 +198,7 @@ export class OperationHistoryService {
     this.currentIndex++;
     const operation = this.operations[this.currentIndex];
     logger.debug(`[REDO] Redoing operation: ${operation.name}`);
-    
+
     return { success: true, data: undefined };
   }
 
@@ -238,7 +233,7 @@ export class OperationHistoryService {
    * Get operation by ID
    */
   getOperation(id: string): OperationResult | null {
-    return this.operations.find(op => op.id === id) || null;
+    return this.operations.find((op) => op.id === id) || null;
   }
 
   /**
@@ -252,7 +247,7 @@ export class OperationHistoryService {
    * Get failed operations
    */
   getFailedOperations(): readonly OperationResult[] {
-    return this.operations.filter(op => !op.success);
+    return this.operations.filter((op) => !op.success);
   }
 
   /**
@@ -272,7 +267,7 @@ export class OperationHistoryService {
     options: ExecutionOptions = {}
   ): Promise<Result<readonly unknown[], Error>> {
     logger.debug(`[TRANSACTION] Starting transaction with ${operations.length} operations`);
-    
+
     const results: unknown[] = [];
     const executedOperations: Operation<unknown>[] = [];
 
@@ -303,17 +298,16 @@ export class OperationHistoryService {
           result: results,
           metadata: {
             operationCount: operations.length,
-            operationNames: operations.map(op => op.name),
+            operationNames: operations.map((op) => op.name),
             ...options.metadata,
           },
         };
-        
+
         this.addToHistory(transactionRecord);
       }
 
       logger.debug('[TRANSACTION] Transaction completed successfully');
       return { success: true, data: results };
-
     } catch (error) {
       logger.error('[TRANSACTION] Transaction failed, rolling back', error);
 
@@ -322,7 +316,10 @@ export class OperationHistoryService {
         try {
           await executedOperations[i].rollback();
         } catch (rollbackError) {
-          logger.error(`[TRANSACTION] Failed to rollback operation: ${executedOperations[i].name}`, rollbackError);
+          logger.error(
+            `[TRANSACTION] Failed to rollback operation: ${executedOperations[i].name}`,
+            rollbackError
+          );
         }
       }
 

@@ -1,31 +1,31 @@
 /**
  * @file Feature Detection Service
- * 
+ *
  * Provides comprehensive feature detection and capability checking for
  * graceful degradation in production environments. Detects browser
  * capabilities, WebGL support, and application-specific features.
- * 
+ *
  * @example
  * ```typescript
  * import { FeatureDetectionService } from './feature-detection.service';
- * 
+ *
  * const detector = new FeatureDetectionService();
  * await detector.initialize();
- * 
+ *
  * if (detector.isWebGLSupported()) {
  *   // Use WebGL rendering
  * } else {
  *   // Fall back to alternative rendering
  * }
- * 
+ *
  * const capabilities = detector.getCapabilities();
  * console.log('Supported features:', capabilities);
  * ```
  */
 
-import { createLogger } from '../logger.service';
 import type { Result } from '../../types/result.types';
 import { tryCatch, tryCatchAsync } from '../../utils/functional/result';
+import { createLogger } from '../logger.service';
 
 const logger = createLogger('FeatureDetection');
 
@@ -99,7 +99,7 @@ export interface FeatureDetectionError {
 
 /**
  * Feature Detection Service
- * 
+ *
  * Provides comprehensive feature detection and capability assessment
  * for graceful degradation in production environments.
  */
@@ -125,7 +125,7 @@ export class FeatureDetectionService {
       async () => {
         this.capabilities = await this.detectCapabilities();
         this.initialized = true;
-        
+
         logger.debug('[INIT] Feature detection initialized successfully');
         logger.debug('[CAPABILITIES]', this.capabilities);
       },
@@ -167,9 +167,7 @@ export class FeatureDetectionService {
 
     const { webgl, performance } = this.capabilities;
     return Boolean(
-      webgl?.supported &&
-      webgl?.maxTextureSize >= 4096 &&
-      performance?.hardwareConcurrency >= 4
+      webgl?.supported && webgl?.maxTextureSize >= 4096 && performance?.hardwareConcurrency >= 4
     );
   }
 
@@ -322,15 +320,20 @@ export class FeatureDetectionService {
       () => {
         const hardwareConcurrency = navigator.hardwareConcurrency || 1;
         const deviceMemory = (navigator as any).deviceMemory || null;
-        
-        const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-        const connectionInfo = connection ? {
-          effectiveType: connection.effectiveType || null,
-          downlink: connection.downlink || null,
-        } : {
-          effectiveType: null,
-          downlink: null,
-        };
+
+        const connection =
+          (navigator as any).connection ||
+          (navigator as any).mozConnection ||
+          (navigator as any).webkitConnection;
+        const connectionInfo = connection
+          ? {
+              effectiveType: connection.effectiveType || null,
+              downlink: connection.downlink || null,
+            }
+          : {
+              effectiveType: null,
+              downlink: null,
+            };
 
         return {
           hardwareConcurrency,
@@ -392,7 +395,7 @@ export class FeatureDetectionService {
    */
   private getWebGLSupport(): FeatureSupport {
     const webgl = this.capabilities!.webgl;
-    
+
     if (!webgl.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
@@ -411,10 +414,7 @@ export class FeatureDetectionService {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'Limited WebGL capabilities detected',
         fallbackAvailable: true,
-        recommendations: [
-          'Update graphics drivers',
-          'Use lower quality settings',
-        ],
+        recommendations: ['Update graphics drivers', 'Use lower quality settings'],
       };
     }
 
@@ -431,7 +431,7 @@ export class FeatureDetectionService {
    */
   private getWebGPUSupport(): FeatureSupport {
     const webgpu = this.capabilities!.webgpu;
-    
+
     if (!webgpu.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
@@ -450,10 +450,7 @@ export class FeatureDetectionService {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'WebGPU adapter not available',
         fallbackAvailable: true,
-        recommendations: [
-          'Update graphics drivers',
-          'Fall back to WebGL rendering',
-        ],
+        recommendations: ['Update graphics drivers', 'Fall back to WebGL rendering'],
       };
     }
 
@@ -532,10 +529,7 @@ export class FeatureDetectionService {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'No storage APIs available',
         fallbackAvailable: true,
-        recommendations: [
-          'Enable cookies and local storage',
-          'Use in-memory storage fallback',
-        ],
+        recommendations: ['Enable cookies and local storage', 'Use in-memory storage fallback'],
       };
     }
 
@@ -544,9 +538,7 @@ export class FeatureDetectionService {
         level: FeatureSupportLevel.PARTIAL,
         reason: 'Only session storage available',
         fallbackAvailable: true,
-        recommendations: [
-          'Enable local storage for better persistence',
-        ],
+        recommendations: ['Enable local storage for better persistence'],
       };
     }
 

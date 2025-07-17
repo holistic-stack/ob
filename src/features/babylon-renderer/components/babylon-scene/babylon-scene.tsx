@@ -17,6 +17,7 @@ import type {
   BabylonSceneConfig as ServiceSceneConfig,
 } from '../../services/babylon-scene-service';
 import { createBabylonSceneService } from '../../services/babylon-scene-service';
+import { performCompleteBufferClearing } from '../../utils/buffer-clearing/buffer-clearing';
 
 const logger = createLogger('BabylonScene');
 
@@ -269,9 +270,13 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     initializeScene();
 
-    // Setup render loop
+    // Setup render loop with explicit buffer clearing to prevent camera trails
     engine.runRenderLoop(() => {
       if (sceneRef.current) {
+        // Perform complete buffer clearing to prevent camera trails/ghosting
+        performCompleteBufferClearing(engine, sceneRef.current);
+
+        // Render the scene
         sceneRef.current.render();
       }
     });

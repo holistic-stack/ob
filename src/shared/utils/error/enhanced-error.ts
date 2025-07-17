@@ -1,13 +1,13 @@
 /**
  * @file Enhanced Error Utilities for Better Developer Experience
- * 
+ *
  * Provides enhanced error creation and handling utilities with improved
  * source location information, stack traces, and debugging context.
- * 
+ *
  * @example
  * ```typescript
  * import { createEnhancedError, withSourceLocation } from './enhanced-error';
- * 
+ *
  * // Create error with enhanced context
  * const error = createEnhancedError({
  *   message: 'Failed to parse OpenSCAD code',
@@ -16,7 +16,7 @@
  *   location: { line: 1, column: 5 },
  *   context: { operation: 'parsing', file: 'model.scad' }
  * });
- * 
+ *
  * // Add source location to existing error
  * const enhancedError = withSourceLocation(originalError, {
  *   file: 'src/parser.ts',
@@ -84,7 +84,7 @@ export class EnhancedError extends Error {
 
   constructor(config: EnhancedErrorConfig) {
     super(config.message);
-    
+
     this.name = 'EnhancedError';
     this.code = config.code || 'UNKNOWN_ERROR';
     this.source = config.source;
@@ -97,15 +97,15 @@ export class EnhancedError extends Error {
     this.recoverable = config.recoverable ?? true;
     this.suggestions = config.suggestions || [];
     this.timestamp = new Date();
-    
+
     // Preserve original stack trace
     this.originalStack = this.stack;
-    
+
     // Set cause if provided
     if (config.cause) {
       this.cause = config.cause;
     }
-    
+
     // Maintain proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, EnhancedError);
@@ -117,35 +117,37 @@ export class EnhancedError extends Error {
    */
   getFormattedMessage(): string {
     const parts: string[] = [this.message];
-    
+
     if (this.code !== 'UNKNOWN_ERROR') {
       parts.push(`[${this.code}]`);
     }
-    
+
     if (this.location) {
       const locationParts: string[] = [];
       if (this.location.file) locationParts.push(`file: ${this.location.file}`);
       if (this.location.function) locationParts.push(`function: ${this.location.function}`);
       if (this.location.line) locationParts.push(`line: ${this.location.line}`);
       if (this.location.column) locationParts.push(`column: ${this.location.column}`);
-      
+
       if (locationParts.length > 0) {
         parts.push(`(${locationParts.join(', ')})`);
       }
     }
-    
+
     if (this.source) {
-      parts.push(`Source: "${this.source.substring(0, 100)}${this.source.length > 100 ? '...' : ''}"`);
+      parts.push(
+        `Source: "${this.source.substring(0, 100)}${this.source.length > 100 ? '...' : ''}"`
+      );
     }
-    
+
     if (this.context.operation) {
       parts.push(`Operation: ${this.context.operation}`);
     }
-    
+
     if (this.suggestions.length > 0) {
       parts.push(`Suggestions: ${this.suggestions.join(', ')}`);
     }
-    
+
     return parts.join(' ');
   }
 
@@ -165,11 +167,13 @@ export class EnhancedError extends Error {
       suggestions: this.suggestions,
       stack: this.stack,
       originalStack: this.originalStack,
-      cause: this.cause ? {
-        name: this.cause.name,
-        message: this.cause.message,
-        stack: this.cause.stack,
-      } : undefined,
+      cause: this.cause
+        ? {
+            name: this.cause.name,
+            message: this.cause.message,
+            stack: this.cause.stack,
+          }
+        : undefined,
     };
   }
 
@@ -191,10 +195,7 @@ export const createEnhancedError = (config: EnhancedErrorConfig): EnhancedError 
 /**
  * Add source location information to an existing error
  */
-export const withSourceLocation = (
-  error: Error, 
-  location: SourceLocation
-): EnhancedError => {
+export const withSourceLocation = (error: Error, location: SourceLocation): EnhancedError => {
   if (error instanceof EnhancedError) {
     return createEnhancedError({
       message: error.message,
@@ -208,7 +209,7 @@ export const withSourceLocation = (
       suggestions: error.suggestions,
     });
   }
-  
+
   return createEnhancedError({
     message: error.message,
     location,
@@ -219,10 +220,7 @@ export const withSourceLocation = (
 /**
  * Add operation context to an existing error
  */
-export const withContext = (
-  error: Error,
-  context: ErrorContext
-): EnhancedError => {
+export const withContext = (error: Error, context: ErrorContext): EnhancedError => {
   if (error instanceof EnhancedError) {
     return createEnhancedError({
       message: error.message,
@@ -236,7 +234,7 @@ export const withContext = (
       suggestions: error.suggestions,
     });
   }
-  
+
   return createEnhancedError({
     message: error.message,
     context,

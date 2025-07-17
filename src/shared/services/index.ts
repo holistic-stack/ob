@@ -5,41 +5,35 @@
  * Services provide reusable business logic and external integrations.
  */
 
-export type { ComponentLogger, LoggerConfig, TsLogLevel } from './logger.service';
-export { createLogger, logger } from './logger.service';
-
+export type {
+  BrowserCapabilities,
+  FeatureDetectionError,
+  FeatureSupport,
+} from './feature-detection';
 export {
   FeatureDetectionService,
   FeatureSupportLevel,
 } from './feature-detection';
+export type { ComponentLogger, LoggerConfig, TsLogLevel } from './logger.service';
+export { createLogger, logger } from './logger.service';
 export type {
-  BrowserCapabilities,
-  FeatureSupport,
-  FeatureDetectionError,
-} from './feature-detection';
-
-export {
-  UserErrorHandlerService,
-  ErrorCategory,
-} from './user-error-handler';
-export type {
-  UserErrorMessage,
-} from './user-error-handler';
-
-export { OperationHistoryService } from './operation-history';
-export type {
+  ExecutionOptions,
+  HistoryState,
   Operation,
   OperationResult,
-  HistoryState,
-  ExecutionOptions,
 } from './operation-history';
-
-export { TelemetryService } from './telemetry';
+export { OperationHistoryService } from './operation-history';
 export type {
-  TelemetryConfig,
-  TelemetryEvent,
   ErrorEvent,
   PerformanceEvent,
-  UserEvent,
   SystemEvent,
+  TelemetryConfig,
+  TelemetryEvent,
+  UserEvent,
 } from './telemetry';
+export { TelemetryService } from './telemetry';
+export type { UserErrorMessage } from './user-error-handler';
+export {
+  ErrorCategory,
+  UserErrorHandlerService,
+} from './user-error-handler';

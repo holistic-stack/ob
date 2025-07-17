@@ -186,7 +186,10 @@ export class ASTBridgeConverter {
   /**
    * Create appropriate BabylonJS node based on OpenSCAD node type
    */
-  private async createBabylonNode(openscadNode: ASTNode, config: BridgeConversionConfig): Promise<BabylonJSNode> {
+  private async createBabylonNode(
+    openscadNode: ASTNode,
+    config: BridgeConversionConfig
+  ): Promise<BabylonJSNode> {
     const nodeId = `${openscadNode.type}_${Date.now()}`;
 
     // Check if this is a primitive type

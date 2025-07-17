@@ -6,6 +6,7 @@
  */
 
 import type { StateCreator } from 'zustand';
+import { createLogger } from '../../../shared/services/logger.service.js';
 import type {
   DebounceConfig,
   EditorPosition,
@@ -13,7 +14,6 @@ import type {
 } from '../../../shared/types/common.types.js';
 import type { AsyncResult } from '../../../shared/types/result.types.js';
 import { debounce } from '../../../shared/utils/functional/pipe.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
 import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
 import type { AppStore, EditorSlice } from '../types/store.types.js';
 
@@ -36,7 +36,9 @@ export const createEditorSlice = (
       logger.debug(`[DEBUG][EditorSlice] Triggering debounced parse for ${code.length} chars`);
       const result = await store.parseCode(code);
       if (result.success) {
-        logger.debug(`[DEBUG][EditorSlice] Debounced parse successful: ${result.data.length} AST nodes`);
+        logger.debug(
+          `[DEBUG][EditorSlice] Debounced parse successful: ${result.data.length} AST nodes`
+        );
       } else {
         logger.error(`[ERROR][EditorSlice] Debounced parse failed: ${result.error.message}`);
       }
