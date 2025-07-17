@@ -14,6 +14,7 @@ import type { ErrorHandler } from '../../../error-handling/index.js'; // Added E
 import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
+import type { ASTVisitor } from '../ast-visitor.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
 
@@ -22,6 +23,7 @@ import { ExpressionVisitor } from '../expression-visitor.js';
  */
 export class IfElseVisitor extends BaseASTVisitor {
   private expressionVisitor: ExpressionVisitor;
+  private compositeVisitor: ASTVisitor | undefined;
 
   constructor(
     sourceCode: string,
@@ -30,6 +32,14 @@ export class IfElseVisitor extends BaseASTVisitor {
   ) {
     super(sourceCode, errorHandler, variableScope);
     this.expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler, variableScope);
+  }
+
+  /**
+   * Set the composite visitor for delegating child node processing
+   * This is needed to resolve circular dependency issues during visitor creation
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
   }
 
   protected createASTNodeForFunction(
@@ -173,23 +183,23 @@ export class IfElseVisitor extends BaseASTVisitor {
     for (let i = 0; i < node.namedChildCount; i++) {
       const child = node.namedChildren[i];
 
-      // For now, just create placeholder nodes for the children
-      // In a real implementation, this would delegate to other visitors
-      // Make sure child is not null before accessing its properties
       if (child) {
-        const _childType =
-          child.type === 'module_instantiation' && child.namedChildren[0]
-            ? (child.namedChildren[0].text ?? 'expression')
-            : 'expression';
-
-        const childNode: ast.ASTNode = {
-          type: 'expression' as const,
-          expressionType: 'literal',
-          value: _childType,
-          location: getLocation(child),
-        };
-
-        result.push(childNode);
+        // Delegate to the composite visitor if available
+        if (this.compositeVisitor) {
+          const childNode = this.compositeVisitor.visitNode(child);
+          if (childNode) {
+            result.push(childNode);
+          }
+        } else {
+          // Fallback: create placeholder nodes if no composite visitor is available
+          const childNode: ast.ASTNode = {
+            type: 'expression' as const,
+            expressionType: 'literal',
+            value: child.type,
+            location: getLocation(child),
+          };
+          result.push(childNode);
+        }
       }
     }
 

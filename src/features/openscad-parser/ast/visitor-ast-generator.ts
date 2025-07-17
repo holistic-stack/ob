@@ -42,7 +42,7 @@
  * @since 0.1.0
  */
 
-import type { Tree } from 'web-tree-sitter';
+import type { Language, Tree } from 'web-tree-sitter';
 import type { ErrorHandler } from '../error-handling/index.js';
 import type * as ast from './ast-types.js';
 import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';
@@ -160,7 +160,7 @@ export class VisitorASTGenerator {
   constructor(
     private tree: Tree,
     private source: string,
-    private language: unknown,
+    private language: Language,
     private errorHandler: ErrorHandler // Added ErrorHandler
   ) {
     // Create a shared variable scope that can be used by multiple visitors
@@ -193,6 +193,13 @@ export class VisitorASTGenerator {
       sharedVariableScope
     );
 
+    // Create control structure visitor instance to set composite visitor later
+    const controlStructureVisitor = new ControlStructureVisitor(
+      this.source,
+      this.errorHandler,
+      sharedVariableScope
+    );
+
     const compositeVisitor = new CompositeVisitor(
       [
         new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
@@ -200,11 +207,12 @@ export class VisitorASTGenerator {
         // Module and function definitions must be processed before instantiations
         new ModuleVisitor(this.source, this.errorHandler, sharedVariableScope), // Process module definitions first
         new FunctionVisitor(this.source, this.errorHandler, sharedVariableScope), // Process function definitions first
-        // Specialized visitors for module instantiations come after definition visitors
+        // Control structures must be processed before other visitors to handle if/for/let statements
+        controlStructureVisitor,
+        // Specialized visitors for module instantiations come after control structure visitors
         new PrimitiveVisitor(this.source, this.errorHandler, sharedVariableScope),
         transformVisitor, // transformVisitor instance already has errorHandler
         csgVisitor, // Use the pre-created CSG visitor
-        new ControlStructureVisitor(this.source, this.errorHandler, sharedVariableScope),
         // General statement visitor comes after specialized visitors
         new EchoStatementVisitor(this.source, this.errorHandler, sharedVariableScope),
         expressionVisitor,
@@ -219,11 +227,14 @@ export class VisitorASTGenerator {
     // Set the composite visitor on the Transform visitor to enable child delegation
     transformVisitor.setCompositeVisitor(compositeVisitor);
 
+    // Set the composite visitor on the Control Structure visitor to enable child delegation
+    controlStructureVisitor.setCompositeVisitor(compositeVisitor);
+
     // Create a query visitor that uses the composite visitor
     this.queryVisitor = new QueryVisitor(
       this.source,
       this.tree, // Used this.tree
-      this.language as any,
+      this.language,
       compositeVisitor,
       this.errorHandler // Added errorHandler
     );

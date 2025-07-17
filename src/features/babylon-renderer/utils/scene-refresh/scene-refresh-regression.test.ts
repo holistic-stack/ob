@@ -1,14 +1,14 @@
 /**
  * @file Scene Refresh Regression Tests
- * 
+ *
  * Regression tests to ensure scene refresh works correctly after mesh changes.
  * These tests verify the fix for visual update issues where the canvas didn't
  * refresh properly after mesh disposal or creation.
- * 
+ *
  * **Critical Bug Fixed**: Canvas not updating visually after mesh changes
  * **Root Cause**: Missing engine.resize() and scene refresh operations
  * **Solution**: Comprehensive scene refresh with engine resize and material cache reset
- * 
+ *
  * @example
  * ```bash
  * # Run these regression tests
@@ -16,13 +16,13 @@
  * ```
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   forceEngineResize,
-  resetSceneMaterialCache,
-  markSceneMaterialsAsDirty,
   forceSceneRefresh,
+  markSceneMaterialsAsDirty,
+  resetSceneMaterialCache,
   SceneRefreshErrorCode,
 } from './scene-refresh';
 
@@ -46,11 +46,11 @@ describe('Scene Refresh Regression Tests', () => {
     it('should force canvas refresh after mesh disposal', () => {
       // REGRESSION TEST: Canvas didn't update visually after mesh removal
       // The fix: engine.resize() forces canvas to refresh
-      
+
       // Create and dispose a mesh
       const mesh = BABYLON.MeshBuilder.CreateBox('testBox', { size: 10 }, scene);
       expect(scene.meshes.length).toBe(1);
-      
+
       // Remove mesh from scene
       scene.removeMesh(mesh);
       mesh.dispose();
@@ -66,22 +66,22 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should refresh scene after multiple mesh changes', () => {
       // REGRESSION TEST: Multiple rapid changes sometimes didn't update visually
-      
+
       const meshChanges = 10;
-      
+
       for (let i = 0; i < meshChanges; i++) {
         // Create mesh
         const mesh = BABYLON.MeshBuilder.CreateSphere(`sphere_${i}`, { diameter: 5 }, scene);
         expect(scene.meshes.length).toBe(1);
-        
+
         // Remove mesh
         scene.removeMesh(mesh);
         mesh.dispose();
         expect(scene.meshes.length).toBe(0);
-        
+
         // Force scene refresh after each change
         const refreshResult = forceSceneRefresh(engine, scene);
-        
+
         // Should succeed or fail gracefully (some methods might not exist in NullEngine)
         if (refreshResult.success) {
           expect(refreshResult.data).toBeUndefined();
@@ -93,9 +93,9 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should handle scene refresh with material changes', () => {
       // REGRESSION TEST: Material changes sometimes didn't trigger visual updates
-      
+
       const mesh = BABYLON.MeshBuilder.CreateBox('materialBox', { size: 5 }, scene);
-      
+
       // Create and assign materials
       const materials = [
         new BABYLON.StandardMaterial('material1', scene),
@@ -105,11 +105,11 @@ describe('Scene Refresh Regression Tests', () => {
 
       for (const material of materials) {
         mesh.material = material;
-        
+
         // Reset material cache (part of the fix)
         const cacheResult = resetSceneMaterialCache(scene);
         expect(cacheResult.success).toBe(true);
-        
+
         // Mark materials as dirty (part of the fix)
         const dirtyResult = markSceneMaterialsAsDirty(scene);
         expect(dirtyResult.success).toBe(true);
@@ -120,7 +120,7 @@ describe('Scene Refresh Regression Tests', () => {
   describe('REGRESSION: Engine Resize Operations', () => {
     it('should handle engine resize without errors', () => {
       // REGRESSION TEST: Engine resize was critical but sometimes failed
-      
+
       // Multiple resize operations (simulating window resize events)
       for (let i = 0; i < 5; i++) {
         const result = forceEngineResize(engine);
@@ -130,17 +130,17 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should handle engine resize with invalid engine', () => {
       // REGRESSION TEST: Error handling for invalid engines
-      
+
       const invalidEngine = null as any;
       const result = forceEngineResize(invalidEngine);
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
     });
 
     it('should maintain performance during repeated resizes', () => {
       // REGRESSION TEST: Repeated resizes shouldn't degrade performance
-      
+
       const resizeCount = 50;
       const startTime = performance.now();
 
@@ -161,7 +161,7 @@ describe('Scene Refresh Regression Tests', () => {
   describe('REGRESSION: Material Cache Management', () => {
     it('should reset material cache without errors', () => {
       // REGRESSION TEST: Material cache reset was part of the visual update fix
-      
+
       // Create materials to populate cache
       const materials = [
         new BABYLON.StandardMaterial('mat1', scene),
@@ -178,7 +178,7 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should mark materials as dirty correctly', () => {
       // REGRESSION TEST: Marking materials as dirty was essential for updates
-      
+
       const mesh = BABYLON.MeshBuilder.CreateBox('dirtyBox', { size: 5 }, scene);
       const material = new BABYLON.StandardMaterial('dirtyMaterial', scene);
       mesh.material = material;
@@ -190,7 +190,7 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should handle scenes without material methods gracefully', () => {
       // REGRESSION TEST: Some BabylonJS versions might not have all methods
-      
+
       // Create a scene-like object without some methods
       const partialScene = {
         render: () => {},
@@ -209,19 +209,19 @@ describe('Scene Refresh Regression Tests', () => {
   describe('REGRESSION: Complete Scene Refresh Pipeline', () => {
     it('should execute complete refresh pipeline successfully', () => {
       // REGRESSION TEST: The complete refresh pipeline was the final fix
-      
+
       // Create a complex scene
       const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 5 }, scene);
       const mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 5 }, scene);
       const material1 = new BABYLON.StandardMaterial('mat1', scene);
       const material2 = new BABYLON.StandardMaterial('mat2', scene);
-      
+
       mesh1.material = material1;
       mesh2.material = material2;
 
       // Execute complete refresh pipeline
       const result = forceSceneRefresh(engine, scene);
-      
+
       // Should succeed or fail gracefully
       if (result.success) {
         expect(result.data).toBeUndefined();
@@ -233,11 +233,11 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should handle refresh pipeline with empty scene', () => {
       // REGRESSION TEST: Empty scenes should refresh without issues
-      
+
       expect(scene.meshes.length).toBe(0);
-      
+
       const result = forceSceneRefresh(engine, scene);
-      
+
       // Should handle empty scene gracefully
       if (result.success) {
         expect(result.data).toBeUndefined();
@@ -248,7 +248,7 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should maintain performance during complete refresh', () => {
       // REGRESSION TEST: Complete refresh should be efficient
-      
+
       // Create a moderately complex scene
       for (let i = 0; i < 10; i++) {
         const mesh = BABYLON.MeshBuilder.CreateBox(`box_${i}`, { size: 1 }, scene);
@@ -275,9 +275,9 @@ describe('Scene Refresh Regression Tests', () => {
   describe('REGRESSION: Error Handling and Edge Cases', () => {
     it('should handle invalid scene in refresh operations', () => {
       // REGRESSION TEST: Error handling was critical for stability
-      
+
       const invalidScene = null as any;
-      
+
       const cacheResult = resetSceneMaterialCache(invalidScene);
       expect(cacheResult.success).toBe(false);
       expect(cacheResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
@@ -293,9 +293,9 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should handle invalid engine in refresh operations', () => {
       // REGRESSION TEST: Engine validation was important
-      
+
       const invalidEngine = null as any;
-      
+
       const refreshResult = forceSceneRefresh(invalidEngine, scene);
       expect(refreshResult.success).toBe(false);
       expect(refreshResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
@@ -303,9 +303,9 @@ describe('Scene Refresh Regression Tests', () => {
 
     it('should include timestamps in error objects', () => {
       // REGRESSION TEST: Error tracking was important for debugging
-      
+
       const result = forceSceneRefresh(null as any, scene);
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.timestamp).toBeInstanceOf(Date);
       expect(result.error?.message).toBeTruthy();

@@ -78,6 +78,7 @@ import type { ErrorHandler } from '../../error-handling/index.js'; // Added Erro
 import type * as ast from '../ast-types.js';
 import { extractArguments } from '../extractors/argument-extractor.js';
 import { getLocation } from '../utils/location-utils.js';
+import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 import { ForLoopVisitor } from './control-structure-visitor/for-loop-visitor.js';
 import { IfElseVisitor } from './control-structure-visitor/if-else-visitor.js';
@@ -111,6 +112,7 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   private ifElseVisitor: IfElseVisitor;
   private forLoopVisitor: ForLoopVisitor;
   private expressionVisitor: ExpressionVisitor;
+  private compositeVisitor: ASTVisitor | undefined;
 
   /**
    * Create a new ControlStructureVisitor
@@ -134,6 +136,17 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
+   * Set the composite visitor for delegating child node processing
+   * This is needed to resolve circular dependency issues during visitor creation
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
+    // Pass the composite visitor to sub-visitors that need it
+    this.ifElseVisitor.setCompositeVisitor(compositeVisitor);
+    this.forLoopVisitor.setCompositeVisitor(compositeVisitor);
+  }
+
+  /**
    * Override visitStatement to only handle control structure statements
    * This prevents the ControlStructureVisitor from interfering with other statement types
    * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
@@ -143,26 +156,27 @@ export class ControlStructureVisitor extends BaseASTVisitor {
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
-    // Only handle statements that contain control structure nodes
+    // Only handle statements that directly contain control structure nodes as immediate children
     // Check for if_statement, for_statement, let_expression, each_statement
-    const ifStatement = node.descendantsOfType('if_statement')[0];
-    if (ifStatement) {
-      return this.visitIfStatement(ifStatement);
-    }
+    for (let i = 0; i < node.namedChildCount; i++) {
+      const child = node.namedChild(i);
+      if (!child) continue;
 
-    const forStatement = node.descendantsOfType('for_statement')[0];
-    if (forStatement) {
-      return this.visitForStatement(forStatement);
-    }
+      if (child.type === 'if_statement') {
+        return this.visitIfStatement(child);
+      }
 
-    const letExpression = node.descendantsOfType('let_expression')[0];
-    if (letExpression) {
-      return this.visitLetExpression(letExpression);
-    }
+      if (child.type === 'for_statement') {
+        return this.visitForStatement(child);
+      }
 
-    const eachStatement = node.descendantsOfType('each_statement')[0];
-    if (eachStatement) {
-      return this.visitEachStatement(eachStatement);
+      if (child.type === 'let_expression') {
+        return this.visitLetExpression(child);
+      }
+
+      if (child.type === 'each_statement') {
+        return this.visitEachStatement(child);
+      }
     }
 
     // Return null for all other statement types to let specialized visitors handle them

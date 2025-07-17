@@ -1,14 +1,14 @@
 /**
  * @file Mesh Disposal Regression Tests
- * 
+ *
  * Regression tests to ensure mesh disposal works correctly during shape changes.
  * These tests verify the fix for mesh persistence issues where changing shapes
  * left old meshes visible or caused memory leaks.
- * 
+ *
  * **Critical Bug Fixed**: Mesh persistence during shape changes
  * **Root Cause**: Incomplete mesh disposal and missing scene refresh
  * **Solution**: Comprehensive mesh disposal with proper material/texture cleanup
- * 
+ *
  * @example
  * ```bash
  * # Run these regression tests
@@ -16,13 +16,13 @@
  * ```
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  disposeMeshesComprehensively,
-  disposeMeshComprehensively,
-  isSystemMesh,
   disposeMaterialSafely,
+  disposeMeshComprehensively,
+  disposeMeshesComprehensively,
+  isSystemMesh,
   MeshDisposalErrorCode,
 } from './mesh-disposal';
 
@@ -46,12 +46,12 @@ describe('Mesh Disposal Regression Tests', () => {
     it('should handle cube to sphere transition without mesh persistence', () => {
       // REGRESSION TEST: This was a common scenario that failed
       // cube(15); -> sphere(15); should completely replace the mesh
-      
+
       // Create initial cube mesh
       const cube = BABYLON.MeshBuilder.CreateBox('cube', { size: 15 }, scene);
       const cubeMaterial = new BABYLON.StandardMaterial('cubeMaterial', scene);
       cube.material = cubeMaterial;
-      
+
       expect(scene.meshes.length).toBe(1);
       expect(scene.materials.length).toBe(1);
 
@@ -75,7 +75,7 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should handle rapid shape changes without memory leaks', () => {
       // REGRESSION TEST: Rapid shape changes were problematic
-      
+
       const shapes = ['cube', 'sphere', 'cylinder', 'torus', 'plane'];
       let totalMeshesDisposed = 0;
       let totalMaterialsDisposed = 0;
@@ -91,7 +91,11 @@ describe('Mesh Disposal Regression Tests', () => {
             mesh = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 10 }, scene);
             break;
           case 'cylinder':
-            mesh = BABYLON.MeshBuilder.CreateCylinder('cylinder', { height: 10, diameter: 10 }, scene);
+            mesh = BABYLON.MeshBuilder.CreateCylinder(
+              'cylinder',
+              { height: 10, diameter: 10 },
+              scene
+            );
             break;
           case 'torus':
             mesh = BABYLON.MeshBuilder.CreateTorus('torus', { diameter: 10, thickness: 2 }, scene);
@@ -112,7 +116,7 @@ describe('Mesh Disposal Regression Tests', () => {
           expect(result.success).toBe(true);
           totalMeshesDisposed += result.data?.meshesDisposed || 0;
           totalMaterialsDisposed += result.data?.materialsDisposed || 0;
-          
+
           expect(scene.meshes.length).toBe(0);
         }
       }
@@ -124,14 +128,18 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should preserve system meshes during disposal', () => {
       // REGRESSION TEST: System meshes (cameras, lights) should not be disposed
-      
+
       // Create user meshes
       const userBox = BABYLON.MeshBuilder.CreateBox('userBox', { size: 5 }, scene);
       const userSphere = BABYLON.MeshBuilder.CreateSphere('userSphere', { diameter: 5 }, scene);
 
       // Create system-like meshes
       const cameraHelper = BABYLON.MeshBuilder.CreateBox('camera_helper', { size: 1 }, scene);
-      const lightHelper = BABYLON.MeshBuilder.CreateSphere('light_indicator', { diameter: 1 }, scene);
+      const lightHelper = BABYLON.MeshBuilder.CreateSphere(
+        'light_indicator',
+        { diameter: 1 },
+        scene
+      );
       const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 100, height: 100 }, scene);
 
       expect(scene.meshes.length).toBe(5);
@@ -145,7 +153,7 @@ describe('Mesh Disposal Regression Tests', () => {
       expect(result.data?.meshesSkipped).toBe(3); // camera_helper, light_indicator, ground
 
       // Verify system meshes are still in scene
-      const remainingMeshes = scene.meshes.map(m => m.name);
+      const remainingMeshes = scene.meshes.map((m) => m.name);
       expect(remainingMeshes).toContain('camera_helper');
       expect(remainingMeshes).toContain('light_indicator');
       expect(remainingMeshes).toContain('ground');
@@ -155,10 +163,10 @@ describe('Mesh Disposal Regression Tests', () => {
   describe('REGRESSION: Material and Texture Cleanup', () => {
     it('should dispose materials and textures during mesh disposal', () => {
       // REGRESSION TEST: Materials and textures were sometimes not disposed
-      
+
       const mesh = BABYLON.MeshBuilder.CreateBox('texturedBox', { size: 10 }, scene);
       const material = new BABYLON.StandardMaterial('texturedMaterial', scene);
-      
+
       // Add textures (common source of memory leaks)
       material.diffuseTexture = new BABYLON.Texture(
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
@@ -168,7 +176,7 @@ describe('Mesh Disposal Regression Tests', () => {
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         scene
       );
-      
+
       mesh.material = material;
 
       // Dispose material safely
@@ -183,9 +191,9 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should handle material disposal failures gracefully', () => {
       // REGRESSION TEST: Material disposal failures shouldn't crash the system
-      
+
       const mesh = BABYLON.MeshBuilder.CreateBox('problematicBox', { size: 10 }, scene);
-      
+
       // Create a material that might fail to dispose
       const material = new BABYLON.StandardMaterial('problematicMaterial', scene);
       mesh.material = material;
@@ -201,7 +209,7 @@ describe('Mesh Disposal Regression Tests', () => {
   describe('REGRESSION: System Mesh Detection', () => {
     it('should correctly identify system meshes', () => {
       // REGRESSION TEST: System mesh detection was critical for preventing disposal
-      
+
       const testCases = [
         { name: 'camera1', expected: true },
         { name: 'light_helper', expected: true },
@@ -221,7 +229,7 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should handle null and undefined meshes safely', () => {
       // REGRESSION TEST: Null checks were important for stability
-      
+
       expect(isSystemMesh(null as any)).toBe(true);
       expect(isSystemMesh(undefined as any)).toBe(true);
     });
@@ -230,7 +238,7 @@ describe('Mesh Disposal Regression Tests', () => {
   describe('REGRESSION: Performance During Disposal', () => {
     it('should maintain performance during large mesh disposal', () => {
       // REGRESSION TEST: Large scenes should dispose efficiently
-      
+
       const meshCount = 50;
       const meshes: BABYLON.Mesh[] = [];
 
@@ -259,7 +267,7 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should handle disposal with zero meshes efficiently', () => {
       // REGRESSION TEST: Empty scene disposal should be fast
-      
+
       expect(scene.meshes.length).toBe(0);
 
       const startTime = performance.now();
@@ -277,7 +285,7 @@ describe('Mesh Disposal Regression Tests', () => {
   describe('REGRESSION: Error Handling', () => {
     it('should handle invalid scene gracefully', () => {
       // REGRESSION TEST: Error handling was critical for stability
-      
+
       const result = disposeMeshesComprehensively(null as any);
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe(MeshDisposalErrorCode.INVALID_SCENE);
@@ -285,7 +293,7 @@ describe('Mesh Disposal Regression Tests', () => {
 
     it('should continue disposal even if individual meshes fail', () => {
       // REGRESSION TEST: Partial failures shouldn't stop the entire process
-      
+
       // Create normal meshes
       const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 1 }, scene);
       const mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 1 }, scene);

@@ -14,6 +14,7 @@ import type { ErrorHandler } from '../../../error-handling/index.js';
 import type * as ast from '../../ast-types.js';
 import { createErrorNodeInternal } from '../../utils/ast-error-utils.js';
 import { getLocation } from '../../utils/location-utils.js';
+import type { ASTVisitor } from '../ast-visitor.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
 
@@ -78,6 +79,7 @@ function isAstExpressionNode(node: ast.ASTNode | null): node is ast.ExpressionNo
  */
 export class ForLoopVisitor extends BaseASTVisitor {
   private expressionVisitor: ExpressionVisitor;
+  private compositeVisitor: ASTVisitor | undefined;
 
   constructor(
     sourceCode: string,
@@ -86,6 +88,14 @@ export class ForLoopVisitor extends BaseASTVisitor {
   ) {
     super(sourceCode, errorHandler, variableScope || new Map());
     this.expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler, variableScope);
+  }
+
+  /**
+   * Set the composite visitor for delegating child node processing
+   * This is needed to resolve circular dependency issues during visitor creation
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
   }
 
   override visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
