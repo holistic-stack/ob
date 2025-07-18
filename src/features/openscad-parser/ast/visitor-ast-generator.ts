@@ -1,45 +1,59 @@
 /**
- * @file Visitor-based AST generator for OpenSCAD parser
+ * @file visitor-ast-generator.ts
+ * @description This file contains the `VisitorASTGenerator` class, which is the central orchestrator for converting
+ * a Tree-sitter Concrete Syntax Tree (CST) into a structured Abstract Syntax Tree (AST) using the Visitor pattern.
+ * It coordinates a hierarchy of specialized visitors to handle different parts of the OpenSCAD language.
  *
- * This module provides the central orchestrator for converting Tree-sitter Concrete Syntax Trees (CST)
- * into structured Abstract Syntax Trees (AST) using the Visitor pattern. The VisitorASTGenerator
- * coordinates multiple specialized visitors to handle different aspects of the OpenSCAD language.
+ * @architectural_decision
+ * The AST generation process is designed around a layered visitor architecture. A `QueryVisitor` serves as the entry point,
+ * traversing the CST and delegating to a `CompositeVisitor`. The `CompositeVisitor` then routes each node to the
+ * appropriate specialized visitor (e.g., `PrimitiveVisitor`, `TransformVisitor`). This separation of concerns makes the
+ * system highly modular, maintainable, and extensible. New language features can be supported by simply adding new visitors
+ * without modifying existing ones. This design is crucial for managing the complexity of the OpenSCAD language and ensuring
+ * that the parser is easy to maintain and extend.
  *
- * The AST generation process follows a layered architecture:
- * 1. **QueryVisitor**: Entry point that traverses the CST and delegates to appropriate visitors
- * 2. **CompositeVisitor**: Coordinates multiple specialized visitors using chain of responsibility
- * 3. **Specialized Visitors**: Handle specific language constructs (primitives, transforms, CSG, etc.)
- * 4. **AST Nodes**: Structured output representing the semantic meaning of the code
- *
- * Key features:
- * - Modular visitor architecture for extensibility and maintainability
- * - Comprehensive error handling and reporting throughout the generation process
- * - Support for all OpenSCAD language constructs including primitives, transforms, and expressions
- * - Type-safe AST generation with proper TypeScript typing
- * - Incremental parsing support for editor integration
- *
- * @example Basic AST generation
+ * @example
  * ```typescript
+ * import { OpenscadParser, SimpleErrorHandler } from '../openscad-parser';
  * import { VisitorASTGenerator } from './visitor-ast-generator';
+ * import { Language, Parser, Tree } from 'web-tree-sitter';
  *
- * // Parse OpenSCAD code with Tree-sitter
- * const tree = parser.parse('cube(10);');
+ * async function generateAst() {
+ *   // 1. Initialize the Tree-sitter parser and load the OpenSCAD language
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
  *
- * // Create AST generator
- * const generator = new VisitorASTGenerator(
- *   tree,
- *   'cube(10);',
- *   openscadLanguage,
- *   errorHandler
- * );
+ *   // 2. Parse the source code to get a Concrete Syntax Tree (CST)
+ *   const sourceCode = 'translate([10, 0, 0]) cube(10);';
+ *   const tree: Tree = parser.parse(sourceCode);
  *
- * // Generate structured AST
- * const ast = generator.generate();
- * // Returns: [{ type: 'cube', size: 10, center: false }]
+ *   // 3. Create an error handler
+ *   const errorHandler = new SimpleErrorHandler();
+ *
+ *   // 4. Instantiate the AST generator with the CST and other dependencies
+ *   const generator = new VisitorASTGenerator(tree, sourceCode, openscadLanguage, errorHandler);
+ *
+ *   // 5. Generate the AST
+ *   const ast = generator.generate();
+ *
+ *   // 6. Log the resulting AST
+ *   console.log(JSON.stringify(ast, null, 2));
+ *
+ *   // 7. Clean up resources
+ *   generator.dispose();
+ *   parser.delete();
+ * }
+ *
+ * generateAst();
  * ```
  *
- * @module visitor-ast-generator
- * @since 0.1.0
+ * @integration
+ * The `VisitorASTGenerator` is instantiated and used by the `OpenscadParser` class.
+ * The `OpenscadParser` is responsible for managing the Tree-sitter parser and language lifecycle,
+ * and it passes the necessary dependencies to this generator. The generated AST is then consumed
+ * by the application's state management (Zustand) and forwarded to the rendering engine.
  */
 
 import type { Language, Tree } from 'web-tree-sitter';
@@ -60,72 +74,10 @@ import { QueryVisitor } from './visitors/query-visitor.js';
 import { TransformVisitor } from './visitors/transform-visitor.js';
 import { VariableVisitor } from './visitors/variable-visitor.js';
 
-// This function is not used in this file
-// /**
-//  * Find a child node of a specific type
-//  * @param node The parent node
-//  * @param type The type of child to find
-//  * @returns The child node or null if not found
-//  */
-// function findChildOfType(node: TSNode, type: string): TSNode | null {
-//   for (let i = 0; i < node.childCount; i++) {
-//     const child = node.child(i);
-//     if (child && child.type === type) {
-//       return child;
-//     }
-//   }
-//   return null;
-// }
-
 /**
- * Converts a Tree-sitter Concrete Syntax Tree (CST) to an OpenSCAD Abstract Syntax Tree (AST)
- * using the visitor pattern.
- *
- * The VisitorASTGenerator is the central orchestrator in the AST generation process, serving as
- * the bridge between Tree-sitter's low-level parse tree and the high-level semantic AST. It
- * implements a layered visitor architecture where:
- *
- * 1. A QueryVisitor provides the entry point for CST traversal
- * 2. A CompositeVisitor delegates to specialized visitors based on node types
- * 3. Type-specific visitors (PrimitiveVisitor, TransformVisitor, etc.) handle particular OpenSCAD constructs
- *
- * This design provides several benefits:
- * - Separation of concerns: Each visitor focuses on a specific aspect of the language
- * - Extensibility: New language features can be supported by adding new visitors
- * - Maintainability: Changes to one syntax element don't affect the handling of others
- *
- * The AST generation follows this workflow:
- * ```
- * Tree-sitter CST → QueryVisitor → CompositeVisitor → Specialized Visitors → AST Nodes
- * ```
- *
- * @example Parsing and AST Generation Flow
- * ```typescript
- * // 1. Parse OpenSCAD code with Tree-sitter
- * const parser = new Parser();
- * parser.setLanguage(openscadLanguage);
- * const tree = parser.parse('cube(10);');
- *
- * // 2. Create error handler for reporting issues
- * const errorHandler = new ErrorHandler();
- *
- * // 3. Create the AST generator
- * const generator = new VisitorASTGenerator(
- *   tree,                // Tree-sitter parse tree
- *   'cube(10);',         // Original source code
- *   openscadLanguage,    // Language definition
- *   errorHandler         // Error reporting
- * );
- *
- * // 4. Generate the AST
- * const ast = generator.generate();
- *
- * // 5. Use the AST for analysis, transformation, etc.
- * console.log(JSON.stringify(ast, null, 2));
- * ```
- *
- * @file Defines the VisitorASTGenerator class that serves as the entry point for AST generation
- * @since 0.1.0
+ * @class VisitorASTGenerator
+ * @description Converts a Tree-sitter CST into an OpenSCAD AST using a visitor-based approach.
+ * This class is the main entry point for the AST generation process, orchestrating a set of specialized visitors.
  */
 export class VisitorASTGenerator {
   private visitor: ASTVisitor;
@@ -133,29 +85,15 @@ export class VisitorASTGenerator {
   private previousAST: ast.ASTNode[] | null = null;
 
   /**
-   * Creates a new VisitorASTGenerator instance and initializes the visitor hierarchy.
+   * @constructor
+   * @description Initializes a new instance of the `VisitorASTGenerator`, setting up the visitor hierarchy.
+   * The constructor establishes a chain of responsibility, where the `QueryVisitor` acts as the primary visitor,
+   * delegating to a `CompositeVisitor` that, in turn, delegates to a collection of specialized visitors.
    *
-   * This constructor sets up a complex visitor structure where specialized visitors
-   * are combined into a composite visitor. The QueryVisitor is used as the main entry point
-   * which delegates to the appropriate specialized visitor based on node types.
-   *
-   * @param tree - The Tree-sitter parse tree (CST) to convert to an AST
-   * @param source - The original OpenSCAD source code string
-   * @param language - The Tree-sitter language object for OpenSCAD
-   * @param errorHandler - Error handler for reporting issues during AST generation
-   *
-   * @example
-   * ```ts
-   * // Create a generator with a parsed Tree-sitter tree
-   * const parser = new Parser();
-   * parser.setLanguage(openscadLanguage);
-   * const tree = parser.parse('cube(10);');
-   *
-   * const errorHandler = new ConsoleErrorHandler();
-   * const generator = new VisitorASTGenerator(tree, 'cube(10);', openscadLanguage, errorHandler);
-   * ```
-   *
-   * @since 0.1.0
+   * @param {Tree} tree - The Tree-sitter parse tree (CST).
+   * @param {string} source - The original OpenSCAD source code.
+   * @param {Language} language - The Tree-sitter language definition for OpenSCAD.
+   * @param {ErrorHandler} errorHandler - An error handler instance for reporting issues.
    */
   constructor(
     private tree: Tree,
@@ -244,38 +182,11 @@ export class VisitorASTGenerator {
   }
 
   /**
-   * Generates an Abstract Syntax Tree (AST) from the Tree-sitter Concrete Syntax Tree (CST).
+   * @method generate
+   * @description Generates the AST by traversing the CST from the root node.
+   * It delegates the processing of each node to the configured visitor hierarchy.
    *
-   * This method traverses the CST starting from the root node and delegates the processing
-   * of each node to the appropriate visitor. The result is a structured AST that represents
-   * the semantic meaning of the OpenSCAD code in a format that's easier to analyze and transform
-   * than the raw parse tree.
-   *
-   * @returns An array of top-level AST nodes representing the OpenSCAD program
-   * @throws Error if visitor processing fails during AST generation
-   *
-   * @example Simple Program
-   * ```ts
-   * // For source code: 'cube(10);'
-   * const ast = generator.generate();
-   * // Returns an array with a single ModuleInstantiationNode for 'cube'
-   * ```
-   *
-   * @example Complex Program
-   * ```ts
-   * // For a program with multiple statements
-   * const source = `
-   *   cube(10);
-   *   translate([0, 0, 10]) {
-   *     sphere(5);
-   *   }
-   * `;
-   * const generator = new VisitorASTGenerator(tree, source, language, errorHandler);
-   * const ast = generator.generate();
-   * // Returns an array with multiple AST nodes representing the program structure
-   * ```
-   *
-   * @since 0.1.0
+   * @returns {ast.ASTNode[]} An array of top-level AST nodes representing the OpenSCAD program.
    */
   public generate(): ast.ASTNode[] {
     // Get the root node of the Tree-sitter tree
@@ -301,7 +212,10 @@ export class VisitorASTGenerator {
   }
 
   /**
-   * Dispose of all resources and clean up memory
+   * @method dispose
+   * @description Cleans up resources used by the generator, particularly the `QueryVisitor`,
+   * to prevent memory leaks from Tree-sitter queries. It is crucial to call this method
+   * when the generator is no longer needed to avoid retaining references to the CST and other objects.
    */
   public dispose(): void {
     // Dispose the query visitor which will clean up Query objects

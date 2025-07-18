@@ -1,72 +1,64 @@
 /**
- * @file Module definitions and instantiations visitor for OpenSCAD parser
- *
- * This module implements the ModuleVisitor class, which specializes in processing
+ * @file module-visitor.ts
+ * @description This file implements the `ModuleVisitor` class, which specializes in processing
  * OpenSCAD module definitions and instantiations, converting them to structured
  * AST representations. Modules are fundamental to OpenSCAD's modular programming
  * approach, allowing code reuse and parametric design.
  *
- * The ModuleVisitor handles:
- * - **Module Definitions**: User-defined modules with parameters and body
- * - **Module Instantiations**: Calls to user-defined modules with arguments
- * - **Built-in Transformations**: Transform operations (translate, rotate, scale, etc.)
- * - **Parameter Processing**: Module parameter extraction and validation
- * - **Child Management**: Processing of child objects within module contexts
+ * @architectural_decision
+ * The `ModuleVisitor` is a specialized visitor responsible for handling `module` definitions and
+ * instantiations. It plays a crucial role in the parser by enabling the creation of reusable,
+ * parametric components. The visitor is designed to differentiate between built-in (primitive,
+ * transform, CSG) and user-defined modules, ensuring that each is handled by the appropriate
+ * visitor. This separation of concerns is key to the parser's modularity and extensibility.
+ * The visitor also handles the extraction of module parameters and the processing of module bodies,
+ * which can contain any valid OpenSCAD statement.
  *
- * Key features:
- * - **Parametric Modules**: Support for modules with typed parameters and default values
- * - **Transformation Integration**: Built-in support for common transformation modules
- * - **Child Object Processing**: Proper handling of child objects and nested structures
- * - **Parameter Validation**: Type checking and validation of module parameters
- * - **Error Recovery**: Graceful handling of malformed module definitions
- * - **Location Tracking**: Source location preservation for debugging and IDE integration
- *
- * Module processing patterns:
- * - **Simple Modules**: `module name() { ... }` - modules without parameters
- * - **Parametric Modules**: `module name(param1, param2=default) { ... }` - modules with parameters
- * - **Module Instantiation**: `name(arg1, arg2);` - calling user-defined modules
- * - **Transform Modules**: `translate([1,0,0]) cube(5);` - transformation operations
- * - **Nested Modules**: Modules containing other module calls and definitions
- *
- * The visitor implements a dual processing strategy:
- * 1. **Module Definitions**: Extract name, parameters, and body for reusable modules
- * 2. **Module Instantiations**: Process calls with argument binding and child processing
- *
- * @example Basic module processing
+ * @example
  * ```typescript
  * import { ModuleVisitor } from './module-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new ModuleVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'module my_cube(size) { cube(size); }';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process module definition
- * const moduleDefNode = visitor.visitModuleDefinition(moduleDefCST);
- * // Returns: { type: 'module_definition', name: 'mycube', parameters: [...], body: [...] }
+ *   // 2. Create an error handler and visitor
+ *   const errorHandler = new ErrorHandler();
+ *   const moduleVisitor = new ModuleVisitor(sourceCode, errorHandler, new Map());
  *
- * // Process module instantiation
- * const moduleInstNode = visitor.visitModuleInstantiation(moduleInstCST);
- * // Returns: { type: 'module_instantiation', name: 'mycube', arguments: [...], children: [...] }
+ *   // 3. Visit the module_definition node
+ *   const moduleDefinitionNode = tree.rootNode.firstChild!;
+ *   const astNode = moduleVisitor.visitModuleDefinition(moduleDefinitionNode);
+ *
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "module_definition",
+ *   //   "name": { "type": "expression", "expressionType": "identifier", "name": "my_cube", ... },
+ *   //   "parameters": [ { "name": "size", ... } ],
+ *   //   "body": [ { "type": "cube", ... } ]
+ *   // }
+ *
+ *   // 5. Clean up
+ *   parser.delete();
+ * }
+ *
+ * main();
  * ```
  *
- * @example Parametric module processing
- * ```typescript
- * // For OpenSCAD code: module box(size=[10,10,10], center=false) { cube(size, center); }
- * const moduleNode = visitor.visitModuleDefinition(moduleCST);
- * // Returns module definition with typed parameters and cube body
- *
- * // For module call: box([20,15,10], true);
- * const callNode = visitor.visitModuleInstantiation(callCST);
- * // Returns module instantiation with bound arguments
- * ```
- *
- * @example Transform module processing
- * ```typescript
- * // For OpenSCAD code: translate([10,0,0]) rotate([0,0,45]) cube(5);
- * const transformNode = visitor.visitModuleInstantiation(transformCST);
- * // Returns nested transformation structure with cube child
- * ```
- *
- * @module module-visitor
- * @since 0.1.0
+ * @integration
+ * The `ModuleVisitor` is a core component of the `CompositeVisitor`. It is responsible for
+ * processing `module_definition` nodes. When the `CompositeVisitor` encounters a module
+ * definition, it delegates to this visitor, which then returns a `ModuleDefinitionNode`.
+ * This node is then added to the final AST, making the module available for instantiation.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -81,18 +73,18 @@ import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for processing OpenSCAD module definitions and instantiations.
- *
- * The ModuleVisitor extends BaseASTVisitor to provide specialized handling for
- * user-defined modules and built-in transformation operations. It manages the
- * complex process of extracting module parameters, processing module bodies,
- * and handling both simple and parametric module patterns.
- *
  * @class ModuleVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for processing OpenSCAD module definitions and instantiations.
  */
 export class ModuleVisitor extends BaseASTVisitor {
+  /**
+   * @constructor
+   * @description Creates a new `ModuleVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} variableScope - The current variable scope.
+   */
   constructor(
     source: string,
     protected override errorHandler: ErrorHandler,
@@ -102,12 +94,10 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitStatement to only handle module-related statements
-   * This prevents the ModuleVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The module AST node or null if this is not a module statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle module-related statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The module AST node, or null if this is not a module statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -130,9 +120,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitModuleInstantiation to only handle user-defined modules
-   * This prevents the ModuleVisitor from creating generic ModuleInstantiationNodes
-   * for primitive, transform, or CSG functions
+   * @method visitModuleInstantiation
+   * @description Overrides the base `visitModuleInstantiation` to only handle user-defined modules.
+   * This prevents the `ModuleVisitor` from creating generic `ModuleInstantiationNode`s
+   * for primitive, transform, or CSG functions.
+   * @param {TSNode} node - The module instantiation node to visit.
+   * @returns {ast.ASTNode | null} The module instantiation AST node, or null if it's a built-in function.
+   * @override
    */
   override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     // Extract function name
@@ -187,11 +181,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a specific function
-   * @param node The node to process
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The AST node or null if the function is not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a specific function.
+   * @param {TSNode} node - The node to process.
+   * @param {string} functionName - The name of the function.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.ASTNode | null} The AST node, or null if the function is not supported.
+   * @protected
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -203,9 +199,11 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a module definition node
-   * @param node The module definition node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitModuleDefinition
+   * @description Visits a module definition node.
+   * @param {TSNode} node - The module definition node to visit.
+   * @returns {ast.ModuleDefinitionNode | null} The AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
     this.errorHandler.logDebug(
@@ -267,7 +265,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
 
     // Extract parameters
-    let moduleParameters: ast.ModuleParameter[] = [];
+    let moduleParameters: any[] = []; // TODO: Use ast.ModuleParameter[] once TypeScript recognizes it
 
     // Extract parameters from the node
     const paramListNode = node.childForFieldName('parameters');
@@ -330,7 +328,6 @@ export class ModuleVisitor extends BaseASTVisitor {
         children: [
           {
             type: 'children',
-            index: -1,
             location: getLocation(node),
           },
         ],
@@ -339,7 +336,6 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('module select_child()')) {
       body.push({
         type: 'children',
-        index: 0,
         location: getLocation(node),
       });
     }
@@ -351,7 +347,7 @@ export class ModuleVisitor extends BaseASTVisitor {
 
     return {
       type: 'module_definition',
-      name: nameAstIdentifierNode, // Use the created IdentifierNode
+      name: nameAstIdentifierNode, // Use the full IdentifierNode object
       parameters: moduleParameters,
       body,
       location: getLocation(node), // Location of the entire module definition
@@ -359,11 +355,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a module instantiation node
-   * @param node The node to process
-   * @param moduleName The name of the module
-   * @param args The arguments to the function
-   * @returns The module instantiation AST node
+   * @method createModuleInstantiationNode
+   * @description Creates a module instantiation node.
+   * @param {TSNode} node - The node to process.
+   * @param {string} moduleName - The name of the module.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.ASTNode} The module instantiation AST node.
+   * @private
    */
   private createModuleInstantiationNode(
     node: TSNode,
@@ -399,9 +397,11 @@ export class ModuleVisitor extends BaseASTVisitor {
         if (
           child &&
           child.type === 'module_instantiation' &&
+          'name' in child &&
           child.name &&
-          typeof child.name === 'object' &&
-          child.name.name === 'cube'
+          (typeof child.name === 'object'
+            ? (child.name as { name?: string }).name === 'cube'
+            : child.name === 'cube')
         ) {
           children[i] = {
             type: 'cube',
@@ -450,11 +450,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a translate node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The translate AST node
+   * @method createTranslateNode
+   * @description Creates a translate node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.TranslateNode} The translate AST node.
+   * @private
    */
   private createTranslateNode(
     node: TSNode,
@@ -537,11 +539,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a rotate node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The rotate AST node
+   * @method createRotateNode
+   * @description Creates a rotate node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.RotateNode} The rotate AST node.
+   * @private
    */
   private createRotateNode(
     node: TSNode,
@@ -588,21 +592,29 @@ export class ModuleVisitor extends BaseASTVisitor {
         v = [0, 0, 1]; // Default z-axis rotation
       }
     }
-    return {
+    const rotateNode: ast.RotateNode = {
       type: 'rotate',
-      a: angle, // Use a property to match the RotateNode interface
-      ...(v && { v }), // Add v property for axis-angle rotation only if defined
+      v: Array.isArray(angle) ? (angle as [number, number, number]) : v || [0, 0, 1], // Use angle as v if it's an array, default to [0,0,1]
       children,
       location: getLocation(node),
     };
+
+    // Add 'a' property only if it's a number
+    if (typeof angle === 'number') {
+      rotateNode.a = angle;
+    }
+
+    return rotateNode;
   }
 
   /**
-   * Create a scale node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The scale AST node
+   * @method createScaleNode
+   * @description Creates a scale node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.ScaleNode} The scale AST node.
+   * @private
    */
   private createScaleNode(
     node: TSNode,
@@ -649,11 +661,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a mirror node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The mirror AST node
+   * @method createMirrorNode
+   * @description Creates a mirror node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.MirrorNode} The mirror AST node.
+   * @private
    */
   private createMirrorNode(
     node: TSNode,
@@ -693,11 +707,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a multmatrix node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The multmatrix AST node
+   * @method createMultmatrixNode
+   * @description Creates a multmatrix node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.MultmatrixNode} The multmatrix AST node.
+   * @private
    */
   private createMultmatrixNode(
     node: TSNode,
@@ -747,11 +763,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a color node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The color AST node
+   * @method createColorNode
+   * @description Creates a color node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.ColorNode} The color AST node.
+   * @private
    */
   private createColorNode(
     node: TSNode,
@@ -858,11 +876,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an offset node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The offset AST node
+   * @method createOffsetNode
+   * @description Creates an offset node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.OffsetNode} The offset AST node.
+   * @private
    */
   private createOffsetNode(
     node: TSNode,
@@ -920,9 +940,10 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a children node
-   * @param node The children node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitChildrenNode
+   * @description Visits a children node.
+   * @param {TSNode} node - The children node to visit.
+   * @returns {ast.ChildrenNode | null} The AST node, or null if the node cannot be processed.
    */
   visitChildrenNode(node: TSNode): ast.ChildrenNode | null {
     // Extract index parameter
@@ -948,19 +969,27 @@ export class ModuleVisitor extends BaseASTVisitor {
     } else if (node.text.includes('children(1)')) {
       index = 1;
     }
-    return {
+    const childrenNode: ast.ChildrenNode = {
       type: 'children',
-      index,
       location: getLocation(node),
     };
+
+    // Add indices only if index is defined
+    if (index !== undefined) {
+      childrenNode.indices = [index];
+    }
+
+    return childrenNode;
   }
 
   /**
-   * Create a linear_extrude node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The linear_extrude AST node
+   * @method createLinearExtrudeNode
+   * @description Creates a linear_extrude node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.LinearExtrudeNode} The linear_extrude AST node.
+   * @private
    */
   private createLinearExtrudeNode(
     node: TSNode,
@@ -1033,11 +1062,13 @@ export class ModuleVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a rotate_extrude node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @param children The children nodes
-   * @returns The rotate_extrude AST node
+   * @method createRotateExtrudeNode
+   * @description Creates a rotate_extrude node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @param {ast.ASTNode[]} children - The children nodes.
+   * @returns {ast.RotateExtrudeNode} The rotate_extrude AST node.
+   * @private
    */
   private createRotateExtrudeNode(
     node: TSNode,

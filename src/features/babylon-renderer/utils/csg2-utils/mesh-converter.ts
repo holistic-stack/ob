@@ -5,11 +5,23 @@
  * Following functional programming patterns with Result<T,E> error handling.
  */
 
-import { type FloatArray, Mesh, type Scene, VertexData } from '@babylonjs/core';
+import {
+  BoundingBox,
+  type FloatArray,
+  Mesh,
+  type Scene,
+  Vector3,
+  VertexData,
+} from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
-import type { GenericMeshData } from '../../../ast-to-csg-converter/types/conversion.types';
+import type {
+  GenericGeometry,
+  GenericMeshData,
+  GenericMeshMetadata,
+} from '../../types/generic-mesh-data.types';
+import { MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 
 const logger = createLogger('CSG2MeshConverter');
 
@@ -85,7 +97,7 @@ export const convertGenericMeshToBabylon = (
       const mesh = new Mesh(meshData.id, scene);
 
       // Extract geometry data
-      const geometry = meshData.geometry as any; // TODO: Replace with proper BabylonJS geometry type
+      const geometry = meshData.geometry;
 
       // Create vertex data
       const vertexData = new VertexData();
@@ -175,11 +187,16 @@ export const convertGenericMeshToBabylon = (
       logger.debug('[DEBUG][CSG2MeshConverter] Generic mesh converted successfully');
       return mesh;
     },
-    (error) =>
-      createConversionError(
+    (error) => {
+      // Preserve original error codes if it's already a MeshConversionError
+      if (error && typeof error === 'object' && 'code' in error) {
+        return error as MeshConversionError;
+      }
+      return createConversionError(
         MeshConversionErrorCode.CONVERSION_FAILED,
         `Failed to convert mesh: ${error}`
-      )
+      );
+    }
   );
 };
 
@@ -216,41 +233,80 @@ export const convertBabylonMeshToGeneric = (
       const genericMeshData: GenericMeshData = {
         id: mesh.id,
         geometry: {
-          positions: positions,
-          indices: indices,
-          normals: normals || undefined,
-          uvs: uvs || undefined,
-        } as any, // TODO: Replace with proper geometry type
-        material: {
-          // TODO: Convert BabylonJS material to generic format
-          color: '#ffffff',
-          metalness: 0,
-          roughness: 1,
-          opacity: 1,
-          transparent: false,
-          side: 'front' as const,
-        },
-        transform: mesh.getWorldMatrix() as any, // TODO: Replace with proper matrix type
+          positions: new Float32Array(positions),
+          indices: new Uint32Array(indices),
+          vertexCount: positions.length / 3,
+          triangleCount: indices.length / 3,
+          boundingBox: new BoundingBox(
+            new Vector3(
+              mesh.getBoundingInfo().boundingBox.minimumWorld.x,
+              mesh.getBoundingInfo().boundingBox.minimumWorld.y,
+              mesh.getBoundingInfo().boundingBox.minimumWorld.z
+            ),
+            new Vector3(
+              mesh.getBoundingInfo().boundingBox.maximumWorld.x,
+              mesh.getBoundingInfo().boundingBox.maximumWorld.y,
+              mesh.getBoundingInfo().boundingBox.maximumWorld.z
+            )
+          ),
+          normals: normals ? new Float32Array(normals) : undefined,
+          uvs: uvs ? new Float32Array(uvs) : undefined,
+        } satisfies GenericGeometry,
+        material: MATERIAL_PRESETS.DEFAULT,
+        transform: mesh.getWorldMatrix(),
         metadata: {
           meshId: mesh.id,
-          triangleCount: indices.length / 3,
+          name: mesh.name || mesh.id,
+          nodeType: 'converted_mesh',
           vertexCount: positions.length / 3,
-          boundingBox: mesh.getBoundingInfo().boundingBox as any, // TODO: Replace with proper bounding box type
+          triangleCount: indices.length / 3,
+          boundingBox: new BoundingBox(
+            new Vector3(
+              mesh.getBoundingInfo().boundingBox.minimumWorld.x,
+              mesh.getBoundingInfo().boundingBox.minimumWorld.y,
+              mesh.getBoundingInfo().boundingBox.minimumWorld.z
+            ),
+            new Vector3(
+              mesh.getBoundingInfo().boundingBox.maximumWorld.x,
+              mesh.getBoundingInfo().boundingBox.maximumWorld.y,
+              mesh.getBoundingInfo().boundingBox.maximumWorld.z
+            )
+          ),
+          surfaceArea: 0,
+          volume: 0,
+          generationTime: 0,
+          optimizationTime: 0,
+          memoryUsage: 0,
           complexity: indices.length / 3,
-          operationTime: 0,
           isOptimized: false,
+          hasErrors: false,
+          warnings: [],
+          debugInfo: {},
+          createdAt: new Date(),
+          lastModified: new Date(),
           lastAccessed: new Date(),
-        },
+          childIds: [],
+          depth: 0,
+          openscadParameters: {},
+          modifiers: [],
+          transformations: [],
+          csgOperations: [],
+        } satisfies GenericMeshMetadata,
       };
 
       logger.debug('[DEBUG][CSG2MeshConverter] BabylonJS mesh converted successfully');
       return genericMeshData;
     },
-    (error) =>
-      createConversionError(
+    (error) => {
+      // Preserve original error codes if it's already a MeshConversionError
+      if (error && typeof error === 'object' && 'code' in error) {
+        return error as MeshConversionError;
+      }
+      return createConversionError(
         MeshConversionErrorCode.CONVERSION_FAILED,
         `Failed to convert mesh: ${error}`
-      )
+      );
+    }
   );
 };
 
@@ -352,7 +408,7 @@ export const optimizeMeshForCSG = (
         if (!isValid) {
           throw createConversionError(
             MeshConversionErrorCode.VALIDATION_FAILED,
-            'Mesh is not valid'
+            'Mesh is not manifold'
           );
         }
       }
@@ -360,10 +416,15 @@ export const optimizeMeshForCSG = (
       logger.debug('[DEBUG][CSG2MeshConverter] Mesh optimization completed');
       return mesh;
     },
-    (error) =>
-      createConversionError(
+    (error) => {
+      // Preserve original error codes if it's already a MeshConversionError
+      if (error && typeof error === 'object' && 'code' in error) {
+        return error as MeshConversionError;
+      }
+      return createConversionError(
         MeshConversionErrorCode.OPTIMIZATION_FAILED,
         `Failed to optimize mesh: ${error}`
-      )
+      );
+    }
   );
 };

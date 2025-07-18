@@ -1,59 +1,53 @@
 /**
- * @file Extractor utilities module exports
+ * @file index.ts
+ * @description This file serves as the barrel export for all parameter and value extraction utilities
+ * within the OpenSCAD parser's AST module. It consolidates various extractors that convert Tree-sitter
+ * CST nodes into structured, typed parameter values for AST generation.
  *
- * This module serves as the central export point for all parameter and value extraction
- * utilities used in the OpenSCAD parser. The extractors are responsible for converting
- * Tree-sitter CST nodes into typed parameter values that can be used in AST generation.
+ * @architectural_decision
+ * Using a barrel export here provides a single, convenient entry point for accessing all extraction-related
+ * functionalities. This simplifies imports in other parts of the parser and promotes a cleaner, more organized
+ * codebase. It also allows for easy management of the public API of the extractors.
  *
- * The extractor system provides:
- * - **Argument Extraction**: Converting function call arguments from CST to typed parameters
- * - **Value Extraction**: Converting individual values (numbers, strings, vectors) from CST nodes
- * - **Type Safety**: Ensuring extracted values match expected TypeScript types
- * - **Error Handling**: Graceful handling of malformed or missing parameters
- *
- * Key extraction capabilities:
- * - **Positional Arguments**: `cube(10)` - arguments by position
- * - **Named Arguments**: `cube(size=10, center=true)` - arguments by name
- * - **Mixed Arguments**: `cube(10, center=true)` - combination of both
- * - **Vector Values**: `[10, 20, 30]` - multi-dimensional arrays
- * - **Primitive Values**: Numbers, strings, booleans
- * - **Complex Expressions**: Mathematical expressions and function calls
- *
- * @example Basic argument extraction
+ * @example
  * ```typescript
- * import { extractArguments } from '@holistic-stack/openscad-parser/extractors';
+ * import { extractArguments, extractParameterValue, type ExtractedParameter } from './index';
+ * import * as TreeSitter from 'web-tree-sitter';
+ * import { OpenscadParser } from '../../openscad-parser';
+ * import { SimpleErrorHandler } from '../../error-handling/simple-error-handler';
  *
- * // Extract arguments from a function call CST node
- * const args = extractArguments(argumentsNode);
- * // Returns: [{ name: 'size', value: 10 }, { name: 'center', value: true }]
- * ```
+ * async function demonstrateExtraction() {
+ *   const errorHandler = new SimpleErrorHandler();
+ *   const parser = new OpenscadParser(errorHandler);
+ *   await parser.init();
  *
- * @example Value extraction
- * ```typescript
- * import { extractParameterValue } from '@holistic-stack/openscad-parser/extractors';
+ *   const code = 'cube(size=10, center=true);';
+ *   const cst = parser.parseCST(code);
+ *   if (!cst) return;
  *
- * // Extract a specific value from a CST node
- * const value = extractParameterValue(valueNode);
- * // Returns: { type: 'vector', value: [10, 20, 30] }
- * ```
+ *   // Assuming we can find the arguments node for 'cube'
+ *   // This part would typically involve traversing the CST to find the relevant node
+ *   const cubeCallNode = cst.rootNode.namedChild(0); // Example: get the first statement
+ *   if (cubeCallNode && cubeCallNode.type === 'call_expression') {
+ *     const argumentsNode = cubeCallNode.namedChild(1); // Assuming arguments are the second named child
+ *     if (argumentsNode) {
+ *       const extractedArgs: ExtractedParameter[] = extractArguments(argumentsNode, code, errorHandler);
+ *       console.log('Extracted Arguments:', extractedArgs);
+ *       // Expected output: [{ name: 'size', value: 10, type: 'number' }, { name: 'center', value: true, type: 'boolean' }]
  *
- * @example Type-safe parameter processing
- * ```typescript
- * import { extractArguments, type ExtractedParameter } from '@holistic-stack/openscad-parser/extractors';
- *
- * function processCubeParameters(args: ExtractedParameter[]) {
- *   const sizeParam = args.find(arg => arg.name === 'size' || !arg.name);
- *   const centerParam = args.find(arg => arg.name === 'center');
- *
- *   return {
- *     size: sizeParam?.value ?? 1,
- *     center: centerParam?.value ?? false
- *   };
+ *       // Example of extracting a single parameter value
+ *       const sizeParamNode = argumentsNode.namedChild(0); // Assuming 'size=10' is the first argument
+ *       if (sizeParamNode) {
+ *         const sizeValue = extractParameterValue(sizeParamNode, code, errorHandler);
+ *         console.log('Extracted Size Value:', sizeValue); // Expected: { value: 10, type: 'number' }
+ *       }
+ *     }
+ *   }
+ *   parser.dispose();
  * }
- * ```
  *
- * @module extractors
- * @since 0.1.0
+ * demonstrateExtraction();
+ * ```
  */
 
 // Re-export types from argument-extractor

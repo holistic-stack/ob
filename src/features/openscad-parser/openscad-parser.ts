@@ -1,89 +1,46 @@
 /**
- * @file OpenSCAD parser with AST generation and error handling
+ * @file openscad-parser.ts
+ * @description This file contains the main `OpenscadParser` class, which is responsible for parsing OpenSCAD code,
+ * generating an Abstract Syntax Tree (AST), and handling errors. It integrates the Tree-sitter parsing library
+ * with a custom visitor-based AST generator to provide a comprehensive parsing solution.
  *
- * This module provides a high-level parser for OpenSCAD code that extends the Tree-sitter
- * parsing with additional capabilities like Abstract Syntax Tree (AST) generation,
- * error reporting, and incremental parsing for editor integration.
- *
- * The parser follows a layered architecture:
- * 1. Tree-sitter provides the low-level syntax parsing (CST)
- * 2. VisitorASTGenerator converts the CST to a structured AST
- * 3. Error handlers collect, format, and report syntax and semantic errors
- *
- * @module openscad-parser/openscad-parser
- * @since 0.1.0
+ * @architectural_decision
+ * The parser is designed as a class to encapsulate its state, including the Tree-sitter parser instance,
+ * the loaded language grammar, and the error handler. This makes it easier to manage the parser's lifecycle,
+ * from initialization to disposal. The parser uses a cold parsing approach (parsing the entire code on each change)
+ * to ensure maximum reliability, which is a trade-off for performance in favor of correctness.
+ * It also includes several workarounds to handle limitations in the Tree-sitter grammar for OpenSCAD.
  */
 
 import * as TreeSitter from 'web-tree-sitter';
 import type { Result } from '../../shared/types/result.types.js';
-import type { ASTNode } from './ast/ast-types.js';
+import type { ASTNode, SourceLocation } from './ast/ast-types.js';
 import { VisitorASTGenerator } from './ast/index.js';
 
 import { ErrorHandler } from './error-handling/index.js';
 import { type IErrorHandler, SimpleErrorHandler } from './error-handling/simple-error-handler.js';
 
 /**
- * OpenSCAD parser with AST generation capabilities and error handling.
+ * @class OpenscadParser
+ * @description A high-level parser for OpenSCAD code that generates a structured AST and handles errors.
+ * It combines Tree-sitter for CST parsing with a visitor pattern for AST generation.
  *
- * The OpenscadParser serves as the main entry point for parsing OpenSCAD code and
- * generating structured Abstract Syntax Trees (ASTs). It combines Tree-sitter's powerful
- * parsing capabilities with a visitor-based AST generation system and comprehensive error
- * handling.
- *
- * Key features:
- * - WASM-based Tree-sitter parser for efficient and accurate syntax parsing
- * - Visitor pattern for transforming Concrete Syntax Trees (CSTs) into semantic ASTs
- * - Incremental parsing support for editor integration with better performance
- * - Detailed error reporting with line/column information and formatted messages
- * - Configurable error handling through the IErrorHandler interface
- *
- * The parsing process follows these steps:
- * 1. Initialize the parser by loading the OpenSCAD grammar (init)
- * 2. Parse the source code into a CST (parseCST)
- * 3. Transform the CST into an AST (parseAST)
- * 4. Handle any syntax or semantic errors through the error handler
- *
- * The parser uses cold parsing only for maximum reliability and consistency,
- * prioritizing correctness over incremental parsing performance optimizations.
- *
- * @example Complete Parser Workflow
+ * @example
  * ```typescript
- * import { OpenscadParser, ConsoleErrorHandler } from '@holistic-stack/openscad-parser';
+ * import { OpenscadParser, SimpleErrorHandler } from './openscad-parser';
  *
- * // Setup with custom error handling
- * const errorHandler = new ConsoleErrorHandler();
+ * const errorHandler = new SimpleErrorHandler();
  * const parser = new OpenscadParser(errorHandler);
  *
- * async function parseOpenSCAD() {
- *   // Initialize the parser with the OpenSCAD grammar
- *   await parser.init('./path/to/tree-sitter-openscad.wasm');
- *
- *   try {
- *     // Parse some OpenSCAD code
- *     const code = 'module test() { cube(10); sphere(5); }';
- *
- *     // Generate the AST
- *     const ast = parser.parseAST(code);
- *
- *     // Process the AST (e.g., code analysis, transformation)
- *     console.log(JSON.stringify(ast, null, 2));
- *
- *     // For code updates, simply reparse the entire code
- *     const updatedCode = 'module test() { cube(20); sphere(5); }';
- *     const updatedAst = parser.parseAST(updatedCode);
- *   } catch (error) {
- *     console.error('Parsing failed:', error);
- *     // Access collected errors
- *     const errors = errorHandler.getErrors();
- *     errors.forEach(err => console.error(err));
- *   } finally {
- *     // Clean up when done
- *     parser.dispose();
- *   }
+ * async function main() {
+ *   await parser.init();
+ *   const ast = parser.parseAST('cube(10);');
+ *   console.log(ast);
+ *   parser.dispose();
  * }
- * ```
  *
- * @since 0.1.0
+ * main();
+ * ```
  */
 export class OpenscadParser {
   private parser: TreeSitter.Parser | null = null;
@@ -95,55 +52,9 @@ export class OpenscadParser {
   public isInitialized = false;
 
   /**
-   * Creates a new OpenscadParser instance with optional custom error handling.
-   *
-   * This constructor initializes the parser with either a custom error handler or the default
-   * SimpleErrorHandler. The error handler is responsible for collecting, formatting, and
-   * reporting errors that occur during parsing or AST generation.
-   *
-   * Note that calling the constructor only creates the parser instance but does not load
-   * the OpenSCAD grammar. You must call the `init()` method before attempting to parse any code.
-   *
-   * @param errorHandler - Optional custom error handler that implements the IErrorHandler interface.
-   *                        If not provided, a SimpleErrorHandler is used by default.
-   *
-   * @example Default Error Handler
-   * ```typescript
-   * // Create a parser with the default SimpleErrorHandler
-   * const parser = new OpenscadParser();
-   * ```
-   *
-   * @example Custom Error Handler
-   * ```typescript
-   * // Create a custom error handler for specialized error reporting
-   * class CustomErrorHandler implements IErrorHandler {
-   *   private errors: string[] = [];
-   *
-   *   logInfo(message: string): void {
-   *     console.log(`[INFO] ${message}`);
-   *   }
-   *
-   *   logWarning(message: string): void {
-   *     console.warn(`[WARNING] ${message}`);
-   *   }
-   *
-   *   handleError(error: string | Error): void {
-   *     const errorMessage = typeof error === 'string' ? error : error.message;
-   *     this.errors.push(errorMessage);
-   *     console.error(`[ERROR] ${errorMessage}`);
-   *   }
-   *
-   *   getErrors(): string[] {
-   *     return this.errors;
-   *   }
-   * }
-   *
-   * // Create a parser with the custom error handler
-   * const errorHandler = new CustomErrorHandler();
-   * const parser = new OpenscadParser(errorHandler);
-   * ```
-   *
-   * @since 0.1.0
+   * @constructor
+   * @description Creates a new instance of the OpenscadParser.
+   * @param {IErrorHandler} [errorHandler] - An optional custom error handler. If not provided, a `SimpleErrorHandler` is used.
    */
   constructor(errorHandler?: IErrorHandler) {
     this.simpleErrorHandler = (errorHandler ?? new SimpleErrorHandler()) as SimpleErrorHandler;
@@ -168,21 +79,13 @@ export class OpenscadParser {
   }
 
   /**
-   * Initializes the OpenSCAD parser by loading the WASM grammar.
+   * @method init
+   * @description Initializes the parser by loading the OpenSCAD grammar from a WASM file.
+   * This method must be called before any parsing can be done.
    *
-   * @param wasmPath - Path to Tree-sitter WASM binary (default: './tree-sitter-openscad.wasm')
-   * @returns Promise<void> that resolves when initialization completes.
-   * @throws Error if fetching or parser initialization fails.
-   * @example Simple Usage
-   * ```ts
-   * const parser = new OpenscadParser();
-   * await parser.init();
-   * ```
-   * @example Custom Path Usage
-   * ```ts
-   * await parser.init('/custom/path/tree-sitter-openscad.wasm');
-   * ```
-   * @since 0.1.0
+   * @param {string} [wasmPath='./tree-sitter-openscad.wasm'] - The path to the Tree-sitter OpenSCAD WASM grammar file.
+   * @param {string} [treeSitterWasmPath='./tree-sitter.wasm'] - The path to the main Tree-sitter WASM file.
+   * @returns {Promise<void>} A promise that resolves when the parser is initialized.
    */
   async init(
     wasmPath = './tree-sitter-openscad.wasm',
@@ -222,21 +125,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Parses the OpenSCAD source string into a Concrete Syntax Tree (CST).
+   * @method parseCST
+   * @description Parses the given OpenSCAD code into a Concrete Syntax Tree (CST).
    *
-   * @param code - OpenSCAD code to parse.
-   * @returns Tree-sitter CST or null.
-   * @throws Error if parser not initialized or parsing fails.
-   * @example Simple Usage
-   * ```ts
-   * const tree = parser.parseCST('cube(1);');
-   * ```
-   * @example Error Handling
-   * ```ts
-   * try {
-   *   parser.parseCST('invalid code');
-   * } catch (e) { console.error(e); }
-   * ```
+   * @param {string} code - The OpenSCAD code to parse.
+   * @returns {TreeSitter.Tree | null} The parsed CST, or null if parsing fails.
    */
   parseCST(code: string): TreeSitter.Tree | null {
     if (!this.parser) {
@@ -261,20 +154,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Parses the OpenSCAD code into an Abstract Syntax Tree (AST) using the visitor pattern.
+   * @method parseAST
+   * @description Parses the OpenSCAD code and generates an Abstract Syntax Tree (AST).
+   * This is the primary method for obtaining a structured representation of the code.
    *
-   * @param code - OpenSCAD code to generate AST for.
-   * @returns Array of ASTNode representing the AST.
-   * @throws Error if AST generation fails.
-   * @example Simple Usage
-   * ```ts
-   * const ast = parser.parseAST('cube(1);');
-   * ```
-   * @example Nested Expressions
-   * ```ts
-   * const ast = parser.parseAST('translate([1,1,1]) cube(2);');
-   * ```
-   * @since 0.1.0
+   * @param {string} code - The OpenSCAD code to parse.
+   * @returns {ASTNode[]} An array of AST nodes representing the parsed code.
    */
   parseAST(code: string): ASTNode[] {
     try {
@@ -305,17 +190,14 @@ export class OpenscadParser {
   }
 
   /**
-   * Apply workarounds for Tree-sitter grammar limitations.
+   * @method applyGrammarWorkarounds
+   * @description Applies workarounds for known limitations in the Tree-sitter OpenSCAD grammar.
+   * This method is crucial for correctly parsing certain language constructs that the grammar struggles with.
    *
-   * The Tree-sitter OpenSCAD grammar has limitations where transform statements
-   * with immediate child primitives (e.g., 'translate([10,0,0]) sphere(10);')
-   * are not parsed correctly. This method implements workarounds to handle
-   * these cases by parsing the code in multiple ways and reconstructing
-   * the correct AST structure.
-   *
-   * @param code - The original OpenSCAD source code
-   * @param initialAST - The AST generated by the standard parsing process
-   * @returns Enhanced AST with grammar limitation workarounds applied
+   * @param {string} code - The original OpenSCAD source code.
+   * @param {ASTNode[]} initialAST - The initial AST generated from the CST.
+   * @returns {ASTNode[]} The enhanced AST with workarounds applied.
+   * @private
    */
   private applyGrammarWorkarounds(code: string, initialAST: ASTNode[]): ASTNode[] {
     try {
@@ -354,7 +236,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Check if a node is a transform node (translate, rotate, scale, etc.)
+   * @method isTransformNode
+   * @description Checks if a given AST node is a transformation node (e.g., translate, rotate).
+   * @param {ASTNode} node - The AST node to check.
+   * @returns {boolean} True if the node is a transform node, false otherwise.
+   * @private
    */
   private isTransformNode(node: ASTNode): boolean {
     return ['translate', 'rotate', 'scale', 'mirror', 'multmatrix', 'color', 'offset'].includes(
@@ -363,8 +249,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Count the expected number of statements in the code by analyzing semicolons and structure.
-   * This helps detect when Tree-sitter has truncated the parsing.
+   * @method countExpectedStatements
+   * @description Counts the expected number of statements in the code to detect parsing truncation by Tree-sitter.
+   * @param {string} code - The OpenSCAD code.
+   * @returns {number} The expected number of statements.
+   * @private
    */
   private countExpectedStatements(code: string): number {
     try {
@@ -372,7 +261,7 @@ export class OpenscadParser {
 
       // For block statements (union, difference, intersection), count as single statement
       const blockStatementPattern =
-        /^\s*(union|difference|intersection|hull|minkowski)\s*\(.*?\)\s*\{/;
+        /^\s*(union|difference|intersection|hull|minkowski)\s*\(.*\?\)\s*\{/;
       if (blockStatementPattern.test(code.trim())) {
         console.log('[DEBUG] Detected block statement, returning 1');
         return 1;
@@ -437,8 +326,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Fallback parsing strategy that parses each statement individually when Tree-sitter truncates input.
-   * This method splits the code into individual statements and parses each one separately.
+   * @method parseLineByLineFallback
+   * @description A fallback parsing strategy that parses the code line by line.
+   * This is used when Tree-sitter fails to parse the entire code block correctly.
+   * @param {string} code - The OpenSCAD code.
+   * @returns {ASTNode[]} An array of AST nodes parsed from the code.
+   * @private
    */
   private parseLineByLineFallback(code: string): ASTNode[] {
     try {
@@ -494,8 +387,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Parse code line by line as a fallback when Tree-sitter fails to parse the full code.
-   * Preserves standalone primitives from the initial parsing.
+   * @method parseLineByLineFallbackWithStandalonePrimitives
+   * @description A more advanced line-by-line fallback that preserves standalone primitives from the initial parse.
+   * @param {string} code - The OpenSCAD code.
+   * @param {ASTNode[]} initialAST - The initial (potentially truncated) AST.
+   * @returns {ASTNode[]} The reconstructed AST.
+   * @private
    */
   private parseLineByLineFallbackWithStandalonePrimitives(
     code: string,
@@ -576,7 +473,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Check if a statement is complete (ends with semicolon or is a complete transform block).
+   * @method isStatementComplete
+   * @description Checks if a given string forms a complete OpenSCAD statement.
+   * @param {string} statement - The statement to check.
+   * @returns {boolean} True if the statement is complete.
+   * @private
    */
   private isStatementComplete(statement: string): boolean {
     const trimmed = statement.trim();
@@ -604,7 +505,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Parse an individual statement using Tree-sitter and apply workarounds.
+   * @method parseIndividualStatement
+   * @description Parses a single OpenSCAD statement.
+   * @param {string} statement - The statement to parse.
+   * @param {number} startLine - The starting line number of the statement in the original code.
+   * @returns {ASTNode[]} An array of AST nodes for the statement.
+   * @private
    */
   private parseIndividualStatement(statement: string, startLine: number): ASTNode[] {
     try {
@@ -635,7 +541,13 @@ export class OpenscadParser {
   }
 
   /**
-   * Apply workarounds at the statement level (without recursion).
+   * @method applyStatementLevelWorkarounds
+   * @description Applies grammar workarounds to a single statement's AST.
+   * @param {string} statement - The source code of the statement.
+   * @param {ASTNode[]} nodes - The AST nodes of the statement.
+   * @param {number} startLine - The starting line number.
+   * @returns {ASTNode[]} The enhanced AST for the statement.
+   * @private
    */
   private applyStatementLevelWorkarounds(
     statement: string,
@@ -671,7 +583,13 @@ export class OpenscadParser {
   }
 
   /**
-   * Find child primitive in a statement using source code analysis.
+   * @method findChildPrimitiveInStatement
+   * @description Finds a child primitive within a statement string for a given transform node.
+   * @param {string} statement - The statement's source code.
+   * @param {ASTNode} _transformNode - The transform node.
+   * @param {number} startLine - The starting line number.
+   * @returns {ASTNode | null} The found primitive node, or null.
+   * @private
    */
   private findChildPrimitiveInStatement(
     statement: string,
@@ -709,7 +627,15 @@ export class OpenscadParser {
   }
 
   /**
-   * Create a synthetic primitive node for workarounds with actual parameters from source code.
+   * @method createSyntheticPrimitive
+   * @description Creates a synthetic AST node for a primitive, extracting parameters from the source code.
+   * This is a core part of the grammar workaround.
+   * @param {string} primitiveType - The type of the primitive (e.g., 'cube', 'sphere').
+   * @param {number} line - The line number.
+   * @param {number} column - The column number.
+   * @param {string} [sourceLine] - The source code line containing the primitive.
+   * @returns {ASTNode} The synthetic AST node.
+   * @private
    */
   private createSyntheticPrimitive(
     primitiveType: string,
@@ -731,16 +657,21 @@ export class OpenscadParser {
         return this.createSyntheticCylinder(location, sourceLine);
       default:
         return {
-          type: primitiveType as any,
+          type: primitiveType as string,
           location,
         };
     }
   }
 
   /**
-   * Create a synthetic cube node with parameters extracted from source code.
+   * @method createSyntheticCube
+   * @description Creates a synthetic cube node with parameters extracted from the source line.
+   * @param {SourceLocation} location - The location of the node.
+   * @param {string} [sourceLine] - The source line.
+   * @returns {ASTNode} The synthetic cube node.
+   * @private
    */
-  private createSyntheticCube(location: any, sourceLine?: string): ASTNode {
+  private createSyntheticCube(location: SourceLocation, sourceLine?: string): ASTNode {
     let size: number | [number, number, number] = 1; // default (OpenSCAD standard)
     let center = false; // default
 
@@ -775,7 +706,6 @@ export class OpenscadParser {
             const scalarSize = parseFloat(sizeParam);
             if (!Number.isNaN(scalarSize)) {
               size = scalarSize;
-            } else {
             }
           }
 
@@ -801,9 +731,14 @@ export class OpenscadParser {
   }
 
   /**
-   * Create a synthetic sphere node with parameters extracted from source code.
+   * @method createSyntheticSphere
+   * @description Creates a synthetic sphere node with parameters extracted from the source line.
+   * @param {SourceLocation} location - The location of the node.
+   * @param {string} [sourceLine] - The source line.
+   * @returns {ASTNode} The synthetic sphere node.
+   * @private
    */
-  private createSyntheticSphere(location: any, sourceLine?: string): ASTNode {
+  private createSyntheticSphere(location: SourceLocation, sourceLine?: string): ASTNode {
     let radius = 5; // default
 
     if (sourceLine) {
@@ -835,9 +770,14 @@ export class OpenscadParser {
   }
 
   /**
-   * Create a synthetic cylinder node with parameters extracted from source code.
+   * @method createSyntheticCylinder
+   * @description Creates a synthetic cylinder node with parameters extracted from the source line.
+   * @param {SourceLocation} location - The location of the node.
+   * @param {string} [sourceLine] - The source line.
+   * @returns {ASTNode} The synthetic cylinder node.
+   * @private
    */
-  private createSyntheticCylinder(location: any, sourceLine?: string): ASTNode {
+  private createSyntheticCylinder(location: SourceLocation, sourceLine?: string): ASTNode {
     let h = 10; // default height
     let r1 = 5; // default bottom radius
     let r2 = 5; // default top radius
@@ -912,16 +852,13 @@ export class OpenscadParser {
   }
 
   /**
-   * Associate transform nodes with their child primitives by parsing individual statements.
-   *
-   * This method works around the Tree-sitter grammar limitation by:
-   * 1. Splitting the code into individual statements
-   * 2. Parsing each statement separately to capture all primitives
-   * 3. Using source location analysis to associate primitives with transforms
-   *
-   * @param code - The original OpenSCAD source code
-   * @param initialAST - The initial AST with incomplete transform nodes
-   * @returns Enhanced AST with correct parent-child relationships
+   * @method associateTransformsWithPrimitives
+   * @description Associates transform nodes with their child primitives by analyzing the source code.
+   * This is a key workaround for grammar limitations.
+   * @param {string} code - The OpenSCAD source code.
+   * @param {ASTNode[]} initialAST - The initial AST.
+   * @returns {ASTNode[]} The enhanced AST.
+   * @private
    */
   private associateTransformsWithPrimitives(code: string, initialAST: ASTNode[]): ASTNode[] {
     try {
@@ -955,11 +892,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Find the child primitive for a transform node by analyzing the source code.
-   *
-   * @param transformNode - The transform node that needs a child
-   * @param lines - The source code split into lines
-   * @returns The transform node with its child primitive (if found)
+   * @method findChildPrimitiveForTransform
+   * @description Finds the child primitive for a transform node by analyzing the source code.
+   * @param {ASTNode} transformNode - The transform node.
+   * @param {string[]} lines - The source code lines.
+   * @returns {ASTNode} The transform node, potentially with its child attached.
+   * @private
    */
   private findChildPrimitiveForTransform(transformNode: ASTNode, lines: string[]): ASTNode {
     if (!transformNode.location) {
@@ -1020,7 +958,36 @@ export class OpenscadParser {
   }
 
   /**
-   * Parse OpenSCAD code and return a Result type for better error handling
+   * @method parse
+   * @description Asynchronously parses OpenSCAD code and returns a `Result` object.
+   * @param {string} code - The OpenSCAD code.
+   * @returns {Promise<Result<{ body: ASTNode[] }, string>>} A result object containing the AST or an error.
+   */
+  async parse(code: string): Promise<Result<{ body: ASTNode[] }, string>> {
+    try {
+      const astResult = this.parseASTWithResult(code);
+
+      if (!astResult.success) {
+        return { success: false, error: astResult.error };
+      }
+
+      return {
+        success: true,
+        data: { body: astResult.data },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * @method parseASTWithResult
+   * @description Parses OpenSCAD code and returns a `Result` object, suitable for functional error handling.
+   * @param {string} code - The OpenSCAD code.
+   * @returns {Result<ASTNode[], string>} A result object containing the AST or an error message.
    */
   parseASTWithResult(code: string): Result<ASTNode[], string> {
     try {
@@ -1051,63 +1018,18 @@ export class OpenscadParser {
   }
 
   /**
-   * @deprecated since v0.2.0. Use `parseCST` instead.
-   *
-   * Alias for parseCST for backward compatibility.
-   *
-   * @param code - OpenSCAD code to parse.
-   * @returns Tree-sitter CST or null.
-   * @example
-   * ```ts
-   * const tree = parser.parse('cube(1);');
-   * ```
-   */
-  parse(code: string): TreeSitter.Tree | null {
-    return this.parseCST(code);
-  }
-
-  /**
-   * Gets the Tree Sitter language object.
-   *
-   * @returns The Tree Sitter language object or null if not initialized
-   * @since 0.1.0
+   * @method getLanguage
+   * @description Returns the loaded Tree-sitter language object.
+   * @returns {TreeSitter.Language | null} The language object, or null if not initialized.
    */
   getLanguage(): TreeSitter.Language | null {
     return this.language;
   }
 
   /**
-   * Releases all resources used by the parser instance.
-   *
-   * This method should be called when the parser is no longer needed to prevent memory leaks.
-   * After calling dispose(), the parser cannot be used until init() is called again.
-   *
-   * @returns void
-   *
-   * @example
-   * ```ts
-   * // Clean up parser resources when done
-   * const parser = new EnhancedOpenscadParser();
-   * await parser.init();
-   *
-   * // Use parser...
-   *
-   * // When finished:
-   * parser.dispose();
-   * ```
-   *
-   * @example Editor Integration
-   * ```ts
-   * // In a code editor component's cleanup method:
-   * componentWillUnmount() {
-   *   if (this.parser) {
-   *     this.parser.dispose();
-   *     this.parser = null;
-   *   }
-   * }
-   * ```
-   *
-   * @since 0.1.0
+   * @method dispose
+   * @description Releases all resources used by the parser instance, preventing memory leaks.
+   * After calling `dispose`, the parser must be re-initialized before use.
    */
   dispose(): void {
     try {
@@ -1150,55 +1072,20 @@ export class OpenscadParser {
   }
 
   /**
-   * Returns the error handler instance used by this parser.
-   *
-   * This can be useful for accessing parser errors or configuring error handling behavior.
-   * The returned error handler follows the IErrorHandler interface and can be used to
-   * retrieve error logs or redirect error output.
-   *
-   * @returns The error handler instance
-   *
-   * @example Access Error Logs
-   * ```ts
-   * const parser = new EnhancedOpenscadParser();
-   * await parser.init();
-   *
-   * // After parsing:
-   * const errorHandler = parser.getErrorHandler();
-   * const errors = errorHandler.getErrors(); // If implemented by the error handler
-   * ```
-   *
-   * @example Custom Error Processing
-   * ```ts
-   * const parser = new EnhancedOpenscadParser();
-   * await parser.init();
-   *
-   * // Get errors for display in UI
-   * try {
-   *   parser.parseCST(code);
-   * } catch (e) {
-   *   const errorHandler = parser.getErrorHandler();
-   *   this.displayErrors(errorHandler.getErrors());
-   * }
-   * ```
-   *
-   * @since 0.1.0
+   * @method getErrorHandler
+   * @description Returns the error handler instance used by the parser.
+   * @returns {SimpleErrorHandler} The error handler instance.
    */
   getErrorHandler(): SimpleErrorHandler {
     return this.simpleErrorHandler;
   }
 
   /**
-   * Recursively checks if a node or any of its children has an ERROR node type.
-   *
-   * This is a helper method used internally by the parser to detect syntax errors
-   * in the parsed OpenSCAD code. It traverses the CST to find any nodes marked as errors
-   * by the Tree-sitter parser.
-   *
-   * @param node - The Tree-sitter node to check for errors
-   * @returns true if the node or any of its children is an error node, false otherwise
+   * @method hasErrorNodes
+   * @description Recursively checks if a CST node or any of its descendants is an error node.
+   * @param {TreeSitter.Node} node - The node to check.
+   * @returns {boolean} True if an error node is found.
    * @private
-   * @since 0.1.0
    */
   private hasErrorNodes(node: TreeSitter.Node): boolean {
     if (node.type === 'ERROR' || node.isMissing) {
@@ -1216,15 +1103,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Checks if the parse tree contains MISSING tokens by examining the string representation.
-   *
-   * Tree-sitter uses MISSING tokens for error recovery when expected tokens are absent.
-   * These tokens may not be detectable through the isMissing property in all cases.
-   *
-   * @param node - The Tree-sitter node to check for MISSING tokens
-   * @returns true if the tree contains MISSING tokens, false otherwise
+   * @method hasMissingTokens
+   * @description Checks if the string representation of a CST node contains missing tokens.
+   * @param {TreeSitter.Node} node - The node to check.
+   * @returns {boolean} True if missing tokens are found.
    * @private
-   * @since 0.1.0
    */
   private hasMissingTokens(node: TreeSitter.Node): boolean {
     const treeString = node.toString();
@@ -1232,17 +1115,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Formats a detailed syntax error message with line, column, and visual pointer to the error.
-   *
-   * This method creates a user-friendly error message that pinpoints exactly where
-   * in the code the syntax error occurred, making it easier for developers to identify
-   * and fix parsing issues in their OpenSCAD code.
-   *
-   * @param code - The OpenSCAD code string that contains the error
-   * @param rootNode - The root node of the parse tree containing error nodes
-   * @returns A formatted error message with line, column and visual pointer to the error location
+   * @method formatSyntaxError
+   * @description Formats a user-friendly syntax error message with code context.
+   * @param {string} code - The source code.
+   * @param {TreeSitter.Node} rootNode - The root node of the CST.
+   * @returns {string} The formatted error message.
    * @private
-   * @since 0.1.0
    */
   private formatSyntaxError(code: string, rootNode: TreeSitter.Node): string {
     const errorNode = this.findFirstErrorNode(rootNode) || this.findFirstMissingToken(rootNode);
@@ -1267,16 +1145,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Recursively searches for the first ERROR node in the parse tree.
-   *
-   * This method traverses the Tree-sitter CST depth-first to find the first
-   * node with a type of 'ERROR', which indicates a syntax error in the parsed code.
-   * The first error node is used to generate precise error messages with location information.
-   *
-   * @param node - The Tree-sitter node to begin the search from (typically the root node)
-   * @returns The first ERROR node found, or null if no error nodes exist
+   * @method findFirstErrorNode
+   * @description Recursively finds the first error node in the CST.
+   * @param {TreeSitter.Node} node - The node to start the search from.
+   * @returns {TreeSitter.Node | null} The first error node found, or null.
    * @private
-   * @since 0.1.0
    */
   private findFirstErrorNode(node: TreeSitter.Node): TreeSitter.Node | null {
     if (node.type === 'ERROR' || node.isMissing) {
@@ -1297,15 +1170,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Recursively searches for the first node that represents a MISSING token.
-   *
-   * This method traverses the Tree-sitter CST to find nodes that contain MISSING tokens
-   * in their string representation, which indicates error recovery by the parser.
-   *
-   * @param node - The Tree-sitter node to begin the search from
-   * @returns The first node containing a MISSING token, or null if none found
+   * @method findFirstMissingToken
+   * @description Recursively finds the first node representing a missing token.
+   * @param {TreeSitter.Node} node - The node to start the search from.
+   * @returns {TreeSitter.Node | null} The first node with a missing token, or null.
    * @private
-   * @since 0.1.0
    */
   private findFirstMissingToken(node: TreeSitter.Node): TreeSitter.Node | null {
     // Check if this node's string representation contains MISSING
@@ -1328,7 +1197,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Check if a statement looks like a standalone primitive (sphere, cube, etc.)
+   * @method looksLikeStandalonePrimitive
+   * @description Checks if a statement appears to be a standalone primitive.
+   * @param {string} statement - The statement to check.
+   * @returns {boolean} True if it looks like a standalone primitive.
+   * @private
    */
   private looksLikeStandalonePrimitive(statement: string): boolean {
     const trimmed = statement.trim();
@@ -1338,7 +1211,12 @@ export class OpenscadParser {
   }
 
   /**
-   * Find a matching primitive in the standalone primitives list
+   * @method findMatchingPrimitive
+   * @description Finds a matching primitive from a list of standalone primitives.
+   * @param {string} statement - The statement containing the primitive.
+   * @param {ASTNode[]} standalonePrimitives - The list of available primitives.
+   * @returns {ASTNode | null} The matching primitive node, or null.
+   * @private
    */
   private findMatchingPrimitive(
     statement: string,
@@ -1359,7 +1237,11 @@ export class OpenscadParser {
   }
 
   /**
-   * Check if a node is a primitive node
+   * @method isPrimitiveNode
+   * @description Checks if an AST node is a primitive type.
+   * @param {ASTNode} node - The node to check.
+   * @returns {boolean} True if the node is a primitive.
+   * @private
    */
   private isPrimitiveNode(node: ASTNode): boolean {
     const primitiveTypes = [

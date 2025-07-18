@@ -7,7 +7,7 @@
 
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { EngineInitOptions } from './use-babylon-engine';
+import type { HookEngineInitOptions as EngineInitOptions } from './use-babylon-engine';
 import { useBabylonEngine } from './use-babylon-engine';
 
 // Mock BabylonJS Engine Service

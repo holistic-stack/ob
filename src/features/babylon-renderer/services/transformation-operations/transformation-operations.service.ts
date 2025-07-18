@@ -644,17 +644,12 @@ export class TransformationOperationsService {
     message: string,
     details?: Record<string, unknown>
   ): TransformationError {
-    const error: TransformationError = {
+    return {
       code,
       message,
       operationType,
       timestamp: new Date(),
+      details,
     };
-
-    if (details) {
-      (error as any).details = details;
-    }
-
-    return error;
   }
 }

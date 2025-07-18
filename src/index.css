@@ -1,8 +1,49 @@
 /**
- * Main CSS file for the OpenSCAD Babylon project
+ * @file index.css
+ * @description This file serves as the main stylesheet for the OpenSCAD Babylon project.
+ * It integrates Tailwind CSS for utility-first styling and defines custom styles for
+ * glass morphism effects, animations, and accessibility improvements.
  *
- * Includes Tailwind CSS base styles and custom glass morphism utilities
- * for the Liquid Glass UI component library.
+ * @architectural_decision
+ * - **Tailwind CSS**: Used for rapid UI development and consistent styling. The `@tailwind` directives
+ *   import Tailwind's base, components, and utilities layers. `preflight.css` (included with `@tailwind base`)
+ *   provides a robust CSS reset.
+ * - **Glass Morphism**: Custom CSS classes are defined to achieve a modern glass-like UI effect.
+ *   This involves `backdrop-filter` for blur and transparent backgrounds with subtle borders and shadows.
+ * - **Accessibility**: Includes media queries for `prefers-reduced-motion` and `prefers-contrast`
+ *   to enhance user experience for individuals with specific preferences or needs.
+ * - **Modularity**: Project-specific customizations are kept separate from Tailwind's defaults,
+ *   promoting a clean and maintainable stylesheet.
+ *
+ * @limitations
+ * - `backdrop-filter` support varies across browsers. Fallback styles are provided for unsupported browsers,
+ *   but the visual effect will be different.
+ * - Custom scrollbar styles are currently WebKit-specific (`::-webkit-scrollbar`).
+ *
+ * @example
+ * ```html
+ * <!-- Example of applying glass effect to a div -->
+ * <div class="glass-effect p-4 rounded-lg">
+ *   <h2 class="text-xl font-bold">Glassy Card</h2>
+ *   <p>This content is inside a beautiful glass-morphed container.</p>
+ * </div>
+ * ```
+ *
+ * @diagram
+ * ```mermaid
+ * graph TD
+ *    A[index.css] --> B[Tailwind Base (preflight.css)];
+ *    A --> C[Tailwind Components];
+ *    A --> D[Tailwind Utilities];
+ *    A --> E[Custom Glass Effects];
+ *    A --> F[Accessibility Overrides];
+ *    A --> G[Storybook Specifics];
+ *    E --> E1[backdrop-filter];
+ *    E --> E2[rgba backgrounds];
+ *    E --> E3[box-shadow];
+ *    F --> F1[prefers-reduced-motion];
+ *    F --> F2[prefers-contrast];
+ * ```
  */
 
 /* Tailwind CSS - includes preflight.css which handles all global reset */
@@ -14,13 +55,36 @@
 /* Custom styles - Tailwind's preflight.css handles all global reset */
 /* Only add project-specific customizations here */
 
-/* Ensure backdrop-filter support */
+/**
+ * @section Global Styles
+ * @description Ensures `backdrop-filter` inheritance for all elements and sets a custom font for code.
+ */
 * {
   -webkit-backdrop-filter: inherit;
   backdrop-filter: inherit;
 }
 
-/* Enhanced glass morphism base styles */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/**
+ * @section Glass Morphism Base Styles
+ * @description Defines the core styles for the `.glass-effect` class, providing a translucent, blurred background.
+ * @property {string} background - A semi-transparent white background.
+ * @property {string} backdrop-filter - Applies a blur effect to the content behind the element.
+ * @property {string} -webkit-backdrop-filter - Vendor prefix for WebKit browsers.
+ * @property {string} border - A subtle white border for depth.
+ * @property {string} box-shadow - Inner and outer shadows for a realistic glass appearance.
+ * @example
+ * ```css
+ * .my-component {
+ *   @apply glass-effect;
+ *   padding: 1rem;
+ *   border-radius: 0.5rem;
+ * }
+ * ```
+ */
 .glass-effect {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -31,20 +95,20 @@
     0 0 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Custom font family for code elements (if different from Tailwind's default) */
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
-/* Custom CSS for glass morphism effects and animations */
-
-/* Base styles for glass morphism components */
+/**
+ * @section Glass Morphism Effects and Animations
+ * @description Provides additional styling and animations for glass-morphed components,
+ * including `backdrop-filter` support checks and fallbacks.
+ */
 .glass-effect {
   position: relative;
   overflow: hidden;
 }
 
-/* Ensure proper backdrop-filter support */
+/**
+ * @media @supports (backdrop-filter: blur(1px))
+ * @description Applies a stronger blur if `backdrop-filter` is supported by the browser.
+ */
 @supports (backdrop-filter: blur(1px)) {
   .glass-effect {
     backdrop-filter: blur(20px);
@@ -52,7 +116,11 @@ code {
   }
 }
 
-/* Fallback for browsers without backdrop-filter support */
+/**
+ * @media @supports not (backdrop-filter: blur(1px))
+ * @description Provides fallback styles for browsers that do not support `backdrop-filter`,
+ * ensuring a consistent (though less visually rich) appearance.
+ */
 @supports not (backdrop-filter: blur(1px)) {
   .glass-effect {
     background: rgba(255, 255, 255, 0.9) !important;
@@ -65,7 +133,10 @@ code {
   }
 }
 
-/* Custom animations for liquid glass effects */
+/**
+ * @keyframes glassHover
+ * @description Defines a subtle hover animation for glass elements, making them slightly scale and brighten.
+ */
 @keyframes glassHover {
   0% {
     transform: scale(1);
@@ -77,6 +148,10 @@ code {
   }
 }
 
+/**
+ * @keyframes liquidBounce
+ * @description Defines a bounce animation, often used for interactive elements to provide visual feedback.
+ */
 @keyframes liquidBounce {
   0% {
     transform: scale(0.95);
@@ -92,7 +167,16 @@ code {
   }
 }
 
-/* Accessibility improvements */
+/**
+ * @section Accessibility Improvements
+ * @description Contains media queries to enhance accessibility for users with specific preferences.
+ */
+
+/**
+ * @media (prefers-reduced-motion: reduce)
+ * @description Disables animations and transitions for users who prefer reduced motion,
+ * improving usability and preventing motion sickness.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -110,7 +194,11 @@ code {
   }
 }
 
-/* High contrast mode support */
+/**
+ * @media (prefers-contrast: high)
+ * @description Adjusts glass effect styles for high contrast mode, ensuring readability
+ * by removing blur and using solid borders.
+ */
 @media (prefers-contrast: high) {
   .glass-effect {
     background: rgba(255, 255, 255, 0.95) !important;
@@ -125,8 +213,11 @@ code {
   }
 }
 
-/* Focus styles for better accessibility */
-.focus\:ring-2:focus {
+/**
+ * @class .focus\:ring-2:focus
+ * @description Provides enhanced focus styles for interactive elements, improving keyboard navigation visibility.
+ */
+.focus\\:ring-2:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow:
@@ -134,7 +225,11 @@ code {
     0 0 0 4px rgba(59, 130, 246, 0.25);
 }
 
-/* Custom scrollbar styles for glass components */
+/**
+ * @section Custom Scrollbar Styles
+ * @description Defines custom styles for WebKit-based scrollbars, giving them a glass-like appearance.
+ * @class .glass-scrollbar
+ */
 .glass-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -155,20 +250,22 @@ code {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Storybook specific styles */
+/**
+ * @section Storybook Specific Styles
+ * @description Styles applied specifically within the Storybook development environment.
+ */
 .sb-show-main {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Dark theme for Storybook */
 .dark .sb-show-main {
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
 }
 
-/* Additional project-specific styles can be added here */
-/* Tailwind's preflight.css handles all global reset needs */
-
-/* Improve image handling */
+/**
+ * @section General Element Styling
+ * @description Provides basic styling for common HTML elements to ensure consistency and responsiveness.
+ */
 img,
 picture,
 video,
@@ -178,30 +275,34 @@ svg {
   max-width: 100%;
 }
 
-/* Remove list styling */
 ol,
 ul {
   list-style: none;
 }
 
-/* Remove link styling */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/* Improve table styling */
 table {
   border-collapse: collapse;
   border-spacing: 0;
 }
 
-/* Ensure Babylon.js canvas container allows overlays */
+/**
+ * @class .babylon-canvas-container
+ * @description Ensures the Babylon.js canvas container has relative positioning to allow for overlays.
+ */
 .babylon-canvas-container {
   position: relative !important;
 }
 
-/* Debug styles for navigation cube (temporary) */
+/**
+ * @class .babylon-renderer__nav-cube-status
+ * @description Temporary debug styles for the navigation cube in the Babylon.js renderer.
+ * @limitation This is a temporary debug style and should be removed or refined for production.
+ */
 .babylon-renderer__nav-cube-status {
   position: fixed;
   top: 10px;

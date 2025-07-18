@@ -15,7 +15,7 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 // Mock logger to avoid console output during tests
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ManifoldASTConverter } from '../../features/babylon-renderer/services/manifold-csg/manifold-ast-converter';
+import { ASTBridgeConverter } from '../../features/babylon-renderer/services/ast-bridge-converter';
 import { OpenscadParser } from '../../features/openscad-parser';
 
 vi.mock('../../shared/services/logger.service', () => ({
@@ -45,7 +45,7 @@ describe('Performance Benchmarks Integration Tests', () => {
   let engine: NullEngine;
   let scene: Scene;
   let parser: OpenscadParser;
-  let astConverter: ManifoldASTConverter;
+  let astConverter: ASTBridgeConverter;
 
   beforeEach(async () => {
     // Create BabylonJS NullEngine for headless testing
@@ -57,7 +57,8 @@ describe('Performance Benchmarks Integration Tests', () => {
     await parser.init();
 
     // Create AST converter
-    astConverter = new ManifoldASTConverter();
+    astConverter = new ASTBridgeConverter();
+    await astConverter.initialize(scene);
 
     logger.debug('[SETUP] Performance benchmark environment initialized');
   });
@@ -109,7 +110,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       // Measure conversion time
       const startTime = performance.now();
 
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
 
       const endTime = performance.now();
       const convertTime = endTime - startTime;
@@ -133,7 +134,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       const ast = parseResult.data;
 
       // Step 2: Convert
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
       expect(convertResult.success).toBe(true);
 
       const endTime = performance.now();
@@ -205,7 +206,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       // Measure conversion time
       const startTime = performance.now();
 
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
 
       const endTime = performance.now();
       const convertTime = endTime - startTime;
@@ -243,7 +244,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       const ast = parseResult.data;
 
       // Step 2: Convert
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
       expect(convertResult.success).toBe(true);
 
       const endTime = performance.now();
@@ -271,7 +272,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       if (!parseResult.success) return;
       const ast = parseResult.data;
 
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
       expect(convertResult.success).toBe(true);
 
       const endTime = performance.now();
@@ -299,7 +300,7 @@ describe('Performance Benchmarks Integration Tests', () => {
       if (!parseResult.success) return;
       const ast = parseResult.data;
 
-      const convertResult = await astConverter.convertAST(ast);
+      const convertResult = await astConverter.convertAST(ast.body);
       expect(convertResult.success).toBe(true);
 
       const endTime = performance.now();
@@ -317,7 +318,9 @@ describe('Performance Benchmarks Integration Tests', () => {
       const testModel = 'difference() { cube([5, 5, 5]); sphere(r=3); }';
 
       // Measure initial memory (if available)
-      const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const initialMemory =
+        (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0;
 
       // Perform repeated operations
       for (let i = 0; i < 10; i++) {
@@ -327,7 +330,7 @@ describe('Performance Benchmarks Integration Tests', () => {
         if (!parseResult.success) continue;
         const ast = parseResult.data;
 
-        const convertResult = await astConverter.convertAST(ast);
+        const convertResult = await astConverter.convertAST(ast.body);
         expect(convertResult.success).toBe(true);
       }
 
@@ -337,7 +340,9 @@ describe('Performance Benchmarks Integration Tests', () => {
       }
 
       // Measure final memory (if available)
-      const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const finalMemory =
+        (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0;
 
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryIncrease = finalMemory - initialMemory;
@@ -368,7 +373,7 @@ describe('Performance Benchmarks Integration Tests', () => {
         if (!parseResult.success) continue;
         const ast = parseResult.data;
 
-        const convertResult = await astConverter.convertAST(ast);
+        const convertResult = await astConverter.convertAST(ast.body);
         expect(convertResult.success).toBe(true);
 
         const endTime = performance.now();
@@ -416,7 +421,7 @@ describe('Performance Benchmarks Integration Tests', () => {
 
       // Measure conversion time
       const convertStart = performance.now();
-      const convertResult = await astConverter.convertAST(parseResult.data);
+      const convertResult = await astConverter.convertAST(parseResult.data.body);
       const convertEnd = performance.now();
       const convertTime = convertEnd - convertStart;
 

@@ -7,6 +7,20 @@
 
 import type { Camera, Engine, Light, Mesh, Scene } from '@babylonjs/core';
 import type { Result } from '../../../shared/types/result.types';
+import type { BabylonSceneService } from '../services/babylon-scene-service';
+
+/**
+ * Module augmentation to extend BabylonJS Scene interface
+ * with custom properties used by our application
+ */
+declare module '@babylonjs/core' {
+  interface Scene {
+    /**
+     * Custom scene service reference for camera controls and scene management
+     */
+    _sceneService?: BabylonSceneService;
+  }
+}
 
 /**
  * BabylonJS scene configuration

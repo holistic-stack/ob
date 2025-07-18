@@ -317,7 +317,7 @@ export class CSGOperationsService {
       triangleCount: geometry.triangleCount,
       boundingBox: geometry.boundingBox,
       generationTime: totalGenerationTime + operationTime,
-      csgOperations: [...inputMeshes[0]?.metadata.csgOperations, operationType],
+      csgOperations: [...(inputMeshes[0]?.metadata.csgOperations || []), operationType],
       openscadParameters: {
         operationType,
         inputMeshCount: inputMeshes.length,
@@ -349,11 +349,8 @@ export class CSGOperationsService {
       message,
       operationType,
       timestamp: new Date(),
+      details,
     };
-
-    if (details) {
-      (error as any).details = details;
-    }
 
     return error;
   }

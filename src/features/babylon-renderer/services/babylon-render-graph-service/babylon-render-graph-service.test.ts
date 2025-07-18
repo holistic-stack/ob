@@ -5,6 +5,7 @@
  * Following TDD principles with real implementations where possible.
  */
 
+import { NodeRenderGraph } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   RenderGraphBlockConfig,
@@ -139,8 +140,7 @@ describe('BabylonRenderGraphService', () => {
       }
 
       // Verify NodeRenderGraph was created
-      const { NodeRenderGraph } = require('@babylonjs/core');
-      expect(NodeRenderGraph).toHaveBeenCalledWith('test-render-graph');
+      expect(NodeRenderGraph).toHaveBeenCalledWith('test-render-graph', mockScene);
 
       // Verify render graph is stored
       const renderGraph = renderGraphService.getRenderGraph('test-render-graph');

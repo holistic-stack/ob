@@ -9,6 +9,11 @@ import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 
+// Extend GPUAdapter interface to include experimental methods
+interface ExtendedGPUAdapter extends GPUAdapter {
+  requestAdapterInfo?(): Promise<GPUAdapterInfo>;
+}
+
 const logger = createLogger('WebGPUUtils');
 
 /**
@@ -78,7 +83,9 @@ export const getWebGPUCapabilities = async (): Promise<Result<WebGPUCapabilities
       }
 
       const adapterInfo =
-        'requestAdapterInfo' in adapter ? await (adapter as any).requestAdapterInfo() : null;
+        'requestAdapterInfo' in adapter
+          ? await (adapter as ExtendedGPUAdapter).requestAdapterInfo?.()
+          : null;
       const limits = adapter.limits;
       const features = Array.from(adapter.features);
 
@@ -207,7 +214,7 @@ export const requestWebGPUDevice = async (
       }
 
       // Set up error handling
-      device.addEventListener('uncapturederror', (event: any) => {
+      device.addEventListener('uncapturederror', (event: GPUUncapturedErrorEvent) => {
         logger.error(
           `[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error?.message || 'Unknown error'}`
         );

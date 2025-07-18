@@ -1,55 +1,114 @@
 /**
- * LRU (Least Recently Used) implementation of the QueryCache interface
+ * @file lru-query-cache.ts
+ * @description This file implements an LRU (Least Recently Used) cache for Tree-sitter queries.
+ * It stores query results based on the query string and a hash of the source text, ensuring that
+ * frequently accessed queries are readily available while older, less used ones are evicted.
  *
- * This module provides an implementation of the QueryCache interface
- * using an LRU (Least Recently Used) eviction policy.
+ * @architectural_decision
+ * The `LRUQueryCache` implements the `QueryCache` interface, adhering to the Strategy pattern.
+ * This allows the caching mechanism to be swapped out without affecting the `QueryManager`.
+ * The use of an LRU policy is a common and effective strategy for managing cache size and ensuring
+ * that the most relevant data remains in memory. Hashing the source text for the cache key prevents
+ * storing large strings directly in the map keys, optimizing memory usage.
  *
- * @module lib/openscad-parser/ast/query/lru-query-cache
+ * @example
+ * ```typescript
+ * import { LRUQueryCache } from './lru-query-cache';
+ * import * as TreeSitter from 'web-tree-sitter';
+ *
+ * async function demonstrateLRUCache() {
+ *   // Initialize Tree-sitter (assuming it's done elsewhere in the application)
+ *   await TreeSitter.Parser.init();
+ *
+ *   const cache = new LRUQueryCache(2); // Cache size of 2
+ *   const queryString1 = '(function_definition)';
+ *   const queryString2 = '(variable_declaration)';
+ *   const sourceText1 = 'function foo() {}\nfunction bar() {}\n';
+ *   const sourceText2 = 'a = 1;\nb = 2;\n';
+ *
+ *   // First query: cache miss, then set
+ *   let result1 = cache.get(queryString1, sourceText1);
+ *   console.log('Result 1 (initial get):', result1); // Expected: null
+ *   cache.set(queryString1, sourceText1, [/* some TSNode results * /]);
+ *   console.log('Cache size after set 1:', cache.size()); // Expected: 1
+ *
+ *   // Second query: cache miss, then set
+ *   let result2 = cache.get(queryString2, sourceText2);
+ *   console.log('Result 2 (initial get):', result2); // Expected: null
+ *   cache.set(queryString2, sourceText2, [/* some other TSNode results * /]);
+ *   console.log('Cache size after set 2:', cache.size()); // Expected: 2
+ *
+ *   // Access first query again: cache hit, moves to MRU
+ *   result1 = cache.get(queryString1, sourceText1);
+ *   console.log('Result 1 (second get):', result1); // Expected: [/* some TSNode results * /]
+ *   console.log('Cache stats after hit:', cache.getStats()); // Hits: 1, Misses: 2, Size: 2
+ *
+ *   // Add a third query: cache is full, LRU (queryString2) is evicted
+ *   const queryString3 = '(call_expression)';
+ *   const sourceText3 = 'foo(); bar();';
+ *   cache.set(queryString3, sourceText3, [/* yet more TSNode results * /]);
+ *   console.log('Cache size after set 3:', cache.size()); // Expected: 2
+ *
+ *   // Try to get evicted query: cache miss
+ *   result2 = cache.get(queryString2, sourceText2);
+ *   console.log('Result 2 (after eviction):', result2); // Expected: null
+ *   console.log('Cache stats after miss:', cache.getStats()); // Hits: 1, Misses: 3, Size: 2
+ *
+ *   cache.clear();
+ *   console.log('Cache size after clear:', cache.size()); // Expected: 0
+ * }
+ *
+ * demonstrateLRUCache();
+ * ```
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
 import type { QueryCache } from './query-cache.js';
 
 /**
- * LRU (Least Recently Used) implementation of the QueryCache interface
+ * @class LRUQueryCache
+ * @description Implements a Least Recently Used (LRU) cache for Tree-sitter query results.
+ * This cache stores query results and evicts the least recently accessed items when the cache limit is reached.
  */
 export class LRUQueryCache implements QueryCache {
   /**
-   * The cache of query results
-   *
-   * The outer map uses a cache key (query string + source hash) as the key
-   * and a map of source text to query results as the value.
+   * @property {Map<string, TSNode[]>} cache - The internal Map used to store cached query results.
+   * The key is a combination of the query string and a hash of the source text.
    */
   private cache: Map<string, TSNode[]> = new Map();
 
   /**
-   * The maximum number of queries to cache
+   * @property {number} maxSize - The maximum number of query results that can be stored in the cache.
    */
   private maxSize: number;
 
   /**
-   * The number of cache hits
+   * @property {number} hits - Counter for cache hits.
    */
   private hits: number = 0;
 
   /**
-   * The number of cache misses
+   * @property {number} misses - Counter for cache misses.
    */
   private misses: number = 0;
 
   /**
-   * Create a new LRUQueryCache
-   * @param maxSize The maximum number of queries to cache (default: 100)
+   * @constructor
+   * @description Creates a new `LRUQueryCache` instance.
+   * @param {number} [maxSize=100] - The maximum number of queries to cache. Defaults to 100.
    */
   constructor(maxSize: number = 100) {
     this.maxSize = maxSize;
   }
 
   /**
-   * Get cached query results
-   * @param queryString The query string
-   * @param sourceText The source text
-   * @returns The cached results or null if not found
+   * @method get
+   * @description Retrieves cached query results for a given query string and source text.
+   * If found, the entry is moved to the most recently used position in the cache.
+   *
+   * @param {string} queryString - The Tree-sitter query string.
+   * @param {string} sourceText - The source code text against which the query was run.
+   * @returns {TSNode[] | null} The cached query results (an array of Tree-sitter nodes), or `null` if not found.
    */
   get(queryString: string, sourceText: string): TSNode[] | null {
     const cacheKey = this.getCacheKey(queryString, sourceText);
@@ -60,7 +119,7 @@ export class LRUQueryCache implements QueryCache {
       return null;
     }
 
-    // Move the entry to the end of the map to mark it as recently used
+    // Move the entry to the end of the map to mark it as recently used (LRU logic)
     this.cache.delete(cacheKey);
     this.cache.set(cacheKey, results);
 
@@ -69,10 +128,13 @@ export class LRUQueryCache implements QueryCache {
   }
 
   /**
-   * Cache query results
-   * @param queryString The query string
-   * @param sourceText The source text
-   * @param results The query results to cache
+   * @method set
+   * @description Caches query results for a given query string and source text.
+   * If the cache is full, the least recently used entry is evicted.
+   *
+   * @param {string} queryString - The Tree-sitter query string.
+   * @param {string} sourceText - The source code text against which the query was run.
+   * @param {TSNode[]} results - The query results (an array of Tree-sitter nodes) to cache.
    */
   set(queryString: string, sourceText: string, results: TSNode[]): void {
     const cacheKey = this.getCacheKey(queryString, sourceText);
@@ -90,7 +152,8 @@ export class LRUQueryCache implements QueryCache {
   }
 
   /**
-   * Clear the cache
+   * @method clear
+   * @description Clears all entries from the cache and resets hit/miss counters.
    */
   clear(): void {
     this.cache.clear();
@@ -99,16 +162,18 @@ export class LRUQueryCache implements QueryCache {
   }
 
   /**
-   * Get the number of cached queries
-   * @returns The number of cached queries
+   * @method size
+   * @description Returns the current number of items stored in the cache.
+   * @returns {number} The number of cached queries.
    */
   size(): number {
     return this.cache.size;
   }
 
   /**
-   * Get cache statistics
-   * @returns An object with cache statistics
+   * @method getStats
+   * @description Returns statistics about the cache usage, including hits, misses, and current size.
+   * @returns {{ hits: number; misses: number; size: number }} An object containing cache statistics.
    */
   getStats(): { hits: number; misses: number; size: number } {
     return {
@@ -119,10 +184,14 @@ export class LRUQueryCache implements QueryCache {
   }
 
   /**
-   * Get a cache key for a query and source text
-   * @param queryString The query string
-   * @param sourceText The source text
-   * @returns A cache key
+   * @method getCacheKey
+   * @description Generates a unique cache key for a given query string and source text.
+   * It uses a hash of the source text to create a compact key.
+   *
+   * @param {string} queryString - The Tree-sitter query string.
+   * @param {string} sourceText - The source code text.
+   * @returns {string} A unique string representing the cache key.
+   * @private
    */
   private getCacheKey(queryString: string, sourceText: string): string {
     // Use a hash of the source text to avoid storing the entire text in the key
@@ -131,9 +200,13 @@ export class LRUQueryCache implements QueryCache {
   }
 
   /**
-   * Hash a string
-   * @param str The string to hash
-   * @returns A hash of the string
+   * @method hashString
+   * @description Generates a simple hash for a given string.
+   * This is used to create compact keys for the cache.
+   *
+   * @param {string} str - The string to hash.
+   * @returns {string} A hexadecimal string representation of the hash.
+   * @private
    */
   private hashString(str: string): string {
     let hash = 0;

@@ -124,7 +124,7 @@ describe('BabylonInspectorService', () => {
       expect(mockInspector.Show).toHaveBeenCalledWith(
         mockScene,
         expect.objectContaining({
-          popup: true,
+          enablePopup: true,
           showExplorer: false,
         })
       );

@@ -1,69 +1,35 @@
 /**
- * @file AST utilities module exports
+ * @file index.ts
+ * @description This file serves as the barrel export for all utility functions within the AST module.
+ * It consolidates and exports various helper functions for AST processing, Tree-sitter node manipulation,
+ * location tracking, vector operations, and debugging.
  *
- * This module serves as the central export point for all utility functions used in
- * OpenSCAD AST processing and Tree-sitter node manipulation. These utilities provide
- * essential functionality for working with the Concrete Syntax Tree (CST) and
- * generating the Abstract Syntax Tree (AST).
+ * @architectural_decision
+ * Using a barrel export for utilities provides a single, convenient entry point for accessing a wide range
+ * of helper functions. This simplifies imports in other modules and promotes a cleaner, more organized
+ * codebase. It also allows for easy management of the public API of the utility functions.
  *
- * The utility system provides:
- * - **Node Utilities**: Tree-sitter node traversal, searching, and manipulation
- * - **Location Utilities**: Source location tracking and mapping for error reporting
- * - **Vector Utilities**: Mathematical operations on 2D/3D vectors and arrays
- * - **Variable Utilities**: Variable name validation and processing
- * - **Debug Utilities**: Development and debugging support for CST inspection
- *
- * Key utility categories:
- * - **Tree Traversal**: Finding nodes by type, navigating parent-child relationships
- * - **Location Tracking**: Mapping AST nodes back to source code positions
- * - **Mathematical Operations**: Vector arithmetic, normalization, and validation
- * - **Name Processing**: Variable and identifier validation and transformation
- * - **Development Support**: Debugging tools for understanding CST structure
- *
- * @example Node utilities usage
+ * @example
  * ```typescript
- * import { findDescendantOfType, getChildrenOfType } from '@holistic-stack/openscad-parser/utils';
+ * import { getLocation, findDescendantOfType, createVector3D } from './index';
+ * import * as TreeSitter from 'web-tree-sitter';
  *
- * // Find a specific node type in the tree
- * const identifierNode = findDescendantOfType(rootNode, 'identifier');
+ * // Example: Get location of a Tree-sitter node
+ * // Assuming `someNode` is a Tree-sitter Node
+ * // const nodeLocation = getLocation(someNode);
+ * // console.log(nodeLocation);
  *
- * // Get all children of a specific type
- * const statements = getChildrenOfType(blockNode, 'statement');
+ * // Example: Find a descendant node of a specific type
+ * // Assuming `rootNode` is a Tree-sitter Tree.rootNode
+ * // const functionCallNode = findDescendantOfType(rootNode, 'call_expression');
+ * // if (functionCallNode) {
+ * //   console.log('Found function call:', functionCallNode.text);
+ * // }
+ *
+ * // Example: Create a 3D vector
+ * const vector = createVector3D(1, 2, 3);
+ * console.log('Created vector:', vector); // Expected: [1, 2, 3]
  * ```
- *
- * @example Location utilities usage
- * ```typescript
- * import { getLocation, createLocationFromNode } from '@holistic-stack/openscad-parser/utils';
- *
- * // Get source location for error reporting
- * const location = getLocation(node);
- * console.log(`Error at line ${location.start.line}, column ${location.start.column}`);
- * ```
- *
- * @example Vector utilities usage
- * ```typescript
- * import { normalizeVector, isValidVector, createVector3D } from '@holistic-stack/openscad-parser/utils';
- *
- * // Validate and normalize vectors
- * const vector = [10, 20, 30];
- * if (isValidVector(vector)) {
- *   const normalized = normalizeVector(vector);
- *   const vector3D = createVector3D(vector);
- * }
- * ```
- *
- * @example Variable utilities usage
- * ```typescript
- * import { isValidVariableName, normalizeVariableName } from '@holistic-stack/openscad-parser/utils';
- *
- * // Validate variable names
- * if (isValidVariableName('myVariable')) {
- *   const normalized = normalizeVariableName('myVariable');
- * }
- * ```
- *
- * @module utils
- * @since 0.1.0
  */
 
 export * from './ast-evaluator';

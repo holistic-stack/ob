@@ -16,7 +16,7 @@
  * ```
  */
 
-import { BoundingBox, Matrix, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
+import { BoundingBox, Matrix, type Mesh, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -315,7 +315,10 @@ export class ExtrusionOperationsService {
   /**
    * Apply linear extrude transformations (twist, scale)
    */
-  private applyLinearExtrudeTransformations(_mesh: any, params: OpenSCADLinearExtrudeParams): void {
+  private applyLinearExtrudeTransformations(
+    _mesh: Mesh,
+    params: OpenSCADLinearExtrudeParams
+  ): void {
     // Note: BabylonJS ExtrudeShape doesn't directly support twist and scale
     // This would require custom geometry generation for full OpenSCAD compatibility
     // For now, we'll log that these features need custom implementation
@@ -331,7 +334,7 @@ export class ExtrusionOperationsService {
    * Convert BabylonJS mesh to GenericMeshData
    */
   private async convertBabylonMeshToGeneric(
-    babylonMesh: any,
+    babylonMesh: Mesh,
     operationType: string,
     params: Record<string, unknown>,
     operationTime: number
@@ -397,17 +400,12 @@ export class ExtrusionOperationsService {
     message: string,
     details?: Record<string, unknown>
   ): ExtrusionError {
-    const error: ExtrusionError = {
+    return {
       code,
       message,
       operationType,
       timestamp: new Date(),
+      details,
     };
-
-    if (details) {
-      (error as any).details = details;
-    }
-
-    return error;
   }
 }

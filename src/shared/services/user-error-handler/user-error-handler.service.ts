@@ -25,6 +25,14 @@ import type { Result } from '../../types/result.types';
 import type { EnhancedError } from '../../utils/error';
 import { createLogger } from '../logger.service';
 
+/**
+ * Extended error interface for accessing additional properties
+ */
+interface ExtendedError extends Error {
+  code?: string;
+  location?: unknown;
+}
+
 const logger = createLogger('UserErrorHandler');
 
 /**
@@ -94,23 +102,6 @@ export class UserErrorHandlerService {
       canRecover: true,
     },
 
-    // Feature Not Supported
-    {
-      category: ErrorCategory.FEATURE_NOT_SUPPORTED,
-      pattern: /not supported|not implemented|unsupported feature/i,
-      title: 'Feature Not Supported',
-      messageTemplate: 'This OpenSCAD feature is not yet supported in the web editor.',
-      suggestions: [
-        'Try using alternative OpenSCAD functions',
-        'Check the documentation for supported features',
-        'Consider simplifying your model',
-        'Use basic primitives and operations',
-      ],
-      helpUrl: 'https://docs.openscad.org/supported-features',
-      canRetry: false,
-      canRecover: true,
-    },
-
     // Browser Compatibility (check first, more specific)
     {
       category: ErrorCategory.BROWSER_COMPATIBILITY,
@@ -127,6 +118,23 @@ export class UserErrorHandlerService {
       helpUrl: 'https://caniuse.com/webgl',
       canRetry: false,
       canRecover: false,
+    },
+
+    // Feature Not Supported
+    {
+      category: ErrorCategory.FEATURE_NOT_SUPPORTED,
+      pattern: /not supported|not implemented|unsupported feature/i,
+      title: 'Feature Not Supported',
+      messageTemplate: 'This OpenSCAD feature is not yet supported in the web editor.',
+      suggestions: [
+        'Try using alternative OpenSCAD functions',
+        'Check the documentation for supported features',
+        'Consider simplifying your model',
+        'Use basic primitives and operations',
+      ],
+      helpUrl: 'https://docs.openscad.org/supported-features',
+      canRetry: false,
+      canRecover: true,
     },
 
     // WebGL/Rendering Errors (more general)
@@ -147,26 +155,10 @@ export class UserErrorHandlerService {
       canRecover: true,
     },
 
-    // Performance Issues
-    {
-      category: ErrorCategory.PERFORMANCE_ISSUE,
-      pattern: /timeout|too complex|memory|performance/i,
-      title: 'Performance Issue',
-      messageTemplate: 'Your model is too complex for smooth rendering. Consider simplifying it.',
-      suggestions: [
-        'Reduce the number of objects in your model',
-        'Use lower resolution for curved surfaces',
-        'Break complex models into smaller parts',
-        'Use simpler geometric shapes where possible',
-      ],
-      canRetry: true,
-      canRecover: true,
-    },
-
-    // Network Errors
+    // Network Errors (more specific pattern first)
     {
       category: ErrorCategory.NETWORK_ERROR,
-      pattern: /network|fetch|connection|timeout.*request/i,
+      pattern: /network|fetch|connection.*timeout|timeout.*connection|connection.*error/i,
       title: 'Network Error',
       messageTemplate:
         'There was a problem connecting to the server. Please check your internet connection.',
@@ -178,6 +170,22 @@ export class UserErrorHandlerService {
       ],
       canRetry: true,
       canRecover: false,
+    },
+
+    // Performance Issues (more general timeout pattern)
+    {
+      category: ErrorCategory.PERFORMANCE_ISSUE,
+      pattern: /too complex|memory|performance|timeout(?!.*connection)/i,
+      title: 'Performance Issue',
+      messageTemplate: 'Your model is too complex for smooth rendering. Consider simplifying it.',
+      suggestions: [
+        'Reduce the number of objects in your model',
+        'Use lower resolution for curved surfaces',
+        'Break complex models into smaller parts',
+        'Use simpler geometric shapes where possible',
+      ],
+      canRetry: true,
+      canRecover: true,
     },
   ];
 
@@ -257,7 +265,7 @@ export class UserErrorHandlerService {
     }
 
     if (error && typeof error === 'object' && 'message' in error) {
-      return String((error as any).message);
+      return String((error as ExtendedError).message);
     }
 
     return 'An unknown error occurred';
@@ -289,7 +297,7 @@ export class UserErrorHandlerService {
    */
   private createUserMessage(
     pattern: ErrorPattern,
-    originalMessage: string,
+    _originalMessage: string,
     originalError: unknown
   ): UserErrorMessage {
     const severity = this.determineSeverity(pattern.category);
@@ -300,17 +308,17 @@ export class UserErrorHandlerService {
       message: pattern.messageTemplate,
       severity,
       suggestions: pattern.suggestions,
-      helpUrl: pattern.helpUrl,
+      ...(pattern.helpUrl !== undefined && { helpUrl: pattern.helpUrl }),
       canRetry: pattern.canRetry,
       canRecover: pattern.canRecover,
-      technicalDetails,
+      ...(technicalDetails !== undefined && { technicalDetails }),
     };
   }
 
   /**
    * Create fallback message for unknown errors
    */
-  private createFallbackMessage(message: string, originalError: unknown): UserErrorMessage {
+  private createFallbackMessage(_message: string, originalError: unknown): UserErrorMessage {
     const technicalDetails = this.extractTechnicalDetails(originalError);
 
     return {
@@ -326,7 +334,7 @@ export class UserErrorHandlerService {
       ],
       canRetry: true,
       canRecover: true,
-      technicalDetails,
+      ...(technicalDetails !== undefined && { technicalDetails }),
     };
   }
 
@@ -384,11 +392,11 @@ export class UserErrorHandlerService {
 
       // Enhanced error details
       if ('code' in error) {
-        details.push(`Code: ${(error as any).code}`);
+        details.push(`Code: ${(error as ExtendedError).code}`);
       }
 
       if ('location' in error) {
-        const location = (error as any).location;
+        const location = (error as ExtendedError).location;
         if (location) {
           details.push(`Location: ${JSON.stringify(location)}`);
         }

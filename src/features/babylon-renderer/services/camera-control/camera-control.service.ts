@@ -19,7 +19,14 @@
  * ```
  */
 
-import { ArcRotateCamera, type Mesh, type Scene, Vector3 } from '@babylonjs/core';
+import {
+  ArcRotateCamera,
+  type ArcRotateCameraMouseWheelInput,
+  type ArcRotateCameraPointersInput,
+  type Mesh,
+  type Scene,
+  Vector3,
+} from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -137,14 +144,15 @@ export class CameraControlService {
         this.camera.upperBetaLimit = finalConfig.maxBeta;
 
         // Configure input sensitivity
-        const pointersInput = this.camera.inputs.attached.pointers as any;
+        const pointersInput = this.camera.inputs.attached.pointers as ArcRotateCameraPointersInput;
         if (pointersInput) {
           pointersInput.angularSensibilityX = 1000 / finalConfig.orbitSensitivity;
           pointersInput.angularSensibilityY = 1000 / finalConfig.orbitSensitivity;
           pointersInput.panningSensibility = 1000 / finalConfig.panSensitivity;
         }
 
-        const mousewheelInput = this.camera.inputs.attached.mousewheel as any;
+        const mousewheelInput = this.camera.inputs.attached
+          .mousewheel as ArcRotateCameraMouseWheelInput;
         if (mousewheelInput) {
           mousewheelInput.wheelPrecision = 50 / finalConfig.zoomSensitivity;
         }
@@ -155,7 +163,8 @@ export class CameraControlService {
         }
 
         if (!finalConfig.enablePan) {
-          const pointersInput = this.camera.inputs.attached.pointers as any;
+          const pointersInput = this.camera.inputs.attached
+            .pointers as ArcRotateCameraPointersInput;
           if (pointersInput) {
             pointersInput.panningSensibility = 0;
           }

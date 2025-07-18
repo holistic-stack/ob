@@ -1,76 +1,63 @@
 /**
- * @file Control structures visitor for OpenSCAD parser
- *
- * This module implements the ControlStructureVisitor class, which specializes in processing
+ * @file control-structure-visitor.ts
+ * @description This file implements the `ControlStructureVisitor` class, which specializes in processing
  * OpenSCAD control structures and converting them to structured AST representations.
  * Control structures are fundamental to OpenSCAD's programming model, enabling conditional
- * logic, iteration, variable scoping, and collection processing.
+ * logic, iteration, and variable scoping.
  *
- * The ControlStructureVisitor handles:
- * - **If Statements**: Conditional execution with optional else branches
- * - **For Loops**: Iteration over ranges, arrays, and collections
- * - **Let Expressions**: Variable scoping and local assignments
- * - **Each Statements**: Collection iteration and element processing
- * - **Nested Structures**: Complex combinations of control structures
- * - **Expression Integration**: Seamless integration with expression evaluation
+ * @architectural_decision
+ * The `ControlStructureVisitor` is a specialized visitor that handles control flow statements
+ * like `if`, `for`, and `let`. It delegates the processing of complex control structures
+ * to dedicated sub-visitors (`IfElseVisitor`, `ForLoopVisitor`), promoting a clean separation
+ * of concerns. This approach allows the main visitor to focus on identifying control structures,
+ * while the sub-visitors handle the specific logic for each type. This makes the codebase
+ * more modular, easier to test, and more maintainable.
  *
- * Key features:
- * - **Specialized Sub-Visitors**: Dedicated visitors for complex control structures
- * - **Conditional Logic**: Complete if/else statement processing with condition evaluation
- * - **Loop Processing**: Comprehensive for loop handling with range and collection iteration
- * - **Variable Scoping**: Let expression processing with local variable assignments
- * - **Collection Iteration**: Each statement processing for array and object iteration
- * - **Error Recovery**: Graceful handling of malformed control structures
- * - **Location Tracking**: Source location preservation for debugging and IDE integration
- *
- * Control structure processing patterns:
- * - **Simple Conditionals**: `if (condition) statement` - basic conditional execution
- * - **If-Else Chains**: `if (cond1) stmt1 else if (cond2) stmt2 else stmt3` - complex conditionals
- * - **Range Loops**: `for (i = [0:10]) statement` - numeric range iteration
- * - **Array Loops**: `for (item = array) statement` - collection iteration
- * - **Let Scoping**: `let (a = 10, b = 20) statement` - local variable assignments
- * - **Each Processing**: `each array` - element-wise collection processing
- *
- * The visitor implements a delegation strategy using specialized sub-visitors:
- * 1. **IfElseVisitor**: Handles complex conditional logic and else branches
- * 2. **ForLoopVisitor**: Processes various loop patterns and iteration types
- * 3. **ExpressionVisitor**: Evaluates conditions and expressions within control structures
- *
- * @example Basic control structure processing
+ * @example
  * ```typescript
  * import { ControlStructureVisitor } from './control-structure-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new ControlStructureVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'if (x > 10) { cube(10); } else { sphere(5); }';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process if statement
- * const ifNode = visitor.visitIfStatement(ifCST);
- * // Returns: { type: 'if', condition: {...}, thenBranch: {...}, elseBranch: {...} }
+ *   // 2. Create an error handler and visitor
+ *   const errorHandler = new ErrorHandler();
+ *   const controlStructureVisitor = new ControlStructureVisitor(sourceCode, errorHandler);
  *
- * // Process for loop
- * const forNode = visitor.visitForStatement(forCST);
- * // Returns: { type: 'for_loop', variable: 'i', iterable: {...}, body: {...} }
+ *   // 3. Visit the if_statement node
+ *   const ifStatementNode = tree.rootNode.firstChild!;
+ *   const astNode = controlStructureVisitor.visitIfStatement(ifStatementNode);
+ *
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "if",
+ *   //   "condition": { ... },
+ *   //   "thenBranch": { ... },
+ *   //   "elseBranch": { ... }
+ *   // }
+ *
+ *   // 5. Clean up
+ *   parser.delete();
+ * }
+ *
+ * main();
  * ```
  *
- * @example Complex control structure combinations
- * ```typescript
- * // For OpenSCAD code: if (x > 0) for (i = [0:x]) let (y = i * 2) cube(y);
- * const complexNode = visitor.visitIfStatement(complexCST);
- * // Returns nested structure with if containing for containing let
- *
- * // For collection iteration: for (point = points) translate(point) sphere(1);
- * const iterationNode = visitor.visitForStatement(iterationCST);
- * // Returns for loop with array iteration and transformation
- * ```
- *
- * @example Variable scoping with let expressions
- * ```typescript
- * // For OpenSCAD code: let (size = 10, height = size * 2) cube([size, size, height]);
- * const letNode = visitor.visitLetExpression(letCST);
- * // Returns let expression with local variable assignments and cube body
- * ```
- *
- * @module control-structure-visitor
- * @since 0.1.0
+ * @integration
+ * The `ControlStructureVisitor` is a key part of the `CompositeVisitor`'s collection of visitors.
+ * It is responsible for identifying and processing all control flow statements from the CST.
+ * When it encounters a control structure, it delegates to the appropriate sub-visitor to generate
+ * the corresponding AST node (e.g., `IfNode`, `ForLoopNode`), which is then included in the final AST.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -85,28 +72,9 @@ import { IfElseVisitor } from './control-structure-visitor/if-else-visitor.js';
 import { ExpressionVisitor } from './expression-visitor.js';
 
 /**
- * Visitor for processing OpenSCAD control structures with specialized sub-visitors.
- *
- * The ControlStructureVisitor extends BaseASTVisitor to provide comprehensive handling
- * for all types of control structures in OpenSCAD. It implements a delegation pattern
- * using specialized sub-visitors for complex control structures while handling simpler
- * structures directly.
- *
- * This implementation provides:
- * - **Delegation Strategy**: Uses specialized visitors for complex control structures
- * - **Direct Processing**: Handles simpler structures like let and each directly
- * - **Expression Integration**: Seamless integration with expression evaluation
- * - **Error Context Preservation**: Maintains detailed error information throughout processing
- * - **Performance Optimization**: Efficient routing to appropriate processing methods
- *
- *  * The visitor maintains a set of specialized sub-visitors:
- * - **IfElseVisitor**: Handles conditional logic and else branches
- * - **ForLoopVisitor**: Processes various loop patterns and iteration types
- * - **ExpressionVisitor**: Evaluates expressions within control structure contexts
- *
  * @class ControlStructureVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for processing OpenSCAD control structures with specialized sub-visitors.
  */
 export class ControlStructureVisitor extends BaseASTVisitor {
   private ifElseVisitor: IfElseVisitor;
@@ -115,9 +83,11 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   private compositeVisitor: ASTVisitor | undefined;
 
   /**
-   * Create a new ControlStructureVisitor
-   * @param source The source code (optional, defaults to empty string)
-   * @param errorHandler The error handler instance
+   * @constructor
+   * @description Creates a new `ControlStructureVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} [variableScope] - The current variable scope.
    */
   constructor(
     source: string,
@@ -136,8 +106,10 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Set the composite visitor for delegating child node processing
-   * This is needed to resolve circular dependency issues during visitor creation
+   * @method setCompositeVisitor
+   * @description Sets the composite visitor for delegating child node processing.
+   * This is needed to resolve circular dependency issues during visitor creation.
+   * @param {ASTVisitor} compositeVisitor - The composite visitor instance.
    */
   setCompositeVisitor(compositeVisitor: ASTVisitor): void {
     this.compositeVisitor = compositeVisitor;
@@ -147,20 +119,34 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitStatement to only handle control structure statements
-   * This prevents the ControlStructureVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The control structure AST node or null if this is not a control structure statement
+   * @method visitModuleInstantiation
+   * @description Overrides the base `visitModuleInstantiation` to only handle control structure modules.
+   * @param {TSNode} _node - The module instantiation node to visit.
+   * @returns {null} Always returns null, as module instantiations are not control structures.
+   * @override
+   */
+  override visitModuleInstantiation(_node: TSNode): ast.ASTNode | null {
+    // ControlStructureVisitor only handles control structures (if, for, let, each)
+    // Module instantiations are not control structures, so return null
+    // to let other visitors handle module instantiations
+    return null;
+  }
+
+  /**
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle control structure statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The control structure AST node, or null if this is not a control structure statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
     // Only handle statements that directly contain control structure nodes as immediate children
     // Check for if_statement, for_statement, let_expression, each_statement
-    for (let i = 0; i < node.namedChildCount; i++) {
-      const child = node.namedChild(i);
-      if (!child) continue;
+
+    // First, check if this statement has exactly one child that is a control structure
+    if (node.namedChildCount === 1) {
+      const child = node.namedChild(0);
+      if (!child) return null;
 
       if (child.type === 'if_statement') {
         return this.visitIfStatement(child);
@@ -184,9 +170,11 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an if statement node
-   * @param node The if statement node to visit
-   * @returns The if AST node or null if the node cannot be processed
+   * @method visitIfStatement
+   * @description Visits an if statement node.
+   * @param {TSNode} node - The if statement node to visit.
+   * @returns {ast.IfNode | null} The if AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitIfStatement(node: TSNode): ast.IfNode | null {
     // Delegate to the specialized IfElseVisitor
@@ -194,9 +182,11 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a for statement node
-   * @param node The for statement node to visit
-   * @returns The for loop AST node, error node, or null if the node cannot be processed
+   * @method visitForStatement
+   * @description Visits a for statement node.
+   * @param {TSNode} node - The for statement node to visit.
+   * @returns {ast.ForLoopNode | ast.ErrorNode | null} The for loop AST node, an error node, or null if the node cannot be processed.
+   * @override
    */
   override visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
     // Delegate to the specialized ForLoopVisitor
@@ -204,9 +194,11 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a let expression node
-   * @param node The let expression node to visit
-   * @returns The let AST node or null if the node cannot be processed
+   * @method visitLetExpression
+   * @description Visits a let expression node.
+   * @param {TSNode} node - The let expression node to visit.
+   * @returns {ast.LetNode | null} The let AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitLetExpression(node: TSNode): ast.LetNode | null {
     // Extract assignments
@@ -245,11 +237,13 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an each statement node
-   * @param node The each statement node to visit
-   * @returns The each AST node or null if the node cannot be processed
+   * @method visitEachStatement
+   * @description Visits an each statement node.
+   * @param {TSNode} node - The each statement node to visit.
+   * @returns {ast.EachNode | null} The each AST node, or null if the node cannot be processed.
    */
   visitEachStatement(node: TSNode): ast.EachNode | null {
+    // TODO: Use ast.EachNode when TS recognizes it
     // Extract expression
     const expressionNode = node.childForFieldName('expression');
     if (!expressionNode) {
@@ -273,11 +267,13 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a function call
-   * @param node The node containing the function call
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The AST node or null if the function is not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a function call.
+   * @param {TSNode} node - The node containing the function call.
+   * @param {string} functionName - The name of the function.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.ASTNode | null} The AST node, or null if the function is not supported.
+   * @protected
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -300,10 +296,12 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a let node
-   * @param node The node containing the let expression
-   * @param args The arguments to the let expression
-   * @returns The let AST node or null if the arguments are invalid
+   * @method createLetNode
+   * @description Creates a let node.
+   * @param {TSNode} node - The node containing the let expression.
+   * @param {ast.Parameter[]} args - The arguments to the let expression.
+   * @returns {ast.LetNode | null} The let AST node, or null if the arguments are invalid.
+   * @private
    */
   private createLetNode(node: TSNode, args: ast.Parameter[]): ast.LetNode | null {
     // Extract assignments from the arguments
@@ -325,12 +323,15 @@ export class ControlStructureVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an each node
-   * @param node The node containing the each statement
-   * @param args The arguments to the each statement
-   * @returns The each AST node or null if the arguments are invalid
+   * @method createEachNode
+   * @description Creates an each node.
+   * @param {TSNode} node - The node containing the each statement.
+   * @param {ast.Parameter[]} args - The arguments to the each statement.
+   * @returns {ast.EachNode | null} The each AST node, or null if the arguments are invalid.
+   * @private
    */
   private createEachNode(node: TSNode, args: ast.Parameter[]): ast.EachNode | null {
+    // TODO: Use ast.EachNode when TS recognizes it
     // Each should have exactly one argument (the expression)
     if (args.length !== 1) {
       return null;

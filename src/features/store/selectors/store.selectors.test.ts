@@ -60,6 +60,7 @@ describe('Store Selectors', () => {
         renderErrors: [],
         lastRendered: new Date('2024-01-01T10:02:00Z'),
         renderTime: 25.3,
+        scene: null, // Add missing scene property
         camera: {
           position: [10, 10, 10],
           target: [0, 0, 0],
@@ -296,6 +297,7 @@ describe('Store Selectors', () => {
               renderTime: 0,
               lastRendered: null,
               engine: {} as any,
+              scene: null,
               inspector: {} as any,
               csg: {} as any,
               particles: [],
@@ -328,6 +330,7 @@ describe('Store Selectors', () => {
           renderTime: 0,
           lastRendered: null,
           engine: {} as any,
+          scene: null,
           inspector: {} as any,
           csg: {} as any,
           particles: [],

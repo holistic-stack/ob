@@ -5,6 +5,8 @@
  * Following TDD principles with real implementations where possible.
  */
 
+// Real BabylonJS components for testing (no mocks)
+import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ParticleSystemConfig } from './babylon-particle-service';
 import {
@@ -12,16 +14,6 @@ import {
   DEFAULT_PARTICLE_CONFIG,
   ParticleSystemType,
 } from './babylon-particle-service';
-
-// Mock BabylonJS components for testing
-const createMockScene = () =>
-  ({
-    dispose: vi.fn(),
-    render: vi.fn(),
-    getEngine: vi.fn(() => ({
-      webGLVersion: 2,
-    })),
-  }) as any;
 
 const createMockParticleSystem = (name: string) =>
   ({
@@ -93,20 +85,24 @@ const { GPUParticleSystem } = await import('@babylonjs/core');
 
 describe('BabylonParticleService', () => {
   let particleService: BabylonParticleService;
-  let mockScene: any;
+  let engine: BABYLON.NullEngine;
+  let scene: BABYLON.Scene;
 
   beforeEach(() => {
-    // Create fresh instances for each test
+    // Create real BabylonJS instances for testing (no mocks)
+    engine = new BABYLON.NullEngine();
+    scene = new BABYLON.Scene(engine);
     particleService = new BabylonParticleService();
-    mockScene = createMockScene();
 
     // Reset mocks
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Clean up after each test
+    // Clean up resources
     particleService.dispose();
+    scene.dispose();
+    engine.dispose();
   });
 
   describe('constructor', () => {
@@ -120,7 +116,7 @@ describe('BabylonParticleService', () => {
 
   describe('init', () => {
     it('should initialize with valid scene', () => {
-      const result = particleService.init(mockScene);
+      const result = particleService.init(scene);
 
       expect(result.success).toBe(true);
     });
@@ -138,7 +134,7 @@ describe('BabylonParticleService', () => {
 
   describe('createParticleSystem', () => {
     beforeEach(() => {
-      particleService.init(mockScene);
+      particleService.init(scene);
     });
 
     it('should create CPU particle system successfully', async () => {
@@ -225,7 +221,7 @@ describe('BabylonParticleService', () => {
 
   describe('startParticleSystem', () => {
     beforeEach(async () => {
-      particleService.init(mockScene);
+      particleService.init(scene);
       await particleService.createParticleSystem({
         ...DEFAULT_PARTICLE_CONFIG,
         name: 'test-particles',
@@ -259,7 +255,7 @@ describe('BabylonParticleService', () => {
 
   describe('stopParticleSystem', () => {
     beforeEach(async () => {
-      particleService.init(mockScene);
+      particleService.init(scene);
       await particleService.createParticleSystem({
         ...DEFAULT_PARTICLE_CONFIG,
         name: 'test-particles',
@@ -294,7 +290,7 @@ describe('BabylonParticleService', () => {
 
   describe('removeParticleSystem', () => {
     beforeEach(async () => {
-      particleService.init(mockScene);
+      particleService.init(scene);
       await particleService.createParticleSystem({
         ...DEFAULT_PARTICLE_CONFIG,
         name: 'test-particles',
@@ -328,7 +324,7 @@ describe('BabylonParticleService', () => {
 
   describe('getAllParticleSystemStates', () => {
     beforeEach(async () => {
-      particleService.init(mockScene);
+      particleService.init(scene);
     });
 
     it('should return empty array when no particle systems exist', () => {
@@ -355,7 +351,7 @@ describe('BabylonParticleService', () => {
 
   describe('dispose', () => {
     it('should dispose service cleanly', async () => {
-      particleService.init(mockScene);
+      particleService.init(scene);
       await particleService.createParticleSystem({
         ...DEFAULT_PARTICLE_CONFIG,
         name: 'test-particles',

@@ -244,9 +244,9 @@ export class BabylonMaterialService {
         const material = new PBRMaterial(config.name, this.scene);
 
         // Configure basic PBR properties
-        (material as any).baseColor = config.baseColor;
-        (material as any).metallicFactor = config.metallicFactor;
-        (material as any).roughnessFactor = config.roughnessFactor;
+        material.albedoColor = config.baseColor;
+        material.metallic = config.metallicFactor;
+        material.roughness = config.roughnessFactor;
         material.emissiveColor = config.emissiveColor;
         material.emissiveIntensity = config.emissiveIntensity;
         material.indexOfRefraction = config.indexOfRefraction;
@@ -276,7 +276,7 @@ export class BabylonMaterialService {
         if (config.anisotropy.enabled) {
           material.anisotropy.isEnabled = true;
           material.anisotropy.intensity = config.anisotropy.intensity;
-          (material.anisotropy as any).direction = config.anisotropy.direction;
+          material.anisotropy.direction = config.anisotropy.direction;
         }
 
         // Load textures if provided
@@ -493,7 +493,7 @@ export class BabylonMaterialService {
     if (textures.baseColorTexture) {
       texturePromises.push(
         this.loadTexture(textures.baseColorTexture).then((texture) => {
-          if (texture) (material as any).baseTexture = texture;
+          if (texture) material.albedoTexture = texture;
         })
       );
     }

@@ -1,120 +1,82 @@
 /**
- * @file Expression evaluation registry for OpenSCAD parser AST processing
+ * @file expression-evaluator-registry.ts
+ * @description This file provides the central registry and entry point for evaluating OpenSCAD expressions
+ * within the Abstract Syntax Tree (AST). It dispatches evaluation requests to specialized evaluators
+ * based on the type of expression node, ensuring a modular and extensible evaluation system.
  *
- * This module provides a comprehensive expression evaluation system for OpenSCAD
- * Abstract Syntax Tree (AST) nodes. The evaluator registry implements a centralized
- * approach to expression evaluation, supporting various expression types including
- * literals, binary operations, unary operations, and variable references. The system
- * is designed to be extensible and follows functional programming principles.
+ * @architectural_decision
+ * The `evaluateExpression` function acts as a facade for the entire expression evaluation subsystem.
+ * It uses a `switch` statement to delegate to specific evaluation logic for different expression types
+ * (e.g., literals, binary operations, unary operations). This registry pattern allows for easy addition
+ * of new expression types and their corresponding evaluators without modifying existing code, adhering
+ * to the Open/Closed Principle. Error handling is integrated to gracefully manage evaluation failures.
  *
- * The expression evaluator registry includes:
- * - **Multi-Type Expression Support**: Handles literals, binary, unary, and variable expressions
- * - **Type-Safe Evaluation**: Returns strongly-typed values (number, boolean, string, null)
- * - **Error Handling Integration**: Comprehensive error logging and recovery capabilities
- * - **Delegated Evaluation**: Uses specialized evaluators for complex expression types
- * - **Null Safety**: Robust handling of null values and evaluation failures
- * - **Extensible Architecture**: Easy to add support for new expression types
- *
- * Key features:
- * - **Centralized Evaluation**: Single entry point for all expression evaluation
- * - **Type Preservation**: Maintains OpenSCAD type semantics during evaluation
- * - **Error Resilience**: Graceful handling of evaluation errors with detailed logging
- * - **Performance Optimization**: Efficient evaluation with minimal overhead
- * - **Functional Design**: Pure functions with no side effects for predictable behavior
- * - **Comprehensive Logging**: Detailed evaluation tracing for debugging and monitoring
- *
- * Supported expression types:
- * - **Literal Expressions**: Numbers, booleans, strings, and other constant values
- * - **Binary Expressions**: Arithmetic, logical, and comparison operations
- * - **Unary Expressions**: Negation, logical NOT, and other unary operators
- * - **Variable References**: Identifier resolution and scope-aware variable lookup
- * - **Function Calls**: Mathematical functions and user-defined function evaluation
- * - **Array Access**: Index-based access to array and vector elements
- *
- * Evaluation patterns:
- * - **Literal Values**: `5`, `true`, `"hello"` → Direct value return
- * - **Arithmetic Operations**: `5 + 3`, `10 * 2` → Numeric computation
- * - **Logical Operations**: `true && false`, `!condition` → Boolean evaluation
- * - **Comparison Operations**: `x > 5`, `a == b` → Boolean comparison results
- * - **String Operations**: `"hello" + " world"` → String concatenation
- * - **Mathematical Functions**: `sin(45)`, `sqrt(16)` → Function evaluation
- *
- * The evaluator implements a recursive evaluation strategy:
- * 1. **Type Identification**: Determine the expression type from AST node
- * 2. **Specialized Dispatch**: Delegate to appropriate evaluator for the expression type
- * 3. **Recursive Evaluation**: Evaluate sub-expressions as needed
- * 4. **Type Checking**: Validate operand types for operations
- * 5. **Result Computation**: Perform the actual computation or operation
- * 6. **Error Handling**: Log errors and return null for failed evaluations
- *
- * @example Basic expression evaluation
+ * @example
  * ```typescript
  * import { evaluateExpression } from './expression-evaluator-registry';
  * import { ErrorHandler } from '../../error-handling';
+ * import type * as ast from '../ast-types';
  *
  * const errorHandler = new ErrorHandler();
  *
- * // Evaluate literal expression
- * const literalNode: LiteralNode = {
- *   nodeType: 'literal',
+ * // Example 1: Evaluate a literal number
+ * const literalNode: ast.LiteralNode = {
+ *   type: 'expression',
  *   expressionType: 'literal',
- *   value: 42
+ *   value: 42,
+ *   location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 2, offset: 2 } }
  * };
+ * const result1 = evaluateExpression(literalNode, errorHandler);
+ * console.log(`Literal evaluation: ${result1}`); // Expected: 42
  *
- * const result = evaluateExpression(literalNode, errorHandler);
- * console.log('Literal result:', result); // Output: 42
- * ```
- *
- * @example Binary expression evaluation
- * ```typescript
- * // Evaluate binary expression: 5 + 3
- * const binaryNode: BinaryExpressionNode = {
- *   nodeType: 'binary_expression',
+ * // Example 2: Evaluate a binary addition expression
+ * const binaryNode: ast.BinaryExpressionNode = {
+ *   type: 'expression',
  *   expressionType: 'binary',
  *   operator: '+',
- *   left: { nodeType: 'literal', expressionType: 'literal', value: 5 },
- *   right: { nodeType: 'literal', expressionType: 'literal', value: 3 }
+ *   left: {
+ *     type: 'expression',
+ *     expressionType: 'literal',
+ *     value: 10,
+ *     location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 2, offset: 2 } }
+ *   },
+ *   right: {
+ *     type: 'expression',
+ *     expressionType: 'literal',
+ *     value: 5,
+ *     location: { start: { line: 0, column: 4, offset: 4 }, end: { line: 0, column: 5, offset: 5 } }
+ *   },
+ *   location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 5, offset: 5 } }
  * };
+ * const result2 = evaluateExpression(binaryNode, errorHandler);
+ * console.log(`Binary addition evaluation: ${result2}`); // Expected: 15
  *
- * const result = evaluateExpression(binaryNode, errorHandler);
- * console.log('Binary result:', result); // Output: 8
- * ```
- *
- * @example Unary expression evaluation
- * ```typescript
- * // Evaluate unary expression: -10
- * const unaryNode: UnaryExpressionNode = {
- *   nodeType: 'unary_expression',
+ * // Example 3: Evaluate a unary negation expression
+ * const unaryNode: ast.UnaryExpressionNode = {
+ *   type: 'expression',
  *   expressionType: 'unary',
  *   operator: '-',
- *   operand: { nodeType: 'literal', expressionType: 'literal', value: 10 }
+ *   operand: {
+ *     type: 'expression',
+ *     expressionType: 'literal',
+ *     value: 7,
+ *     location: { start: { line: 0, column: 1, offset: 1 }, end: { line: 0, column: 2, offset: 2 } }
+ *   },
+ *   prefix: true,
+ *   location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 2, offset: 2 } }
  * };
+ * const result3 = evaluateExpression(unaryNode, errorHandler);
+ * console.log(`Unary negation evaluation: ${result3}`); // Expected: -7
  *
- * const result = evaluateExpression(unaryNode, errorHandler);
- * console.log('Unary result:', result); // Output: -10
- * ```
- *
- * @example Error handling during evaluation
- * ```typescript
- * // Evaluate expression with error handling
- * const invalidNode: BinaryExpressionNode = {
- *   nodeType: 'binary_expression',
- *   expressionType: 'binary',
- *   operator: '+',
- *   left: { nodeType: 'literal', expressionType: 'literal', value: 5 },
- *   right: null // Invalid operand
+ * // Example 4: Evaluation with an unsupported expression type (will log a warning)
+ * const unsupportedNode: ast.ExpressionNode = {
+ *   type: 'expression',
+ *   expressionType: 'custom_expression',
+ *   location: { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } }
  * };
- *
- * const result = evaluateExpression(invalidNode, errorHandler);
- * console.log('Error result:', result); // Output: null
- *
- * // Check error logs
- * const errors = errorHandler.getErrors();
- * console.log('Evaluation errors:', errors);
+ * const result4 = evaluateExpression(unsupportedNode, errorHandler);
+ * console.log(`Unsupported expression evaluation: ${result4}`); // Expected: null (and a warning in logs)
  * ```
- *
- * @module expression-evaluator-registry
- * @since 0.1.0
  */
 
 import type { ErrorHandler } from '../../error-handling/index.js';
@@ -122,10 +84,20 @@ import type * as ast from '../ast-types.js';
 import { evaluateBinaryExpression } from './binary-expression-evaluator/binary-expression-evaluator.js';
 
 /**
- * Evaluates an expression node and returns a value
- * @param expr The expression node to evaluate
- * @param errorHandler Optional error handler for logging
- * @returns The evaluated value or null if evaluation fails
+ * @function evaluateExpression
+ * @description Evaluates a given OpenSCAD Abstract Syntax Tree (AST) expression node.
+ * This function acts as the central dispatcher, delegating the evaluation to specialized
+ * handlers based on the `expressionType` of the node.
+ *
+ * @param {ast.ExpressionNode} expr - The AST expression node to evaluate.
+ * @param {ErrorHandler} [errorHandler] - An optional error handler instance for logging warnings or errors during evaluation.
+ * @returns {number | boolean | string | null} The evaluated value of the expression. Returns `null` if the expression cannot be evaluated or an error occurs.
+ *
+ * @limitations
+ * - Currently, only `literal`, `binary`, and `unary` expression types are fully supported.
+ * - Variable references (`variable` type) are not yet implemented and will return `null` with a warning.
+ * - Complex expression types like function calls, array access, etc., are not yet handled and will return `null` with a warning.
+ * - Type coercion rules are basic; more sophisticated OpenSCAD-specific type handling might be needed for edge cases.
  */
 export function evaluateExpression(
   expr: ast.ExpressionNode,
@@ -152,6 +124,10 @@ export function evaluateExpression(
       case 'binary_expression': {
         // Use the dedicated binary expression evaluator
         const binaryExpr = expr as ast.BinaryExpressionNode;
+        // NOTE: The `evaluateBinaryExpression` function here is a placeholder.
+        // In a complete system, this would be an instance of `BinaryExpressionEvaluator`
+        // from the `expression-evaluator.ts` module, which would take the `context`.
+        // For now, it's assumed to directly return a value.
         const result = evaluateBinaryExpression(binaryExpr, errorHandler);
 
         if (errorHandler) {
@@ -188,7 +164,13 @@ export function evaluateExpression(
             if (typeof operandValue === 'boolean') {
               return !operandValue;
             } else if (typeof operandValue === 'number') {
+              // OpenSCAD treats 0 as false, non-zero as true for logical NOT
               return operandValue === 0;
+            }
+            break;
+          case '+': // Unary plus, typically no-op but included for completeness
+            if (typeof operandValue === 'number') {
+              return +operandValue;
             }
             break;
           default:
@@ -210,16 +192,47 @@ export function evaluateExpression(
         return null;
       }
       case 'variable': {
-        // Variable references are not yet implemented
-        // In a real implementation, this would look up the variable value in a scope
+        // @TODO: Implement variable resolution from a symbol table or context
         if (errorHandler) {
           errorHandler.logWarning(
-            `[evaluateExpression] Variable reference evaluation not yet implemented`,
+            `[evaluateExpression] Variable reference evaluation not yet implemented for variable: ${(expr as ast.VariableNode).name}`,
             'evaluateExpression'
           );
         }
         return null;
       }
+      case 'function_call': {
+        // @TODO: Implement function call evaluation, including built-in and user-defined functions
+        if (errorHandler) {
+          errorHandler.logWarning(
+            `[evaluateExpression] Function call evaluation not yet implemented for function: ${(expr as ast.FunctionCallNode).functionName}`,
+            'evaluateExpression'
+          );
+        }
+        return null;
+      }
+      case 'vector_expression':
+      case 'array': {
+        // @TODO: Implement array/vector literal evaluation
+        if (errorHandler) {
+          errorHandler.logWarning(
+            `[evaluateExpression] Array/Vector expression evaluation not yet implemented.`,
+            'evaluateExpression'
+          );
+        }
+        return null;
+      }
+      case 'conditional': {
+        // @TODO: Implement conditional (ternary) expression evaluation
+        if (errorHandler) {
+          errorHandler.logWarning(
+            `[evaluateExpression] Conditional expression evaluation not yet implemented.`,
+            'evaluateExpression'
+          );
+        }
+        return null;
+      }
+      // Add more cases for other expression types as they are implemented
       default: {
         // Other expression types are not yet implemented
         if (errorHandler) {

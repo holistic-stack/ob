@@ -126,6 +126,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       {/* Frame All Button */}
       {showFrameAll && (
         <button
+          type="button"
           onClick={handleFrameAll}
           disabled={isLoading}
           className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -146,6 +147,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             {VIEW_PRESETS.map((preset) => (
               <button
                 key={preset.key}
+                type="button"
                 onClick={() => handleViewPreset(preset.key)}
                 disabled={isLoading}
                 className={`flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded border transition-colors ${

@@ -19,7 +19,7 @@
 import { BoundingBox, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { isError, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
 import { createMeshCollection } from '../../utils/generic-mesh-utils';
 
@@ -156,7 +156,7 @@ export class ControlFlowOperationsService {
                 // If body returns a collection, flatten it
                 meshes.push(...bodyResult.data.meshes);
               }
-            } else {
+            } else if (isError(bodyResult)) {
               logger.warn(
                 `[FOR_LOOP] Iteration failed for value ${value}: ${bodyResult.error.message}`
               );
@@ -193,7 +193,7 @@ export class ControlFlowOperationsService {
           'control_flow_result'
         );
 
-        if (!collectionResult.success) {
+        if (isError(collectionResult)) {
           throw new Error(`Failed to create mesh collection: ${collectionResult.error.message}`);
         }
 
@@ -232,7 +232,7 @@ export class ControlFlowOperationsService {
               `[IF] Then branch executed in ${(performance.now() - startTime).toFixed(2)}ms`
             );
             return thenResult.data;
-          } else {
+          } else if (isError(thenResult)) {
             throw new Error(`Then branch failed: ${thenResult.error.message}`);
           }
         } else if (params.elseBody) {
@@ -243,7 +243,7 @@ export class ControlFlowOperationsService {
               `[IF] Else branch executed in ${(performance.now() - startTime).toFixed(2)}ms`
             );
             return elseResult.data;
-          } else {
+          } else if (isError(elseResult)) {
             throw new Error(`Else branch failed: ${elseResult.error.message}`);
           }
         } else {
@@ -278,7 +278,7 @@ export class ControlFlowOperationsService {
 
         // Execute body with new context
         const bodyResult = await params.body(letContext);
-        if (!bodyResult.success) {
+        if (isError(bodyResult)) {
           throw new Error(`Let body failed: ${bodyResult.error.message}`);
         }
 
@@ -326,7 +326,7 @@ export class ControlFlowOperationsService {
           const bodyResult = await params.body(value, iterationContext);
           if (bodyResult.success) {
             meshes.push(bodyResult.data);
-          } else {
+          } else if (isError(bodyResult)) {
             logger.warn(
               `[INTERSECTION_FOR] Iteration failed for value ${value}: ${bodyResult.error.message}`
             );
@@ -448,17 +448,12 @@ export class ControlFlowOperationsService {
     message: string,
     details?: Record<string, unknown>
   ): ControlFlowError {
-    const error: ControlFlowError = {
+    return {
       code,
       message,
       operationType,
       timestamp: new Date(),
+      ...(details && { details }),
     };
-
-    if (details) {
-      (error as any).details = details;
-    }
-
-    return error;
   }
 }

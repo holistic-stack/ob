@@ -1,40 +1,55 @@
 /**
- * Recovery strategies for parser errors
+ * @file recovery-strategy.ts
+ * @description This file defines interfaces and concrete implementations for error recovery strategies
+ * within the OpenSCAD parser. These strategies allow the parser to attempt to continue processing
+ * even when syntax errors are encountered, improving resilience and user experience.
  *
- * This module provides strategies for recovering from parser errors,
- * allowing the parser to continue parsing even when errors are encountered.
- *
- * @module lib/openscad-parser/ast/errors/recovery-strategy
+ * @architectural_decision
+ * The error recovery system is based on the Strategy pattern, where different recovery mechanisms
+ * (e.g., skipping to the next statement, inserting missing tokens) are encapsulated in separate classes.
+ * This design promotes modularity, extensibility, and testability. A factory function (`createRecoveryStrategy`)
+ * is used to dynamically select the most appropriate strategy based on the type of error encountered.
+ * This allows for flexible and intelligent error handling without tightly coupling the parser to specific recovery logic.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ParserError } from './parser-error.js';
-import { OpenSCADSyntaxError } from './syntax-error.js';
+import { OpenSCADSyntaxError, type ParserError } from '../../error-handling/types/error-types.js';
 
 /**
- * Interface for error recovery strategies
+ * @interface RecoveryStrategy
+ * @description Defines the contract for any error recovery strategy.
+ * Implementations of this interface provide a mechanism to attempt to recover from a parsing error.
  */
 export interface RecoveryStrategy {
   /**
-   * Recover from an error
+   * @method recover
+   * @description Attempts to recover from a given parser error at a specific CST node.
    *
-   * @param node - The node where the error occurred
-   * @param error - The error that occurred
-   * @returns The recovered node or null if recovery is not possible
+   * @param {TSNode} node - The Tree-sitter node where the error occurred.
+   * @param {ParserError} error - The ParserError instance describing the issue.
+   * @returns {TSNode | null} The CST node from which parsing can potentially resume, or null if recovery is not possible.
    */
   recover(node: TSNode, error: ParserError): TSNode | null;
 }
 
 /**
- * Strategy for skipping to the next statement
+ * @class SkipToNextStatementStrategy
+ * @description A recovery strategy that attempts to skip the problematic code segment
+ * and resume parsing from the next valid statement. This is a common fallback strategy
+ * for unrecoverable syntax errors.
  */
 export class SkipToNextStatementStrategy implements RecoveryStrategy {
   /**
-   * Recover from an error by skipping to the next statement
+   * @method recover
+   * @description Implements the recovery logic by attempting to find the next statement node
+   * in the CST, effectively skipping the erroneous part.
    *
-   * @param node - The node where the error occurred
-   * @param error - The error that occurred
-   * @returns The next statement node or null if no next statement is found
+   * @param {TSNode} node - The Tree-sitter node where the error occurred.
+   * @param {ParserError} _error - The error that occurred (unused in this strategy).
+   * @returns {TSNode | null} The next statement node, or null if no suitable next statement is found.
+   *
+   * @example
+   * Basic usage: If parsing fails at invalid code, this strategy tries to find the next statement node.
    */
   recover(node: TSNode, _error: ParserError): TSNode | null {
     // Start from the current node
@@ -81,15 +96,25 @@ export class SkipToNextStatementStrategy implements RecoveryStrategy {
 }
 
 /**
- * Strategy for inserting a missing token
+ * @class InsertMissingTokenStrategy
+ * @description A recovery strategy that simulates the insertion of a missing token.
+ * This strategy is typically used for syntax errors where a token (like a semicolon or parenthesis)
+ * is expected but not found.
+ *
+ * @limitation This implementation does not actually modify the source code or the CST.
+ * In a real-world scenario, this strategy would involve modifying the underlying text buffer
+ * and triggering a re-parse, or directly manipulating the CST if the parser supports it.
+ * Currently, it serves as a placeholder for such functionality.
  */
 export class InsertMissingTokenStrategy implements RecoveryStrategy {
   /**
-   * Recover from an error by inserting a missing token
+   * @method recover
+   * @description Attempts to recover by conceptually inserting a missing token.
+   * Currently, it just returns the original node, as actual insertion requires source modification.
    *
-   * @param node - The node where the error occurred
-   * @param error - The error that occurred
-   * @returns The node after the inserted token or null if insertion is not possible
+   * @param {TSNode} node - The Tree-sitter node where the error occurred.
+   * @param {ParserError} error - The error that occurred.
+   * @returns {TSNode | null} The original node, or null if the error is not a syntax error with suggestions.
    */
   recover(node: TSNode, error: ParserError): TSNode | null {
     // This strategy only works for syntax errors
@@ -110,15 +135,22 @@ export class InsertMissingTokenStrategy implements RecoveryStrategy {
 }
 
 /**
- * Strategy for deleting an unexpected token
+ * @class DeleteExtraTokenStrategy
+ * @description A recovery strategy that simulates the deletion of an unexpected or extra token.
+ * This is useful for syntax errors caused by extraneous characters or misplaced keywords.
+ *
+ * @limitation Similar to InsertMissingTokenStrategy, this implementation does not actually
+ * modify the source code or the CST. It serves as a conceptual recovery mechanism.
  */
 export class DeleteExtraTokenStrategy implements RecoveryStrategy {
   /**
-   * Recover from an error by deleting an unexpected token
+   * @method recover
+   * @description Attempts to recover by conceptually deleting an extra token.
+   * Currently, it returns the next sibling node, simulating a skip over the erroneous token.
    *
-   * @param node - The node where the error occurred
-   * @param error - The error that occurred
-   * @returns The node after the deleted token or null if deletion is not possible
+   * @param {TSNode} node - The Tree-sitter node where the error occurred.
+   * @param {ParserError} error - The error that occurred.
+   * @returns {TSNode | null} The next sibling node, or null if the error is not a syntax error.
    */
   recover(node: TSNode, error: ParserError): TSNode | null {
     // This strategy only works for syntax errors
@@ -133,7 +165,28 @@ export class DeleteExtraTokenStrategy implements RecoveryStrategy {
 }
 
 /**
- * Factory for creating recovery strategies
+ * @function createRecoveryStrategy
+ * @description A factory function that selects and returns an appropriate RecoveryStrategy
+ * based on the type and characteristics of the given ParserError.
+ *
+ * @param {ParserError} error - The error for which a recovery strategy is needed.
+ * @returns {RecoveryStrategy | null} An instance of a RecoveryStrategy if a suitable one is found, otherwise null.
+ *
+ * @example
+ * Basic usage:
+ *
+ * const missingTokenError = new OpenSCADSyntaxError(
+ *   'Missing semicolon', 'MISSING_SEMICOLON', 'cube(10)', { line: 0, column: 8, offset: 8 },
+ *   [{ message: 'Add a semicolon', replacement: 'cube(10);' }]
+ * );
+ * const strategy1 = createRecoveryStrategy(missingTokenError);
+ * // strategy1 will be an instance of InsertMissingTokenStrategy
+ *
+ * const unexpectedTokenError = new OpenSCADSyntaxError(
+ *   'Unexpected keyword', 'UNEXPECTED_KEYWORD', 'cube(10) then', { line: 0, column: 9, offset: 9 }
+ * );
+ * const strategy2 = createRecoveryStrategy(unexpectedTokenError);
+ * // strategy2 will be an instance of DeleteExtraTokenStrategy
  */
 export function createRecoveryStrategy(error: ParserError): RecoveryStrategy | null {
   // Choose a strategy based on the error type
@@ -157,32 +210,37 @@ export function createRecoveryStrategy(error: ParserError): RecoveryStrategy | n
 }
 
 /**
- * Factory functions for creating recovery strategies
- */
-
-/**
- * Create InsertMissingTokenStrategy for missing token errors
+ * @function createInsertMissingTokenStrategy
+ * @description Factory function to create an instance of InsertMissingTokenStrategy.
+ * @returns {InsertMissingTokenStrategy} A new InsertMissingTokenStrategy instance.
  */
 export function createInsertMissingTokenStrategy(): InsertMissingTokenStrategy {
   return new InsertMissingTokenStrategy();
 }
 
 /**
- * Create DeleteExtraTokenStrategy for unexpected token errors
+ * @function createDeleteExtraTokenStrategy
+ * @description Factory function to create an instance of DeleteExtraTokenStrategy.
+ * @returns {DeleteExtraTokenStrategy} A new DeleteExtraTokenStrategy instance.
  */
 export function createDeleteExtraTokenStrategy(): DeleteExtraTokenStrategy {
   return new DeleteExtraTokenStrategy();
 }
 
 /**
- * Create SkipToNextStatementStrategy for other syntax errors
+ * @function createSkipToNextStatementStrategy
+ * @description Factory function to create an instance of SkipToNextStatementStrategy.
+ * @returns {SkipToNextStatementStrategy} A new SkipToNextStatementStrategy instance.
  */
 export function createSkipToNextStatementStrategy(): SkipToNextStatementStrategy {
   return new SkipToNextStatementStrategy();
 }
 
 /**
- * Create appropriate strategy based on error type
+ * @function createRecoveryStrategyFactory
+ * @description An alias for createRecoveryStrategy, maintaining consistency with factory naming conventions.
+ * @param {ParserError} error - The error for which to create a strategy.
+ * @returns {RecoveryStrategy | null} An instance of a RecoveryStrategy or null.
  */
 export function createRecoveryStrategyFactory(error: ParserError): RecoveryStrategy | null {
   return createRecoveryStrategy(error);

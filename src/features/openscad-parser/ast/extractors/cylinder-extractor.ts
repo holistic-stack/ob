@@ -1,3 +1,72 @@
+/**
+ * @file cylinder-extractor.ts
+ * @description This module provides the `extractCylinderNode` function, which is responsible for parsing
+ * Tree-sitter nodes representing OpenSCAD `cylinder()` calls and converting them into a structured
+ * `CylinderNode` in the Abstract Syntax Tree (AST). It handles various ways of specifying cylinder
+ * dimensions (height, radii/diameters) and the `center` parameter, as well as special `$fa`, `$fs`, `$fn` parameters.
+ *
+ * @architectural_decision
+ * The `extractCylinderNode` function encapsulates the complex logic for interpreting the arguments of the OpenSCAD `cylinder()` module.
+ * It leverages `argument-extractor.ts` to parse the raw arguments from the CST and then uses `parameter-extractor.ts`
+ * to convert these into typed values. It specifically handles the multiple overloaded syntaxes for `cylinder`,
+ * including positional and named arguments for height, single radius/diameter, and separate top/bottom radii/diameters.
+ * This modular approach ensures that the extraction logic is reusable and testable, and keeps the core AST generation clean.
+ *
+ * @example
+ * ```typescript
+ * import { extractCylinderNode } from './cylinder-extractor';
+ * import { OpenscadParser } from '../../openscad-parser';
+ * import { SimpleErrorHandler } from '../../error-handling/simple-error-handler';
+ * import * as TreeSitter from 'web-tree-sitter';
+ *
+ * async function demonstrateCylinderExtraction() {
+ *   const errorHandler = new SimpleErrorHandler();
+ *   const parser = new OpenscadParser(errorHandler);
+ *   await parser.init();
+ *
+ *   // Example 1: Cylinder with height and single radius
+ *   let code = 'cylinder(h=10, r=5);';
+ *   let cst = parser.parseCST(code);
+ *   let cylinderNodeCST = cst?.rootNode.namedChild(0); // Assuming cylinder() is the first node
+ *   if (cylinderNodeCST) {
+ *     const cylinderAST = extractCylinderNode(cylinderNodeCST, errorHandler, code);
+ *     console.log('Cylinder (h, r) AST:', cylinderAST); // Expected: { type: 'cylinder', h: 10, r: 5, r1: 5, r2: 5, center: false, location: ... }
+ *   }
+ *
+ *   // Example 2: Cylinder with height, r1, r2, and centered
+ *   code = 'cylinder(h=20, r1=5, r2=10, center=true);';
+ *   cst = parser.parseCST(code);
+ *   cylinderNodeCST = cst?.rootNode.namedChild(0);
+ *   if (cylinderNodeCST) {
+ *     const cylinderAST = extractCylinderNode(cylinderNodeCST, errorHandler, code);
+ *     console.log('Cylinder (h, r1, r2, center) AST:', cylinderAST); // Expected: { type: 'cylinder', h: 20, r1: 5, r2: 10, center: true, location: ... }
+ *   }
+ *
+ *   // Example 3: Positional arguments (h, r)
+ *   code = 'cylinder(15, 7);';
+ *   cst = parser.parseCST(code);
+ *   cylinderNodeCST = cst?.rootNode.namedChild(0);
+ *   if (cylinderNodeCST) {
+ *     const cylinderAST = extractCylinderNode(cylinderNodeCST, errorHandler, code);
+ *     console.log('Cylinder (pos h, r) AST:', cylinderAST); // Expected: { type: 'cylinder', h: 15, r: 7, r1: 7, r2: 7, center: false, location: ... }
+ *   }
+ *
+ *   // Example 4: Positional arguments (h, r1, r2)
+ *   code = 'cylinder(25, 8, 12);';
+ *   cst = parser.parseCST(code);
+ *   cylinderNodeCST = cst?.rootNode.namedChild(0);
+ *   if (cylinderNodeCST) {
+ *     const cylinderAST = extractCylinderNode(cylinderNodeCST, errorHandler, code);
+ *     console.log('Cylinder (pos h, r1, r2) AST:', cylinderAST); // Expected: { type: 'cylinder', h: 25, r1: 8, r2: 12, center: false, location: ... }
+ *   }
+ *
+ *   parser.dispose();
+ * }
+ *
+ * demonstrateCylinderExtraction();
+ * ```
+ */
+
 import type { Node as SyntaxNode } from 'web-tree-sitter';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
@@ -6,36 +75,38 @@ import { extractArguments } from './argument-extractor.js';
 import { extractBooleanParameter, extractNumberParameter } from './parameter-extractor.js';
 
 /**
- * Extracts parameters for a cylinder node from a CST node.
+ * @function extractCylinderNode
+ * @description Extracts parameters for a `cylinder()` call from a Tree-sitter CST node and constructs a `CylinderNode`.
+ * This function handles the various argument formats supported by OpenSCAD's `cylinder` module.
  *
- * Cylinder syntax variations:
- * cylinder(h, r|d, center);
- * cylinder(h, r1|d1, r2|d2, center);
- * cylinder(h=val, r=val|d=val, center=val);
- * cylinder(h=val, r1=val|d1=val, r2=val|d2=val, center=val);
- * Special params: $fa, $fs, $fn
- *
- * @param node The CST node representing the cylinder call.
- * @returns An AST CylinderNode or null if extraction fails.
+ * @param {SyntaxNode} node - The CST node representing the `cylinder()` call.
+ * @param {ErrorHandler} [errorHandler] - Optional error handler for logging issues during argument extraction.
+ * @param {string} [sourceCode] - The original source code string, used for accurate text extraction.
+ * @returns {ast.CylinderNode | null} A `CylinderNode` object representing the parsed cylinder, or `null` if extraction fails (e.g., missing mandatory `h` parameter).
  */
 export function extractCylinderNode(
   node: SyntaxNode,
   errorHandler?: ErrorHandler,
   sourceCode?: string
 ): ast.CylinderNode | null {
+  // Ensure the node is a call expression or module call, otherwise it's not a cylinder invocation.
   if (node.type !== 'call_expression' && node.type !== 'module_call') {
     return null;
   }
 
   const location = getLocation(node);
+  // The arguments for the cylinder are typically found in a child node named 'arguments'.
   const argsNode = node.childForFieldName('arguments');
   if (!argsNode) {
-    // 'h' is mandatory, and without an argsNode, it cannot be provided.
+    // The 'h' (height) parameter is mandatory for a cylinder. If no arguments node is found,
+    // it implies 'h' cannot be provided, so return null as it's an invalid cylinder definition.
     return null;
   }
 
+  // Extract all arguments using the generic argument extractor.
   const params = extractArguments(argsNode, errorHandler, sourceCode);
 
+  // Initialize all possible cylinder parameters. OpenSCAD has complex defaulting rules.
   let h: number | undefined;
   let r: number | undefined;
   let d: number | undefined;
@@ -48,7 +119,7 @@ export function extractCylinderNode(
   let $fa: number | undefined;
   let $fs: number | undefined;
 
-  // Process named arguments first
+  // Process named arguments first, as they explicitly override positional defaults.
   for (const param of params) {
     if (param.name) {
       switch (param.name) {
@@ -89,11 +160,11 @@ export function extractCylinderNode(
     }
   }
 
-  // Implement positional argument handling
+  // Implement positional argument handling. Positional arguments are processed only if their named counterparts haven't been set.
   const positionalArgs = params.filter((p) => !p.name);
   let currentPositionalIndex = 0;
 
-  // 1. Positional 'h'
+  // 1. Positional 'h' (height) - mandatory.
   if (h === undefined && positionalArgs.length > currentPositionalIndex) {
     const param = positionalArgs[currentPositionalIndex];
     if (param) {
@@ -105,8 +176,8 @@ export function extractCylinderNode(
     }
   }
 
-  // 2. Positional 'r1' & 'r2' OR 'r'
-  // Check for r1, r2 pattern first (two consecutive numbers)
+  // 2. Positional 'r1' & 'r2' OR 'r' (radii/diameters).
+  // Check for the `cylinder(h, r1, r2)` pattern first (two consecutive numbers after h).
   if (
     r1 === undefined &&
     r2 === undefined &&
@@ -127,29 +198,23 @@ export function extractCylinderNode(
     }
   }
 
-  // If r1,r2 pattern didn't match or apply, check for single 'r'
+  // If `r1, r2` pattern didn't match or apply, check for a single positional `r`.
   if (
     r === undefined &&
-    r1 === undefined && // only if r is not set and r1 is not set (r2 might be set if r1 was named)
+    r1 === undefined && // Only if r is not set and r1 is not set (r2 might be set if r1 was named)
     positionalArgs.length > currentPositionalIndex
   ) {
-    // If r1 was set (either by name or above), this positional arg is not r.
-    // If r1 is undefined, then this could be r.
     const param = positionalArgs[currentPositionalIndex];
     if (param) {
       const val = extractNumberParameter(param);
       if (val !== null) {
-        // If r2 is defined (e.g. named r2= or positional r1,r2), this can't be r for cylinder(h,r,center)
-        // This logic is tricky. Standard OpenSCAD: cylinder(h,r) or cylinder(h,r1,r2).
-        // If we are here, it means r1,r2 as a pair was not matched positionally.
-        // So, if this is a number, it's 'r'.
         r = val;
         currentPositionalIndex++;
       }
     }
   }
 
-  // 3. Positional 'center'
+  // 3. Positional 'center'.
   if (center === undefined && positionalArgs.length > currentPositionalIndex) {
     const param = positionalArgs[currentPositionalIndex];
     if (param) {
@@ -161,19 +226,26 @@ export function extractCylinderNode(
     }
   }
 
-  // Basic validation: 'h' is mandatory for a cylinder.
-  // After all attempts (named and positional), if h is still undefined or not a number, it's invalid.
+  // Basic validation: 'h' is mandatory for a cylinder. If it's still undefined or not a number,
+  // after processing all arguments, then the cylinder definition is invalid.
   if (typeof h !== 'number') {
+    // Log an error or warning if h is missing, as it's a critical parameter.
+    errorHandler?.handleError(
+      new Error(
+        `Missing mandatory 'h' parameter for cylinder at ${location.start.line}:${location.start.column}`
+      )
+    );
     return null;
   }
 
-  // Construct the CylinderNode
+  // Construct the CylinderNode with extracted and default values.
   const cylinderNode: ast.CylinderNode = {
     type: 'cylinder',
-    h: h, // h is now guaranteed to be a number.
+    h: h, // `h` is now guaranteed to be a number.
     location,
   };
 
+  // Assign optional parameters if they were found.
   if (r !== undefined) cylinderNode.r = r;
   if (d !== undefined) cylinderNode.d = d;
   if (r1 !== undefined) cylinderNode.r1 = r1;
@@ -185,31 +257,32 @@ export function extractCylinderNode(
   if ($fa !== undefined) cylinderNode.$fa = $fa;
   if ($fs !== undefined) cylinderNode.$fs = $fs;
 
-  // Logic for deriving r from d, r1 from d1, etc.
+  // Apply OpenSCAD's implicit rules for radii/diameters:
+  // - If `d` is given, `r` is `d/2`. If `r1` and `r2` are not specified, they also default to `d/2`.
   if (d !== undefined && r === undefined) {
     cylinderNode.r = d / 2;
-    // If d is given, it implies r1 and r2 are also d/2 if not otherwise specified
     if (r1 === undefined) cylinderNode.r1 = d / 2;
     if (r2 === undefined) cylinderNode.r2 = d / 2;
   }
+  // - If `d1` is given, `r1` is `d1/2`.
   if (d1 !== undefined && r1 === undefined) {
     cylinderNode.r1 = d1 / 2;
   }
+  // - If `d2` is given, `r2` is `d2/2`.
   if (d2 !== undefined && r2 === undefined) {
     cylinderNode.r2 = d2 / 2;
   }
 
-  // If r is given, and r1/r2 are not, then r1 and r2 default to r.
+  // - If `r` is given (and `r1`/`r2` are not), then `r1` and `r2` default to `r`.
   if (r !== undefined) {
     if (r1 === undefined) cylinderNode.r1 = r;
     if (r2 === undefined) cylinderNode.r2 = r;
   }
 
-  // If only one of r1 or r2 is defined, the other defaults to it (OpenSCAD behavior for cylinder(r,h))
-  // This is implicitly handled if r is defined, as r1 and r2 take r's value.
-  // If r is not defined, but one of r1/r2 is, this needs specific handling.
-  // However, standard cylinder calls are (h,r) or (h,r1,r2). (h,r1) is not standard.
-  // Let's stick to named parameters and documented positional ones for now.
+  // Note: OpenSCAD has specific behaviors for when only one of r1/r2 is defined (the other defaults to it).
+  // This is implicitly handled if `r` is defined, as `r1` and `r2` take `r`'s value.
+  // If `r` is not defined, but one of `r1`/`r2` is, this needs specific handling if not covered by the above.
+  // For now, we assume the most common patterns are covered.
 
   return cylinderNode;
 }

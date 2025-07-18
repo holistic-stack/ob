@@ -73,11 +73,11 @@ export interface UseExportReturn {
     meshes: readonly AbstractMesh[],
     config: ExportConfig,
     onProgress?: ExportProgressCallback
-  ) => Promise<{ success: boolean; data?: ExportResult; error?: ExportError }>;
+  ) => Promise<Result<ExportResult, ExportError>>;
   readonly exportScene: (
     config: ExportConfig,
     onProgress?: ExportProgressCallback
-  ) => Promise<{ success: boolean; data?: ExportResult; error?: ExportError }>;
+  ) => Promise<Result<ExportResult, ExportError>>;
   readonly isExporting: boolean;
   readonly exportProgress: number;
   readonly exportMessage: string | null;

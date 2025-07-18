@@ -6,7 +6,8 @@
  */
 
 // CSG2 hooks
-export * from './use-babylon-csg2';
+// TODO: Implement use-babylon-csg2 hook
+// export * from './use-babylon-csg2';
 
 // Engine hooks
 export * from './use-babylon-engine';

@@ -3,11 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  type BrowserCapabilities,
-  FeatureDetectionService,
-  FeatureSupportLevel,
-} from './feature-detection.service';
+import { FeatureDetectionService, FeatureSupportLevel } from './feature-detection.service';
 
 // Mock global objects for testing
 const mockCanvas = {
@@ -17,11 +13,11 @@ const mockCanvas = {
 const mockWebGLContext = {
   getParameter: vi.fn(),
   getExtension: vi.fn(),
-  VERSION: 'VERSION',
-  MAX_TEXTURE_SIZE: 'MAX_TEXTURE_SIZE',
-  MAX_VERTEX_ATTRIBS: 'MAX_VERTEX_ATTRIBS',
-  UNMASKED_RENDERER_WEBGL: 'UNMASKED_RENDERER_WEBGL',
-  UNMASKED_VENDOR_WEBGL: 'UNMASKED_VENDOR_WEBGL',
+  VERSION: 0x1f02,
+  MAX_TEXTURE_SIZE: 0x0d33,
+  MAX_VERTEX_ATTRIBS: 0x8869,
+  UNMASKED_RENDERER_WEBGL: 0x9246,
+  UNMASKED_VENDOR_WEBGL: 0x9245,
 };
 
 const mockGPU = {
@@ -78,6 +74,28 @@ describe('FeatureDetectionService', () => {
   beforeEach(() => {
     service = new FeatureDetectionService();
     vi.clearAllMocks();
+
+    // Reset global objects to their initial state
+    Object.defineProperty(global, 'document', {
+      value: {
+        createElement: vi.fn(() => mockCanvas),
+      },
+      writable: true,
+    });
+
+    Object.defineProperty(global, 'navigator', {
+      value: {
+        gpu: mockGPU,
+        hardwareConcurrency: 8,
+      },
+      writable: true,
+    });
+
+    // Reset mock implementations
+    mockCanvas.getContext.mockReset();
+    mockWebGLContext.getParameter.mockReset();
+    mockWebGLContext.getExtension.mockReset();
+    mockGPU.requestAdapter.mockReset();
   });
 
   afterEach(() => {
@@ -90,19 +108,19 @@ describe('FeatureDetectionService', () => {
       mockCanvas.getContext.mockReturnValue(mockWebGLContext);
       mockWebGLContext.getParameter.mockImplementation((param) => {
         switch (param) {
-          case 'VERSION':
+          case 0x1f02: // VERSION
             return 'WebGL 2.0';
-          case 'MAX_TEXTURE_SIZE':
+          case 0x0d33: // MAX_TEXTURE_SIZE
             return 4096;
-          case 'MAX_VERTEX_ATTRIBS':
+          case 0x8869: // MAX_VERTEX_ATTRIBS
             return 16;
           default:
             return null;
         }
       });
       mockWebGLContext.getExtension.mockReturnValue({
-        UNMASKED_RENDERER_WEBGL: 'UNMASKED_RENDERER_WEBGL',
-        UNMASKED_VENDOR_WEBGL: 'UNMASKED_VENDOR_WEBGL',
+        UNMASKED_RENDERER_WEBGL: 0x9246,
+        UNMASKED_VENDOR_WEBGL: 0x9245,
       });
 
       // Setup WebGPU mock
@@ -115,15 +133,9 @@ describe('FeatureDetectionService', () => {
     });
 
     it('should handle initialization errors gracefully', async () => {
-      // Make the entire detectCapabilities method fail by breaking document.createElement
-      Object.defineProperty(global, 'document', {
-        value: {
-          createElement: vi.fn(() => {
-            throw new Error('DOM not available');
-          }),
-        },
-        writable: true,
-      });
+      // Spy on the private detectCapabilities method and make it throw
+      const detectCapabilitiesSpy = vi.spyOn(service as any, 'detectCapabilities');
+      detectCapabilitiesSpy.mockRejectedValue(new Error('Detection failed'));
 
       const result = await service.initialize();
 
@@ -133,13 +145,7 @@ describe('FeatureDetectionService', () => {
         expect(result.error.message).toContain('Failed to initialize feature detection');
       }
 
-      // Restore document for other tests
-      Object.defineProperty(global, 'document', {
-        value: {
-          createElement: vi.fn(() => mockCanvas),
-        },
-        writable: true,
-      });
+      detectCapabilitiesSpy.mockRestore();
     });
 
     it('should not reinitialize if already initialized', async () => {
@@ -162,19 +168,19 @@ describe('FeatureDetectionService', () => {
       mockCanvas.getContext.mockReturnValue(mockWebGLContext);
       mockWebGLContext.getParameter.mockImplementation((param) => {
         switch (param) {
-          case 'VERSION':
+          case 0x1f02: // VERSION
             return 'WebGL 2.0';
-          case 'MAX_TEXTURE_SIZE':
+          case 0x0d33: // MAX_TEXTURE_SIZE
             return 4096;
-          case 'MAX_VERTEX_ATTRIBS':
+          case 0x8869: // MAX_VERTEX_ATTRIBS
             return 16;
           default:
             return null;
         }
       });
       mockWebGLContext.getExtension.mockReturnValue({
-        UNMASKED_RENDERER_WEBGL: 'UNMASKED_RENDERER_WEBGL',
-        UNMASKED_VENDOR_WEBGL: 'UNMASKED_VENDOR_WEBGL',
+        UNMASKED_RENDERER_WEBGL: 0x9246,
+        UNMASKED_VENDOR_WEBGL: 0x9245,
       });
 
       await service.initialize();

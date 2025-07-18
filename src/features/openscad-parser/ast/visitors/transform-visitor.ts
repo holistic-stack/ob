@@ -1,77 +1,70 @@
 /**
- * @file Transform operations visitor for OpenSCAD parser
- *
- * This module implements the TransformVisitor class, which specializes in processing
+ * @file transform-visitor.ts
+ * @description This file implements the `TransformVisitor` class, which specializes in processing
  * OpenSCAD transformation operations and converting them to structured AST representations.
  * Transformations are fundamental operations that modify the position, orientation, and
  * scale of geometric objects in 3D space.
  *
- * The TransformVisitor handles all transformation operations:
- * - **Spatial Transforms**: translate, rotate, scale, mirror
- * - **Visual Transforms**: color (appearance modification)
- * - **Matrix Transforms**: multmatrix (arbitrary 4x4 matrix transformations)
- * - **2D Transforms**: offset (2D path operations)
- * - **Advanced Transforms**: hull, minkowski (geometric operations)
+ * @architectural_decision
+ * The `TransformVisitor` is a key component of the composite visitor pattern, responsible for
+ * handling all transformation nodes. It is designed to manage the hierarchical nature of
+ * transformations in OpenSCAD, where a transform can have one or more child nodes (which
+ * can themselves be primitives or other transformations). To handle this, the `TransformVisitor`
+ * collaborates with the `CompositeVisitor` to process its children, ensuring that the entire
+ * subtree is correctly parsed. This delegation is essential for building a complete and accurate AST.
  *
- * Key features:
- * - **Vector Processing**: Handles 2D and 3D vector parameters for spatial operations
- * - **Matrix Operations**: Supports 4x4 transformation matrices for complex operations
- * - **Child Processing**: Manages transformation hierarchies with child objects
- * - **Parameter Validation**: Type-safe parameter extraction with sensible defaults
- * - **Error Recovery**: Graceful handling of malformed transformation parameters
- * - **Composite Integration**: Works seamlessly with the composite visitor pattern
- *
- * The visitor implements a dual processing strategy:
- * 1. **Accessor Expressions**: For simple transformations without children
- * 2. **Module Instantiations**: For transformations with child objects
- *
- * Transformation patterns supported:
- * - **Simple Transforms**: `translate([10, 0, 0])` - transformation without children
- * - **Transform with Child**: `translate([10, 0, 0]) cube(5)` - single child object
- * - **Transform with Block**: `translate([10, 0, 0]) { cube(5); sphere(3); }` - multiple children
- * - **Nested Transforms**: `translate([10, 0, 0]) rotate([0, 0, 45]) cube(5)` - transformation chains
- *
- * @example Basic transformation processing
+ * @example
  * ```typescript
  * import { TransformVisitor } from './transform-visitor';
+ * import { CompositeVisitor } from './composite-visitor';
+ * import { PrimitiveVisitor } from './primitive-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new TransformVisitor(sourceCode, compositeVisitor, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'translate([10, 0, 0]) cube(10);';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process translate operation
- * const translateNode = visitor.visitModuleInstantiation(translateCST);
- * // Returns: { type: 'translate', v: [10, 0, 0], children: [...] }
+ *   // 2. Create an error handler and visitors
+ *   const errorHandler = new ErrorHandler();
+ *   const primitiveVisitor = new PrimitiveVisitor(sourceCode, errorHandler);
+ *   const transformVisitor = new TransformVisitor(sourceCode, undefined, errorHandler);
+ *   const compositeVisitor = new CompositeVisitor([primitiveVisitor, transformVisitor], errorHandler);
+ *   transformVisitor.setCompositeVisitor(compositeVisitor);
  *
- * // Process rotation with child
- * const rotateNode = visitor.visitModuleInstantiation(rotateCST);
- * // Returns: { type: 'rotate', a: [0, 0, 45], children: [cubeNode] }
- * ```
+ *   // 3. Visit the relevant CST node
+ *   const moduleInstantiationNode = tree.rootNode.firstChild!;
+ *   const astNode = transformVisitor.visitModuleInstantiation(moduleInstantiationNode);
  *
- * @example Complex transformation hierarchies
- * ```typescript
- * // For OpenSCAD code: translate([10, 0, 0]) rotate([0, 0, 45]) { cube(5); sphere(3); }
- * const complexTransform = visitor.visitModuleInstantiation(complexCST);
- * // Returns nested transformation with multiple children
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "translate",
+ *   //   "v": [10, 0, 0],
+ *   //   "children": [
+ *   //     { "type": "cube", "size": 10, "center": false, ... }
+ *   //   ],
+ *   //   ...
+ *   // }
  *
- * // For matrix transformation: multmatrix([[1,0,0,10],[0,1,0,0],[0,0,1,0],[0,0,0,1]]) cube(5)
- * const matrixTransform = visitor.visitModuleInstantiation(matrixCST);
- * // Returns: { type: 'multmatrix', m: [[...]], children: [cubeNode] }
- * ```
- *
- * @example Error handling and parameter validation
- * ```typescript
- * const visitor = new TransformVisitor(sourceCode, compositeVisitor, errorHandler);
- *
- * // Process malformed transformation
- * const result = visitor.visitModuleInstantiation(malformedCST);
- *
- * if (!result) {
- *   const errors = errorHandler.getErrors();
- *   console.log('Transformation errors:', errors);
+ *   // 5. Clean up
+ *   parser.delete();
  * }
+ *
+ * main();
  * ```
  *
- * @module transform-visitor
- * @since 0.1.0
+ * @integration
+ * The `TransformVisitor` is a crucial part of the `CompositeVisitor`'s collection of visitors.
+ * It is responsible for identifying and processing all transformation nodes from the CST.
+ * When it encounters a transformation, it creates the corresponding AST node (e.g., `TranslateNode`)
+ * and then recursively calls the `CompositeVisitor` to process the children of the transformation.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -88,18 +81,18 @@ import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for transform operations (translate, rotate, scale, mirror)
- *
  * @class TransformVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for transform operations (translate, rotate, scale, mirror).
  */
 export class TransformVisitor extends BaseASTVisitor {
   /**
-   * Create a new TransformVisitor
-   * @param source The source code
-   * @param compositeVisitor Optional composite visitor for delegating child processing
-   * @param errorHandler The error handler instance
+   * @constructor
+   * @description Creates a new `TransformVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ASTVisitor | undefined} compositeVisitor - The composite visitor for delegating child processing.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} [variableScope] - The current variable scope.
    */
   constructor(
     source: string,
@@ -111,20 +104,20 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Set the composite visitor for delegating child node processing
-   * This is needed to resolve circular dependency issues during visitor creation
+   * @method setCompositeVisitor
+   * @description Sets the composite visitor for delegating child node processing.
+   * This is needed to resolve circular dependency issues during visitor creation.
+   * @param {ASTVisitor} compositeVisitor - The composite visitor instance.
    */
   setCompositeVisitor(compositeVisitor: ASTVisitor): void {
     this.compositeVisitor = compositeVisitor;
   }
 
   /**
-   * Override visitStatement to only handle transform-related statements
-   * This prevents the TransformVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, CSGVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The transform AST node or null if this is not a transform statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle transform-related statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The transform AST node, or null if this is not a transform statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -144,9 +137,11 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Check if a function name is a supported transform operation
-   * @param functionName The function name to check
-   * @returns True if the function is a transform operation
+   * @method isSupportedTransformFunction
+   * @description Checks if a function name is a supported transform operation.
+   * @param {string} functionName - The function name to check.
+   * @returns {boolean} True if the function is a transform operation.
+   * @private
    */
   private isSupportedTransformFunction(functionName: string): boolean {
     return [
@@ -166,9 +161,11 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Extract function name from a module instantiation node
-   * @param node The module instantiation node
-   * @returns The function name or empty string if not found
+   * @method extractFunctionName
+   * @description Extracts the function name from a module instantiation node.
+   * @param {TSNode} node - The module instantiation node.
+   * @returns {string} The function name, or an empty string if not found.
+   * @private
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
@@ -178,9 +175,11 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an accessor expression node (function calls like translate([10, 0, 0]))
-   * @param node The accessor expression node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitAccessorExpression
+   * @description Visits an accessor expression node (function calls like translate([10, 0, 0])).
+   * @param {TSNode} node - The accessor expression node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     this.errorHandler.logInfo(
@@ -248,9 +247,12 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a module instantiation node (transform with children like translate([10, 0, 0]) cube())
-   * @param node The module instantiation node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitModuleInstantiation
+   * @description Visits a module instantiation node (transform with children like translate([10, 0, 0]) cube()).
+   * @param {TSNode} node - The module instantiation node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed.
+   * @public
+   * @override
    */
   public override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     // Get function name using the truncation workaround
@@ -355,11 +357,13 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a transform node based on function name and arguments
-   * @param node The CST node
-   * @param functionName The transform function name
-   * @param args The extracted arguments
-   * @returns The transform AST node
+   * @method createTransformNode
+   * @description Creates a transform node based on function name and arguments.
+   * @param {TSNode} node - The CST node.
+   * @param {string} functionName - The transform function name.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.ASTNode | null} The transform AST node.
+   * @private
    */
   private createTransformNode(
     node: TSNode,
@@ -780,10 +784,12 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a translate node
-   * @param node The CST node
-   * @param args The extracted arguments
-   * @returns The translate AST node
+   * @method createTranslateNode
+   * @description Creates a translate node.
+   * @param {TSNode} node - The CST node.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.TranslateNode} The translate AST node.
+   * @private
    */
   private createTranslateNode(node: TSNode, args: ast.Parameter[]): ast.TranslateNode {
     // Default vector (3D)
@@ -880,10 +886,12 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a rotate node
-   * @param node The CST node
-   * @param args The extracted arguments
-   * @returns The rotate AST node
+   * @method createRotateNode
+   * @description Creates a rotate node.
+   * @param {TSNode} node - The CST node.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.RotateNode} The rotate AST node.
+   * @private
    */
   private createRotateNode(node: TSNode, args: ast.Parameter[]): ast.RotateNode {
     // Default values
@@ -936,10 +944,12 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a scale node
-   * @param node The CST node
-   * @param args The extracted arguments
-   * @returns The scale AST node
+   * @method createScaleNode
+   * @description Creates a scale node.
+   * @param {TSNode} node - The CST node.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.ScaleNode} The scale AST node.
+   * @private
    */
   private createScaleNode(node: TSNode, args: ast.Parameter[]): ast.ScaleNode {
     // Default scale
@@ -977,10 +987,12 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a mirror node
-   * @param node The CST node
-   * @param args The extracted arguments
-   * @returns The mirror AST node
+   * @method createMirrorNode
+   * @description Creates a mirror node.
+   * @param {TSNode} node - The CST node.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.MirrorNode} The mirror AST node.
+   * @private
    */
   private createMirrorNode(node: TSNode, args: ast.Parameter[]): ast.MirrorNode {
     // Default mirror plane
@@ -1010,11 +1022,13 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a function (required by BaseASTVisitor)
-   * @param node The CST node
-   * @param functionName The function name
-   * @param args The extracted arguments
-   * @returns The AST node or null if not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a function (required by `BaseASTVisitor`).
+   * @param {TSNode} node - The CST node.
+   * @param {string} functionName - The function name.
+   * @param {ast.Parameter[]} args - The extracted arguments.
+   * @returns {ast.ASTNode | null} The AST node, or null if not supported.
+   * @protected
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -1035,9 +1049,11 @@ export class TransformVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Find a module_instantiation node within a statement
-   * @param statementNode The statement node to search
-   * @returns The module_instantiation node or null if not found
+   * @method findModuleInstantiationInStatement
+   * @description Finds a `module_instantiation` node within a statement.
+   * @param {TSNode} statementNode - The statement node to search.
+   * @returns {TSNode | null} The `module_instantiation` node, or null if not found.
+   * @private
    */
   private findModuleInstantiationInStatement(statementNode: TSNode): TSNode | null {
     for (let i = 0; i < statementNode.childCount; i++) {

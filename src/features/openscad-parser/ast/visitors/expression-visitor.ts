@@ -1,83 +1,66 @@
 /**
- * @file Expression evaluation visitor for OpenSCAD parser
- *
- * This module implements the ExpressionVisitor class, which specializes in processing
+ * @file expression-visitor.ts
+ * @description This file implements the `ExpressionVisitor` class, which specializes in processing
  * OpenSCAD expressions and converting them to structured AST representations. Expressions
  * are fundamental to OpenSCAD's computational model, enabling mathematical calculations,
  * logical operations, and dynamic value generation.
  *
- * The ExpressionVisitor handles:
- * - **Binary Expressions**: Arithmetic (+, -, *, /, %), comparison (==, !=, <, <=, >, >=), and logical (&&, ||) operations
- * - **Unary Expressions**: Negation (-), logical not (!), and other prefix operators
- * - **Conditional Expressions**: Ternary operator (condition ? then : else) for conditional evaluation
- * - **Variable References**: Identifier resolution and variable access
- * - **Literal Values**: Numbers, strings, booleans, vectors, and undefined values
- * - **Array Operations**: Vector/array construction, indexing, and manipulation
- * - **Function Calls**: Function invocation within expression contexts
- * - **Parenthesized Expressions**: Grouping and precedence control
+ * @architectural_decision
+ * The `ExpressionVisitor` is a specialized visitor that handles all expression-related nodes.
+ * It is designed to be self-contained, processing a wide variety of expression types, including
+ * binary, unary, conditional, and literal expressions. This visitor is a critical part of the
+ * parsing pipeline, as expressions can appear in many different contexts (e.g., as parameters,
+ * in assignments, in control flow statements). The visitor uses a dispatching mechanism to
+ * route each expression type to the appropriate handler method, ensuring that the code is
+ * modular and easy to maintain.
  *
- * Key features:
- * - **Expression Hierarchy Processing**: Handles complex nested expression structures
- * - **Operator Precedence**: Respects mathematical and logical operator precedence
- * - **Type-Safe Evaluation**: Maintains type information throughout expression processing
- * - **Error Recovery**: Graceful handling of malformed expressions with detailed error reporting
- * - **Performance Optimization**: Efficient dispatching and minimal overhead for simple expressions
- * - **Location Tracking**: Preserves source location information for debugging and IDE integration
- *
- * Expression processing patterns:
- * - **Simple Literals**: `42`, `"hello"`, `true`, `[1, 2, 3]` - direct value extraction
- * - **Binary Operations**: `a + b`, `x > y`, `p && q` - operator-based calculations
- * - **Nested Expressions**: `(a + b) * (c - d)` - complex hierarchical evaluation
- * - **Conditional Logic**: `x > 0 ? x : -x` - ternary conditional expressions
- * - **Function Integration**: `sin(angle)`, `len(vector)` - function calls within expressions
- * - **Variable Access**: `myVar`, `dimensions[0]` - identifier and array access
- *
- * The visitor implements a comprehensive dispatching strategy:
- * 1. **Type-Based Routing**: Routes nodes to appropriate handlers based on CST node type
- * 2. **Hierarchical Processing**: Handles expression precedence through recursive evaluation
- * 3. **Error Propagation**: Maintains error context throughout the expression tree
- *
- * @example Basic expression processing
+ * @example
  * ```typescript
  * import { ExpressionVisitor } from './expression-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new ExpressionVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'a = (1 + 2) * 3;';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process arithmetic expression
- * const binaryExpr = visitor.visitBinaryExpression(binaryCST);
- * // Returns: { type: 'expression', expressionType: 'binary', operator: '+', left: ..., right: ... }
+ *   // 2. Create an error handler and visitor
+ *   const errorHandler = new ErrorHandler();
+ *   const expressionVisitor = new ExpressionVisitor(sourceCode, errorHandler);
  *
- * // Process conditional expression
- * const conditionalExpr = visitor.visitConditionalExpression(conditionalCST);
- * // Returns: { type: 'expression', expressionType: 'conditional', condition: ..., thenBranch: ..., elseBranch: ... }
- * ```
+ *   // 3. Visit the expression node
+ *   const assignmentNode = tree.rootNode.firstChild!;
+ *   const expressionCSTNode = assignmentNode.childForFieldName('value')!;
+ *   const astNode = expressionVisitor.visitExpression(expressionCSTNode);
  *
- * @example Complex expression hierarchies
- * ```typescript
- * // For OpenSCAD code: (x + y) * sin(angle) > threshold ? max_value : min_value
- * const complexExpr = visitor.dispatchSpecificExpression(complexCST);
- * // Returns nested expression structure with proper precedence and evaluation order
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output for the expression part:
+ *   // {
+ *   //   "type": "expression",
+ *   //   "expressionType": "binary",
+ *   //   "operator": "*",
+ *   //   "left": { ... }, // represents (1 + 2)
+ *   //   "right": { ... } // represents 3
+ *   // }
  *
- * // For vector operations: [x, y, z][index] + offset
- * const vectorExpr = visitor.dispatchSpecificExpression(vectorCST);
- * // Returns expression with array access and arithmetic operation
- * ```
- *
- * @example Error handling and recovery
- * ```typescript
- * const visitor = new ExpressionVisitor(sourceCode, errorHandler);
- *
- * // Process malformed expression
- * const result = visitor.dispatchSpecificExpression(malformedCST);
- *
- * if (!result) {
- *   const errors = errorHandler.getErrors();
- *   console.log('Expression processing errors:', errors);
+ *   // 5. Clean up
+ *   parser.delete();
  * }
+ *
+ * main();
  * ```
  *
- * @module expression-visitor
- * @since 0.1.0
+ * @integration
+ * The `ExpressionVisitor` is a core component of the `CompositeVisitor`. It is responsible for
+ * processing any expression nodes that are encountered during the CST traversal. The `CompositeVisitor`
+ * delegates to this visitor when it finds an expression, and the `ExpressionVisitor` returns
+ * a structured `ExpressionNode` that represents the parsed expression.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -112,27 +95,9 @@ const _RESERVED_KEYWORDS_AS_EXPRESSION_BLOCKLIST = new Set([
 ]);
 
 /**
- * Visitor for processing OpenSCAD expressions with comprehensive type support.
- *
- * The ExpressionVisitor extends BaseASTVisitor to provide specialized handling for
- * all types of expressions in OpenSCAD. It follows tree-sitter visitor pattern
- * best practices and adheres to DRY, KISS, and SRP principles by directly handling
- * all expression types without relying on incompatible sub-visitors.
- *
- * This implementation provides:
- * - **Direct Expression Handling**: All expression types processed in a single visitor
- * - **Efficient Dispatching**: Type-based routing to appropriate processing methods
- * - **Error Context Preservation**: Maintains detailed error information throughout processing
- * - **Performance Optimization**: Minimal overhead for simple expressions
- * - **Comprehensive Coverage**: Supports all OpenSCAD expression constructs
- *
- * The visitor maintains a single FunctionCallVisitor dependency for handling function
- * calls within expressions, following the Single Responsibility Principle by keeping
- * only essential dependencies.
- *
  * @class ExpressionVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for processing OpenSCAD expressions with comprehensive type support.
  */
 export class ExpressionVisitor extends BaseASTVisitor {
   public override variableScope: Map<string, ast.ParameterValue> = new Map();
@@ -141,9 +106,32 @@ export class ExpressionVisitor extends BaseASTVisitor {
   private readonly rangeExpressionVisitor: RangeExpressionVisitor;
 
   /**
-   * Create a binary expression node from a CST node
-   * @param node The binary expression CST node
-   * @returns The binary expression AST node, an ErrorNode, or null if the node cannot be processed
+   * @constructor
+   * @description Creates a new `ExpressionVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} [variableScope] - The current variable scope.
+   */
+  constructor(
+    source: string,
+    protected override errorHandler: ErrorHandler,
+    variableScope?: Map<string, ast.ParameterValue>
+  ) {
+    super(source, errorHandler, variableScope || new Map());
+
+    // Initialize specialized visitors
+    // This follows SRP by keeping only essential dependencies
+    this.functionCallVisitor = new FunctionCallVisitor(this, errorHandler);
+    this.listComprehensionVisitor = new ListComprehensionVisitor(this, errorHandler);
+    this.rangeExpressionVisitor = new RangeExpressionVisitor(this, errorHandler);
+  }
+
+  /**
+   * @method createBinaryExpressionNode
+   * @description Creates a binary expression node from a CST node.
+   * @param {TSNode} node - The binary expression CST node.
+   * @returns {ast.BinaryExpressionNode | ast.ErrorNode | null} The binary expression AST node, an ErrorNode, or null if the node cannot be processed.
+   * @private
    */
   createBinaryExpressionNode(node: TSNode): ast.BinaryExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -328,31 +316,10 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Constructor for the ExpressionVisitor
-   * @param source The source code
-   * @param errorHandler The error handler
-   */
-  constructor(
-    source: string,
-    protected override errorHandler: ErrorHandler,
-    variableScope?: Map<string, ast.ParameterValue>
-  ) {
-    super(source, errorHandler, variableScope || new Map());
-
-    // Initialize specialized visitors
-    // This follows SRP by keeping only essential dependencies
-    this.functionCallVisitor = new FunctionCallVisitor(this, errorHandler);
-    this.listComprehensionVisitor = new ListComprehensionVisitor(this, errorHandler);
-    this.rangeExpressionVisitor = new RangeExpressionVisitor(this, errorHandler);
-  }
-
-  /**
-   * Override visitStatement to only handle expression statements
-   * This prevents the ExpressionVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The expression AST node or null if this is not an expression statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle expression statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The expression AST node, or null if this is not an expression statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -379,27 +346,33 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Type guard to check if an AST node is an expression node
-   * @param node The AST node to check
-   * @returns True if the node is an ExpressionNode
+   * @method isExpressionNode
+   * @description Type guard to check if an AST node is an expression node.
+   * @param {ast.ASTNode} node - The AST node to check.
+   * @returns {boolean} True if the node is an `ExpressionNode`.
+   * @private
    */
   private isExpressionNode(node: ast.ASTNode): node is ast.ExpressionNode {
     return node.type === 'expression' && 'expressionType' in node;
   }
 
   /**
-   * Type guard to check if an AST node is an error node
-   * @param node The AST node to check
-   * @returns True if the node is an ErrorNode
+   * @method isErrorNode
+   * @description Type guard to check if an AST node is an error node.
+   * @param {ast.ASTNode} node - The AST node to check.
+   * @returns {boolean} True if the node is an `ErrorNode`.
+   * @private
    */
   private isErrorNode(node: ast.ASTNode): node is ast.ErrorNode {
     return node.type === 'error';
   }
 
   /**
-   * Dispatch an expression node to the appropriate handler method
-   * @param node The expression node to dispatch
-   * @returns The expression AST node, error node, or null if the node cannot be processed
+   * @method dispatchSpecificExpression
+   * @description Dispatches an expression node to the appropriate handler method.
+   * @param {TSNode} node - The expression node to dispatch.
+   * @returns {ast.ExpressionNode | ast.ErrorNode | null} The expression AST node, an error node, or null if the node cannot be processed.
+   * @public
    */
   public dispatchSpecificExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
     // Check for binary expression types first
@@ -484,11 +457,13 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an identifier node in the CST
-   * @param node The identifier node from the CST
-   * @returns A variable node for the AST or an error node if the identifier is a reserved keyword
+   * @method visitIdentifier
+   * @description Visits an identifier node in the CST.
+   * @param {TSNode} node - The identifier node from the CST.
+   * @returns {ast.IdentifierNode | ast.ErrorNode | null} An identifier node for the AST, or an error node if the identifier is a reserved keyword.
+   * @public
    */
-  visitIdentifier(node: TSNode): ast.VariableNode | ast.ErrorNode | null {
+  visitIdentifier(node: TSNode): ast.IdentifierNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
       `[ExpressionVisitor.visitIdentifier] Processing identifier: ${node.text}`,
       'ExpressionVisitor.visitIdentifier',
@@ -513,19 +488,21 @@ export class ExpressionVisitor extends BaseASTVisitor {
       };
     }
 
-    // Create a variable node directly from the identifier
+    // Create an identifier node directly from the identifier
     return {
       type: 'expression',
-      expressionType: 'variable',
+      expressionType: 'identifier',
       name: node.text,
       location: getLocation(node),
     };
   }
 
   /**
-   * Create an expression node from a CST node
-   * @param node The CST node
-   * @returns The expression AST node or null if the node cannot be processed
+   * @method createExpressionNode
+   * @description Creates an expression node from a CST node.
+   * @param {TSNode} node - The CST node.
+   * @returns {ast.ExpressionNode | ast.ErrorNode | null} The expression AST node, or null if the node cannot be processed.
+   * @private
    */
   createExpressionNode(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -840,7 +817,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return {
           type: 'error',
           errorCode: 'INVALID_PARENTHESIZED_EXPRESSION',
-          message: `Parenthesized expression contains invalid inner expression type: ${(innerExpr as any)?.type || 'unknown'}`,
+          message: `Parenthesized expression contains invalid inner expression type: ${innerExpr?.type ?? 'unknown'}`,
           originalNodeType: node.type,
           cstNodeText: node.text,
           location: getLocation(node),
@@ -883,18 +860,22 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a binary expression node
-   * @param node The binary expression CST node
-   * @returns The binary expression AST node or null if the node cannot be processed
+   * @method visitBinaryExpression
+   * @description Visits a binary expression node.
+   * @param {TSNode} node - The binary expression CST node.
+   * @returns {ast.BinaryExpressionNode | ast.ErrorNode | null} The binary expression AST node, or null if the node cannot be processed.
+   * @public
    */
   visitBinaryExpression(node: TSNode): ast.BinaryExpressionNode | ast.ErrorNode | null {
     return this.createBinaryExpressionNode(node);
   }
 
   /**
-   * Visit a conditional expression node (ternary operator: condition ? consequence : alternative)
-   * @param node The conditional expression CST node
-   * @returns The conditional expression AST node or null if the node cannot be processed
+   * @method visitConditionalExpression
+   * @description Visits a conditional expression node (ternary operator: `condition ? consequence : alternative`).
+   * @param {TSNode} node - The conditional expression CST node.
+   * @returns {ast.ConditionalExpressionNode | ast.ErrorNode | null} The conditional expression AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitConditionalExpression(
     node: TSNode
@@ -947,9 +928,11 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a unary expression node (e.g., -x, !flag)
-   * @param node The unary expression CST node
-   * @returns The unary expression AST node or null if the node cannot be processed
+   * @method visitUnaryExpression
+   * @description Visits a unary expression node (e.g., `-x`, `!flag`).
+   * @param {TSNode} node - The unary expression CST node.
+   * @returns {ast.UnaryExpressionNode | ast.ErrorNode | null} The unary expression AST node, or null if the node cannot be processed.
+   * @public
    */
   visitUnaryExpression(node: TSNode): ast.UnaryExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -1052,7 +1035,6 @@ export class ExpressionVisitor extends BaseASTVisitor {
       expressionType: 'unary',
       operator: operatorNode.text as ast.UnaryOperator,
       operand: operandExpr as ast.ExpressionNode,
-      prefix: true, // All unary operators in OpenSCAD are prefix operators
       location: getLocation(node),
     };
 
@@ -1069,10 +1051,12 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an expression node. This method determines the specific type of expression
+   * @method visitExpression
+   * @description Visits an expression node. This method determines the specific type of expression
    * and dispatches to the appropriate handler method.
-   * @param node The expression node to visit (CST node)
-   * @returns The expression AST node or null if the node cannot be processed
+   * @param {TSNode} node - The expression node to visit (CST node).
+   * @returns {ast.ExpressionNode | ast.ErrorNode | null} The expression AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
     // Debug: Log the node structure
@@ -1184,19 +1168,13 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a let expression node.
+   * @method visitLetExpression
+   * @description Visits a let expression node.
    * This method constructs an AST node for a 'let' expression, which allows
    * defining local variables (assignments) scoped to a body expression.
-   *
-   * It processes the variable assignments and the body expression.
-   * If any assignment fails to parse, or if the body expression fails to parse,
-   * this method will return an ErrorNode.
-   *
-   * Only if all assignments and the body expression are processed successfully
-   * will a valid LetExpressionNode be returned.
-   *
-   * @param node The Tree-sitter CST node representing the let expression.
-   * @returns The let expression node or an error node if processing fails
+   * @param {TSNode} node - The Tree-sitter CST node representing the let expression.
+   * @returns {ast.LetExpressionNode | ast.ErrorNode | null} The let expression node, or an error node if processing fails.
+   * @override
    */
   override visitLetExpression(node: TSNode): ast.LetExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -1271,30 +1249,6 @@ export class ExpressionVisitor extends BaseASTVisitor {
         };
       }
 
-      // Check if the value of the assignment is an ErrorNode
-      // Ensure value exists and is an object before checking 'type' property
-      if (
-        assignmentAst.value &&
-        typeof assignmentAst.value === 'object' &&
-        'type' in assignmentAst.value &&
-        assignmentAst.value.type === 'error'
-      ) {
-        this.errorHandler.logInfo(
-          `[ExpressionVisitor.visitLetExpression] Error in let assignment value for '${assignmentAst.variable}'. Propagating. ErrorCode: LET_ASSIGNMENT_VALUE_ERROR`,
-          'ExpressionVisitor.visitLetExpression',
-          node
-        );
-        // Propagate the error from the assignment's value
-        return {
-          type: 'error',
-          errorCode: ErrorCode.LET_ASSIGNMENT_VALUE_ERROR_PROPAGATED,
-          message: `Error in let assignment value for '${assignmentAst.variable}'. Propagating.`,
-          location: getLocation(node), // Error location is the whole let expression
-          originalNodeType: node.type,
-          cstNodeText: node.text,
-          cause: assignmentAst.value, // Include the original ErrorNode as cause
-        };
-      }
       // At this point, assignmentAst is a valid AssignmentNode and its .value is a valid ExpressionNode
       processedAssignments.push(assignmentAst);
     }
@@ -1438,21 +1392,13 @@ export class ExpressionVisitor extends BaseASTVisitor {
       location: getLocation(node),
     };
   }
+
   /**
-   * Visit a let assignment node.
-   * This method constructs an AST node for a 'let' assignment, which allows
-   * defining local variables (assignments) scoped to a body expression.
-   *
-   * It processes the variable name and the value expression within the assignment.
-   * If either the variable name or the value expression fails to parse, or if the
-   * value expression results in an error, this method will return null, indicating
-   * a failure in processing the assignment.
-   *
-   * Only if both the variable name and the value expression are processed successfully
-   * without errors will a valid AssignmentNode be returned.
-   *
-   * @param node The Tree-sitter CST node representing the let assignment.
-   * @returns The assignment node or null if the node cannot be processed
+   * @method processLetAssignment
+   * @description Visits a let assignment node.
+   * @param {TSNode} node - The Tree-sitter CST node representing the let assignment.
+   * @returns {ast.AssignmentNode | null} The assignment node, or null if the node cannot be processed.
+   * @private
    */
   private processLetAssignment(node: TSNode): ast.AssignmentNode | null {
     this.errorHandler.logInfo(
@@ -1500,6 +1446,16 @@ export class ExpressionVisitor extends BaseASTVisitor {
       return null;
     }
 
+    // Check if the value is an ErrorNode
+    if (value.type === 'error') {
+      this.errorHandler.logInfo(
+        `[ExpressionVisitor.processLetAssignment] Value expression resulted in error`,
+        'ExpressionVisitor.processLetExpression',
+        valueNode
+      );
+      return null;
+    }
+
     // Add the assignment to the variable scope
     if (value && 'value' in value) {
       this.variableScope.set(variable.name, value.value);
@@ -1508,15 +1464,17 @@ export class ExpressionVisitor extends BaseASTVisitor {
     return {
       type: 'assignment',
       variable,
-      value,
+      value: value as ast.ExpressionNode, // Safe cast since we checked it's not an ErrorNode
       location: getLocation(node),
     };
   }
 
   /**
-   * Visit a vector expression node
-   * @param node The vector expression node to visit
-   * @returns The vector expression AST node or null if the node cannot be processed
+   * @method visitVectorExpression
+   * @description Visits a vector expression node.
+   * @param {TSNode} node - The vector expression node to visit.
+   * @returns {ast.VectorExpressionNode | ast.ErrorNode | null} The vector expression AST node, or null if the node cannot be processed.
+   * @public
    */
   visitVectorExpression(node: TSNode): ast.VectorExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -1570,9 +1528,11 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an array expression node
-   * @param node The array expression node to visit
-   * @returns The array expression AST node or null if the node cannot be processed
+   * @method visitArrayExpression
+   * @description Visits an array expression node.
+   * @param {TSNode} node - The array expression node to visit.
+   * @returns {ast.ArrayExpressionNode | ast.ErrorNode | null} The array expression AST node, or null if the node cannot be processed.
+   * @public
    */
   visitArrayExpression(node: TSNode): ast.ArrayExpressionNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -1626,9 +1586,11 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a literal node
-   * @param node The literal node to visit
-   * @returns The literal AST node or null if the node cannot be processed
+   * @method visitLiteral
+   * @description Visits a literal node.
+   * @param {TSNode} node - The literal node to visit.
+   * @returns {ast.LiteralNode | ast.ErrorNode | null} The literal AST node, or null if the node cannot be processed.
+   * @public
    */
   visitLiteral(node: TSNode): ast.LiteralNode | ast.ErrorNode | null {
     this.errorHandler.logInfo(
@@ -1688,11 +1650,14 @@ export class ExpressionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a function (required by BaseASTVisitor)
-   * @param node The function node
-   * @param functionName The function name
-   * @param args The function arguments
-   * @returns The function call AST node or null if not handled
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a function (required by `BaseASTVisitor`).
+   * @param {TSNode} node - The function node.
+   * @param {string} _functionName - The function name.
+   * @param {ast.Parameter[]} _args - The function arguments.
+   * @returns {ast.ASTNode | null} The function call AST node, or null if not handled.
+   * @protected
+   * @override
    */
   protected override createASTNodeForFunction(
     node: TSNode,

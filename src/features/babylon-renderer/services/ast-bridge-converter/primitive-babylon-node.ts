@@ -447,17 +447,12 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    * Create a BabylonJS error specific to this node
    */
   private createError(code: string, message: string): BabylonJSError {
-    const error: BabylonJSError = {
+    return {
       code,
       message,
       nodeType: this.nodeType,
       timestamp: new Date(),
+      sourceLocation: this.sourceLocation,
     };
-
-    if (this.sourceLocation) {
-      (error as any).sourceLocation = this.sourceLocation;
-    }
-
-    return error;
   }
 }

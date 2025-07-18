@@ -1,16 +1,63 @@
+/**
+ * @file vitest-setup.ts
+ * @description This file configures the Vitest testing environment for the OpenSCAD Babylon project.
+ * It sets up global mocks for browser APIs, handles WASM file resolution for `web-tree-sitter`,
+ * and includes utilities for memory management during tests.
+ *
+ * @architectural_decision
+ * - **Global Setup**: Mocks and polyfills are applied globally to ensure a consistent testing environment
+ *   for all UI components and services that rely on browser APIs.
+ * - **Real WASM Loading**: Instead of mocking `web-tree-sitter`'s WASM loading, this setup provides a robust
+ *   mechanism to resolve and load the actual WASM files, ensuring that parser-related tests run against
+ *   a near-production environment.
+ * - **Memory Management**: Includes explicit garbage collection and mock resets to prevent test contamination
+ *   and ensure reliable, isolated test runs.
+ *
+ * @limitations
+ * - Some browser API mocks are simplified and might not cover all edge cases of real browser behavior.
+ * - Explicit garbage collection (`global.gc()`) requires Node.js to be run with `--expose-gc` flag.
+ *
+ * @example
+ * ```typescript
+ * // This file is automatically loaded by Vitest before running tests.
+ * // No explicit import is needed in individual test files.
+ * // To run tests with garbage collection enabled:
+ * // vitest --expose-gc
+ * ```
+ */
+
 import React from 'react';
 import { vi } from 'vitest';
 
+/**
+ * @mock MonacoEditorComponent
+ * @description Mocks the `MonacoEditorComponent` to prevent actual editor rendering during tests.
+ * This improves test performance and isolates UI component tests from the Monaco Editor's complexities.
+ * @example
+ * ```tsx
+ * // In a test file, rendering a component that uses MonacoEditorComponent:
+ * render(<MyComponentUsingEditor />);
+ * expect(screen.getByTestId('monaco-editor-mock')).toBeInTheDocument();
+ * ```
+ */
 vi.mock('./features/code-editor/components/monaco-editor.tsx', () => ({
   MonacoEditorComponent: () =>
     React.createElement('div', { 'data-testid': 'monaco-editor-mock' }, 'Monaco Editor Mock'),
 }));
 
-// Import ResizeObserver polyfill FIRST to ensure it's available before any other imports
+/**
+ * @polyfill ResizeObserver
+ * @description Polyfills `ResizeObserver` globally to ensure components relying on it (e.g., for responsive layouts)
+ * function correctly in the JSDOM environment where it's not natively available.
+ * @architectural_decision
+ * Placed at the very top to ensure it's available before any other imports that might use it.
+ * @example
+ * Basic usage:
+ * A component using ResizeObserver will now work in tests.
+ * The polyfill ensures ResizeObserver is available in JSDOM environment.
+ */
 import ResizeObserver from 'resize-observer-polyfill';
 
-// Set up ResizeObserver polyfill globally before any other imports
-// Use multiple assignment methods to ensure it's available everywhere
 global.ResizeObserver = ResizeObserver;
 globalThis.ResizeObserver = ResizeObserver;
 window.ResizeObserver = ResizeObserver;
@@ -19,30 +66,45 @@ import '@testing-library/jest-dom';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { findUpSync } from 'find-up';
-// Use resolve.sync for robust module resolution following Node.js algorithm
 import resolve from 'resolve';
 import { afterEach } from 'vitest';
 
 import { createLogger } from './shared/services/logger.service.js';
-// Import OpenSCAD parser test utility to register cleanup hooks
 import './vitest-helpers/openscad-parser-test-utils.js';
 
-// ResizeObserver polyfill is set up once at startup and should persist
-
-// Enable Zustand mocking for proper store testing
+/**
+ * @mock Zustand
+ * @description Mocks the Zustand library to ensure proper isolation and control over store state during tests.
+ * This allows for predictable state management without relying on actual store instances.
+ * @example
+ * Basic usage:
+ * In tests, you can mock Zustand hooks for predictable state management.
+ * This allows for isolated testing without actual store instances.
+ */
 vi.mock('zustand');
 
-// ============================================================================
-// Real Web-Tree-Sitter Setup for Testing
-// ============================================================================
-
+/**
+ * @constant logger
+ * @description Initializes a logger instance for the Vitest setup file.
+ * Used for debugging and tracing the setup process itself.
+ */
 const logger = createLogger('VitestSetup');
 
-// ============================================================================
-// Browser API Mocks for UI Component Testing
-// ============================================================================
+/**
+ * @section Browser API Mocks for UI Component Testing
+ * @description This section provides global mocks for various browser APIs to enable reliable
+ * testing of UI components in a Node.js environment (JSDOM).
+ */
 
-// Mock window.matchMedia for accessibility and responsive design tests
+/**
+ * @mock window.matchMedia
+ * @description Mocks `window.matchMedia` to control the behavior of media queries in tests.
+ * Essential for testing responsive designs and accessibility features that depend on `prefers-reduced-motion` or `prefers-color-scheme`.
+ * @example
+ * Basic usage:
+ * In tests, you can override the mock behavior to simulate different media query states.
+ * This is useful for testing responsive designs and accessibility features.
+ */
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -57,7 +119,16 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock CSS.supports for glass morphism compatibility tests
+/**
+ * @mock window.CSS.supports
+ * @description Mocks `window.CSS.supports` to control CSS feature detection in tests.
+ * Particularly useful for testing components that use `@supports` rules or check for specific CSS capabilities (e.g., `backdrop-filter`).
+ * @example
+ * ```typescript
+ * // In a test, you can simulate browser support for a CSS feature:
+ * vi.spyOn(window.CSS, 'supports').mockReturnValue(false); // Simulate no support for a feature
+ * ```
+ */
 Object.defineProperty(window, 'CSS', {
   writable: true,
   value: {
@@ -65,12 +136,21 @@ Object.defineProperty(window, 'CSS', {
   },
 });
 
-// Mock document.createElementNS for SVG filter tests
+/**
+ * @mock document.createElementNS
+ * @description Mocks `document.createElementNS` to handle SVG element creation, specifically adding an `href` property for SVG filter tests.
+ * This is crucial for testing SVG-based UI elements or effects.
+ * @example
+ * ```typescript
+ * // When a component creates an SVG filter element:
+ * const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+ * expect(filter.href).toBe('test-href');
+ * ```
+ */
 Object.defineProperty(document, 'createElementNS', {
   writable: true,
   value: vi.fn().mockImplementation((_namespace: string, tagName: string) => {
     const element = document.createElement(tagName);
-    // Add href property for SVG filter elements
     if (tagName === 'filter') {
       Object.defineProperty(element, 'href', {
         value: 'test-href',
@@ -81,9 +161,18 @@ Object.defineProperty(document, 'createElementNS', {
   }),
 });
 
-// ResizeObserver polyfill is already set up at the top of this file
-
-// Mock IntersectionObserver for visibility-based components
+/**
+ * @mock IntersectionObserver
+ * @description Mocks the `IntersectionObserver` API, which is commonly used for lazy loading, infinite scrolling, and visibility tracking.
+ * This mock allows testing components that rely on element visibility without a real browser environment.
+ * @example
+ * ```typescript
+ * // A component using IntersectionObserver will now have its observe/unobserve methods mocked:
+ * const observer = new IntersectionObserver(() => {});
+ * observer.observe(myElement);
+ * expect(observer.observe).toHaveBeenCalledWith(myElement);
+ * ```
+ */
 Object.defineProperty(global, 'IntersectionObserver', {
   writable: true,
   configurable: true,
@@ -94,21 +183,39 @@ Object.defineProperty(global, 'IntersectionObserver', {
   })),
 });
 
-// Mock performance.now() for consistent timing in tests
+/**
+ * @mock performance.now()
+ * @description Mocks `performance.now()` to provide consistent and predictable timestamps during tests.
+ * This is vital for performance-sensitive components or logic that relies on precise timing, preventing flaky tests due to variable execution times.
+ * @example
+ * ```typescript
+ * // In a test, performance.now() will return an incrementing value:
+ * const time1 = performance.now(); // e.g., 1000
+ * const time2 = performance.now(); // e.g., 1000.1
+ * expect(time2).toBeGreaterThan(time1);
+ * ```
+ */
 Object.defineProperty(performance, 'now', {
   writable: true,
   value: vi.fn(() => {
-    // Return a consistent timestamp that increments slightly each call
-    // This prevents NaN values in performance measurements
-    const baseTime = 1000; // Start at 1000ms
-    const increment = 0.1; // Small increment per call
+    const baseTime = 1000;
+    const increment = 0.1;
     const callCount = (performance.now as any).__callCount || 0;
     (performance.now as any).__callCount = callCount + 1;
     return baseTime + callCount * increment;
   }),
 });
 
-// Mock window addEventListener and removeEventListener for react-use-measure
+/**
+ * @mock window.addEventListener and window.removeEventListener
+ * @description Mocks `window.addEventListener` and `window.removeEventListener`.
+ * This is particularly useful for libraries like `react-use-measure` that attach global event listeners.
+ * @example
+ * ```typescript
+ * // In a test, you can assert if event listeners were added/removed:
+ * expect(window.addEventListener).toHaveBeenCalledWith('resize', expect.any(Function));
+ * ```
+ */
 Object.defineProperty(window, 'addEventListener', {
   writable: true,
   value: vi.fn(),
@@ -119,7 +226,13 @@ Object.defineProperty(window, 'removeEventListener', {
   value: vi.fn(),
 });
 
-// Mock IE-specific event methods for React DOM compatibility
+/**
+ * @mock window.attachEvent and window.detachEvent
+ * @description Mocks IE-specific event methods (`attachEvent`, `detachEvent`) for React DOM compatibility.
+ * This ensures that React's internal event system does not throw errors in a JSDOM environment that lacks these legacy methods.
+ * @architectural_decision
+ * These mocks are applied to `window` and dynamically to all elements created via `document.createElement`.
+ */
 Object.defineProperty(window, 'attachEvent', {
   writable: true,
   value: vi.fn(),
@@ -130,31 +243,46 @@ Object.defineProperty(window, 'detachEvent', {
   value: vi.fn(),
 });
 
-// Mock these methods on all DOM elements to prevent React DOM errors
+/**
+ * @mock document.createElement
+ * @description Overrides `document.createElement` to automatically add mocked `attachEvent` and `detachEvent` methods
+ * to all newly created DOM elements. This prevents React DOM errors in JSDOM.
+ */
 const originalCreateElement = document.createElement;
 document.createElement = function (tagName: string, options?: ElementCreationOptions) {
   const element = originalCreateElement.call(this, tagName, options);
-
-  // Add IE-specific event methods to all elements
   if (!(element as any).attachEvent) {
     (element as any).attachEvent = vi.fn();
   }
   if (!(element as any).detachEvent) {
     (element as any).detachEvent = vi.fn();
   }
-
   return element;
 };
 
-// Mock window.getComputedStyle for react-use-measure
+/**
+ * @mock window.getComputedStyle
+ * @description Mocks `window.getComputedStyle` to return predictable CSS styles for elements.
+ * This is crucial for testing layout-dependent components or libraries like `react-use-measure`.
+ * It can parse inline styles and return default computed values.
+ * @example
+ * ```typescript
+ * // In a test, you can simulate an element's computed width:
+ * const element = document.createElement('div');
+ * element.style.width = '500px';
+ * const computedStyle = window.getComputedStyle(element);
+ * expect(computedStyle.getPropertyValue('width')).toBe('500px');
+ * ```
+ * @limitations
+ * - Only handles a limited set of CSS properties (`width`, `height`, `overflow`).
+ * - Relies on simple string matching for inline styles and class names, not a full CSS cascade.
+ */
 Object.defineProperty(window, 'getComputedStyle', {
   writable: true,
   value: vi.fn((element: Element) => {
-    // Return appropriate styles based on element attributes or test context
     const style = element.getAttribute('style') || '';
     const className = element.getAttribute('class') || '';
 
-    // Parse inline styles to extract width and height
     const parseInlineStyle = (styleAttr: string, property: string): string => {
       const regex = new RegExp(`${property}:\s*([^;]+)`, 'i');
       const match = styleAttr.match(regex);
@@ -164,10 +292,8 @@ Object.defineProperty(window, 'getComputedStyle', {
     const inlineWidth = parseInlineStyle(style, 'width');
     const inlineHeight = parseInlineStyle(style, 'height');
 
-    // Default computed style object
     const computedStyle: any = {
       getPropertyValue: vi.fn((property: string) => {
-        // Handle common CSS properties for tests
         switch (property) {
           case 'width':
             if (inlineWidth) return inlineWidth;
@@ -199,29 +325,35 @@ Object.defineProperty(window, 'getComputedStyle', {
 const __dirname = import.meta.dirname;
 const projectRoot = join(__dirname, '..');
 
-// Initialize fetch mock for WASM files
+/**
+ * @mock fetch
+ * @description Stubs the global `fetch` API to intercept network requests, particularly for WASM files.
+ * This allows Vitest to serve WASM files from the local filesystem during tests.
+ * @architectural_decision
+ * Intercepting `fetch` is crucial for `web-tree-sitter` which loads its parser grammar as a WASM module.
+ * This ensures that tests can run without actual network requests.
+ */
 vi.stubGlobal('fetch', vi.fn());
 
 /**
- * Create a minimal mock WASM file for testing purposes
- * This provides a fallback when the actual OpenSCAD grammar WASM is not available
+ * @function _createMockWasmFile
+ * @description Creates a minimal, valid WebAssembly (WASM) file as a `Uint8Array`.
+ * This serves as a fallback when the actual OpenSCAD grammar WASM file cannot be resolved or loaded,
+ * preventing tests from failing due to missing WASM binaries.
+ * @returns {Uint8Array} A `Uint8Array` representing a minimal WASM file.
+ * @example
+ * ```typescript
+ * const mockWasm = _createMockWasmFile();
+ * expect(mockWasm.length).toBeGreaterThan(0);
+ * ```
  */
 function _createMockWasmFile(): Uint8Array {
-  // Create a minimal valid WASM file structure
-  // WASM magic number (0x00, 0x61, 0x73, 0x6d) + version (0x01, 0x00, 0x00, 0x00)
   const wasmHeader = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
-
-  // Add minimal sections for a valid WASM file
-  // Type section (empty)
   const typeSection = new Uint8Array([0x01, 0x00]);
-  // Function section (empty)
   const functionSection = new Uint8Array([0x03, 0x00]);
-  // Export section (empty)
   const exportSection = new Uint8Array([0x07, 0x00]);
-  // Code section (empty)
   const codeSection = new Uint8Array([0x0a, 0x00]);
 
-  // Combine all sections
   const totalLength =
     wasmHeader.length +
     typeSection.length +
@@ -246,12 +378,39 @@ function _createMockWasmFile(): Uint8Array {
 }
 
 /**
- * Advanced WASM file resolution using multiple strategies
- * Combines Node.js module resolution with directory traversal for maximum robustness
- * Falls back to mock WASM for OpenSCAD grammar when not available
+ * @function resolveWasmPath
+ * @description Resolves the absolute file path for a given WASM file URL or path using multiple strategies.
+ * This function is critical for `web-tree-sitter` to load its WASM grammar files correctly in the test environment.
+ * It prioritizes finding the actual WASM file over falling back to a mock.
+ * @param {string} urlPath - The URL or path to the WASM file (e.g., 'tree-sitter-openscad.wasm').
+ * @returns {string} The resolved absolute file path prefixed with `file://`.
+ * @throws {Error} If the WASM file cannot be found after trying all resolution strategies.
+ *
+ * @architectural_decision
+ * - **Multi-Strategy Resolution**: Employs a series of strategies (public directory, Node.js module resolution, `find-up`)
+ *   to maximize the chances of finding the WASM file regardless of the test runner's working directory or module resolution quirks.
+ * - **Robustness**: Handles various input formats for `urlPath` (HTTP/HTTPS URLs, `file://` URLs, relative paths).
+ *
+ * @limitations
+ * - Relies on synchronous file system operations (`readFileSync`, `resolve.sync`, `findUpSync`), which are acceptable in a test setup but not for production code.
+ * - The `find-up` strategy involves parsing `package.json` files, which adds a slight overhead.
+ *
+ * @edge_cases
+ * - **Missing File**: If the WASM file is genuinely missing, it will throw an error after exhausting all strategies.
+ * - **Incorrect Path**: Handles cases where the provided `urlPath` might be a full URL or a relative path.
+ *
+ * @example
+ * ```typescript
+ * // Example usage in a test setup:
+ * const wasmPath = resolveWasmPath('tree-sitter-openscad.wasm');
+ * expect(wasmPath).toMatch(/file:\/\/.+\/tree-sitter-openscad.wasm$/);
+ *
+ * // Example of a URL input:
+ * const urlWasmPath = resolveWasmPath('http://localhost:3000/tree-sitter-openscad.wasm');
+ * expect(urlWasmPath).toMatch(/file:\/\/.+\/tree-sitter-openscad.wasm$/);
+ * ```
  */
 export function resolveWasmPath(urlPath: string): string {
-  // Extract filename from URL or path
   let normalizedPath: string;
 
   if (
@@ -268,16 +427,13 @@ export function resolveWasmPath(urlPath: string): string {
       normalizedPath = urlPath;
     }
   } else {
-    // Remove leading ./ or /
     normalizedPath = urlPath.replace(/^\.?\//, '');
   }
 
   logger.debug(`Resolving WASM file: ${normalizedPath}`);
   logger.debug(`__dirname: ${__dirname}`);
 
-  // Strategy 1: Check public directory first (where WASM files are located)
   const publicDirectoryStrategies = [
-    // Try public directory (main location for WASM files)
     () => {
       logger.debug(`Attempting public directory strategy for ${normalizedPath}`);
       try {
@@ -287,8 +443,6 @@ export function resolveWasmPath(urlPath: string): string {
         return null;
       }
     },
-
-    // Try root directory
     () => {
       logger.debug(`Attempting root directory strategy for ${normalizedPath}`);
       try {
@@ -300,9 +454,7 @@ export function resolveWasmPath(urlPath: string): string {
     },
   ];
 
-  // Strategy 2: Use Node.js module resolution algorithm (fallback)
   const moduleResolutionStrategies = [
-    // Try web-tree-sitter package
     () => {
       logger.debug(`Attempting web-tree-sitter strategy 2 (direct) for ${normalizedPath}`);
       try {
@@ -310,14 +462,11 @@ export function resolveWasmPath(urlPath: string): string {
           basedir: projectRoot,
         });
         const resolvedWasmPath = join(dirname(packagePath), normalizedPath);
-
         return resolvedWasmPath;
       } catch (_e) {
         return null;
       }
     },
-
-    // Try web-tree-sitter/lib subdirectory
     () => {
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
@@ -328,8 +477,6 @@ export function resolveWasmPath(urlPath: string): string {
         return null;
       }
     },
-
-    // Try web-tree-sitter debug directory (for tree-sitter.wasm)
     () => {
       try {
         const packagePath = resolve.sync('web-tree-sitter/package.json', {
@@ -342,9 +489,7 @@ export function resolveWasmPath(urlPath: string): string {
     },
   ];
 
-  // Strategy 2: Use find-up to locate package.json files and resolve from there
   const findUpStrategies = [
-    // Find web-tree-sitter package.json using matcher function
     () => {
       try {
         logger.debug(
@@ -368,7 +513,6 @@ export function resolveWasmPath(urlPath: string): string {
 
         if (packageJson) {
           const resolvedWasmPath = join(dirname(packageJson), normalizedPath);
-
           return resolvedWasmPath;
         }
         return null;
@@ -378,7 +522,6 @@ export function resolveWasmPath(urlPath: string): string {
     },
   ];
 
-  // Try all strategies in order of preference (public directory first, then modules, then find-up)
   const allStrategies = [
     ...publicDirectoryStrategies,
     ...moduleResolutionStrategies,
@@ -389,14 +532,12 @@ export function resolveWasmPath(urlPath: string): string {
     const resolvedPath = strategy();
     if (resolvedPath) {
       try {
-        // Test if file exists by attempting to read it
         readFileSync(resolvedPath, { flag: 'r' });
         logger.debug(
           `✅ Found WASM file: ${normalizedPath} at ${resolvedPath} (strategy ${index + 1})`
         );
         return `file://${resolvedPath}`;
       } catch {
-        // File doesn't exist, continue to next strategy
         logger.debug(`❌ Strategy ${index + 1} failed: ${resolvedPath} (file not found)`);
       }
     }
@@ -407,38 +548,48 @@ export function resolveWasmPath(urlPath: string): string {
   );
 }
 
-// Configure fetch mock to handle WASM files with better URL handling
+/**
+ * @mock fetch
+ * @description Configures the global `fetch` mock to serve WASM files from the local filesystem.
+ * This mock intercepts `fetch` calls for WASM files and resolves them using `resolveWasmPath`,
+ * reading the file content and returning it as an `ArrayBuffer`.
+ * @param {RequestInfo | URL} url - The URL or `RequestInfo` object passed to `fetch`.
+ * @returns {Promise<Response>} A promise that resolves to a mocked `Response` object containing the WASM file's content.
+ * @throws {Error} If the WASM file cannot be read from the resolved path.
+ * @example
+ * ```typescript
+ * // In a test, a component or library calling fetch for a WASM file will be intercepted:
+ * const response = await fetch('tree-sitter-openscad.wasm');
+ * expect(response.ok).toBe(true);
+ * const buffer = await response.arrayBuffer();
+ * expect(buffer.byteLength).toBeGreaterThan(0);
+ * ```
+ */
 vi.mocked(fetch).mockImplementation((url) => {
   logger.debug('using local fetch mock', url);
   logger.debug('URL type:', typeof url, 'URL constructor:', url.constructor.name);
 
-  // Handle both string and URL objects
   let urlPath: string;
   if (typeof url === 'string') {
     urlPath = url;
   } else if (url instanceof URL) {
-    urlPath = url.href; // Use href to get the full file:// URL
+    urlPath = url.href;
   } else {
-    // Handle other URL-like objects
     urlPath = String(url);
   }
 
-  // Remove 'file://' prefix if present for local file system access
   if (urlPath.startsWith('file://')) {
     urlPath = urlPath.substring('file://'.length);
   }
 
   try {
-    // Resolve the actual file path
     const resolvedPath = resolveWasmPath(urlPath);
 
-    // Remove file:// prefix if present for file system access
     let actualPath = resolvedPath;
     if (actualPath.startsWith('file://')) {
       actualPath = actualPath.substring('file://'.length);
     }
 
-    // Read file as Uint8Array
     const localFile = readFileSync(actualPath);
     const uint8Array = new Uint8Array(localFile);
 
@@ -461,18 +612,37 @@ vi.mocked(fetch).mockImplementation((url) => {
 });
 
 /**
- * Reset singleton instances for clean test isolation
- * Call this in beforeEach or afterEach hooks to prevent test contamination
+ * @function resetMatrixServiceSingletons
+ * @description Resets any singleton instances related to matrix services for clean test isolation.
+ * This function is currently a no-op as complex matrix services have been removed or simplified.
+ * @returns {Promise<void>} A promise that resolves when the reset is complete.
+ * @deprecated This function is largely deprecated as the underlying services have been simplified.
+ * @example
+ * ```typescript
+ * beforeEach(async () => {
+ *   await resetMatrixServiceSingletons();
+ * });
+ * ```
  */
 export async function resetMatrixServiceSingletons(): Promise<void> {
   logger.debug('Matrix service singletons reset (simplified - no complex services)');
-  // No-op since we removed all complex matrix services
 }
 
 /**
- * Initialize matrix services with thread-safe async initialization
- * Use this in test setup to ensure services are properly initialized
- * DEPRECATED: Use lightweight test setup instead to prevent hanging
+ * @function initializeMatrixServicesForTest
+ * @description Initializes simplified mock matrix services for testing purposes.
+ * This function provides mock implementations for services that were previously complex,
+ * ensuring tests can run without heavy dependencies.
+ * @returns {Promise<{ serviceContainer: unknown; integrationService: unknown; }>} A promise that resolves with mock service objects.
+ * @deprecated This function is deprecated in favor of more lightweight test setups to prevent hanging issues.
+ * @example
+ * ```typescript
+ * test('should perform a matrix operation', async () => {
+ *   const { integrationService } = await initializeMatrixServicesForTest();
+ *   const result = await integrationService.performRobustInversion();
+ *   expect(result.success).toBe(true);
+ * });
+ * ```
  */
 export async function initializeMatrixServicesForTest(): Promise<{
   serviceContainer: unknown;
@@ -480,7 +650,6 @@ export async function initializeMatrixServicesForTest(): Promise<{
 }> {
   logger.debug('Initializing simplified matrix services for test');
 
-  // Return simple mock services since we removed complex infrastructure
   const mockServiceContainer = {
     getService: () => null,
     isHealthy: () => true,
@@ -501,12 +670,27 @@ export async function initializeMatrixServicesForTest(): Promise<{
   };
 }
 
-// ============================================================================
-// Memory Management for Tests
-// ============================================================================
+/**
+ * @section Memory Management for Tests
+ * @description This section provides utilities for managing memory during test runs,
+ * crucial for preventing memory leaks and ensuring consistent test performance.
+ */
 
 /**
- * Force garbage collection to prevent memory leaks during tests
+ * @function forceGarbageCollection
+ * @description Forces a garbage collection run in the Node.js environment.
+ * This is used to explicitly free up memory after tests, helping to identify memory leaks
+ * and ensure a clean state for subsequent tests.
+ * @returns {void}
+ * @example
+ * ```typescript
+ * afterEach(() => {
+ *   forceGarbageCollection();
+ * });
+ * ```
+ * @limitations
+ * - Requires Node.js to be run with the `--expose-gc` flag.
+ * - `global.gc()` is not available in all environments.
  */
 export function forceGarbageCollection(): void {
   if (global.gc) {
@@ -520,33 +704,57 @@ export function forceGarbageCollection(): void {
 }
 
 /**
- * Reset performance.now() mock for clean test isolation
+ * @function resetPerformanceMock
+ * @description Resets the `performance.now()` mock's internal call counter.
+ * This ensures that `performance.now()` returns consistent, predictable values at the start of each test,
+ * preventing accumulated increments from affecting timing-sensitive tests.
+ * @returns {void}
+ * @example
+ * ```typescript
+ * beforeEach(() => {
+ *   resetPerformanceMock();
+ * });
+ * ```
  */
 export function resetPerformanceMock(): void {
-  // Reset the call counter for performance.now()
   if (performance.now && typeof performance.now === 'function') {
     (performance.now as any).__callCount = 0;
   }
 }
 
 /**
- * Clear test memory and force garbage collection
+ * @function clearTestMemory
+ * @description Clears test-specific memory and forces garbage collection.
+ * This is a comprehensive cleanup function called after each test to ensure maximum test isolation.
+ * @returns {void}
+ * @example
+ * ```typescript
+ * afterEach(() => {
+ *   clearTestMemory();
+ * });
+ * ```
  */
 export function clearTestMemory(): void {
   logger.debug('Clearing test memory');
-
-  // Reset performance mock for clean isolation
   resetPerformanceMock();
-
-  // Force garbage collection
   forceGarbageCollection();
 }
 
-// ============================================================================
-// Global Test Hooks for Memory Management
-// ============================================================================
+/**
+ * @section Global Test Hooks for Memory Management
+ * @description Defines global Vitest hooks to ensure memory is managed effectively after each test.
+ */
 
-// Global memory cleanup after each test
+/**
+ * @hook afterEach
+ * @description Vitest hook that runs after each test, calling `clearTestMemory`.
+ * This ensures that each test starts with a clean memory slate, preventing side effects and memory leaks between tests.
+ * @example
+ * ```typescript
+ * // This hook is automatically applied by Vitest due to its presence in vitest-setup.ts.
+ * // No explicit call is needed in individual test files.
+ * ```
+ */
 afterEach(() => {
   clearTestMemory();
 });

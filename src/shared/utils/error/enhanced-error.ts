@@ -73,14 +73,15 @@ export interface EnhancedErrorConfig {
  */
 export class EnhancedError extends Error {
   public readonly code: string;
-  public readonly source?: string;
-  public readonly location?: SourceLocation;
+  public readonly source: string | undefined;
+  public readonly location: SourceLocation | undefined;
   public readonly context: ErrorContext;
   public readonly severity: 'low' | 'medium' | 'high' | 'critical';
   public readonly recoverable: boolean;
   public readonly suggestions: readonly string[];
   public readonly timestamp: Date;
-  public readonly originalStack?: string;
+  public readonly originalStack: string | undefined;
+  public override readonly cause?: Error;
 
   constructor(config: EnhancedErrorConfig) {
     super(config.message);
@@ -200,7 +201,7 @@ export const withSourceLocation = (error: Error, location: SourceLocation): Enha
     return createEnhancedError({
       message: error.message,
       code: error.code,
-      source: error.source,
+      ...(error.source !== undefined && { source: error.source }),
       location: { ...error.location, ...location },
       context: error.context,
       cause: error.cause as Error,
@@ -225,8 +226,8 @@ export const withContext = (error: Error, context: ErrorContext): EnhancedError 
     return createEnhancedError({
       message: error.message,
       code: error.code,
-      source: error.source,
-      location: error.location,
+      ...(error.source !== undefined && { source: error.source }),
+      ...(error.location !== undefined && { location: error.location }),
       context: { ...error.context, ...context },
       cause: error.cause as Error,
       severity: error.severity,

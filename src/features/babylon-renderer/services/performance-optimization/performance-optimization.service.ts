@@ -19,6 +19,7 @@
  */
 
 import {
+  type BoundingInfo,
   type Camera,
   Frustum,
   type InstancedMesh,
@@ -829,7 +830,7 @@ export class PerformanceOptimizationService {
   /**
    * Hash bounding box for geometry comparison
    */
-  private hashBoundingBox(boundingInfo: any): string {
+  private hashBoundingBox(boundingInfo: BoundingInfo): string {
     if (!boundingInfo || !boundingInfo.boundingBox) {
       return '0';
     }

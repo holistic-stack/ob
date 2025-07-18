@@ -13,74 +13,26 @@
 // Explicitly re-export the most commonly used types for better IDE support
 export type {
   ASTNode,
-  // Statements
-  AssertStatementNode,
-  AssignmentNode,
-  AssignStatementNode,
   BaseNode,
-  // Type aliases
   BinaryOperator,
-  // Special nodes
-  ChildrenNode,
-  CircleNode,
-  ColorNode,
   // Primitive shapes
   CubeNode,
   CylinderNode,
-  DifferenceNode,
-  EachNode,
-  EchoStatementNode,
-  ErrorNode,
-  // Expressions
+  // Expressions and variables
   ExpressionNode,
-  ForLoopNode,
-  FunctionCallNode,
-  FunctionDefinitionNode,
-  HullNode,
-  IdentifierNode,
-  // Control structures
-  IfNode,
-  IndexExpressionNode,
-  IntersectionNode,
-  LetExpressionNode,
-  LetNode,
-  // Extrusions
-  LinearExtrudeNode,
-  LiteralNode,
-  MinkowskiNode,
   MirrorNode,
-  // Module system
-  ModuleDefinitionNode,
-  ModuleInstantiationNode,
-  ModuleParameter,
-  MultmatrixNode,
-  OffsetNode,
   Parameter,
   ParameterValue,
-  PolygonNode,
-  PolyhedronNode,
   Position,
-  RangeExpressionNode,
-  ResizeNode,
-  RotateExtrudeNode,
   RotateNode,
   ScaleNode,
   SourceLocation,
-  SpecialVariable,
-  SpecialVariableAssignment,
   SphereNode,
-  SquareNode,
   StatementNode,
-  TextNode,
   // Transformations
   TranslateNode,
   UnaryOperator,
-  // CSG operations
-  UnionNode,
   VariableNode,
-  Vector2D,
-  Vector3D,
-  VectorExpressionNode,
 } from '../ast/ast-types.js';
 // Re-export all types from the main AST types module
 export * from '../ast/ast-types.js';

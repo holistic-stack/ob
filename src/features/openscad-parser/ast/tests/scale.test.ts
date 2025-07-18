@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import type * as ASTTypes from '../ast-types.js';
 
 describe('Scale AST Generation', () => {
   let parser: OpenscadParser;
@@ -160,12 +161,14 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode?.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ASTTypes.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((scaleNode as ASTTypes.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with scalar parameter (uniform)', () => {
@@ -177,12 +180,14 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode?.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 2, 2]);
+      expect((scaleNode as ASTTypes.ScaleNode).v).toEqual([2, 2, 2]);
 
       // Check children
-      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((scaleNode as ASTTypes.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with named v parameter', () => {
@@ -194,12 +199,14 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode?.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ASTTypes.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((scaleNode as ASTTypes.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with 2D vector parameter', () => {
@@ -211,12 +218,14 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode?.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 1]); // Z should default to 1
+      expect((scaleNode as ASTTypes.ScaleNode).v).toEqual([2, 1, 1]); // Z should default to 1
 
       // Check children
-      expect((scaleNode as ast.ScaleNode).children).toHaveLength(1);
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((scaleNode as ASTTypes.ScaleNode).children).toHaveLength(1);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse scale with child block', () => {
@@ -231,14 +240,18 @@ describe('Scale AST Generation', () => {
 
       const scaleNode = ast[0];
       expect(scaleNode?.type).toBe('scale');
-      expect((scaleNode as ast.ScaleNode).v).toEqual([2, 1, 0.5]);
+      expect((scaleNode as ASTTypes.ScaleNode).v).toEqual([2, 1, 0.5]);
 
       // Check children
-      expect((scaleNode as ast.ScaleNode).children).toHaveLength(2);
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((scaleNode as ast.ScaleNode).children[0] as ast.CubeNode).size).toBe(10);
-      expect(((scaleNode as ast.ScaleNode).children[1] as ast.SphereNode).type).toBe('sphere');
-      expect(((scaleNode as ast.ScaleNode).children[1] as ast.SphereNode).radius).toBe(5);
+      expect((scaleNode as ASTTypes.ScaleNode).children).toHaveLength(2);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
+      expect(((scaleNode as ASTTypes.ScaleNode).children[1] as ASTTypes.SphereNode).type).toBe(
+        'sphere'
+      );
+      expect(((scaleNode as ASTTypes.ScaleNode).children[1] as ASTTypes.SphereNode).radius).toBe(5);
     });
   });
 });

@@ -20,7 +20,7 @@ export type {
   ExecutionOptions,
   HistoryState,
   Operation,
-  OperationResult,
+  OperationHistoryRecord,
 } from './operation-history';
 export { OperationHistoryService } from './operation-history';
 export type {

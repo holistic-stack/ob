@@ -8,7 +8,12 @@
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from '../../../shared/services/logger.service';
-import type { ASTNode } from '../../openscad-parser/ast/ast-types';
+import type {
+  ASTNode,
+  RotateNode,
+  ScaleNode,
+  TranslateNode,
+} from '../../openscad-parser/ast/ast-types';
 import { getParserInitializationService } from '../../openscad-parser/services/parser-initialization.service';
 
 const logger = createLogger('OpenSCADPipelineTest');
@@ -194,7 +199,9 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       expect(ast.length).toBeGreaterThan(0);
 
       // Find translate node
-      const translateNode = ast.find((node) => node.type === 'translate');
+      const translateNode = ast.find((node) => node.type === 'translate') as
+        | TranslateNode
+        | undefined;
       expect(translateNode).toBeDefined();
       expect(translateNode?.v).toEqual([5, 3, -2]);
       expect(translateNode?.children).toBeDefined();
@@ -222,7 +229,7 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       expect(ast.length).toBeGreaterThan(0);
 
       // Find rotate node
-      const rotateNode = ast.find((node) => node.type === 'rotate');
+      const rotateNode = ast.find((node) => node.type === 'rotate') as RotateNode | undefined;
       expect(rotateNode).toBeDefined();
       expect(rotateNode?.a).toEqual([45, 90, 0]);
       expect(rotateNode?.children).toBeDefined();
@@ -254,7 +261,7 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       expect(ast.length).toBeGreaterThan(0);
 
       // Find scale node
-      const scaleNode = ast.find((node) => node.type === 'scale');
+      const scaleNode = ast.find((node) => node.type === 'scale') as ScaleNode | undefined;
       expect(scaleNode).toBeDefined();
       expect(scaleNode?.v).toEqual([2, 0.5, 1.5]);
       expect(scaleNode?.children).toBeDefined();

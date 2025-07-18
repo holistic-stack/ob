@@ -36,15 +36,19 @@ describe('Scene Refresh Utilities', () => {
       const result = forceEngineResize(engine);
 
       expect(result.success).toBe(true);
-      expect(result.data).toBeUndefined();
+      if (result.success) {
+        expect(result.data).toBeUndefined();
+      }
     });
 
     it('should return error for invalid engine', () => {
       const result = forceEngineResize(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS engine');
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS engine');
+      }
     });
 
     it('should return error for engine without resize method', () => {
@@ -52,7 +56,9 @@ describe('Scene Refresh Utilities', () => {
       const result = forceEngineResize(invalidEngine);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      }
     });
   });
 
@@ -61,21 +67,25 @@ describe('Scene Refresh Utilities', () => {
       const result = resetSceneMaterialCache(scene);
 
       expect(result.success).toBe(true);
-      expect(result.data).toBeUndefined();
+      if (result.success) {
+        expect(result.data).toBeUndefined();
+      }
     });
 
     it('should return error for invalid scene', () => {
       const result = resetSceneMaterialCache(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should handle scene without resetCachedMaterial method gracefully', () => {
       // Create a scene-like object without the method
       const sceneWithoutMethod = { ...scene };
-      delete (sceneWithoutMethod as any).resetCachedMaterial;
+      (sceneWithoutMethod as any).resetCachedMaterial = undefined;
 
       const result = resetSceneMaterialCache(sceneWithoutMethod as BABYLON.Scene);
 
@@ -88,21 +98,25 @@ describe('Scene Refresh Utilities', () => {
       const result = markSceneMaterialsAsDirty(scene);
 
       expect(result.success).toBe(true);
-      expect(result.data).toBeUndefined();
+      if (result.success) {
+        expect(result.data).toBeUndefined();
+      }
     });
 
     it('should return error for invalid scene', () => {
       const result = markSceneMaterialsAsDirty(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should handle scene without markAllMaterialsAsDirty method gracefully', () => {
       // Create a scene-like object without the method
       const sceneWithoutMethod = { ...scene };
-      delete (sceneWithoutMethod as any).markAllMaterialsAsDirty;
+      (sceneWithoutMethod as any).markAllMaterialsAsDirty = undefined;
 
       const result = markSceneMaterialsAsDirty(sceneWithoutMethod as BABYLON.Scene);
 
@@ -120,7 +134,7 @@ describe('Scene Refresh Utilities', () => {
         expect(result.data).toBeUndefined();
       } else {
         // If it fails, it should be due to missing methods, not invalid inputs
-        expect(result.error?.code).toBe('REFRESH_FAILED');
+        expect(result.error.code).toBe('REFRESH_FAILED');
       }
     });
 
@@ -128,22 +142,26 @@ describe('Scene Refresh Utilities', () => {
       const result = forceSceneRefresh(null as any, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS engine');
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS engine');
+      }
     });
 
     it('should return error for invalid scene', () => {
       const result = forceSceneRefresh(engine, null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should handle scene without render method gracefully', () => {
       // Create a scene-like object without render method
       const sceneWithoutRender = { ...scene };
-      delete (sceneWithoutRender as any).render;
+      (sceneWithoutRender as any).render = undefined;
 
       const result = forceSceneRefresh(engine, sceneWithoutRender as BABYLON.Scene);
 
@@ -156,15 +174,19 @@ describe('Scene Refresh Utilities', () => {
       const result = forceEngineResize(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.timestamp).toBeInstanceOf(Date);
+      if (!result.success) {
+        expect(result.error.timestamp).toBeInstanceOf(Date);
+      }
     });
 
     it('should provide meaningful error messages', () => {
       const result = resetSceneMaterialCache(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBeTruthy();
-      expect(result.error?.message.length).toBeGreaterThan(0);
+      if (!result.success) {
+        expect(result.error.message).toBeTruthy();
+        expect(result.error.message.length).toBeGreaterThan(0);
+      }
     });
 
     it('should handle different error types consistently', () => {
@@ -173,8 +195,12 @@ describe('Scene Refresh Utilities', () => {
 
       expect(engineResult.success).toBe(false);
       expect(sceneResult.success).toBe(false);
-      expect(engineResult.error?.timestamp).toBeInstanceOf(Date);
-      expect(sceneResult.error?.timestamp).toBeInstanceOf(Date);
+      if (!engineResult.success) {
+        expect(engineResult.error.timestamp).toBeInstanceOf(Date);
+      }
+      if (!sceneResult.success) {
+        expect(sceneResult.error.timestamp).toBeInstanceOf(Date);
+      }
     });
   });
 });

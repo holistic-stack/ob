@@ -1,33 +1,54 @@
 /**
- * @file Argument extraction utilities for OpenSCAD parser
+ * @file argument-extractor.ts
+ * @description This module provides utilities for extracting and converting function arguments
+ * from Tree-sitter CST nodes into structured AST parameter objects. It handles both positional
+ * and named arguments, supporting various OpenSCAD data types and expressions.
  *
- * This module provides utilities for extracting and converting function arguments
- * from Tree-sitter CST nodes into structured AST parameter objects. It handles
- * both positional and named arguments, supporting various OpenSCAD data types
- * including numbers, strings, booleans, vectors, ranges, and expressions.
+ * @architectural_decision
+ * The argument extraction logic is encapsulated in this module to centralize the complex process
+ * of interpreting Tree-sitter's generic argument nodes into meaningful OpenSCAD parameters.
+ * It leverages `value-extractor.ts` for individual value parsing and includes robust error handling.
+ * The design supports the flexible argument passing mechanisms of OpenSCAD, including mixed positional
+ * and named arguments, and complex nested expressions.
  *
- * The argument extractor is a critical component of the AST generation process,
- * responsible for:
- * - Parsing function call arguments from CST nodes
- * - Converting raw values to typed ParameterValue objects
- * - Handling named vs positional argument patterns
- * - Supporting complex expressions and nested structures
- * - Providing error handling and recovery
- *
- * @example Basic usage
+ * @example
  * ```typescript
  * import { extractArguments } from './argument-extractor';
+ * import { OpenscadParser } from '../../openscad-parser';
+ * import { SimpleErrorHandler } from '../../error-handling/simple-error-handler';
+ * import * as TreeSitter from 'web-tree-sitter';
  *
- * // Extract arguments from a function call like cube(10, center=true)
- * const args = extractArguments(argumentsNode);
- * // Returns: [
- * //   { value: 10 },                    // positional argument
- * //   { name: 'center', value: true }   // named argument
- * // ]
+ * async function demonstrateArgumentExtraction() {
+ *   const errorHandler = new SimpleErrorHandler();
+ *   const parser = new OpenscadParser(errorHandler);
+ *   await parser.init();
+ *
+ *   const code = 'cylinder(h=20, r1=5, r2=10, center=true);';
+ *   const cst = parser.parseCST(code);
+ *   if (!cst) return;
+ *
+ *   // Assuming the CST structure allows direct access to the arguments node
+ *   // For a call_expression, arguments are typically a named child.
+ *   const callExpressionNode = cst.rootNode.namedChild(0); // e.g., cylinder(...)
+ *   if (callExpressionNode && callExpressionNode.type === 'call_expression') {
+ *     const argsNode = callExpressionNode.namedChild(1); // Assuming the arguments are the second named child
+ *     if (argsNode) {
+ *       const extractedParams = extractArguments(argsNode, errorHandler, code);
+ *       console.log('Extracted Parameters:', extractedParams);
+ *       // Expected output:
+ *       // [
+ *       //   { name: 'h', value: { value: 20, type: 'number' } },
+ *       //   { name: 'r1', value: { value: 5, type: 'number' } },
+ *       //   { name: 'r2', value: { value: 10, type: 'number' } },
+ *       //   { name: 'center', value: { value: true, type: 'boolean' } }
+ *       // ]
+ *     }
+ *   }
+ *   parser.dispose();
+ * }
+ *
+ * demonstrateArgumentExtraction();
  * ```
- *
- * @module argument-extractor
- * @since 0.1.0
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -36,11 +57,14 @@ import type * as ast from '../ast-types.js';
 import { extractValue as extractValueFromNode } from './value-extractor.js';
 
 /**
- * Extract text from a Tree-sitter node.
+ * @function getNodeText
+ * @description Extracts the raw text content from a Tree-sitter node.
+ * It prioritizes extracting from the original source code using byte offsets for accuracy,
+ * falling back to `node.text` if source code is not provided or extraction fails.
  *
- * @param node - The Tree-sitter node
- * @param sourceCode - The original source code (optional)
- * @returns The text for the node
+ * @param {TSNode} node - The Tree-sitter node from which to extract text.
+ * @param {string} [sourceCode] - The optional original source code string.
+ * @returns {string} The extracted text content of the node.
  */
 function getNodeText(node: TSNode, sourceCode?: string): string {
   if (sourceCode && node.startIndex !== undefined && node.endIndex !== undefined) {
@@ -58,9 +82,13 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
 }
 
 /**
- * Convert a Value to a ParameterValue
- * @param value The Value object to convert
- * @returns A ParameterValue object
+ * @function convertValueToParameterValue
+ * @description Converts a generic `ast.Value` object (as extracted by `value-extractor`)
+ * into a more specific `ast.ParameterValue` type, which is used in the AST.
+ * This function handles type coercion and conversion for numbers, booleans, strings, vectors, and ranges.
+ *
+ * @param {ast.Value} value - The generic value object to convert.
+ * @returns {ast.ParameterValue} The converted parameter value, or `null` if conversion is not possible.
  */
 function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   if (value.type === 'number') {
@@ -177,11 +205,16 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
 }
 
 /**
- * Convert a node to a ParameterValue
- * @param node The node to convert
- * @param errorHandler Optional error handler for enhanced expression evaluation
- * @param sourceCode Optional source code string for extracting correct text when node.text is truncated
- * @returns A ParameterValue object or undefined if the conversion fails
+ * @function convertNodeToParameterValue
+ * @description Converts a Tree-sitter node directly into an `ast.ParameterValue`.
+ * This function acts as an intermediary, first extracting a generic `ast.Value` from the node,
+ * and then converting it to the more specific `ast.ParameterValue`.
+ *
+ * @param {TSNode} node - The Tree-sitter node to convert.
+ * @param {ErrorHandler} [_errorHandler] - Optional error handler for logging (currently unused).
+ * @param {string} [sourceCode=''] - The original source code string for accurate text extraction.
+ * @param {Map<string, ast.ParameterValue>} [_variableScope] - Optional variable scope for resolving identifiers (currently unused).
+ * @returns {ast.ParameterValue | undefined} The converted parameter value, or `undefined` if conversion fails.
  */
 function convertNodeToParameterValue(
   node: TSNode,
@@ -201,74 +234,20 @@ function convertNodeToParameterValue(
 }
 
 /**
- * Extracts function arguments from Tree-sitter CST nodes and converts them to AST parameters.
+ * @function extractArguments
+ * @description Extracts function arguments from a Tree-sitter CST node and converts them into an array of `ast.Parameter` objects.
+ * This function handles various argument patterns, including positional, named, and mixed arguments, as well as complex expressions.
  *
- * This function is the main entry point for argument extraction, handling both simple
- * and complex argument patterns found in OpenSCAD function calls. It supports:
- * - Positional arguments: `cube(10, 20, 30)`
- * - Named arguments: `cube(size=[10, 20, 30], center=true)`
- * - Mixed arguments: `cube(10, center=true)`
- * - Complex expressions: `cube(x + 5, center=condition)`
- * - Vector arguments: `translate([x, y, z])`
- * - Range arguments: `for(i = [0:10:100])`
+ * @param {TSNode} argsNode - The Tree-sitter CST node that contains the arguments (e.g., an `arguments` or `argument_list` node).
+ * @param {ErrorHandler} [errorHandler] - Optional error handler for logging and reporting issues during extraction.
+ * @param {string} [sourceCode] - The original source code string, used for accurate text extraction from Tree-sitter nodes.
+ * @param {Map<string, ast.ParameterValue>} [variableScope] - Optional variable scope for resolving identifiers within expressions.
+ * @returns {ast.Parameter[]} An array of `ast.Parameter` objects, each representing an extracted argument.
  *
- * The function handles different CST node types that can contain arguments:
- * - `arguments`: Standard argument container
- * - `argument_list`: Alternative argument container format
- * - `argument`: Individual argument nodes
- * - `named_argument`: Explicitly named arguments
- *
- * This function extracts arguments from CST nodes and converts them to typed parameters.
- *
- * @param argsNode - The CST node containing the arguments to extract
- * @param errorHandler - Optional error handler for enhanced expression evaluation and error reporting
- * @param sourceCode - Optional source code string for text extraction
- * @returns Array of Parameter objects with optional names and typed values
- *
- * @example Extracting positional arguments
- * ```typescript
- * // For OpenSCAD code: cube(10, 20, 30)
- * const args = extractArguments(argumentsNode);
- * // Returns: [
- * //   { value: 10 },
- * //   { value: 20 },
- * //   { value: 30 }
- * // ]
- * ```
- *
- * @example Extracting named arguments
- * ```typescript
- * // For OpenSCAD code: cylinder(h=20, r=5, center=true)
- * const args = extractArguments(argumentsNode);
- * // Returns: [
- * //   { name: 'h', value: 20 },
- * //   { name: 'r', value: 5 },
- * //   { name: 'center', value: true }
- * // ]
- * ```
- *
- * @example Extracting mixed arguments
- * ```typescript
- * // For OpenSCAD code: cube([10, 20, 30], center=true)
- * const args = extractArguments(argumentsNode);
- * // Returns: [
- * //   { value: [10, 20, 30] },
- * //   { name: 'center', value: true }
- * // ]
- * ```
- *
- * @example With error handling and source code
- * ```typescript
- * const errorHandler = new SimpleErrorHandler();
- * const args = extractArguments(argumentsNode, errorHandler, sourceCode);
- *
- * if (errorHandler.getErrors().length > 0) {
- *   console.log('Argument extraction errors:', errorHandler.getErrors());
- * }
- * ```
- *
- * @since 0.1.0
- * @category Extractors
+ * @limitations
+ * - The function includes a workaround for Tree-sitter memory corruption issues that can affect empty argument lists.
+ * - The handling of complex expressions within arguments relies on `extractValueFromNode`, which itself has limitations on expression evaluation.
+ * - The current implementation might not fully support all edge cases of OpenSCAD's argument parsing, especially for highly dynamic or malformed inputs.
  */
 export function extractArguments(
   argsNode: TSNode,
@@ -464,11 +443,15 @@ export function extractArguments(
 }
 
 /**
- * Extract a parameter from an argument node
- * @param argNode The argument node
- * @param errorHandler Optional error handler for enhanced expression evaluation
- * @param sourceCode Optional source code for text extraction
- * @returns A parameter object or null if the argument is invalid
+ * @function extractArgument
+ * @description Extracts a single parameter from a Tree-sitter `argument` or `named_argument` node.
+ * It determines whether the argument is named or positional and extracts its value accordingly.
+ *
+ * @param {TSNode} argNode - The Tree-sitter node representing a single argument.
+ * @param {ErrorHandler} [errorHandler] - Optional error handler for logging.
+ * @param {string} [sourceCode] - The original source code string.
+ * @param {Map<string, ast.ParameterValue>} [variableScope] - Optional variable scope for resolving identifiers.
+ * @returns {ast.Parameter | null} An `ast.Parameter` object if extraction is successful, or `null` if the argument is invalid.
  */
 function extractArgument(
   argNode: TSNode,
@@ -617,9 +600,98 @@ function extractArgument(
 }
 
 /**
- * Extract a value from a value node
- * @param valueNode The value node
- * @returns A value object or null if the value is invalid
+ * Extract a vector literal from a vector_literal node
+ *
+ * @param vectorNode - The vector_literal node
+ * @param sourceCode - The original source code string
+ * @param variableScope - Optional variable scope for resolving identifiers
+ * @returns A vector value object or null if the vector is invalid
+ *
+ * @example
+ * ```typescript
+ * const vectorNode = parser.parse('[1, 2, 3]').rootNode.namedChild(0);
+ * const vector = extractVectorLiteral(vectorNode, '[1, 2, 3]');
+ * // Returns: { type: 'vector', value: [{ type: 'number', value: '1' }, ...] }
+ * ```
+ */
+function extractVectorLiteral(
+  vectorNode: TSNode,
+  sourceCode: string = '',
+  variableScope?: Map<string, ast.ParameterValue>
+): ast.VectorValue | null {
+  const values: ast.Value[] = [];
+
+  // Iterate over named children to skip syntax tokens like '[', ']', ','
+  for (let i = 0; i < vectorNode.namedChildCount; i++) {
+    const elementNode = vectorNode.namedChild(i);
+    if (elementNode) {
+      // Ensure child exists
+      const value = extractValue(elementNode, sourceCode, variableScope);
+      if (value) {
+        values.push(value);
+      }
+    }
+  }
+
+  // It's possible for an array like `[,,]` to parse with no actual values.
+  // Or if extractValue fails for all children. Default OpenSCAD behavior might be relevant here.
+  return { type: 'vector', value: values };
+}
+
+/**
+ * Extract a range literal from a range_literal node
+ *
+ * @param rangeNode - The range_literal node
+ * @returns A range value object or null if the range is invalid
+ *
+ * @example
+ * ```typescript
+ * const rangeNode = parser.parse('[1:2:10]').rootNode.namedChild(0);
+ * const range = extractRangeLiteral(rangeNode);
+ * // Returns: { type: 'range', start: '1', end: '10', step: '2' }
+ * ```
+ */
+function extractRangeLiteral(rangeNode: TSNode): ast.RangeValue | null {
+  const startNode = rangeNode.childForFieldName('start');
+  const endNode = rangeNode.childForFieldName('end');
+  const stepNode = rangeNode.childForFieldName('step');
+
+  const rangeValue: Omit<ast.RangeValue, 'value'> = {
+    type: 'range',
+  };
+
+  if (startNode) {
+    rangeValue.start = startNode.text;
+  }
+  if (endNode) {
+    rangeValue.end = endNode.text;
+  }
+  if (stepNode) {
+    rangeValue.step = stepNode.text;
+  }
+
+  // The 'value' property inherited from ast.Value is problematic here.
+  // ast.RangeValue should ideally not have a 'value: string | Value[]' field.
+  // For now, we cast to satisfy the return type, but ast-types.ts needs review.
+  return rangeValue as ast.RangeValue;
+}
+
+/**
+ * @function extractValue
+ * @description Extracts a value from a Tree-sitter node. This function is a simplified version
+ * of the `extractValue` from `value-extractor.ts` and is used internally within `argument-extractor.ts`.
+ * It handles various literal types, vectors, ranges, and some basic expressions.
+ *
+ * @param {TSNode} valueNode - The Tree-sitter node representing the value.
+ * @param {string} [sourceCode=''] - The original source code string.
+ * @param {Map<string, ast.ParameterValue>} [variableScope] - Optional variable scope for resolving identifiers.
+ * @returns {ast.Value | null} A generic `ast.Value` object if extraction is successful, or `null` if the value is invalid or unsupported.
+ *
+ * @limitations
+ * - This function contains simplified logic for expression evaluation (e.g., binary expressions, unary expressions).
+ *   For full expression evaluation, a dedicated expression evaluator should be used.
+ * - Handling of `call_expression`, `special_variable`, and `member_expression` is currently basic (returns string representation).
+ * - The `variableScope` parameter is passed but not fully utilized for complex expression resolution within this function.
  */
 export function extractValue(
   valueNode: TSNode,
@@ -718,14 +790,6 @@ export function extractValue(
               !Number.isNaN(numericValue)
             ) {
               return { type: 'number', value: numericValue };
-            }
-          } else if (typeof operandValue === 'number') {
-            // Handle direct numeric values
-            if (operator === '-') {
-              return { type: 'number', value: -operandValue };
-            }
-            if (operator === '+') {
-              return { type: 'number', value: operandValue };
             }
           }
         }
@@ -870,65 +934,6 @@ export function extractValue(
       );
       return null;
   }
-}
-
-/**
- * Extract a vector literal from a vector_literal node
- * @param vectorNode The vector_literal node
- * @returns A vector value object or null if the vector is invalid
- */
-function extractVectorLiteral(
-  vectorNode: TSNode,
-  sourceCode: string = '',
-  _variableScope?: Map<string, ast.ParameterValue>
-): ast.VectorValue | null {
-  const values: ast.Value[] = [];
-
-  // Iterate over named children to skip syntax tokens like '[', ']', ','
-  for (let i = 0; i < vectorNode.namedChildCount; i++) {
-    const elementNode = vectorNode.namedChild(i);
-    if (elementNode) {
-      // Ensure child exists
-      const value = extractValue(elementNode, sourceCode);
-      if (value) {
-        values.push(value);
-      }
-    }
-  }
-
-  // It's possible for an array like `[,,]` to parse with no actual values.
-  // Or if extractValue fails for all children. Default OpenSCAD behavior might be relevant here.
-  return { type: 'vector', value: values };
-}
-
-/**
- * Extract a range literal from a range_literal node
- * @param rangeNode The range_literal node
- * @returns A range value object or null if the range is invalid
- */
-function extractRangeLiteral(rangeNode: TSNode): ast.RangeValue | null {
-  const startNode = rangeNode.childForFieldName('start');
-  const endNode = rangeNode.childForFieldName('end');
-  const stepNode = rangeNode.childForFieldName('step');
-
-  const rangeValue: Omit<ast.RangeValue, 'value'> = {
-    type: 'range',
-  };
-
-  if (startNode) {
-    rangeValue.start = startNode.text;
-  }
-  if (endNode) {
-    rangeValue.end = endNode.text;
-  }
-  if (stepNode) {
-    rangeValue.step = stepNode.text;
-  }
-
-  // The 'value' property inherited from ast.Value is problematic here.
-  // ast.RangeValue should ideally not have a 'value: string | Value[]' field.
-  // For now, we cast to satisfy the return type, but ast-types.ts needs review.
-  return rangeValue as ast.RangeValue;
 }
 
 export interface ExtractedNamedArgument {

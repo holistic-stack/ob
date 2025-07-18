@@ -177,7 +177,7 @@ export const markSceneMaterialsAsDirty = (scene: Scene): SceneRefreshResult => {
 
   try {
     if (scene.markAllMaterialsAsDirty && typeof scene.markAllMaterialsAsDirty === 'function') {
-      scene.markAllMaterialsAsDirty();
+      scene.markAllMaterialsAsDirty(1); // Mark all materials as dirty with flag 1
     }
     return { success: true, data: undefined };
   } catch (cause) {

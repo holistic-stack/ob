@@ -146,7 +146,9 @@ describe('Camera Trails Regression Tests', () => {
       const result = clearRenderBuffers(engine, invalidScene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+      }
     });
 
     it('should handle buffer clearing with invalid engine gracefully', () => {
@@ -156,7 +158,9 @@ describe('Camera Trails Regression Tests', () => {
       const result = clearRenderBuffers(invalidEngine, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      }
     });
 
     it('should maintain performance during repeated buffer clearing', () => {

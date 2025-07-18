@@ -79,11 +79,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
       // This method should return ListComprehensionExpressionNode, ErrorNode, or null (if not OpenSCAD style)
       const openScadResult = this.parseOpenScadStyle(node);
 
-      if (
-        openScadResult &&
-        openScadResult.type === 'expression' &&
-        openScadResult.expressionType === 'list_comprehension_expression'
-      ) {
+      if (openScadResult && openScadResult.type === 'list_comprehension') {
         return openScadResult;
       }
 
@@ -104,11 +100,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
           'visitListComprehension.tryPythonStyle'
         );
         const pythonResult = this.parsePythonStyle(node);
-        if (
-          pythonResult &&
-          pythonResult.type === 'expression' &&
-          pythonResult.expressionType === 'list_comprehension_expression'
-        ) {
+        if (pythonResult && pythonResult.type === 'list_comprehension') {
           this.errorHandler.logInfo(
             `[ListComprehensionVisitor.visitListComprehension] Successfully parsed as Python style. CST: ${node.text.substring(0, 50)}`,
             'visitListComprehension.pythonSuccess'
@@ -423,7 +415,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
 
       // Only add cause if it's an actual ErrorNode
       if (bodyExpressionAstNode && bodyExpressionAstNode.type === 'error') {
-        (errorNode as any).cause = bodyExpressionAstNode;
+        (errorNode as typeof errorNode & { cause?: ast.ErrorNode }).cause = bodyExpressionAstNode;
       }
 
       return errorNode;
@@ -467,8 +459,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
 
     // Construct the AST node
     const resultNode: ast.ListComprehensionExpressionNode = {
-      type: 'expression' as const,
-      expressionType: 'list_comprehension_expression' as const,
+      type: 'list_comprehension' as const,
       variable: forClause.variable, // Checked for null/empty and error propagation above
       range: forClause.range, // Error propagation handled above
       expression: bodyExpressionAstNode, // Checked for null and error propagation above

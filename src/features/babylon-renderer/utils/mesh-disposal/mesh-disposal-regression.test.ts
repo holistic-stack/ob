@@ -58,8 +58,10 @@ describe('Mesh Disposal Regression Tests', () => {
       // Dispose all meshes (simulating shape change)
       const disposalResult = disposeMeshesComprehensively(scene);
       expect(disposalResult.success).toBe(true);
-      expect(disposalResult.data?.meshesDisposed).toBe(1);
-      expect(disposalResult.data?.materialsDisposed).toBe(1);
+      if (disposalResult.success) {
+        expect(disposalResult.data.meshesDisposed).toBe(1);
+        expect(disposalResult.data.materialsDisposed).toBe(1);
+      }
 
       // Verify complete cleanup
       expect(scene.meshes.length).toBe(0);
@@ -114,8 +116,10 @@ describe('Mesh Disposal Regression Tests', () => {
         if (i < shapes.length - 1) {
           const result = disposeMeshesComprehensively(scene);
           expect(result.success).toBe(true);
-          totalMeshesDisposed += result.data?.meshesDisposed || 0;
-          totalMaterialsDisposed += result.data?.materialsDisposed || 0;
+          if (result.success) {
+            totalMeshesDisposed += result.data.meshesDisposed || 0;
+            totalMaterialsDisposed += result.data.materialsDisposed || 0;
+          }
 
           expect(scene.meshes.length).toBe(0);
         }
@@ -130,17 +134,21 @@ describe('Mesh Disposal Regression Tests', () => {
       // REGRESSION TEST: System meshes (cameras, lights) should not be disposed
 
       // Create user meshes
-      const userBox = BABYLON.MeshBuilder.CreateBox('userBox', { size: 5 }, scene);
-      const userSphere = BABYLON.MeshBuilder.CreateSphere('userSphere', { diameter: 5 }, scene);
+      const _userBox = BABYLON.MeshBuilder.CreateBox('userBox', { size: 5 }, scene);
+      const _userSphere = BABYLON.MeshBuilder.CreateSphere('userSphere', { diameter: 5 }, scene);
 
       // Create system-like meshes
-      const cameraHelper = BABYLON.MeshBuilder.CreateBox('camera_helper', { size: 1 }, scene);
-      const lightHelper = BABYLON.MeshBuilder.CreateSphere(
+      const _cameraHelper = BABYLON.MeshBuilder.CreateBox('camera_helper', { size: 1 }, scene);
+      const _lightHelper = BABYLON.MeshBuilder.CreateSphere(
         'light_indicator',
         { diameter: 1 },
         scene
       );
-      const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 100, height: 100 }, scene);
+      const _ground = BABYLON.MeshBuilder.CreateGround(
+        'ground',
+        { width: 100, height: 100 },
+        scene
+      );
 
       expect(scene.meshes.length).toBe(5);
 
@@ -149,8 +157,10 @@ describe('Mesh Disposal Regression Tests', () => {
       expect(result.success).toBe(true);
 
       // Verify only user meshes were disposed, system meshes preserved
-      expect(result.data?.meshesDisposed).toBe(2); // Only userBox and userSphere
-      expect(result.data?.meshesSkipped).toBe(3); // camera_helper, light_indicator, ground
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(2); // Only userBox and userSphere
+        expect(result.data.meshesSkipped).toBe(3); // camera_helper, light_indicator, ground
+      }
 
       // Verify system meshes are still in scene
       const remainingMeshes = scene.meshes.map((m) => m.name);
@@ -172,7 +182,7 @@ describe('Mesh Disposal Regression Tests', () => {
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         scene
       );
-      material.normalTexture = new BABYLON.Texture(
+      material.bumpTexture = new BABYLON.Texture(
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         scene
       );
@@ -261,7 +271,9 @@ describe('Mesh Disposal Regression Tests', () => {
 
       // Performance regression test
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(meshCount);
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(meshCount);
+      }
       expect(disposalTime).toBeLessThan(100); // Should complete in under 100ms
     });
 
@@ -277,7 +289,9 @@ describe('Mesh Disposal Regression Tests', () => {
       const disposalTime = endTime - startTime;
 
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(0);
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(0);
+      }
       expect(disposalTime).toBeLessThan(1); // Should be nearly instantaneous
     });
   });
@@ -288,22 +302,26 @@ describe('Mesh Disposal Regression Tests', () => {
 
       const result = disposeMeshesComprehensively(null as any);
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(MeshDisposalErrorCode.INVALID_SCENE);
+      if (!result.success) {
+        expect(result.error.code).toBe(MeshDisposalErrorCode.INVALID_SCENE);
+      }
     });
 
     it('should continue disposal even if individual meshes fail', () => {
       // REGRESSION TEST: Partial failures shouldn't stop the entire process
 
       // Create normal meshes
-      const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 1 }, scene);
-      const mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 1 }, scene);
+      const _mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 1 }, scene);
+      const _mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 1 }, scene);
 
       expect(scene.meshes.length).toBe(2);
 
       // Disposal should succeed even if some operations might fail internally
       const result = disposeMeshesComprehensively(scene);
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(2);
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(2);
+      }
     });
   });
 });

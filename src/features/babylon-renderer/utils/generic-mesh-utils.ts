@@ -8,7 +8,7 @@
 import { BoundingBox, type Matrix, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { Result } from '../../../shared/types/result.types';
-import { tryCatch } from '../../../shared/utils/functional/result';
+import { isError, tryCatch } from '../../../shared/utils/functional/result';
 import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 import type {
   GenericGeometry,
@@ -143,13 +143,13 @@ export const calculateSurfaceArea = (geometry: GenericGeometry): number => {
   let totalArea = 0;
 
   for (let i = 0; i < indices.length; i += 3) {
-    const i1 = indices[i]! * 3;
-    const i2 = indices[i + 1]! * 3;
-    const i3 = indices[i + 2]! * 3;
+    const i1 = (indices[i] ?? 0) * 3;
+    const i2 = (indices[i + 1] ?? 0) * 3;
+    const i3 = (indices[i + 2] ?? 0) * 3;
 
-    const v1 = new Vector3(positions[i1]!, positions[i1 + 1]!, positions[i1 + 2]!);
-    const v2 = new Vector3(positions[i2]!, positions[i2 + 1]!, positions[i2 + 2]!);
-    const v3 = new Vector3(positions[i3]!, positions[i3 + 1]!, positions[i3 + 2]!);
+    const v1 = new Vector3(positions[i1] ?? 0, positions[i1 + 1] ?? 0, positions[i1 + 2] ?? 0);
+    const v2 = new Vector3(positions[i2] ?? 0, positions[i2 + 1] ?? 0, positions[i2 + 2] ?? 0);
+    const v3 = new Vector3(positions[i3] ?? 0, positions[i3 + 1] ?? 0, positions[i3 + 2] ?? 0);
 
     // Calculate triangle area using cross product
     const edge1 = v2.subtract(v1);
@@ -172,13 +172,13 @@ export const calculateVolume = (geometry: GenericGeometry): number => {
   let volume = 0;
 
   for (let i = 0; i < indices.length; i += 3) {
-    const i1 = indices[i]! * 3;
-    const i2 = indices[i + 1]! * 3;
-    const i3 = indices[i + 2]! * 3;
+    const i1 = (indices[i] ?? 0) * 3;
+    const i2 = (indices[i + 1] ?? 0) * 3;
+    const i3 = (indices[i + 2] ?? 0) * 3;
 
-    const v1 = new Vector3(positions[i1]!, positions[i1 + 1]!, positions[i1 + 2]!);
-    const v2 = new Vector3(positions[i2]!, positions[i2 + 1]!, positions[i2 + 2]!);
-    const v3 = new Vector3(positions[i3]!, positions[i3 + 1]!, positions[i3 + 2]!);
+    const v1 = new Vector3(positions[i1] ?? 0, positions[i1 + 1] ?? 0, positions[i1 + 2] ?? 0);
+    const v2 = new Vector3(positions[i2] ?? 0, positions[i2 + 1] ?? 0, positions[i2 + 2] ?? 0);
+    const v3 = new Vector3(positions[i3] ?? 0, positions[i3 + 1] ?? 0, positions[i3 + 2] ?? 0);
 
     // Calculate signed volume of tetrahedron formed by origin and triangle
     const signedVolume = Vector3.Dot(v1, Vector3.Cross(v2, v3)) / 6.0;
@@ -298,7 +298,7 @@ export const mergeMeshCollections = (
       const allMeshes = collections.flatMap((collection) => collection.meshes);
 
       const result = createMeshCollection(id, allMeshes, collectionType);
-      if (!result.success) {
+      if (isError(result)) {
         throw result.error;
       }
       return result.data;

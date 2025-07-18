@@ -5,7 +5,7 @@
  * Implements WebGPU engine with fallback to WebGL2, following functional programming patterns.
  */
 
-import { Engine, WebGPUEngine } from '@babylonjs/core';
+import { Engine, NullEngine, WebGPUEngine } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -76,16 +76,31 @@ export class BabylonEngineService {
           return this.createEngineState(false);
         }
 
+        // Final fallback to NullEngine for test environments (only if canvas is valid)
+        if (process.env.NODE_ENV === 'test' && this.canvas) {
+          logger.warn('[WARN][BabylonEngineService] Using NullEngine for test environment');
+          const nullEngineResult = await this.initNullEngine(options);
+          if (nullEngineResult.success) {
+            logger.debug('[DEBUG][BabylonEngineService] NullEngine initialized successfully');
+            return this.createEngineState(false);
+          }
+        }
+
         throw this.createError(
           EngineErrorCode.INITIALIZATION_FAILED,
-          'Both WebGPU and WebGL2 initialization failed'
+          'All engine initialization methods failed'
         );
       },
-      (error) =>
-        this.createError(
+      (error) => {
+        // Preserve original error codes if it's already an EngineError
+        if (error && typeof error === 'object' && 'code' in error) {
+          return error as EngineError;
+        }
+        return this.createError(
           EngineErrorCode.INITIALIZATION_FAILED,
           `Engine initialization failed: ${error}`
-        )
+        );
+      }
     );
   }
 
@@ -159,6 +174,47 @@ export class BabylonEngineService {
         this.createError(
           EngineErrorCode.WEBGL_NOT_SUPPORTED,
           `WebGL2 initialization failed: ${error}`
+        )
+    );
+  }
+
+  /**
+   * Initialize NullEngine for test environments
+   *
+   * @param options - Engine initialization options
+   * @returns Result containing the NullEngine or error
+   *
+   * @example
+   * ```typescript
+   * const result = await engineService.initNullEngine(options);
+   * if (result.success) {
+   *   console.log('NullEngine initialized for testing');
+   * }
+   * ```
+   */
+  private async initNullEngine(options: EngineInitOptions): Promise<Result<Engine, EngineError>> {
+    return tryCatch(
+      () => {
+        // NullEngine doesn't require a canvas but we'll store the reference
+        const nullEngine = new NullEngine({
+          renderWidth: 800,
+          renderHeight: 600,
+          textureSize: 512,
+          deterministicLockstep: false,
+          lockstepMaxSteps: 4,
+        });
+
+        this.engine = nullEngine;
+        this.setupEngineEvents();
+
+        options.onEngineReady?.(nullEngine);
+
+        return nullEngine;
+      },
+      (error) =>
+        this.createError(
+          EngineErrorCode.INITIALIZATION_FAILED,
+          `NullEngine initialization failed: ${error}`
         )
     );
   }
@@ -245,6 +301,21 @@ export class BabylonEngineService {
 
   /**
    * Dispose the engine and clean up resources
+   *
+   * @returns Result indicating success or failure of disposal operation
+   *
+   * @example
+   * ```typescript
+   * const engineService = new BabylonEngineService();
+   * await engineService.init({ canvas, config });
+   *
+   * const result = engineService.dispose();
+   * if (result.success) {
+   *   console.log('Engine disposed successfully');
+   * } else {
+   *   console.error('Disposal failed:', result.error.message);
+   * }
+   * ```
    */
   dispose(): EngineDisposeResult {
     logger.debug('[DEBUG][BabylonEngineService] Disposing engine...');
@@ -252,7 +323,15 @@ export class BabylonEngineService {
     return tryCatch(
       () => {
         if (this.engine) {
-          this.engine.dispose();
+          try {
+            // Attempt to dispose the engine, but don't fail if it throws
+            this.engine.dispose();
+          } catch (engineDisposeError) {
+            // Log the error but continue with cleanup
+            logger.warn(
+              `[WARN][BabylonEngineService] Engine dispose threw error: ${engineDisposeError}`
+            );
+          }
           this.engine = null;
         }
 

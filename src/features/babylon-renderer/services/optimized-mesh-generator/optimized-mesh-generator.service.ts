@@ -21,7 +21,12 @@ import { type AbstractMesh, Mesh, type Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types';
+import type {
+  ASTNode,
+  CubeNode,
+  CylinderNode,
+  SphereNode,
+} from '../../../openscad-parser/ast/ast-types';
 import type { GenericMeshData } from '../../types/generic-mesh-data.types';
 import { CSGOperationsService } from '../csg-operations';
 import {
@@ -273,7 +278,7 @@ export class OptimizedMeshGeneratorService {
     // TODO: Extend to handle all AST node types
     switch (astNode.type) {
       case 'cube': {
-        const cubeNode = astNode as any; // Cast to access cube-specific properties
+        const cubeNode = astNode as CubeNode;
 
         // Validate cube parameters
         if (cubeNode.size === null || cubeNode.size === undefined) {
@@ -292,7 +297,7 @@ export class OptimizedMeshGeneratorService {
       }
 
       case 'sphere': {
-        const sphereNode = astNode as any; // Cast to access sphere-specific properties
+        const sphereNode = astNode as SphereNode;
         const params = {
           r: sphereNode.radius || sphereNode.r || 1,
           fn: sphereNode.fn || sphereNode.$fn || 16,
@@ -305,7 +310,7 @@ export class OptimizedMeshGeneratorService {
       }
 
       case 'cylinder': {
-        const cylinderNode = astNode as any; // Cast to access cylinder-specific properties
+        const cylinderNode = astNode as CylinderNode;
         const params = {
           height: cylinderNode.h || 1,
           radius: cylinderNode.r || 1,

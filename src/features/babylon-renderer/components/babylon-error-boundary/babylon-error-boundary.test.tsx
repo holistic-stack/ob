@@ -50,10 +50,14 @@ const _HookTestComponent: React.FC = () => {
     <div>
       <div data-testid="has-error">{hasError.toString()}</div>
       {error && <div data-testid="error-type">{error.type}</div>}
-      <button data-testid="trigger-error" onClick={() => handleError(new Error('Test error'))}>
+      <button
+        type="button"
+        data-testid="trigger-error"
+        onClick={() => handleError(new Error('Test error'))}
+      >
         Trigger Error
       </button>
-      <button data-testid="clear-error" onClick={clearError}>
+      <button type="button" data-testid="clear-error" onClick={clearError}>
         Clear Error
       </button>
     </div>

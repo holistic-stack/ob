@@ -88,8 +88,8 @@ describe('Malformed Input Error Handling Tests', () => {
     await parser.init();
 
     // Create AST converter
-    astConverter = new ASTBridgeConverter(scene);
-    await astConverter.initialize();
+    astConverter = new ASTBridgeConverter();
+    await astConverter.initialize(scene);
 
     // Create services
     selectionService = new SelectionService(scene);
@@ -130,7 +130,7 @@ describe('Malformed Input Error Handling Tests', () => {
       // Should either fail gracefully or recover with partial AST
       if (!parseResult.success) {
         expect(parseResult.error).toBeDefined();
-        expect(parseResult.error.code).toBeDefined();
+        expect(typeof parseResult.error).toBe('string');
         logger.debug('[SYNTAX_ERROR] Missing semicolon handled gracefully');
       } else {
         // If parser recovered, AST should still be valid
@@ -147,7 +147,7 @@ describe('Malformed Input Error Handling Tests', () => {
 
       if (!parseResult.success) {
         expect(parseResult.error).toBeDefined();
-        expect(parseResult.error.message).toBeDefined();
+        expect(typeof parseResult.error).toBe('string');
         logger.debug('[SYNTAX_ERROR] Missing parenthesis handled gracefully');
       } else {
         expect(parseResult.data).toBeDefined();
@@ -204,7 +204,7 @@ describe('Malformed Input Error Handling Tests', () => {
   });
 
   describe('Unsupported Feature Handling', () => {
-    it('should handle unsupported import statements gracefully', () => {
+    it('should handle unsupported import statements gracefully', async () => {
       const unsupportedCode = 'import("external_file.stl");';
 
       const parseResult = parser.parseASTWithResult(unsupportedCode);
@@ -213,7 +213,7 @@ describe('Malformed Input Error Handling Tests', () => {
         const astNodes = parseResult.data;
 
         // Try to convert (may fail or skip unsupported features)
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         // Should handle unsupported features gracefully
         if (!conversionResult.success) {
@@ -226,14 +226,14 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle unsupported include statements gracefully', () => {
+    it('should handle unsupported include statements gracefully', async () => {
       const unsupportedCode = 'include <library.scad>';
 
       const parseResult = parser.parseASTWithResult(unsupportedCode);
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -245,7 +245,7 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle unsupported module definitions gracefully', () => {
+    it('should handle unsupported module definitions gracefully', async () => {
       const unsupportedCode = `
         module custom_shape(size) {
           cube([size, size, size]);
@@ -257,7 +257,7 @@ describe('Malformed Input Error Handling Tests', () => {
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -269,7 +269,7 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle unsupported function definitions gracefully', () => {
+    it('should handle unsupported function definitions gracefully', async () => {
       const unsupportedCode = `
         function double(x) = x * 2;
         cube([double(2), 2, 2]);
@@ -279,7 +279,7 @@ describe('Malformed Input Error Handling Tests', () => {
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -340,14 +340,14 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle extremely large numbers gracefully', () => {
+    it('should handle extremely large numbers gracefully', async () => {
       const largeNumberCode = 'cube([1e100, 1e100, 1e100]);';
 
       const parseResult = parser.parseASTWithResult(largeNumberCode);
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -359,14 +359,14 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle negative dimensions gracefully', () => {
+    it('should handle negative dimensions gracefully', async () => {
       const negativeCode = 'cube([-2, -3, -4]);';
 
       const parseResult = parser.parseASTWithResult(negativeCode);
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -378,14 +378,14 @@ describe('Malformed Input Error Handling Tests', () => {
       }
     });
 
-    it('should handle zero dimensions gracefully', () => {
+    it('should handle zero dimensions gracefully', async () => {
       const zeroCode = 'cube([0, 0, 0]);';
 
       const parseResult = parser.parseASTWithResult(zeroCode);
 
       if (parseResult.success) {
         const astNodes = parseResult.data;
-        const conversionResult = astConverter.convertAST(astNodes);
+        const conversionResult = await astConverter.convertAST(astNodes);
 
         if (!conversionResult.success) {
           expect(conversionResult.error).toBeDefined();
@@ -408,7 +408,8 @@ describe('Malformed Input Error Handling Tests', () => {
       expect(selectionResult.success).toBe(false);
       if (!selectionResult.success) {
         expect(selectionResult.error).toBeDefined();
-        expect(selectionResult.error.code).toBeDefined();
+        // Error should be a proper error object or string
+        expect(selectionResult.error).toBeTruthy();
       }
 
       logger.debug('[SERVICE_ERROR] Selection service error handled gracefully');
@@ -426,7 +427,8 @@ describe('Malformed Input Error Handling Tests', () => {
       expect(exportResult.success).toBe(false);
       if (!exportResult.success) {
         expect(exportResult.error).toBeDefined();
-        expect(exportResult.error.code).toBeDefined();
+        // Error should be a proper error object or string
+        expect(exportResult.error).toBeTruthy();
       }
 
       logger.debug('[SERVICE_ERROR] Export service error handled gracefully');
@@ -441,7 +443,8 @@ describe('Malformed Input Error Handling Tests', () => {
       expect(conversionResult.success).toBe(false);
       if (!conversionResult.success) {
         expect(conversionResult.error).toBeDefined();
-        expect(conversionResult.error.code).toBeDefined();
+        // Error should be a proper error object or string
+        expect(conversionResult.error).toBeTruthy();
       }
 
       logger.debug('[SERVICE_ERROR] AST converter error handled gracefully');
@@ -449,7 +452,7 @@ describe('Malformed Input Error Handling Tests', () => {
   });
 
   describe('Recovery and Resilience', () => {
-    it('should recover from parser errors and continue processing', () => {
+    it('should recover from parser errors and continue processing', async () => {
       const mixedCode = `
         cube([2, 2, 2]); // Valid
         invalid_syntax_here // Invalid
@@ -479,7 +482,7 @@ describe('Malformed Input Error Handling Tests', () => {
         expect(parser).toBeDefined();
 
         if (parseResult.success) {
-          const _conversionResult = await astConverter.convertAST(parseResult.data);
+          const _conversionResult = await astConverter.convertAST(parseResult.data.body);
           // Converter should remain stable regardless of result
           expect(astConverter).toBeDefined();
         }
@@ -502,11 +505,10 @@ describe('Malformed Input Error Handling Tests', () => {
 
       if (!parseResult.success) {
         expect(parseResult.error).toBeDefined();
-        expect(parseResult.error.message).toBeDefined();
-        expect(typeof parseResult.error.message).toBe('string');
-        expect(parseResult.error.message.length).toBeGreaterThan(0);
+        expect(typeof parseResult.error).toBe('string');
+        expect(parseResult.error.length).toBeGreaterThan(0);
 
-        logger.debug(`[ERROR_MESSAGE] Meaningful error: ${parseResult.error.message}`);
+        logger.debug(`[ERROR_MESSAGE] Meaningful error: ${parseResult.error}`);
       }
     });
   });

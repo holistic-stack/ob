@@ -27,6 +27,25 @@ import type { Result } from '../../types/result.types';
 import { tryCatch, tryCatchAsync } from '../../utils/functional/result';
 import { createLogger } from '../logger.service';
 
+/**
+ * Extended Navigator interface for experimental browser APIs
+ */
+interface ExtendedNavigator extends Navigator {
+  deviceMemory?: number;
+  connection?: {
+    effectiveType?: string;
+    downlink?: number;
+  };
+  mozConnection?: {
+    effectiveType?: string;
+    downlink?: number;
+  };
+  webkitConnection?: {
+    effectiveType?: string;
+    downlink?: number;
+  };
+}
+
 const logger = createLogger('FeatureDetection');
 
 /**
@@ -230,7 +249,7 @@ export class FeatureDetectionService {
    * Detect WebGL capabilities
    */
   private detectWebGLCapabilities(): BrowserCapabilities['webgl'] {
-    return tryCatch(
+    const result = tryCatch(
       () => {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
@@ -270,7 +289,18 @@ export class FeatureDetectionService {
         maxTextureSize: 0,
         maxVertexAttribs: 0,
       })
-    ).data;
+    );
+
+    return result.success
+      ? result.data
+      : {
+          supported: false,
+          version: null,
+          renderer: null,
+          vendor: null,
+          maxTextureSize: 0,
+          maxVertexAttribs: 0,
+        };
   }
 
   /**
@@ -280,6 +310,14 @@ export class FeatureDetectionService {
     const result = await tryCatchAsync(
       async () => {
         if (!('gpu' in navigator)) {
+          return {
+            supported: false,
+            adapter: false,
+            features: [],
+          };
+        }
+
+        if (!navigator.gpu) {
           return {
             supported: false,
             adapter: false,
@@ -309,22 +347,28 @@ export class FeatureDetectionService {
       })
     );
 
-    return result.data;
+    return result.success
+      ? result.data
+      : {
+          supported: false,
+          adapter: false,
+          features: [],
+        };
   }
 
   /**
    * Detect performance capabilities
    */
   private detectPerformanceCapabilities(): BrowserCapabilities['performance'] {
-    return tryCatch(
+    const result = tryCatch(
       () => {
         const hardwareConcurrency = navigator.hardwareConcurrency || 1;
-        const deviceMemory = (navigator as any).deviceMemory || null;
+        const deviceMemory = (navigator as ExtendedNavigator).deviceMemory || null;
 
         const connection =
-          (navigator as any).connection ||
-          (navigator as any).mozConnection ||
-          (navigator as any).webkitConnection;
+          (navigator as ExtendedNavigator).connection ||
+          (navigator as ExtendedNavigator).mozConnection ||
+          (navigator as ExtendedNavigator).webkitConnection;
         const connectionInfo = connection
           ? {
               effectiveType: connection.effectiveType || null,
@@ -349,7 +393,9 @@ export class FeatureDetectionService {
           downlink: null,
         },
       })
-    ).data;
+    );
+
+    return result.success ? result.data : result.error;
   }
 
   /**
@@ -394,9 +440,9 @@ export class FeatureDetectionService {
    * Get WebGL support details
    */
   private getWebGLSupport(): FeatureSupport {
-    const webgl = this.capabilities!.webgl;
+    const webgl = this.capabilities?.webgl;
 
-    if (!webgl.supported) {
+    if (!webgl || !webgl.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGL is not supported by this browser',
@@ -430,9 +476,9 @@ export class FeatureDetectionService {
    * Get WebGPU support details
    */
   private getWebGPUSupport(): FeatureSupport {
-    const webgpu = this.capabilities!.webgpu;
+    const webgpu = this.capabilities?.webgpu;
 
-    if (!webgpu.supported) {
+    if (!webgpu || !webgpu.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGPU is not supported by this browser',

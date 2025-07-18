@@ -7,19 +7,54 @@
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { ProgressOperation } from '../../services/progress/progress.service';
+import type {
+  ProgressOperation,
+  ProgressOperationConfig,
+  ProgressState,
+} from '../../services/progress/progress.service';
 import { ProgressBar } from './progress-bar';
 
-// Mock progress operation for testing
-const createMockOperation = (overrides: Partial<ProgressOperation> = {}): ProgressOperation => {
-  const defaultConfig = {
+/**
+ * Mock progress operation factory for testing
+ *
+ * Creates a complete ProgressOperation with sensible defaults and allows
+ * partial overrides for specific test scenarios.
+ *
+ * @param overrides - Partial overrides for config and state
+ * @returns Complete ProgressOperation for testing
+ *
+ * @example
+ * ```typescript
+ * // Create operation with default values
+ * const operation = createMockOperation();
+ *
+ * // Override specific state properties
+ * const completedOperation = createMockOperation({
+ *   state: { isCompleted: true, percentage: 100 }
+ * });
+ *
+ * // Override config properties
+ * const cancellableOperation = createMockOperation({
+ *   config: { cancellable: true, title: 'Custom Title' }
+ * });
+ * ```
+ */
+const createMockOperation = (
+  overrides: {
+    config?: Partial<ProgressOperationConfig>;
+    state?: Partial<ProgressState>;
+    id?: string;
+    abortController?: AbortController;
+  } = {}
+): ProgressOperation => {
+  const defaultConfig: ProgressOperationConfig = {
     type: 'parsing' as const,
     title: 'Test Operation',
     total: 100,
     cancellable: false,
   };
 
-  const defaultState = {
+  const defaultState: ProgressState = {
     current: 0,
     total: 100 as number | undefined,
     percentage: 0,
@@ -34,10 +69,10 @@ const createMockOperation = (overrides: Partial<ProgressOperation> = {}): Progre
   };
 
   return {
-    id: 'test-operation',
+    id: overrides.id ?? 'test-operation',
     config: { ...defaultConfig, ...overrides.config },
     state: { ...defaultState, ...overrides.state },
-    ...overrides,
+    abortController: overrides.abortController,
   };
 };
 

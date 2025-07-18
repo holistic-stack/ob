@@ -28,7 +28,7 @@ describe('ModuleVisitor', () => {
           cube(10);
         }
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }
@@ -73,7 +73,7 @@ describe('ModuleVisitor', () => {
           cube(size);
         }
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }
@@ -81,7 +81,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        (child) =>
+        (child: any) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -101,7 +101,7 @@ describe('ModuleVisitor', () => {
         expect(result?.name?.expressionType).toBe('identifier');
         expect(result?.name?.location).toBeDefined();
         expect(result?.parameters).toHaveLength(1);
-        expect(result?.parameters[0]?.name).toBe('size');
+        expect(result?.parameters?.[0]?.name).toBe('size');
         expect(result?.body).toHaveLength(1);
       }
     });
@@ -112,7 +112,7 @@ describe('ModuleVisitor', () => {
           cube(size, center=center);
         }
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }
@@ -120,7 +120,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        (child) =>
+        (child: any) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -140,10 +140,10 @@ describe('ModuleVisitor', () => {
         expect(result?.name?.expressionType).toBe('identifier');
         expect(result?.name?.location).toBeDefined();
         expect(result?.parameters).toHaveLength(2);
-        expect(result?.parameters[0]?.name).toBe('size');
-        expect(result?.parameters[0]?.defaultValue).toBe(10);
-        expect(result?.parameters[1]?.name).toBe('center');
-        expect(result?.parameters[1]?.defaultValue).toBe(false);
+        expect(result?.parameters?.[0]?.name).toBe('size');
+        expect(result?.parameters?.[0]?.defaultValue).toBe(10);
+        expect(result?.parameters?.[1]?.name).toBe('center');
+        expect(result?.parameters?.[1]?.defaultValue).toBe(false);
         expect(result?.body).toHaveLength(1);
       }
     });
@@ -154,7 +154,7 @@ describe('ModuleVisitor', () => {
           translate(v) cube(10);
         }
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }
@@ -162,7 +162,7 @@ describe('ModuleVisitor', () => {
 
       // Find the module definition node - use the correct node type
       const moduleDefNode = rootNode.namedChildren.find(
-        (child) =>
+        (child: any) =>
           child &&
           (child.type === 'module_definition' ||
             (child.type === 'statement' && child.text.includes('module')))
@@ -182,8 +182,8 @@ describe('ModuleVisitor', () => {
         expect(result?.name?.expressionType).toBe('identifier');
         expect(result?.name?.location).toBeDefined();
         expect(result?.parameters).toHaveLength(1);
-        expect(result?.parameters[0]?.name).toBe('v');
-        expect(result?.parameters[0]?.defaultValue).toEqual([0, 0, 0]);
+        expect(result?.parameters?.[0]?.name).toBe('v');
+        expect(result?.parameters?.[0]?.defaultValue).toEqual([0, 0, 0]);
         // The body might be empty in the test, so we don't check its length
         expect(result?.body).toBeDefined();
       }
@@ -195,7 +195,7 @@ describe('ModuleVisitor', () => {
       const code = `
         mycube(10);
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }
@@ -233,7 +233,7 @@ describe('ModuleVisitor', () => {
           cube(10);
         }
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code');
       }

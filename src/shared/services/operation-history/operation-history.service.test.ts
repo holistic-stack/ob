@@ -1,13 +1,32 @@
 /**
  * @file Tests for Operation History Service
+ *
+ * Comprehensive test suite for the OperationHistoryService following TDD principles.
+ * Tests cover operation execution, rollback functionality, transaction management,
+ * history size limits, and error handling scenarios.
+ *
+ * Uses real service instances (no mocks) to ensure proper integration testing.
+ *
+ * @example
+ * ```typescript
+ * // Test successful operation execution
+ * const operation: Operation<string> = {
+ *   id: 'test-1',
+ *   name: 'Test Operation',
+ *   execute: async () => 'success',
+ *   rollback: async () => {}
+ * };
+ *
+ * const result = await service.executeOperation(operation);
+ * expect(result.success).toBe(true);
+ * ```
+ *
+ * @see {@link OperationHistoryService} for the service implementation
+ * @see {@link Operation} for operation interface definition
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  type Operation,
-  OperationHistoryService,
-  type OperationResult,
-} from './operation-history.service';
+import { type Operation, OperationHistoryService } from './operation-history.service';
 
 describe('OperationHistoryService', () => {
   let service: OperationHistoryService;
@@ -39,8 +58,14 @@ describe('OperationHistoryService', () => {
 
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(1);
-      expect(history.operations[0].success).toBe(true);
-      expect(history.operations[0].name).toBe('Test Operation');
+
+      const firstOperation = history.operations[0];
+      expect(firstOperation).toBeDefined();
+
+      if (!firstOperation) return;
+
+      expect(firstOperation.success).toBe(true);
+      expect(firstOperation.name).toBe('Test Operation');
     });
 
     it('should handle failed operations with rollback', async () => {
@@ -66,7 +91,13 @@ describe('OperationHistoryService', () => {
 
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(1);
-      expect(history.operations[0].success).toBe(false);
+
+      const firstOperation = history.operations[0];
+      expect(firstOperation).toBeDefined();
+
+      if (!firstOperation) return;
+
+      expect(firstOperation.success).toBe(false);
     });
 
     it('should handle rollback failures gracefully', async () => {
@@ -88,7 +119,13 @@ describe('OperationHistoryService', () => {
       // Should still record the operation failure even if rollback fails
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(1);
-      expect(history.operations[0].success).toBe(false);
+
+      const firstOperation = history.operations[0];
+      expect(firstOperation).toBeDefined();
+
+      if (!firstOperation) return;
+
+      expect(firstOperation.success).toBe(false);
     });
 
     it('should skip rollback when autoRollbackOnFailure is false', async () => {
@@ -221,7 +258,13 @@ describe('OperationHistoryService', () => {
 
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(1);
-      expect(history.operations[0].name).toContain('Transaction');
+
+      const firstOperation = history.operations[0];
+      expect(firstOperation).toBeDefined();
+
+      if (!firstOperation) return;
+
+      expect(firstOperation.name).toContain('Transaction');
     });
 
     it('should rollback failed transactions', async () => {
@@ -232,7 +275,7 @@ describe('OperationHistoryService', () => {
           name: 'Transaction Op 1',
           timestamp: new Date(),
           execute: async () => 1,
-          rollback: rollbackSpies[0],
+          rollback: rollbackSpies[0]!,
         },
         {
           id: 'tx-op-2',
@@ -241,7 +284,7 @@ describe('OperationHistoryService', () => {
           execute: async () => {
             throw new Error('Transaction operation failed');
           },
-          rollback: rollbackSpies[1],
+          rollback: rollbackSpies[1]!,
         },
       ];
 
@@ -253,8 +296,8 @@ describe('OperationHistoryService', () => {
       }
 
       // Should rollback the first operation (in reverse order)
-      expect(rollbackSpies[0]).toHaveBeenCalledOnce();
-      expect(rollbackSpies[1]).not.toHaveBeenCalled();
+      expect(rollbackSpies[0]!).toHaveBeenCalledOnce();
+      expect(rollbackSpies[1]!).not.toHaveBeenCalled();
     });
 
     it('should handle rollback failures in transactions', async () => {
@@ -303,9 +346,18 @@ describe('OperationHistoryService', () => {
       const history = service.getHistoryState();
       expect(history.operations).toHaveLength(5);
       expect(history.maxHistorySize).toBe(5);
+
       // Should keep the most recent operations
-      expect(history.operations[0].name).toBe('Operation 3');
-      expect(history.operations[4].name).toBe('Operation 7');
+      const firstOperation = history.operations[0];
+      const lastOperation = history.operations[4];
+
+      expect(firstOperation).toBeDefined();
+      expect(lastOperation).toBeDefined();
+
+      if (!firstOperation || !lastOperation) return;
+
+      expect(firstOperation.name).toBe('Operation 3');
+      expect(lastOperation.name).toBe('Operation 7');
     });
 
     it('should get operation by ID', async () => {

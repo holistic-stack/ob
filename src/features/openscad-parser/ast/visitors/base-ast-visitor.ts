@@ -348,7 +348,7 @@ export abstract class BaseASTVisitor implements ASTVisitor {
         }
       }
 
-      const identifierNode: ast.IdentifierNode = {
+      const _identifierNode: ast.IdentifierNode = {
         type: 'expression',
         expressionType: 'identifier',
         name: functionName,
@@ -357,11 +357,11 @@ export abstract class BaseASTVisitor implements ASTVisitor {
 
       astNode = {
         type: 'module_instantiation',
-        name: identifierNode,
+        name: functionName, // Use the string name directly
         args: args, // These are the ast.Parameter[] converted earlier
         children: childrenNodes,
         location: getLocation(node),
-      };
+      } as ast.ModuleInstantiationNode;
     }
     return astNode;
   }

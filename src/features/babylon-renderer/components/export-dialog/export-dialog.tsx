@@ -20,8 +20,10 @@ import type { AbstractMesh, Scene } from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
+import type { Result } from '../../../../shared/types/result.types';
 import type {
   ExportConfig,
+  ExportError,
   ExportFormat,
   ExportQuality,
   ExportResult,
@@ -68,7 +70,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
     exportProgress,
     exportMessage,
     getSupportedFormats,
-    getDefaultConfig,
     cancelExport,
   } = useExport(scene);
 
@@ -120,7 +121,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         ...(format === '3mf' ? { units } : {}),
       };
 
-      let result;
+      let result: Result<ExportResult, ExportError>;
       if (exportSelected && selectedMeshes.length > 0) {
         result = await exportMeshes(selectedMeshes, config);
       } else {
@@ -131,9 +132,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         onExportComplete?.(result.data);
         onClose();
         logger.debug(`[EXPORT] Export completed: ${result.data.filename}`);
-      } else if (result.error) {
-        onExportError?.(result.error.message);
-        logger.error(`[EXPORT] Export failed: ${result.error.message}`);
+      } else if (!result.success) {
+        const errorMessage =
+          typeof result.error === 'object' && result.error && 'message' in result.error
+            ? String(result.error.message)
+            : String(result.error);
+        onExportError?.(errorMessage);
+        logger.error(`[EXPORT] Export failed: ${errorMessage}`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown export error';
@@ -164,6 +169,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-800">Export 3D Model</h2>
             <button
+              type="button"
               onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
               data-testid="close-dialog-button"
@@ -183,12 +189,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         {/* Content */}
         <div className="dialog-content p-6 space-y-4">
           {/* Export Target */}
-          <div className="form-group">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Export Target</label>
+          <fieldset className="form-group">
+            <legend className="block text-sm font-medium text-gray-700 mb-2">Export Target</legend>
             <div className="space-y-2">
               <label className="flex items-center">
                 <input
                   type="radio"
+                  name="export-target"
                   checked={!exportSelected}
                   onChange={() => setExportSelected(false)}
                   className="mr-2"
@@ -199,6 +206,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
               <label className="flex items-center">
                 <input
                   type="radio"
+                  name="export-target"
                   checked={exportSelected}
                   onChange={() => setExportSelected(true)}
                   className="mr-2"
@@ -207,7 +215,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 <span className="text-sm">Selected Objects ({selectedMeshes.length})</span>
               </label>
             </div>
-          </div>
+          </fieldset>
 
           {/* Format Selection */}
           <div className="form-group">
@@ -391,6 +399,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         {/* Footer */}
         <div className="dialog-footer p-6 border-t border-gray-200 flex justify-end space-x-3">
           <button
+            type="button"
             onClick={handleCancel}
             className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
             disabled={isExporting}
@@ -399,6 +408,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             {isExporting ? 'Cancel Export' : 'Cancel'}
           </button>
           <button
+            type="button"
             onClick={handleExport}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isExporting || !filename.trim()}

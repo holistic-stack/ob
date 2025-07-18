@@ -130,10 +130,10 @@ export class CSGBabylonNode extends BabylonJSNode {
       // Ensure we have proper Mesh instances for CSG operations
       if (!('geometry' in mesh)) {
         throw new Error(
-          `Child mesh ${(mesh as any).name || 'unknown'} is not a valid Mesh for CSG operations`
+          `Child mesh ${mesh.name || 'unknown'} is not a valid Mesh for CSG operations`
         );
       }
-      return mesh as any; // Type assertion for CSG operations
+      return mesh; // AbstractMesh is sufficient for CSG operations
     });
 
     switch (this.csgType) {
@@ -151,7 +151,7 @@ export class CSGBabylonNode extends BabylonJSNode {
   /**
    * Apply union operation to multiple meshes
    */
-  private async applyUnionOperation(meshes: any[]): Promise<AbstractMesh> {
+  private async applyUnionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug(`[UNION] Applying union operation to ${meshes.length} meshes`);
 
     // Start with the first mesh
@@ -174,7 +174,7 @@ export class CSGBabylonNode extends BabylonJSNode {
   /**
    * Apply difference operation to multiple meshes
    */
-  private async applyDifferenceOperation(meshes: any[]): Promise<AbstractMesh> {
+  private async applyDifferenceOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug(`[DIFFERENCE] Applying difference operation to ${meshes.length} meshes`);
 
     // Start with the first mesh
@@ -197,7 +197,7 @@ export class CSGBabylonNode extends BabylonJSNode {
   /**
    * Apply intersection operation to multiple meshes
    */
-  private async applyIntersectionOperation(meshes: any[]): Promise<AbstractMesh> {
+  private async applyIntersectionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
     logger.debug(`[INTERSECTION] Applying intersection operation to ${meshes.length} meshes`);
 
     // Start with the first mesh
@@ -290,17 +290,12 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Create a BabylonJS error specific to this node
    */
   private createError(code: string, message: string): BabylonJSError {
-    const error: BabylonJSError = {
+    return {
       code,
       message,
       nodeType: this.nodeType,
       timestamp: new Date(),
+      sourceLocation: this.sourceLocation,
     };
-
-    if (this.sourceLocation) {
-      (error as any).sourceLocation = this.sourceLocation;
-    }
-
-    return error;
   }
 }

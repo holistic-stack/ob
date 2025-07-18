@@ -43,9 +43,9 @@ export interface Operation<T = unknown> {
 }
 
 /**
- * Operation result with execution details
+ * Operation history record with execution details
  */
-export interface OperationResult<T = unknown> {
+export interface OperationHistoryRecord<T = unknown> {
   readonly id: string;
   readonly name: string;
   readonly timestamp: Date;
@@ -60,7 +60,7 @@ export interface OperationResult<T = unknown> {
  * Operation history state
  */
 export interface HistoryState {
-  readonly operations: readonly OperationResult[];
+  readonly operations: readonly OperationHistoryRecord[];
   readonly currentIndex: number;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
@@ -83,7 +83,7 @@ export interface ExecutionOptions {
  * automatic rollback capabilities for failed operations.
  */
 export class OperationHistoryService {
-  private operations: OperationResult[] = [];
+  private operations: OperationHistoryRecord[] = [];
   private currentIndex = -1;
   private readonly maxHistorySize: number;
 
@@ -108,7 +108,7 @@ export class OperationHistoryService {
       const operationResult = await operation.execute();
 
       if (saveToHistory) {
-        const operationRecord: OperationResult<T> = {
+        const operationRecord: OperationHistoryRecord<T> = {
           id: operation.id,
           name: operation.name,
           timestamp: operation.timestamp,
@@ -138,7 +138,7 @@ export class OperationHistoryService {
       }
 
       if (saveToHistory) {
-        const operationRecord: OperationResult = {
+        const operationRecord: OperationHistoryRecord = {
           id: operation.id,
           name: operation.name,
           timestamp: operation.timestamp,
@@ -156,8 +156,6 @@ export class OperationHistoryService {
         error: error instanceof Error ? error : new Error(String(error)),
       };
     }
-
-    return result;
   }
 
   /**
@@ -172,6 +170,13 @@ export class OperationHistoryService {
     }
 
     const operation = this.operations[this.currentIndex];
+    if (!operation) {
+      return {
+        success: false,
+        error: new Error('Operation not found'),
+      };
+    }
+
     logger.debug(`[UNDO] Undoing operation: ${operation.name}`);
 
     // For now, we don't have rollback functions stored in history
@@ -197,6 +202,13 @@ export class OperationHistoryService {
 
     this.currentIndex++;
     const operation = this.operations[this.currentIndex];
+    if (!operation) {
+      return {
+        success: false,
+        error: new Error('Operation not found'),
+      };
+    }
+
     logger.debug(`[REDO] Redoing operation: ${operation.name}`);
 
     return { success: true, data: undefined };
@@ -232,21 +244,21 @@ export class OperationHistoryService {
   /**
    * Get operation by ID
    */
-  getOperation(id: string): OperationResult | null {
+  getOperation(id: string): OperationHistoryRecord | null {
     return this.operations.find((op) => op.id === id) || null;
   }
 
   /**
    * Get recent operations
    */
-  getRecentOperations(count = 10): readonly OperationResult[] {
+  getRecentOperations(count = 10): readonly OperationHistoryRecord[] {
     return this.operations.slice(-count);
   }
 
   /**
    * Get failed operations
    */
-  getFailedOperations(): readonly OperationResult[] {
+  getFailedOperations(): readonly OperationHistoryRecord[] {
     return this.operations.filter((op) => !op.success);
   }
 
@@ -262,7 +274,7 @@ export class OperationHistoryService {
   /**
    * Create a transaction that can be rolled back as a unit
    */
-  async executeTransaction<T>(
+  async executeTransaction<_T>(
     operations: readonly Operation<unknown>[],
     options: ExecutionOptions = {}
   ): Promise<Result<readonly unknown[], Error>> {
@@ -289,7 +301,7 @@ export class OperationHistoryService {
 
       // Save transaction as a single operation in history
       if (options.saveToHistory !== false) {
-        const transactionRecord: OperationResult = {
+        const transactionRecord: OperationHistoryRecord = {
           id: `transaction-${Date.now()}`,
           name: `Transaction (${operations.length} operations)`,
           timestamp: new Date(),
@@ -313,11 +325,14 @@ export class OperationHistoryService {
 
       // Rollback all executed operations in reverse order
       for (let i = executedOperations.length - 1; i >= 0; i--) {
+        const operation = executedOperations[i];
+        if (!operation) continue;
+
         try {
-          await executedOperations[i].rollback();
+          await operation.rollback();
         } catch (rollbackError) {
           logger.error(
-            `[TRANSACTION] Failed to rollback operation: ${executedOperations[i].name}`,
+            `[TRANSACTION] Failed to rollback operation: ${operation.name}`,
             rollbackError
           );
         }
@@ -333,7 +348,7 @@ export class OperationHistoryService {
   /**
    * Add operation to history
    */
-  private addToHistory(operation: OperationResult): void {
+  private addToHistory(operation: OperationHistoryRecord): void {
     // Remove any operations after current index (when undoing and then executing new operation)
     if (this.currentIndex < this.operations.length - 1) {
       this.operations = this.operations.slice(0, this.currentIndex + 1);

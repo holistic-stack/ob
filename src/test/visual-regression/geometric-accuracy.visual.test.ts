@@ -56,8 +56,8 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
     await parser.init();
 
     // Create AST converter
-    astConverter = new ASTBridgeConverter(scene);
-    await astConverter.initialize();
+    astConverter = new ASTBridgeConverter();
+    await astConverter.initialize(scene);
 
     logger.debug('[SETUP] Geometric accuracy test environment initialized');
   });
@@ -94,15 +94,26 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       // Validate cube dimensions
       expect(babylonNodes).toHaveLength(1);
       const cubeNode = babylonNodes[0];
+      expect(cubeNode).toBeDefined();
+
+      if (!cubeNode) return;
 
       // Check that the node represents a cube with correct dimensions
-      expect(cubeNode.type).toBeDefined();
-      expect(cubeNode.metadata).toBeDefined();
+      expect(cubeNode.nodeType).toBeDefined();
 
-      // For a cube [4, 6, 8], we expect specific geometric properties
-      if (cubeNode.metadata?.parameters) {
-        const params = cubeNode.metadata.parameters;
-        expect(params.size).toEqual([4, 6, 8]);
+      // Generate mesh to access metadata
+      const meshResult = await cubeNode.generateMesh();
+      expect(meshResult.success).toBe(true);
+
+      if (meshResult.success) {
+        const mesh = meshResult.data;
+        expect(mesh.metadata).toBeDefined();
+
+        // For a cube [4, 6, 8], we expect specific geometric properties
+        if (mesh.metadata?.parameters) {
+          const params = mesh.metadata.parameters;
+          expect(params.size).toEqual([4, 6, 8]);
+        }
       }
 
       logger.debug('[CUBE_ACCURACY] Cube dimensions validated');
@@ -127,15 +138,26 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       // Validate sphere properties
       expect(babylonNodes).toHaveLength(1);
       const sphereNode = babylonNodes[0];
+      expect(sphereNode).toBeDefined();
 
-      expect(sphereNode.type).toBeDefined();
-      expect(sphereNode.metadata).toBeDefined();
+      if (!sphereNode) return;
 
-      // For a sphere with r=5, $fn=32, we expect specific properties
-      if (sphereNode.metadata?.parameters) {
-        const params = sphereNode.metadata.parameters;
-        expect(params.r).toBe(5);
-        expect(params.$fn).toBe(32);
+      expect(sphereNode.nodeType).toBeDefined();
+
+      // Generate mesh to access metadata
+      const sphereMeshResult = await sphereNode.generateMesh();
+      expect(sphereMeshResult.success).toBe(true);
+
+      if (sphereMeshResult.success) {
+        const mesh = sphereMeshResult.data;
+        expect(mesh.metadata).toBeDefined();
+
+        // For a sphere with r=5, $fn=32, we expect specific properties
+        if (mesh.metadata?.parameters) {
+          const params = mesh.metadata.parameters;
+          expect(params.radius).toBe(5);
+          expect(params.$fn).toBe(32);
+        }
       }
 
       logger.debug('[SPHERE_ACCURACY] Sphere radius and resolution validated');
@@ -160,17 +182,28 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       // Validate cylinder properties
       expect(babylonNodes).toHaveLength(1);
       const cylinderNode = babylonNodes[0];
+      expect(cylinderNode).toBeDefined();
 
-      expect(cylinderNode.type).toBeDefined();
-      expect(cylinderNode.metadata).toBeDefined();
+      if (!cylinderNode) return;
 
-      // For a cylinder with h=10, r1=3, r2=5, center=true
-      if (cylinderNode.metadata?.parameters) {
-        const params = cylinderNode.metadata.parameters;
-        expect(params.h).toBe(10);
-        expect(params.r1).toBe(3);
-        expect(params.r2).toBe(5);
-        expect(params.center).toBe(true);
+      expect(cylinderNode.nodeType).toBeDefined();
+
+      // Generate mesh to access metadata
+      const cylinderMeshResult = await cylinderNode.generateMesh();
+      expect(cylinderMeshResult.success).toBe(true);
+
+      if (cylinderMeshResult.success) {
+        const mesh = cylinderMeshResult.data;
+        expect(mesh.metadata).toBeDefined();
+
+        // For a cylinder with h=10, r1=3, r2=5, center=true
+        if (mesh.metadata?.parameters) {
+          const params = mesh.metadata.parameters;
+          expect(params.h).toBe(10);
+          expect(params.r1).toBe(3);
+          expect(params.r2).toBe(5);
+          expect(params.center).toBe(true);
+        }
       }
 
       logger.debug('[CYLINDER_ACCURACY] Cylinder dimensions validated');
@@ -418,6 +451,7 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       const booleanNodes = babylonNodes.filter(
         (node) =>
           node.metadata?.operation &&
+          typeof node.metadata.operation === 'string' &&
           ['union', 'difference', 'intersection'].includes(node.metadata.operation)
       );
 
@@ -451,13 +485,31 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       // All results should be structurally identical
       expect(results).toHaveLength(3);
 
+      const firstResult = results[0];
+      expect(firstResult).toBeDefined();
+
+      if (!firstResult) return;
+
       for (let i = 1; i < results.length; i++) {
-        expect(results[i]).toHaveLength(results[0].length);
+        const currentResult = results[i];
+        expect(currentResult).toBeDefined();
+
+        if (!currentResult) continue;
+
+        expect(currentResult).toHaveLength(firstResult.length);
 
         // Compare node types and metadata
-        for (let j = 0; j < results[i].length; j++) {
-          expect(results[i][j].type).toBe(results[0][j].type);
-          expect(results[i][j].metadata).toEqual(results[0][j].metadata);
+        for (let j = 0; j < currentResult.length; j++) {
+          const currentNode = currentResult[j];
+          const firstNode = firstResult[j];
+
+          expect(currentNode).toBeDefined();
+          expect(firstNode).toBeDefined();
+
+          if (!currentNode || !firstNode) continue;
+
+          expect(currentNode.type).toBe(firstNode.type);
+          expect(currentNode.metadata).toEqual(firstNode.metadata);
         }
       }
 
@@ -483,12 +535,22 @@ describe('Geometric Accuracy Visual Regression Tests', () => {
       // Validate precision is maintained
       expect(babylonNodes).toHaveLength(1);
       const cubeNode = babylonNodes[0];
+      expect(cubeNode).toBeDefined();
 
-      if (cubeNode.metadata?.parameters?.size) {
-        const size = cubeNode.metadata.parameters.size;
-        expect(size[0]).toBeCloseTo(0.001, 6);
-        expect(size[1]).toBeCloseTo(0.002, 6);
-        expect(size[2]).toBeCloseTo(0.003, 6);
+      if (!cubeNode) return;
+
+      // Generate mesh to access metadata
+      const precisionMeshResult = await cubeNode.generateMesh();
+      expect(precisionMeshResult.success).toBe(true);
+
+      if (precisionMeshResult.success) {
+        const mesh = precisionMeshResult.data;
+        if (mesh.metadata?.parameters?.size) {
+          const size = mesh.metadata.parameters.size;
+          expect(size[0]).toBeCloseTo(0.001, 6);
+          expect(size[1]).toBeCloseTo(0.002, 6);
+          expect(size[2]).toBeCloseTo(0.003, 6);
+        }
       }
 
       logger.debug('[PRECISION] Small dimension precision validated');

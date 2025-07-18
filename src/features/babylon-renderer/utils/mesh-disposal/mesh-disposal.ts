@@ -16,7 +16,17 @@
  * ```
  */
 
-import type { Material, Mesh, Scene } from '@babylonjs/core';
+import type { AbstractMesh, BaseTexture, Material, Scene } from '@babylonjs/core';
+
+// Interface for materials with texture properties
+interface MaterialWithTextures extends Material {
+  diffuseTexture?: BaseTexture;
+  normalTexture?: BaseTexture;
+  bumpTexture?: BaseTexture;
+  emissiveTexture?: BaseTexture;
+  specularTexture?: BaseTexture;
+}
+
 import type { Result } from '../../../../shared/types/result.types';
 
 /**
@@ -40,7 +50,17 @@ export interface MeshDisposalError {
 }
 
 /**
- * Mesh disposal statistics
+ * Mesh disposal statistics (mutable for internal use)
+ */
+interface MutableMeshDisposalStats {
+  meshesDisposed: number;
+  materialsDisposed: number;
+  texturesDisposed: number;
+  meshesSkipped: number;
+}
+
+/**
+ * Mesh disposal statistics (readonly for external use)
  */
 export interface MeshDisposalStats {
   readonly meshesDisposed: number;
@@ -87,7 +107,7 @@ const createMeshDisposalError = (
  * }
  * ```
  */
-export const isSystemMesh = (mesh: Mesh): boolean => {
+export const isSystemMesh = (mesh: AbstractMesh): boolean => {
   if (!mesh) return true;
 
   const meshName = (mesh.name || '').toLowerCase();
@@ -127,31 +147,36 @@ export const disposeMaterialSafely = (material: Material): number => {
 
   try {
     // Dispose common texture types
-    const materialAny = material as any;
+    const materialWithTextures = material as MaterialWithTextures;
 
-    if (materialAny.diffuseTexture) {
-      materialAny.diffuseTexture.dispose();
+    if (materialWithTextures.diffuseTexture) {
+      materialWithTextures.diffuseTexture.dispose();
       texturesDisposed++;
     }
 
-    if (materialAny.normalTexture) {
-      materialAny.normalTexture.dispose();
+    if (materialWithTextures.normalTexture) {
+      materialWithTextures.normalTexture.dispose();
       texturesDisposed++;
     }
 
-    if (materialAny.emissiveTexture) {
-      materialAny.emissiveTexture.dispose();
+    if (materialWithTextures.bumpTexture) {
+      materialWithTextures.bumpTexture.dispose();
       texturesDisposed++;
     }
 
-    if (materialAny.specularTexture) {
-      materialAny.specularTexture.dispose();
+    if (materialWithTextures.emissiveTexture) {
+      materialWithTextures.emissiveTexture.dispose();
+      texturesDisposed++;
+    }
+
+    if (materialWithTextures.specularTexture) {
+      materialWithTextures.specularTexture.dispose();
       texturesDisposed++;
     }
 
     // Dispose the material itself
     material.dispose();
-  } catch (error) {
+  } catch (_error) {
     // Continue disposal even if individual texture disposal fails
   }
 
@@ -176,7 +201,7 @@ export const disposeMaterialSafely = (material: Material): number => {
  */
 export const disposeMeshComprehensively = (
   scene: Scene,
-  mesh: Mesh
+  mesh: AbstractMesh
 ): Omit<MeshDisposalStats, 'meshesSkipped'> => {
   const stats = {
     meshesDisposed: 0,
@@ -200,7 +225,7 @@ export const disposeMeshComprehensively = (
     // Step 3: Dispose the mesh (this should dispose geometry too)
     mesh.dispose();
     stats.meshesDisposed = 1;
-  } catch (error) {
+  } catch (_error) {
     // Continue even if disposal fails for this mesh
   }
 
@@ -241,7 +266,7 @@ export const disposeMeshesComprehensively = (scene: Scene): MeshDisposalResult =
     // Use slice() to avoid iteration issues when modifying the array
     const allMeshes = scene.meshes ? scene.meshes.slice() : [];
 
-    const stats: MeshDisposalStats = {
+    const stats: MutableMeshDisposalStats = {
       meshesDisposed: 0,
       materialsDisposed: 0,
       texturesDisposed: 0,

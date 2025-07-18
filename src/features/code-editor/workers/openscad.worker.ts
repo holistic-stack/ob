@@ -1,8 +1,37 @@
 /**
- * OpenSCAD Language Worker
+ * @file openscad.worker.ts
+ * @description This Web Worker provides OpenSCAD language support for the Monaco Editor,
+ * offering syntax validation, auto-completion, and hover information.
  *
- * Web Worker for OpenSCAD language support in Monaco Editor,
- * providing syntax validation, auto-completion, and language services.
+ * @architectural_decision
+ * Running language services in a Web Worker offloads computationally intensive tasks
+ * from the main UI thread. This prevents the editor from freezing or becoming unresponsive
+ * during operations like code validation or complex auto-completion suggestions.
+ * The worker communicates with the main thread via `postMessage` and `addEventListener`,
+ * ensuring a smooth user experience.
+ *
+ * @example
+ * ```typescript
+ * // In your main application thread (e.g., in a Monaco editor setup file):
+ * import { configureMonacoEnvironment } from '../config/monaco-vite-config';
+ * import { registerOpenSCADLanguage, registerOpenSCADCompletionProvider } from '../services/openscad-language';
+ * import * as monaco from 'monaco-editor';
+ *
+ * // Configure Monaco to use the OpenSCAD worker
+ * configureMonacoEnvironment();
+ *
+ * // Register the language and completion provider
+ * registerOpenSCADLanguage(monaco);
+ * registerOpenSCADCompletionProvider(monaco);
+ *
+ * // The worker will be automatically loaded by Monaco when the 'openscad' language is used.
+ * ```
+ *
+ * @integration
+ * This worker is loaded by the Monaco Editor when the `openscad` language is set for a model.
+ * It exposes methods (`validateCode`, `getCompletions`, `getHoverInfo`) that the Monaco Editor
+ * calls to provide language-specific features. The `OpenSCADLanguageService` within the worker
+ * performs the actual logic for these features.
  */
 
 import * as monaco from 'monaco-editor';
@@ -23,12 +52,20 @@ interface WorkerContext {
 }
 
 /**
- * OpenSCAD language worker implementation
+ * @class OpenSCADWorker
+ * @description OpenSCAD language worker implementation.
+ * This class acts as the entry point for the Web Worker, handling communication with the main thread
+ * and delegating language service requests to `OpenSCADLanguageService`.
  */
 export class OpenSCADWorker {
   private readonly _ctx: WorkerContext;
   private readonly _languageService: OpenSCADLanguageService;
 
+  /**
+   * @constructor
+   * @description Creates a new instance of the `OpenSCADWorker`.
+   * @param {WorkerContext} ctx - The Web Worker context.
+   */
   constructor(ctx: WorkerContext) {
     this._ctx = ctx;
     this._languageService = new OpenSCADLanguageService();
@@ -37,14 +74,19 @@ export class OpenSCADWorker {
   }
 
   /**
-   * Get language service instance
+   * @method getLanguageService
+   * @description Gets the language service instance.
+   * @returns {OpenSCADLanguageService} The language service instance.
    */
   getLanguageService(): OpenSCADLanguageService {
     return this._languageService;
   }
 
   /**
-   * Validate OpenSCAD code
+   * @method validateCode
+   * @description Validates OpenSCAD code and returns a list of markers (errors, warnings).
+   * @param {string} code - The OpenSCAD code to validate.
+   * @returns {Promise<monaco.editor.IMarkerData[]>} A promise that resolves with an array of Monaco editor markers.
    */
   async validateCode(code: string): Promise<monaco.editor.IMarkerData[]> {
     try {
@@ -56,7 +98,11 @@ export class OpenSCADWorker {
   }
 
   /**
-   * Get completion suggestions
+   * @method getCompletions
+   * @description Gets completion suggestions for OpenSCAD code at a given position.
+   * @param {string} code - The OpenSCAD code.
+   * @param {{ line: number; column: number }} position - The cursor position.
+   * @returns {Promise<monaco.languages.CompletionItem[]>} A promise that resolves with an array of completion items.
    */
   async getCompletions(
     code: string,
@@ -71,7 +117,11 @@ export class OpenSCADWorker {
   }
 
   /**
-   * Get hover information
+   * @method getHoverInfo
+   * @description Gets hover information for OpenSCAD elements at a given position.
+   * @param {string} code - The OpenSCAD code.
+   * @param {{ line: number; column: number }} position - The cursor position.
+   * @returns {Promise<monaco.languages.Hover | null>} A promise that resolves with hover information, or null if none is available.
    */
   async getHoverInfo(
     code: string,
@@ -87,13 +137,21 @@ export class OpenSCADWorker {
 }
 
 /**
- * OpenSCAD language service implementation
+ * @class OpenSCADLanguageService
+ * @description OpenSCAD language service implementation.
+ * This class provides the core logic for OpenSCAD language features, including syntax validation,
+ * auto-completion, and hover information. It uses the `OPENSCAD_LANGUAGE_CONFIG` to provide
+ * accurate suggestions and diagnostics.
  */
 class OpenSCADLanguageService {
   private readonly _keywords: Set<string>;
   private readonly _builtinFunctions: Set<string>;
   private readonly _builtinModules: Set<string>;
 
+  /**
+   * @constructor
+   * @description Creates a new instance of the `OpenSCADLanguageService`.
+   */
   constructor() {
     this._keywords = new Set(OPENSCAD_LANGUAGE_CONFIG.keywords);
     this._builtinFunctions = new Set(OPENSCAD_LANGUAGE_CONFIG.builtinFunctions);
@@ -101,7 +159,10 @@ class OpenSCADLanguageService {
   }
 
   /**
-   * Validate OpenSCAD code and return diagnostics
+   * @method validateCode
+   * @description Validates OpenSCAD code and returns diagnostics.
+   * @param {string} code - The OpenSCAD code to validate.
+   * @returns {Promise<monaco.editor.IMarkerData[]>} A promise that resolves with an array of Monaco editor markers.
    */
   async validateCode(code: string): Promise<monaco.editor.IMarkerData[]> {
     const markers: monaco.editor.IMarkerData[] = [];
@@ -126,7 +187,11 @@ class OpenSCADLanguageService {
   }
 
   /**
-   * Get completion suggestions for OpenSCAD
+   * @method getCompletions
+   * @description Gets completion suggestions for OpenSCAD.
+   * @param {string} _code - The OpenSCAD code.
+   * @param {{ line: number; column: number }} position - The cursor position.
+   * @returns {Promise<monaco.languages.CompletionItem[]>} A promise that resolves with an array of completion items.
    */
   async getCompletions(
     _code: string,
@@ -181,11 +246,32 @@ class OpenSCADLanguageService {
       });
     });
 
+    // Add constant suggestions
+    if (OPENSCAD_LANGUAGE_CONFIG.constants && Array.isArray(OPENSCAD_LANGUAGE_CONFIG.constants)) {
+      OPENSCAD_LANGUAGE_CONFIG.constants.forEach((constant) => {
+        completions.push({
+          label: constant,
+          kind: monaco.languages.CompletionItemKind.Constant,
+          insertText: constant,
+          range: {
+            startLineNumber: position.line,
+            endLineNumber: position.line,
+            startColumn: position.column,
+            endColumn: position.column,
+          },
+        });
+      });
+    }
+
     return completions;
   }
 
   /**
-   * Get hover information for OpenSCAD elements
+   * @method getHoverInfo
+   * @description Gets hover information for OpenSCAD elements.
+   * @param {string} code - The OpenSCAD code.
+   * @param {{ line: number; column: number }} position - The cursor position.
+   * @returns {Promise<monaco.languages.Hover | null>} A promise that resolves with hover information, or null if none is available.
    */
   async getHoverInfo(
     code: string,
@@ -227,7 +313,12 @@ class OpenSCADLanguageService {
   }
 
   /**
-   * Validate syntax of a line
+   * @method _validateSyntax
+   * @description Validates the syntax of a single line of OpenSCAD code.
+   * @param {string} line - The line of code to validate.
+   * @param {number} lineNumber - The line number.
+   * @returns {monaco.editor.IMarkerData[]} An array of Monaco editor markers for syntax errors.
+   * @private
    */
   private _validateSyntax(line: string, lineNumber: number): monaco.editor.IMarkerData[] {
     const markers: monaco.editor.IMarkerData[] = [];
@@ -265,7 +356,12 @@ class OpenSCADLanguageService {
   }
 
   /**
-   * Validate semantics of a line
+   * @method _validateSemantics
+   * @description Validates the semantics of a single line of OpenSCAD code.
+   * @param {string} line - The line of code to validate.
+   * @param {number} lineNumber - The line number.
+   * @returns {monaco.editor.IMarkerData[]} An array of Monaco editor markers for semantic errors.
+   * @private
    */
   private _validateSemantics(line: string, lineNumber: number): monaco.editor.IMarkerData[] {
     const markers: monaco.editor.IMarkerData[] = [];
@@ -298,7 +394,12 @@ class OpenSCADLanguageService {
   }
 
   /**
-   * Get word at specific position in line
+   * @method _getWordAtPosition
+   * @description Gets the word at a specific position in a line.
+   * @param {string} line - The line of code.
+   * @param {number} column - The column number.
+   * @returns {string | null} The word at the specified position, or null if no word is found.
+   * @private
    */
   private _getWordAtPosition(line: string, column: number): string | null {
     const wordRegex = /\b\w+\b/g;
@@ -321,9 +422,14 @@ class OpenSCADLanguageService {
 }
 
 /**
- * Create and export worker instance
+ * @constant ctx
+ * @description The Web Worker context, cast to `WorkerContext`.
  */
 const ctx: WorkerContext = self as unknown as WorkerContext;
+/**
+ * @constant openscadWorker
+ * @description The singleton instance of `OpenSCADWorker`.
+ */
 const openscadWorker = new OpenSCADWorker(ctx);
 
 // Export worker for Monaco Editor

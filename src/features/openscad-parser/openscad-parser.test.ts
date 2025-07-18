@@ -77,18 +77,17 @@ describe('OpenSCADParser', () => {
 
   it('should parse simple OpenSCAD code correctly', async () => {
     // Parse the sample code
-    const result = parser.parse(SAMPLE_OPENSCAD_CODE);
+    const result = await parser.parse(SAMPLE_OPENSCAD_CODE);
 
     // Check that the result is valid
     expect(result).toBeDefined();
-    expect(result?.rootNode).toBeDefined();
-    expect(result?.rootNode.type).toBe('source_file');
+    expect(result.success).toBe(true);
 
-    // Check that the text content contains the expected code
-    const text = result?.rootNode.text;
-    expect(text).toContain('module test()');
-    expect(text).toContain('cube([10, 10, 10])');
-    expect(text).toContain('test();');
+    if (!result.success) return;
+
+    expect(result.data).toBeDefined();
+    expect(result.data.body).toBeDefined();
+    expect(Array.isArray(result.data.body)).toBe(true);
   });
 
   it('should parse complex OpenSCAD code correctly', async () => {

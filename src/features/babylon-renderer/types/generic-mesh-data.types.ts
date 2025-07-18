@@ -1,9 +1,490 @@
 /**
- * @file Generic Mesh Data Types
+ * @file generic-mesh-data.types.ts
+ * @description Renderer-agnostic mesh data structures enabling multi-backend 3D rendering
+ * support. This implements the abstract mesh layer that bridges OpenSCAD AST to multiple
+ * rendering backends (BabylonJS, Three.js future) while maintaining performance optimization
+ * and comprehensive debugging capabilities.
  *
- * Complete GenericMeshData interface for all OpenSCAD constructs with
- * material configuration types and metadata preservation for debugging
- * and editor integration. This implements Task 1.3 from the architecture.
+ * @architectural_decision
+ * **Renderer-Agnostic Design**: GenericMeshData provides a universal interface that
+ * abstracts away renderer-specific details, enabling:
+ * - **Multi-Backend Support**: Same mesh data can drive BabylonJS, Three.js, or custom renderers
+ * - **Future Extensibility**: New rendering backends can be added without changing core logic
+ * - **Serialization Support**: Complete mesh state can be cached, persisted, or transmitted
+ * - **Testing Flexibility**: Mesh generation can be tested without WebGL dependencies
+ * - **Performance Isolation**: Renderer-specific optimizations don't affect core data structures
+ *
+ * **Comprehensive Metadata System**: Rich metadata enables debugging, performance monitoring,
+ * editor integration, and sophisticated caching strategies while maintaining immutability.
+ *
+ * **OpenSCAD-Specific Features**: Material presets and metadata fields specifically designed
+ * for OpenSCAD modifiers (*, !, #, %) and parameter tracking for editor integration.
+ *
+ * @performance_characteristics
+ * **Memory Efficiency**:
+ * - **Typed Arrays**: Float32Array/Uint32Array for optimal memory layout and GPU transfer
+ * - **Immutable Sharing**: Readonly arrays prevent accidental mutations and enable sharing
+ * - **Lazy Computation**: Expensive properties (surface area, volume) computed on demand
+ * - **Cache-Friendly**: Sequential memory layout optimized for CPU cache performance
+ *
+ * **GPU Compatibility**:
+ * - **Direct Transfer**: Typed arrays can be directly uploaded to GPU buffers
+ * - **Interleaved Data**: Vertex attributes organized for optimal GPU access patterns
+ * - **Index Optimization**: Uint32Array indices support meshes with >65K vertices
+ * - **Normal Computation**: Pre-computed normals eliminate GPU computation overhead
+ *
+ * @example
+ * **Complete Mesh Generation Pipeline**:
+ * ```typescript
+ * import {
+ *   GenericMeshData,
+ *   GenericGeometry,
+ *   GenericMaterialConfig,
+ *   MATERIAL_PRESETS,
+ *   isGenericMeshData
+ * } from './generic-mesh-data.types';
+ * import { BoundingBox, Vector3, Matrix } from '@babylonjs/core';
+ *
+ * async function generateCubeMesh(
+ *   size: [number, number, number],
+ *   center: boolean = false
+ * ): Promise<GenericMeshData> {
+ *   const startTime = performance.now();
+ *   const [width, height, depth] = size;
+ *
+ *   // Generate cube geometry with optimized vertex layout
+ *   const geometry = createCubeGeometry(width, height, depth, center);
+ *
+ *   // Create material configuration for OpenSCAD default appearance
+ *   const material: GenericMaterialConfig = {
+ *     ...MATERIAL_PRESETS.DEFAULT,
+ *     diffuseColor: [0.8, 0.8, 0.8], // Light gray
+ *     metallicFactor: 0.1,
+ *     roughnessFactor: 0.8,
+ *   };
+ *
+ *   // Calculate transform matrix (identity for this example)
+ *   const transform = Matrix.Identity();
+ *
+ *   // Generate comprehensive metadata
+ *   const generationTime = performance.now() - startTime;
+ *   const metadata: GenericMeshMetadata = {
+ *     meshId: `cube_${Date.now()}`,
+ *     name: 'cube',
+ *     nodeType: 'cube',
+ *     vertexCount: geometry.vertexCount,
+ *     triangleCount: geometry.triangleCount,
+ *     boundingBox: geometry.boundingBox,
+ *     surfaceArea: calculateCubeSurfaceArea(width, height, depth),
+ *     volume: width * height * depth,
+ *     generationTime,
+ *     optimizationTime: 0,
+ *     memoryUsage: calculateMemoryUsage(geometry),
+ *     complexity: geometry.triangleCount, // Simple complexity metric
+ *     isOptimized: true,
+ *     hasErrors: false,
+ *     warnings: [],
+ *     debugInfo: {
+ *       dimensions: { width, height, depth },
+ *       centered: center,
+ *       algorithmUsed: 'box_primitive',
+ *     },
+ *     createdAt: new Date(),
+ *     lastModified: new Date(),
+ *     lastAccessed: new Date(),
+ *     childIds: [],
+ *     depth: 0,
+ *     openscadParameters: { size, center },
+ *     modifiers: [],
+ *     transformations: [],
+ *     csgOperations: [],
+ *   };
+ *
+ *   const meshData: GenericMeshData = {
+ *     id: metadata.meshId,
+ *     geometry,
+ *     material,
+ *     transform,
+ *     metadata,
+ *   };
+ *
+ *   // Validate generated mesh data
+ *   if (!isGenericMeshData(meshData)) {
+ *     throw new Error('Generated mesh data failed validation');
+ *   }
+ *
+ *   console.log(`Generated cube mesh: ${geometry.triangleCount} triangles in ${generationTime.toFixed(2)}ms`);
+ *   return meshData;
+ * }
+ *
+ * function createCubeGeometry(
+ *   width: number,
+ *   height: number,
+ *   depth: number,
+ *   center: boolean
+ * ): GenericGeometry {
+ *   // Calculate cube vertices (24 vertices for proper normals)
+ *   const vertices = generateCubeVertices(width, height, depth, center);
+ *   const indices = generateCubeIndices();
+ *   const normals = generateCubeNormals();
+ *   const uvs = generateCubeUVs();
+ *
+ *   // Calculate bounding box
+ *   const min = center
+ *     ? new Vector3(-width/2, -height/2, -depth/2)
+ *     : new Vector3(0, 0, 0);
+ *   const max = center
+ *     ? new Vector3(width/2, height/2, depth/2)
+ *     : new Vector3(width, height, depth);
+ *   const boundingBox = new BoundingBox(min, max);
+ *
+ *   return {
+ *     positions: new Float32Array(vertices),
+ *     indices: new Uint32Array(indices),
+ *     normals: new Float32Array(normals),
+ *     uvs: new Float32Array(uvs),
+ *     vertexCount: vertices.length / 3,
+ *     triangleCount: indices.length / 3,
+ *     boundingBox,
+ *   };
+ * }
+ * ```
+ *
+ * @example
+ * **Multi-Renderer Compatibility**:
+ * ```typescript
+ * import { GenericMeshData } from './generic-mesh-data.types';
+ * import { Mesh as BabylonMesh, Scene as BabylonScene } from '@babylonjs/core';
+ * import { Mesh as ThreeMesh, Scene as ThreeScene, BufferGeometry } from 'three';
+ *
+ * // Abstract renderer interface for multi-backend support
+ * interface MeshRenderer {
+ *   createMesh(data: GenericMeshData): Promise<any>;
+ *   updateMesh(mesh: any, data: GenericMeshData): Promise<void>;
+ *   disposeMesh(mesh: any): void;
+ * }
+ *
+ * // BabylonJS renderer implementation
+ * class BabylonMeshRenderer implements MeshRenderer {
+ *   constructor(private scene: BabylonScene) {}
+ *
+ *   async createMesh(data: GenericMeshData): Promise<BabylonMesh> {
+ *     const mesh = new BabylonMesh(data.id, this.scene);
+ *
+ *     // Create vertex data from generic geometry
+ *     const vertexData = new VertexData();
+ *     vertexData.positions = Array.from(data.geometry.positions);
+ *     vertexData.indices = Array.from(data.geometry.indices);
+ *     vertexData.normals = Array.from(data.geometry.normals || []);
+ *     vertexData.uvs = Array.from(data.geometry.uvs || []);
+ *
+ *     vertexData.applyToMesh(mesh);
+ *
+ *     // Apply material configuration
+ *     const material = new StandardMaterial(data.material.id, this.scene);
+ *     material.diffuseColor = new Color3(...data.material.diffuseColor);
+ *     material.alpha = data.material.alpha;
+ *     material.metallicFactor = data.material.metallicFactor;
+ *     material.roughness = data.material.roughnessFactor;
+ *     mesh.material = material;
+ *
+ *     // Apply transform
+ *     mesh.setPreTransformMatrix(data.transform);
+ *
+ *     // Store metadata for debugging and performance tracking
+ *     mesh.metadata = {
+ *       originalMeshData: data,
+ *       creationTime: Date.now(),
+ *       renderer: 'babylon',
+ *     };
+ *
+ *     return mesh;
+ *   }
+ *
+ *   async updateMesh(mesh: BabylonMesh, data: GenericMeshData): Promise<void> {
+ *     // Update vertex data
+ *     const vertexData = new VertexData();
+ *     vertexData.positions = Array.from(data.geometry.positions);
+ *     vertexData.indices = Array.from(data.geometry.indices);
+ *     vertexData.normals = Array.from(data.geometry.normals || []);
+ *
+ *     vertexData.applyToMesh(mesh, true); // Update existing mesh
+ *
+ *     // Update material properties
+ *     const material = mesh.material as StandardMaterial;
+ *     if (material) {
+ *       material.diffuseColor = new Color3(...data.material.diffuseColor);
+ *       material.alpha = data.material.alpha;
+ *     }
+ *
+ *     // Update transform
+ *     mesh.setPreTransformMatrix(data.transform);
+ *   }
+ *
+ *   disposeMesh(mesh: BabylonMesh): void {
+ *     mesh.dispose(false, true); // Dispose mesh and materials
+ *   }
+ * }
+ *
+ * // Three.js renderer implementation (future support)
+ * class ThreeMeshRenderer implements MeshRenderer {
+ *   constructor(private scene: ThreeScene) {}
+ *
+ *   async createMesh(data: GenericMeshData): Promise<ThreeMesh> {
+ *     // Create BufferGeometry from generic data
+ *     const geometry = new BufferGeometry();
+ *     geometry.setAttribute('position', new Float32BufferAttribute(data.geometry.positions, 3));
+ *     geometry.setIndex(new Uint32BufferAttribute(data.geometry.indices, 1));
+ *
+ *     if (data.geometry.normals) {
+ *       geometry.setAttribute('normal', new Float32BufferAttribute(data.geometry.normals, 3));
+ *     }
+ *
+ *     if (data.geometry.uvs) {
+ *       geometry.setAttribute('uv', new Float32BufferAttribute(data.geometry.uvs, 2));
+ *     }
+ *
+ *     // Create material from generic configuration
+ *     const material = new MeshStandardMaterial({
+ *       color: new Color().setRGB(...data.material.diffuseColor),
+ *       transparent: data.material.transparent,
+ *       opacity: data.material.alpha,
+ *       metalness: data.material.metallicFactor,
+ *       roughness: data.material.roughnessFactor,
+ *     });
+ *
+ *     const mesh = new ThreeMesh(geometry, material);
+ *     mesh.name = data.id;
+ *
+ *     // Apply transform matrix
+ *     mesh.matrix.fromArray(data.transform.asArray());
+ *     mesh.matrixAutoUpdate = false;
+ *
+ *     return mesh;
+ *   }
+ *
+ *   async updateMesh(mesh: ThreeMesh, data: GenericMeshData): Promise<void> {
+ *     // Update geometry
+ *     const geometry = mesh.geometry as BufferGeometry;
+ *     geometry.setAttribute('position', new Float32BufferAttribute(data.geometry.positions, 3));
+ *     geometry.setIndex(new Uint32BufferAttribute(data.geometry.indices, 1));
+ *     geometry.attributes.position.needsUpdate = true;
+ *
+ *     // Update material
+ *     const material = mesh.material as MeshStandardMaterial;
+ *     material.color.setRGB(...data.material.diffuseColor);
+ *     material.opacity = data.material.alpha;
+ *   }
+ *
+ *   disposeMesh(mesh: ThreeMesh): void {
+ *     mesh.geometry.dispose();
+ *     if (Array.isArray(mesh.material)) {
+ *       mesh.material.forEach(mat => mat.dispose());
+ *     } else {
+ *       mesh.material.dispose();
+ *     }
+ *   }
+ * }
+ *
+ * // Universal mesh management with renderer abstraction
+ * class UniversalMeshManager {
+ *   constructor(private renderer: MeshRenderer) {}
+ *
+ *   async createFromOpenSCAD(
+ *     openscadCode: string,
+ *     options: { enableOptimization?: boolean; targetTriangleCount?: number } = {}
+ *   ): Promise<any[]> {
+ *     // Parse OpenSCAD and convert to generic mesh data
+ *     const parseResult = await parseOpenSCAD(openscadCode);
+ *     if (!parseResult.success) {
+ *       throw new Error(`OpenSCAD parsing failed: ${parseResult.error.message}`);
+ *     }
+ *
+ *     const meshDataResults = await convertASTToMeshData(parseResult.data);
+ *     const meshes = [];
+ *
+ *     for (const meshData of meshDataResults) {
+ *       if (isGenericMeshData(meshData)) {
+ *         // Apply optimizations if requested
+ *         const optimizedData = options.enableOptimization
+ *           ? await optimizeMeshData(meshData, options.targetTriangleCount)
+ *           : meshData;
+ *
+ *         // Create mesh using the configured renderer
+ *         const mesh = await this.renderer.createMesh(optimizedData);
+ *         meshes.push(mesh);
+ *       }
+ *     }
+ *
+ *     return meshes;
+ *   }
+ * }
+ * ```
+ *
+ * @example
+ * **Performance Optimization and Caching**:
+ * ```typescript
+ * import { GenericMeshData, GenericMeshCollection } from './generic-mesh-data.types';
+ *
+ * class MeshDataCache {
+ *   private cache = new Map<string, GenericMeshData>();
+ *   private stats = { hits: 0, misses: 0, evictions: 0 };
+ *   private readonly maxCacheSize = 1000;
+ *
+ *   // Generate cache key from OpenSCAD parameters
+ *   private generateCacheKey(nodeType: string, parameters: Record<string, any>): string {
+ *     const paramString = JSON.stringify(parameters, Object.keys(parameters).sort());
+ *     return `${nodeType}_${this.hashString(paramString)}`;
+ *   }
+ *
+ *   private hashString(str: string): string {
+ *     let hash = 0;
+ *     for (let i = 0; i < str.length; i++) {
+ *       const char = str.charCodeAt(i);
+ *       hash = ((hash << 5) - hash) + char;
+ *       hash = hash & hash; // Convert to 32-bit integer
+ *     }
+ *     return hash.toString(36);
+ *   }
+ *
+ *   async getCachedMesh(
+ *     nodeType: string,
+ *     parameters: Record<string, any>,
+ *     generator: () => Promise<GenericMeshData>
+ *   ): Promise<GenericMeshData> {
+ *     const cacheKey = this.generateCacheKey(nodeType, parameters);
+ *
+ *     // Check cache first
+ *     const cached = this.cache.get(cacheKey);
+ *     if (cached) {
+ *       this.stats.hits++;
+ *       console.log(`Cache hit for ${nodeType}: ${this.getCacheHitRate().toFixed(1)}% hit rate`);
+ *
+ *       // Update access timestamp
+ *       cached.metadata.lastAccessed = new Date();
+ *       return cached;
+ *     }
+ *
+ *     // Cache miss - generate new mesh data
+ *     this.stats.misses++;
+ *     const startTime = performance.now();
+ *
+ *     const meshData = await generator();
+ *     const generationTime = performance.now() - startTime;
+ *
+ *     // Update metadata with cache information
+ *     const enhancedMeshData: GenericMeshData = {
+ *       ...meshData,
+ *       metadata: {
+ *         ...meshData.metadata,
+ *         generationTime,
+ *         debugInfo: {
+ *           ...meshData.metadata.debugInfo,
+ *           cacheKey,
+ *           cacheGeneration: true,
+ *         },
+ *       },
+ *     };
+ *
+ *     // Add to cache with eviction if necessary
+ *     if (this.cache.size >= this.maxCacheSize) {
+ *       this.evictOldestEntry();
+ *     }
+ *
+ *     this.cache.set(cacheKey, enhancedMeshData);
+ *
+ *     console.log(`Generated and cached ${nodeType} in ${generationTime.toFixed(2)}ms`);
+ *     return enhancedMeshData;
+ *   }
+ *
+ *   private evictOldestEntry(): void {
+ *     let oldestKey = '';
+ *     let oldestTime = Date.now();
+ *
+ *     for (const [key, meshData] of this.cache) {
+ *       const accessTime = meshData.metadata.lastAccessed.getTime();
+ *       if (accessTime < oldestTime) {
+ *         oldestTime = accessTime;
+ *         oldestKey = key;
+ *       }
+ *     }
+ *
+ *     if (oldestKey) {
+ *       this.cache.delete(oldestKey);
+ *       this.stats.evictions++;
+ *     }
+ *   }
+ *
+ *   getCacheHitRate(): number {
+ *     const total = this.stats.hits + this.stats.misses;
+ *     return total > 0 ? (this.stats.hits / total) * 100 : 0;
+ *   }
+ *
+ *   getStats(): typeof this.stats & { size: number; hitRate: number } {
+ *     return {
+ *       ...this.stats,
+ *       size: this.cache.size,
+ *       hitRate: this.getCacheHitRate(),
+ *     };
+ *   }
+ *
+ *   clear(): void {
+ *     this.cache.clear();
+ *     this.stats = { hits: 0, misses: 0, evictions: 0 };
+ *   }
+ * }
+ *
+ * // Usage with performance monitoring
+ * const meshCache = new MeshDataCache();
+ *
+ * async function generateOptimizedCube(size: number[]): Promise<GenericMeshData> {
+ *   return meshCache.getCachedMesh(
+ *     'cube',
+ *     { size },
+ *     () => generateCubeMesh(size as [number, number, number])
+ *   );
+ * }
+ *
+ * // Performance testing
+ * async function performanceTest() {
+ *   const testSizes = [
+ *     [1, 1, 1], [2, 2, 2], [1, 1, 1], // Repeat for cache hit
+ *     [3, 3, 3], [2, 2, 2], [4, 4, 4], [1, 1, 1], // Mixed
+ *   ];
+ *
+ *   for (const size of testSizes) {
+ *     const startTime = performance.now();
+ *     await generateOptimizedCube(size);
+ *     const endTime = performance.now();
+ *
+ *     console.log(`Size ${size}: ${(endTime - startTime).toFixed(2)}ms`);
+ *   }
+ *
+ *   const stats = meshCache.getStats();
+ *   console.log(`Final cache stats:`, stats);
+ *   console.log(`Cache efficiency: ${stats.hitRate.toFixed(1)}% hit rate`);
+ * }
+ * ```
+ *
+ * @technical_specifications
+ * **Geometry Data Layout**:
+ * - **Positions**: Float32Array with [x,y,z, x,y,z, ...] layout for CPU cache efficiency
+ * - **Indices**: Uint32Array supporting meshes up to 4.3 billion vertices
+ * - **Normals**: Float32Array with same layout as positions, pre-computed for GPU upload
+ * - **UVs**: Float32Array with [u,v, u,v, ...] layout for texture coordinates
+ * - **Colors**: Optional Float32Array with [r,g,b,a, r,g,b,a, ...] layout
+ *
+ * **Material System**:
+ * - **PBR Support**: Metallic-roughness workflow compatible with glTF 2.0 standard
+ * - **OpenSCAD Modifiers**: Built-in support for *, !, #, % modifier visual styles
+ * - **Texture References**: String-based texture paths for lazy loading and sharing
+ * - **Transparency**: Full alpha blending support with proper depth sorting hints
+ *
+ * **Metadata Optimization**:
+ * - **Lazy Computation**: Expensive properties computed only when accessed
+ * - **Serialization**: JSON-compatible structure for persistence and networking
+ * - **Debug Information**: Comprehensive tracking for development and debugging
+ * - **Performance Metrics**: Built-in timing and memory usage tracking
  */
 
 import type { BoundingBox, Matrix } from '@babylonjs/core';
@@ -280,7 +761,7 @@ export const isGenericMeshCollection = (obj: unknown): obj is GenericMeshCollect
     'id' in obj &&
     'meshes' in obj &&
     'metadata' in obj &&
-    Array.isArray((obj as any).meshes)
+    Array.isArray((obj as Record<string, unknown>).meshes)
   );
 };
 

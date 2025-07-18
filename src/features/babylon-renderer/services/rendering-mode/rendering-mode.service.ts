@@ -24,6 +24,12 @@ import {
   type Scene,
   StandardMaterial,
 } from '@babylonjs/core';
+
+// Extend StandardMaterial interface to include custom properties
+interface ExtendedStandardMaterial extends StandardMaterial {
+  _isPointsMode?: boolean;
+}
+
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -253,7 +259,7 @@ export class RenderingModeService {
     // Restore to solid rendering
     if (mesh.material instanceof StandardMaterial) {
       mesh.material.wireframe = false;
-      (mesh.material as any)._isPointsMode = false;
+      (mesh.material as ExtendedStandardMaterial)._isPointsMode = false;
     }
 
     // Ensure lighting is enabled if specified
@@ -322,7 +328,7 @@ export class RenderingModeService {
     pointsMaterial.wireframe = false;
 
     // Set a flag to track points mode (for testing purposes)
-    (pointsMaterial as any)._isPointsMode = true;
+    (pointsMaterial as ExtendedStandardMaterial)._isPointsMode = true;
 
     return {
       originalMesh: mesh,
@@ -488,7 +494,7 @@ export class RenderingModeService {
 
     // Points material
     const pointsMaterial = new StandardMaterial('default_points', this.scene);
-    (pointsMaterial as any)._isPointsMode = true;
+    (pointsMaterial as ExtendedStandardMaterial)._isPointsMode = true;
     pointsMaterial.pointSize = 2.0;
     this.modeMaterials.set('points', pointsMaterial);
 

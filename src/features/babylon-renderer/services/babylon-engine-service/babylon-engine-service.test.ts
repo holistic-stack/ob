@@ -88,8 +88,8 @@ describe('BabylonEngineService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('ENGINE_INITIALIZATION_FAILED');
-        expect(result.error.message).toContain('Engine initialization failed');
+        expect(result.error.code).toBe('INITIALIZATION_FAILED');
+        expect(result.error.message).toContain('initialization methods failed');
       }
     });
 

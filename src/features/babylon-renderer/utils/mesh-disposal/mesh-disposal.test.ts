@@ -151,35 +151,41 @@ describe('Mesh Disposal Utilities', () => {
   describe('disposeMeshesComprehensively', () => {
     it('should dispose all non-system meshes', () => {
       // Create regular meshes
-      const box1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 1 }, scene);
-      const box2 = BABYLON.MeshBuilder.CreateBox('box2', { size: 1 }, scene);
+      const _box1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 1 }, scene);
+      const _box2 = BABYLON.MeshBuilder.CreateBox('box2', { size: 1 }, scene);
 
       // Create system mesh
-      const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
+      const _ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
 
       const result = disposeMeshesComprehensively(scene);
 
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(2); // Only the boxes
-      expect(result.data?.meshesSkipped).toBe(1); // The ground
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(2); // Only the boxes
+        expect(result.data.meshesSkipped).toBe(1); // The ground
+      }
     });
 
     it('should handle empty scene', () => {
       const result = disposeMeshesComprehensively(scene);
 
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(0);
-      expect(result.data?.materialsDisposed).toBe(0);
-      expect(result.data?.texturesDisposed).toBe(0);
-      expect(result.data?.meshesSkipped).toBe(0);
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(0);
+        expect(result.data.materialsDisposed).toBe(0);
+        expect(result.data.texturesDisposed).toBe(0);
+        expect(result.data.meshesSkipped).toBe(0);
+      }
     });
 
     it('should return error for null scene', () => {
       const result = disposeMeshesComprehensively(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(MeshDisposalErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(MeshDisposalErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should dispose meshes with materials and textures', () => {
@@ -194,9 +200,11 @@ describe('Mesh Disposal Utilities', () => {
       const result = disposeMeshesComprehensively(scene);
 
       expect(result.success).toBe(true);
-      expect(result.data?.meshesDisposed).toBe(1);
-      expect(result.data?.materialsDisposed).toBe(1);
-      expect(result.data?.texturesDisposed).toBe(1);
+      if (result.success) {
+        expect(result.data.meshesDisposed).toBe(1);
+        expect(result.data.materialsDisposed).toBe(1);
+        expect(result.data.texturesDisposed).toBe(1);
+      }
     });
   });
 
@@ -205,15 +213,19 @@ describe('Mesh Disposal Utilities', () => {
       const result = disposeMeshesComprehensively(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.timestamp).toBeInstanceOf(Date);
+      if (!result.success) {
+        expect(result.error.timestamp).toBeInstanceOf(Date);
+      }
     });
 
     it('should provide meaningful error messages', () => {
       const result = disposeMeshesComprehensively(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBeTruthy();
-      expect(result.error?.message.length).toBeGreaterThan(0);
+      if (!result.success) {
+        expect(result.error.message).toBeTruthy();
+        expect(result.error.message.length).toBeGreaterThan(0);
+      }
     });
   });
 });

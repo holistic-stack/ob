@@ -1,47 +1,93 @@
 /**
- * @file Argument extraction utilities for OpenSCAD parser
+ * @file value-extractor.ts
+ * @description This module provides the `extractValue` function, a core utility for converting Tree-sitter
+ * CST nodes into a generic `ast.Value` representation. It handles various literal types (numbers, strings, booleans),
+ * vectors, ranges, and attempts to process simple expressions.
  *
- * This module provides utilities for extracting and converting function arguments
- * from Tree-sitter CST nodes into structured AST parameter objects. It handles
- * both positional and named arguments, supporting various OpenSCAD data types
- * including numbers, strings, booleans, vectors, ranges, and expressions.
+ * @architectural_decision
+ * The `extractValue` function is designed to be a versatile, low-level extractor that can interpret the raw
+ * Tree-sitter nodes into a more structured `ast.Value`. This `ast.Value` can then be further processed by
+ * other extractors (like `argument-extractor`) or directly used in AST nodes. It includes basic logic for
+ * handling unary and binary expressions, but defers complex expression evaluation to a dedicated evaluator.
+ * The inclusion of `variableScope` allows for basic identifier resolution during extraction.
  *
- * The argument extractor is a critical component of the AST generation process,
- * responsible for:
- * - Parsing function call arguments from CST nodes
- * - Converting raw values to typed ParameterValue objects
- * - Handling named vs positional argument patterns
- * - Supporting complex expressions and nested structures
- * - Providing error handling and recovery
- *
- * @example Basic usage
+ * @example
  * ```typescript
- * import { extractArguments } from './argument-extractor';
+ * import { extractValue } from './value-extractor';
+ * import { OpenscadParser } from '../../openscad-parser';
+ * import { SimpleErrorHandler } from '../../error-handling/simple-error-handler';
+ * import * as TreeSitter from 'web-tree-sitter';
  *
- * // Extract arguments from a function call like cube(10, center=true)
- * const args = extractArguments(argumentsNode);
- * // Returns: [
- * //   { value: 10 },                    // positional argument
- * //   { name: 'center', value: true }   // named argument
- * // ]
+ * async function demonstrateValueExtraction() {
+ *   const errorHandler = new SimpleErrorHandler();
+ *   const parser = new OpenscadParser(errorHandler);
+ *   await parser.init();
+ *
+ *   // Example 1: Extract a number literal
+ *   let code = '123.45';
+ *   let cst = parser.parseCST(code);
+ *   let valueNode = cst?.rootNode.namedChild(0); // Assuming '123.45' is the first node
+ *   if (valueNode) {
+ *     const value = extractValue(valueNode, code);
+ *     console.log('Number Value:', value); // Expected: { type: 'number', value: '123.45' }
+ *   }
+ *
+ *   // Example 2: Extract a string literal
+ *   code = '"hello world" ';
+ *   cst = parser.parseCST(code);
+ *   valueNode = cst?.rootNode.namedChild(0);
+ *   if (valueNode) {
+ *     const value = extractValue(valueNode, code);
+ *     console.log('String Value:', value); // Expected: { type: 'string', value: 'hello world' }
+ *   }
+ *
+ *   // Example 3: Extract a boolean literal
+ *   code = 'true';
+ *   cst = parser.parseCST(code);
+ *   valueNode = cst?.rootNode.namedChild(0);
+ *   if (valueNode) {
+ *     const value = extractValue(valueNode, code);
+ *     console.log('Boolean Value:', value); // Expected: { type: 'boolean', value: 'true' }
+ *   }
+ *
+ *   // Example 4: Extract a vector literal
+ *   code = '[1, 2, 3]';
+ *   cst = parser.parseCST(code);
+ *   valueNode = cst?.rootNode.namedChild(0);
+ *   if (valueNode) {
+ *     const value = extractValue(valueNode, code);
+ *     console.log('Vector Value:', value); // Expected: { type: 'vector', value: [...] }
+ *   }
+ *
+ *   // Example 5: Extract a simple binary expression (limited evaluation)
+ *   code = '1 + 2';
+ *   cst = parser.parseCST(code);
+ *   valueNode = cst?.rootNode.namedChild(0);
+ *   if (valueNode) {
+ *     const value = extractValue(valueNode, code);
+ *     console.log('Binary Expression Value:', value); // Expected: { type: 'number', value: 3 }
+ *   }
+ *
+ *   parser.dispose();
+ * }
+ *
+ * demonstrateValueExtraction();
  * ```
- *
- * @module argument-extractor
- * @since 0.1.0
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-
-// Note: Removed circular import - extractValue is defined in this file
+import type { ErrorHandler } from '../ast-types.js';
 
 /**
- * Extract text from a Tree-sitter node.
+ * @function getNodeText
+ * @description Extracts the raw text content from a Tree-sitter node.
+ * It prioritizes extracting from the original source code using byte offsets for accuracy,
+ * falling back to `node.text` if source code is not provided or extraction fails.
  *
- * @param node - The Tree-sitter node
- * @param sourceCode - The original source code (optional)
- * @returns The text for the node
+ * @param {TSNode} node - The Tree-sitter node from which to extract text.
+ * @param {string} [sourceCode] - The optional original source code string.
+ * @returns {string} The extracted text content of the node.
  */
 function getNodeText(node: TSNode, sourceCode?: string): string {
   if (sourceCode && node.startIndex !== undefined && node.endIndex !== undefined) {
@@ -59,9 +105,13 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
 }
 
 /**
- * Convert a Value to a ParameterValue
- * @param value The Value object to convert
- * @returns A ParameterValue object
+ * @function convertValueToParameterValue
+ * @description Converts a generic `ast.Value` object (as extracted by `value-extractor`)
+ * into a more specific `ast.ParameterValue` type, which is used in the AST.
+ * This function handles type coercion and conversion for numbers, booleans, strings, vectors, and ranges.
+ *
+ * @param {ast.Value | ast.ErrorNode} value - The generic value object or an error node to convert.
+ * @returns {ast.ParameterValue} The converted parameter value, or `null` if conversion is not possible.
  */
 function convertValueToParameterValue(value: ast.Value | ast.ErrorNode): ast.ParameterValue {
   if (value.type === 'error') {
@@ -598,9 +648,58 @@ function extractArgument(
 }
 
 /**
+ * Extract a vector literal from a vector_literal node
+ *
+ * @param vectorNode - The vector_literal node
+ * @param sourceCode - The original source code string
+ * @param variableScope - Optional variable scope for resolving identifiers
+ * @returns A vector value object or null if the vector is invalid
+ *
+ * @example
+ * ```typescript
+ * const vectorNode = parser.parse('[1, 2, 3]').rootNode.namedChild(0);
+ * const vector = extractVectorLiteral(vectorNode, '[1, 2, 3]');
+ * // Returns: { type: 'vector', value: [{ type: 'number', value: '1' }, ...] }
+ * ```
+ */
+function extractVectorLiteral(
+  vectorNode: TSNode,
+  sourceCode: string = '',
+  variableScope?: Map<string, ast.ParameterValue>
+): ast.VectorValue | null {
+  const values: ast.Value[] = [];
+
+  // Iterate over named children to skip syntax tokens like '[', ']', ','
+  for (let i = 0; i < vectorNode.namedChildCount; i++) {
+    const elementNode = vectorNode.namedChild(i);
+    if (elementNode) {
+      // Ensure child exists
+      const value = extractValue(elementNode, sourceCode, variableScope);
+      if (value) {
+        values.push(value);
+      }
+    }
+  }
+
+  // It's possible for an array like `[,,]` to parse with no actual values.
+  // Or if extractValue fails for all children. Default OpenSCAD behavior might be relevant here.
+  return { type: 'vector', value: values };
+}
+
+/**
  * Extract a value from a value node
- * @param valueNode The value node
+ *
+ * @param valueNode - The value node to extract from
+ * @param sourceCode - The original source code string
+ * @param variableScope - Optional variable scope for resolving identifiers
  * @returns A value object or null if the value is invalid
+ *
+ * @example
+ * ```typescript
+ * const numberNode = parser.parse('42').rootNode.namedChild(0);
+ * const value = extractValue(numberNode, '42');
+ * // Returns: { type: 'number', value: '42' }
+ * ```
  */
 export function extractValue(
   valueNode: TSNode,
@@ -684,8 +783,6 @@ export function extractValue(
               return { type: 'string', value: literalValue };
             } else if (typeof literalValue === 'number') {
               return { type: 'number', value: literalValue };
-            } else if (typeof literalValue === 'boolean') {
-              return { type: 'boolean', value: literalValue };
             }
           }
           // For other expression types, return as identifier
@@ -753,14 +850,6 @@ export function extractValue(
               !Number.isNaN(numericValue)
             ) {
               return { type: 'number', value: numericValue };
-            }
-          } else if (typeof operandValue === 'number') {
-            // Handle direct numeric values
-            if (operator === '-') {
-              return { type: 'number', value: -operandValue };
-            }
-            if (operator === '+') {
-              return { type: 'number', value: operandValue };
             }
           }
         }
@@ -905,35 +994,6 @@ export function extractValue(
       );
       return null;
   }
-}
-
-/**
- * Extract a vector literal from a vector_literal node
- * @param vectorNode The vector_literal node
- * @returns A vector value object or null if the vector is invalid
- */
-function extractVectorLiteral(
-  vectorNode: TSNode,
-  sourceCode: string = '',
-  variableScope?: Map<string, ast.ParameterValue>
-): ast.VectorValue | null {
-  const values: ast.Value[] = [];
-
-  // Iterate over named children to skip syntax tokens like '[', ']', ','
-  for (let i = 0; i < vectorNode.namedChildCount; i++) {
-    const elementNode = vectorNode.namedChild(i);
-    if (elementNode) {
-      // Ensure child exists
-      const value = extractValue(elementNode, sourceCode, variableScope);
-      if (value) {
-        values.push(value);
-      }
-    }
-  }
-
-  // It's possible for an array like `[,,]` to parse with no actual values.
-  // Or if extractValue fails for all children. Default OpenSCAD behavior might be relevant here.
-  return { type: 'vector', value: values };
 }
 
 /**

@@ -6,7 +6,7 @@ import { ExpressionVisitor } from '../../expression-visitor.js';
 import { UnaryExpressionVisitor } from './unary-expression-visitor.js';
 
 async function getExpressionNode(parser: OpenscadParser, code: string): Promise<TSNode | null> {
-  const tree = parser.parse(code);
+  const tree = parser.parseCST(code);
   if (!tree) return null;
 
   let unaryExprNode: TSNode | null = null;

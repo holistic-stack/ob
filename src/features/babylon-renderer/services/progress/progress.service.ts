@@ -57,11 +57,11 @@ export interface ProgressStage {
 export interface ProgressOperationConfig {
   readonly type: ProgressOperationType;
   readonly title: string;
-  readonly description?: string;
-  readonly total?: number; // For determinate progress
-  readonly stages?: readonly ProgressStage[]; // For multi-stage operations
-  readonly cancellable?: boolean;
-  readonly persistent?: boolean; // Persist across component re-renders
+  readonly description?: string | undefined;
+  readonly total?: number | undefined; // For determinate progress
+  readonly stages?: readonly ProgressStage[] | undefined; // For multi-stage operations
+  readonly cancellable?: boolean | undefined;
+  readonly persistent?: boolean | undefined; // Persist across component re-renders
 }
 
 /**
@@ -88,7 +88,7 @@ export interface ProgressOperation {
   readonly id: string;
   readonly config: ProgressOperationConfig;
   readonly state: ProgressState;
-  readonly abortController?: AbortController;
+  readonly abortController?: AbortController | undefined;
 }
 
 /**

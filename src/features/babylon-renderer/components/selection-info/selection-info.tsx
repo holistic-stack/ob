@@ -110,7 +110,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
   onSelectMesh,
   'data-testid': dataTestId = 'selection-info',
 }) => {
-  const { selectedMeshes, selectedMeshInfos, hoveredMesh, clearSelection } = useSelection(scene);
+  const { selectedMeshInfos, hoveredMesh, clearSelection } = useSelection(scene);
   const stats = useSelectionStats(scene);
 
   const handleClearSelection = () => {
@@ -139,6 +139,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
             <h3 className="text-sm font-semibold text-gray-800">Selection</h3>
             {stats.hasSelection && (
               <button
+                type="button"
                 onClick={handleClearSelection}
                 className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
                 data-testid="clear-selection-button"
@@ -196,6 +197,7 @@ export const SelectionInfo: React.FC<SelectionInfoProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-semibold text-blue-800">{mesh.name || mesh.id}</h4>
                   <button
+                    type="button"
                     onClick={() => handleMeshClick(mesh)}
                     className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded"
                     data-testid={`focus-mesh-${index}`}

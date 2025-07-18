@@ -1,8 +1,36 @@
 /**
- * Monaco Editor Vite Configuration
+ * @file monaco-vite-config.ts
+ * @description This file provides comprehensive configuration for integrating Monaco Editor
+ * with Vite, including OpenSCAD language support, worker configuration, and performance optimization.
+ * It follows functional programming patterns for creating and validating configurations.
  *
- * Comprehensive configuration for vite-plugin-monaco-editor with OpenSCAD language support,
- * worker configuration, and performance optimization following functional programming patterns.
+ * @architectural_decision
+ * This module centralizes all Monaco Editor-related configurations for the Vite build process.
+ * By providing functions to create, validate, and retrieve configurations based on the environment,
+ * it ensures consistency and reduces boilerplate. The use of `Result` types for validation
+ * promotes robust error handling. The separation of concerns between configuration, validation,
+ * and environment-specific settings makes the integration flexible and maintainable.
+ *
+ * @example
+ * ```typescript
+ * // vite.config.ts
+ * import { defineConfig } from 'vite';
+ * import react from '@vitejs/plugin-react';
+ * import monacoEditorPlugin from 'vite-plugin-monaco-editor';
+ * import { createViteMonacoPlugin } from './src/features/code-editor/config/monaco-vite-config.ts';
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     react(),
+ *     monacoEditorPlugin(createViteMonacoPlugin()),
+ *   ],
+ * });
+ * ```
+ *
+ * @integration
+ * This configuration is primarily consumed by `vite.config.ts` to set up the Monaco Editor plugin.
+ * It ensures that the OpenSCAD language worker is correctly registered and that the editor is
+ * optimized for the target environment (development or production).
  */
 
 import { createLogger } from '../../../shared/services/logger.service.js';
@@ -12,7 +40,8 @@ import { tryCatch } from '../../../shared/utils/functional/result.js';
 const logger = createLogger('MonacoViteConfig');
 
 /**
- * Custom worker configuration
+ * @interface CustomWorker
+ * @description Defines the structure for a custom Monaco Editor worker.
  */
 export interface CustomWorker {
   readonly label: string;
@@ -20,7 +49,8 @@ export interface CustomWorker {
 }
 
 /**
- * Monaco Editor plugin configuration options
+ * @interface MonacoEditorConfig
+ * @description Defines the configuration options for the Monaco Editor plugin.
  */
 export interface MonacoEditorConfig {
   readonly languageWorkers?: ReadonlyArray<string>;
@@ -34,7 +64,8 @@ export interface MonacoEditorConfig {
 }
 
 /**
- * Default Monaco Editor configuration
+ * @constant DEFAULT_CONFIG
+ * @description The default configuration for the Monaco Editor plugin.
  */
 const DEFAULT_CONFIG: Required<MonacoEditorConfig> = {
   languageWorkers: ['editorWorkerService', 'typescript', 'json', 'html', 'css', 'openscad'],
@@ -53,7 +84,10 @@ const DEFAULT_CONFIG: Required<MonacoEditorConfig> = {
 };
 
 /**
- * Create Monaco Editor configuration with defaults and custom options
+ * @function createMonacoEditorConfig
+ * @description Creates a Monaco Editor configuration object with default values and custom options.
+ * @param {Partial<MonacoEditorConfig>} [options={}] - Optional configuration overrides.
+ * @returns {Required<MonacoEditorConfig>} A complete Monaco Editor configuration object.
  */
 export const createMonacoEditorConfig = (
   options: Partial<MonacoEditorConfig> = {}
@@ -69,14 +103,18 @@ export const createMonacoEditorConfig = (
 };
 
 /**
- * Monaco configuration interface for validation
+ * @interface MonacoConfigValidation
+ * @description Interface for validating Monaco Editor configuration.
  */
 export interface MonacoConfigValidation {
   readonly [key: string]: unknown;
 }
 
 /**
- * Validate Monaco Editor configuration
+ * @function validateMonacoConfig
+ * @description Validates the Monaco Editor configuration.
+ * @param {MonacoConfigValidation} config - The configuration object to validate.
+ * @returns {Result<void, string>} A `Result` indicating success or a validation error message.
  */
 export const validateMonacoConfig = (config: MonacoConfigValidation): Result<void, string> => {
   return tryCatch(
@@ -154,7 +192,9 @@ export const validateMonacoConfig = (config: MonacoConfigValidation): Result<voi
 };
 
 /**
- * Create optimized Monaco Editor configuration for development
+ * @function createDevMonacoConfig
+ * @description Creates an optimized Monaco Editor configuration for development.
+ * @returns {Required<MonacoEditorConfig>} A development-optimized configuration object.
  */
 export const createDevMonacoConfig = (): Required<MonacoEditorConfig> => {
   return createMonacoEditorConfig({
@@ -165,7 +205,9 @@ export const createDevMonacoConfig = (): Required<MonacoEditorConfig> => {
 };
 
 /**
- * Create optimized Monaco Editor configuration for production
+ * @function createProdMonacoConfig
+ * @description Creates an optimized Monaco Editor configuration for production.
+ * @returns {Required<MonacoEditorConfig>} A production-optimized configuration object.
  */
 export const createProdMonacoConfig = (): Required<MonacoEditorConfig> => {
   return createMonacoEditorConfig({
@@ -176,7 +218,10 @@ export const createProdMonacoConfig = (): Required<MonacoEditorConfig> => {
 };
 
 /**
- * Get Monaco Editor configuration based on environment
+ * @function getMonacoConfigForEnvironment
+ * @description Gets the Monaco Editor configuration based on the environment.
+ * @param {boolean} [isDevelopment=process.env.NODE_ENV === 'development'] - Whether the current environment is development.
+ * @returns {Required<MonacoEditorConfig>} The appropriate configuration object for the environment.
  */
 export const getMonacoConfigForEnvironment = (
   isDevelopment: boolean = process.env.NODE_ENV === 'development'
@@ -185,7 +230,11 @@ export const getMonacoConfigForEnvironment = (
 };
 
 /**
- * Create Vite plugin configuration for Monaco Editor
+ * @function createViteMonacoPlugin
+ * @description Creates a Vite plugin configuration for Monaco Editor.
+ * @param {Partial<MonacoEditorConfig>} [options={}] - Optional configuration overrides.
+ * @returns {object} A configuration object compatible with `vite-plugin-monaco-editor`.
+ * @throws {Error} If the Monaco configuration is invalid.
  */
 export const createViteMonacoPlugin = (options: Partial<MonacoEditorConfig> = {}) => {
   const config = createMonacoEditorConfig(options);
@@ -211,7 +260,8 @@ export const createViteMonacoPlugin = (options: Partial<MonacoEditorConfig> = {}
 };
 
 /**
- * Monaco Editor worker paths configuration
+ * @constant MONACO_WORKER_PATHS
+ * @description Defines the paths for Monaco Editor workers.
  */
 export const MONACO_WORKER_PATHS = {
   editorWorkerService: 'monaco-editor/esm/vs/editor/editor.worker.js',
@@ -223,7 +273,8 @@ export const MONACO_WORKER_PATHS = {
 } as const;
 
 /**
- * Monaco Editor environment configuration
+ * @constant MONACO_ENVIRONMENT_CONFIG
+ * @description Defines the Monaco Editor environment configuration, including worker URL resolution.
  */
 export const MONACO_ENVIRONMENT_CONFIG = {
   getWorkerUrl: (_moduleId: string, label: string) => {
@@ -244,7 +295,9 @@ export const MONACO_ENVIRONMENT_CONFIG = {
 };
 
 /**
- * Configure Monaco Editor environment for runtime
+ * @function configureMonacoEnvironment
+ * @description Configures the Monaco Editor environment for runtime.
+ * @returns {Result<void, string>} A `Result` indicating success or an error message.
  */
 export const configureMonacoEnvironment = (): Result<void, string> => {
   return tryCatch(
@@ -266,7 +319,9 @@ export const configureMonacoEnvironment = (): Result<void, string> => {
 };
 
 /**
- * Validate Monaco Editor plugin installation
+ * @function validateMonacoInstallation
+ * @description Validates the Monaco Editor plugin installation.
+ * @returns {Result<void, string>} A `Result` indicating success or an error message.
  */
 export const validateMonacoInstallation = (): Result<void, string> => {
   return tryCatch(

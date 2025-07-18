@@ -1,73 +1,71 @@
 /**
- * @file CSG operations visitor for OpenSCAD parser
- *
- * This module implements the CSGVisitor class, which specializes in processing
+ * @file csg-visitor.ts
+ * @description This file implements the `CSGVisitor` class, which specializes in processing
  * Constructive Solid Geometry (CSG) operations and converting them to structured
  * AST representations. CSG operations are fundamental to 3D modeling, allowing
  * complex shapes to be created by combining simpler geometric primitives.
  *
- * The CSGVisitor handles all CSG operations:
- * - **Boolean Operations**: union, difference, intersection
- * - **Geometric Operations**: hull (convex hull), minkowski (Minkowski sum)
- * - **Advanced Operations**: Support for nested CSG hierarchies
+ * @architectural_decision
+ * The `CSGVisitor` is a specialized visitor within the composite visitor pattern, dedicated to
+ * handling CSG operations (`union`, `difference`, `intersection`, `hull`, `minkowski`).
+ * Like the `TransformVisitor`, it collaborates with the `CompositeVisitor` to process its
+ * child nodes, which is essential for parsing the hierarchical structure of CSG trees.
+ * This delegation allows the `CSGVisitor` to focus solely on the logic of CSG operations,
+ * while the `CompositeVisitor` handles the parsing of the children, which could be primitives,
+ * transformations, or even other CSG operations.
  *
- * Key features:
- * - **Child Processing**: Manages hierarchical CSG operations with multiple child objects
- * - **Block Handling**: Processes both single statements and block statements with multiple children
- * - **Recursive Processing**: Supports nested CSG operations for complex geometries
- * - **Error Recovery**: Graceful handling of malformed CSG operations
- * - **Type Safety**: Validates CSG operation types and provides appropriate AST nodes
- * - **Location Tracking**: Maintains source location information for debugging
- *
- * The visitor implements a dual processing strategy:
- * 1. **Accessor Expressions**: For simple CSG operations without explicit children
- * 2. **Module Instantiations**: For CSG operations with child objects in blocks
- *
- * CSG operation patterns supported:
- * - **Simple Operations**: `union()` - CSG operation without explicit children
- * - **Block Operations**: `union() { cube(5); sphere(3); }` - multiple child objects
- * - **Single Child**: `difference() cube(10)` - single child object
- * - **Nested Operations**: `union() { difference() { cube(10); sphere(5); } }` - nested CSG
- *
- * @example Basic CSG processing
+ * @example
  * ```typescript
  * import { CSGVisitor } from './csg-visitor';
+ * import { CompositeVisitor } from './composite-visitor';
+ * import { PrimitiveVisitor } from './primitive-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new CSGVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'difference() { cube(10); sphere(5); }';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process union operation
- * const unionNode = visitor.visitModuleInstantiation(unionCST);
- * // Returns: { type: 'union', children: [cubeNode, sphereNode] }
+ *   // 2. Create an error handler and visitors
+ *   const errorHandler = new ErrorHandler();
+ *   const primitiveVisitor = new PrimitiveVisitor(sourceCode, errorHandler);
+ *   const csgVisitor = new CSGVisitor(sourceCode, undefined, errorHandler);
+ *   const compositeVisitor = new CompositeVisitor([primitiveVisitor, csgVisitor], errorHandler);
+ *   csgVisitor.setCompositeVisitor(compositeVisitor);
  *
- * // Process difference operation
- * const differenceNode = visitor.visitModuleInstantiation(differenceCST);
- * // Returns: { type: 'difference', children: [baseNode, subtractNode] }
+ *   // 3. Visit the relevant CST node
+ *   const moduleInstantiationNode = tree.rootNode.firstChild!;
+ *   const astNode = csgVisitor.visitModuleInstantiation(moduleInstantiationNode);
+ *
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "difference",
+ *   //   "children": [
+ *   //     { "type": "cube", "size": 10, ... },
+ *   //     { "type": "sphere", "radius": 5, ... }
+ *   //   ],
+ *   //   ...
+ *   // }
+ *
+ *   // 5. Clean up
+ *   parser.delete();
+ * }
+ *
+ * main();
  * ```
  *
- * @example Complex CSG hierarchies
- * ```typescript
- * // For OpenSCAD code: union() { cube(10); difference() { sphere(8); cube(5); } }
- * const complexCSG = visitor.visitModuleInstantiation(complexCST);
- * // Returns nested CSG structure with union containing cube and difference
- *
- * // For intersection: intersection() { cube([20, 20, 20]); sphere(15); }
- * const intersectionNode = visitor.visitModuleInstantiation(intersectionCST);
- * // Returns: { type: 'intersection', children: [cubeNode, sphereNode] }
- * ```
- *
- * @example Advanced geometric operations
- * ```typescript
- * // Hull operation: hull() { translate([10, 0, 0]) cube(5); sphere(3); }
- * const hullNode = visitor.visitModuleInstantiation(hullCST);
- * // Returns: { type: 'hull', children: [translatedCube, sphereNode] }
- *
- * // Minkowski sum: minkowski() { cube(2); sphere(1); }
- * const minkowskiNode = visitor.visitModuleInstantiation(minkowskiCST);
- * // Returns: { type: 'minkowski', children: [cubeNode, sphereNode] }
- * ```
- *
- * @module csg-visitor
- * @since 0.1.0
+ * @integration
+ * The `CSGVisitor` is a core part of the `CompositeVisitor`'s collection of visitors.
+ * It is responsible for identifying and processing all CSG operations from the CST.
+ * When it encounters a CSG operation, it creates the corresponding AST node (e.g., `DifferenceNode`)
+ * and then recursively calls the `CompositeVisitor` to process the children of the operation.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -80,13 +78,19 @@ import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for CSG operations (union, difference, intersection, etc.)
- *
  * @class CSGVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for CSG operations (union, difference, intersection, etc.).
  */
 export class CSGVisitor extends BaseASTVisitor {
+  /**
+   * @constructor
+   * @description Creates a new `CSGVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ASTVisitor | undefined} compositeVisitor - The composite visitor for delegating child processing.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} [variableScope] - The current variable scope.
+   */
   constructor(
     source: string,
     private compositeVisitor: ASTVisitor | undefined,
@@ -97,26 +101,28 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Set the composite visitor for delegating child node processing
-   * This is needed to resolve circular dependency issues during visitor creation
+   * @method setCompositeVisitor
+   * @description Sets the composite visitor for delegating child node processing.
+   * This is needed to resolve circular dependency issues during visitor creation.
+   * @param {ASTVisitor} compositeVisitor - The composite visitor instance.
    */
   setCompositeVisitor(compositeVisitor: ASTVisitor): void {
     this.compositeVisitor = compositeVisitor;
   }
 
   /**
-   * Mock children for testing purposes
-   * This property is only used in tests and should not be used in production code
+   * @property {Record<string, ast.ASTNode[]>} mockChildren
+   * @description Mock children for testing purposes.
+   * This property is only used in tests and should not be used in production code.
+   * @deprecated
    */
   mockChildren: Record<string, ast.ASTNode[]> = {};
 
   /**
-   * Override visitStatement to only handle CSG-related statements
-   * This prevents the CSGVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The CSG AST node or null if this is not a CSG statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle CSG-related statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The CSG AST node, or null if this is not a CSG statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -136,18 +142,22 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Check if a function name is a supported CSG operation
-   * @param functionName The function name to check
-   * @returns True if the function is a CSG operation
+   * @method isSupportedCSGFunction
+   * @description Checks if a function name is a supported CSG operation.
+   * @param {string} functionName - The function name to check.
+   * @returns {boolean} True if the function is a CSG operation.
+   * @private
    */
   private isSupportedCSGFunction(functionName: string): boolean {
     return ['union', 'difference', 'intersection', 'hull', 'minkowski'].includes(functionName);
   }
 
   /**
-   * Extract function name from a module instantiation node
-   * @param node The module instantiation node
-   * @returns The function name or empty string if not found
+   * @method extractFunctionName
+   * @description Extracts the function name from a module instantiation node.
+   * @param {TSNode} node - The module instantiation node.
+   * @returns {string} The function name, or an empty string if not found.
+   * @private
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
@@ -157,11 +167,13 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a specific function
-   * @param node The node to process
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The AST node or null if the function is not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a specific function.
+   * @param {TSNode} node - The node to process.
+   * @param {string} functionName - The name of the function.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.ASTNode | null} The AST node, or null if the function is not supported.
+   * @protected
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -194,9 +206,11 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an accessor expression node
-   * @param node The node to visit
-   * @returns The AST node
+   * @method visitAccessorExpression
+   * @description Visits an accessor expression node.
+   * @param {TSNode} node - The node to visit.
+   * @returns {ast.ASTNode | null} The AST node.
+   * @override
    */
   override visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     try {
@@ -241,9 +255,11 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a module instantiation node
-   * @param node The node to visit
-   * @returns The AST node
+   * @method visitModuleInstantiation
+   * @description Visits a module instantiation node.
+   * @param {TSNode} node - The node to visit.
+   * @returns {ast.ASTNode | null} The AST node.
+   * @override
    */
   override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     try {
@@ -282,10 +298,12 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a union node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The union AST node
+   * @method createUnionNode
+   * @description Creates a union node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.UnionNode | null} The union AST node.
+   * @private
    */
   private createUnionNode(node: TSNode, _args: ast.Parameter[]): ast.UnionNode | null {
     // Extract children - look for block node in different ways
@@ -334,10 +352,12 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a difference node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The difference AST node
+   * @method createDifferenceNode
+   * @description Creates a difference node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.DifferenceNode | null} The difference AST node.
+   * @private
    */
   private createDifferenceNode(node: TSNode, _args: ast.Parameter[]): ast.DifferenceNode | null {
     // Extract children - look for block node in different ways
@@ -385,10 +405,12 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an intersection node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The intersection AST node
+   * @method createIntersectionNode
+   * @description Creates an intersection node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.IntersectionNode | null} The intersection AST node.
+   * @private
    */
   private createIntersectionNode(
     node: TSNode,
@@ -439,10 +461,12 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a hull node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The hull AST node
+   * @method createHullNode
+   * @description Creates a hull node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.HullNode | null} The hull AST node.
+   * @private
    */
   private createHullNode(node: TSNode, _args: ast.Parameter[]): ast.HullNode | null {
     // Extract children
@@ -476,10 +500,12 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a minkowski node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The minkowski AST node
+   * @method createMinkowskiNode
+   * @description Creates a minkowski node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.MinkowskiNode | null} The minkowski AST node.
+   * @private
    */
   private createMinkowskiNode(node: TSNode, _args: ast.Parameter[]): ast.MinkowskiNode | null {
     // Extract children
@@ -513,9 +539,11 @@ export class CSGVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a call expression node
-   * @param node The node to visit
-   * @returns The AST node
+   * @method visitCallExpression
+   * @description Visits a call expression node.
+   * @param {TSNode} node - The node to visit.
+   * @returns {ast.ASTNode | null} The AST node.
+   * @override
    */
   override visitCallExpression(node: TSNode): ast.ASTNode | null {
     // Extract function name

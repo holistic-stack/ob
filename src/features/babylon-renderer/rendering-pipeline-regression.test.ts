@@ -83,7 +83,9 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
       // Dispose existing meshes
       const disposalResult = disposeMeshesComprehensively(scene);
       expect(disposalResult.success).toBe(true);
-      expect(disposalResult.data?.meshesDisposed).toBe(1);
+      if (disposalResult.success) {
+        expect(disposalResult.data.meshesDisposed).toBe(1);
+      }
 
       // Force scene refresh after disposal
       const refreshResult = forceSceneRefresh(engine, scene);
@@ -113,7 +115,7 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
       // Verify final state
       const userMeshes = scene.meshes.filter((m) => !m.name.includes('light'));
       expect(userMeshes.length).toBe(1);
-      expect(userMeshes[0].name).toBe('sphere');
+      expect(userMeshes[0]?.name).toBe('sphere');
     });
 
     it('should handle rapid shape changes with continuous camera movement', () => {
@@ -235,7 +237,7 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
 
       for (let i = 0; i < extendedOperations; i++) {
         // Create mesh
-        const mesh = BABYLON.MeshBuilder.CreateSphere(`sphere_${i}`, { diameter: 3 }, scene);
+        const _mesh = BABYLON.MeshBuilder.CreateSphere(`sphere_${i}`, { diameter: 3 }, scene);
         totalMeshesCreated++;
 
         // Brief camera movement
@@ -273,8 +275,8 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
       // REGRESSION TEST: Pipeline should be resilient to individual failures
 
       // Create meshes with potential disposal issues
-      const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 5 }, scene);
-      const mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 5 }, scene);
+      const _mesh1 = BABYLON.MeshBuilder.CreateBox('box1', { size: 5 }, scene);
+      const _mesh2 = BABYLON.MeshBuilder.CreateSphere('sphere1', { diameter: 5 }, scene);
 
       // Simulate camera movement
       camera.alpha = Math.PI / 4;
@@ -307,7 +309,7 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
       expect(invalidRefreshResult.success).toBe(false);
 
       // Valid operations should still work after invalid ones
-      const mesh = BABYLON.MeshBuilder.CreateBox('validBox', { size: 5 }, scene);
+      const _mesh = BABYLON.MeshBuilder.CreateBox('validBox', { size: 5 }, scene);
 
       const validClearResult = performCompleteBufferClearing(engine, scene);
       expect(validClearResult.success).toBe(true);

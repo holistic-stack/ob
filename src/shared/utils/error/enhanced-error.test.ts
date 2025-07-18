@@ -2,7 +2,7 @@
  * @file Tests for Enhanced Error Utilities
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   createEnhancedError,
   createErrorResult,
@@ -124,7 +124,7 @@ describe('EnhancedError', () => {
       });
 
       const formatted = error.getFormattedMessage();
-      expect(formatted).toContain('Source: "' + 'a'.repeat(100) + '..."');
+      expect(formatted).toContain(`Source: "${'a'.repeat(100)}..."`);
     });
   });
 

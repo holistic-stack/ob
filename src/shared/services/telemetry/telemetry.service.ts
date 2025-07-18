@@ -3,9 +3,18 @@
  *
  * Provides comprehensive telemetry collection for production monitoring
  * including error tracking, performance metrics, user interactions, and
- * system health monitoring.
+ * system health monitoring. This service follows bulletproof-react architecture
+ * patterns and uses functional programming principles with Result<T,E> error handling.
  *
- * @example
+ * Key Features:
+ * - Error tracking with context and stack traces
+ * - Performance metrics collection with <16ms render targets
+ * - User interaction tracking for UX analytics
+ * - Configurable data collection with privacy controls
+ * - Batch processing and retry mechanisms for reliability
+ * - Type-safe event interfaces with strict TypeScript compliance
+ *
+ * @example Basic Usage
  * ```typescript
  * import { TelemetryService } from './telemetry.service';
  *
@@ -15,15 +24,31 @@
  *   enableInDevelopment: false,
  * });
  *
- * // Track errors
- * telemetry.trackError(error, { context: 'parsing' });
+ * // Track errors with context
+ * telemetry.trackError(error, {
+ *   component: 'OpenSCADParser',
+ *   operation: 'parseAST'
+ * });
  *
- * // Track performance
- * telemetry.trackPerformance('render_time', 16.5, { model: 'cube' });
+ * // Track performance metrics
+ * telemetry.trackPerformance('render_time', 16.5, {
+ *   unit: 'ms',
+ *   category: 'render',
+ *   operation: 'meshGeneration'
+ * });
  *
  * // Track user interactions
- * telemetry.trackEvent('code_edited', { lines: 50 });
+ * telemetry.trackEvent('code_edited', {
+ *   category: 'editor',
+ *   target: 'monaco',
+ *   value: 50
+ * });
  * ```
+ *
+ * @see {@link TelemetryConfig} for configuration options
+ * @see {@link ErrorEvent} for error event structure
+ * @see {@link PerformanceEvent} for performance event structure
+ * @see {@link UserEvent} for user interaction event structure
  */
 
 import type { Result } from '../../types/result.types';
@@ -146,7 +171,7 @@ export class TelemetryService {
   private readonly config: Required<TelemetryConfig>;
   private readonly sessionId: string;
   private readonly eventQueue: TelemetryEvent[] = [];
-  private flushTimer?: NodeJS.Timeout;
+  private flushTimer: NodeJS.Timeout | undefined;
   private isEnabled: boolean;
 
   constructor(config: TelemetryConfig = {}) {
@@ -182,25 +207,27 @@ export class TelemetryService {
   ): void {
     if (!this.isEnabled || !this.config.enableErrorTracking) return;
 
-    const errorEvent: ErrorEvent = {
+    const errorEventContext: ErrorEvent['context'] = {
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+      ...(context.component !== undefined && { component: context.component }),
+      ...(context.operation !== undefined && { operation: context.operation }),
+    };
+
+    const errorEvent = {
       id: this.generateEventId(),
       timestamp: new Date(),
-      type: 'error',
+      type: 'error' as const,
       sessionId: this.sessionId,
       userId: context.userId,
       error: this.extractErrorInfo(error),
-      context: {
-        component: context.component,
-        operation: context.operation,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-        viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight,
-        },
-      },
+      context: errorEventContext,
       metadata: {},
-    };
+    } as ErrorEvent;
 
     this.addEvent(errorEvent);
     logger.debug('[ERROR] Error tracked:', errorEvent.error.name);
@@ -222,10 +249,16 @@ export class TelemetryService {
   ): void {
     if (!this.isEnabled || !this.config.enablePerformanceTracking) return;
 
-    const performanceEvent: PerformanceEvent = {
+    const performanceEventContext: PerformanceEvent['context'] = {
+      browserInfo: this.getBrowserInfo(),
+      ...(context.operation !== undefined && { operation: context.operation }),
+      ...(context.modelComplexity !== undefined && { modelComplexity: context.modelComplexity }),
+    };
+
+    const performanceEvent = {
       id: this.generateEventId(),
       timestamp: new Date(),
-      type: 'performance',
+      type: 'performance' as const,
       sessionId: this.sessionId,
       userId: context.userId,
       metric: {
@@ -234,13 +267,9 @@ export class TelemetryService {
         unit: context.unit || 'ms',
         category: context.category || 'render',
       },
-      context: {
-        operation: context.operation,
-        modelComplexity: context.modelComplexity,
-        browserInfo: this.getBrowserInfo(),
-      },
+      context: performanceEventContext,
       metadata: {},
-    };
+    } as PerformanceEvent;
 
     this.addEvent(performanceEvent);
     logger.debug(`[PERFORMANCE] Metric tracked: ${name} = ${value}${context.unit || 'ms'}`);
@@ -267,19 +296,19 @@ export class TelemetryService {
       timestamp: new Date(),
       type: 'user',
       sessionId: this.sessionId,
-      userId: context.userId,
+      ...(context.userId !== undefined && { userId: context.userId }),
       action: {
         name: action,
         category: context.category || 'edit',
-        target: context.target,
-        value: context.value,
+        ...(context.target !== undefined && { target: context.target }),
+        ...(context.value !== undefined && { value: context.value }),
       },
       context: {
-        feature: context.feature,
-        duration: context.duration,
+        ...(context.feature !== undefined && { feature: context.feature }),
+        ...(context.duration !== undefined && { duration: context.duration }),
       },
       metadata: {},
-    };
+    } as UserEvent;
 
     this.addEvent(userEvent);
     logger.debug(`[USER] Event tracked: ${action}`);
@@ -313,7 +342,7 @@ export class TelemetryService {
       context: {
         version: context.version || '1.0.0',
         environment: context.environment || 'production',
-        deployment: context.deployment,
+        ...(context.deployment !== undefined && { deployment: context.deployment }),
       },
       metadata: {},
     };
@@ -419,13 +448,16 @@ export class TelemetryService {
   private extractErrorInfo(error: unknown): ErrorEvent['error'] {
     if (error instanceof Error) {
       // Check if it's an enhanced error with additional properties
-      const enhancedError = error as any;
+      const enhancedError = error as Error & {
+        code?: string;
+        severity?: 'low' | 'medium' | 'high' | 'critical';
+      };
       return {
         name: error.name,
         message: error.message,
-        stack: error.stack,
-        code: enhancedError.code || undefined,
-        severity: enhancedError.severity || 'medium',
+        ...(error.stack !== undefined && { stack: error.stack }),
+        ...(enhancedError.code !== undefined && { code: enhancedError.code }),
+        severity: enhancedError.severity ?? 'medium',
       };
     }
 
@@ -449,15 +481,15 @@ export class TelemetryService {
     if (userAgent.includes('Chrome')) {
       name = 'Chrome';
       const match = userAgent.match(/Chrome\/(\d+)/);
-      version = match ? match[1] : 'Unknown';
+      version = match?.[1] || 'Unknown';
     } else if (userAgent.includes('Firefox')) {
       name = 'Firefox';
       const match = userAgent.match(/Firefox\/(\d+)/);
-      version = match ? match[1] : 'Unknown';
+      version = match?.[1] || 'Unknown';
     } else if (userAgent.includes('Safari')) {
       name = 'Safari';
       const match = userAgent.match(/Version\/(\d+)/);
-      version = match ? match[1] : 'Unknown';
+      version = match?.[1] || 'Unknown';
     }
 
     return {

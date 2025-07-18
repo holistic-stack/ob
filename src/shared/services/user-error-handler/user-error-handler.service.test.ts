@@ -4,11 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createEnhancedError } from '../../utils/error';
-import {
-  ErrorCategory,
-  UserErrorHandlerService,
-  type UserErrorMessage,
-} from './user-error-handler.service';
+import { ErrorCategory, UserErrorHandlerService } from './user-error-handler.service';
 
 describe('UserErrorHandlerService', () => {
   let service: UserErrorHandlerService;

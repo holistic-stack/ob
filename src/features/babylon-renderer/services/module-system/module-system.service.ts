@@ -20,7 +20,7 @@
 import { BoundingBox, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { isError, tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type {
   ASTNode,
   ChildrenNode,
@@ -28,6 +28,7 @@ import type {
   ModuleInstantiationNode,
   ModuleParameter,
   Parameter,
+  SourceLocation,
 } from '../../../openscad-parser/ast/ast-types';
 import type { GenericMeshCollection, GenericMeshData } from '../../types/generic-mesh-data.types';
 import { createMeshCollection } from '../../utils/generic-mesh-utils';
@@ -42,7 +43,7 @@ export interface ResolvedModuleDefinition {
   readonly name: string;
   readonly parameters: readonly ModuleParameter[];
   readonly body: readonly ASTNode[];
-  readonly sourceLocation?: any;
+  readonly sourceLocation?: SourceLocation;
 }
 
 /**
@@ -171,7 +172,7 @@ export class ModuleSystemService {
 
         // Execute module body
         const result = await bodyExecutor(moduleDefinition.body, moduleContext);
-        if (!result.success) {
+        if (isError(result)) {
           throw new Error(`Module execution failed: ${result.error.message}`);
         }
 
@@ -241,7 +242,7 @@ export class ModuleSystemService {
           const childContext = { ...context, childrenIndex: childrenNode.index };
           const childResult = await childExecutor(childrenNodes[childrenNode.index]!, childContext);
 
-          if (!childResult.success) {
+          if (isError(childResult)) {
             throw new Error(`Child execution failed: ${childResult.error.message}`);
           }
 
@@ -274,7 +275,7 @@ export class ModuleSystemService {
           'control_flow_result'
         );
 
-        if (!childrenCollection.success) {
+        if (isError(childrenCollection)) {
           throw new Error(
             `Failed to create children collection: ${childrenCollection.error.message}`
           );

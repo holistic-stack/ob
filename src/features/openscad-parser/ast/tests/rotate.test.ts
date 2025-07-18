@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import type * as ASTTypes from '../ast-types.js';
 
 describe('Rotate AST Generation', () => {
   let parser: OpenscadParser;
@@ -102,7 +103,7 @@ describe('Rotate AST Generation', () => {
               },
               {
                 type: 'sphere',
-                r: 5,
+                radius: 5,
                 location: {
                   start: { line: 2, column: 8, offset: 45 },
                   end: { line: 2, column: 16, offset: 53 },
@@ -134,13 +135,15 @@ describe('Rotate AST Generation', () => {
 
       const rotateNode = ast[0];
       expect(rotateNode?.type).toBe('rotate');
-      expect((rotateNode as ast.RotateNode).a).toBe(45);
-      expect((rotateNode as ast.RotateNode).v).toEqual([0, 0, 1]); // Default z-axis
+      expect((rotateNode as ASTTypes.RotateNode).a).toBe(45);
+      expect((rotateNode as ASTTypes.RotateNode).v).toEqual([0, 0, 1]); // Default z-axis
 
       // Check children
-      expect((rotateNode as ast.RotateNode).children).toHaveLength(1);
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((rotateNode as ASTTypes.RotateNode).children).toHaveLength(1);
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse rotate with vector angles [x,y,z]', () => {
@@ -152,12 +155,14 @@ describe('Rotate AST Generation', () => {
 
       const rotateNode = ast[0];
       expect(rotateNode?.type).toBe('rotate');
-      expect((rotateNode as ast.RotateNode).a).toEqual([45, 0, 90]);
+      expect((rotateNode as ASTTypes.RotateNode).a).toEqual([45, 0, 90]);
 
       // Check children
-      expect((rotateNode as ast.RotateNode).children).toHaveLength(1);
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((rotateNode as ASTTypes.RotateNode).children).toHaveLength(1);
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse rotate with a and v parameters (axis-angle)', () => {
@@ -169,13 +174,15 @@ describe('Rotate AST Generation', () => {
 
       const rotateNode = ast[0];
       expect(rotateNode?.type).toBe('rotate');
-      expect((rotateNode as ast.RotateNode).a).toBe(45);
-      expect((rotateNode as ast.RotateNode).v).toEqual([0, 0, 1]);
+      expect((rotateNode as ASTTypes.RotateNode).a).toBe(45);
+      expect((rotateNode as ASTTypes.RotateNode).v).toEqual([0, 0, 1]);
 
       // Check children
-      expect((rotateNode as ast.RotateNode).children).toHaveLength(1);
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).size).toBe(10);
+      expect((rotateNode as ASTTypes.RotateNode).children).toHaveLength(1);
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
     });
 
     it('should parse rotate with child block', () => {
@@ -190,14 +197,20 @@ describe('Rotate AST Generation', () => {
 
       const rotateNode = ast[0];
       expect(rotateNode?.type).toBe('rotate');
-      expect((rotateNode as ast.RotateNode).a).toEqual([45, 0, 90]);
+      expect((rotateNode as ASTTypes.RotateNode).a).toEqual([45, 0, 90]);
 
       // Check children
-      expect((rotateNode as ast.RotateNode).children).toHaveLength(2);
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).type).toBe('cube');
-      expect(((rotateNode as ast.RotateNode).children[0] as ast.CubeNode).size).toBe(10);
-      expect(((rotateNode as ast.RotateNode).children[1] as ast.SphereNode).type).toBe('sphere');
-      expect(((rotateNode as ast.RotateNode).children[1] as ast.SphereNode).radius).toBe(5);
+      expect((rotateNode as ASTTypes.RotateNode).children).toHaveLength(2);
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).type).toBe(
+        'cube'
+      );
+      expect(((rotateNode as ASTTypes.RotateNode).children[0] as ASTTypes.CubeNode).size).toBe(10);
+      expect(((rotateNode as ASTTypes.RotateNode).children[1] as ASTTypes.SphereNode).type).toBe(
+        'sphere'
+      );
+      expect(((rotateNode as ASTTypes.RotateNode).children[1] as ASTTypes.SphereNode).radius).toBe(
+        5
+      );
     });
   });
 });

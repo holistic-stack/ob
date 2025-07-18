@@ -1,25 +1,62 @@
 /**
- * SyntaxError class for syntax errors in the parser
+ * @file syntax-error.ts
+ * @description This file defines the `OpenSCADSyntaxError` class, which extends `ParserError` to represent
+ * syntax-specific errors encountered during the parsing of OpenSCAD code. These errors are typically
+ * identified by the Tree-sitter parser and relate to violations of the language's grammatical rules.
  *
- * This class represents syntax errors in the OpenSCAD code, such as
- * missing semicolons, unmatched parentheses, etc.
+ * @architectural_decision
+ * By creating a specialized `OpenSCADSyntaxError` class, we can provide more granular error reporting
+ * and tailored recovery strategies for syntax-related issues. This class includes static factory methods
+ * for common syntax error scenarios (e.g., missing tokens, unexpected tokens), ensuring consistency
+ * in error message generation and providing actionable suggestions to the user.
  *
- * @module lib/openscad-parser/ast/errors/syntax-error
+ * @example
+ * ```typescript
+ * import { OpenSCADSyntaxError } from './syntax-error';
+ * import { ErrorPosition } from './parser-error';
+ *
+ * const sourceCode = 'cube(10';
+ * const errorPos: ErrorPosition = { line: 0, column: 8, offset: 8 };
+ *
+ * // Example: Missing semicolon error
+ * const missingSemicolonError = OpenSCADSyntaxError.missingSemicolon(sourceCode, errorPos);
+ * console.error(missingSemicolonError.getFormattedMessage());
+ * // Expected output (formatted):
+ * // Missing semicolon
+ * //
+ * // cube(10
+ * //         ^
+ * //
+ * // Suggestions:
+ * // 1. Add a semicolon at the end of the statement
+ * //    Try: ;
+ *
+ * // Example: Unexpected token error
+ * const unexpectedTokenError = OpenSCADSyntaxError.unexpectedToken('then', 'else', 'if (true) then', { line: 0, column: 12, offset: 12 });
+ * console.error(unexpectedTokenError.getFormattedMessage());
+ *
+ * // Example: Unmatched token error
+ * const unmatchedTokenError = OpenSCADSyntaxError.unmatchedToken('(', ')', 'function foo(a {', { line: 0, column: 15, offset: 15 });
+ * console.error(unmatchedTokenError.getFormattedMessage());
+ * ```
  */
 
 import { type ErrorPosition, type ErrorSuggestion, ParserError } from './parser-error.js';
 
 /**
- * SyntaxError class for syntax errors in the parser
+ * @class OpenSCADSyntaxError
+ * @description Represents a syntax error in OpenSCAD code, extending the base `ParserError`.
+ * This class provides specific error codes and suggestions for common syntax issues.
  */
 export class OpenSCADSyntaxError extends ParserError {
   /**
-   * Create a new SyntaxError
+   * @constructor
+   * @description Creates a new instance of `OpenSCADSyntaxError`.
    *
-   * @param message - The error message
-   * @param source - The source code that caused the error
-   * @param position - The position in the source code where the error occurred
-   * @param suggestions - Suggestions for fixing the error
+   * @param {string} message - A human-readable description of the syntax error.
+   * @param {string} source - The full source code string where the error occurred.
+   * @param {ErrorPosition} position - The precise location of the error in the source code.
+   * @param {ErrorSuggestion[]} [suggestions=[]] - An array of suggestions for how to resolve the error.
    */
   constructor(
     message: string,
@@ -32,12 +69,13 @@ export class OpenSCADSyntaxError extends ParserError {
   }
 
   /**
-   * Create a missing token error
+   * @method missingToken
+   * @description Creates an `OpenSCADSyntaxError` for a missing token.
    *
-   * @param tokenName - The name of the missing token
-   * @param source - The source code
-   * @param position - The position in the source code
-   * @returns An OpenSCADSyntaxError for a missing token
+   * @param {string} tokenName - The name or description of the missing token (e.g., ';', ')').
+   * @param {string} source - The source code.
+   * @param {ErrorPosition} position - The position where the token is missing.
+   * @returns {OpenSCADSyntaxError} A `OpenSCADSyntaxError` instance for a missing token.
    */
   public static missingToken(
     tokenName: string,
@@ -55,13 +93,14 @@ export class OpenSCADSyntaxError extends ParserError {
   }
 
   /**
-   * Create an unexpected token error
+   * @method unexpectedToken
+   * @description Creates an `OpenSCADSyntaxError` for an unexpected token encountered during parsing.
    *
-   * @param foundToken - The token that was found
-   * @param expectedToken - The token that was expected
-   * @param source - The source code
-   * @param position - The position in the source code
-   * @returns An OpenSCADSyntaxError for an unexpected token
+   * @param {string} foundToken - The token that was found.
+   * @param {string} expectedToken - The token that was expected instead.
+   * @param {string} source - The source code.
+   * @param {ErrorPosition} position - The position of the unexpected token.
+   * @returns {OpenSCADSyntaxError} A `OpenSCADSyntaxError` instance for an unexpected token.
    */
   public static unexpectedToken(
     foundToken: string,
@@ -80,13 +119,14 @@ export class OpenSCADSyntaxError extends ParserError {
   }
 
   /**
-   * Create an unmatched token error
+   * @method unmatchedToken
+   * @description Creates an `OpenSCADSyntaxError` for an unmatched opening token (e.g., missing closing parenthesis).
    *
-   * @param openToken - The opening token
-   * @param closeToken - The closing token
-   * @param source - The source code
-   * @param position - The position in the source code
-   * @returns A SyntaxError for an unmatched token
+   * @param {string} openToken - The opening token (e.g., '(', '{').
+   * @param {string} closeToken - The expected closing token (e.g., ')', '}').
+   * @param {string} source - The source code.
+   * @param {ErrorPosition} position - The position of the unmatched opening token.
+   * @returns {OpenSCADSyntaxError} A `OpenSCADSyntaxError` instance for an unmatched token.
    */
   public static unmatchedToken(
     openToken: string,
@@ -105,11 +145,12 @@ export class OpenSCADSyntaxError extends ParserError {
   }
 
   /**
-   * Create a missing semicolon error
+   * @method missingSemicolon
+   * @description Creates an `OpenSCADSyntaxError` specifically for a missing semicolon.
    *
-   * @param source - The source code
-   * @param position - The position in the source code
-   * @returns A SyntaxError for a missing semicolon
+   * @param {string} source - The source code.
+   * @param {ErrorPosition} position - The position where the semicolon is missing.
+   * @returns {OpenSCADSyntaxError} A `OpenSCADSyntaxError` instance for a missing semicolon.
    */
   public static missingSemicolon(source: string, position: ErrorPosition): OpenSCADSyntaxError {
     const message = `Missing semicolon`;

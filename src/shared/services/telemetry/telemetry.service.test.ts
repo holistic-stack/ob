@@ -4,14 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEnhancedError } from '../../utils/error';
-import {
-  type ErrorEvent,
-  type PerformanceEvent,
-  type SystemEvent,
-  type TelemetryConfig,
-  TelemetryService,
-  type UserEvent,
-} from './telemetry.service';
+import { type TelemetryConfig, TelemetryService } from './telemetry.service';
 
 // Mock global objects
 Object.defineProperty(global, 'navigator', {

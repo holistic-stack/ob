@@ -1,68 +1,65 @@
 /**
- * @file Composite visitor implementation for OpenSCAD parser
- *
- * This module implements the CompositeVisitor class, which serves as the central orchestrator
- * for AST generation using the Composite design pattern. The CompositeVisitor coordinates
+ * @file composite-visitor.ts
+ * @description This file implements the `CompositeVisitor` class, which serves as the central orchestrator
+ * for AST generation using the Composite design pattern. The `CompositeVisitor` coordinates
  * multiple specialized visitors, each responsible for handling specific aspects of the
  * OpenSCAD language syntax.
  *
- * The composite pattern provides several key benefits:
- * - **Modular Architecture**: Each visitor focuses on a specific domain (primitives, transforms, etc.)
- * - **Extensibility**: New visitors can be added without modifying existing code
- * - **Chain of Responsibility**: Visitors are tried in sequence until one can handle the node
- * - **Centralized Coordination**: Single point of control for the entire AST generation process
- * - **Error Handling**: Consistent error reporting and logging throughout the process
+ * @architectural_decision
+ * The composite pattern is used here to create a tree structure of visitors. This allows clients
+ * to treat individual visitors and compositions of visitors uniformly. The `CompositeVisitor`
+ * acts as a router, delegating the processing of a CST node to the first specialized visitor
+ * in its collection that can handle that node type. This approach provides several key benefits:
+ * - **Modularity**: Each visitor has a single responsibility (e.g., `PrimitiveVisitor` for shapes).
+ * - **Extensibility**: New language features can be supported by adding new visitors without changing existing code.
+ * - **Chain of Responsibility**: Visitors are tried in a specific order, allowing for a fallback mechanism.
+ * - **Centralized Coordination**: The `CompositeVisitor` provides a single point of control for the entire AST generation process.
  *
- * The CompositeVisitor implements a two-tier delegation strategy:
- * 1. **Direct Routing**: Common node types are routed directly to specific methods
- * 2. **Visitor Delegation**: Unknown or specialized nodes are delegated to child visitors
- *
- * Supported visitor types:
- * - **PrimitiveVisitor**: Handles basic shapes (cube, sphere, cylinder, etc.)
- * - **TransformVisitor**: Handles transformations (translate, rotate, scale, etc.)
- * - **CSGVisitor**: Handles CSG operations (union, difference, intersection)
- * - **ModuleVisitor**: Handles module definitions and instantiations
- * - **ControlStructureVisitor**: Handles if/else, for loops, let expressions
- * - **ExpressionVisitor**: Handles mathematical and logical expressions
- * - **VariableVisitor**: Handles variable assignments and references
- *
- * @example Basic usage
+ * @example
  * ```typescript
  * import { CompositeVisitor } from './composite-visitor';
+ * import { PrimitiveVisitor } from './primitive-visitor';
+ * import { TransformVisitor } from './transform-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * // Create specialized visitors
- * const primitiveVisitor = new PrimitiveVisitor(sourceCode, errorHandler);
- * const transformVisitor = new TransformVisitor(sourceCode, compositeVisitor, errorHandler);
- * const csgVisitor = new CSGVisitor(sourceCode, compositeVisitor, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'translate([10, 0, 0]) cube(10);';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Create composite visitor
- * const compositeVisitor = new CompositeVisitor([
- *   primitiveVisitor,
- *   transformVisitor,
- *   csgVisitor
- * ], errorHandler);
+ *   // 2. Create an error handler
+ *   const errorHandler = new ErrorHandler();
  *
- * // Process AST
- * const astNode = compositeVisitor.visitNode(cstNode);
- * ```
+ *   // 3. Create specialized visitors
+ *   const primitiveVisitor = new PrimitiveVisitor(sourceCode, errorHandler);
+ *   const transformVisitor = new TransformVisitor(sourceCode, errorHandler);
  *
- * @example Error handling integration
- * ```typescript
- * const errorHandler = new ErrorHandler({
- *   throwErrors: false,
- *   minSeverity: Severity.WARNING
- * });
+ *   // 4. Create a composite visitor
+ *   const compositeVisitor = new CompositeVisitor(
+ *     [primitiveVisitor, transformVisitor],
+ *     errorHandler
+ *   );
  *
- * const visitor = new CompositeVisitor(visitors, errorHandler);
- * const result = visitor.visitNode(node);
+ *   // 5. Process the root node of the CST
+ *   const astNode = compositeVisitor.visitNode(tree.rootNode);
+ *   console.log(JSON.stringify(astNode, null, 2));
  *
- * if (errorHandler.getErrors().length > 0) {
- *   console.log('Processing errors:', errorHandler.getErrors());
+ *   // 6. Clean up
+ *   parser.delete();
  * }
+ *
+ * main();
  * ```
  *
- * @module composite-visitor
- * @since 0.1.0
+ * @integration
+ * The `CompositeVisitor` is instantiated within the `VisitorASTGenerator`. It is the core component
+ * that connects the high-level CST traversal with the low-level, specialized visitors that actually
+ * create the AST nodes.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -71,47 +68,18 @@ import type * as ast from '../ast-types.js';
 import type { ASTVisitor } from './ast-visitor.js';
 
 /**
- * A composite visitor that implements the visitor pattern and delegates to specialized visitors.
- *
- * The CompositeVisitor serves as a central coordinator in the AST generation process, implementing
- * the Composite design pattern to organize multiple specialized visitors. It acts as both a router
- * and delegator, examining each node's type and either handling it directly through a type-specific
- * visit method, or delegating to one of its child visitors that can process the node.
- *
- * This approach allows for modular, extensible parsing where each visitor can focus on a specific
- * aspect of the OpenSCAD language (primitives, transformations, expressions, etc.) while the
- * CompositeVisitor handles the orchestration of the parsing process.
- *
  * @class CompositeVisitor
  * @implements {ASTVisitor}
- * @since 0.1.0
+ * @description A composite visitor that implements the visitor pattern and delegates to specialized visitors.
+ * It acts as a central coordinator in the AST generation process, examining each node's type and either
+ * handling it directly through a type-specific visit method, or delegating to one of its child visitors.
  */
 export class CompositeVisitor implements ASTVisitor {
   /**
-   * Creates a new CompositeVisitor that delegates to specialized visitors.
-   *
-   * The CompositeVisitor combines multiple specialized visitors, allowing each to focus on
-   * a specific part of the OpenSCAD syntax. When a node is encountered, the CompositeVisitor
-   * either routes it to a specific visit method based on its type, or tries each of its
-   * child visitors in sequence until one can process the node.
-   *
-   * @param visitors - Array of specialized visitors that implement the ASTVisitor interface
-   * @param errorHandler - Error handler for reporting issues during AST generation
-   *
-   * @example
-   * ```ts
-   * // Create specialized visitors
-   * const primitiveVisitor = new PrimitiveVisitor(source, errorHandler);
-   * const transformVisitor = new TransformVisitor(source, compositeVisitor, errorHandler);
-   *
-   * // Create a composite visitor with the specialized visitors
-   * const compositeVisitor = new CompositeVisitor(
-   *   [primitiveVisitor, transformVisitor],
-   *   errorHandler
-   * );
-   * ```
-   *
-   * @since 0.1.0
+   * @constructor
+   * @description Creates a new CompositeVisitor that delegates to specialized visitors.
+   * @param {ASTVisitor[]} visitors - An array of specialized visitors that implement the `ASTVisitor` interface.
+   * @param {ErrorHandler} errorHandler - An error handler for reporting issues during AST generation.
    */
   constructor(
     protected visitors: ASTVisitor[],
@@ -119,9 +87,12 @@ export class CompositeVisitor implements ASTVisitor {
   ) {}
 
   /**
-   * Visit a node and return the corresponding AST node
-   * @param node The node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitNode
+   * @description Visits a CST node and returns the corresponding AST node.
+   * This method acts as a router, delegating to more specific `visit` methods based on the node type.
+   * If no specific method exists, it delegates to the collection of specialized visitors.
+   * @param {TSNode} node - The node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed.
    */
   visitNode(node: TSNode): ast.ASTNode | null {
     // Route to specific visitor methods based on node type
@@ -174,9 +145,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit all children of a node and return the corresponding AST nodes
-   * @param node The node whose children to visit
-   * @returns An array of AST nodes
+   * @method visitChildren
+   * @description Visits all children of a node and returns the corresponding AST nodes.
+   * @param {TSNode} node - The node whose children to visit.
+   * @returns {ast.ASTNode[]} An array of AST nodes.
    */
   visitChildren(node: TSNode): ast.ASTNode[] {
     const children: ast.ASTNode[] = [];
@@ -194,38 +166,11 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * NOTE: This method is intentionally empty as it's been moved to the dedicated implementation below
-   * to avoid duplicates while maintaining method order in the file.
-   */
-
-  /**
-   * Processes a statement node in the OpenSCAD syntax tree.
-   *
-   * Statements are the fundamental execution units in OpenSCAD code, including
-   * module instantiations, assignments, conditionals, and loops. This method
-   * examines the statement node and delegates to specialized visitors that can
-   * handle the specific statement type.
-   *
-   * @param node - The statement Tree-sitter node to process
-   * @returns The corresponding AST node, or null if no visitor can process the statement
-   *
-   * @example Simple Statement
-   * ```ts
-   * // For a statement like 'cube(10);'
-   * const statementNode = tree.rootNode.childForFieldName('statement');
-   * const astNode = visitor.visitStatement(statementNode);
-   * // Returns a ModuleInstantiationNode with type 'cube'
-   * ```
-   *
-   * @example Complex Statement
-   * ```ts
-   * // For a complex statement like 'if (x > 10) { cube(x); }'
-   * const ifStatementNode = tree.rootNode.childForFieldName('statement');
-   * const astNode = visitor.visitStatement(ifStatementNode);
-   * // Returns an IfNode with condition and consequent children
-   * ```
-   *
-   * @since 0.1.0
+   * @method visitStatement
+   * @description Processes a statement node in the OpenSCAD syntax tree.
+   * It delegates to specialized visitors that can handle the specific statement type.
+   * @param {TSNode} node - The statement Tree-sitter node to process.
+   * @returns {ast.ASTNode | null} The corresponding AST node, or null if no visitor can process the statement.
    */
   visitStatement(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -239,32 +184,11 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Processes a block node containing multiple statements in the OpenSCAD syntax tree.
-   *
-   * Blocks in OpenSCAD are collections of statements enclosed in curly braces, commonly
-   * used in module bodies, if/else bodies, and for loop bodies. This method delegates
-   * to visitChildren to process each statement in the block sequentially.
-   *
-   * @param node - The block Tree-sitter node to process
-   * @returns An array of AST nodes representing the statements in the block
-   *
-   * @example Module Body
-   * ```ts
-   * // For a module body like 'module test() { cube(10); sphere(5); }'
-   * const blockNode = moduleDefNode.childForFieldName('body');
-   * const bodyNodes = visitor.visitBlock(blockNode);
-   * // Returns an array containing the cube and sphere module instantiation nodes
-   * ```
-   *
-   * @example Empty Block
-   * ```ts
-   * // For an empty block like 'if(x>0) { }'
-   * const emptyBlockNode = ifNode.childForFieldName('consequent');
-   * const nodes = visitor.visitBlock(emptyBlockNode);
-   * // Returns an empty array []
-   * ```
-   *
-   * @since 0.1.0
+   * @method visitBlock
+   * @description Processes a block node containing multiple statements.
+   * It delegates to `visitChildren` to process each statement in the block sequentially.
+   * @param {TSNode} node - The block Tree-sitter node to process.
+   * @returns {ast.ASTNode[]} An array of AST nodes representing the statements in the block.
    */
   visitBlock(node: TSNode): ast.ASTNode[] {
     // Delegate to visitChildren to process each statement in the block
@@ -272,33 +196,12 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visits and processes a module instantiation node in the OpenSCAD syntax tree.
-   *
-   * Module instantiations are the core building blocks of OpenSCAD code, representing
-   * calls to both built-in modules (like cube, sphere) and user-defined modules.
-   * This method delegates the processing to specialized visitors capable of handling
+   * @method visitModuleInstantiation
+   * @description Visits and processes a module instantiation node.
+   * It delegates the processing to specialized visitors capable of handling
    * different types of module instantiations (primitives, transformations, etc.).
-   *
-   * @param node - The module_instantiation Tree-sitter node to process
-   * @returns The AST node representing the module instantiation, or null if no visitor can process it
-   *
-   * @example
-   * ```ts
-   * // For processing a primitive instantiation like 'cube(10);'
-   * const moduleNode = tree.rootNode.child(0); // Assuming first child is the module instantiation
-   * const astNode = visitor.visitModuleInstantiation(moduleNode);
-   * // Returns a ModuleInstantiationNode with type 'cube'
-   * ```
-   *
-   * @example
-   * ```ts
-   * // For processing a transformation like 'translate([0,0,5]) sphere(10);'
-   * const transformNode = tree.rootNode.child(0);
-   * const astNode = visitor.visitModuleInstantiation(transformNode);
-   * // Returns a TransformNode with a child ModuleInstantiationNode
-   * ```
-   *
-   * @since 0.1.0
+   * @param {TSNode} node - The module_instantiation Tree-sitter node to process.
+   * @returns {ast.ASTNode | null} The AST node representing the module instantiation, or null if no visitor can process it.
    */
   visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -312,9 +215,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a module definition node
-   * @param node The module definition node to visit
-   * @returns The module definition AST node or null if the node cannot be processed
+   * @method visitModuleDefinition
+   * @description Visits a module definition node.
+   * @param {TSNode} node - The module definition node to visit.
+   * @returns {ast.ModuleDefinitionNode | null} The module definition AST node or null if the node cannot be processed.
    */
   visitModuleDefinition(node: TSNode): ast.ModuleDefinitionNode | null {
     // Try each visitor in sequence
@@ -328,9 +232,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a function definition node
-   * @param node The function definition node to visit
-   * @returns The function definition AST node or null if the node cannot be processed
+   * @method visitFunctionDefinition
+   * @description Visits a function definition node.
+   * @param {TSNode} node - The function definition node to visit.
+   * @returns {ast.FunctionDefinitionNode | null} The function definition AST node or null if the node cannot be processed.
    */
   visitFunctionDefinition(node: TSNode): ast.FunctionDefinitionNode | null {
     // Try each visitor in sequence
@@ -344,9 +249,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an if statement node
-   * @param node The if statement node to visit
-   * @returns The if AST node or null if the node cannot be processed
+   * @method visitIfStatement
+   * @description Visits an if statement node.
+   * @param {TSNode} node - The if statement node to visit.
+   * @returns {ast.IfNode | null} The if AST node or null if the node cannot be processed.
    */
   visitIfStatement(node: TSNode): ast.IfNode | null {
     // Try each visitor in sequence
@@ -360,9 +266,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a for statement node
-   * @param node The for statement node to visit
-   * @returns The for loop AST node, error node, or null if the node cannot be processed
+   * @method visitForStatement
+   * @description Visits a for statement node.
+   * @param {TSNode} node - The for statement node to visit.
+   * @returns {ast.ForLoopNode | ast.ErrorNode | null} The for loop AST node, error node, or null if the node cannot be processed.
    */
   visitForStatement(node: TSNode): ast.ForLoopNode | ast.ErrorNode | null {
     // Try each visitor in sequence
@@ -376,9 +283,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a let expression node
-   * @param node The let expression node to visit
-   * @returns The let AST node or null if the node cannot be processed
+   * @method visitLetExpression
+   * @description Visits a let expression node.
+   * @param {TSNode} node - The let expression node to visit.
+   * @returns {ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null} The let AST node or null if the node cannot be processed.
    */
   visitLetExpression(node: TSNode): ast.LetNode | ast.LetExpressionNode | ast.ErrorNode | null {
     // Try each visitor in sequence
@@ -392,9 +300,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a conditional expression node
-   * @param node The conditional expression node to visit
-   * @returns The expression AST node or null if the node cannot be processed
+   * @method visitConditionalExpression
+   * @description Visits a conditional expression node.
+   * @param {TSNode} node - The conditional expression node to visit.
+   * @returns {ast.ExpressionNode | ast.ErrorNode | null} The expression AST node or null if the node cannot be processed.
    */
   visitConditionalExpression(node: TSNode): ast.ExpressionNode | ast.ErrorNode | null {
     // Try each visitor in sequence
@@ -408,9 +317,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an assignment statement node
-   * @param node The assignment statement node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitAssignmentStatement
+   * @description Visits an assignment statement node.
+   * @param {TSNode} node - The assignment statement node to visit.
+   * @returns {ast.ASTNode | null} The AST node or null if the node cannot be processed.
    */
   visitAssignmentStatement(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -424,9 +334,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an assert statement node
-   * @param node The assert statement node to visit
-   * @returns The assert statement AST node or null if the node cannot be processed
+   * @method visitAssertStatement
+   * @description Visits an assert statement node.
+   * @param {TSNode} node - The assert statement node to visit.
+   * @returns {ast.AssertStatementNode | null} The assert statement AST node or null if the node cannot be processed.
    */
   visitAssertStatement(node: TSNode): ast.AssertStatementNode | null {
     // Try each visitor in sequence
@@ -440,9 +351,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an echo statement node
-   * @param node The echo statement node to visit
-   * @returns The echo statement AST node or null if the node cannot be processed
+   * @method visitEchoStatement
+   * @description Visits an echo statement node.
+   * @param {TSNode} node - The echo statement node to visit.
+   * @returns {ast.EchoStatementNode | null} The echo statement AST node or null if the node cannot be processed.
    */
   visitEchoStatement(node: TSNode): ast.EchoStatementNode | null {
     // Try each visitor in sequence
@@ -456,9 +368,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an expression statement node
-   * @param node The expression statement node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitExpressionStatement
+   * @description Visits an expression statement node.
+   * @param {TSNode} node - The expression statement node to visit.
+   * @returns {ast.ASTNode | null} The AST node or null if the node cannot be processed.
    */
   visitExpressionStatement(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -472,9 +385,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an accessor expression node (function calls like cube(10))
-   * @param node The accessor expression node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitAccessorExpression
+   * @description Visits an accessor expression node (function calls like cube(10)).
+   * @param {TSNode} node - The accessor expression node to visit.
+   * @returns {ast.ASTNode | null} The AST node or null if the node cannot be processed.
    */
   visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -488,9 +402,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit a call expression node
-   * @param node The call expression node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitCallExpression
+   * @description Visits a call expression node.
+   * @param {TSNode} node - The call expression node to visit.
+   * @returns {ast.ASTNode | null} The AST node or null if the node cannot be processed.
    */
   visitCallExpression(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence
@@ -504,9 +419,10 @@ export class CompositeVisitor implements ASTVisitor {
   }
 
   /**
-   * Visit an expression node
-   * @param node The expression node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitExpression
+   * @description Visits an expression node.
+   * @param {TSNode} node - The expression node to visit.
+   * @returns {ast.ASTNode | null} The AST node or null if the node cannot be processed.
    */
   visitExpression(node: TSNode): ast.ASTNode | null {
     // Try each visitor in sequence

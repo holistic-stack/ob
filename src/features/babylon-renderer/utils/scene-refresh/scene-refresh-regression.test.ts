@@ -86,7 +86,7 @@ describe('Scene Refresh Regression Tests', () => {
         if (refreshResult.success) {
           expect(refreshResult.data).toBeUndefined();
         } else {
-          expect(refreshResult.error?.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
+          expect(refreshResult.error.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
         }
       }
     });
@@ -135,7 +135,9 @@ describe('Scene Refresh Regression Tests', () => {
       const result = forceEngineResize(invalidEngine);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      if (!result.success) {
+        expect(result.error.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      }
     });
 
     it('should maintain performance during repeated resizes', () => {
@@ -163,7 +165,7 @@ describe('Scene Refresh Regression Tests', () => {
       // REGRESSION TEST: Material cache reset was part of the visual update fix
 
       // Create materials to populate cache
-      const materials = [
+      const _materials = [
         new BABYLON.StandardMaterial('mat1', scene),
         new BABYLON.StandardMaterial('mat2', scene),
         new BABYLON.StandardMaterial('mat3', scene),
@@ -227,7 +229,7 @@ describe('Scene Refresh Regression Tests', () => {
         expect(result.data).toBeUndefined();
       } else {
         // Acceptable failure in NullEngine environment
-        expect(result.error?.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
+        expect(result.error.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
       }
     });
 
@@ -242,7 +244,7 @@ describe('Scene Refresh Regression Tests', () => {
       if (result.success) {
         expect(result.data).toBeUndefined();
       } else {
-        expect(result.error?.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
+        expect(result.error.code).toBe(SceneRefreshErrorCode.REFRESH_FAILED);
       }
     });
 
@@ -280,15 +282,21 @@ describe('Scene Refresh Regression Tests', () => {
 
       const cacheResult = resetSceneMaterialCache(invalidScene);
       expect(cacheResult.success).toBe(false);
-      expect(cacheResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      if (!cacheResult.success) {
+        expect(cacheResult.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      }
 
       const dirtyResult = markSceneMaterialsAsDirty(invalidScene);
       expect(dirtyResult.success).toBe(false);
-      expect(dirtyResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      if (!dirtyResult.success) {
+        expect(dirtyResult.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      }
 
       const refreshResult = forceSceneRefresh(engine, invalidScene);
       expect(refreshResult.success).toBe(false);
-      expect(refreshResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      if (!refreshResult.success) {
+        expect(refreshResult.error.code).toBe(SceneRefreshErrorCode.INVALID_SCENE);
+      }
     });
 
     it('should handle invalid engine in refresh operations', () => {
@@ -298,7 +306,9 @@ describe('Scene Refresh Regression Tests', () => {
 
       const refreshResult = forceSceneRefresh(invalidEngine, scene);
       expect(refreshResult.success).toBe(false);
-      expect(refreshResult.error?.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      if (!refreshResult.success) {
+        expect(refreshResult.error.code).toBe(SceneRefreshErrorCode.INVALID_ENGINE);
+      }
     });
 
     it('should include timestamps in error objects', () => {
@@ -307,8 +317,10 @@ describe('Scene Refresh Regression Tests', () => {
       const result = forceSceneRefresh(null as any, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.timestamp).toBeInstanceOf(Date);
-      expect(result.error?.message).toBeTruthy();
+      if (!result.success) {
+        expect(result.error.timestamp).toBeInstanceOf(Date);
+        expect(result.error.message).toBeTruthy();
+      }
     });
   });
 });

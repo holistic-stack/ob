@@ -5,7 +5,7 @@
  */
 
 export type {
-  EngineInitOptions,
+  HookEngineInitOptions as EngineInitOptions,
   UseBabylonEngineReturn,
 } from './use-babylon-engine';
 export { useBabylonEngine } from './use-babylon-engine';

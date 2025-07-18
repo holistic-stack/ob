@@ -1,30 +1,22 @@
 /**
- * @file Central error handling system for the OpenSCAD parser
- *
- * This module provides comprehensive error handling capabilities for the OpenSCAD parser,
+ * @file error-handler.ts
+ * @description This file provides a comprehensive error handling system for the OpenSCAD parser,
  * including error collection, reporting, recovery strategies, and logging integration.
- * The ErrorHandler class serves as the central coordinator for all error-related operations
+ * The `ErrorHandler` class serves as the central coordinator for all error-related operations
  * throughout the parsing and AST generation process.
  *
- * Key features:
- * - Structured error types with severity levels and context information
- * - Configurable error handling behavior (throw vs collect)
- * - Error recovery strategies for common syntax issues
- * - Integrated logging system with multiple output levels
- * - Type-safe error creation and management
- * - Support for error filtering and analysis
+ * @architectural_decision
+ * The error handling system is designed to be robust and flexible. It uses a class-based approach
+ * to encapsulate the error state and configuration. The system supports different error severity
+ * levels, allowing for fine-grained control over error reporting. It also includes a mechanism
+ * for error recovery, which can be extended with custom strategies. This design ensures that the
+ * parser can gracefully handle errors and provide meaningful feedback to the user.
  *
- * The error handling system supports multiple error types:
- * - SyntaxError: Issues with OpenSCAD syntax (missing semicolons, brackets, etc.)
- * - TypeError: Type mismatches and invalid type operations
- * - ValidationError: Semantic validation failures
- * - ReferenceError: Undefined variables or functions
- * - InternalError: Parser implementation issues
- *
- * @example Basic error handling setup
+ * @example
  * ```typescript
  * import { ErrorHandler, Severity } from './error-handler';
  *
+ * // 1. Create a new error handler instance
  * const errorHandler = new ErrorHandler({
  *   throwErrors: false,        // Collect errors instead of throwing
  *   minSeverity: Severity.WARNING,  // Include warnings and above
@@ -32,12 +24,24 @@
  *   includeSource: true        // Include source context in errors
  * });
  *
- * // Use throughout parsing
- * const parser = new EnhancedOpenscadParser(errorHandler);
+ * // 2. Use the error handler throughout the parsing process
+ * try {
+ *   // Some parsing operation that might fail
+ *   throw new Error('Something went wrong');
+ * } catch (error) {
+ *   errorHandler.handleError(error as Error, 'MyParser.parse');
+ * }
+ *
+ * // 3. Get the collected errors
+ * const errors = errorHandler.getErrors();
+ * console.log(errors);
  * ```
  *
- * @module openscad-parser/error-handling/error-handler
- * @since 0.1.0
+ * @integration
+ * The `ErrorHandler` is instantiated in the `OpenscadParser` and passed down to all the
+ * visitors. This ensures that all parts of the parser have access to a single, consistent
+ * error handling mechanism. The collected errors can then be used to display feedback to the
+ * user in the UI.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -55,7 +59,10 @@ import {
   ValidationError,
 } from './types/error-types.js';
 
-/** Configuration options for the ErrorHandler */
+/**
+ * @interface ErrorHandlerOptions
+ * @description Configuration options for the `ErrorHandler`.
+ */
 export interface ErrorHandlerOptions {
   /** Whether to throw errors immediately when they occur */
   throwErrors?: boolean;
@@ -70,31 +77,8 @@ export interface ErrorHandlerOptions {
 }
 
 /**
- * Central error error-handling for managing errors and recovery in the OpenSCAD parser.
- *
- * The ErrorHandler provides:
- * - Error collection and reporting
- * - Error recovery using registered strategies
- * - Configurable error handling behavior
- * - Integration with logging system
- *
- * @example
- * ```typescript
- * const errorHandler = new ErrorHandler({
- *   throwErrors: false,
- *   minSeverity: Severity.WARNING,
- *   attemptRecovery: true
- * });
- *
- * // Create and report an error
- * const error = errorHandler.createSyntaxError('Missing semicolon', {
- *   line: 10,
- *   column: 5
- * });
- *
- * // Attempt recovery
- * const recoveredCode = errorHandler.attemptRecovery(error, originalCode);
- * ```
+ * @class ErrorHandler
+ * @description Central error handler for managing errors and recovery in the OpenSCAD parser.
  */
 export class ErrorHandler {
   private errors: ParserError[] = [];
@@ -105,8 +89,9 @@ export class ErrorHandler {
   public readonly options: Required<ErrorHandlerOptions>;
 
   /**
-   * Creates a new ErrorHandler
-   * @param options - Configuration options
+   * @constructor
+   * @description Creates a new `ErrorHandler`.
+   * @param {ErrorHandlerOptions} [options] - Configuration options.
    */
   constructor(options: ErrorHandlerOptions = {}) {
     this.options = {
@@ -122,68 +107,75 @@ export class ErrorHandler {
   }
 
   /**
-   * Creates a generic parser error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New ParserError instance
+   * @method createParserError
+   * @description Creates a generic parser error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {ParserError} A new `ParserError` instance.
    */
   createParserError(message: string, context: ErrorContext = {}): ParserError {
     return new ParserError(message, ErrorCode.INTERNAL_ERROR, Severity.ERROR, context);
   }
 
   /**
-   * Creates a syntax error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New SyntaxError instance
+   * @method createSyntaxError
+   * @description Creates a syntax error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {CustomSyntaxError} A new `SyntaxError` instance.
    */
   createSyntaxError(message: string, context: ErrorContext = {}): CustomSyntaxError {
     return new CustomSyntaxError(message, context);
   }
 
   /**
-   * Creates a type error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New TypeError instance
+   * @method createTypeError
+   * @description Creates a type error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {CustomTypeError} A new `TypeError` instance.
    */
   createTypeError(message: string, context: ErrorContext = {}): CustomTypeError {
     return new CustomTypeError(message, context);
   }
 
   /**
-   * Creates a validation error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New ValidationError instance
+   * @method createValidationError
+   * @description Creates a validation error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {ValidationError} A new `ValidationError` instance.
    */
   createValidationError(message: string, context: ErrorContext = {}): ValidationError {
     return new ValidationError(message, context);
   }
 
   /**
-   * Creates a reference error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New ReferenceError instance
+   * @method createReferenceError
+   * @description Creates a reference error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {CustomReferenceError} A new `ReferenceError` instance.
    */
   createReferenceError(message: string, context: ErrorContext = {}): CustomReferenceError {
     return new CustomReferenceError(message, context);
   }
 
   /**
-   * Creates an internal error
-   * @param message - Error message
-   * @param context - Error context
-   * @returns New InternalError instance
+   * @method createInternalError
+   * @description Creates an internal error.
+   * @param {string} message - The error message.
+   * @param {ErrorContext} [context] - The error context.
+   * @returns {InternalParserError} A new `InternalError` instance.
    */
   createInternalError(message: string, context: ErrorContext = {}): InternalParserError {
     return new InternalParserError(message, context);
   }
 
   /**
-   * Reports an error to the error-handling
-   * @param error - The error to report
+   * @method report
+   * @description Reports an error to the error handler.
+   * @param {ParserError} error - The error to report.
    */
   report(error: ParserError): void {
     // Only collect errors that meet the minimum severity threshold
@@ -199,10 +191,11 @@ export class ErrorHandler {
   }
 
   /**
-   * Attempts to recover from an error using registered strategies
-   * @param error - The error to recover from
-   * @param code - The original source code
-   * @returns The recovered code if successful, null otherwise
+   * @method attemptRecovery
+   * @description Attempts to recover from an error using registered strategies.
+   * @param {ParserError} error - The error to recover from.
+   * @param {string} code - The original source code.
+   * @returns {string | null} The recovered code if successful, otherwise null.
    */
   attemptRecovery(error: ParserError, code: string): string | null {
     if (!this.options.attemptRecovery) {
@@ -221,17 +214,19 @@ export class ErrorHandler {
   }
 
   /**
-   * Gets all collected errors
-   * @returns Array of collected errors
+   * @method getErrors
+   * @description Gets all collected errors.
+   * @returns {readonly ParserError[]} An array of collected errors.
    */
   getErrors(): readonly ParserError[] {
     return [...this.errors];
   }
 
   /**
-   * Gets errors filtered by severity level
-   * @param minSeverity - Minimum severity level to include
-   * @returns Array of filtered errors
+   * @method getErrorsBySeverity
+   * @description Gets errors filtered by severity level.
+   * @param {Severity} minSeverity - The minimum severity level to include.
+   * @returns {ParserError[]} An array of filtered errors.
    */
   getErrorsBySeverity(minSeverity: Severity): ParserError[] {
     const minLevel = this.getSeverityLevel(minSeverity);
@@ -239,170 +234,99 @@ export class ErrorHandler {
   }
 
   /**
-   * Clears all collected errors
+   * @method clearErrors
+   * @description Clears all collected errors.
    */
   clearErrors(): void {
     this.errors = [];
   }
 
   /**
-   * Checks if there are any errors
-   * @returns True if there are collected errors
+   * @method hasErrors
+   * @description Checks if there are any errors.
+   * @returns {boolean} True if there are collected errors.
    */
   hasErrors(): boolean {
     return this.errors.length > 0;
   }
 
   /**
-   * Checks if there are any critical errors
-   * @returns True if there are critical errors
+   * @method hasCriticalErrors
+   * @description Checks if there are any critical errors.
+   * @returns {boolean} True if there are critical errors.
    */
   hasCriticalErrors(): boolean {
     return this.errors.some((error) => this.isCriticalError(error));
   }
 
   /**
-   * Gets the recovery strategy registry
-   * @returns The recovery strategy registry
+   * @method getRecoveryRegistry
+   * @description Gets the recovery strategy registry.
+   * @returns {RecoveryStrategyRegistry} The recovery strategy registry.
    */
   getRecoveryRegistry(): RecoveryStrategyRegistry {
     return this.recoveryRegistry;
   }
 
   /**
-   * Gets the logger instance
-   * @returns The logger instance
+   * @method getLogger
+   * @description Gets the logger instance.
+   * @returns {Logger} The logger instance.
    */
   getLogger(): Logger {
     return this.logger;
   }
 
   /**
-   * Logs an info message
-   * @param message - The message to log
-   * @param context - Optional context information
-   * @param node - Optional tree-sitter node for additional context
+   * @method logInfo
+   * @description Logs an info message.
+   * @param {string} _message - The message to log.
+   * @param {string} [_context] - Optional context information.
+   * @param {TSNode} [_node] - Optional tree-sitter node for additional context.
    */
   logInfo(_message: string, _context?: string, _node?: TSNode): void {
     // Info logging removed
   }
 
   /**
-   * Logs a debug message
-   * @param message - The message to log
-   * @param context - Optional context information
-   * @param node - Optional tree-sitter node for additional context
+   * @method logDebug
+   * @description Logs a debug message.
+   * @param {string} _message - The message to log.
+   * @param {string} [_context] - Optional context information.
+   * @param {TSNode} [_node] - Optional tree-sitter node for additional context.
    */
   logDebug(_message: string, _context?: string, _node?: TSNode): void {
     // Debug logging removed
   }
 
   /**
-   * Logs a warning message with optional context information.
-   *
-   * Warning messages indicate potential issues that might not prevent parsing but
-   * could lead to unexpected behavior or AST structure. These warnings are useful for
-   * diagnostic purposes and can help identify problematic code patterns.
-   *
-   * @param message - The warning message to log
-   * @param context - Optional context information (e.g., method name, phase)
-   * @param node - Optional tree-sitter node for additional context such as location
-   *
-   * @example
-   * ```typescript
-   * // Log a simple warning
-   * errorHandler.logWarning('Deprecated syntax detected');
-   *
-   * // Log a warning with context
-   * errorHandler.logWarning('Missing parentheses in expression', 'visitExpression');
-   *
-   * // Log a warning with both context and node information
-   * errorHandler.logWarning(
-   *   'Ambiguous operator precedence',
-   *   'ExpressionVisitor.visitBinaryExpression',
-   *   node
-   * );
-   * ```
-   *
-   * @since 0.1.0
+   * @method logWarning
+   * @description Logs a warning message with optional context information.
+   * @param {string} _message - The warning message to log.
+   * @param {string} [_context] - Optional context information (e.g., method name, phase).
+   * @param {TSNode} [_node] - Optional tree-sitter node for additional context such as location.
    */
   logWarning(_message: string, _context?: string, _node?: TSNode): void {
     // Warning logging removed
   }
 
   /**
-   * Logs an error message with optional context information.
-   *
-   * Error messages indicate significant issues that may prevent successful parsing or
-   * result in an incomplete/incorrect AST. These errors are critical for understanding
-   * parsing failures and should provide clear information about what went wrong and where.
-   *
-   * This method should be used instead of console.log/error throughout the parser codebase
-   * to ensure consistent error handling and logging.
-   *
-   * @param message - The error message to log
-   * @param context - Optional context information (e.g., method name, component)
-   * @param node - Optional tree-sitter node for additional context such as location
-   *
-   * @example
-   * ```typescript
-   * // Log a simple error
-   * errorHandler.logError('Failed to parse expression');
-   *
-   * // Log an error with context
-   * errorHandler.logError('Invalid parameter type', 'ModuleVisitor.processCube');
-   *
-   * // Log an error with both context and node information for location tracking
-   * errorHandler.logError(
-   *   'Unexpected token in module instantiation',
-   *   'CompositeVisitor.visitModuleInstantiation',
-   *   node
-   * );
-   * ```
-   *
-   * @since 0.1.0
+   * @method logError
+   * @description Logs an error message with optional context information.
+   * @param {string} message - The error message to log.
+   * @param {string} [_context] - Optional context information (e.g., method name, component).
+   * @param {TSNode} [_node] - Optional tree-sitter node for additional context such as location.
    */
   logError(message: string, _context?: string, _node?: TSNode): void {
     this.logger.error(message);
   }
 
   /**
-   * Handles an error by logging it and optionally reporting it to the error collection system.
-   *
-   * This method serves as the central error handling mechanism in the parser, providing
-   * consistent error processing for both standard JavaScript errors and specialized
-   * parser errors. It can optionally convert generic errors to parser-specific errors
-   * and adds them to the error collection if appropriate.
-   *
-   * The context parameter allows providing information about where the error occurred,
-   * which is particularly useful for debugging complex parsing scenarios.
-   *
-   * @param error - The error to handle (can be a standard Error or a ParserError)
-   * @param context - Optional context information (e.g., class and method where error occurred)
-   * @param node - Optional tree-sitter node for additional context such as location information
-   *
-   * @example Standard Error
-   * ```typescript
-   * try {
-   *   // Some parsing operation that might fail
-   *   processNode(node);
-   * } catch (err) {
-   *   // Handle any generic error
-   *   errorHandler.handleError(err, 'VisitorASTGenerator.generate', node);
-   * }
-   * ```
-   *
-   * @example With Parser Error
-   * ```typescript
-   * // Creating and handling a specific parser error
-   * const syntaxError = errorHandler.createSyntaxError(
-   *   'Unexpected closing brace',
-   *   { line: 42, column: 10 }
-   * );
-   * errorHandler.handleError(syntaxError, 'BlockVisitor.processBlock');
-   * ```
-   *
-   * @since 0.1.0
+   * @method handleError
+   * @description Handles an error by logging it and optionally reporting it to the error collection system.
+   * @param {Error} error - The error to handle (can be a standard `Error` or a `ParserError`).
+   * @param {string} [context] - Optional context information (e.g., class and method where error occurred).
+   * @param {TSNode} [_node] - Optional tree-sitter node for additional context such as location information.
    */
   handleError(error: Error, context?: string, _node?: TSNode): void {
     const message = context ? `${context}: ${error.message}` : error.message;
@@ -410,27 +334,33 @@ export class ErrorHandler {
   }
 
   /**
-   * Determines if an error should be collected based on severity
-   * @param error - The error to check
-   * @returns True if the error should be collected
+   * @method shouldCollectError
+   * @description Determines if an error should be collected based on severity.
+   * @param {ParserError} error - The error to check.
+   * @returns {boolean} True if the error should be collected.
+   * @private
    */
   private shouldCollectError(error: ParserError): boolean {
     return this.getSeverityLevel(error.severity) >= this.getSeverityLevel(this.options.minSeverity);
   }
 
   /**
-   * Determines if an error is critical and should cause throwing
-   * @param error - The error to check
-   * @returns True if the error is critical
+   * @method isCriticalError
+   * @description Determines if an error is critical and should cause throwing.
+   * @param {ParserError} error - The error to check.
+   * @returns {boolean} True if the error is critical.
+   * @private
    */
   private isCriticalError(error: ParserError): boolean {
     return this.getSeverityLevel(error.severity) >= this.getSeverityLevel(Severity.ERROR);
   }
 
   /**
-   * Gets the numeric level for a severity
-   * @param severity - The severity to get level for
-   * @returns Numeric level for comparison
+   * @method getSeverityLevel
+   * @description Gets the numeric level for a severity.
+   * @param {Severity} severity - The severity to get the level for.
+   * @returns {number} The numeric level for comparison.
+   * @private
    */
   private getSeverityLevel(severity: Severity): number {
     const levels: Record<Severity, number> = {

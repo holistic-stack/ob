@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser.js';
+import type * as ASTTypes from '../ast-types.js';
 
 describe('Cube Primitive', () => {
   let parser: OpenscadParser;
@@ -22,7 +23,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size value
       expect(typeof cubeNode.size).toBe('number');
@@ -38,7 +39,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size value
       expect(typeof cubeNode.size).toBe('number');
@@ -56,7 +57,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size value
       expect(typeof cubeNode.size).toBe('number');
@@ -72,7 +73,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size value
       expect(typeof cubeNode.size).toBe('number');
@@ -90,7 +91,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, the size might be a number or an array
       // We'll just check that it's a valid size
@@ -108,7 +109,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, the size might be a number or an array
       // We'll just check that it's a valid size
@@ -126,7 +127,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size format
       // It could be a number or an array depending on the parser implementation
@@ -150,7 +151,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       // With the real parser, we need to be more flexible about the size format
       // It could be a number or an array depending on the parser implementation
@@ -174,7 +175,7 @@ describe('Cube Primitive', () => {
       expect(ast).toBeDefined();
       expect(ast).toHaveLength(1);
 
-      const cubeNode = ast[0] as ast.CubeNode;
+      const cubeNode = ast[0] as ASTTypes.CubeNode;
       expect(cubeNode.type).toBe('cube');
       expect(cubeNode.size).toBe(1);
       // With the real parser, the center parameter might be different

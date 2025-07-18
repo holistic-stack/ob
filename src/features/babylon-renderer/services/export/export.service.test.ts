@@ -130,7 +130,7 @@ describe('ExportService', () => {
   });
 
   describe('STL Export', () => {
-    it('should fail to export STL format (not yet implemented)', async () => {
+    it('should successfully export STL format', async () => {
       const config: ExportConfig = {
         format: 'stl',
         filename: 'test.stl',
@@ -139,14 +139,16 @@ describe('ExportService', () => {
 
       const result = await exportService.exportMeshes([testMesh1, testMesh2], config);
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filename).toBe('test.stl');
+        expect(result.data.format).toBe('stl');
+        expect(result.data.meshCount).toBe(2);
+        expect(result.data.fileSize).toBeGreaterThan(0);
       }
     });
 
-    it('should fail to export scene to STL format', async () => {
+    it('should successfully export scene to STL format', async () => {
       const config: ExportConfig = {
         format: 'stl',
         filename: 'scene.stl',
@@ -155,10 +157,11 @@ describe('ExportService', () => {
 
       const result = await exportService.exportScene(config);
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filename).toBe('scene.stl');
+        expect(result.data.format).toBe('stl');
+        expect(result.data.meshCount).toBeGreaterThan(0);
       }
     });
 
@@ -187,8 +190,8 @@ describe('ExportService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+        expect(result.error.code).toBe('UNSUPPORTED_FORMAT');
+        expect(result.error.message).toContain('3MF export is not yet implemented');
       }
     });
 
@@ -202,8 +205,8 @@ describe('ExportService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+        expect(result.error.code).toBe('UNSUPPORTED_FORMAT');
+        expect(result.error.message).toContain('GLTF export is not yet implemented');
       }
     });
 
@@ -217,8 +220,8 @@ describe('ExportService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+        expect(result.error.code).toBe('UNSUPPORTED_FORMAT');
+        expect(result.error.message).toContain('GLB export is not yet implemented');
       }
     });
   });
@@ -249,7 +252,7 @@ describe('ExportService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
+        expect(result.error.code).toBe('UNSUPPORTED_FORMAT');
       }
     });
 
@@ -391,7 +394,7 @@ describe('ExportService', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
+        expect(result.error.code).toBe('DOWNLOAD_FAILED');
       }
 
       // Restore original function
@@ -400,18 +403,18 @@ describe('ExportService', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle export errors', async () => {
+    it('should handle unsupported format errors', async () => {
       const config: ExportConfig = {
-        format: 'stl',
-        filename: 'error.stl',
+        format: 'unsupported' as any,
+        filename: 'error.unsupported',
       };
 
       const result = await exportService.exportMeshes([testMesh1], config);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('EXPORT_FAILED');
-        expect(result.error.message).toContain('Export failed');
+        expect(result.error.code).toBe('UNSUPPORTED_FORMAT');
+        expect(result.error.message).toContain('Unsupported format');
       }
     });
 

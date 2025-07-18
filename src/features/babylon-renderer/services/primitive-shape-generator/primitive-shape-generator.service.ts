@@ -14,7 +14,7 @@
  * ```
  */
 
-import { BoundingBox, Matrix, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
+import { BoundingBox, Matrix, type Mesh, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -386,7 +386,7 @@ export class PrimitiveShapeGeneratorService {
    * Convert BabylonJS mesh to GenericMeshData
    */
   private async convertBabylonMeshToGeneric(
-    babylonMesh: any,
+    babylonMesh: Mesh,
     primitiveType: string,
     params: unknown,
     generationTime: number
@@ -449,17 +449,12 @@ export class PrimitiveShapeGeneratorService {
     message: string,
     details?: Record<string, unknown>
   ): PrimitiveGenerationError {
-    const error: PrimitiveGenerationError = {
+    return {
       code,
       message,
       primitiveType,
       timestamp: new Date(),
+      ...(details && { details }),
     };
-
-    if (details) {
-      (error as any).details = details;
-    }
-
-    return error;
   }
 }

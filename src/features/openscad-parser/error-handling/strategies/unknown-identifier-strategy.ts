@@ -1,136 +1,50 @@
 /**
- * @file Unknown identifier recovery strategy for OpenSCAD parser error handling
- *
- * This module implements a sophisticated recovery strategy for handling unknown
+ * @file unknown-identifier-strategy.ts
+ * @description This file implements a sophisticated recovery strategy for handling unknown
  * identifier errors in OpenSCAD code. Unknown identifiers are common when
  * variables, functions, or modules are misspelled or referenced before declaration.
  * This strategy uses advanced string similarity algorithms and scope-aware
  * identifier tracking to provide intelligent suggestions and automatic corrections.
  *
- * The unknown identifier strategy includes:
- * - **Scope-Aware Tracking**: Maintains identifier visibility across different scopes
- * - **Levenshtein Distance**: Uses edit distance algorithms for similarity matching
- * - **Multi-Type Support**: Handles variables, functions, and modules separately
- * - **Intelligent Suggestions**: Provides ranked suggestions based on similarity and context
- * - **Automatic Correction**: Attempts to replace unknown identifiers with best matches
- * - **Context Preservation**: Maintains error context with suggestion information
+ * @architectural_decision
+ * The `UnknownIdentifierStrategy` is a powerful recovery strategy that uses the Levenshtein
+ * distance algorithm to find the most likely correction for a misspelled identifier. This
+ * approach is more complex than simple string matching, but it provides a much better user
+ * experience by offering intelligent suggestions. The strategy is also scope-aware, meaning
+ * it will only suggest identifiers that are visible in the current scope. This prevents
+ * incorrect suggestions and ensures that the recovered code is semantically valid.
  *
- * Key features:
- * - **Advanced String Matching**: Levenshtein distance algorithm for fuzzy matching
- * - **Scope Management**: Tracks identifiers across nested scopes and modules
- * - **Type-Aware Suggestions**: Prioritizes suggestions based on identifier type
- * - **Configurable Thresholds**: Adjustable edit distance and suggestion limits
- * - **Pattern Recognition**: Extracts unknown identifiers from various error message formats
- * - **High Priority Processing**: Executes early (priority 30) for common identifier errors
- *
- * Identifier types handled:
- * - **Variables**: Local variables, parameters, and global constants
- * - **Functions**: Built-in functions, user-defined functions, and mathematical operations
- * - **Modules**: User-defined modules and built-in OpenSCAD modules
- *
- * Recovery patterns supported:
- * - **Typo Correction**: `cuve(10)` → `cube(10)` (single character error)
- * - **Case Sensitivity**: `Cube(10)` → `cube(10)` (case mismatch)
- * - **Missing Characters**: `spere(5)` → `sphere(5)` (missing character)
- * - **Extra Characters**: `cuube(10)` → `cube(10)` (extra character)
- * - **Character Transposition**: `pshere(5)` → `sphere(5)` (swapped characters)
- *
- * The strategy implements intelligent scope resolution:
- * 1. **Scope Tracking**: Maintain current scope hierarchy for identifier visibility
- * 2. **Identifier Registration**: Track available identifiers by scope and type
- * 3. **Error Analysis**: Extract unknown identifier from error messages and context
- * 4. **Similarity Matching**: Find similar identifiers using Levenshtein distance
- * 5. **Suggestion Ranking**: Sort suggestions by distance, type priority, and name
- * 6. **Automatic Correction**: Replace unknown identifier with best match
- *
- * @example Basic unknown identifier recovery
+ * @example
  * ```typescript
  * import { UnknownIdentifierStrategy } from './unknown-identifier-strategy';
- * import { ReferenceError } from '../types/error-types';
+ * import { ParserError, ErrorCode, Severity } from '../types/error-types';
  *
+ * // 1. Create a new strategy instance
  * const strategy = new UnknownIdentifierStrategy();
  *
- * // Register available identifiers
- * strategy.setCurrentScope(['main']);
- * strategy.addIdentifier('cube', 'function');
- * strategy.addIdentifier('sphere', 'function');
- * strategy.addIdentifier('cylinder', 'function');
+ * // 2. Add some identifiers to the scope
+ * strategy.addIdentifier('my_variable', 'variable');
  *
- * // Create error for unknown identifier
- * const error = new ReferenceError('Unknown identifier: cuve', {
- *   line: 1,
- *   column: 1,
- *   found: 'cuve'
- * });
+ * // 3. Create a sample error
+ * const error = new ParserError('Unknown identifier: my_var', ErrorCode.UNDEFINED_VARIABLE, Severity.ERROR);
  *
- * // Attempt recovery
+ * // 4. Check if the strategy can handle the error
  * if (strategy.canHandle(error)) {
- *   const fixedCode = strategy.recover(error, 'cuve(10);');
- *   console.log('Fixed code:', fixedCode);
- *   // Output: 'cube(10);'
+ *   // 5. Attempt to recover from the error
+ *   const originalCode = 'echo(my_var);';
+ *   const recoveredCode = strategy.recover(error, originalCode);
  *
- *   const suggestion = strategy.getRecoverySuggestion(error);
- *   console.log('Suggestion:', suggestion);
- *   // Output: "Did you mean 'cube'?"
+ *   // 6. Log the result
+ *   console.log('Recovered code:', recoveredCode);
+ *   // Expected output: 'echo(my_variable);'
  * }
  * ```
  *
- * @example Advanced scope-aware identifier tracking
- * ```typescript
- * const strategy = new UnknownIdentifierStrategy();
- *
- * // Set up nested scope hierarchy
- * strategy.setCurrentScope(['main', 'my_module']);
- *
- * // Register identifiers in different scopes
- * strategy.addIdentifier('width', 'variable');
- * strategy.addIdentifier('height', 'variable');
- * strategy.addIdentifier('create_shape', 'function');
- *
- * // Switch to different scope
- * strategy.setCurrentScope(['main']);
- * strategy.addIdentifier('global_size', 'variable');
- *
- * // Handle error with scope-aware suggestions
- * const error = new ReferenceError('Undefined variable: widht', {
- *   line: 5,
- *   column: 10,
- *   found: 'widht'
- * });
- *
- * const fixedCode = strategy.recover(error, 'translate([widht, 0, 0])');
- * // Suggests 'width' from the appropriate scope
- * ```
- *
- * @example Complex error handling with multiple suggestions
- * ```typescript
- * const strategy = new UnknownIdentifierStrategy();
- *
- * // Register similar identifiers
- * strategy.addIdentifier('translate', 'function');
- * strategy.addIdentifier('rotate', 'function');
- * strategy.addIdentifier('scale', 'function');
- * strategy.addIdentifier('transformation', 'variable');
- *
- * // Handle ambiguous error
- * const error = new ReferenceError('Unknown function: transalte', {
- *   line: 3,
- *   column: 1,
- *   found: 'transalte'
- * });
- *
- * if (strategy.canHandle(error)) {
- *   const fixedCode = strategy.recover(error, 'transalte([1,0,0]) cube(5);');
- *   // Automatically corrects to 'translate' (closest match)
- *
- *   const suggestions = error.context.suggestions;
- *   console.log('All suggestions:', suggestions);
- *   // Output: ['translate', 'transformation'] (ranked by similarity)
- * }
- * ```
- *
- * @module unknown-identifier-strategy
- * @since 0.1.0
+ * @integration
+ * The `UnknownIdentifierStrategy` is registered with the `RecoveryStrategyRegistry`.
+ * When the `ErrorHandler` attempts to recover from an error, the registry will invoke
+ * this strategy if the error is an unknown identifier error. If the strategy is successful,
+ * the recovered code is returned to the error handler.
  */
 
 import { ErrorCode, type ParserError } from '../types/error-types.js';
@@ -143,37 +57,9 @@ interface IdentifierSuggestion {
 }
 
 /**
- * Sophisticated recovery strategy for automatically fixing unknown identifier errors.
- *
- * The UnknownIdentifierStrategy extends BaseRecoveryStrategy to provide intelligent
- * recovery for misspelled or undefined variables, functions, and modules in OpenSCAD
- * code. This strategy implements advanced string similarity algorithms and scope-aware
- * identifier tracking to provide accurate suggestions and automatic corrections.
- *
- * This implementation provides:
- * - **High Priority Processing**: Executes early (priority 30) for common identifier errors
- * - **Scope-Aware Tracking**: Maintains identifier visibility across nested scopes
- * - **Levenshtein Distance**: Advanced string similarity matching with configurable thresholds
- * - **Multi-Type Support**: Handles variables, functions, and modules with type-aware prioritization
- * - **Intelligent Ranking**: Sorts suggestions by edit distance, type priority, and alphabetical order
- * - **Context Preservation**: Updates error context with suggestion information for user feedback
- *
- * The strategy maintains sophisticated identifier tracking:
- * - **Scoped Identifiers**: Map of scope keys to identifier sets with type information
- * - **Current Scope**: Array representing the current scope hierarchy (innermost last)
- * - **Type Classification**: Separate tracking for variables, functions, and modules
- * - **Configurable Limits**: Maximum suggestions (3) and edit distance (2) for performance
- *
- * Algorithm features:
- * - **Pattern Recognition**: Extracts unknown identifiers from various error message formats
- * - **Fuzzy Matching**: Uses Levenshtein distance for similarity calculation
- * - **Scope Resolution**: Checks current scope and global scope for identifier visibility
- * - **Type Prioritization**: Prefers variables over functions/modules in suggestion ranking
- * - **Exact Replacement**: Performs precise identifier replacement at error locations
- *
  * @class UnknownIdentifierStrategy
  * @extends {BaseRecoveryStrategy}
- * @since 0.1.0
+ * @description Sophisticated recovery strategy for automatically fixing unknown identifier errors.
  */
 export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   private readonly maxSuggestions = 3;
@@ -183,21 +69,27 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   private scopedIdentifiers: Map<string, Set<string>> = new Map();
   private currentScope: string[] = [];
 
-  /** Higher priority than default */
+  /**
+   * @property {number} priority
+   * @description The priority of this strategy. Higher numbers are tried first.
+   * @override
+   */
   public override readonly priority: number = 30;
 
   /**
-   * Updates the current scope for identifier resolution
-   * @param scope - Array of scope names (innermost last)
+   * @method setCurrentScope
+   * @description Updates the current scope for identifier resolution.
+   * @param {string[]} scope - An array of scope names (innermost last).
    */
   setCurrentScope(scope: string[]): void {
     this.currentScope = [...scope];
   }
 
   /**
-   * Adds an identifier to the current scope
-   * @param name - Identifier name
-   * @param type - Type of identifier (variable/function/module)
+   * @method addIdentifier
+   * @description Adds an identifier to the current scope.
+   * @param {string} name - The identifier name.
+   * @param {'variable' | 'function' | 'module'} [type='variable'] - The type of identifier.
    */
   addIdentifier(name: string, type: 'variable' | 'function' | 'module' = 'variable'): void {
     const scopeKey = this.currentScope.join('::');
@@ -208,7 +100,10 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Determines if this strategy can handle the given error
+   * @method canHandle
+   * @description Determines if this strategy can handle the given error.
+   * @param {ParserError} error - The error to check.
+   * @returns {boolean} True if this is an unknown identifier error.
    */
   canHandle(error: ParserError): boolean {
     return (
@@ -224,7 +119,11 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Attempts to recover from an unknown identifier error
+   * @method recover
+   * @description Attempts to recover from an unknown identifier error.
+   * @param {ParserError} error - The error to recover from.
+   * @param {string} code - The source code where the error occurred.
+   * @returns {string | null} The modified source code with the corrected identifier, or null if recovery fails.
    */
   recover(error: ParserError, code: string): string | null {
     const position = this.getErrorPosition(error);
@@ -252,7 +151,11 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Extracts the unknown identifier from the error
+   * @method extractIdentifier
+   * @description Extracts the unknown identifier from the error.
+   * @param {ParserError} error - The error to extract the identifier from.
+   * @returns {string | null} The unknown identifier, or null if it cannot be extracted.
+   * @private
    */
   private extractIdentifier(error: ParserError): string | null {
     // Try to get from context first
@@ -279,7 +182,11 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Finds identifiers similar to the given name in the current scope
+   * @method findSimilarIdentifiers
+   * @description Finds identifiers similar to the given name in the current scope.
+   * @param {string} name - The name to find similar identifiers for.
+   * @returns {IdentifierSuggestion[]} An array of suggestions, sorted by relevance.
+   * @private
    */
   private findSimilarIdentifiers(name: string): IdentifierSuggestion[] {
     const suggestions: IdentifierSuggestion[] = [];
@@ -322,7 +229,12 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Calculates Levenshtein distance between two strings
+   * @method calculateLevenshteinDistance
+   * @description Calculates the Levenshtein distance between two strings.
+   * @param {string} a - The first string.
+   * @param {string} b - The second string.
+   * @returns {number} The Levenshtein distance between the two strings.
+   * @private
    */
   private calculateLevenshteinDistance(a: string, b: string): number {
     if (a.length === 0) return b.length;
@@ -368,7 +280,15 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Replaces an identifier in the source code
+   * @method replaceIdentifier
+   * @description Replaces an identifier in the source code.
+   * @param {string} code - The source code.
+   * @param {number} lineNumber - The line number of the identifier.
+   * @param {number} column - The column number of the identifier.
+   * @param {string} oldName - The old identifier name.
+   * @param {string} newName - The new identifier name.
+   * @returns {string | null} The modified source code, or null if the replacement fails.
+   * @private
    */
   private replaceIdentifier(
     code: string,
@@ -398,7 +318,12 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Gets the character position of the start of a line
+   * @method getLineStartPosition
+   * @description Gets the character position of the start of a line.
+   * @param {string} code - The source code.
+   * @param {number} lineNumber - The line number.
+   * @returns {number} The character position of the start of the line.
+   * @private
    */
   private getLineStartPosition(code: string, lineNumber: number): number {
     const lines = code.split('\n');
@@ -415,7 +340,10 @@ export class UnknownIdentifierStrategy extends BaseRecoveryStrategy {
   }
 
   /**
-   * Gets a human-readable description of the recovery action
+   * @method getRecoverySuggestion
+   * @description Gets a human-readable description of the recovery action.
+   * @param {ParserError} error - The error being recovered from.
+   * @returns {string} A description of the recovery action.
    */
   getRecoverySuggestion(error: ParserError): string {
     const suggestions = error.context.suggestions;

@@ -55,7 +55,7 @@ describe('ListComprehensionVisitor', () => {
   describe('Traditional Syntax', () => {
     it.skip('should parse simple list comprehension [x for (x = [1:5])]', () => {
       const code = '[x for (x = [1:5])]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       // Find the list comprehension node
@@ -75,10 +75,7 @@ describe('ListComprehensionVisitor', () => {
     Location: ${JSON.stringify(errorNode.location)}
     Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (
-          result?.type === 'expression' &&
-          result.expressionType === 'list_comprehension_expression'
-        ) {
+        } else if (result?.type === 'list_comprehension') {
           expect(result.variable).toBe('x');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('range_expression');
@@ -96,7 +93,7 @@ describe('ListComprehensionVisitor', () => {
 
     it.skip('should parse expression list comprehension [x*x for (x = [1:5])]', () => {
       const code = '[x*x for (x = [1:5])]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
@@ -105,9 +102,8 @@ describe('ListComprehensionVisitor', () => {
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
-        expect(result?.type).toBe('expression');
+        expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
-          expect(result.expressionType).toBe('list_comprehension_expression');
           expect(result.variable).toBe('x');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('range_expression');
@@ -122,7 +118,7 @@ describe('ListComprehensionVisitor', () => {
 
     it.skip('should parse conditional list comprehension [x for (x = [1:10]) if (x % 2 == 0)]', () => {
       const code = '[x for (x = [1:10]) if (x % 2 == 0)]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
@@ -134,8 +130,7 @@ describe('ListComprehensionVisitor', () => {
         if (result && 'type' in result) {
           if (result.type === 'error') {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
-          } else if (result.type === 'expression') {
-            expect(result.expressionType).toBe('list_comprehension_expression');
+          } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('x');
             expect(result.range).toBeTruthy();
             expect(result.range?.expressionType).toBe('range_expression');
@@ -158,7 +153,7 @@ describe('ListComprehensionVisitor', () => {
   describe('OpenSCAD Syntax', () => {
     it('should parse OpenSCAD list comprehension [for (x = [1:5]) x]', () => {
       const code = 'values = [for (x = [1:5]) x];';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       // Find the list comprehension node within the assignment
@@ -179,12 +174,8 @@ describe('ListComprehensionVisitor', () => {
     Location: ${JSON.stringify(errorNode.location)}
     Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (
-          result?.type === 'expression' &&
-          result.expressionType === 'list_comprehension_expression'
-        ) {
-          // Original success assertions (with slight adjustment for clarity):
-          expect(result.expressionType).toBe('list_comprehension_expression');
+        } else if (result?.type === 'list_comprehension') {
+          // Updated success assertions for new AST structure:
           expect(result.variable).toBe('x');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('vector'); // [1:5] is parsed as vector containing range
@@ -203,7 +194,7 @@ describe('ListComprehensionVisitor', () => {
 
     it('should parse OpenSCAD list comprehension with condition [for (x = [1:10]) if (x % 2 == 0) x]', () => {
       const code = 'evens = [for (x = [1:10]) if (x % 2 == 0) x];';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       if (!tree?.rootNode) throw new Error('No root node found');
@@ -216,8 +207,7 @@ describe('ListComprehensionVisitor', () => {
         if (result && 'type' in result) {
           if (result.type === 'error') {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
-          } else if (result.type === 'expression') {
-            expect(result.expressionType).toBe('list_comprehension_expression');
+          } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('x');
             expect(result.range).toBeTruthy();
             expect(result.range?.expressionType).toBe('vector'); // [1:10] is parsed as vector containing range
@@ -240,7 +230,7 @@ describe('ListComprehensionVisitor', () => {
   describe('Complex Expressions', () => {
     it('should parse list comprehension with complex conditional [for (i = [0:10]) if (i > 2 && i < 8 && i % 2 == 0) i*i]', () => {
       const code = 'result = [for (i = [0:10]) if (i > 2 && i < 8 && i % 2 == 0) i*i];';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       if (!tree?.rootNode) throw new Error('No root node found');
@@ -253,8 +243,7 @@ describe('ListComprehensionVisitor', () => {
         if (result && 'type' in result) {
           if (result.type === 'error') {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
-          } else if (result.type === 'expression') {
-            expect(result.expressionType).toBe('list_comprehension_expression');
+          } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('i');
             expect(result.range).toBeTruthy();
             expect(result.range?.expressionType).toBe('vector'); // [0:10] is parsed as vector containing range
@@ -273,7 +262,7 @@ describe('ListComprehensionVisitor', () => {
 
     it('should parse list comprehension with function calls [for (i = [0:2]) a_function(i)]', () => {
       const code = 'result = [for (i = [0:2]) a_function(i)];';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       if (!tree?.rootNode) throw new Error('No root node found');
@@ -283,9 +272,8 @@ describe('ListComprehensionVisitor', () => {
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
-        expect(result?.type).toBe('expression');
+        expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
-          expect(result.expressionType).toBe('list_comprehension_expression');
           expect(result.variable).toBe('i');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
@@ -300,7 +288,7 @@ describe('ListComprehensionVisitor', () => {
 
     it('should parse list comprehension with nested arrays [for (i = [0:2]) [i, i*2]]', () => {
       const code = 'nested = [for (i = [0:2]) [i, i*2]];';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       if (!tree?.rootNode) throw new Error('No root node found');
@@ -310,9 +298,8 @@ describe('ListComprehensionVisitor', () => {
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         expect(result).toBeTruthy();
-        expect(result?.type).toBe('expression');
+        expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
-          expect(result.expressionType).toBe('list_comprehension_expression');
           expect(result.variable).toBe('i');
           expect(result.range).toBeTruthy();
           expect(result.range?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
@@ -327,7 +314,7 @@ describe('ListComprehensionVisitor', () => {
 
     it.skip('should return an ErrorNode for invalid "for...let" order in [for (i = [0:2]) let(x = i*2) x]', () => {
       const code = '[for (i = [0:2]) let(x = i*2) x]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
@@ -342,7 +329,7 @@ describe('ListComprehensionVisitor', () => {
             "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
           );
         } else {
-          const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
+          const message = `Expected error, got ${result?.type === 'list_comprehension' ? 'list_comprehension' : 'something else'}: ${JSON.stringify(result)}`;
           throw new Error(message);
         }
       }
@@ -352,7 +339,7 @@ describe('ListComprehensionVisitor', () => {
   describe('Let Expressions', () => {
     it.skip('should return an ErrorNode for invalid "for...let" order in [for (i = [0:3]) let(angle = i * 36) [cos(angle), sin(angle)]]', () => {
       const code = '[for (i = [0:3]) let(angle = i * 36) [cos(angle), sin(angle)]]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
@@ -367,7 +354,7 @@ describe('ListComprehensionVisitor', () => {
             "Required 'list_comprehension_for' child node not found for OpenSCAD-style list comprehension."
           );
         } else {
-          const message = `Expected error, got ${result?.type === 'expression' ? 'expression' : 'something else'}: ${JSON.stringify(result)}`;
+          const message = `Expected error, got ${result?.type === 'list_comprehension' ? 'list_comprehension' : 'something else'}: ${JSON.stringify(result)}`;
           throw new Error(message);
         }
       }
@@ -376,7 +363,7 @@ describe('ListComprehensionVisitor', () => {
     it.skip('should return an ErrorNode for invalid "for...let" order in [for (a = [1:4]) let(b = a*a, c = 2*b) [a, b, c]]', async () => {
       // Test multiple let assignments
       const code = '[for (a = [1:4]) let(b = a*a, c = 2*b) [a, b, c]]';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
@@ -402,24 +389,20 @@ describe('ListComprehensionVisitor', () => {
   describe('Error Handling', () => {
     it('should handle malformed list comprehension gracefully', () => {
       const code = '[for (x = [1:5]'; // Missing closing bracket and expression
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
       const listCompNode = tree?.rootNode.descendantForIndex(0, code.length);
       if (listCompNode) {
         const result = visitor.visitListComprehension(listCompNode);
         // For malformed input, we expect an ErrorNode or potentially null if parsing fails very early
-        expect(result === null || result?.type === 'error' || result?.type === 'expression').toBe(
-          true
-        );
-        if (
-          result &&
-          result.type === 'expression' &&
-          result.expressionType !== 'list_comprehension_expression'
-        ) {
-          // If it's an expression but not a list comprehension, it might be a partially parsed node or an error wrapped as expression.
+        expect(
+          result === null || result?.type === 'error' || result?.type === 'list_comprehension'
+        ).toBe(true);
+        if (result && result.type === 'list_comprehension') {
+          // If it's a list comprehension, it might be a partially parsed node.
           // This test is primarily about not crashing and returning *something* sensible or an error.
-        } else if (result && result.type !== 'error' && result.type !== 'expression') {
+        } else if (result && result.type !== 'error' && result.type !== 'list_comprehension') {
           throw new Error(
             'Expected ErrorNode, null, or partial ListComprehensionExpressionNode for malformed input'
           );
@@ -429,10 +412,11 @@ describe('ListComprehensionVisitor', () => {
 
     it('should return an ErrorNode for non-list-comprehension nodes', () => {
       const code = 'cube(10)';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).toBeTruthy();
 
-      const cubeNode = tree?.rootNode.descendantForIndex(0, code.length);
+      if (!tree?.rootNode) throw new Error('No root node found');
+      const cubeNode = tree.rootNode.descendantForIndex(0, code.length);
       if (cubeNode) {
         const result = visitor.visitListComprehension(cubeNode);
         expect(result).toBeTruthy(); // Check it's not null

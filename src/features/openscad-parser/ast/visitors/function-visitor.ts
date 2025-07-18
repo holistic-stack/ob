@@ -1,73 +1,63 @@
 /**
- * @file Function definitions and calls visitor for OpenSCAD parser
- *
- * This module implements the FunctionVisitor class, which specializes in processing
+ * @file function-visitor.ts
+ * @description This file implements the `FunctionVisitor` class, which specializes in processing
  * OpenSCAD function definitions and function calls, converting them to structured
  * AST representations. Functions are essential to OpenSCAD's computational model,
  * enabling mathematical calculations, code reuse, and parametric design patterns.
  *
- * The FunctionVisitor handles:
- * - **Function Definitions**: User-defined functions with parameters and expressions
- * - **Function Calls**: Invocation of user-defined and built-in functions
- * - **Parameter Processing**: Function parameter extraction and validation
- * - **Expression Processing**: Function body expression parsing and evaluation
- * - **Return Value Handling**: Processing of function return expressions
- * - **Scope Management**: Function parameter scope and variable resolution
+ * @architectural_decision
+ * The `FunctionVisitor` is a specialized visitor responsible for handling `function` definitions.
+ * It is designed to be a focused component within the composite visitor pattern, ensuring that
+ * function-related nodes are processed correctly. The visitor extracts the function name,
+ * parameters, and the expression that constitutes the function body. This separation of concerns
+ * allows the `ExpressionVisitor` to handle the evaluation of function calls, while this visitor
+ * focuses on the definition.
  *
- * Key features:
- * - **Parametric Functions**: Support for functions with typed parameters and default values
- * - **Expression Integration**: Comprehensive expression parsing for function bodies
- * - **Call Resolution**: Function call processing with argument binding
- * - **Type Safety**: Parameter and return type validation
- * - **Error Recovery**: Graceful handling of malformed function definitions
- * - **Location Tracking**: Source location preservation for debugging and IDE integration
- *
- * Function processing patterns:
- * - **Simple Functions**: `function name() = expression;` - functions without parameters
- * - **Parametric Functions**: `function name(param1, param2=default) = expression;` - functions with parameters
- * - **Function Calls**: `name(arg1, arg2)` - calling user-defined functions
- * - **Mathematical Functions**: `function area(r) = PI * r * r;` - mathematical calculations
- * - **Conditional Functions**: `function abs(x) = x >= 0 ? x : -x;` - conditional expressions
- *
- * The visitor implements a dual processing strategy:
- * 1. **Function Definitions**: Extract name, parameters, and expression for reusable functions
- * 2. **Function Calls**: Process invocations with argument binding and expression evaluation
- *
- * @example Basic function processing
+ * @example
  * ```typescript
  * import { FunctionVisitor } from './function-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new FunctionVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'function add(a, b) = a + b;';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process function definition
- * const funcDefNode = visitor.visitFunctionDefinition(funcDefCST);
- * // Returns: { type: 'function_definition', name: 'add', parameters: [...], expression: {...} }
+ *   // 2. Create an error handler and visitor
+ *   const errorHandler = new ErrorHandler();
+ *   const functionVisitor = new FunctionVisitor(sourceCode, errorHandler, new Map());
  *
- * // Process function call
- * const funcCallNode = visitor.createFunctionCallNode(funcCallCST, 'add', args);
- * // Returns: { type: 'function_call', name: 'add', arguments: [...] }
+ *   // 3. Visit the function_definition node
+ *   const functionDefinitionNode = tree.rootNode.firstChild!;
+ *   const astNode = functionVisitor.visitFunctionDefinition(functionDefinitionNode);
+ *
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "function_definition",
+ *   //   "name": { "type": "expression", "expressionType": "identifier", "name": "add", ... },
+ *   //   "parameters": [ { "name": "a", ... }, { "name": "b", ... } ],
+ *   //   "expression": { "type": "expression", "expressionType": "binary", ... }
+ *   // }
+ *
+ *   // 5. Clean up
+ *   parser.delete();
+ * }
+ *
+ * main();
  * ```
  *
- * @example Mathematical function processing
- * ```typescript
- * // For OpenSCAD code: function area(radius) = PI * radius * radius;
- * const funcNode = visitor.visitFunctionDefinition(funcCST);
- * // Returns function definition with mathematical expression
- *
- * // For function call: area(5)
- * const callNode = visitor.createFunctionCallNode(callCST, 'area', [radiusArg]);
- * // Returns function call with bound argument
- * ```
- *
- * @example Conditional function processing
- * ```typescript
- * // For OpenSCAD code: function abs(x) = x >= 0 ? x : -x;
- * const conditionalFunc = visitor.visitFunctionDefinition(conditionalCST);
- * // Returns function definition with conditional expression
- * ```
- *
- * @module function-visitor
- * @since 0.1.0
+ * @integration
+ * The `FunctionVisitor` is a core component of the `CompositeVisitor`. It is responsible for
+ * processing `function_definition` nodes. When the `CompositeVisitor` encounters a function
+ * definition, it delegates to this visitor, which then returns a `FunctionDefinitionNode`.
+ * This node is then added to the final AST, making the function available for calls.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -83,25 +73,18 @@ import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for processing OpenSCAD function definitions and calls.
- *
- * The FunctionVisitor extends BaseASTVisitor to provide specialized handling for
- * user-defined functions and function invocations. It manages the complex process
- * of extracting function parameters, processing function expressions, and handling
- * both simple and parametric function patterns.
- *
- * This implementation provides:
- * - **Function Definition Processing**: Complete extraction of function metadata and expressions
- * - **Function Call Processing**: Argument binding and call resolution
- * - **Parameter Management**: Type-safe parameter extraction and validation
- * - **Expression Integration**: Seamless integration with expression evaluation system
- * - **Error Context Preservation**: Detailed error information for debugging
- *
  * @class FunctionVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for processing OpenSCAD function definitions and calls.
  */
 export class FunctionVisitor extends BaseASTVisitor {
+  /**
+   * @constructor
+   * @description Creates a new `FunctionVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} variableScope - The current variable scope.
+   */
   constructor(
     source: string,
     protected override errorHandler: ErrorHandler,
@@ -111,12 +94,10 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitStatement to only handle function-related statements
-   * This prevents the FunctionVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The function AST node or null if this is not a function statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle function-related statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The function AST node, or null if this is not a function statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -133,9 +114,12 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitModuleInstantiation to only handle function definitions
-   * The FunctionVisitor should not handle module instantiations (function calls)
-   * Those should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
+   * @method visitModuleInstantiation
+   * @description Overrides the base `visitModuleInstantiation` to only handle function definitions.
+   * The `FunctionVisitor` should not handle module instantiations (function calls).
+   * @param {TSNode} _node - The module instantiation node to visit.
+   * @returns {null} Always returns null.
+   * @override
    */
   override visitModuleInstantiation(_node: TSNode): ast.ASTNode | null {
     // FunctionVisitor only handles function definitions, not function calls/module instantiations
@@ -144,11 +128,13 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a specific function
-   * @param node The node to process
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The AST node or null if the function is not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a specific function.
+   * @param {TSNode} node - The node to process.
+   * @param {string} _functionName - The name of the function.
+   * @param {ast.Parameter[]} _args - The arguments to the function.
+   * @returns {ast.ASTNode | null} The AST node, or null if the function is not supported.
+   * @protected
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -166,9 +152,11 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a function definition node
-   * @param node The function definition node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitFunctionDefinition
+   * @description Visits a function definition node.
+   * @param {TSNode} node - The function definition node to visit.
+   * @returns {ast.FunctionDefinitionNode | null} The AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitFunctionDefinition(node: TSNode): ast.FunctionDefinitionNode | null {
     this.errorHandler.logDebug(
@@ -337,11 +325,13 @@ export class FunctionVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a function call node
-   * @param node The node to process
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The function call AST node
+   * @method createFunctionCallNode
+   * @description Creates a function call node.
+   * @param {TSNode} node - The node to process.
+   * @param {string} functionName - The name of the function.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.FunctionCallNode} The function call AST node.
+   * @public
    */
   public createFunctionCallNode(
     node: TSNode,

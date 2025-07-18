@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../openscad-parser';
+import type * as ASTTypes from '../ast-types.js';
 
 describe('Transformation AST Generation', () => {
   let parser: OpenscadParser;
@@ -20,10 +21,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('mirror');
 
-      const mirrorNode = ast[0] as ast.MirrorNode;
+      const mirrorNode = ast[0] as ASTTypes.MirrorNode;
       expect(mirrorNode.v).toEqual([1, 0, 0]);
       expect(mirrorNode.children).toHaveLength(1);
-      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
+      expect((mirrorNode.children[0] as ASTTypes.CubeNode).type).toBe('cube');
     });
 
     it('should parse a mirror with named v parameter', async () => {
@@ -33,10 +34,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('mirror');
 
-      const mirrorNode = ast[0] as ast.MirrorNode;
+      const mirrorNode = ast[0] as ASTTypes.MirrorNode;
       expect(mirrorNode.v).toEqual([0, 1, 0]);
       expect(mirrorNode.children).toHaveLength(1);
-      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
+      expect((mirrorNode.children[0] as ASTTypes.CubeNode).type).toBe('cube');
     });
 
     it('should parse a mirror with 2D vector parameter', async () => {
@@ -46,10 +47,10 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('mirror');
 
-      const mirrorNode = ast[0] as ast.MirrorNode;
+      const mirrorNode = ast[0] as ASTTypes.MirrorNode;
       expect(mirrorNode.v).toEqual([1, 1, 0]); // Z should default to 0
       expect(mirrorNode.children).toHaveLength(1);
-      expect((mirrorNode.children[0] as ast.CubeNode).type).toBe('cube');
+      expect((mirrorNode.children[0] as ASTTypes.CubeNode).type).toBe('cube');
     });
   });
 
@@ -61,7 +62,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('multmatrix');
 
-      const multmatrixNode = ast[0] as ast.MultmatrixNode;
+      const multmatrixNode = ast[0] as ASTTypes.MultmatrixNode;
       // Add m property to module_instantiation node for test
       multmatrixNode.m = [
         [1, 0, 0, 10],
@@ -94,7 +95,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('multmatrix');
 
-      const multmatrixNode = ast[0] as ast.MultmatrixNode;
+      const multmatrixNode = ast[0] as ASTTypes.MultmatrixNode;
       // Add m property to module_instantiation node for test
       multmatrixNode.m = [
         [1, 0, 0, 10],
@@ -129,7 +130,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color is stored in c property
       if (typeof colorNode.c === 'string') {
         expect(colorNode.c).toBe('red');
@@ -148,7 +149,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color is stored in c property
       if (typeof colorNode.c === 'string') {
         expect(typeof colorNode.c).toBe('string');
@@ -167,7 +168,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the vector we expect
       // For now, we'll just check that the node has the right type
@@ -182,7 +183,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the vector we expect
       // For now, we'll just check that the node has the right type
@@ -197,7 +198,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the color we expect
       // For now, we'll just check that the node has the right type
@@ -212,7 +213,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('color');
 
-      const colorNode = ast[0] as ast.ColorNode;
+      const colorNode = ast[0] as ASTTypes.ColorNode;
       // With the real parser, the color might be stored in c or color property
       // and it might not be exactly the color we expect
       // For now, we'll just check that the node has the right type
@@ -229,7 +230,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('offset');
 
-      const offsetNode = ast[0] as ast.OffsetNode;
+      const offsetNode = ast[0] as ASTTypes.OffsetNode;
       // With the real parser, the radius is stored in r property
       if (offsetNode.r !== undefined) {
         expect(typeof offsetNode.r).toBe('number');
@@ -249,7 +250,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('offset');
 
-      const offsetNode = ast[0] as ast.OffsetNode;
+      const offsetNode = ast[0] as ASTTypes.OffsetNode;
       // With the real parser, we'll just check that the node has the right type
       expect(offsetNode.children).toBeDefined();
       // Skip child node checks since children array might be empty
@@ -262,7 +263,7 @@ describe('Transformation AST Generation', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('offset');
 
-      const offsetNode = ast[0] as ast.OffsetNode;
+      const offsetNode = ast[0] as ASTTypes.OffsetNode;
       // With the real parser, we'll just check that the node has the right type
       expect(offsetNode.children).toBeDefined();
       // Skip child node checks since children array might be empty

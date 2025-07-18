@@ -50,8 +50,8 @@ describe('Scene Structure Visual Regression Tests', () => {
     await parser.init();
 
     // Create AST converter
-    astConverter = new ASTBridgeConverter(scene);
-    await astConverter.initialize();
+    astConverter = new ASTBridgeConverter();
+    await astConverter.initialize(scene);
 
     // Create selection service
     selectionService = new SelectionService(scene);
@@ -198,15 +198,25 @@ describe('Scene Structure Visual Regression Tests', () => {
       // Validate metadata preservation
       expect(babylonNodes).toHaveLength(1);
       const cubeNode = babylonNodes[0];
+      expect(cubeNode).toBeDefined();
 
-      expect(cubeNode.metadata).toBeDefined();
-      expect(cubeNode.metadata?.openscadType).toBeDefined();
-      expect(cubeNode.metadata?.parameters).toBeDefined();
+      if (!cubeNode) return;
 
-      // Check specific parameters
-      if (cubeNode.metadata?.parameters) {
-        expect(cubeNode.metadata.parameters.size).toEqual([4, 6, 8]);
-        expect(cubeNode.metadata.parameters.center).toBe(true);
+      // Generate mesh to access metadata
+      const meshResult = await cubeNode.generateMesh();
+      expect(meshResult.success).toBe(true);
+
+      if (meshResult.success) {
+        const mesh = meshResult.data;
+        expect(mesh.metadata).toBeDefined();
+        expect(mesh.metadata?.primitiveType).toBeDefined();
+        expect(mesh.metadata?.parameters).toBeDefined();
+
+        // Check specific parameters
+        if (mesh.metadata?.parameters) {
+          expect(mesh.metadata.parameters.size).toEqual([4, 6, 8]);
+          expect(mesh.metadata.parameters.center).toBe(true);
+        }
       }
 
       logger.debug('[METADATA] OpenSCAD metadata preservation validated');
@@ -298,10 +308,13 @@ describe('Scene Structure Visual Regression Tests', () => {
       const mockMeshes: AbstractMesh[] = [];
 
       for (let i = 0; i < babylonNodes.length; i++) {
+        const node = babylonNodes[i];
+        if (!node) continue;
+
         const mockMesh = {
           id: `openscad-object-${i}`,
           name: `OpenSCAD Object ${i}`,
-          metadata: babylonNodes[i].metadata,
+          metadata: node.metadata,
           isVisible: true,
           isEnabled: () => true,
           position: { x: 0, y: 0, z: 0 },
@@ -320,12 +333,17 @@ describe('Scene Structure Visual Regression Tests', () => {
 
       // Test selection functionality
       if (mockMeshes.length > 0) {
-        const selectionResult = selectionService.selectMesh(mockMeshes[0]);
+        const firstMesh = mockMeshes[0];
+        expect(firstMesh).toBeDefined();
+
+        if (!firstMesh) return;
+
+        const selectionResult = selectionService.selectMesh(firstMesh);
         expect(selectionResult.success).toBe(true);
 
         const selectedMeshes = selectionService.getSelectedMeshes();
         expect(selectedMeshes).toHaveLength(1);
-        expect(selectedMeshes[0]).toBe(mockMeshes[0]);
+        expect(selectedMeshes[0]).toBe(firstMesh);
       }
 
       logger.debug('[SELECTION_INTEGRATION] Selection integration validated');
@@ -419,6 +437,7 @@ describe('Scene Structure Visual Regression Tests', () => {
       const primitiveNodes = babylonNodes.filter(
         (node) =>
           node.metadata?.openscadType &&
+          typeof node.metadata.openscadType === 'string' &&
           ['cube', 'sphere', 'cylinder'].includes(node.metadata.openscadType)
       );
 
@@ -456,11 +475,12 @@ describe('Scene Structure Visual Regression Tests', () => {
 
       // Validate naming conventions
       for (const node of babylonNodes) {
-        expect(node.type).toBeDefined();
-        expect(typeof node.type).toBe('string');
+        expect(node.nodeType).toBeDefined();
+        expect(typeof node.nodeType).toBe('string');
 
-        if (node.metadata?.openscadType) {
-          expect(['cube', 'sphere', 'cylinder'].includes(node.metadata.openscadType)).toBe(true);
+        // Check if the node has metadata with OpenSCAD type information
+        if (node.metadata?.primitiveType && typeof node.metadata.primitiveType === 'string') {
+          expect(['cube', 'sphere', 'cylinder'].includes(node.metadata.primitiveType)).toBe(true);
         }
       }
 
@@ -493,12 +513,28 @@ describe('Scene Structure Visual Regression Tests', () => {
       expect(results).toHaveLength(3);
 
       for (let i = 1; i < results.length; i++) {
-        expect(results[i]).toHaveLength(results[0].length);
+        const currentResult = results[i];
+        const firstResult = results[0];
+
+        expect(currentResult).toBeDefined();
+        expect(firstResult).toBeDefined();
+
+        if (!currentResult || !firstResult) continue;
+
+        expect(currentResult).toHaveLength(firstResult.length);
 
         // Compare structure and metadata
-        for (let j = 0; j < results[i].length; j++) {
-          expect(results[i][j].type).toBe(results[0][j].type);
-          expect(results[i][j].metadata).toEqual(results[0][j].metadata);
+        for (let j = 0; j < currentResult.length; j++) {
+          const currentNode = currentResult[j];
+          const firstNode = firstResult[j];
+
+          expect(currentNode).toBeDefined();
+          expect(firstNode).toBeDefined();
+
+          if (!currentNode || !firstNode) continue;
+
+          expect(currentNode.type).toBe(firstNode.type);
+          expect(currentNode.metadata).toEqual(firstNode.metadata);
         }
       }
 

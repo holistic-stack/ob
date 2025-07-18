@@ -121,7 +121,7 @@ export const unifiedParseOpenSCAD = async (
     }
 
     if (!isSuccess(parseResult)) {
-      const errorMessage = `Parse failed: ${(parseResult as any).error}`;
+      const errorMessage = `Parse failed: ${parseResult.error}`;
       logger.error(errorMessage);
       const operationError = operationUtils.createOperationError('PARSE_ERROR', errorMessage);
       return operationUtils.createError(operationError, metadata);

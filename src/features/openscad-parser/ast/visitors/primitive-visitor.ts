@@ -1,75 +1,64 @@
 /**
- * @file Primitive shapes visitor for OpenSCAD parser
- *
- * This module implements the PrimitiveVisitor class, which specializes in processing
+ * @file primitive-visitor.ts
+ * @description This file implements the `PrimitiveVisitor` class, which specializes in processing
  * OpenSCAD primitive shape nodes and converting them to structured AST representations.
  * Primitive shapes are the fundamental building blocks of 3D models in OpenSCAD.
  *
- * The PrimitiveVisitor handles all basic geometric primitives:
- * - **3D Primitives**: cube, sphere, cylinder, polyhedron
- * - **2D Primitives**: square, circle, polygon
- * - **Text Primitives**: text (for 2D/3D text generation)
+ * @architectural_decision
+ * The `PrimitiveVisitor` is a specialized visitor that is part of the composite visitor pattern.
+ * It is responsible only for handling primitive shapes (e.g., `cube`, `sphere`). This separation
+ * of concerns makes the parser more modular and easier to maintain. The visitor uses a combination
+ * of dedicated extractor functions (e.g., `extractCubeNode`) and generic parameter extractors
+ * to handle the various ways that parameters can be specified in OpenSCAD (e.g., positional, named).
+ * This approach provides a balance between performance for common cases and flexibility for more
+ * complex scenarios.
  *
- * Key features:
- * - **Parameter Extraction**: Handles both positional and named parameters
- * - **Type Safety**: Validates parameter types and provides sensible defaults
- * - **Vector Support**: Processes vector parameters for size and positioning
- * - **Resolution Parameters**: Supports $fn, $fa, $fs for mesh quality control
- * - **Error Recovery**: Graceful handling of malformed or missing parameters
- * - **Specialized Extractors**: Uses dedicated extractors for complex primitives
- *
- * The visitor implements a two-tier processing strategy:
- * 1. **Specialized Extractors**: For complex primitives with dedicated extraction logic
- * 2. **Generic Processing**: For standard parameter extraction and validation
- *
- * Parameter handling patterns:
- * - **Positional Parameters**: `cube(10)` - size parameter by position
- * - **Named Parameters**: `cube(size=10, center=true)` - explicit parameter names
- * - **Mixed Parameters**: `cube(10, center=true)` - combination of both
- * - **Vector Parameters**: `cube([10, 20, 30])` - multi-dimensional values
- * - **Resolution Parameters**: `sphere(r=5, $fn=20)` - mesh quality control
- *
- * @example Basic primitive processing
+ * @example
  * ```typescript
  * import { PrimitiveVisitor } from './primitive-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new PrimitiveVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'cube(10, center=true);';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process cube with size parameter
- * const cubeNode = visitor.visitAccessorExpression(cubeCST);
- * // Returns: { type: 'cube', size: 10, center: false }
+ *   // 2. Create an error handler
+ *   const errorHandler = new ErrorHandler();
  *
- * // Process sphere with radius and resolution
- * const sphereNode = visitor.visitAccessorExpression(sphereCST);
- * // Returns: { type: 'sphere', radius: 5, fn: 20 }
- * ```
+ *   // 3. Create the visitor
+ *   const primitiveVisitor = new PrimitiveVisitor(sourceCode, errorHandler);
  *
- * @example Complex parameter handling
- * ```typescript
- * // For OpenSCAD code: cube([10, 20, 30], center=true)
- * const complexCube = visitor.visitAccessorExpression(complexCST);
- * // Returns: { type: 'cube', size: [10, 20, 30], center: true }
+ *   // 4. Visit the relevant CST node
+ *   const moduleInstantiationNode = tree.rootNode.firstChild!;
+ *   const astNode = primitiveVisitor.visitModuleInstantiation(moduleInstantiationNode);
  *
- * // For OpenSCAD code: cylinder(h=20, r1=5, r2=10, $fn=16)
- * const cylinder = visitor.visitAccessorExpression(cylinderCST);
- * // Returns: { type: 'cylinder', height: 20, radius1: 5, radius2: 10, fn: 16 }
- * ```
+ *   // 5. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "cube",
+ *   //   "size": 10,
+ *   //   "center": true,
+ *   //   ...
+ *   // }
  *
- * @example Error handling and recovery
- * ```typescript
- * const visitor = new PrimitiveVisitor(sourceCode, errorHandler);
- *
- * // Process malformed primitive
- * const result = visitor.visitAccessorExpression(malformedCST);
- *
- * if (!result) {
- *   const errors = errorHandler.getErrors();
- *   console.log('Processing errors:', errors);
+ *   // 6. Clean up
+ *   parser.delete();
  * }
+ *
+ * main();
  * ```
  *
- * @module primitive-visitor
- * @since 0.1.0
+ * @integration
+ * The `PrimitiveVisitor` is used within the `CompositeVisitor`. The `CompositeVisitor` delegates
+ * any CST node that represents a primitive shape to this visitor. The `PrimitiveVisitor` then
+ * returns a corresponding AST node (e.g., `CubeNode`, `SphereNode`), which is then included in the final AST.
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -88,11 +77,10 @@ import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for primitive shapes (cube, sphere, cylinder, etc.)
- *
  * @class PrimitiveVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description A visitor for primitive shapes (cube, sphere, cylinder, etc.).
+ * It is responsible for converting CST nodes for these shapes into their corresponding AST nodes.
  */
 export class PrimitiveVisitor extends BaseASTVisitor {
   constructor(
@@ -104,12 +92,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitStatement to only handle primitive-related statements
-   * This prevents the PrimitiveVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (TransformVisitor, CSGVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The primitive AST node or null if this is not a primitive statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle primitive-related statements.
+   * This prevents the `PrimitiveVisitor` from interfering with other statement types.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The primitive AST node, or null if this is not a primitive statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -129,9 +116,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Check if a function name is a supported primitive operation
-   * @param functionName The function name to check
-   * @returns True if the function is a primitive operation
+   * @method isSupportedPrimitiveFunction
+   * @description Checks if a function name is a supported primitive operation.
+   * @param {string} functionName - The function name to check.
+   * @returns {boolean} True if the function is a primitive operation.
+   * @private
    */
   private isSupportedPrimitiveFunction(functionName: string): boolean {
     return [
@@ -147,9 +136,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Extract function name from a module instantiation node
-   * @param node The module instantiation node
-   * @returns The function name or empty string if not found
+   * @method extractFunctionName
+   * @description Extracts the function name from a module instantiation node.
+   * @param {TSNode} node - The module instantiation node.
+   * @returns {string} The function name, or an empty string if not found.
+   * @private
    */
   private extractFunctionName(node: TSNode): string {
     const nameNode = node.childForFieldName('name');
@@ -159,11 +150,13 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a specific function
-   * @param node The node to process
-   * @param functionName The name of the function
-   * @param args The arguments to the function
-   * @returns The AST node or null if the function is not supported
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a specific function.
+   * @param {TSNode} node - The node to process.
+   * @param {string} functionName - The name of the function.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.ASTNode | null} The AST node, or null if the function is not supported.
+   * @private
    */
   protected createASTNodeForFunction(
     node: TSNode,
@@ -203,9 +196,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a module instantiation node
-   * @param node The module instantiation node to visit
-   * @returns The AST node or null if the node cannot be processed by this visitor
+   * @method visitModuleInstantiation
+   * @description Visits a module instantiation node.
+   * @param {TSNode} node - The module instantiation node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed by this visitor.
+   * @override
    */
   override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
     // Extract function name using the truncation workaround
@@ -246,9 +241,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an accessor expression node (function calls like cube(10))
-   * @param node The accessor expression node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitAccessorExpression
+   * @description Visits an accessor expression node (function calls like cube(10)).
+   * @param {TSNode} node - The accessor expression node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitAccessorExpression(node: TSNode): ast.ASTNode | null {
     try {
@@ -332,9 +329,11 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an expression statement node
-   * @param node The expression statement node to visit
-   * @returns The AST node or null if the node cannot be processed
+   * @method visitExpressionStatement
+   * @description Visits an expression statement node.
+   * @param {TSNode} node - The expression statement node to visit.
+   * @returns {ast.ASTNode | null} The AST node, or null if the node cannot be processed.
+   * @override
    */
   override visitExpressionStatement(node: TSNode): ast.ASTNode | null {
     // Look for accessor_expression in the expression_statement
@@ -350,10 +349,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a cube node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The cube AST node or null if the arguments are invalid
+   * @method createCubeNode
+   * @description Creates a cube node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.CubeNode | null} The cube AST node, or null if the arguments are invalid.
+   * @private
    */
   private createCubeNode(node: TSNode, args: ast.Parameter[]): ast.CubeNode | null {
     // Default values
@@ -441,10 +442,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a sphere node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The sphere AST node or null if the arguments are invalid
+   * @method createSphereNode
+   * @description Creates a sphere node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.SphereNode | null} The sphere AST node, or null if the arguments are invalid.
+   * @private
    */
   private createSphereNode(node: TSNode, args: ast.Parameter[]): ast.SphereNode | null {
     // Default values
@@ -532,10 +535,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a cylinder node
-   * @param node The node to process
-   * @param args The arguments to the function
-   * @returns The cylinder AST node or null if the arguments are invalid
+   * @method createCylinderNode
+   * @description Creates a cylinder node.
+   * @param {TSNode} node - The node to process.
+   * @param {ast.Parameter[]} args - The arguments to the function.
+   * @returns {ast.CylinderNode | null} The cylinder AST node, or null if the arguments are invalid.
+   * @private
    */
   private createCylinderNode(node: TSNode, args: ast.Parameter[]): ast.CylinderNode | null {
     // Default values
@@ -671,10 +676,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a circle node
-   * @param node The AST node
-   * @param args The arguments
-   * @returns The circle node
+   * @method createCircleNode
+   * @description Creates a circle node.
+   * @param {TSNode} node - The AST node.
+   * @param {ast.Parameter[]} args - The arguments.
+   * @returns {ast.CircleNode} The circle node.
+   * @private
    */
   private createCircleNode(node: TSNode, args: ast.Parameter[]): ast.CircleNode {
     let radius = 1; // Default radius
@@ -742,10 +749,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a square node
-   * @param node The AST node
-   * @param args The arguments
-   * @returns The square node
+   * @method createSquareNode
+   * @description Creates a square node.
+   * @param {TSNode} node - The AST node.
+   * @param {ast.Parameter[]} args - The arguments.
+   * @returns {ast.SquareNode} The square node.
+   * @private
    */
   private createSquareNode(node: TSNode, args: ast.Parameter[]): ast.SquareNode {
     let size: number | ast.Vector2D = 1; // Default size
@@ -800,10 +809,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a polygon node
-   * @param node The AST node
-   * @param args The arguments
-   * @returns The polygon node
+   * @method createPolygonNode
+   * @description Creates a polygon node.
+   * @param {TSNode} node - The AST node.
+   * @param {ast.Parameter[]} args - The arguments.
+   * @returns {ast.PolygonNode} The polygon node.
+   * @private
    */
   private createPolygonNode(node: TSNode, args: ast.Parameter[]): ast.PolygonNode {
     const points: ast.Vector2D[] = []; // Default empty points
@@ -846,10 +857,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a text node
-   * @param node The AST node
-   * @param args The arguments
-   * @returns The text node
+   * @method createTextNode
+   * @description Creates a text node.
+   * @param {TSNode} node - The AST node.
+   * @param {ast.Parameter[]} args - The arguments.
+   * @returns {ast.TextNode} The text node.
+   * @private
    */
   private createTextNode(node: TSNode, args: ast.Parameter[]): ast.TextNode {
     let text = ''; // Default text

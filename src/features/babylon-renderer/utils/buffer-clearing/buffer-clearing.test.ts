@@ -59,7 +59,9 @@ describe('Buffer Clearing Utilities', () => {
       const result = clearRenderBuffers(invalidEngine, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      }
     });
   });
 
@@ -80,8 +82,10 @@ describe('Buffer Clearing Utilities', () => {
       const result = ensureSceneAutoClear(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should maintain existing auto-clear settings if already true', () => {
@@ -114,14 +118,18 @@ describe('Buffer Clearing Utilities', () => {
       const result = performCompleteBufferClearing(null as any, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+      }
     });
 
     it('should return error for invalid scene', () => {
       const result = performCompleteBufferClearing(engine, null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+      }
     });
   });
 
@@ -130,15 +138,19 @@ describe('Buffer Clearing Utilities', () => {
       const result = clearRenderBuffers(null as any, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.timestamp).toBeInstanceOf(Date);
+      if (!result.success) {
+        expect(result.error.timestamp).toBeInstanceOf(Date);
+      }
     });
 
     it('should provide meaningful error messages', () => {
       const result = ensureSceneAutoClear(null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toBeTruthy();
-      expect(result.error?.message.length).toBeGreaterThan(0);
+      if (!result.success) {
+        expect(result.error.message).toBeTruthy();
+        expect(result.error.message.length).toBeGreaterThan(0);
+      }
     });
   });
 });

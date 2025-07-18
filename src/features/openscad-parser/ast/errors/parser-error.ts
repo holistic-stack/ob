@@ -1,16 +1,46 @@
 /**
- * Base class for all parser errors
+ * @file parser-error.ts
+ * @description This file defines the base `ParserError` class, which serves as the foundation for all custom error types
+ * within the OpenSCAD parser. It provides a standardized structure for error reporting, including source code position,
+ * error codes, and suggestions for resolution.
  *
- * This class provides a common interface for all parser errors, including
- * position information, suggestions for fixes, and error codes.
+ * @architectural_decision
+ * By extending the native `Error` class, `ParserError` maintains compatibility with standard JavaScript error handling
+ * mechanisms while adding domain-specific properties crucial for a parser. The inclusion of `ErrorPosition` and
+ * `ErrorSuggestion` interfaces ensures that error messages are not only informative but also actionable, guiding
+ * developers to quickly identify and fix issues in their OpenSCAD code. The `captureStackTrace` ensures proper stack
+ * trace reporting for debugging.
  *
- * @module lib/openscad-parser/ast/errors/parser-error
+ * @example
+ * ```typescript
+ * import { ParserError, type ErrorPosition, type ErrorSuggestion } from './parser-error';
+ *
+ * try {
+ *   throw new ParserError(
+ *     'Unexpected token',
+ *     'SYNTAX_001',
+ *     'cube(10',
+ *     { line: 0, column: 8, offset: 8 },
+ *     [{ message: 'Missing closing parenthesis', replacement: 'cube(10);' }]
+ *   );
+ * } catch (error) {
+ *   if (error instanceof ParserError) {
+ *     console.error('Parser Error:', error.message);
+ *     console.error('Code:', error.code);
+ *     console.error('Position:', error.getPositionString());
+ *     console.error('Formatted Message:\n', error.getFormattedMessage());
+ *   }
+ * }
+ * ```
  */
 
-// Position type is defined locally as ErrorPosition
-
 /**
- * Interface for error position information
+ * @interface ErrorPosition
+ * @description Defines the precise location of an error within the source code.
+ *
+ * @property {number} line - The 0-based line number where the error occurred.
+ * @property {number} column - The 0-based column number within the line where the error occurred.
+ * @property {number} offset - The 0-based character offset from the beginning of the file where the error occurred.
  */
 export interface ErrorPosition {
   line: number;
@@ -19,7 +49,11 @@ export interface ErrorPosition {
 }
 
 /**
- * Interface for error suggestions
+ * @interface ErrorSuggestion
+ * @description Provides a suggestion for how to resolve an error, optionally including a code replacement.
+ *
+ * @property {string} message - A human-readable message describing the suggestion.
+ * @property {string} [replacement] - An optional string that can be used to automatically fix the error.
  */
 export interface ErrorSuggestion {
   message: string;
@@ -27,47 +61,52 @@ export interface ErrorSuggestion {
 }
 
 /**
- * Base class for all parser errors
+ * @class ParserError
+ * @description Base class for all errors encountered during the parsing process.
+ * It extends the native `Error` class and adds properties for detailed error reporting.
  */
 export class ParserError extends Error {
   /**
-   * The error code
+   * @property {string} code - A unique error code (e.g., 'SYNTAX_ERROR', 'UNDEFINED_VARIABLE').
    */
   public code: string;
 
   /**
-   * The position in the source code where the error occurred
+   * @property {ErrorPosition | undefined} position - The exact location in the source code where the error occurred.
    */
   public position: ErrorPosition | undefined;
 
   /**
-   * The source code that caused the error
+   * @property {string} source - The full source code string in which the error was found.
    */
   public source: string;
 
   /**
-   * Suggestions for fixing the error
+   * @property {ErrorSuggestion[]} suggestions - An array of suggestions to help the user fix the error.
    */
   public suggestions: ErrorSuggestion[];
 
   /**
-   * Additional context about the error
+   * @property {Record<string, unknown> | undefined} context - Additional arbitrary context data related to the error.
    */
   public context: Record<string, unknown> | undefined;
 
   /**
-   * The original error that caused this error (if any)
+   * @property {Error | undefined} originalError - The underlying original error that caused this `ParserError`, if any.
    */
   public originalError: Error | undefined;
 
   /**
-   * Create a new ParserError
+   * @constructor
+   * @description Creates an instance of `ParserError`.
    *
-   * @param message - The error message
-   * @param code - The error code
-   * @param source - The source code that caused the error
-   * @param position - The position in the source code where the error occurred
-   * @param suggestions - Suggestions for fixing the error
+   * @param {string} message - A human-readable description of the error.
+   * @param {string} [code='PARSER_ERROR'] - The error code.
+   * @param {string} [source=''] - The source code where the error occurred.
+   * @param {ErrorPosition} [position] - The position of the error.
+   * @param {ErrorSuggestion[]} [suggestions=[]] - An array of suggestions for fixing the error.
+   * @param {Record<string, unknown>} [context] - Additional context for the error.
+   * @param {Error} [originalError] - The original error that caused this `ParserError`.
    */
   constructor(
     message: string,
@@ -96,9 +135,10 @@ export class ParserError extends Error {
   }
 
   /**
-   * Get the source line where the error occurred
+   * @method getSourceLine
+   * @description Retrieves the specific line of source code where the error is located.
    *
-   * @returns The source line
+   * @returns {string} The source code line, or an empty string if the position is invalid.
    */
   public getSourceLine(): string {
     const lines = this.source.split('\n');
@@ -106,7 +146,10 @@ export class ParserError extends Error {
   }
 
   /**
-   * Get the error position as a string
+   * @method getPositionString
+   * @description Returns a human-readable string representation of the error's position.
+   *
+   * @returns {string} A string like "line X, column Y" or "unknown position".
    */
   public getPositionString(): string {
     return this.position
@@ -115,9 +158,11 @@ export class ParserError extends Error {
   }
 
   /**
-   * Get a formatted error message with context
+   * @method getFormattedMessage
+   * @description Generates a comprehensive, multi-line error message including the source line,
+   * a pointer to the exact error column, and any provided suggestions.
    *
-   * @returns A formatted error message with context
+   * @returns {string} A formatted string ready for display in logs or UI.
    */
   public getFormattedMessage(): string {
     const sourceLine = this.getSourceLine();
@@ -141,10 +186,11 @@ export class ParserError extends Error {
   }
 
   /**
-   * Convert a tree-sitter position to an ErrorPosition
+   * @method fromTreeSitterPosition
+   * @description Converts a Tree-sitter `Point` object into an `ErrorPosition` object.
    *
-   * @param position - The tree-sitter position
-   * @returns An ErrorPosition
+   * @param {{ row: number; column: number }} position - The Tree-sitter position object.
+   * @returns {ErrorPosition} The converted error position.
    */
   public static fromTreeSitterPosition(position: { row: number; column: number }): ErrorPosition {
     return {
@@ -155,14 +201,16 @@ export class ParserError extends Error {
   }
 
   /**
-   * Create a ParserError from a tree-sitter node
+   * @method fromNode
+   * @description Creates a `ParserError` instance directly from a Tree-sitter node.
+   * This is a convenience method for generating errors with precise location information.
    *
-   * @param message - The error message
-   * @param code - The error code
-   * @param source - The source code
-   * @param node - The tree-sitter node
-   * @param suggestions - Suggestions for fixing the error
-   * @returns A ParserError
+   * @param {string} message - The error message.
+   * @param {string} code - The error code.
+   * @param {string} source - The full source code.
+   * @param {{ startPosition: { row: number; column: number } }} node - The Tree-sitter node where the error occurred.
+   * @param {ErrorSuggestion[]} [suggestions=[]] - Optional suggestions for fixing the error.
+   * @returns {ParserError} A new `ParserError` instance.
    */
   public static fromNode(
     message: string,

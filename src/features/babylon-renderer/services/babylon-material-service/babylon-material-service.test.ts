@@ -5,6 +5,8 @@
  * Following TDD principles with real implementations where possible.
  */
 
+// Real BabylonJS components for testing (no mocks)
+import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NodeMaterialConfig, PBRMaterialConfig } from './babylon-material-service';
 import {
@@ -12,13 +14,6 @@ import {
   DEFAULT_PBR_CONFIG,
   MaterialType,
 } from './babylon-material-service';
-
-// Mock BabylonJS components for testing
-const createMockScene = () =>
-  ({
-    dispose: vi.fn(),
-    render: vi.fn(),
-  }) as any;
 
 const createMockMesh = (id: string) =>
   ({
@@ -116,20 +111,24 @@ vi.mock('@babylonjs/core', async () => {
 
 describe('BabylonMaterialService', () => {
   let materialService: BabylonMaterialService;
-  let mockScene: any;
+  let engine: BABYLON.NullEngine;
+  let scene: BABYLON.Scene;
 
   beforeEach(() => {
-    // Create fresh instances for each test
+    // Create real BabylonJS instances for testing (no mocks)
+    engine = new BABYLON.NullEngine();
+    scene = new BABYLON.Scene(engine);
     materialService = new BabylonMaterialService();
-    mockScene = createMockScene();
 
     // Reset mocks
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Clean up after each test
+    // Clean up resources
     materialService.dispose();
+    scene.dispose();
+    engine.dispose();
   });
 
   describe('constructor', () => {
@@ -143,7 +142,7 @@ describe('BabylonMaterialService', () => {
 
   describe('init', () => {
     it('should initialize with valid scene', () => {
-      const result = materialService.init(mockScene);
+      const result = materialService.init(scene);
 
       expect(result.success).toBe(true);
     });
@@ -161,7 +160,7 @@ describe('BabylonMaterialService', () => {
 
   describe('createPBRMaterial', () => {
     beforeEach(() => {
-      materialService.init(mockScene);
+      materialService.init(scene);
     });
 
     it('should create PBR material successfully', async () => {
@@ -180,7 +179,7 @@ describe('BabylonMaterialService', () => {
 
       // Verify PBR material was created
       const { PBRMaterial } = await import('@babylonjs/core');
-      expect(PBRMaterial).toHaveBeenCalledWith('test-pbr-material', mockScene);
+      expect(PBRMaterial).toHaveBeenCalledWith('test-pbr-material', scene);
 
       // Verify material is stored
       const material = materialService.getMaterial('test-pbr-material');
@@ -235,7 +234,7 @@ describe('BabylonMaterialService', () => {
 
   describe('createNodeMaterial', () => {
     beforeEach(() => {
-      materialService.init(mockScene);
+      materialService.init(scene);
     });
 
     it('should create node material successfully', async () => {
@@ -256,7 +255,7 @@ describe('BabylonMaterialService', () => {
 
       // Verify NodeMaterial was created
       const { NodeMaterial } = await import('@babylonjs/core');
-      expect(NodeMaterial).toHaveBeenCalledWith('test-node-material', mockScene);
+      expect(NodeMaterial).toHaveBeenCalledWith('test-node-material', scene);
 
       // Verify state was created
       const state = materialService.getMaterialState('test-node-material');
@@ -282,7 +281,7 @@ describe('BabylonMaterialService', () => {
 
   describe('applyToMesh', () => {
     beforeEach(async () => {
-      materialService.init(mockScene);
+      materialService.init(scene);
       await materialService.createPBRMaterial({
         ...DEFAULT_PBR_CONFIG,
         name: 'test-material',
@@ -317,7 +316,7 @@ describe('BabylonMaterialService', () => {
 
   describe('getMaterial', () => {
     beforeEach(async () => {
-      materialService.init(mockScene);
+      materialService.init(scene);
       await materialService.createPBRMaterial({
         ...DEFAULT_PBR_CONFIG,
         name: 'test-material',
@@ -338,7 +337,7 @@ describe('BabylonMaterialService', () => {
 
   describe('getAllMaterialStates', () => {
     beforeEach(() => {
-      materialService.init(mockScene);
+      materialService.init(scene);
     });
 
     it('should return empty array when no materials exist', () => {
@@ -365,7 +364,7 @@ describe('BabylonMaterialService', () => {
 
   describe('removeMaterial', () => {
     beforeEach(async () => {
-      materialService.init(mockScene);
+      materialService.init(scene);
       await materialService.createPBRMaterial({
         ...DEFAULT_PBR_CONFIG,
         name: 'test-material',
@@ -399,7 +398,7 @@ describe('BabylonMaterialService', () => {
 
   describe('dispose', () => {
     it('should dispose service cleanly', async () => {
-      materialService.init(mockScene);
+      materialService.init(scene);
       await materialService.createPBRMaterial({
         ...DEFAULT_PBR_CONFIG,
         name: 'test-material',

@@ -1,80 +1,62 @@
 /**
- * @file Variable references visitor for OpenSCAD parser
- *
- * This module implements the VariableVisitor class, which specializes in processing
+ * @file variable-visitor.ts
+ * @description This file implements the `VariableVisitor` class, which specializes in processing
  * OpenSCAD variable references and identifier nodes, converting them to structured
  * AST representations. Variables are fundamental to OpenSCAD's programming model,
  * enabling data storage, parameter passing, and dynamic value computation.
  *
- * The VariableVisitor handles:
- * - **Variable References**: Identifier resolution and variable access
- * - **Identifier Processing**: Direct identifier node conversion to variable expressions
- * - **Scope Resolution**: Variable name extraction and validation
- * - **Expression Integration**: Variable nodes as part of larger expressions
- * - **Error Recovery**: Graceful handling of malformed variable references
- * - **Location Tracking**: Source location preservation for debugging and IDE integration
+ * @architectural_decision
+ * The `VariableVisitor` is a focused visitor responsible for handling identifiers that represent
+ * variable references. It is a simple but crucial part of the parsing pipeline, as it ensures
+ * that variable names are correctly extracted and represented in the AST. This visitor does not
+ * handle variable assignments; that is the responsibility of the `AssignStatementVisitor`.
+ * This separation of concerns keeps the `VariableVisitor` simple and focused on its core task.
  *
- * Key features:
- * - **Identifier Extraction**: Robust extraction of variable names from CST nodes
- * - **Type-Safe Processing**: Conversion to strongly-typed variable expression nodes
- * - **Error Context Preservation**: Detailed error information for debugging
- * - **Safe Logging**: Conditional logging that handles missing error handlers
- * - **Performance Optimization**: Efficient processing with minimal overhead
- * - **CST Integration**: Seamless integration with tree-sitter node structures
- *
- * Variable processing patterns:
- * - **Simple Variables**: `myVar` - direct variable reference
- * - **Parameter Variables**: Function and module parameter references
- * - **Built-in Variables**: `$fn`, `$fa`, `$fs` - OpenSCAD special variables
- * - **Scoped Variables**: Variables within let expressions and function scopes
- * - **Array Elements**: Variables used in array indexing expressions
- *
- * The visitor implements a focused processing strategy:
- * 1. **Identifier Extraction**: Locate identifier nodes within variable contexts
- * 2. **Name Validation**: Ensure valid variable names and handle edge cases
- * 3. **Expression Creation**: Convert to variable expression nodes with proper typing
- * 4. **Error Handling**: Provide detailed error context for malformed references
- *
- * @example Basic variable processing
+ * @example
  * ```typescript
  * import { VariableVisitor } from './variable-visitor';
+ * import { ErrorHandler } from '../../error-handling';
+ * import { Parser, Language } from 'web-tree-sitter';
  *
- * const visitor = new VariableVisitor(sourceCode, errorHandler);
+ * async function main() {
+ *   // 1. Setup parser and get CST
+ *   await Parser.init();
+ *   const parser = new Parser();
+ *   const openscadLanguage = await Language.load('tree-sitter-openscad.wasm');
+ *   parser.setLanguage(openscadLanguage);
+ *   const sourceCode = 'my_variable = 10;';
+ *   const tree = parser.parse(sourceCode);
  *
- * // Process variable reference
- * const varNode = visitor.visitVariable(variableCST);
- * // Returns: { type: 'expression', expressionType: 'variable', name: 'myVar', location: {...} }
+ *   // 2. Create an error handler and visitor
+ *   const errorHandler = new ErrorHandler();
+ *   const variableVisitor = new VariableVisitor(sourceCode, errorHandler, new Map());
  *
- * // Process identifier directly
- * const identNode = visitor.visitIdentifier(identifierCST);
- * // Returns: { type: 'expression', expressionType: 'variable', name: 'identifier', location: {...} }
- * ```
+ *   // 3. Visit the identifier node
+ *   const assignmentNode = tree.rootNode.firstChild!;
+ *   const identifierNode = assignmentNode.childForFieldName('name')!;
+ *   const astNode = variableVisitor.visitIdentifier(identifierNode);
  *
- * @example Variable processing in expressions
- * ```typescript
- * // For OpenSCAD code: x + y * z
- * // Each variable (x, y, z) is processed by VariableVisitor
- * const xVar = visitor.visitIdentifier(xCST);
- * const yVar = visitor.visitIdentifier(yCST);
- * const zVar = visitor.visitIdentifier(zCST);
- * // Each returns a variable expression node
- * ```
+ *   // 4. Log the result
+ *   console.log(JSON.stringify(astNode, null, 2));
+ *   // Expected output:
+ *   // {
+ *   //   "type": "variable",
+ *   //   "name": "my_variable",
+ *   //   ...
+ *   // }
  *
- * @example Error handling for malformed variables
- * ```typescript
- * const visitor = new VariableVisitor(sourceCode, errorHandler);
- *
- * // Process malformed variable reference
- * const result = visitor.createVariableNode(malformedCST);
- *
- * if (!result) {
- *   const errors = errorHandler.getErrors();
- *   console.log('Variable processing errors:', errors);
+ *   // 5. Clean up
+ *   parser.delete();
  * }
+ *
+ * main();
  * ```
  *
- * @module variable-visitor
- * @since 0.1.0
+ * @integration
+ * The `VariableVisitor` is used by the `CompositeVisitor` to process identifier nodes that are
+ * determined to be variable references. It returns a `VariableNode`, which is then used in
+ * various expression contexts (e.g., as an operand in a binary expression, or as a parameter
+ * to a function call).
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
@@ -85,29 +67,17 @@ import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
- * Visitor for processing OpenSCAD variable references and identifiers.
- *
- * The VariableVisitor extends BaseASTVisitor to provide specialized handling for
- * variable references and identifier nodes. It focuses on converting CST identifier
- * nodes to properly typed variable expression nodes while maintaining error context
- * and location information.
- *
- * This implementation provides:
- * - **Focused Processing**: Specialized handling only for variable-related nodes
- * - **Robust Extraction**: Safe identifier extraction with error handling
- * - **Type Safety**: Conversion to strongly-typed variable expression nodes
- * - **Error Recovery**: Graceful handling of malformed variable references
- * - **Performance Optimization**: Minimal overhead for simple variable processing
- *
  * @class VariableVisitor
  * @extends {BaseASTVisitor}
- * @since 0.1.0
+ * @description Visitor for processing OpenSCAD variable references and identifiers.
  */
 export class VariableVisitor extends BaseASTVisitor {
   /**
-   * Constructor for the VariableVisitor
-   * @param source The source code
-   * @param errorHandler The error handler
+   * @constructor
+   * @description Creates a new `VariableVisitor`.
+   * @param {string} source - The source code being parsed.
+   * @param {ErrorHandler} errorHandler - The error handler instance.
+   * @param {Map<string, ast.ParameterValue>} [variableScope] - The current variable scope.
    */
   constructor(
     source: string,
@@ -118,12 +88,10 @@ export class VariableVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Override visitStatement to only handle variable-related statements
-   * This prevents the VariableVisitor from interfering with other statement types
-   * that should be handled by specialized visitors (PrimitiveVisitor, TransformVisitor, etc.)
-   *
-   * @param node The statement node to visit
-   * @returns The variable AST node or null if this is not a variable statement
+   * @method visitStatement
+   * @description Overrides the base `visitStatement` to only handle variable-related statements.
+   * @param {TSNode} node - The statement node to visit.
+   * @returns {ast.ASTNode | null} The variable AST node, or null if this is not a variable statement.
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
@@ -150,9 +118,11 @@ export class VariableVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create a variable node from a variable node in the CST
-   * @param node The variable node from the CST
-   * @returns A variable node for the AST
+   * @method createVariableNode
+   * @description Creates a variable node from a variable node in the CST.
+   * @param {TSNode} node - The variable node from the CST.
+   * @returns {ast.VariableNode | null} A variable node for the AST.
+   * @private
    */
   createVariableNode(node: TSNode): ast.VariableNode | null {
     this.safeLog(
@@ -177,8 +147,7 @@ export class VariableVisitor extends BaseASTVisitor {
 
       // Create the variable node
       return {
-        type: 'expression',
-        expressionType: 'variable',
+        type: 'variable',
         name: identifierNode.text,
         location: getLocation(node),
       };
@@ -193,9 +162,11 @@ export class VariableVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit a variable node in the CST
-   * @param node The variable node from the CST
-   * @returns A variable node for the AST
+   * @method visitVariable
+   * @description Visits a variable node in the CST.
+   * @param {TSNode} node - The variable node from the CST.
+   * @returns {ast.VariableNode | null} A variable node for the AST.
+   * @public
    */
   visitVariable(node: TSNode): ast.VariableNode | null {
     this.safeLog(
@@ -208,9 +179,11 @@ export class VariableVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Visit an identifier node in the CST
-   * @param node The identifier node from the CST
-   * @returns A variable node for the AST
+   * @method visitIdentifier
+   * @description Visits an identifier node in the CST.
+   * @param {TSNode} node - The identifier node from the CST.
+   * @returns {ast.VariableNode | null} A variable node for the AST.
+   * @public
    */
   visitIdentifier(node: TSNode): ast.VariableNode | null {
     this.safeLog(
@@ -222,15 +195,20 @@ export class VariableVisitor extends BaseASTVisitor {
 
     // Create a variable node directly from the identifier
     return {
-      type: 'expression',
-      expressionType: 'variable',
+      type: 'variable',
       name: node.text,
       location: getLocation(node),
     };
   }
 
   /**
-   * Safe logging helper that checks if errorHandler exists
+   * @method safeLog
+   * @description A safe logging helper that checks if the error handler exists.
+   * @param {'info' | 'debug' | 'warning' | 'error'} level - The log level.
+   * @param {string} message - The log message.
+   * @param {string} [context] - The context of the log message.
+   * @param {TSNode | ast.ASTNode} [node] - The node associated with the log message.
+   * @private
    */
   private safeLog(
     level: 'info' | 'debug' | 'warning' | 'error',
@@ -263,11 +241,13 @@ export class VariableVisitor extends BaseASTVisitor {
   }
 
   /**
-   * Create an AST node for a function (required by BaseASTVisitor)
-   * @param node The function node
-   * @param functionName The function name
-   * @param args The function arguments
-   * @returns The function call AST node or null if not handled
+   * @method createASTNodeForFunction
+   * @description Creates an AST node for a function (required by `BaseASTVisitor`).
+   * @param {TSNode} _node - The function node.
+   * @param {string} [_functionName] - The function name.
+   * @param {ast.Parameter[]} [_args] - The function arguments.
+   * @returns {null} Always returns null, as this visitor does not handle functions.
+   * @protected
    */
   createASTNodeForFunction(
     _node: TSNode,

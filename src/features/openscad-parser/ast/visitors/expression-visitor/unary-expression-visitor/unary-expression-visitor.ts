@@ -110,7 +110,7 @@ export class UnaryExpressionVisitor extends BaseASTVisitor {
     // At this point, operandAST should be a valid ExpressionNode (not null and not ErrorNode)
     return {
       type: 'expression',
-      expressionType: 'unary_expression',
+      expressionType: 'unary',
       operator: operator as ast.UnaryOperator, // Cast, assuming grammar aligns
       operand: operandAST as ast.ExpressionNode, // operandAST is now guaranteed to be a valid ExpressionNode
       prefix: true, // OpenSCAD unary operators are always prefix
