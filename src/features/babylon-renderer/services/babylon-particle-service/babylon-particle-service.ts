@@ -18,7 +18,7 @@ import {
 
 // Interface extension for Engine with webGLVersion property
 interface ExtendedEngine extends Engine {
-  webGLVersion?: number;
+  webGLVersion: number;
 }
 
 import { createLogger } from '../../../../shared/services/logger.service';

@@ -13,6 +13,7 @@ import {
   PBRMaterial,
   type Scene,
   Texture,
+  Vector2,
   Vector3,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
@@ -276,7 +277,10 @@ export class BabylonMaterialService {
         if (config.anisotropy.enabled) {
           material.anisotropy.isEnabled = true;
           material.anisotropy.intensity = config.anisotropy.intensity;
-          material.anisotropy.direction = config.anisotropy.direction;
+          material.anisotropy.direction = new Vector2(
+            config.anisotropy.direction.x,
+            config.anisotropy.direction.y
+          );
         }
 
         // Load textures if provided

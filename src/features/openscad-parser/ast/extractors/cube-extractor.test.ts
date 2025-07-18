@@ -49,7 +49,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a numeric size', () => {
     const code = 'cube(5);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;
@@ -64,7 +64,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a simple binary expression size', () => {
     const code = 'cube(2 + 3);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;
@@ -128,7 +128,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a multiplication expression size', () => {
     const code = 'cube(2 * 3);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;
@@ -143,7 +143,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a complex expression size', () => {
     const code = 'cube(1 + 2 * 3);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;
@@ -158,7 +158,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a vector size', () => {
     const code = 'cube([10, 20, 30]);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;
@@ -174,7 +174,7 @@ describe('Cube Extractor', () => {
 
   it('should extract a cube with a vector containing expressions', () => {
     const code = 'cube([5 + 5, 10 * 2, 5 * 6]);';
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     if (!tree) return;

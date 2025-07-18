@@ -668,11 +668,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
-      name: string,
-      renderGraph: NodeRenderGraph
-    ) => NodeRenderGraphBlock;
-    const block = new BlockConstructor(config.name, renderGraph);
+    const block = new NodeRenderGraphBlock(config.name, renderGraph.frameGraph, renderGraph.getScene());
     return block;
   }
 
