@@ -382,7 +382,7 @@ describe('ProgressBar', () => {
 
   describe('Edge Cases', () => {
     it('should handle missing operation gracefully', () => {
-      render(<ProgressBar operation={undefined} />);
+      render(<ProgressBar />);
 
       expect(screen.getByText('Processing...')).toBeInTheDocument();
       expect(screen.getByText('0%')).toBeInTheDocument();

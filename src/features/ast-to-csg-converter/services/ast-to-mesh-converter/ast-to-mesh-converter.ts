@@ -769,7 +769,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
           vertexCount: 16, // Combined geometry approximation
           triangleCount: 24, // Combined geometry approximation
           geometry: astNode.type,
-          children: astNode.children || [],
+          children: (astNode as any).children || [],
         };
 
       default:

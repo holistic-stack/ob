@@ -132,7 +132,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         onExportComplete?.(result.data);
         onClose();
         logger.debug(`[EXPORT] Export completed: ${result.data.filename}`);
-      } else if (result.error) {
+      } else if (!result.success) {
         onExportError?.(result.error.message);
         logger.error(`[EXPORT] Export failed: ${result.error.message}`);
       }
@@ -379,13 +379,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           {isExporting && (
             <div className="progress-section">
               <ProgressBar
-                current={exportProgress}
-                total={100}
+                percentage={exportProgress}
+                title={exportMessage || 'Exporting...'}
                 size="md"
                 color="blue"
                 showPercentage={true}
                 showTimeRemaining={false}
-                message={exportMessage || undefined}
                 data-testid="export-progress"
               />
             </div>
