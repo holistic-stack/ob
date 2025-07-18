@@ -8,6 +8,7 @@
 import {
   BoundingBox,
   type FloatArray,
+  Matrix,
   Mesh,
   type Scene,
   Vector3,
@@ -18,6 +19,7 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 import type {
   GenericGeometry,
+  GenericMaterialConfig,
   GenericMeshData,
   GenericMeshMetadata,
 } from '../../types/generic-mesh-data.types';

@@ -102,8 +102,8 @@ describe('FunctionVisitor', () => {
       expect(result?.name?.expressionType).toBe('identifier');
       expect(result?.name?.location).toBeDefined(); // May require mock update
       expect(result?.parameters).toHaveLength(2);
-      expect(result?.parameters[0]?.name).toBe('a');
-      expect(result?.parameters[1]?.name).toBe('b');
+      expect(result?.parameters?.[0]?.name).toBe('a');
+      expect(result?.parameters?.[1]?.name).toBe('b');
       expect(result?.expression).toBeDefined();
       expect(result?.expression.value).toBe('a + b');
     });
@@ -147,10 +147,10 @@ describe('FunctionVisitor', () => {
       expect(result?.name?.expressionType).toBe('identifier');
       expect(result?.name?.location).toBeDefined(); // May require mock update
       expect(result?.parameters).toHaveLength(2);
-      expect(result?.parameters[0]?.name).toBe('a');
-      expect(result?.parameters[0]?.defaultValue).toBe(0);
-      expect(result?.parameters[1]?.name).toBe('b');
-      expect(result?.parameters[1]?.defaultValue).toBe(0);
+      expect(result?.parameters?.[0]?.name).toBe('a');
+      expect(result?.parameters?.[0]?.defaultValue).toBe(0);
+      expect(result?.parameters?.[1]?.name).toBe('b');
+      expect(result?.parameters?.[1]?.defaultValue).toBe(0);
       expect(result?.expression).toBeDefined();
       expect(result?.expression.value).toBe('a + b');
     });
@@ -194,12 +194,12 @@ describe('FunctionVisitor', () => {
       expect(result?.name?.expressionType).toBe('identifier');
       expect(result?.name?.location).toBeDefined(); // May require mock update
       expect(result?.parameters).toHaveLength(3);
-      expect(result?.parameters[0]?.name).toBe('x');
-      expect(result?.parameters[0]?.defaultValue).toBe(0);
-      expect(result?.parameters[1]?.name).toBe('y');
-      expect(result?.parameters[1]?.defaultValue).toBe(0);
-      expect(result?.parameters[2]?.name).toBe('z');
-      expect(result?.parameters[2]?.defaultValue).toBe(0);
+      expect(result?.parameters?.[0]?.name).toBe('x');
+      expect(result?.parameters?.[0]?.defaultValue).toBe(0);
+      expect(result?.parameters?.[1]?.name).toBe('y');
+      expect(result?.parameters?.[1]?.defaultValue).toBe(0);
+      expect(result?.parameters?.[2]?.name).toBe('z');
+      expect(result?.parameters?.[2]?.defaultValue).toBe(0);
       expect(result?.expression).toBeDefined();
       expect(result?.expression.value).toBe('[x, y, z]');
     });

@@ -20,7 +20,6 @@ import {
 interface ExtendedEngine extends Engine {
   webGLVersion?: number;
 }
-
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -493,8 +492,7 @@ export class BabylonParticleService {
 
     const engine = this.scene.getEngine();
     // Check if it's a WebGL engine and has webGLVersion property
-    const isWebGL2Supported =
-      'webGLVersion' in engine && (engine as ExtendedEngine).webGLVersion! >= 2;
+    const isWebGL2Supported = 'webGLVersion' in engine && (engine as ExtendedEngine).webGLVersion! >= 2;
     return GPUParticleSystem.IsSupported && isWebGL2Supported;
   }
 

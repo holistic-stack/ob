@@ -342,7 +342,7 @@ export class AssertStatementVisitor extends BaseASTVisitor {
 
       // Create the assert statement AST node
       const assertNode: ast.AssertStatementNode = {
-        type: 'assert',
+        type: 'assert_statement',
         condition,
         location: getLocation(node),
       };

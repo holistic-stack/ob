@@ -62,7 +62,7 @@ describe('extractValue - Vector Literals Regression Tests', () => {
    */
   function parseAndExtractVector(vectorCode: string): Vector2D | Vector3D | undefined {
     const code = `cube(${vectorCode});`;
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
     expect(tree?.rootNode).toBeDefined();
 

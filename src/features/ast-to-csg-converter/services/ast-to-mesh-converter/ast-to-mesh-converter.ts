@@ -455,9 +455,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
             totalVertices += meshResult.data.metadata.vertexCount;
             totalTriangles += meshResult.data.metadata.triangleCount;
           } else {
-            const errorMessage =
-              typeof meshResult.error === 'string' ? meshResult.error : String(meshResult.error);
-            errors.push(`Failed to convert node ${i} (${node.type}): ${errorMessage}`);
+            errors.push(`Failed to convert node ${i} (${node.type}): ${meshResult.error}`);
           }
         }
 
@@ -771,8 +769,7 @@ export class ASTToMeshConversionService implements ASTToMeshConverter {
           vertexCount: 16, // Combined geometry approximation
           triangleCount: 24, // Combined geometry approximation
           geometry: astNode.type,
-          children:
-            'children' in astNode && Array.isArray(astNode.children) ? astNode.children : [],
+          children: astNode.children || [],
         };
 
       default:

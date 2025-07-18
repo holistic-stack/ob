@@ -685,14 +685,12 @@ export interface ForNode extends BaseNode {
  * @description Represents an `if` conditional statement in OpenSCAD.
  * @property {'if'} type - The node type.
  * @property {ExpressionNode} condition - The condition expression.
- * @property {ASTNode[]} thenBranch - The child nodes to execute if condition is true.
- * @property {ASTNode[]} elseBranch - The child nodes to execute if condition is false (optional).
+ * @property {ASTNode[]} children - The child nodes to execute if condition is true.
  */
 export interface IfNode extends BaseNode {
   type: 'if';
   condition: ExpressionNode;
-  thenBranch: ASTNode[];
-  elseBranch?: ASTNode[];
+  children: ASTNode[];
 }
 
 /**
@@ -911,22 +909,13 @@ export interface FunctionDefinitionNode extends BaseNode {
 }
 
 /**
- * @interface ForLoopVariable
- * @description Represents a variable assignment in a for loop.
- */
-export interface ForLoopVariable {
-  variable: string;
-  range: ExpressionNode | number[] | ErrorNode;
-  step?: ExpressionNode | number;
-}
-
-/**
  * @interface ForLoopNode
  * @description Represents a for loop statement in OpenSCAD.
  */
 export interface ForLoopNode extends BaseNode {
   type: 'for_loop';
-  variables: ForLoopVariable[];
+  variable: string;
+  range: ExpressionNode;
   body: ASTNode[];
 }
 

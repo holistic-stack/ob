@@ -101,7 +101,9 @@ export class ExportService {
 
   constructor(scene: Scene, progressService?: ProgressService) {
     this.scene = scene;
-    this.progressService = progressService;
+    if (progressService) {
+      this.progressService = progressService;
+    }
     logger.init('[INIT] Export service initialized');
   }
 
@@ -335,9 +337,9 @@ export class ExportService {
 
       // Process triangles
       for (let i = 0; i < indices.length; i += 3) {
-        const i1 = indices[i] * 3;
-        const i2 = indices[i + 1] * 3;
-        const i3 = indices[i + 2] * 3;
+        const i1 = (indices[i] ?? 0) * 3;
+        const i2 = (indices[i + 1] ?? 0) * 3;
+        const i3 = (indices[i + 2] ?? 0) * 3;
 
         // Get vertices
         const v1 = [positions[i1], positions[i1 + 1], positions[i1 + 2]];
@@ -470,7 +472,7 @@ export class ExportService {
     if (this.progressService && operationId) {
       this.progressService.updateProgress(operationId, {
         current: progress,
-        message,
+        message: message ?? '',
       });
     }
   }

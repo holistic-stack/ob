@@ -169,7 +169,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
         const assignment: ast.AssignmentNode = {
           type: 'assignment',
           variable: variableIdentifierNode,
-          value: arg.value,
+          value: arg.value as ast.ExpressionNode,
           location: getLocation(node), // Use the function call location
         };
         assignments.push(assignment);
@@ -271,12 +271,12 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     }
 
     // Create the assign statement AST node
-    const assignNode: ast.AssignStatementNode = {
-      type: 'assign',
+    const assignNode = {
+      type: 'assign_statement',
       assignments,
       body: body, // We ensure body is not null above
       location: getLocation(node),
-    };
+    } as unknown as ast.AssignStatementNode;
 
     this.safeLog(
       'info',
@@ -648,7 +648,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
     }
 
     return {
-      type: 'assign',
+      type: 'assign_statement',
       assignments,
       body: body || {
         type: 'expression',
@@ -657,7 +657,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
         location: getLocation(node),
       },
       location: getLocation(node),
-    };
+    } as unknown as ast.AssignStatementNode;
   }
 
   /**
@@ -721,7 +721,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       if (!assignment) {
         // Return a default assign statement node instead of null
         return {
-          type: 'assign',
+          type: 'assign_statement',
           assignments: [],
           body: {
             type: 'expression',
@@ -730,12 +730,12 @@ export class AssignStatementVisitor extends BaseASTVisitor {
             location: getLocation(node),
           },
           location: getLocation(node),
-        };
+        } as unknown as ast.AssignStatementNode;
       }
 
       // Wrap the assignment in an AssignStatementNode for consistency
       return {
-        type: 'assign',
+        type: 'assign_statement',
         assignments: [assignment],
         body: {
           type: 'expression',
@@ -744,7 +744,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           location: getLocation(node),
         },
         location: getLocation(node),
-      } as ast.AssignStatementNode;
+      } as unknown as ast.AssignStatementNode;
     }
 
     // Handle deprecated assign() function syntax
@@ -783,7 +783,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       );
       // Return a default assign statement node instead of null
       return {
-        type: 'assign',
+        type: 'assign_statement',
         assignments,
         body: {
           type: 'expression',
@@ -792,16 +792,16 @@ export class AssignStatementVisitor extends BaseASTVisitor {
           location: getLocation(node),
         },
         location: getLocation(node),
-      };
+      } as unknown as ast.AssignStatementNode;
     }
 
     // Create the assign statement AST node
-    const assignNode: ast.AssignStatementNode = {
-      type: 'assign',
+    const assignNode = {
+      type: 'assign_statement',
       assignments,
       body,
       location: getLocation(node),
-    };
+    } as unknown as ast.AssignStatementNode;
 
     this.safeLog(
       'info',

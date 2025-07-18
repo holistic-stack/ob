@@ -142,7 +142,7 @@ export class ConditionalExpressionVisitor extends BaseASTVisitor {
 
     return {
       type: 'expression',
-      expressionType: 'conditional_expression',
+      expressionType: 'conditional',
       condition: conditionAST as ast.ExpressionNode,
       thenBranch: consequenceAST as ast.ExpressionNode,
       elseBranch: alternativeAST as ast.ExpressionNode,

@@ -24,6 +24,18 @@ import { performCompleteBufferClearing } from './utils/buffer-clearing/buffer-cl
 import { disposeMeshesComprehensively } from './utils/mesh-disposal/mesh-disposal';
 import { forceSceneRefresh } from './utils/scene-refresh/scene-refresh';
 
+/**
+ * @interface TestShape
+ * @description Represents a test shape for rendering pipeline tests
+ */
+interface TestShape {
+  type: 'cube' | 'sphere' | 'cylinder' | 'torus';
+  size?: number;
+  diameter?: number;
+  height?: number;
+  thickness?: number;
+}
+
 describe('Rendering Pipeline Integration Regression Tests', () => {
   let engine: BABYLON.NullEngine;
   let scene: BABYLON.Scene;
@@ -121,7 +133,7 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
     it('should handle rapid shape changes with continuous camera movement', () => {
       // REGRESSION TEST: Rapid changes + camera movement was especially problematic
 
-      const shapes = [
+      const shapes: TestShape[] = [
         { type: 'cube', size: 10 },
         { type: 'sphere', diameter: 10 },
         { type: 'cylinder', height: 10, diameter: 8 },
@@ -130,35 +142,43 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
 
       for (let shapeIndex = 0; shapeIndex < shapes.length; shapeIndex++) {
         const shape = shapes[shapeIndex];
+        if (!shape) continue;
 
         // Create mesh based on shape type
         let mesh: BABYLON.Mesh;
         switch (shape.type) {
           case 'cube':
-            mesh = BABYLON.MeshBuilder.CreateBox('cube', { size: shape.size }, scene);
+            mesh = BABYLON.MeshBuilder.CreateBox('cube', { size: shape.size ?? 10 }, scene);
             break;
           case 'sphere':
-            mesh = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: shape.diameter }, scene);
+            mesh = BABYLON.MeshBuilder.CreateSphere(
+              'sphere',
+              { diameter: shape.diameter ?? 10 },
+              scene
+            );
             break;
           case 'cylinder':
             mesh = BABYLON.MeshBuilder.CreateCylinder(
               'cylinder',
               {
-                height: shape.height,
-                diameter: shape.diameter,
+                height: shape.height ?? 10,
+                diameter: shape.diameter ?? 8,
+              },
+              scene
+            );
+            break;
+          case 'torus':
+            mesh = BABYLON.MeshBuilder.CreateTorus(
+              'torus',
+              {
+                diameter: shape.diameter ?? 10,
+                thickness: shape.thickness ?? 2,
               },
               scene
             );
             break;
           default:
-            mesh = BABYLON.MeshBuilder.CreateTorus(
-              'torus',
-              {
-                diameter: shape.diameter,
-                thickness: shape.thickness,
-              },
-              scene
-            );
+            throw new Error(`Unknown shape type: ${shape.type}`);
         }
 
         const material = new BABYLON.StandardMaterial(`${shape.type}Material`, scene);
@@ -180,7 +200,9 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
         if (shapeIndex < shapes.length - 1) {
           const disposalResult = disposeMeshesComprehensively(scene);
           expect(disposalResult.success).toBe(true);
-          expect(disposalResult.data?.meshesDisposed).toBe(1);
+          if (disposalResult.success) {
+            expect(disposalResult.data.meshesDisposed).toBe(1);
+          }
 
           // Force scene refresh
           forceSceneRefresh(engine, scene);
@@ -333,6 +355,7 @@ describe('Rendering Pipeline Integration Regression Tests', () => {
 
       for (let step = 0; step < editingSteps.length; step++) {
         const code = editingSteps[step];
+        if (!code) continue;
 
         // Dispose previous mesh (except first step)
         if (step > 0) {

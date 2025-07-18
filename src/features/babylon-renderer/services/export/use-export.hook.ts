@@ -37,6 +37,7 @@
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { useCallback, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
+import type { Result } from '../../../../shared/types/result.types';
 import {
   type ExportConfig,
   type ExportError,

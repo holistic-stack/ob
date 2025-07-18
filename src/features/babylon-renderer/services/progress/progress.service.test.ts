@@ -306,11 +306,11 @@ describe('ProgressService', () => {
     it('should filter operations by type', () => {
       const parsingOperations = progressService.getOperationsByType('parsing');
       expect(parsingOperations).toHaveLength(1);
-      expect(parsingOperations[0].id).toBe(parsingId);
+      expect(parsingOperations[0]?.id).toBe(parsingId);
 
       const renderingOperations = progressService.getOperationsByType('rendering');
       expect(renderingOperations).toHaveLength(1);
-      expect(renderingOperations[0].id).toBe(renderingId);
+      expect(renderingOperations[0]?.id).toBe(renderingId);
 
       const exportOperations = progressService.getOperationsByType('export');
       expect(exportOperations).toHaveLength(0);
@@ -321,7 +321,7 @@ describe('ProgressService', () => {
 
       const activeOperations = progressService.getActiveOperations();
       expect(activeOperations).toHaveLength(1);
-      expect(activeOperations[0].id).toBe(renderingId);
+      expect(activeOperations[0]?.id).toBe(renderingId);
     });
   });
 

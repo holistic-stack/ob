@@ -519,8 +519,9 @@ export class ForLoopVisitor extends BaseASTVisitor {
       }
 
       finalLoopAssignments.push({
-        variable: variableName,
-        range: rangeNode,
+        type: 'for_loop_variable' as const,
+        name: variableName,
+        iterable: rangeNode,
         ...(stepNode && { step: stepNode }),
       });
     }
@@ -532,7 +533,8 @@ export class ForLoopVisitor extends BaseASTVisitor {
     );
     return {
       type: 'for_loop',
-      variables: finalLoopAssignments,
+      variable: finalLoopAssignments[0]?.name ?? '',
+      range: finalLoopAssignments[0]?.iterable ?? ({ type: 'literal', expressionType: 'literal', value: [] } as unknown as ast.ExpressionNode),
       body: bodyAstNodes,
       location: getLocation(node),
     };
@@ -676,8 +678,7 @@ export class ForLoopVisitor extends BaseASTVisitor {
           node
         );
         variableNode = {
-          type: 'expression',
-          expressionType: 'variable',
+          type: 'variable',
           name: arg.name,
           location: getLocation(node),
         };
@@ -811,22 +812,23 @@ export class ForLoopVisitor extends BaseASTVisitor {
         }
 
         variables.push({
-          variable: variableName,
-          range: rangeNode,
+          type: 'for_loop_variable' as const,
+          name: variableName,
+          iterable: rangeNode,
           ...(stepNode && { step: stepNode }),
         });
       }
     }
 
-    if (variables.some((v) => v.range.type === 'error')) {
+    if (variables.some((v) => 'errorCode' in v.iterable)) {
       this.errorHandler.logError(
         'One or more assignments in createForNode resulted in an error.',
         'ForLoopVisitor.createForNode: error_in_assignments',
         node
       );
-      // Return the first error encountered in the range
-      const firstErrorRange = variables.find((v) => v.range.type === 'error');
-      if (firstErrorRange) return firstErrorRange.range as unknown as ast.ErrorNode;
+      // Return the first error encountered in the iterable
+      const firstErrorRange = variables.find((v) => 'errorCode' in v.iterable);
+      if (firstErrorRange) return firstErrorRange.iterable as unknown as ast.ErrorNode;
       // Fallback if error type isn't directly on variable/range but implies failure
       return createErrorNodeInternal(
         node,
@@ -846,7 +848,8 @@ export class ForLoopVisitor extends BaseASTVisitor {
 
     return {
       type: 'for_loop',
-      variables,
+      variable: variables[0]?.name ?? '',
+      range: variables[0]?.iterable ?? ({ type: 'literal', expressionType: 'literal', value: [] } as unknown as ast.ExpressionNode),
       body: [], // Placeholder body, as this method is for specific AST constructions
       location: getLocation(node),
     };

@@ -308,10 +308,10 @@ export class UserErrorHandlerService {
       message: pattern.messageTemplate,
       severity,
       suggestions: pattern.suggestions,
-      ...(pattern.helpUrl !== undefined && { helpUrl: pattern.helpUrl }),
+      helpUrl: pattern.helpUrl,
       canRetry: pattern.canRetry,
       canRecover: pattern.canRecover,
-      ...(technicalDetails !== undefined && { technicalDetails }),
+      technicalDetails,
     };
   }
 
@@ -334,7 +334,7 @@ export class UserErrorHandlerService {
       ],
       canRetry: true,
       canRecover: true,
-      ...(technicalDetails !== undefined && { technicalDetails }),
+      technicalDetails,
     };
   }
 

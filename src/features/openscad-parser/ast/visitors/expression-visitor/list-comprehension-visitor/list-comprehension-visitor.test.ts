@@ -75,12 +75,14 @@ describe('ListComprehensionVisitor', () => {
     Location: ${JSON.stringify(errorNode.location)}
     Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (result?.type === 'list_comprehension') {
+        } else if (
+          result?.type === 'list_comprehension'
+        ) {
           expect(result.variable).toBe('x');
-          expect(result.range).toBeTruthy();
-          expect(result.range?.expressionType).toBe('range_expression');
+          expect(result.iterable).toBeTruthy();
+          expect(result.iterable?.expressionType).toBe('range_expression');
           if (result.expression && result.expression.expressionType === 'identifier_expression') {
-            expect((result.expression as IdentifierExpressionNode).text).toBe('x');
+            expect((result.expression as unknown as IdentifierExpressionNode).name).toBe('x');
           }
           expect(result.condition).toBeUndefined();
         } else {
@@ -105,8 +107,8 @@ describe('ListComprehensionVisitor', () => {
         expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
           expect(result.variable).toBe('x');
-          expect(result.range).toBeTruthy();
-          expect(result.range?.expressionType).toBe('range_expression');
+          expect(result.iterable).toBeTruthy();
+          expect(result.iterable?.expressionType).toBe('range_expression');
           expect(result.expression).toBeTruthy();
           expect(result.expression?.expressionType).toBe('binary_expression');
           expect(result.condition).toBeUndefined();
@@ -132,11 +134,11 @@ describe('ListComprehensionVisitor', () => {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('x');
-            expect(result.range).toBeTruthy();
-            expect(result.range?.expressionType).toBe('range_expression');
+            expect(result.iterable).toBeTruthy();
+            expect(result.iterable?.expressionType).toBe('range_expression');
             expect(result.expression).toBeTruthy();
             if (result.expression && result.expression.expressionType === 'identifier_expression') {
-              expect((result.expression as IdentifierExpressionNode).text).toBe('x');
+              expect((result.expression as unknown as IdentifierExpressionNode).name).toBe('x');
             }
             expect(result.condition).toBeTruthy();
             expect(result.condition?.expressionType).toBe('binary_expression');
@@ -177,11 +179,11 @@ describe('ListComprehensionVisitor', () => {
         } else if (result?.type === 'list_comprehension') {
           // Updated success assertions for new AST structure:
           expect(result.variable).toBe('x');
-          expect(result.range).toBeTruthy();
-          expect(result.range?.expressionType).toBe('vector'); // [1:5] is parsed as vector containing range
+          expect(result.iterable).toBeTruthy();
+          expect(result.iterable?.expressionType).toBe('vector'); // [1:5] is parsed as vector containing range
           expect(result.expression).toBeTruthy();
           if (result.expression && result.expression.expressionType === 'identifier_expression') {
-            expect((result.expression as IdentifierExpressionNode).text).toBe('x');
+            expect((result.expression as unknown as IdentifierExpressionNode).name).toBe('x');
           }
           expect(result.condition).toBeUndefined();
         } else {
@@ -209,11 +211,11 @@ describe('ListComprehensionVisitor', () => {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('x');
-            expect(result.range).toBeTruthy();
-            expect(result.range?.expressionType).toBe('vector'); // [1:10] is parsed as vector containing range
+            expect(result.iterable).toBeTruthy();
+            expect(result.iterable?.expressionType).toBe('vector'); // [1:10] is parsed as vector containing range
             expect(result.expression).toBeTruthy();
             if (result.expression && result.expression.expressionType === 'identifier_expression') {
-              expect((result.expression as IdentifierExpressionNode).text).toBe('x');
+              expect((result.expression as unknown as IdentifierExpressionNode).name).toBe('x');
             }
             expect(result.condition).toBeTruthy();
             expect(result.condition?.expressionType).toBe('binary');
@@ -245,8 +247,8 @@ describe('ListComprehensionVisitor', () => {
             throw new Error('Expected ListComprehensionExpressionNode, got ErrorNode');
           } else if (result.type === 'list_comprehension') {
             expect(result.variable).toBe('i');
-            expect(result.range).toBeTruthy();
-            expect(result.range?.expressionType).toBe('vector'); // [0:10] is parsed as vector containing range
+            expect(result.iterable).toBeTruthy();
+            expect(result.iterable?.expressionType).toBe('vector'); // [0:10] is parsed as vector containing range
             expect(result.expression).toBeTruthy();
             expect(result.expression?.expressionType).toBe('binary'); // i*i is a binary expression
             expect(result.condition).toBeTruthy();
@@ -275,8 +277,8 @@ describe('ListComprehensionVisitor', () => {
         expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
           expect(result.variable).toBe('i');
-          expect(result.range).toBeTruthy();
-          expect(result.range?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
+          expect(result.iterable).toBeTruthy();
+          expect(result.iterable?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
           expect(result.expression).toBeTruthy();
           expect(result.expression?.expressionType).toBe('function_call'); // a_function(i) is a function call
           expect(result.condition).toBeUndefined();
@@ -301,8 +303,8 @@ describe('ListComprehensionVisitor', () => {
         expect(result?.type).toBe('list_comprehension');
         if (result && result.type !== 'error') {
           expect(result.variable).toBe('i');
-          expect(result.range).toBeTruthy();
-          expect(result.range?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
+          expect(result.iterable).toBeTruthy();
+          expect(result.iterable?.expressionType).toBe('vector'); // [0:2] is parsed as vector containing range
           expect(result.expression).toBeTruthy();
           expect(result.expression?.expressionType).toBe('vector'); // [i, i*2] is a vector expression
           expect(result.condition).toBeUndefined();
@@ -399,14 +401,8 @@ describe('ListComprehensionVisitor', () => {
         expect(
           result === null || result?.type === 'error' || result?.type === 'list_comprehension'
         ).toBe(true);
-        if (result && result.type === 'list_comprehension') {
-          // If it's a list comprehension, it might be a partially parsed node.
-          // This test is primarily about not crashing and returning *something* sensible or an error.
-        } else if (result && result.type !== 'error' && result.type !== 'list_comprehension') {
-          throw new Error(
-            'Expected ErrorNode, null, or partial ListComprehensionExpressionNode for malformed input'
-          );
-        }
+        // For malformed input, we expect an ErrorNode, null, or a list comprehension node
+        // This test is primarily about not crashing and returning something sensible
       }
     });
 

@@ -6,7 +6,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { GenericMeshData } from '../../../ast-to-csg-converter/types/conversion.types';
+import type { GenericMeshData } from '../../types/generic-mesh-data.types';
 import {
   convertBabylonMeshToGeneric,
   convertGenericMeshToBabylon,

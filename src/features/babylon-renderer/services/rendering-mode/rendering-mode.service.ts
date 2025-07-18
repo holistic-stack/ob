@@ -29,7 +29,6 @@ import {
 interface ExtendedStandardMaterial extends StandardMaterial {
   _isPointsMode?: boolean;
 }
-
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';

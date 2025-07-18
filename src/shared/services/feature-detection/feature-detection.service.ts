@@ -317,15 +317,7 @@ export class FeatureDetectionService {
           };
         }
 
-        if (!navigator.gpu) {
-          return {
-            supported: false,
-            adapter: false,
-            features: [],
-          };
-        }
-
-        const adapter = await navigator.gpu.requestAdapter();
+        const adapter = await navigator.gpu?.requestAdapter();
         if (!adapter) {
           return {
             supported: true,
@@ -395,7 +387,14 @@ export class FeatureDetectionService {
       })
     );
 
-    return result.success ? result.data : result.error;
+    return result.success ? result.data : {
+      hardwareConcurrency: 1,
+      deviceMemory: null,
+      connection: {
+        effectiveType: null,
+        downlink: null,
+      },
+    };
   }
 
   /**
@@ -442,7 +441,7 @@ export class FeatureDetectionService {
   private getWebGLSupport(): FeatureSupport {
     const webgl = this.capabilities?.webgl;
 
-    if (!webgl || !webgl.supported) {
+    if (!webgl?.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGL is not supported by this browser',
@@ -455,7 +454,7 @@ export class FeatureDetectionService {
       };
     }
 
-    if (webgl.maxTextureSize < 2048) {
+    if (webgl?.maxTextureSize && webgl.maxTextureSize < 2048) {
       return {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'Limited WebGL capabilities detected',
@@ -478,7 +477,7 @@ export class FeatureDetectionService {
   private getWebGPUSupport(): FeatureSupport {
     const webgpu = this.capabilities?.webgpu;
 
-    if (!webgpu || !webgpu.supported) {
+    if (!webgpu?.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGPU is not supported by this browser',
@@ -491,7 +490,7 @@ export class FeatureDetectionService {
       };
     }
 
-    if (!webgpu.adapter) {
+    if (!webgpu?.adapter) {
       return {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'WebGPU adapter not available',

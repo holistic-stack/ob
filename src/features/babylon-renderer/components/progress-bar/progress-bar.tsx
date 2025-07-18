@@ -44,19 +44,19 @@ export type ProgressBarColor = 'blue' | 'green' | 'yellow' | 'red' | 'gray';
  * Progress bar props
  */
 export interface ProgressBarProps {
-  readonly operation?: ProgressOperation | undefined;
-  readonly percentage?: number | undefined;
-  readonly title?: string | undefined;
-  readonly description?: string | undefined;
-  readonly isIndeterminate?: boolean | undefined;
-  readonly showPercentage?: boolean | undefined;
-  readonly showTimeRemaining?: boolean | undefined;
-  readonly showCancelButton?: boolean | undefined;
-  readonly size?: ProgressBarSize | undefined;
-  readonly color?: ProgressBarColor | undefined;
-  readonly className?: string | undefined;
-  readonly onCancel?: (() => void) | undefined;
-  readonly 'data-testid'?: string | undefined;
+  readonly operation?: ProgressOperation;
+  readonly percentage?: number;
+  readonly title?: string;
+  readonly description?: string;
+  readonly isIndeterminate?: boolean;
+  readonly showPercentage?: boolean;
+  readonly showTimeRemaining?: boolean;
+  readonly showCancelButton?: boolean;
+  readonly size?: ProgressBarSize;
+  readonly color?: ProgressBarColor;
+  readonly className?: string;
+  readonly onCancel?: () => void;
+  readonly 'data-testid'?: string;
 }
 
 /**

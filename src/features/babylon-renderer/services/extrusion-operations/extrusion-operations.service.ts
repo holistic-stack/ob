@@ -315,10 +315,7 @@ export class ExtrusionOperationsService {
   /**
    * Apply linear extrude transformations (twist, scale)
    */
-  private applyLinearExtrudeTransformations(
-    _mesh: Mesh,
-    params: OpenSCADLinearExtrudeParams
-  ): void {
+  private applyLinearExtrudeTransformations(_mesh: Mesh, params: OpenSCADLinearExtrudeParams): void {
     // Note: BabylonJS ExtrudeShape doesn't directly support twist and scale
     // This would require custom geometry generation for full OpenSCAD compatibility
     // For now, we'll log that these features need custom implementation

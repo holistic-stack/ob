@@ -132,13 +132,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         onExportComplete?.(result.data);
         onClose();
         logger.debug(`[EXPORT] Export completed: ${result.data.filename}`);
-      } else if (!result.success) {
-        const errorMessage =
-          typeof result.error === 'object' && result.error && 'message' in result.error
-            ? String(result.error.message)
-            : String(result.error);
-        onExportError?.(errorMessage);
-        logger.error(`[EXPORT] Export failed: ${errorMessage}`);
+      } else if (result.error) {
+        onExportError?.(result.error.message);
+        logger.error(`[EXPORT] Export failed: ${result.error.message}`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown export error';

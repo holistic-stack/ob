@@ -35,23 +35,29 @@ describe('Buffer Clearing Utilities', () => {
       const result = clearRenderBuffers(engine, scene);
 
       expect(result.success).toBe(true);
-      expect(result.data).toBeUndefined();
+      if (result.success) {
+        expect(result.data).toBeUndefined();
+      }
     });
 
     it('should return error for invalid engine', () => {
       const result = clearRenderBuffers(null as any, scene);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS engine');
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_ENGINE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS engine');
+      }
     });
 
     it('should return error for invalid scene', () => {
       const result = clearRenderBuffers(engine, null as any);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
-      expect(result.error?.message).toContain('Invalid or missing BabylonJS scene');
+      if (!result.success) {
+        expect(result.error.code).toBe(BufferClearingErrorCode.INVALID_SCENE);
+        expect(result.error.message).toContain('Invalid or missing BabylonJS scene');
+      }
     });
 
     it('should return error for engine without clear method', () => {

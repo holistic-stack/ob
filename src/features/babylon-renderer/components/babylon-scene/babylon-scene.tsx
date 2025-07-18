@@ -251,8 +251,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       onSceneReady: (scene: BabylonSceneType) => {
         sceneRef.current = scene;
         // Store scene service reference for camera controls
-        (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService =
-          sceneService;
+        (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService = sceneService;
         onSceneReady?.(scene);
       },
       ...(onRenderLoop && { onRenderLoop }),

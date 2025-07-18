@@ -49,7 +49,7 @@ describe('AST Evaluator Handlers', () => {
     it('should return successful Result for arithmetic operations', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '+',
         left: createLiteral(5),
         right: createLiteral(3),
@@ -66,7 +66,7 @@ describe('AST Evaluator Handlers', () => {
     it('should return successful Result for multiplication', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '*',
         left: createLiteral(4),
         right: createLiteral(7),
@@ -82,7 +82,7 @@ describe('AST Evaluator Handlers', () => {
     it('should return successful Result for comparison operations', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '<',
         left: createLiteral(5),
         right: createLiteral(10),
@@ -98,7 +98,7 @@ describe('AST Evaluator Handlers', () => {
     it('should return successful Result for logical operations', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '&&',
         left: createLiteral(1),
         right: createLiteral(1),
@@ -114,7 +114,7 @@ describe('AST Evaluator Handlers', () => {
     it('should handle division by zero with error Result', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '/',
         left: createLiteral(10),
         right: createLiteral(0),
@@ -131,9 +131,8 @@ describe('AST Evaluator Handlers', () => {
   describe('evaluateSpecialVariable handler', () => {
     it('should return successful Result for $fn variable', () => {
       const specialVar: SpecialVariableNode = {
-        type: 'expression',
-        expressionType: 'special_variable',
-        variable: '$fn',
+        type: 'special_variable',
+        name: '$fn',
         location: createLocation(),
       };
 
@@ -144,13 +143,12 @@ describe('AST Evaluator Handlers', () => {
     });
 
     it('should return successful Result for all special variables', () => {
-      const specialVars: SpecialVariableNode['variable'][] = ['$fa', '$fs', '$t', '$children'];
+      const specialVars: SpecialVariableNode['name'][] = ['$fa', '$fs', '$t', '$children'];
 
       for (const varType of specialVars) {
         const specialVar: SpecialVariableNode = {
-          type: 'expression',
-          expressionType: 'special_variable',
-          variable: varType,
+          type: 'special_variable',
+          name: varType,
           location: createLocation(),
         };
 
@@ -165,10 +163,9 @@ describe('AST Evaluator Handlers', () => {
   describe('evaluateListComprehension handler', () => {
     it('should return successful Result for list comprehensions', () => {
       const listComp: ListComprehensionExpressionNode = {
-        type: 'expression',
-        expressionType: 'list_comprehension_expression',
+        type: 'list_comprehension',
         variable: 'i',
-        range: {
+        iterable: {
           type: 'expression',
           expressionType: 'array',
           items: [createLiteral(1), createLiteral(2), createLiteral(3)],
@@ -188,8 +185,7 @@ describe('AST Evaluator Handlers', () => {
   describe('evaluateParenthesizedExpression handler', () => {
     it('should return error Result indicating delegation needed', () => {
       const parenExpr: ParenthesizedExpressionNode = {
-        type: 'expression',
-        expressionType: 'parenthesized_expression',
+        type: 'parenthesized_expression',
         expression: createLiteral(42),
         location: createLocation(),
       };
@@ -229,9 +225,8 @@ describe('AST Evaluator Handlers', () => {
 
     it('should return successful Result for special variables', () => {
       const specialVar: SpecialVariableNode = {
-        type: 'expression',
-        expressionType: 'special_variable',
-        variable: '$fn',
+        type: 'special_variable',
+        name: '$fn',
         location: createLocation(),
       };
 
@@ -244,7 +239,7 @@ describe('AST Evaluator Handlers', () => {
     it('should return successful Result for binary expressions', () => {
       const binaryExpr: BinaryExpressionNode = {
         type: 'expression',
-        expressionType: 'binary_expression',
+        expressionType: 'binary',
         operator: '+',
         left: createLiteral(2),
         right: createLiteral(3),

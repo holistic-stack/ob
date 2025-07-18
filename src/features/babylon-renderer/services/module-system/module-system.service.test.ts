@@ -66,8 +66,16 @@ describe('ModuleSystemService', () => {
 
     it('should register a module with parameters', async () => {
       const parameters: ModuleParameter[] = [
-        { name: 'size', defaultValue: [10, 10, 10] },
-        { name: 'center', defaultValue: false },
+        {
+          type: 'module_parameter',
+          name: 'size',
+          defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
+        },
+        {
+          type: 'module_parameter',
+          name: 'center',
+          defaultValue: { type: 'boolean', value: false } as ASTNode
+        },
       ];
       const moduleDefNode = createModuleDefinition('parametric_box', parameters, []);
 
@@ -93,7 +101,7 @@ describe('ModuleSystemService', () => {
 
     it('should overwrite existing module with same name', async () => {
       const module1 = createModuleDefinition('test_module', [], []);
-      const module2 = createModuleDefinition('test_module', [{ name: 'param' }], []);
+      const module2 = createModuleDefinition('test_module', [{ type: 'module_parameter', name: 'param' }], []);
 
       await moduleService.registerModule(module1);
       await moduleService.registerModule(module2);
@@ -110,8 +118,16 @@ describe('ModuleSystemService', () => {
       const parametricModule = createModuleDefinition(
         'parametric_box',
         [
-          { name: 'size', defaultValue: [10, 10, 10] },
-          { name: 'center', defaultValue: false },
+          {
+            type: 'module_parameter',
+            name: 'size',
+            defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
+          },
+          {
+            type: 'module_parameter',
+            name: 'center',
+            defaultValue: { type: 'boolean', value: false } as ASTNode
+          },
         ],
         []
       );
@@ -416,13 +432,5 @@ describe('ModuleSystemService', () => {
     };
   }
 
-  function _createModuleSystemError(
-    message: string
-  ): import('./module-system.service').ModuleSystemError {
-    return {
-      code: 'EXECUTION_FAILED',
-      message,
-      timestamp: new Date(),
-    };
-  }
+
 });
