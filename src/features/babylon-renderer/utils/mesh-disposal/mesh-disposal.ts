@@ -16,7 +16,7 @@
  * ```
  */
 
-import type { AbstractMesh, Material, Scene, BaseTexture } from '@babylonjs/core';
+import type { AbstractMesh, BaseTexture, Material, Scene } from '@babylonjs/core';
 
 // Interface for materials with texture properties
 interface MaterialWithTextures extends Material {
@@ -26,6 +26,7 @@ interface MaterialWithTextures extends Material {
   emissiveTexture?: BaseTexture;
   specularTexture?: BaseTexture;
 }
+
 import type { Result } from '../../../../shared/types/result.types';
 
 /**

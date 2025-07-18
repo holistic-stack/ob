@@ -274,7 +274,7 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
       case 'if': {
         const ifNode = node as IfNode;
         params.condition = ifNode.condition;
-        params.hasElseBranch = !!(ifNode as any).elseBranch;
+        params.hasElseBranch = !!(ifNode as IfNode & { elseBranch?: unknown }).elseBranch;
         break;
       }
       case 'let': {

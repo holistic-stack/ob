@@ -69,12 +69,12 @@ describe('ModuleSystemService', () => {
         {
           type: 'module_parameter',
           name: 'size',
-          defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
+          defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode,
         },
         {
           type: 'module_parameter',
           name: 'center',
-          defaultValue: { type: 'boolean', value: false } as ASTNode
+          defaultValue: { type: 'boolean', value: false } as ASTNode,
         },
       ];
       const moduleDefNode = createModuleDefinition('parametric_box', parameters, []);
@@ -101,7 +101,11 @@ describe('ModuleSystemService', () => {
 
     it('should overwrite existing module with same name', async () => {
       const module1 = createModuleDefinition('test_module', [], []);
-      const module2 = createModuleDefinition('test_module', [{ type: 'module_parameter', name: 'param' }], []);
+      const module2 = createModuleDefinition(
+        'test_module',
+        [{ type: 'module_parameter', name: 'param' }],
+        []
+      );
 
       await moduleService.registerModule(module1);
       await moduleService.registerModule(module2);
@@ -121,12 +125,12 @@ describe('ModuleSystemService', () => {
           {
             type: 'module_parameter',
             name: 'size',
-            defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
+            defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode,
           },
           {
             type: 'module_parameter',
             name: 'center',
-            defaultValue: { type: 'boolean', value: false } as ASTNode
+            defaultValue: { type: 'boolean', value: false } as ASTNode,
           },
         ],
         []
@@ -431,6 +435,4 @@ describe('ModuleSystemService', () => {
       },
     };
   }
-
-
 });

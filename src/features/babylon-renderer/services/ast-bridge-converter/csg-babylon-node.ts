@@ -130,7 +130,7 @@ export class CSGBabylonNode extends BabylonJSNode {
       // Ensure we have proper Mesh instances for CSG operations
       if (!('geometry' in mesh)) {
         throw new Error(
-          `Child mesh ${(mesh as any).name || 'unknown'} is not a valid Mesh for CSG operations`
+          `Child mesh ${(mesh as AbstractMesh & { name?: string }).name || 'unknown'} is not a valid Mesh for CSG operations`
         );
       }
       return mesh; // AbstractMesh is sufficient for CSG operations

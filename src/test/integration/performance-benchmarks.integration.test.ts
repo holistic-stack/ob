@@ -318,7 +318,9 @@ describe('Performance Benchmarks Integration Tests', () => {
       const testModel = 'difference() { cube([5, 5, 5]); sphere(r=3); }';
 
       // Measure initial memory (if available)
-      const initialMemory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
+      const initialMemory =
+        (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0;
 
       // Perform repeated operations
       for (let i = 0; i < 10; i++) {
@@ -338,7 +340,9 @@ describe('Performance Benchmarks Integration Tests', () => {
       }
 
       // Measure final memory (if available)
-      const finalMemory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
+      const finalMemory =
+        (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0;
 
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryIncrease = finalMemory - initialMemory;

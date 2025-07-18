@@ -429,7 +429,10 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return null;
       }
       case 'list_comprehension':
-        return this.listComprehensionVisitor.visitListComprehension(node) as ast.ExpressionNode | ast.ErrorNode | null;
+        return this.listComprehensionVisitor.visitListComprehension(node) as
+          | ast.ExpressionNode
+          | ast.ErrorNode
+          | null;
       case 'range_expression':
         return this.rangeExpressionVisitor.visitRangeExpression(node);
       case 'module_instantiation':
@@ -842,7 +845,10 @@ export class ExpressionVisitor extends BaseASTVisitor {
       }
       case 'list_comprehension':
         // Handle list comprehension expressions
-        return this.listComprehensionVisitor.visitListComprehension(node) as ast.ExpressionNode | ast.ErrorNode | null;
+        return this.listComprehensionVisitor.visitListComprehension(node) as
+          | ast.ExpressionNode
+          | ast.ErrorNode
+          | null;
       case 'range_expression':
         // Handle range expressions
         return this.rangeExpressionVisitor.visitRangeExpression(node);

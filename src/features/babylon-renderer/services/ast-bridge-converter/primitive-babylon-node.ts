@@ -269,7 +269,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    */
   private extractSphereSegments(): number {
     const sphereNode = this.originalOpenscadNode as SphereNode;
-    return (sphereNode as any).$fn ?? 32; // Default segments
+    return (sphereNode as SphereNode & { $fn?: number }).$fn ?? 32; // Default segments
   }
 
   /**
@@ -332,7 +332,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         const sphereNode = node as SphereNode;
         params.radius = sphereNode.radius;
         params.diameter = sphereNode.diameter;
-        params.fn = (sphereNode as any).$fn;
+        params.fn = (sphereNode as SphereNode & { $fn?: number }).$fn;
         break;
       }
       case 'cylinder': {

@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Language } from 'web-tree-sitter';
 import { EnhancedOpenscadParser, ErrorHandler } from '../index.js';
 import { VisitorASTGenerator } from './visitor-ast-generator.js';

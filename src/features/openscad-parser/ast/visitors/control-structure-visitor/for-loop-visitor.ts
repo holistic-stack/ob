@@ -534,7 +534,13 @@ export class ForLoopVisitor extends BaseASTVisitor {
     return {
       type: 'for_loop',
       variable: finalLoopAssignments[0]?.name ?? '',
-      range: finalLoopAssignments[0]?.iterable ?? ({ type: 'literal', expressionType: 'literal', value: [] } as unknown as ast.ExpressionNode),
+      range:
+        finalLoopAssignments[0]?.iterable ??
+        ({
+          type: 'literal',
+          expressionType: 'literal',
+          value: [],
+        } as unknown as ast.ExpressionNode),
       body: bodyAstNodes,
       location: getLocation(node),
     };
@@ -849,7 +855,13 @@ export class ForLoopVisitor extends BaseASTVisitor {
     return {
       type: 'for_loop',
       variable: variables[0]?.name ?? '',
-      range: variables[0]?.iterable ?? ({ type: 'literal', expressionType: 'literal', value: [] } as unknown as ast.ExpressionNode),
+      range:
+        variables[0]?.iterable ??
+        ({
+          type: 'literal',
+          expressionType: 'literal',
+          value: [],
+        } as unknown as ast.ExpressionNode),
       body: [], // Placeholder body, as this method is for specific AST constructions
       location: getLocation(node),
     };

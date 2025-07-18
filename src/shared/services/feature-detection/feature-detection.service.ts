@@ -387,14 +387,16 @@ export class FeatureDetectionService {
       })
     );
 
-    return result.success ? result.data : {
-      hardwareConcurrency: 1,
-      deviceMemory: null,
-      connection: {
-        effectiveType: null,
-        downlink: null,
-      },
-    };
+    return result.success
+      ? result.data
+      : {
+          hardwareConcurrency: 1,
+          deviceMemory: null,
+          connection: {
+            effectiveType: null,
+            downlink: null,
+          },
+        };
   }
 
   /**

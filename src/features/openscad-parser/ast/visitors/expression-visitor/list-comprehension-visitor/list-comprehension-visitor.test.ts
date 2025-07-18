@@ -75,9 +75,7 @@ describe('ListComprehensionVisitor', () => {
     Location: ${JSON.stringify(errorNode.location)}
     Cause: ${errorNode.cause ? `ErrorCode: ${errorNode.cause.errorCode}, Message: ${errorNode.cause.message}` : 'No cause'}
   `);
-        } else if (
-          result?.type === 'list_comprehension'
-        ) {
+        } else if (result?.type === 'list_comprehension') {
           expect(result.variable).toBe('x');
           expect(result.iterable).toBeTruthy();
           expect(result.iterable?.expressionType).toBe('range_expression');

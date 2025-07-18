@@ -251,7 +251,9 @@ describe('Scale AST Generation', () => {
       expect(((scaleNode as ASTTypes.ScaleNode).children?.[1] as ASTTypes.SphereNode)?.type).toBe(
         'sphere'
       );
-      expect(((scaleNode as ASTTypes.ScaleNode).children?.[1] as ASTTypes.SphereNode)?.radius).toBe(5);
+      expect(((scaleNode as ASTTypes.ScaleNode).children?.[1] as ASTTypes.SphereNode)?.radius).toBe(
+        5
+      );
     });
   });
 });
