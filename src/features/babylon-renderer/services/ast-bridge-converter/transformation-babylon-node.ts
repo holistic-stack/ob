@@ -531,7 +531,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
       message,
       nodeType: this.nodeType,
       timestamp: new Date(),
-      sourceLocation: this.sourceLocation,
+      ...(this.sourceLocation && { sourceLocation: this.sourceLocation }),
     };
   }
 }

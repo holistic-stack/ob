@@ -131,7 +131,7 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     const forLoopNode = this.originalOpenscadNode as ForLoopNode;
     const resultMeshes: AbstractMesh[] = [];
 
-    logger.debug(`[FOR_LOOP] Processing for loop with ${forLoopNode.variables.length} variables`);
+    logger.debug(`[FOR_LOOP] Processing for loop with variable: ${forLoopNode.variable}`);
 
     // For now, implement a simple range-based for loop
     // TODO: Implement proper expression evaluation for complex ranges
@@ -213,7 +213,7 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
    */
   private evaluateForLoopRange(forLoopNode: ForLoopNode): number {
     // Simple implementation - assume first variable with range [0:n]
-    if (forLoopNode.variables.length === 0) {
+    if (!forLoopNode.variable) {
       return 0;
     }
 
@@ -267,14 +267,14 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     switch (node.type) {
       case 'for_loop': {
         const forLoopNode = node as ForLoopNode;
-        params.variables = forLoopNode.variables;
-        params.variableCount = forLoopNode.variables.length;
+        params.variables = [forLoopNode.variable];
+        params.variableCount = 1;
         break;
       }
       case 'if': {
         const ifNode = node as IfNode;
         params.condition = ifNode.condition;
-        params.hasElseBranch = !!ifNode.elseBranch;
+        params.hasElseBranch = !!(ifNode as any).elseBranch;
         break;
       }
       case 'let': {
@@ -331,8 +331,8 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     switch (this.controlFlowType) {
       case 'for_loop': {
         const forLoopNode = this.originalOpenscadNode as ForLoopNode;
-        if (forLoopNode.variables.length === 0) {
-          throw new Error('For loop must have at least one variable');
+        if (!forLoopNode.variable) {
+          throw new Error('For loop must have a variable');
         }
         break;
       }
@@ -393,7 +393,7 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
       message,
       nodeType: this.nodeType,
       timestamp: new Date(),
-      sourceLocation: this.sourceLocation,
+      ...(this.sourceLocation && { sourceLocation: this.sourceLocation }),
     };
   }
 }

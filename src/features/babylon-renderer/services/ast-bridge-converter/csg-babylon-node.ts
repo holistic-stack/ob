@@ -5,7 +5,7 @@
  * Supports union, difference, and intersection with OpenSCAD-compatible behavior.
  */
 
-import type { AbstractMesh, Scene } from '@babylonjs/core';
+import type { AbstractMesh, Mesh, Scene } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
@@ -130,7 +130,7 @@ export class CSGBabylonNode extends BabylonJSNode {
       // Ensure we have proper Mesh instances for CSG operations
       if (!('geometry' in mesh)) {
         throw new Error(
-          `Child mesh ${mesh.name || 'unknown'} is not a valid Mesh for CSG operations`
+          `Child mesh ${(mesh as any).name || 'unknown'} is not a valid Mesh for CSG operations`
         );
       }
       return mesh; // AbstractMesh is sufficient for CSG operations
@@ -156,10 +156,15 @@ export class CSGBabylonNode extends BabylonJSNode {
 
     // Start with the first mesh
     let result = meshes[0];
+    if (!result) {
+      throw new Error('Union operation requires at least one valid mesh');
+    }
 
     // Union with each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
-      const unionResult = await this.csgService.union(result, meshes[i]);
+      const mesh = meshes[i];
+      if (!mesh) continue;
+      const unionResult = await this.csgService.union(result as Mesh, mesh as Mesh);
 
       if (!unionResult.success) {
         throw new Error(`Union operation failed: ${unionResult.error.message}`);
@@ -179,10 +184,15 @@ export class CSGBabylonNode extends BabylonJSNode {
 
     // Start with the first mesh
     let result = meshes[0];
+    if (!result) {
+      throw new Error('Difference operation requires at least one valid mesh');
+    }
 
     // Subtract each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
-      const differenceResult = await this.csgService.difference(result, meshes[i]);
+      const mesh = meshes[i];
+      if (!mesh) continue;
+      const differenceResult = await this.csgService.difference(result as Mesh, mesh as Mesh);
 
       if (!differenceResult.success) {
         throw new Error(`Difference operation failed: ${differenceResult.error.message}`);
@@ -202,10 +212,15 @@ export class CSGBabylonNode extends BabylonJSNode {
 
     // Start with the first mesh
     let result = meshes[0];
+    if (!result) {
+      throw new Error('Intersection operation requires at least one valid mesh');
+    }
 
     // Intersect with each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
-      const intersectionResult = await this.csgService.intersection(result, meshes[i]);
+      const mesh = meshes[i];
+      if (!mesh) continue;
+      const intersectionResult = await this.csgService.intersection(result as Mesh, mesh as Mesh);
 
       if (!intersectionResult.success) {
         throw new Error(`Intersection operation failed: ${intersectionResult.error.message}`);
@@ -295,7 +310,7 @@ export class CSGBabylonNode extends BabylonJSNode {
       message,
       nodeType: this.nodeType,
       timestamp: new Date(),
-      sourceLocation: this.sourceLocation,
+      ...(this.sourceLocation && { sourceLocation: this.sourceLocation }),
     };
   }
 }

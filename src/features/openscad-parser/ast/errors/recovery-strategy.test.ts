@@ -68,7 +68,7 @@ describe('RecoveryStrategies', () => {
       const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = new SkipToNextStatementStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       expect(result).toBe(nextStatementNode);
     });
@@ -82,7 +82,7 @@ describe('RecoveryStrategies', () => {
       const error = new OpenSCADSyntaxError('Test error', source, position);
       const strategy = new SkipToNextStatementStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       expect(result).toBeNull();
     });
@@ -94,7 +94,7 @@ describe('RecoveryStrategies', () => {
       const error = OpenSCADSyntaxError.missingToken(']', source, position);
       const strategy = new InsertMissingTokenStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       // In our implementation, we just return the node for now
       expect(result).toBe(errorNode);
@@ -105,7 +105,7 @@ describe('RecoveryStrategies', () => {
       const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new InsertMissingTokenStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       expect(result).toBeNull();
     });
@@ -121,7 +121,7 @@ describe('RecoveryStrategies', () => {
       const error = OpenSCADSyntaxError.unexpectedToken(')', ']', source, position);
       const strategy = new DeleteExtraTokenStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       // Should return the next sibling
       expect(result).toBe(nextNode);
@@ -132,7 +132,7 @@ describe('RecoveryStrategies', () => {
       const error = new ParserError('Test error', 'TEST_ERROR', source, position);
       const strategy = new DeleteExtraTokenStrategy();
 
-      const result = strategy.recover(errorNode as unknown as TSNode, error);
+      const result = strategy.recover(errorNode as unknown as TSNode, error as any);
 
       expect(result).toBeNull();
     });
@@ -141,28 +141,28 @@ describe('RecoveryStrategies', () => {
   describe('createRecoveryStrategy', () => {
     it('should create InsertMissingTokenStrategy for missing token errors', () => {
       const error = OpenSCADSyntaxError.missingToken(']', source, position);
-      const strategy = createRecoveryStrategy(error);
+      const strategy = createRecoveryStrategy(error as any);
 
       expect(strategy).toBeInstanceOf(InsertMissingTokenStrategy);
     });
 
     it('should create DeleteExtraTokenStrategy for unexpected token errors', () => {
       const error = OpenSCADSyntaxError.unexpectedToken(')', ']', source, position);
-      const strategy = createRecoveryStrategy(error);
+      const strategy = createRecoveryStrategy(error as any);
 
       expect(strategy).toBeInstanceOf(DeleteExtraTokenStrategy);
     });
 
     it('should create SkipToNextStatementStrategy for other syntax errors', () => {
       const error = new OpenSCADSyntaxError('Test error', source, position);
-      const strategy = createRecoveryStrategy(error);
+      const strategy = createRecoveryStrategy(error as any);
 
       expect(strategy).toBeInstanceOf(SkipToNextStatementStrategy);
     });
 
     it('should return null for non-syntax errors', () => {
       const error = new SemanticError('Test error', source, position);
-      const strategy = createRecoveryStrategy(error);
+      const strategy = createRecoveryStrategy(error as any);
 
       expect(strategy).toBeNull();
     });
