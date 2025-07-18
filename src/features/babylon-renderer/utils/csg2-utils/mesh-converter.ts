@@ -251,8 +251,8 @@ export const convertBabylonMeshToGeneric = (
               mesh.getBoundingInfo().boundingBox.maximumWorld.z
             )
           ),
-          normals: normals ? new Float32Array(normals) : undefined,
-          uvs: uvs ? new Float32Array(uvs) : undefined,
+          ...(normals && { normals: new Float32Array(normals) }),
+          ...(uvs && { uvs: new Float32Array(uvs) }),
         } satisfies GenericGeometry,
         material: MATERIAL_PRESETS.DEFAULT,
         transform: mesh.getWorldMatrix(),

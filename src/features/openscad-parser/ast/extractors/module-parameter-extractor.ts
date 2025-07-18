@@ -98,12 +98,14 @@ export function extractModuleParameters(paramListNode: TSNode | null): ast.Modul
       // Parameter with default value
       const defaultValue = extractDefaultValue(defaultValueNode);
       moduleParameters.push({
+        type: 'module_parameter',
         name: paramName,
-        defaultValue,
+        ...(defaultValue !== undefined && defaultValue !== null && { defaultValue: defaultValue as ast.ASTNode }),
       });
     } else {
       // Parameter without default value
       moduleParameters.push({
+        type: 'module_parameter',
         name: paramName,
       });
     }
@@ -170,12 +172,14 @@ export function extractModuleParametersFromText(paramsText: string): ast.ModuleP
       const defaultValueText = param.substring(equalIndex + 1).trim();
       const defaultValue = parseDefaultValueText(defaultValueText);
       moduleParameters.push({
+        type: 'module_parameter',
         name: paramName,
-        defaultValue,
+        ...(defaultValue !== undefined && defaultValue !== null && { defaultValue: defaultValue as ast.ASTNode }),
       });
     } else {
       // Parameter without default value
       moduleParameters.push({
+        type: 'module_parameter',
         name: param,
       });
     }

@@ -106,15 +106,15 @@ export class ModuleSystemService {
       () => {
         const resolvedModule: ResolvedModuleDefinition = {
           name: moduleDefNode.name.name,
-          parameters: moduleDefNode.parameters,
+          parameters: moduleDefNode.parameters ?? [],
           body: moduleDefNode.body,
-          sourceLocation: moduleDefNode.location,
+          ...(moduleDefNode.location && { sourceLocation: moduleDefNode.location }),
         };
 
         this.moduleRegistry.set(moduleDefNode.name.name, resolvedModule);
 
         logger.debug(
-          `[REGISTER] Module ${moduleDefNode.name.name} registered with ${moduleDefNode.parameters.length} parameters`
+          `[REGISTER] Module ${moduleDefNode.name.name} registered with ${moduleDefNode.parameters?.length ?? 0} parameters`
         );
       },
       (error) =>
@@ -137,18 +137,19 @@ export class ModuleSystemService {
       context: ModuleExecutionContext
     ) => Promise<Result<GenericMeshData | GenericMeshCollection, ModuleSystemError>>
   ): Promise<Result<GenericMeshData | GenericMeshCollection, ModuleSystemError>> {
-    logger.debug(`[INSTANTIATE] Instantiating module: ${moduleInstNode.name.name}`);
+    const moduleName = typeof moduleInstNode.name === 'string' ? moduleInstNode.name : moduleInstNode.name.name;
+    logger.debug(`[INSTANTIATE] Instantiating module: ${moduleName}`);
     const startTime = performance.now();
 
     // Find module definition first (outside tryCatchAsync to preserve specific error codes)
-    const moduleDefinition = this.moduleRegistry.get(moduleInstNode.name.name);
+    const moduleDefinition = this.moduleRegistry.get(moduleName);
     if (!moduleDefinition) {
       return {
         success: false,
         error: this.createError(
           'MODULE_NOT_FOUND',
-          `Module '${moduleInstNode.name.name}' not found`,
-          moduleInstNode.name.name
+          `Module '${moduleName}' not found`,
+          moduleName
         ),
       };
     }
@@ -167,7 +168,7 @@ export class ModuleSystemService {
           variables: { ...parentContext.variables, ...parameterBindings },
           parent: parentContext,
           moduleParameters: parameterBindings,
-          childrenNodes: moduleInstNode.children,
+          childrenNodes: moduleInstNode.children ?? [],
         };
 
         // Execute module body
@@ -177,7 +178,7 @@ export class ModuleSystemService {
         }
 
         logger.debug(
-          `[INSTANTIATE] Module ${moduleInstNode.name.name} instantiated in ${(performance.now() - startTime).toFixed(2)}ms`
+          `[INSTANTIATE] Module ${moduleName} instantiated in ${(performance.now() - startTime).toFixed(2)}ms`
         );
         return result.data;
       },
@@ -185,7 +186,7 @@ export class ModuleSystemService {
         this.createError(
           'EXECUTION_FAILED',
           `Module instantiation failed: ${error}`,
-          moduleInstNode.name.name
+          moduleName
         )
     );
   }
@@ -206,13 +207,13 @@ export class ModuleSystemService {
     const { childrenNodes } = context;
 
     // Validate child index first (outside tryCatchAsync to preserve specific error codes)
-    if (childrenNode.index !== undefined && childrenNode.index >= 0) {
-      if (childrenNodes && childrenNode.index >= childrenNodes.length) {
+    if (childrenNode.indices?.[0] !== undefined && childrenNode.indices[0] >= 0) {
+      if (childrenNodes && childrenNode.indices[0] >= childrenNodes.length) {
         return {
           success: false,
           error: this.createError(
             'INVALID_CHILDREN',
-            `Child index ${childrenNode.index} out of bounds (${childrenNodes.length} children)`
+            `Child index ${childrenNode.indices?.[0]} out of bounds (${childrenNodes.length} children)`
           ),
         };
       }
@@ -238,9 +239,9 @@ export class ModuleSystemService {
         }
 
         // Handle specific child index
-        if (childrenNode.index !== undefined && childrenNode.index >= 0) {
-          const childContext = { ...context, childrenIndex: childrenNode.index };
-          const childResult = await childExecutor(childrenNodes[childrenNode.index]!, childContext);
+        if (childrenNode.indices?.[0] !== undefined && childrenNode.indices[0] >= 0) {
+          const childContext = { ...context, childrenIndex: childrenNode.indices[0] };
+          const childResult = await childExecutor(childrenNodes[childrenNode.indices[0]]!, childContext);
 
           if (isError(childResult)) {
             throw new Error(`Child execution failed: ${childResult.error.message}`);

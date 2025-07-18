@@ -94,7 +94,7 @@ export const getWebGPUCapabilities = async (): Promise<Result<WebGPUCapabilities
 
       const capabilities: WebGPUCapabilities = {
         isSupported: true,
-        adapterInfo,
+        adapterInfo: adapterInfo ?? null,
         limits,
         features,
         preferredFormat,
@@ -214,9 +214,10 @@ export const requestWebGPUDevice = async (
       }
 
       // Set up error handling
-      device.addEventListener('uncapturederror', (event: GPUUncapturedErrorEvent) => {
+      device.addEventListener('uncapturederror', (event) => {
+        const gpuEvent = event as GPUUncapturedErrorEvent;
         logger.error(
-          `[ERROR][WebGPUUtils] WebGPU uncaptured error: ${event.error?.message || 'Unknown error'}`
+          `[ERROR][WebGPUUtils] WebGPU uncaptured error: ${gpuEvent.error?.message || 'Unknown error'}`
         );
       });
 

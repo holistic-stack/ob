@@ -31,7 +31,7 @@ async function runTest() {
     // Run each test case
     for (const test of testCases) {
       // Parse the code
-      const tree = parser.parse(test.code);
+      const tree = parser.parseCST(test.code);
       if (!tree) {
         console.error(`Failed to parse code: ${test.code}`);
         continue;

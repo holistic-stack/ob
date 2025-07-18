@@ -497,7 +497,7 @@ export function extractIdentifierParameter(param: ast.Parameter): string | null 
 
   // Handle expression node
   if (isExpressionNode(param.value) && param.value.expressionType === 'variable') {
-    return (param.value as ast.VariableNode).name;
+    return (param.value as unknown as ast.VariableNode).name;
   }
 
   return null;

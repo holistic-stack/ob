@@ -97,12 +97,12 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     const code = 'cube(1 + 2);';
     console.log('Testing binary expression in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     console.log('Tree parsed successfully:', !!tree);
     expect(tree).toBeDefined();
-    printNodeRecursive(tree?.rootNode);
+    printNodeRecursive(tree?.rootNode!);
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     expect(cubeNode).not.toBeNull();
     console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
 
@@ -143,10 +143,10 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     const code = 'cube(2 * 3);';
     console.log('Testing multiplication in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     expect(cubeNode).not.toBeNull();
 
     // Extract the cube with enhanced expression evaluation
@@ -166,10 +166,10 @@ describe('Binary Expression Evaluation in Cube Arguments', () => {
     const code = 'cube(1 + 2 * 3);';
     console.log('Testing complex expression in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     expect(cubeNode).not.toBeNull();
 
     // Extract the cube with enhanced expression evaluation

@@ -58,7 +58,7 @@ describe('AST Generator Integration Tests', () => {
       // The child should be a cube
       const children = (translateNode as TranslateNode).children;
       expect(children).toHaveLength(1); // Should have 1 child (the cube)
-      const cubeNode = children[0];
+      const cubeNode = children?.[0];
       expect(cubeNode?.type).toBe('cube');
       expect((cubeNode as CubeNode).size).toEqual([1, 2, 3]);
       expect((cubeNode as CubeNode).center).toBe(true);
@@ -83,7 +83,7 @@ describe('AST Generator Integration Tests', () => {
       const children = (translateNode as TranslateNode).children;
       expect(children).toHaveLength(1); // Fixed: curly brace parsing now works correctly
 
-      const cubeNode = children[0] as CubeNode;
+      const cubeNode = children?.[0] as CubeNode;
       expect(cubeNode.type).toBe('cube');
       expect(cubeNode.size).toEqual([1, 2, 3]); // Size from parameters: cube(size=[1,2,3], center=true)
       expect(cubeNode.center).toBe(true); // Center parameter should be parsed correctly

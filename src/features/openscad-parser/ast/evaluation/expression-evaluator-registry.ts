@@ -195,7 +195,7 @@ export function evaluateExpression(
         // @TODO: Implement variable resolution from a symbol table or context
         if (errorHandler) {
           errorHandler.logWarning(
-            `[evaluateExpression] Variable reference evaluation not yet implemented for variable: ${(expr as ast.VariableNode).name}`,
+            `[evaluateExpression] Variable reference evaluation not yet implemented for variable: ${(expr as unknown as ast.VariableNode).name}`,
             'evaluateExpression'
           );
         }

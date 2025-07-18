@@ -23,7 +23,7 @@ describe('Enhanced Expression Evaluation', () => {
     const code = 'cube(1 + 2);'; // Use a simpler expression that we know works
     console.log('Testing simple binary expression:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     // Find the binary expression node with depth limit to prevent infinite recursion
@@ -54,7 +54,7 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const binaryExprNode = findBinaryExpressionNode(tree?.rootNode);
+    const binaryExprNode = findBinaryExpressionNode(tree?.rootNode!);
     console.log('Binary expression node search result:', binaryExprNode);
 
     if (binaryExprNode) {
@@ -80,7 +80,7 @@ describe('Enhanced Expression Evaluation', () => {
     const code = 'cube(1 + 2);';
     console.log('Testing binary expression in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     console.log('Tree parsed successfully:', !!tree);
     expect(tree).toBeDefined();
     console.log('Tree root node type:', tree?.rootNode.type);
@@ -97,7 +97,7 @@ describe('Enhanced Expression Evaluation', () => {
         }
       }
     }
-    printNodeRecursive(tree?.rootNode);
+    printNodeRecursive(tree?.rootNode!);
 
     // Find the cube function call
     function findCubeNode(node: TSNode): TSNode | null {
@@ -118,7 +118,7 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     console.log('Cube node search result:', cubeNode);
     expect(cubeNode).not.toBeNull();
 
@@ -138,7 +138,7 @@ describe('Enhanced Expression Evaluation', () => {
     const code = 'cube(2 * 3 + 1);';
     console.log('Testing complex binary expression in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     // Find the cube function call
@@ -159,7 +159,7 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     expect(cubeNode).not.toBeNull();
 
     console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
@@ -178,7 +178,7 @@ describe('Enhanced Expression Evaluation', () => {
     const code = 'cube(5);';
     console.log('Testing simple number in cube:', code);
 
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).toBeDefined();
 
     // Find the cube function call
@@ -199,7 +199,7 @@ describe('Enhanced Expression Evaluation', () => {
       return null;
     }
 
-    const cubeNode = findCubeNode(tree?.rootNode);
+    const cubeNode = findCubeNode(tree?.rootNode!);
     expect(cubeNode).not.toBeNull();
 
     console.log('Found cube node:', cubeNode?.type, cubeNode?.text);
