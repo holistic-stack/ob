@@ -1,13 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it } from 'vitest';
+import type { Language } from 'web-tree-sitter';
 import { EnhancedOpenscadParser, ErrorHandler } from '../index.js';
 import { VisitorASTGenerator } from './visitor-ast-generator.js';
 
 // Create a mock language object for testing
 const mockLanguage = {
+  name: 'openscad',
   query: () => ({
     captures: () => [],
   }),
-};
+} as unknown as Language;
 
 // Create a mock ErrorHandler for testing
 const mockErrorHandler = new ErrorHandler();

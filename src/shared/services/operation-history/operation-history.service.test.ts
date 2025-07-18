@@ -393,8 +393,8 @@ describe('OperationHistoryService', () => {
 
       const recent = service.getRecentOperations(3);
       expect(recent).toHaveLength(3);
-      expect(recent[0].name).toBe('Recent 3');
-      expect(recent[2].name).toBe('Recent 5');
+      expect(recent[0]?.name).toBe('Recent 3');
+      expect(recent[2]?.name).toBe('Recent 5');
     });
 
     it('should get failed operations', async () => {
@@ -421,8 +421,8 @@ describe('OperationHistoryService', () => {
 
       const failed = service.getFailedOperations();
       expect(failed).toHaveLength(1);
-      expect(failed[0].name).toBe('Fail Operation');
-      expect(failed[0].success).toBe(false);
+      expect(failed[0]?.name).toBe('Fail Operation');
+      expect(failed[0]?.success).toBe(false);
     });
 
     it('should clear history', () => {

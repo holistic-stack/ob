@@ -429,7 +429,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return null;
       }
       case 'list_comprehension':
-        return this.listComprehensionVisitor.visitListComprehension(node);
+        return this.listComprehensionVisitor.visitListComprehension(node) as ast.ExpressionNode | ast.ErrorNode | null;
       case 'range_expression':
         return this.rangeExpressionVisitor.visitRangeExpression(node);
       case 'module_instantiation':
@@ -817,7 +817,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return {
           type: 'error',
           errorCode: 'INVALID_PARENTHESIZED_EXPRESSION',
-          message: `Parenthesized expression contains invalid inner expression type: ${innerExpr?.type ?? 'unknown'}`,
+          message: `Parenthesized expression contains invalid inner expression type: ${(innerExpr as any)?.type ?? 'unknown'}`,
           originalNodeType: node.type,
           cstNodeText: node.text,
           location: getLocation(node),
@@ -842,7 +842,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
       }
       case 'list_comprehension':
         // Handle list comprehension expressions
-        return this.listComprehensionVisitor.visitListComprehension(node);
+        return this.listComprehensionVisitor.visitListComprehension(node) as ast.ExpressionNode | ast.ErrorNode | null;
       case 'range_expression':
         // Handle range expressions
         return this.rangeExpressionVisitor.visitRangeExpression(node);

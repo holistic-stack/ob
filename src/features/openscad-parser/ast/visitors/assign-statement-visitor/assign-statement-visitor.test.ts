@@ -42,7 +42,7 @@ describe('AssignStatementVisitor', () => {
       expect(ast).toHaveLength(1);
       expect(ast[0]?.type).toBe('assign');
 
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('x');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -58,7 +58,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('flag');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -74,7 +74,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('name');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -95,7 +95,7 @@ describe('AssignStatementVisitor', () => {
       // The parser may not handle this case yet, so just verify it doesn't crash
       expect(ast).toBeDefined();
       if (ast.length > 0) {
-        const assignNode = ast[0] as AssignStatementNode;
+        const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
         expect(assignNode.type).toBe('assign');
         // If assignments are parsed, check them
         if (assignNode.assignments && assignNode.assignments.length > 0) {
@@ -111,7 +111,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(3);
 
       expect(assignNode.assignments[0]?.variable.name).toBe('num');
@@ -135,7 +135,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('result');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -149,7 +149,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(2);
       expect(assignNode.assignments[0]?.variable.name).toBe('angle');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -168,7 +168,7 @@ describe('AssignStatementVisitor', () => {
       // The parser may not handle this case yet, so just verify it doesn't crash
       expect(ast).toBeDefined();
       if (ast.length > 0) {
-        const assignNode = ast[0] as AssignStatementNode;
+        const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
         expect(assignNode.type).toBe('assign');
         // If assignments are parsed, check them
         if (assignNode.assignments && assignNode.assignments.length > 0) {
@@ -184,7 +184,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('range');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -200,7 +200,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('r');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -219,7 +219,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(2);
       expect(assignNode.assignments[0]?.variable.name).toBe('size');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -240,7 +240,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(0);
       expect(assignNode.body).toBeDefined();
     });
@@ -250,7 +250,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      const assignNode = ast[0] as AssignStatementNode;
+      const assignNode = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
       expect(assignNode.assignments).toHaveLength(1);
       expect(assignNode.assignments[0]?.variable.name).toBe('x');
       expect(assignNode.assignments[0]?.variable.type).toBe('expression');
@@ -269,8 +269,8 @@ describe('AssignStatementVisitor', () => {
       expect(ast[0]?.type).toBe('assign');
       expect(ast[1]?.type).toBe('assign');
 
-      const firstAssign = ast[0] as AssignStatementNode;
-      const secondAssign = ast[1] as AssignStatementNode;
+      const firstAssign = ast[0] as unknown as AssignStatementNode & { assignments: any[]; body: any };
+      const secondAssign = ast[1] as unknown as AssignStatementNode & { assignments: any[]; body: any };
 
       expect(firstAssign.assignments[0]?.variable.name).toBe('x');
       expect(firstAssign.assignments[0]?.variable.type).toBe('expression');

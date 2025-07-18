@@ -325,17 +325,17 @@ export function tryEvaluateExpression(node: ExpressionNode): EvaluationResult {
       return evaluationSuccess(extractLiteralValue(node));
 
     case 'special_variable':
-      return evaluateSpecialVariable(node as SpecialVariableNode);
+      return evaluateSpecialVariable(node as unknown as SpecialVariableNode);
 
     case 'binary':
     case 'binary_expression':
       return evaluateBinaryExpression(node as BinaryExpressionNode);
 
     case 'parenthesized_expression':
-      return evaluateParenthesizedExpression(node as ParenthesizedExpressionNode);
+      return evaluateParenthesizedExpression(node as unknown as ParenthesizedExpressionNode);
 
     case 'list_comprehension_expression':
-      return evaluateListComprehension(node as ListComprehensionExpressionNode);
+      return evaluateListComprehension(node as unknown as ListComprehensionExpressionNode);
 
     default:
       return evaluationError(`Cannot evaluate expression type: ${node.expressionType}`);

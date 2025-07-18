@@ -60,8 +60,8 @@ describe('Sphere AST Generation', () => {
       expect(sphereNode.type).toBe('sphere');
       expect(typeof sphereNode.radius).toBe('number');
       // $fn might be stored differently or not at all in the real parser
-      if (sphereNode.fn !== undefined) {
-        expect(typeof sphereNode.fn).toBe('number');
+      if (sphereNode.$fn !== undefined) {
+        expect(typeof sphereNode.$fn).toBe('number');
       }
     });
 
@@ -76,11 +76,11 @@ describe('Sphere AST Generation', () => {
       expect(sphereNode.type).toBe('sphere');
       expect(typeof sphereNode.radius).toBe('number');
       // $fa and $fs might be stored differently or not at all in the real parser
-      if (sphereNode.fa !== undefined) {
-        expect(typeof sphereNode.fa).toBe('number');
+      if (sphereNode.$fa !== undefined) {
+        expect(typeof sphereNode.$fa).toBe('number');
       }
-      if (sphereNode.fs !== undefined) {
-        expect(typeof sphereNode.fs).toBe('number');
+      if (sphereNode.$fs !== undefined) {
+        expect(typeof sphereNode.$fs).toBe('number');
       }
     });
 
@@ -126,14 +126,14 @@ describe('Sphere AST Generation', () => {
       const sphereNode = astNodes[0] as ast.SphereNode;
       expect(sphereNode.type).toBe('sphere');
       expect(typeof sphereNode.radius).toBe('number');
-      if (sphereNode.fn !== undefined) {
-        expect(typeof sphereNode.fn).toBe('number');
+      if (sphereNode.$fn !== undefined) {
+        expect(typeof sphereNode.$fn).toBe('number');
       }
-      if (sphereNode.fa !== undefined) {
-        expect(typeof sphereNode.fa).toBe('number');
+      if (sphereNode.$fa !== undefined) {
+        expect(typeof sphereNode.$fa).toBe('number');
       }
-      if (sphereNode.fs !== undefined) {
-        expect(typeof sphereNode.fs).toBe('number');
+      if (sphereNode.$fs !== undefined) {
+        expect(typeof sphereNode.$fs).toBe('number');
       }
     });
 

@@ -102,17 +102,17 @@ describe('ExpressionVisitor', () => {
           createExpressionNode: (node: unknown) => ast.ExpressionNode | null;
         },
         'createExpressionNode'
-      ).mockImplementation((node: unknown) => {
+      ).mockImplementation((node: unknown): ast.ExpressionNode | null => {
         if ((node as any).text === 'x') {
           return {
             type: 'expression',
-            expressionType: 'variable',
+            expressionType: 'identifier',
             name: 'x',
             location: {
               start: { line: 0, column: 0, offset: 0 },
               end: { line: 0, column: 1, offset: 1 },
             },
-          } as ast.VariableNode;
+          } as unknown as ast.IdentifierNode;
         } else if ((node as any).text === '5') {
           return {
             type: 'expression',
@@ -385,7 +385,7 @@ describe('ExpressionVisitor', () => {
                 start: { line: 0, column: 0, offset: 0 },
                 end: { line: 0, column: 1, offset: 1 },
               },
-            } as ast.VariableNode,
+            } as unknown as ast.VariableNode,
             right: {
               type: 'expression',
               expressionType: 'literal',
@@ -399,7 +399,7 @@ describe('ExpressionVisitor', () => {
               start: { line: 0, column: 0, offset: 0 },
               end: { line: 0, column: 5, offset: 5 },
             },
-          } as ast.BinaryExpressionNode;
+          } as unknown as ast.BinaryExpressionNode;
         } else if (node.text === '10') {
           return {
             type: 'expression',
@@ -536,7 +536,7 @@ describe('ExpressionVisitor', () => {
       if (result && 'expressionType' in result) {
         expect(result.expressionType).toBe('variable');
       }
-      expect((result as ast.VariableNode).name).toBe('myVariable');
+      expect((result as unknown as ast.VariableNode).name).toBe('myVariable');
     });
   });
 

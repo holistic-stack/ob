@@ -1355,15 +1355,7 @@ export class AssignStatementVisitor extends BaseASTVisitor {
       } else if (value.type === 'string') {
         return value.value as string;
       } else if (value.type === 'identifier') {
-        return {
-          type: 'expression',
-          expressionType: 'variable',
-          name: value.value as string,
-          location: {
-            start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 0, offset: 0 },
-          },
-        } as ast.VariableNode;
+        return value.value as string;
       } else if (value.type === 'vector') {
         const vectorValues = (value.value as ast.Value[]).map((v) => {
           if ('type' in v && v.type === 'number') {
