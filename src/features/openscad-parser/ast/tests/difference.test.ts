@@ -95,7 +95,7 @@ describe('Difference AST Generation', () => {
                 end: { line: 3, column: 7, offset: 95 },
               },
             },
-          ];
+          ] as ast.ASTNode[];
         } else if (code.includes('{}')) {
           return [
             {
@@ -176,39 +176,39 @@ describe('Difference AST Generation', () => {
       ]);
       expect(
         (
-          ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
-            .children[0] as ast.RotateNode
-        ).type
+          ((differenceNode as ast.DifferenceNode).children?.[1] as ast.TranslateNode)
+            ?.children?.[0] as ast.RotateNode
+        )?.type
       ).toBe('rotate');
       expect(
         (
-          ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
-            .children[0] as ast.RotateNode
-        ).a
+          ((differenceNode as ast.DifferenceNode).children?.[1] as ast.TranslateNode)
+            ?.children?.[0] as ast.RotateNode
+        )?.a
       ).toEqual([0, 0, 45]);
       expect(
         (
           (
-            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
-              .children[0] as ast.RotateNode
-          ).children[0] as ast.CubeNode
-        ).type
+            ((differenceNode as ast.DifferenceNode).children?.[1] as ast.TranslateNode)
+              ?.children?.[0] as ast.RotateNode
+          )?.children?.[0] as ast.CubeNode
+        )?.type
       ).toBe('cube');
       expect(
         (
           (
-            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
-              .children[0] as ast.RotateNode
-          ).children[0] as ast.CubeNode
-        ).size
+            ((differenceNode as ast.DifferenceNode).children?.[1] as ast.TranslateNode)
+              ?.children?.[0] as ast.RotateNode
+          )?.children?.[0] as ast.CubeNode
+        )?.size
       ).toBe(10);
       expect(
         (
           (
-            ((differenceNode as ast.DifferenceNode).children[1] as ast.TranslateNode)
-              .children[0] as ast.RotateNode
-          ).children[0] as ast.CubeNode
-        ).center
+            ((differenceNode as ast.DifferenceNode).children?.[1] as ast.TranslateNode)
+              ?.children?.[0] as ast.RotateNode
+          )?.children?.[0] as ast.CubeNode
+        )?.center
       ).toBe(true);
     });
 
