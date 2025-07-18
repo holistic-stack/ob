@@ -20,7 +20,7 @@ describe('cstTreeCursorWalkLog', () => {
 
   // Helper to parse code and get tree cursor
   const parseCode = (code: string): TreeCursor => {
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     if (!tree) {
       throw new Error('Failed to parse code');
     }

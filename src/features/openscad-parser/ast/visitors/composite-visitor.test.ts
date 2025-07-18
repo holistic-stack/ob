@@ -80,7 +80,7 @@ describe('CompositeVisitor', () => {
 
   // Helper function to parse code and find testable node
   function parseAndFindTestableNode(code: string): TSNode {
-    const tree = parser.parse(code);
+    const tree = parser.parseCST(code);
     expect(tree).not.toBeNull();
     expect(tree?.rootNode).not.toBeNull();
 
@@ -167,7 +167,7 @@ describe('CompositeVisitor', () => {
     it('should visit all children of a node', () => {
       // Parse real OpenSCAD code with multiple statements
       const code = 'cube(10); sphere(5);';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Use the root node which should have multiple children

@@ -32,7 +32,7 @@ describe('IfElseVisitor', () => {
   describe('visitIfStatement', () => {
     it('should parse a basic if statement', () => {
       const code = `if (true) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
@@ -63,7 +63,7 @@ describe('IfElseVisitor', () => {
 
     it('should parse an if-else statement', () => {
       const code = `if (true) { cube(10); } else { sphere(5); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
@@ -91,7 +91,7 @@ describe('IfElseVisitor', () => {
 
     it('should parse an if-else-if-else statement', () => {
       const code = `if (true) { cube(10); } else if (false) { sphere(5); } else { cylinder(h=10, r=2); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the if statement node
@@ -128,7 +128,7 @@ describe('IfElseVisitor', () => {
 
     it('should handle complex conditions in if statements', () => {
       const code = `if (x > 5 && y < 10 || z == 0) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the if statement node

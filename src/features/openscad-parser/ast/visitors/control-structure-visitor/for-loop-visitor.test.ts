@@ -32,7 +32,7 @@ describe('ForLoopVisitor', () => {
   describe('visitForStatement', () => {
     it('should parse a basic for loop', () => {
       const code = `for (i = [0:5]) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the for statement node
@@ -77,7 +77,7 @@ describe('ForLoopVisitor', () => {
 
     it('should parse a for loop with step', () => {
       const code = `for (i = [0:0.5:5]) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the for statement node
@@ -123,7 +123,7 @@ describe('ForLoopVisitor', () => {
 
     it('should parse a for loop with multiple variables', () => {
       const code = `for (i = [0:5], j = [0:5]) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the for statement node
@@ -183,7 +183,7 @@ describe('ForLoopVisitor', () => {
 
     it('should handle complex expressions in for loops', () => {
       const code = `for (i = [0:len(v)-1]) { cube(10); }`;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       const rootNode = tree?.rootNode;
 
       // Find the for statement node

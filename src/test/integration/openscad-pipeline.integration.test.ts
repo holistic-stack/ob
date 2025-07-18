@@ -294,8 +294,8 @@ describe('OpenSCAD Pipeline Integration Tests', () => {
       const transformOperation = csgOperations.find((op) => op.type === 'transform');
       expect(transformOperation).toBeDefined();
       if (transformOperation && transformOperation.type === 'transform') {
-        expect(transformOperation.transform).toBe('translate');
-        expect(transformOperation.parameters).toEqual([5, 10, 15]);
+        expect((transformOperation as any).transformType).toBe('translate');
+        expect((transformOperation as any).parameters).toEqual([5, 10, 15]);
       }
 
       logger.debug(
@@ -322,7 +322,7 @@ describe('OpenSCAD Pipeline Integration Tests', () => {
 
       // Step 3: Verify rotation operation
       const rotateOperation = csgOperations.find(
-        (op) => op.type === 'transform' && op.transform === 'rotate'
+        (op) => op.type === 'transform' && (op as any).transformType === 'rotate'
       );
       expect(rotateOperation).toBeDefined();
 
@@ -350,7 +350,7 @@ describe('OpenSCAD Pipeline Integration Tests', () => {
 
       // Step 3: Verify scale operation
       const scaleOperation = csgOperations.find(
-        (op) => op.type === 'transform' && op.transform === 'scale'
+        (op) => op.type === 'transform' && (op as any).transformType === 'scale'
       );
       expect(scaleOperation).toBeDefined();
 
@@ -381,7 +381,7 @@ describe('OpenSCAD Pipeline Integration Tests', () => {
 
       if (!parseResult.success) return;
       const ast = parseResult.data;
-      expect(ast.type).toBe('Program');
+      expect(ast.body).toBeDefined();
 
       // Step 2: Convert AST to CSG operations
       const csgResult = await astConverter.convertAST(ast.body);
@@ -416,7 +416,7 @@ describe('OpenSCAD Pipeline Integration Tests', () => {
       // Should either fail gracefully or recover with partial AST
       if (!parseResult.success) {
         expect(parseResult.error).toBeDefined();
-        expect(parseResult.error.code).toBeDefined();
+        expect(typeof parseResult.error).toBe('string');
         logger.debug('[ERROR_PIPELINE] Parser correctly handled invalid syntax');
       } else {
         // If parser recovered, AST should still be valid

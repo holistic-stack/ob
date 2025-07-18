@@ -45,7 +45,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
     describe('Cube', () => {
       it('should parse a simple cube with size parameter', () => {
         const code = 'cube(5);';
-        tree = osParser.parse(code);
+        tree = osParser.parseCST(code);
 
         expect(tree).not.toBeNull();
         const rootNode = tree?.rootNode;
@@ -63,7 +63,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
 
       it('should parse a cube with vector size', () => {
         const code = 'cube([10, 20, 30]);';
-        tree = osParser.parse(code);
+        tree = osParser.parseCST(code);
 
         expect(tree).not.toBeNull();
         const rootNode = tree?.rootNode;
@@ -81,7 +81,7 @@ describe('OpenSCAD Parser - AST Generation', () => {
 
       it('should parse a cube with named parameters', () => {
         const code = 'cube(size = 10, center = true);';
-        tree = osParser.parse(code);
+        tree = osParser.parseCST(code);
 
         expect(tree).not.toBeNull();
         const rootNode = tree?.rootNode;

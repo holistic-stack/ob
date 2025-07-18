@@ -59,25 +59,26 @@ export class RealNodeGenerator {
       throw new Error('Parser not initialized. Call init() first.');
     }
 
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
-    // Look for accessor_expression that has an argument_list child (function call)
-    const accessorNode = this.findNodeByType(tree.rootNode, 'accessor_expression');
-    if (accessorNode) {
-      // Check if it has an argument_list child (indicating it's a function call)
-      const argumentList = this.findNodeByType(accessorNode, 'argument_list');
-      if (argumentList) {
-        return accessorNode;
-      }
-    }
-
-    // Also try looking for module_instantiation (which is how OpenSCAD parses primitives like cube, sphere)
+    // In OpenSCAD grammar, function calls like cube(10) are module_instantiation nodes
+    // The tree structure is: source_file -> statement -> module_instantiation
     const moduleInstNode = this.findNodeByType(tree.rootNode, 'module_instantiation');
     if (moduleInstNode) {
       return moduleInstNode;
+    }
+
+    // Fallback: try other possible node types
+    const fallbackTypes = ['accessor_expression', 'call_expression', 'function_call'];
+
+    for (const nodeType of fallbackTypes) {
+      const node = this.findNodeByType(tree.rootNode, nodeType);
+      if (node) {
+        return node;
+      }
     }
 
     return null;
@@ -93,13 +94,21 @@ export class RealNodeGenerator {
 
     // Wrap in assignment to ensure proper parsing
     const code = `x = ${expressionCode};`;
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
-    // Look for binary expression type (unified in current grammar)
-    const binaryTypes = ['binary_expression'];
+    // Look for binary expression types (try multiple possible names)
+    const binaryTypes = [
+      'binary_expression',
+      'additive_expression',
+      'multiplicative_expression',
+      'relational_expression',
+      'equality_expression',
+      'logical_and_expression',
+      'logical_or_expression',
+    ];
 
     for (const type of binaryTypes) {
       const node = this.findNodeByType(tree.rootNode, type);
@@ -120,12 +129,22 @@ export class RealNodeGenerator {
     }
 
     const code = `x = ${expressionCode};`;
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
-    return this.findNodeByType(tree.rootNode, 'unary_expression');
+    // Try multiple possible unary expression node types
+    const unaryTypes = ['unary_expression', 'prefix_expression', 'postfix_expression'];
+
+    for (const type of unaryTypes) {
+      const node = this.findNodeByType(tree.rootNode, type);
+      if (node) {
+        return node;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -137,8 +156,8 @@ export class RealNodeGenerator {
     }
 
     const code = `x = ${expressionCode};`;
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
@@ -165,8 +184,8 @@ export class RealNodeGenerator {
       throw new Error('Parser not initialized. Call init() first.');
     }
 
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
@@ -181,8 +200,8 @@ export class RealNodeGenerator {
       throw new Error('Parser not initialized. Call init() first.');
     }
 
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
@@ -197,8 +216,8 @@ export class RealNodeGenerator {
       throw new Error('Parser not initialized. Call init() first.');
     }
 
-    const tree = this.parser.parse(code);
-    if (!tree) {
+    const tree = this.parser.parseCST(code);
+    if (!tree || !tree.rootNode) {
       return null;
     }
 
@@ -208,7 +227,11 @@ export class RealNodeGenerator {
   /**
    * Find a node of specific type in the tree
    */
-  private findNodeByType(node: TSNode, targetType: string): TSNode | null {
+  private findNodeByType(node: TSNode | null, targetType: string): TSNode | null {
+    if (!node) {
+      return null;
+    }
+
     if (node.type === targetType) {
       return node;
     }
@@ -254,7 +277,7 @@ export class RealNodeGenerator {
       throw new Error('Parser not initialized. Call init() first.');
     }
 
-    const tree = this.parser.parse(code);
+    const tree = this.parser.parseCST(code);
     if (!tree) {
       console.log('Failed to parse code:', code);
       return;

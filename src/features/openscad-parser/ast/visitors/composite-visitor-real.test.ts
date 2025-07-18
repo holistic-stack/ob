@@ -18,7 +18,7 @@ describe('Real Parser Integration Tests', () => {
   describe('Core parsing functionality', () => {
     it('should parse a simple cube and return CST', () => {
       const code = 'cube(10);';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
 
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();
@@ -31,7 +31,7 @@ describe('Real Parser Integration Tests', () => {
 
     it('should parse OpenSCAD code and return valid tree structure', () => {
       const code = 'sphere(5);';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
 
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();
@@ -65,7 +65,7 @@ describe('Real Parser Integration Tests', () => {
         sphere(5);
         cylinder(h=10, r=5);
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
 
       expect(tree).toBeDefined();
       expect(tree).not.toBeNull();

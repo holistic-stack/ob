@@ -185,7 +185,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
 
       // Create the echo statement AST node
       const echoStatementNode: EchoStatementNode = {
-        type: 'echo',
+        type: 'echo_statement',
         arguments: echoArguments,
       };
 

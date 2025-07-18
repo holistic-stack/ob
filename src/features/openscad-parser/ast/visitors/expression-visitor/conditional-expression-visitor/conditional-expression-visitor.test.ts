@@ -6,7 +6,7 @@ import { ExpressionVisitor } from '../../expression-visitor.js';
 import { ConditionalExpressionVisitor } from './conditional-expression-visitor.js';
 
 async function getExpressionNode(parser: OpenscadParser, code: string): Promise<TSNode | null> {
-  const tree = parser.parse(code);
+  const tree = parser.parseCST(code);
   if (!tree) return null;
 
   let conditionalExprNode: TSNode | null = null;

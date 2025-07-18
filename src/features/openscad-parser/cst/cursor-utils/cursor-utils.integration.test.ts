@@ -22,7 +22,7 @@ describe('Cursor Utils Integration', () => {
       const code = `translate([10, 20, 30])
           cube(10);
       `;
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
 
       expect(tree).not.toBeNull();
 
@@ -80,7 +80,7 @@ describe('Cursor Utils Integration', () => {
 
     it('should extract correct text from nodes', () => {
       const code = 'sphere(r=5, $fn=32);';
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       const cursor = tree?.walk();

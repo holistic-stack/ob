@@ -7,7 +7,7 @@ import { BinaryExpressionVisitor } from './binary-expression-visitor.js';
 
 // Helper function to get a Tree-sitter node for an expression
 function _getExpressionNode(parser: OpenscadParser, code: string): TSNode | null {
-  const tree = parser.parse(code);
+  const tree = parser.parseCST(code);
   if (!tree) return null;
 
   console.log('Parsing code:', code);
@@ -34,7 +34,7 @@ function _getExpressionNode(parser: OpenscadParser, code: string): TSNode | null
     }
   }
 
-  if (tree.rootNode) {
+  if (tree?.rootNode) {
     findNode(tree.rootNode);
   }
   return exprNode;

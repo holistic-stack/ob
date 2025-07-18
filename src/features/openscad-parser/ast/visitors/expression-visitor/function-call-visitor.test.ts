@@ -31,7 +31,7 @@ describe('FunctionCallVisitor', () => {
       `;
 
       // Parse the code to get a real CST
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
@@ -59,7 +59,7 @@ describe('FunctionCallVisitor', () => {
       `;
 
       // Parse the code to get a real CST
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
@@ -99,7 +99,7 @@ describe('FunctionCallVisitor', () => {
       `;
 
       // Parse the code to get a real CST
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
@@ -135,7 +135,7 @@ describe('FunctionCallVisitor', () => {
       `;
 
       // Parse the code to get a real CST
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)
@@ -175,7 +175,7 @@ describe('FunctionCallVisitor', () => {
       `;
 
       // Parse the code to get a real CST
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       expect(tree).not.toBeNull();
 
       // Find the module_instantiation node (function call in new grammar)

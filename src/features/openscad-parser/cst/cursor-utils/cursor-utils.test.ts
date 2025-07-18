@@ -22,11 +22,11 @@ describe('cursor-utils', () => {
       if (!parser) {
         throw new Error('Parser is not initialized');
       }
-      const tree = parser.parse(code);
+      const tree = parser.parseCST(code);
       if (!tree) {
         throw new Error('Failed to parse code: tree is null');
       }
-      const cursor = tree.walk();
+      const cursor = tree?.walk();
       console.log('Created cursor, node type:', cursor.nodeType);
 
       // Mock the cursor.nodeText property if it doesn't exist
