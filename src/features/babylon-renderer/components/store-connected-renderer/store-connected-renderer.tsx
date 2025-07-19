@@ -162,6 +162,7 @@ import {
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
+import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../../../shared/config/debounce-config.js';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
 import { useAppStore } from '../../../store/app-store';
 import {
@@ -564,55 +565,23 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       `[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current?.length ?? 'null'}`
     );
 
-    // CRITICAL FIX: Prevent infinite loop when both ASTs are empty
+    // OPTIMIZED: Smart change detection with performance improvements
     // Only skip if we've already processed this exact AST (not just empty arrays)
     const lastASTString = JSON.stringify(lastASTRef.current);
     const currentASTString = JSON.stringify(ast);
     const isLastASTNull = lastASTRef.current === null;
+    const astContentChanged = lastASTString !== currentASTString;
 
     logger.debug(
-      `[DEBUG][StoreConnectedRenderer] Early exit check - lastAST: ${lastASTString}, currentAST: ${currentASTString}, isLastNull: ${isLastASTNull}`
+      `[DEBUG][StoreConnectedRenderer] Smart change detection - AST changed: ${astContentChanged}, isLastNull: ${isLastASTNull}`
     );
 
-    if (lastASTString === currentASTString && !isLastASTNull) {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST unchanged');
+    if (!astContentChanged && !isLastASTNull) {
+      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged (optimized detection)');
       return;
     }
 
-    logger.debug('[DEBUG][StoreConnectedRenderer] Continuing with render logic...');
-
-    // Skip if AST hasn't changed (check content only, not reference)
-
-    // For non-empty ASTs, do a content check
-    if (
-      lastASTRef.current &&
-      lastASTRef.current.length > 0 &&
-      ast.length === lastASTRef.current.length &&
-      ast.length > 0
-    ) {
-      const currentASTString = JSON.stringify(ast);
-      const lastASTString = JSON.stringify(lastASTRef.current);
-      const astChanged = currentASTString !== lastASTString;
-      const meshCount = meshes.length;
-      const shouldRender = astChanged || meshCount === 0;
-
-      console.log(`[DEBUG][StoreConnectedRenderer] AST content comparison:`);
-      console.log(
-        `[DEBUG][StoreConnectedRenderer] Current AST:`,
-        currentASTString.substring(0, 200)
-      );
-      console.log(`[DEBUG][StoreConnectedRenderer] Last AST:`, lastASTString.substring(0, 200));
-      console.log(`[DEBUG][StoreConnectedRenderer] AST changed:`, astChanged);
-      console.log(`[DEBUG][StoreConnectedRenderer] Mesh count:`, meshCount);
-      console.log(`[DEBUG][StoreConnectedRenderer] Should render:`, shouldRender);
-
-      if (!shouldRender) {
-        logger.debug(
-          '[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged and meshes exist'
-        );
-        return;
-      }
-    }
+    logger.debug('[DEBUG][StoreConnectedRenderer] AST content changed - proceeding with optimized render pipeline...');
 
     logger.debug(`[DEBUG][StoreConnectedRenderer] AST change detected - proceeding with render`);
 
@@ -656,7 +625,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       }
 
       lastASTRef.current = ast;
-    }, 300); // 300ms debounce
+    }, OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs); // Optimized 100ms debounce (67% faster)
 
     return () => {
       if (renderTimeoutRef.current) {
