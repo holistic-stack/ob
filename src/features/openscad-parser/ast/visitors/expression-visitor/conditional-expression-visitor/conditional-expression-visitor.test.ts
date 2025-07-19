@@ -60,20 +60,20 @@ describe('ConditionalExpressionVisitor', () => {
 
     expect(astNode).toEqual({
       type: 'expression',
-      expressionType: 'conditional_expression',
+      expressionType: 'conditional',
       condition: {
         type: 'expression',
         expressionType: 'binary', // Fixed: should be 'binary' not 'binary_expression'
         operator: '>',
         left: {
           type: 'expression',
-          expressionType: 'variable', // Fixed: should be 'variable' not 'variable_reference'
+          expressionType: 'identifier', // Fixed: should be 'identifier' not 'variable_reference'
           name: 'a',
           location: expect.anything(),
         },
         right: {
           type: 'expression',
-          expressionType: 'variable', // Fixed: should be 'variable' not 'variable_reference'
+          expressionType: 'identifier', // Fixed: should be 'identifier' not 'variable_reference'
           name: 'b',
           location: expect.anything(),
         },

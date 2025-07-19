@@ -238,16 +238,26 @@ export class ControlFlowBabylonNode extends BabylonJSNode {
     if (meshes.length === 0) {
       // Create an empty placeholder mesh
       const { MeshBuilder } = await import('@babylonjs/core');
-      return MeshBuilder.CreateBox(`${this.name}_empty`, { size: 0.001 }, this.scene!);
+      if (!this.scene) {
+        throw new Error('Scene is required for mesh generation');
+      }
+      return MeshBuilder.CreateBox(`${this.name}_empty`, { size: 0.001 }, this.scene);
     }
 
     if (meshes.length === 1) {
-      return meshes[0]!; // Safe because we checked length === 1
+      const mesh = meshes[0];
+      if (!mesh) {
+        throw new Error('Expected mesh at index 0');
+      }
+      return mesh;
     }
 
     // For multiple meshes, create a parent mesh and attach all children
     const { MeshBuilder } = await import('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene!);
+    if (!this.scene) {
+      throw new Error('Scene is required for mesh generation');
+    }
+    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false; // Make parent invisible
 
     // Parent all meshes to the combined parent

@@ -58,12 +58,16 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=0.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const csgNode = new CSGBabylonNode('test_union', scene, unionNode, [cubeNode, sphereNode]);
 
@@ -89,17 +93,23 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=0.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const cylinderCode = 'cylinder(h=2, r=0.3);';
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
+      const cylinderAstNode = cylinderAst[0];
+      if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
+      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAstNode);
 
       const csgNode = new CSGBabylonNode('test_union_three', scene, unionNode, [
         cubeNode,
@@ -128,12 +138,16 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([2, 2, 2]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=1);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const csgNode = new CSGBabylonNode('test_difference', scene, differenceNode, [
         cubeNode,
@@ -161,17 +175,23 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([3, 3, 3]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=1);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const cylinderCode = 'cylinder(h=4, r=0.5);';
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
+      const cylinderAstNode = cylinderAst[0];
+      if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
+      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAstNode);
 
       const csgNode = new CSGBabylonNode('test_difference_multiple', scene, differenceNode, [
         cubeNode,
@@ -200,12 +220,16 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([2, 2, 2]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=1.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const csgNode = new CSGBabylonNode('test_intersection', scene, intersectionNode, [
         cubeNode,

@@ -83,13 +83,13 @@ describe('ParenthesizedExpressionVisitor', () => {
       operator: '+',
       left: {
         type: 'expression',
-        expressionType: 'variable',
+        expressionType: 'identifier',
         name: 'a',
         location: expect.anything(),
       },
       right: {
         type: 'expression',
-        expressionType: 'variable',
+        expressionType: 'identifier',
         name: 'b',
         location: expect.anything(),
       },

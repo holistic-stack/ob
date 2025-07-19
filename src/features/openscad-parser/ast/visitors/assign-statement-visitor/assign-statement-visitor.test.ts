@@ -40,7 +40,7 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(1);
-      expect(ast[0]?.type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign_statement');
 
       const assignNode = ast[0] as unknown as AssignStatementNode & {
         assignments: any[];
@@ -108,7 +108,7 @@ describe('AssignStatementVisitor', () => {
           assignments: any[];
           body: any;
         };
-        expect(assignNode.type).toBe('assign');
+        expect(assignNode.type).toBe('assign_statement');
         // If assignments are parsed, check them
         if (assignNode.assignments && assignNode.assignments.length > 0) {
           expect(assignNode.assignments[0]?.variable.name).toBe('x');
@@ -193,7 +193,7 @@ describe('AssignStatementVisitor', () => {
           assignments: any[];
           body: any;
         };
-        expect(assignNode.type).toBe('assign');
+        expect(assignNode.type).toBe('assign_statement');
         // If assignments are parsed, check them
         if (assignNode.assignments && assignNode.assignments.length > 0) {
           expect(assignNode.assignments[0]?.variable.name).toBe('points');
@@ -305,8 +305,8 @@ describe('AssignStatementVisitor', () => {
       const ast = parser.parseAST(code);
 
       expect(ast).toHaveLength(2);
-      expect(ast[0]?.type).toBe('assign');
-      expect(ast[1]?.type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign_statement');
+      expect(ast[1]?.type).toBe('assign_statement');
 
       const firstAssign = ast[0] as unknown as AssignStatementNode & {
         assignments: any[];
@@ -335,7 +335,7 @@ describe('AssignStatementVisitor', () => {
 
       // Should still parse but may have incomplete assignment
       expect(ast).toHaveLength(1);
-      expect(ast[0]?.type).toBe('assign');
+      expect(ast[0]?.type).toBe('assign_statement');
     });
 
     it('should handle assign statement with missing body', () => {

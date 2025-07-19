@@ -54,7 +54,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_for_loop', scene, forLoopNode, [
         cubeNode,
@@ -82,7 +84,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode(
         'test_for_loop_multi',
@@ -112,7 +116,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_if_statement', scene, ifNode, [
         cubeNode,
@@ -139,7 +145,9 @@ describe('ControlFlowBabylonNode', () => {
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_if_complex', scene, ifNode, [
         sphereNode,
@@ -166,7 +174,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_let_expression', scene, letNode, [
         cubeNode,
@@ -193,7 +203,9 @@ describe('ControlFlowBabylonNode', () => {
       const cylinderCode = 'cylinder(h=10, r=5);';
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
+      const cylinderAstNode = cylinderAst[0];
+      if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
+      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_let_multi', scene, letNode, [
         cylinderNode,
@@ -220,7 +232,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode(
         'test_for_validation',
@@ -264,7 +278,9 @@ describe('ControlFlowBabylonNode', () => {
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
       const originalNode = new ControlFlowBabylonNode('original_let', scene, letNode, [sphereNode]);
 
@@ -309,7 +325,9 @@ describe('ControlFlowBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      const cubeAstNode = cubeAst[0];
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const controlFlowNode = new ControlFlowBabylonNode('debug_if', scene, ifNode, [cubeNode]);
 

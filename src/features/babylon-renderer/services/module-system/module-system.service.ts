@@ -137,7 +137,8 @@ export class ModuleSystemService {
       context: ModuleExecutionContext
     ) => Promise<Result<GenericMeshData | GenericMeshCollection, ModuleSystemError>>
   ): Promise<Result<GenericMeshData | GenericMeshCollection, ModuleSystemError>> {
-    const moduleName = typeof moduleInstNode.name === 'string' ? moduleInstNode.name : moduleInstNode.name.name;
+    const moduleName =
+      typeof moduleInstNode.name === 'string' ? moduleInstNode.name : moduleInstNode.name.name;
     logger.debug(`[INSTANTIATE] Instantiating module: ${moduleName}`);
     const startTime = performance.now();
 
@@ -146,11 +147,7 @@ export class ModuleSystemService {
     if (!moduleDefinition) {
       return {
         success: false,
-        error: this.createError(
-          'MODULE_NOT_FOUND',
-          `Module '${moduleName}' not found`,
-          moduleName
-        ),
+        error: this.createError('MODULE_NOT_FOUND', `Module '${moduleName}' not found`, moduleName),
       };
     }
 
@@ -183,11 +180,7 @@ export class ModuleSystemService {
         return result.data;
       },
       (error) =>
-        this.createError(
-          'EXECUTION_FAILED',
-          `Module instantiation failed: ${error}`,
-          moduleName
-        )
+        this.createError('EXECUTION_FAILED', `Module instantiation failed: ${error}`, moduleName)
     );
   }
 
@@ -241,7 +234,10 @@ export class ModuleSystemService {
         // Handle specific child index
         if (childrenNode.indices?.[0] !== undefined && childrenNode.indices[0] >= 0) {
           const childContext = { ...context, childrenIndex: childrenNode.indices[0] };
-          const childResult = await childExecutor(childrenNodes[childrenNode.indices[0]]!, childContext);
+          const childResult = await childExecutor(
+            childrenNodes[childrenNode.indices[0]]!,
+            childContext
+          );
 
           if (isError(childResult)) {
             throw new Error(`Child execution failed: ${childResult.error.message}`);

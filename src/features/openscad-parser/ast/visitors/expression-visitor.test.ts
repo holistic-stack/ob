@@ -164,7 +164,7 @@ describe('ExpressionVisitor', () => {
         expect(result.expressionType).toBe('binary');
       }
       expect((result as ast.BinaryExpressionNode).operator).toBe('>');
-      expect((result as ast.BinaryExpressionNode).left.expressionType).toBe('variable');
+      expect((result as ast.BinaryExpressionNode).left.expressionType).toBe('identifier');
       expect((result as ast.BinaryExpressionNode).left.name).toBe('x');
       expect((result as ast.BinaryExpressionNode).right.expressionType).toBe('literal');
       expect((result as ast.BinaryExpressionNode).right.value).toBe(5);
@@ -534,7 +534,7 @@ describe('ExpressionVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('expression');
       if (result && 'expressionType' in result) {
-        expect(result.expressionType).toBe('variable');
+        expect(result.expressionType).toBe('identifier');
       }
       expect((result as unknown as ast.VariableNode).name).toBe('myVariable');
     });

@@ -183,18 +183,18 @@ export function extractSphereNode(
       type: 'sphere',
       radius,
       diameter,
-      ...(fn !== undefined && { fn }),
-      ...(fa !== undefined && { fa }),
-      ...(fs !== undefined && { fs }),
+      ...(fn !== undefined && { $fn: fn }),
+      ...(fa !== undefined && { $fa: fa }),
+      ...(fs !== undefined && { $fs: fs }),
       location: getLocation(node),
     };
   } else {
     return {
       type: 'sphere',
       radius,
-      ...(fn !== undefined && { fn }),
-      ...(fa !== undefined && { fa }),
-      ...(fs !== undefined && { fs }),
+      ...(fn !== undefined && { $fn: fn }),
+      ...(fa !== undefined && { $fa: fa }),
+      ...(fs !== undefined && { $fs: fs }),
       location: getLocation(node),
     };
   }

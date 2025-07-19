@@ -13,7 +13,8 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import { OpenSCADSyntaxError, type ParserError } from '../../error-handling/types/error-types.js';
+import { type ParserError } from '../../error-handling/types/error-types.js';
+import { OpenSCADSyntaxError } from './syntax-error.js';
 
 /**
  * @interface RecoveryStrategy
@@ -122,8 +123,8 @@ export class InsertMissingTokenStrategy implements RecoveryStrategy {
       return null;
     }
 
-    // Get the suggestions from the error context
-    const suggestions = error.context.suggestions;
+    // Get the suggestions from the error
+    const suggestions = error.suggestions;
     if (!suggestions || suggestions.length === 0 || !suggestions[0]) {
       return null;
     }

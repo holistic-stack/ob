@@ -81,7 +81,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -95,7 +95,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -109,7 +109,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -129,7 +129,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -143,7 +143,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -157,7 +157,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -177,7 +177,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeDefined();
@@ -192,7 +192,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeDefined();
@@ -207,7 +207,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeDefined();
@@ -228,7 +228,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeUndefined();
@@ -242,7 +242,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast).toHaveLength(1);
 
       const assertNode = ast[0] as AssertStatementNode;
-      expect(assertNode.type).toBe('assert');
+      expect(assertNode.type).toBe('assert_statement');
       expect(assertNode.condition).toBeDefined();
       expect(assertNode.condition.type).toBe('expression');
       expect(assertNode.message).toBeDefined();

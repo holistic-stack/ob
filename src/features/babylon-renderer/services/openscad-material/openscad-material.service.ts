@@ -183,11 +183,12 @@ export class OpenSCADMaterialService {
     return tryCatchAsync(
       async () => {
         const config: MaterialFromColorConfig = {
-          color: typeof colorNode.c === 'string'
-            ? colorNode.c
-            : colorNode.c.length === 3
-              ? colorNode.c as unknown as readonly [number, number, number]
-              : colorNode.c as unknown as readonly [number, number, number, number],
+          color:
+            typeof colorNode.c === 'string'
+              ? colorNode.c
+              : colorNode.c.length === 3
+                ? (colorNode.c as unknown as readonly [number, number, number])
+                : (colorNode.c as unknown as readonly [number, number, number, number]),
           name,
           materialType,
         };

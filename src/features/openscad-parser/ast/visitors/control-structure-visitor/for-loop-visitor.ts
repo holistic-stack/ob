@@ -19,11 +19,13 @@ import { BaseASTVisitor } from '../base-ast-visitor.js';
 import { ExpressionVisitor } from '../expression-visitor.js';
 
 function isAstVariableNode(node: ast.ASTNode | null): node is ast.VariableNode {
-  // VariableNode extends ExpressionNode, so type is 'expression', and expressionType is 'variable'
+  // VariableNode extends ExpressionNode, so type is 'expression', and expressionType is 'variable' or 'identifier'
+  // Both 'variable' and 'identifier' expression types represent variables in different contexts
   return (
     node !== null &&
     node.type === 'expression' &&
-    (node as ast.ExpressionNode).expressionType === 'variable'
+    ((node as ast.ExpressionNode).expressionType === 'variable' ||
+      (node as ast.ExpressionNode).expressionType === 'identifier')
   );
 }
 

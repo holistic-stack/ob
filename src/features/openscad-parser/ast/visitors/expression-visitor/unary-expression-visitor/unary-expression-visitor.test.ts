@@ -60,11 +60,11 @@ describe('UnaryExpressionVisitor', () => {
 
     expect(astNode).toEqual({
       type: 'expression',
-      expressionType: 'unary_expression',
+      expressionType: 'unary',
       operator: '-',
       operand: {
         type: 'expression',
-        expressionType: 'variable',
+        expressionType: 'identifier',
         name: 'y',
         location: expect.anything(),
       },
@@ -84,11 +84,11 @@ describe('UnaryExpressionVisitor', () => {
 
     expect(astNode).toEqual({
       type: 'expression',
-      expressionType: 'unary_expression',
+      expressionType: 'unary',
       operator: '!',
       operand: {
         type: 'expression',
-        expressionType: 'variable',
+        expressionType: 'identifier',
         name: 'z',
         location: expect.anything(),
       },
@@ -108,7 +108,7 @@ describe('UnaryExpressionVisitor', () => {
 
     expect(astNode).toEqual({
       type: 'expression',
-      expressionType: 'unary_expression',
+      expressionType: 'unary',
       operator: '-',
       operand: {
         type: 'expression',

@@ -397,6 +397,6 @@ export class BabylonCSG2Service {
     this.scene = null;
     this.operationCounter = 0;
 
-    logger.end('[END][BabylonCSG2Service] CSG2 service disposed');
+    logger.info('[END][BabylonCSG2Service] CSG2 service disposed');
   }
 }
