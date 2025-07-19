@@ -293,7 +293,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const [isSceneReady, setIsSceneReady] = useState(false);
   const [sceneService, setSceneService] = useState<BabylonSceneService | null>(null);
-  const lastASTRef = useRef<readonly ASTNode[]>([]);
+  const lastASTRef = useRef<readonly ASTNode[] | null>(null);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Store selectors - use individual primitive selectors to avoid infinite loops
@@ -550,7 +550,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
    */
   useEffect(() => {
     console.log(
-      `[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`
+      `[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current?.length ?? 'null'}`
     );
     console.log(
       `[DEBUG][StoreConnectedRenderer] Current AST:`,
@@ -558,23 +558,32 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     );
     console.log(
       `[DEBUG][StoreConnectedRenderer] Last AST:`,
-      JSON.stringify(lastASTRef.current).substring(0, 100)
+      JSON.stringify(lastASTRef.current ?? []).substring(0, 100)
     );
     logger.debug(
-      `[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current.length}`
+      `[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current?.length ?? 'null'}`
     );
 
     // CRITICAL FIX: Prevent infinite loop when both ASTs are empty
-    // If both current and last AST are empty, skip rendering to prevent infinite loop
-    if (ast.length === 0 && lastASTRef.current.length === 0) {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - both ASTs are empty');
+    // Only skip if we've already processed this exact AST (not just empty arrays)
+    const lastASTString = JSON.stringify(lastASTRef.current);
+    const currentASTString = JSON.stringify(ast);
+    const isLastASTNull = lastASTRef.current === null;
+
+    logger.debug(`[DEBUG][StoreConnectedRenderer] Early exit check - lastAST: ${lastASTString}, currentAST: ${currentASTString}, isLastNull: ${isLastASTNull}`);
+
+    if (lastASTString === currentASTString && !isLastASTNull) {
+      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST unchanged');
       return;
     }
+
+    logger.debug('[DEBUG][StoreConnectedRenderer] Continuing with render logic...');
 
     // Skip if AST hasn't changed (check content only, not reference)
 
     // For non-empty ASTs, do a content check
     if (
+      lastASTRef.current &&
       lastASTRef.current.length > 0 &&
       ast.length === lastASTRef.current.length &&
       ast.length > 0
@@ -613,13 +622,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
     // Skip if no AST
     if (!ast || ast.length === 0) {
-      // Only clear scene if there are meshes to clear (prevent infinite loop)
-      if (meshes.length > 0) {
-        logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
-        safeClearScene();
-      } else {
-        logger.debug('[DEBUG][StoreConnectedRenderer] Scene already clear - no AST');
-      }
+      // Always clear scene when AST is empty to ensure clean state
+      logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
+      safeClearScene();
       lastASTRef.current = ast;
       return;
     }

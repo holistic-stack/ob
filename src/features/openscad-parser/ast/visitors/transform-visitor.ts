@@ -895,16 +895,17 @@ export class TransformVisitor extends BaseASTVisitor {
    */
   private createRotateNode(node: TSNode, args: ast.Parameter[]): ast.RotateNode {
     // Default values
-    let a: number | ast.Vector3D = 0;
-    let v: ast.Vector3D | undefined;
+    let a: number | undefined;
+    let v: ast.Vector3D = [0, 0, 1]; // Default Z-axis rotation
 
-    // Extract angle parameter (first positional or named 'a')
+    // Extract rotation parameter (first positional or named 'a')
     for (const arg of args) {
       if ((!arg.name && args.indexOf(arg) === 0) || arg.name === 'a') {
         // Try vector first (for angle vector like [90, 0, 0])
         const vector = extractVectorParameter(arg);
         if (vector && vector.length >= 3) {
-          a = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
+          // For vector rotation, assign to 'v' property
+          v = [vector[0] ?? 0, vector[1] ?? 0, vector[2] ?? 0];
           break;
         }
 
@@ -912,7 +913,7 @@ export class TransformVisitor extends BaseASTVisitor {
         const angle = extractNumberParameter(arg);
         if (angle !== null) {
           a = angle;
-          v = [0, 0, 1]; // Default Z-axis rotation
+          v = [0, 0, 1]; // Default Z-axis rotation for single angle
           break;
         }
       }
@@ -931,7 +932,7 @@ export class TransformVisitor extends BaseASTVisitor {
 
     const result: ast.RotateNode = {
       type: 'rotate',
-      v: v || [0, 0, 1], // Default to Z-axis rotation if no vector specified
+      v, // Use the extracted or default vector
       children: [],
       location: getLocation(node),
     };

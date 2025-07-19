@@ -231,7 +231,7 @@ describe('OpenSCAD → BabylonJS Pipeline Integration', () => {
       // Find rotate node
       const rotateNode = ast.find((node) => node.type === 'rotate') as RotateNode | undefined;
       expect(rotateNode).toBeDefined();
-      expect(rotateNode?.a).toEqual([45, 90, 0]);
+      expect(rotateNode?.v).toEqual([45, 90, 0]);
       expect(rotateNode?.children).toBeDefined();
       expect(rotateNode?.children?.length).toBeGreaterThan(0);
 
