@@ -47,7 +47,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     super(
       name,
       scene,
-      BabylonJSNodeType.Cube, // Will be updated based on primitive type
+      PrimitiveBabylonNode.mapPrimitiveTypeToNodeType(originalOpenscadNode.type),
       originalOpenscadNode,
       sourceLocation
     );
@@ -56,6 +56,24 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     this.parameters = this.extractParameters(originalOpenscadNode);
 
     logger.debug(`[INIT] Created primitive BabylonJS node for ${this.primitiveType}`);
+  }
+
+  /**
+   * Map OpenSCAD primitive type to BabylonJS node type
+   */
+  private static mapPrimitiveTypeToNodeType(primitiveType: string): BabylonJSNodeType {
+    switch (primitiveType) {
+      case 'cube':
+        return BabylonJSNodeType.Cube;
+      case 'sphere':
+        return BabylonJSNodeType.Sphere;
+      case 'cylinder':
+        return BabylonJSNodeType.Cylinder;
+      case 'polyhedron':
+        return BabylonJSNodeType.Polyhedron;
+      default:
+        return BabylonJSNodeType.Cube; // Default fallback
+    }
   }
 
   /**

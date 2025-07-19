@@ -106,9 +106,10 @@ describe('TransformationBabylonNode', () => {
         expect(mesh).toBeDefined();
 
         // Check that translation was applied
-        expect(mesh.position.x).toBeCloseTo(5);
-        expect(mesh.position.y).toBeCloseTo(0);
-        expect(mesh.position.z).toBeCloseTo(0);
+        // Translation [5,0,0] + cube centering [0.5,0.5,0.5] = [5.5,0.5,0.5]
+        expect(mesh.position.x).toBeCloseTo(5.5);
+        expect(mesh.position.y).toBeCloseTo(0.5);
+        expect(mesh.position.z).toBeCloseTo(0.5);
       }
     });
   });

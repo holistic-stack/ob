@@ -145,24 +145,41 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
   /**
    * Apply translate transformation with OpenSCAD-compatible parameters
+   * Uses direct mesh translation approach following KISS principles
    */
   private applyTranslateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const translation = this.extractTranslationVector();
 
-    // Create a parent mesh to hold the transformed children
-    const { MeshBuilder } = require('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
-    parentMesh.isVisible = false; // Make parent invisible
+    logger.debug(
+      `[TRANSLATE] Applying translation [${translation.x}, ${translation.y}, ${translation.z}] to ${childMeshes.length} child meshes`
+    );
 
-    // Apply translation to parent
-    parentMesh.position = translation;
-
-    // Parent all child meshes to the translated parent
+    // Apply translation directly to each child mesh (OpenSCAD approach)
+    // This is the simplest and most direct approach - just move the meshes
     for (const childMesh of childMeshes) {
-      childMesh.parent = parentMesh;
+      const originalPosition = childMesh.position.clone();
+
+      // Apply translation by adding to current position
+      childMesh.position.addInPlace(translation);
+
+      logger.debug(
+        `[TRANSLATE] Translated mesh '${childMesh.name}': ` +
+        `(${originalPosition.x}, ${originalPosition.y}, ${originalPosition.z}) → ` +
+        `(${childMesh.position.x}, ${childMesh.position.y}, ${childMesh.position.z})`
+      );
     }
 
-    return parentMesh;
+    // Return the first child mesh as the representative mesh
+    // In OpenSCAD, translate() returns the translated object, not a container
+    if (childMeshes.length > 0) {
+      return childMeshes[0]!; // Non-null assertion since we checked length
+    }
+
+    // Fallback: create an empty transform node if no children
+    const { TransformNode } = require('@babylonjs/core');
+    const emptyNode = new TransformNode(`${this.name}_empty`, this.scene);
+    emptyNode.position = translation;
+    return emptyNode as AbstractMesh; // Cast to AbstractMesh for compatibility
   }
 
   /**

@@ -1424,9 +1424,21 @@ export class ASTBridgeConverter {
     if (this.isTransformationType(openscadNode.type)) {
       const { TransformationBabylonNode } = await import('./transformation-babylon-node');
 
-      // TODO: Extract child nodes from the transformation
-      // For now, create with empty children array
+      // Extract child nodes from the transformation
       const childNodes: BabylonJSNode[] = [];
+
+      if ('children' in openscadNode && Array.isArray(openscadNode.children)) {
+        for (const childOpenscadNode of openscadNode.children) {
+          const childConversionResult = await this.convertSingleNode(childOpenscadNode, config);
+          if (childConversionResult.success) {
+            childNodes.push(childConversionResult.data);
+          } else {
+            logger.warn(
+              `[CONVERT] Failed to convert child node for transformation operation: ${childConversionResult.error.message}`
+            );
+          }
+        }
+      }
 
       return new TransformationBabylonNode(
         nodeId,

@@ -1474,39 +1474,73 @@ export const createBabylonRenderingSlice = (
             `[DEBUG][BabylonRenderingSlice] Scene now has ${scene.meshes.length} meshes total`
           );
 
-          // Auto-frame the scene if meshes were generated and auto-framing is enabled
+          // Auto-frame the scene if meshes were generated
           if (meshes.length > 0) {
             try {
-              // Get the scene service to access camera controls
-              const sceneService = (
-                scene as typeof scene & {
-                  _sceneService?: {
-                    frameAll: () => Promise<{ success: boolean; error?: { message: string } }>;
-                  };
+              logger.debug('[DEBUG][BabylonRenderingSlice] Auto-framing scene with new meshes');
+
+              // Direct BabylonJS auto-framing implementation
+              const camera = scene.activeCamera;
+              if (camera && camera.getClassName() === 'ArcRotateCamera') {
+                const arcCamera = camera as any; // ArcRotateCamera
+
+                // Calculate scene bounds from all visible meshes
+                let minX = Number.POSITIVE_INFINITY;
+                let maxX = Number.NEGATIVE_INFINITY;
+                let minY = Number.POSITIVE_INFINITY;
+                let maxY = Number.NEGATIVE_INFINITY;
+                let minZ = Number.POSITIVE_INFINITY;
+                let maxZ = Number.NEGATIVE_INFINITY;
+
+                const allSceneMeshes = scene.meshes.filter(mesh => mesh.isVisible && mesh.isEnabled());
+
+                for (const mesh of allSceneMeshes) {
+                  const boundingInfo = mesh.getBoundingInfo();
+                  if (boundingInfo) {
+                    const min = boundingInfo.boundingBox.minimumWorld;
+                    const max = boundingInfo.boundingBox.maximumWorld;
+
+                    minX = Math.min(minX, min.x);
+                    maxX = Math.max(maxX, max.x);
+                    minY = Math.min(minY, min.y);
+                    maxY = Math.max(maxY, max.y);
+                    minZ = Math.min(minZ, min.z);
+                    maxZ = Math.max(maxZ, max.z);
+                  }
                 }
-              )._sceneService;
-              if (sceneService && typeof sceneService.frameAll === 'function') {
-                logger.debug('[DEBUG][BabylonRenderingSlice] Auto-framing scene with new meshes');
-                sceneService
-                  .frameAll()
-                  .then((frameResult: { success: boolean; error?: { message: string } }) => {
-                    if (frameResult.success) {
-                      logger.debug(
-                        '[DEBUG][BabylonRenderingSlice] Auto-framing completed successfully'
-                      );
-                    } else {
-                      logger.warn(
-                        '[WARN][BabylonRenderingSlice] Auto-framing failed:',
-                        frameResult.error?.message
-                      );
-                    }
-                  })
-                  .catch((error: Error) => {
-                    logger.warn('[WARN][BabylonRenderingSlice] Auto-framing error:', error);
-                  });
+
+                if (isFinite(minX) && isFinite(maxX)) {
+                  const { Vector3 } = require('@babylonjs/core');
+                  const sceneCenter = new Vector3(
+                    (minX + maxX) / 2,
+                    (minY + maxY) / 2,
+                    (minZ + maxZ) / 2
+                  );
+
+                  const sceneSize = new Vector3(
+                    maxX - minX,
+                    maxY - minY,
+                    maxZ - minZ
+                  );
+
+                  const diagonal = sceneSize.length();
+                  const optimalRadius = Math.max(diagonal * 1.5, 5); // Minimum radius of 5
+
+                  // Update camera target and radius
+                  arcCamera.setTarget(sceneCenter);
+                  arcCamera.radius = optimalRadius;
+
+                  logger.debug(
+                    `[DEBUG][BabylonRenderingSlice] Auto-framing completed: target=(${sceneCenter.x.toFixed(1)}, ${sceneCenter.y.toFixed(1)}, ${sceneCenter.z.toFixed(1)}), radius=${optimalRadius.toFixed(1)}`
+                  );
+                } else {
+                  logger.warn('[WARN][BabylonRenderingSlice] No valid meshes found for auto-framing');
+                }
+              } else {
+                logger.warn('[WARN][BabylonRenderingSlice] Auto-framing requires ArcRotateCamera');
               }
             } catch (error) {
-              logger.warn('[WARN][BabylonRenderingSlice] Auto-framing setup failed:', error);
+              logger.warn('[WARN][BabylonRenderingSlice] Auto-framing failed:', error);
             }
           }
 
