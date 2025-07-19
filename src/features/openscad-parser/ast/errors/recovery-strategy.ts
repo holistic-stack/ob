@@ -13,7 +13,7 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import { type ParserError } from '../../error-handling/types/error-types.js';
+import type { ParserError } from '../../error-handling/types/error-types.js';
 import { OpenSCADSyntaxError } from './syntax-error.js';
 
 /**

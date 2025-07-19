@@ -53,7 +53,10 @@ export class CSGBabylonNode extends BabylonJSNode {
 
     // Initialize CSG service with scene
     if (scene) {
-      this.csgService.init(scene);
+      const initResult = this.csgService.init(scene);
+      if (!initResult.success) {
+        logger.error(`[ERROR][CSGBabylonNode] Failed to initialize CSG service: ${initResult.error.message}`);
+      }
     }
 
     logger.debug(`[INIT] Created CSG BabylonJS node for ${this.csgType}`);
@@ -123,6 +126,11 @@ export class CSGBabylonNode extends BabylonJSNode {
   private async applyCSGOperation(childMeshes: AbstractMesh[]): Promise<AbstractMesh> {
     if (!this.scene) {
       throw new Error('Scene is required');
+    }
+
+    // Ensure CSG service is initialized
+    if (!this.csgService) {
+      throw new Error('CSG service is not initialized');
     }
 
     // Convert AbstractMesh to Mesh for CSG operations

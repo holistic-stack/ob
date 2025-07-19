@@ -603,8 +603,12 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
     const result = await engineServiceRef.current.dispose();
 
     if (result.success) {
-      // Reset state
-      setEngineState(INITIAL_ENGINE_STATE);
+      // Set disposed state
+      setEngineState((prev) => ({
+        ...INITIAL_ENGINE_STATE,
+        isDisposed: true,
+        lastUpdated: new Date(),
+      }));
       engineServiceRef.current = null;
       logger.debug('[DEBUG][useBabylonEngine] Engine disposed successfully');
     } else {

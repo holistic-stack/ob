@@ -19,7 +19,8 @@ describe('ASTBridgeConverter', () => {
 
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
-    parser = await createTestParser();
+    parser = createTestParser();
+    await parser.init();
 
     // Create BabylonJS NullEngine for headless testing
     engine = new NullEngine();

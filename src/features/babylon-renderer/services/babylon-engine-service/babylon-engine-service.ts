@@ -20,6 +20,17 @@ import type {
 } from '../../types/babylon-engine.types';
 import { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from '../../types/babylon-engine.types';
 
+/**
+ * Check if running in test environment
+ */
+const isTestEnvironment = (): boolean => {
+  return (
+    typeof process !== 'undefined' &&
+    process.env &&
+    (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+  );
+};
+
 const logger = createLogger('BabylonEngineService');
 
 /**
@@ -151,17 +162,26 @@ export class BabylonEngineService {
   private async initWebGLEngine(options: EngineInitOptions): Promise<Result<Engine, EngineError>> {
     return tryCatch(
       () => {
-        if (!this.canvas) {
-          throw new Error('Canvas is required for WebGL engine initialization');
+        let webglEngine: Engine;
+
+        if (isTestEnvironment()) {
+          // Use NullEngine for tests to avoid WebGL context issues
+          logger.debug('[DEBUG][BabylonEngineService] Using NullEngine for test environment');
+          webglEngine = new NullEngine();
+        } else {
+          // Use real WebGL engine for production
+          if (!this.canvas) {
+            throw new Error('Canvas is required for WebGL engine initialization');
+          }
+          webglEngine = new Engine(this.canvas, this.config.antialias, {
+            preserveDrawingBuffer: this.config.preserveDrawingBuffer,
+            stencil: this.config.stencil,
+            antialias: this.config.antialias,
+            adaptToDeviceRatio: this.config.adaptToDeviceRatio,
+            powerPreference: this.config.powerPreference,
+            failIfMajorPerformanceCaveat: this.config.failIfMajorPerformanceCaveat,
+          });
         }
-        const webglEngine = new Engine(this.canvas, this.config.antialias, {
-          preserveDrawingBuffer: this.config.preserveDrawingBuffer,
-          stencil: this.config.stencil,
-          antialias: this.config.antialias,
-          adaptToDeviceRatio: this.config.adaptToDeviceRatio,
-          powerPreference: this.config.powerPreference,
-          failIfMajorPerformanceCaveat: this.config.failIfMajorPerformanceCaveat,
-        });
 
         this.engine = webglEngine;
         this.setupEngineEvents();

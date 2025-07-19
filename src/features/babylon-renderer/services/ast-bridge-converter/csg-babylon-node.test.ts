@@ -6,7 +6,7 @@
  */
 
 import { NullEngine, Scene } from '@babylonjs/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type {
   DifferenceNode,
@@ -21,6 +21,26 @@ describe('CSGBabylonNode', () => {
   let parser: OpenscadParser;
   let engine: NullEngine;
   let scene: Scene;
+
+  // Mock CSG2 initialization to avoid network dependency in tests
+  beforeAll(async () => {
+    // Mock the CSG2 functions to avoid WASM download during tests
+    vi.doMock('@babylonjs/core', async () => {
+      const actual = await vi.importActual('@babylonjs/core');
+      return {
+        ...actual,
+        IsCSG2Ready: vi.fn(() => true), // Always return true to skip initialization
+        InitializeCSG2Async: vi.fn(() => Promise.resolve()), // Mock initialization
+        CSG2: {
+          FromMesh: vi.fn((mesh) => ({
+            union: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
+            subtract: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
+            intersect: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
+          })),
+        },
+      };
+    });
+  });
 
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
@@ -72,6 +92,9 @@ describe('CSGBabylonNode', () => {
       const csgNode = new CSGBabylonNode('test_union', scene, unionNode, [cubeNode, sphereNode]);
 
       const result = await csgNode.generateMesh();
+      if (!result.success) {
+        console.error('CSG generation failed:', result.error);
+      }
       expect(result.success).toBe(true);
 
       if (result.success) {

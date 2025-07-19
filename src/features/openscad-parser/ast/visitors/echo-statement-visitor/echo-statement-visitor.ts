@@ -493,7 +493,7 @@ export class EchoStatementVisitor extends BaseASTVisitor {
       type: 'expression',
       expressionType: 'function_call',
       functionName: functionName,
-      args: args.map(arg => ({ name: undefined, value: arg })), // Convert to Parameter format
+      args: args.map((arg) => ({ name: undefined, value: arg })), // Convert to Parameter format
       location: getLocation(node),
     } as ExpressionNode;
   }

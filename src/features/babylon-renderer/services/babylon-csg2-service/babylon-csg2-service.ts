@@ -60,11 +60,16 @@ export class BabylonCSG2Service {
         this.scene = scene;
         logger.debug('[DEBUG][BabylonCSG2Service] CSG2 service initialized successfully');
       },
-      (error) =>
-        this.createError(
+      (error) => {
+        // Preserve structured errors, wrap others
+        if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
+          return error as CSGError;
+        }
+        return this.createError(
           CSGErrorCode.OPERATION_FAILED,
           `Failed to initialize CSG2 service: ${error}`
-        )
+        );
+      }
     );
   }
 
@@ -102,7 +107,7 @@ export class BabylonCSG2Service {
       meshA,
       meshB,
       config
-    ) as unknown as Promise<CSGUnionResult>;
+    );
   }
 
   /**
@@ -120,7 +125,7 @@ export class BabylonCSG2Service {
       meshA,
       meshB,
       config
-    ) as unknown as Promise<CSGDifferenceResult>;
+    );
   }
 
   /**
@@ -138,7 +143,7 @@ export class BabylonCSG2Service {
       meshA,
       meshB,
       config
-    ) as unknown as Promise<CSGIntersectionResult>;
+    );
   }
 
   /**
@@ -149,7 +154,7 @@ export class BabylonCSG2Service {
     meshA: Mesh,
     meshB: Mesh,
     config?: Partial<CSGOperationConfig>
-  ): Promise<CSGOperationResult> {
+  ): Promise<Result<CSGOperationResult, CSGError>> {
     const startTime = performance.now();
     const operationId = this.generateOperationId();
 
@@ -161,14 +166,23 @@ export class BabylonCSG2Service {
         // Merge configuration
         const effectiveConfig = config ? { ...this.config, ...config } : this.config;
 
-        // Import CSG2 dynamically to ensure it's available
-        const { CSG2 } = await import('@babylonjs/core');
+        // Import CSG2 and initialization functions
+        const { CSG2, InitializeCSG2Async, IsCSG2Ready } = await import('@babylonjs/core');
 
         if (!CSG2) {
           throw this.createError(
             CSGErrorCode.CSG_ERROR,
             'CSG2 is not available in this BabylonJS build'
           );
+        }
+
+        // Check if CSG2/Manifold is ready (should be initialized globally in tests)
+        if (!IsCSG2Ready()) {
+          logger.debug('[DEBUG][BabylonCSG2Service] Initializing Manifold library...');
+          await InitializeCSG2Async();
+          logger.debug('[DEBUG][BabylonCSG2Service] Manifold library initialized successfully');
+        } else {
+          logger.debug('[DEBUG][BabylonCSG2Service] Manifold library already initialized');
         }
 
         // Prepare meshes for CSG operation
@@ -267,11 +281,7 @@ export class BabylonCSG2Service {
       }
     );
 
-    if (result.success) {
-      return result.data;
-    } else {
-      throw result.error;
-    }
+    return result;
   }
 
   /**

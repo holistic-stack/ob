@@ -1034,8 +1034,13 @@ export class ASTBridgeConverter {
         this.isInitialized = true;
         logger.debug('[DEBUG][ASTBridgeConverter] Bridge converter initialized successfully');
       },
-      (error) =>
-        this.createError('INITIALIZATION_FAILED', `Failed to initialize bridge converter: ${error}`)
+      (error) => {
+        // Preserve structured errors, wrap others
+        if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
+          return error as BabylonJSError;
+        }
+        return this.createError('INITIALIZATION_FAILED', `Failed to initialize bridge converter: ${error}`);
+      }
     );
   }
 
