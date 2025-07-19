@@ -26,6 +26,9 @@ This document provides a comprehensive implementation plan for the OpenSCAD Baby
 - **Improvement**: 3 fewer failing tests + 100% elimination of timeout errors
 
 ### ✅ **Additional Components Now 100% Working**
+- **export.service**: Fixed mock logger to align with `ComponentLogger` interface.
+- **optimized-mesh-generator.service**: Correctly implemented `convertGenericMeshToBabylon` and updated test assertions.
+- **babylon-particle-service**: Mocked `scene.getEngine()` to ensure WebGL 2 support for GPU particle tests.
 - **code-editor feature**: 104/104 tests passing (100%) - Fixed store selector mock issue
 - **progress-bar component**: 29/29 tests passing (100%) - Resolved by infrastructure fixes
 - **csg-operations service**: 14/14 tests passing (100%) - Resolved by infrastructure fixes
@@ -37,12 +40,15 @@ This document provides a comprehensive implementation plan for the OpenSCAD Baby
 - **store-connected-renderer**: 16/16 tests passing (100%)
 - **use-babylon-engine hook**: 16/16 tests passing (100%)
 
-### 🔧 **Five Critical Infrastructure Fixes Applied**
-1. **Timeout Issue**: Fixed `use-babylon-engine` hook dependency array race condition
-2. **Store Mock Issue**: Fixed `store-connected-editor` test mock to handle selector patterns
-3. **Mock Data Structure**: Fixed `mesh-converter` test mock to match BabylonJS API structure
-4. **API Property Names**: Fixed `babylon-material-service` test to use correct BabylonJS property names
-5. **Logger Initialization**: Fixed `progress-bar` component logger to prevent test isolation issues
+### 🔧 **Eight Critical Infrastructure Fixes Applied**
+1. **Export Service Mock**: Fixed mock logger in `export.service.test.ts` to align with the `ComponentLogger` interface by adding a mock for the `end` function.
+2. **Optimized Mesh Generator Implementation**: Correctly implemented the `convertGenericMeshToBabylon` method in `optimized-mesh-generator.service.ts` to properly convert generic mesh data into a Babylon.js mesh.
+3. **Optimized Mesh Generator Tests**: Updated test assertions in `optimized-mesh-generator.service.test.ts` to match the new mesh naming convention after the implementation of `convertGenericMeshToBabylon`.
+4. **Babylon Particle Service Tests**: Mocked `scene.getEngine()` in `babylon-particle-service.test.ts` to report WebGL 2 support, allowing GPU particle systems to be tested correctly.
+5. **Timeout Issue**: Fixed `use-babylon-engine` hook dependency array race condition
+6. **Store Mock Issue**: Fixed `store-connected-editor` test mock to handle selector patterns
+7. **Mock Data Structure**: Fixed `mesh-converter` test mock to match BabylonJS API structure
+8. **API Property Names**: Fixed `babylon-material-service` test to use correct BabylonJS property names
 
 
 ## Table of Contents

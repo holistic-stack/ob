@@ -327,7 +327,7 @@ describe('OptimizedMeshGeneratorService', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.mesh).toBeDefined();
-        expect(result.data.mesh.name).toContain('converted');
+        expect(result.data.mesh.name).toContain('cube');
       }
     });
 

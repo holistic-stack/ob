@@ -17,6 +17,7 @@ vi.mock('../../../../shared/services/logger.service', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    end: vi.fn(),
   })),
 }));
 

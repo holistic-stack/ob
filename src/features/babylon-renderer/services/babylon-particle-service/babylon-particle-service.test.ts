@@ -17,6 +17,7 @@ import {
 
 const createMockParticleSystem = (name: string) =>
   ({
+    id: `particle-system-${name}-${Math.random()}`,
     name,
     emitter: null,
     emitRate: 100,
@@ -38,6 +39,8 @@ const createMockParticleSystem = (name: string) =>
     gravity: null,
     updateSpeed: 0.01,
     particleTexture: null,
+    isStarted: vi.fn(() => false),
+    getCapacity: vi.fn(() => 1000),
     start: vi.fn(),
     stop: vi.fn(),
     dispose: vi.fn(),
@@ -89,13 +92,20 @@ describe('BabylonParticleService', () => {
   let scene: BABYLON.Scene;
 
   beforeEach(() => {
-    // Create real BabylonJS instances for testing (no mocks)
+    // Reset mocks before each test to ensure isolation
+    vi.clearAllMocks();
+
+    // Create real BabylonJS instances for testing
     engine = new BABYLON.NullEngine();
     scene = new BABYLON.Scene(engine);
-    particleService = new BabylonParticleService();
 
-    // Reset mocks
-    vi.clearAllMocks();
+    // Mock getEngine to support WebGL2 for GPU particles, as NullEngine defaults to WebGL1
+    vi.spyOn(scene, 'getEngine').mockReturnValue({
+      ...engine,
+      webGLVersion: 2,
+    } as any);
+
+    particleService = new BabylonParticleService();
   });
 
   afterEach(() => {
@@ -103,6 +113,7 @@ describe('BabylonParticleService', () => {
     particleService.dispose();
     scene.dispose();
     engine.dispose();
+    vi.restoreAllMocks();
   });
 
   describe('constructor', () => {

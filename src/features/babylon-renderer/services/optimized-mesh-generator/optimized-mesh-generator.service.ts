@@ -17,7 +17,7 @@
  * ```
  */
 
-import { type AbstractMesh, Mesh, type Scene } from '@babylonjs/core';
+import { type AbstractMesh, Mesh, type Scene, VertexData } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -335,11 +335,20 @@ export class OptimizedMeshGeneratorService {
   /**
    * Convert GenericMeshData to BabylonJS mesh
    */
-  private async convertGenericMeshToBabylon(_genericMesh: GenericMeshData): Promise<AbstractMesh> {
-    // TODO: Implement proper conversion from GenericMeshData to BabylonJS mesh
-    // For now, create a placeholder mesh
-    const { MeshBuilder } = await import('@babylonjs/core');
-    return MeshBuilder.CreateBox(`converted_${Date.now()}`, { size: 1 }, this.scene);
+  private async convertGenericMeshToBabylon(
+    genericMesh: GenericMeshData,
+  ): Promise<AbstractMesh> {
+    const mesh = new Mesh(genericMesh.metadata.name, this.scene);
+
+    const vertexData = new VertexData();
+    vertexData.positions = genericMesh.geometry.positions;
+    vertexData.indices = genericMesh.geometry.indices;
+    vertexData.normals = genericMesh.geometry.normals;
+    vertexData.uvs = genericMesh.geometry.uvs;
+
+    vertexData.applyToMesh(mesh);
+
+    return mesh;
   }
 
   /**
