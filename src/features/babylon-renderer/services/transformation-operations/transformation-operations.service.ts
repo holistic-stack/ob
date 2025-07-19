@@ -649,7 +649,7 @@ export class TransformationOperationsService {
       message,
       operationType,
       timestamp: new Date(),
-      details,
+      ...(details && { details }),
     };
   }
 }

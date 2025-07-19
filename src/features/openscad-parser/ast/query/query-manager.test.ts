@@ -18,7 +18,7 @@ describe('QueryManager', () => {
     parser = new OpenscadParser();
     await parser.init();
     language = parser.getLanguage()!;
-    tree = parser.parse('cube(10); sphere(5);')!;
+    tree = parser.parseCST('cube(10); sphere(5);')!;
     queryManager = new QueryManager(language, new LRUQueryCache());
   });
 

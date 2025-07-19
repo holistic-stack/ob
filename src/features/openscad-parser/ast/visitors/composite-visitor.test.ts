@@ -84,7 +84,7 @@ describe('CompositeVisitor', () => {
     expect(tree).not.toBeNull();
     expect(tree?.rootNode).not.toBeNull();
 
-    const testableNode = findTestableNode(tree?.rootNode);
+    const testableNode = findTestableNode(tree!.rootNode);
     expect(testableNode).not.toBeNull();
 
     return testableNode as TSNode;

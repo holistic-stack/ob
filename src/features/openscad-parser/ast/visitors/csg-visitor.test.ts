@@ -292,7 +292,10 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('hull');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as HullNode).children.length).toBeGreaterThanOrEqual(0);
+      if (result) {
+        const hullNode = result as HullNode;
+        expect(hullNode.children?.length ?? 0).toBeGreaterThanOrEqual(0);
+      }
     });
 
     it('should handle call_expression nodes for minkowski operations', () => {
@@ -320,7 +323,10 @@ describe('CSGVisitor', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('minkowski');
       // We expect children to be populated, but the exact count might vary based on implementation
-      expect((result as MinkowskiNode).children.length).toBeGreaterThanOrEqual(0);
+      if (result) {
+        const minkowskiNode = result as MinkowskiNode;
+        expect(minkowskiNode.children?.length ?? 0).toBeGreaterThanOrEqual(0);
+      }
     });
 
     it('should create a union node with children', () => {

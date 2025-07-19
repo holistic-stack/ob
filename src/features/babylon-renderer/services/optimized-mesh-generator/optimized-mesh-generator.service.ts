@@ -286,7 +286,7 @@ export class OptimizedMeshGeneratorService {
         }
 
         const params = {
-          size: cubeNode.size || [1, 1, 1],
+          size: (cubeNode.size as number | readonly [number, number, number]) || [1, 1, 1],
           center: cubeNode.center || false,
         };
         const cubeResult = await this.primitiveGenerator.generateCube(params);
@@ -300,7 +300,7 @@ export class OptimizedMeshGeneratorService {
         const sphereNode = astNode as SphereNode;
         const params = {
           r: sphereNode.radius || sphereNode.r || 1,
-          fn: sphereNode.fn || sphereNode.$fn || 16,
+          fn: sphereNode.$fn || 16,
         };
         const sphereResult = await this.primitiveGenerator.generateSphere(params);
         if (sphereResult.success) {
@@ -315,7 +315,7 @@ export class OptimizedMeshGeneratorService {
           height: cylinderNode.h || 1,
           radius: cylinderNode.r || 1,
           center: cylinderNode.center || false,
-          fn: cylinderNode.fn || cylinderNode.$fn || 16,
+          fn: cylinderNode.$fn || 16,
         };
         const cylinderResult = await this.primitiveGenerator.generateCylinder(params);
         if (cylinderResult.success) {

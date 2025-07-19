@@ -81,7 +81,7 @@ describe('Sphere Extractor', () => {
     const sphereNode = extractSphereNode(moduleInstantiationNode);
     expect(sphereNode).toBeDefined();
     expect(sphereNode?.type).toBe('sphere');
-    expect(sphereNode?.fn).toBe(100);
+    expect(sphereNode?.$fn).toBe(100);
   });
 
   it('should extract a sphere node with no parameters', () => {

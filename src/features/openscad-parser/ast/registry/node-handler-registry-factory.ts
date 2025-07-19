@@ -40,7 +40,7 @@
  * ```
  */
 
-import type { Node as TSNode } from 'web-sitter';
+import type { Node as TSNode } from 'web-tree-sitter';
 import type { ExpressionNode, IdentifierNode } from '../ast-types.js';
 import { DefaultNodeHandlerRegistry } from './default-node-handler-registry.js';
 import type { NodeHandlerRegistry } from './node-handler-registry.js';

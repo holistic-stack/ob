@@ -102,7 +102,7 @@ describe('OptimizedMeshGeneratorService', () => {
       const astNode: ASTNode = {
         type: 'sphere',
         radius: 1.5,
-        fn: 32,
+        $fn: 32,
         location: {
           start: { line: 1, column: 1, offset: 0 },
           end: { line: 1, column: 15, offset: 14 },
@@ -200,7 +200,7 @@ describe('OptimizedMeshGeneratorService', () => {
       const astNode: ASTNode = {
         type: 'sphere',
         radius: 1,
-        fn: 8, // Low complexity
+        $fn: 8, // Low complexity
         location: {
           start: { line: 1, column: 1, offset: 0 },
           end: { line: 1, column: 15, offset: 14 },

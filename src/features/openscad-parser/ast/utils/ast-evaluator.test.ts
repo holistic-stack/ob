@@ -230,7 +230,7 @@ describe('AST Evaluator Handlers', () => {
         location: createLocation(),
       };
 
-      const result = tryEvaluateExpression(specialVar);
+      const result = tryEvaluateExpression(specialVar as unknown as ExpressionNode);
 
       expect(result.success).toBe(true);
       expect(result.value).toBe(0);

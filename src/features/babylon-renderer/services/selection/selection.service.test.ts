@@ -352,7 +352,7 @@ describe('SelectionService', () => {
       // The disposed service should not call listeners anymore
       // (Note: we can't test this directly since the service is disposed)
       // Instead, we verify that the listener set is cleared
-      expect(selectionService.listeners.size).toBe(0);
+      expect((selectionService as unknown as { listeners: Set<unknown> }).listeners.size).toBe(0);
     });
   });
 

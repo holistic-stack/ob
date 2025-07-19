@@ -165,8 +165,7 @@ export class IfElseVisitor extends BaseASTVisitor {
     return {
       type: 'if',
       condition,
-      thenBranch,
-      ...(elseBranch && { elseBranch }),
+      children: thenBranch,
       location: getLocation(node),
     };
   }
@@ -256,7 +255,7 @@ export class IfElseVisitor extends BaseASTVisitor {
     return {
       type: 'if',
       condition,
-      thenBranch: [],
+      children: [],
       location: getLocation(node),
     };
   }
