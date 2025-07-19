@@ -574,19 +574,31 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
     // Skip if no AST
     if (!ast || ast.length === 0) {
-      // Always clear scene when AST is empty to ensure clean state
-      safeClearScene();
+      // Clear scene if we previously had content OR if this is the first render with empty AST
+      if ((lastASTRef.current && lastASTRef.current.length > 0) || lastASTRef.current === null) {
+        safeClearScene();
+      }
       lastASTRef.current = ast;
       return;
     }
 
-    // Debounce rendering
+    // Debounce rendering with smart clearing to prevent flickering
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
     }
 
     renderTimeoutRef.current = setTimeout(async () => {
       const startTime = performance.now();
+
+      // Only clear scene if we have existing content and the new AST is significantly different
+      const shouldClearScene = lastASTRef.current &&
+        lastASTRef.current.length > 0 &&
+        (ast.length === 0 || astContentChanged);
+
+      if (shouldClearScene) {
+        safeClearScene();
+      }
+
       const result = await safeRenderAST([...ast]);
       const renderTime = performance.now() - startTime;
 

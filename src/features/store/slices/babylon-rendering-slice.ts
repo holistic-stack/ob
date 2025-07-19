@@ -1553,16 +1553,21 @@ export const createBabylonRenderingSlice = (
     },
 
     clearScene: () => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene...');
+      logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene (optimized for no flickering)...');
 
       set((state: WritableDraft<AppStore>) => {
         let clearedCount = 0;
 
-        // Dispose of existing meshes if they exist
+        // Dispose of existing meshes if they exist (optimized to prevent flickering)
         if (state.babylonRendering?.meshes && Array.isArray(state.babylonRendering.meshes)) {
           (state.babylonRendering.meshes as AbstractMesh[]).forEach((mesh: AbstractMesh) => {
             if (mesh && typeof mesh.dispose === 'function') {
               try {
+                // Hide mesh first to prevent flickering
+                mesh.setEnabled(false);
+                mesh.isVisible = false;
+
+                // Dispose immediately but after hiding
                 mesh.dispose();
                 clearedCount++;
                 logger.debug(
@@ -1578,7 +1583,7 @@ export const createBabylonRenderingSlice = (
           });
         }
 
-        // Also clear meshes from the actual BabylonJS scene if available
+        // Also clear meshes from the actual BabylonJS scene if available (optimized)
         if (state.babylonRendering?.scene) {
           const scene = state.babylonRendering.scene;
           const existingMeshes = [...(scene.meshes as unknown as AbstractMesh[])];
@@ -1591,6 +1596,11 @@ export const createBabylonRenderingSlice = (
               typeof mesh.dispose === 'function'
             ) {
               try {
+                // Hide mesh first to prevent flickering
+                mesh.setEnabled(false);
+                mesh.isVisible = false;
+
+                // Dispose immediately but after hiding
                 mesh.dispose();
                 clearedCount++;
                 logger.debug(
