@@ -380,6 +380,11 @@ export const createEditorSlice = (
   return {
     updateCode: (code: string) => {
       set((state) => {
+        // Performance optimization: skip update if code hasn't changed
+        if (state.editor.code === code) {
+          return;
+        }
+
         state.editor.code = code;
         state.editor.isDirty = true;
 

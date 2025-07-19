@@ -161,13 +161,13 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const engineRef = useRef<BabylonEngineType | null>(null);
 
-  // Merge configurations with defaults
+  // Merge configurations with defaults - use deep comparison to prevent unnecessary re-initialization
   const config = useMemo(
     () => ({
       ...DEFAULT_SCENE_CONFIG,
       ...userConfig,
     }),
-    [userConfig]
+    [JSON.stringify(userConfig)] // Deep comparison to prevent engine recreation
   );
 
   const camera = useMemo(
@@ -175,7 +175,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       ...DEFAULT_CAMERA_CONFIG,
       ...userCamera,
     }),
-    [userCamera]
+    [JSON.stringify(userCamera)] // Deep comparison to prevent engine recreation
   );
 
   const lighting = useMemo(
@@ -184,19 +184,20 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       directional: { ...DEFAULT_LIGHTING_CONFIG.directional, ...userLighting?.directional },
       environment: { ...DEFAULT_LIGHTING_CONFIG.environment, ...userLighting?.environment },
     }),
-    [userLighting]
+    [JSON.stringify(userLighting)] // Deep comparison to prevent engine recreation
   );
 
   // Initialize BabylonJS services
   const { inspectorService, hideInspector } = useBabylonInspector();
 
   /**
-   * Initialize BabylonJS engine and scene using Scene Management Service
+   * Initialize BabylonJS engine ONCE - separate from scene configuration
+   * This prevents engine recreation on every prop change (React 19 best practice)
    */
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    logger.init('[INIT][BabylonScene] Initializing BabylonJS engine and scene');
+    logger.init('[INIT][BabylonScene] Initializing BabylonJS engine (one-time initialization)');
 
     // Create engine
     const engine = new Engine(
@@ -313,16 +314,39 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
       logger.end('[END][BabylonScene] Cleanup complete');
     };
-  }, [
-    config,
-    camera,
-    lighting,
-    onEngineReady,
-    onSceneReady,
-    onRenderLoop,
-    inspectorService,
-    hideInspector,
-  ]);
+  }, []); // CRITICAL: Empty dependency array prevents engine recreation on every prop change
+
+  /**
+   * Handle configuration updates without recreating the engine
+   * This allows dynamic scene updates while maintaining performance (React 19 best practice)
+   */
+  useEffect(() => {
+    if (!sceneRef.current || !engineRef.current) return;
+
+    logger.debug('[UPDATE][BabylonScene] Updating scene configuration dynamically');
+
+    // Update scene configuration without recreation
+    const scene = sceneRef.current;
+
+    // Update background color if changed
+    if (config.backgroundColor) {
+      scene.clearColor = config.backgroundColor.toColor4(1.0); // Convert Color3 to Color4
+    }
+
+    // Update environment intensity if changed
+    if (typeof config.environmentIntensity === 'number') {
+      scene.environmentIntensity = config.environmentIntensity;
+    }
+
+    // Update image processing if changed
+    if (typeof config.imageProcessingEnabled === 'boolean') {
+      scene.imageProcessingConfiguration.isEnabled = config.imageProcessingEnabled;
+    }
+
+    // Note: Camera and lighting updates would require more complex logic
+    // For now, we prioritize preventing engine recreation over dynamic updates
+
+  }, [config, camera, lighting]); // Only update configuration, don't recreate engine
 
   /**
    * Render the canvas element

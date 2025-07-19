@@ -86,7 +86,7 @@ export const OPTIMIZED_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze
  * Additional typing-specific debouncing for Monaco Editor components.
  * This replaces the hardcoded 300ms debouncing in Monaco Editor.
  */
-export const TYPING_DEBOUNCE_MS = 150 as const;
+export const TYPING_DEBOUNCE_MS = 500 as const;
 
 /**
  * Legacy debouncing configuration for backward compatibility.

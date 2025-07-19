@@ -305,7 +305,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
   // Debug initial AST value on mount only (performance optimized)
   useEffect(() => {
-    logger.debug('[INFO][StoreConnectedRenderer] Component mounted');
+    logger.info('[INFO][StoreConnectedRenderer] Component mounted');
   }, []); // Empty dependency array - runs only on mount
 
   // Store actions - use individual selectors to avoid infinite loops
@@ -319,7 +319,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   // Create stable fallback functions to prevent infinite loops
   const safeRenderAST = useCallback(
     async (astNodes: ASTNode[]) => {
-      logger.debug(
+      logger.info(
         `[DEBUG][StoreConnectedRenderer] safeRenderAST called with ${astNodes.length} nodes`
       );
 
@@ -343,7 +343,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
           };
         }
 
-        logger.debug(
+        logger.info(
           `[DEBUG][StoreConnectedRenderer] renderAST completed with success: ${result.success}`
         );
         return result;

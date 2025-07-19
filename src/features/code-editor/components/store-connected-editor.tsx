@@ -195,7 +195,7 @@
 
 import debounce from 'lodash.debounce';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { TYPING_DEBOUNCE_MS } from '../../../shared/config/debounce-config.js';
 import { createLogger } from '../../../shared/services/logger.service.js';
@@ -296,17 +296,16 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   }, [code]);
 
   // Simple debounced store update using lodash.debounce
-  const debouncedUpdateCode = useCallback(
-    debounce((newCode: string) => {
+  // CRITICAL: Stable function that doesn't depend on 'code' to prevent recreation
+  const debouncedUpdateCode = useMemo(
+    () => debounce((newCode: string) => {
       logger.debug(`[DEBOUNCED] Store update: ${newCode.length} characters`);
 
-      // Only update store if code actually changed
-      if (newCode !== code) {
-        updateCode(newCode);
-        markDirty();
-      }
+      // Always update - let the store handle duplicate detection
+      updateCode(newCode);
+      markDirty();
     }, TYPING_DEBOUNCE_MS),
-    [updateCode, markDirty, code]
+    [updateCode, markDirty] // Stable dependencies only
   );
 
   // Cleanup debounced function on unmount
@@ -325,7 +324,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    */
   const handleCodeChange = useCallback(
     (event: EditorChangeEvent) => {
-      logger.debug(`[IMMEDIATE] Code changed: ${event.value.length} characters`);
+      logger.info(`[IMMEDIATE] Code changed: ${event.value.length} characters`);
 
       // Update local state immediately for responsive UI
       setLocalCode(event.value);
