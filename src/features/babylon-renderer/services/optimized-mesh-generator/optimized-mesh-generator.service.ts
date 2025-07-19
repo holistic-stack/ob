@@ -353,8 +353,8 @@ export class OptimizedMeshGeneratorService {
     const vertexData = new VertexData();
     vertexData.positions = genericMesh.geometry.positions;
     vertexData.indices = genericMesh.geometry.indices;
-    vertexData.normals = genericMesh.geometry.normals;
-    vertexData.uvs = genericMesh.geometry.uvs;
+    vertexData.normals = genericMesh.geometry.normals || null;
+    vertexData.uvs = genericMesh.geometry.uvs || null;
 
     vertexData.applyToMesh(mesh);
 
