@@ -161,8 +161,8 @@ import {
 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
 import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../../../shared/config/debounce-config.js';
+import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
 import { useAppStore } from '../../../store/app-store';
 import {
@@ -289,7 +289,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   onRenderError,
 }) => {
   // Debug component mounting
-  logger.debug('[DEBUG][StoreConnectedRenderer] Component is mounting/rendering');
+  logger.info('[INFO][StoreConnectedRenderer] Component is mounting/rendering');
 
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const [isSceneReady, setIsSceneReady] = useState(false);
@@ -303,25 +303,10 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const renderErrors = useAppStore(selectRenderingErrors);
   const meshes = useAppStore(selectRenderingMeshes);
 
-  // Debug initial AST value on mount
+  // Debug initial AST value on mount only (performance optimized)
   useEffect(() => {
-    logger.debug(`[DEBUG][StoreConnectedRenderer] Component mounted with AST: ${ast.length} nodes`);
-    logger.debug(`[DEBUG][StoreConnectedRenderer] Initial AST reference: ${ast}`);
-    logger.debug(`[DEBUG][StoreConnectedRenderer] Initial AST content: ${JSON.stringify(ast)}`);
-  }, [ast]); // Empty dependency array - runs only on mount
-
-  // Debug AST changes
-  console.log(
-    `[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}, AST reference:`,
-    ast
-  );
-  logger.debug(`[DEBUG][StoreConnectedRenderer] Component rendering - AST length: ${ast.length}`);
-
-  // Debug AST changes - use length and JSON to force dependency detection
-  useEffect(() => {
-    console.log(`[DEBUG][StoreConnectedRenderer] AST useEffect triggered - length: ${ast.length}`);
-    logger.debug(`[DEBUG][StoreConnectedRenderer] AST changed: ${ast.length} nodes`);
-  }, [ast.length]);
+    logger.debug('[INFO][StoreConnectedRenderer] Component mounted');
+  }, []); // Empty dependency array - runs only on mount
 
   // Store actions - use individual selectors to avoid infinite loops
   const renderAST = useAppStore((state) => state.renderAST);
@@ -547,54 +532,49 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   }, [updatePerformanceMetrics]);
 
   /**
-   * Render AST when it changes
+   * Render AST when it changes (performance optimized)
    */
   useEffect(() => {
-    console.log(
-      `[DEBUG][StoreConnectedRenderer] MAIN useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current?.length ?? 'null'}`
-    );
-    console.log(
-      `[DEBUG][StoreConnectedRenderer] Current AST:`,
-      JSON.stringify(ast).substring(0, 100)
-    );
-    console.log(
-      `[DEBUG][StoreConnectedRenderer] Last AST:`,
-      JSON.stringify(lastASTRef.current ?? []).substring(0, 100)
-    );
-    logger.debug(
-      `[DEBUG][StoreConnectedRenderer] useEffect triggered - AST length: ${ast.length}, lastAST length: ${lastASTRef.current?.length ?? 'null'}`
-    );
-
-    // OPTIMIZED: Smart change detection with performance improvements
-    // Only skip if we've already processed this exact AST (not just empty arrays)
-    const lastASTString = JSON.stringify(lastASTRef.current);
-    const currentASTString = JSON.stringify(ast);
+    // PERFORMANCE CRITICAL: Fast change detection without expensive JSON.stringify
+    // Use reference equality and length comparison for initial filtering
     const isLastASTNull = lastASTRef.current === null;
-    const astContentChanged = lastASTString !== currentASTString;
+    const lengthChanged = ast.length !== (lastASTRef.current?.length ?? -1);
+    const referenceChanged = ast !== lastASTRef.current;
 
-    logger.debug(
-      `[DEBUG][StoreConnectedRenderer] Smart change detection - AST changed: ${astContentChanged}, isLastNull: ${isLastASTNull}`
-    );
-
-    if (!astContentChanged && !isLastASTNull) {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST content unchanged (optimized detection)');
+    // Quick exit for obvious non-changes
+    if (!isLastASTNull && !lengthChanged && !referenceChanged) {
       return;
     }
 
-    logger.debug('[DEBUG][StoreConnectedRenderer] AST content changed - proceeding with optimized render pipeline...');
+    // Only log when actually processing (reduces console overhead)
+    logger.debug(
+      `[RENDER] AST change detected: length=${ast.length}, lastLength=${lastASTRef.current?.length ?? 'null'}`
+    );
 
-    logger.debug(`[DEBUG][StoreConnectedRenderer] AST change detected - proceeding with render`);
+    // Fast shallow comparison for arrays of same length
+    let astContentChanged = referenceChanged;
+    if (!astContentChanged && ast.length === lastASTRef.current?.length) {
+      // Only do expensive comparison if lengths match but references differ
+      for (let i = 0; i < ast.length; i++) {
+        if (ast[i] !== lastASTRef.current[i]) {
+          astContentChanged = true;
+          break;
+        }
+      }
+    }
+
+    if (!astContentChanged && !isLastASTNull) {
+      return;
+    }
 
     // Skip if already rendering
     if (isRendering) {
-      logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - already rendering');
       return;
     }
 
     // Skip if no AST
     if (!ast || ast.length === 0) {
       // Always clear scene when AST is empty to ensure clean state
-      logger.debug('[DEBUG][StoreConnectedRenderer] Clearing scene - no AST');
       safeClearScene();
       lastASTRef.current = ast;
       return;
@@ -606,26 +586,20 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     }
 
     renderTimeoutRef.current = setTimeout(async () => {
-      logger.debug(`[DEBUG][StoreConnectedRenderer] Rendering AST with ${ast.length} nodes...`);
-
       const startTime = performance.now();
       const result = await safeRenderAST([...ast]);
       const renderTime = performance.now() - startTime;
 
       if (result.success) {
-        logger.debug(
-          `[DEBUG][StoreConnectedRenderer] AST rendered successfully in ${renderTime.toFixed(2)}ms`
-        );
+        logger.debug(`[RENDER] Success: ${ast.length} nodes in ${renderTime.toFixed(2)}ms`);
         onRenderComplete?.(meshes.length);
       } else {
-        logger.error(
-          `[ERROR][StoreConnectedRenderer] AST rendering failed: ${result.error.message}`
-        );
+        logger.error(`[RENDER] Failed: ${result.error.message}`);
         onRenderError?.(new Error(result.error.message));
       }
 
       lastASTRef.current = ast;
-    }, OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs); // Optimized 100ms debounce (67% faster)
+    }, OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs); // Optimized 100ms debounce
 
     return () => {
       if (renderTimeoutRef.current) {

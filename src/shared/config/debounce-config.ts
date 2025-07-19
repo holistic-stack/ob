@@ -77,9 +77,9 @@ import type { DebounceConfig } from '../types/common.types.js';
  * - **Auto-save Balance**: 1000ms prevents interruption while ensuring data safety
  */
 export const OPTIMIZED_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze({
-  parseDelayMs: 200,    // Reduced from 300ms (33% improvement)
-  renderDelayMs: 100,   // Reduced from 300ms (67% improvement)
-  saveDelayMs: 1000,    // Keep current (optimal for user experience)
+  parseDelayMs: 200, // Reduced from 300ms (33% improvement)
+  renderDelayMs: 100, // Reduced from 300ms (67% improvement)
+  saveDelayMs: 1000, // Keep current (optimal for user experience)
 } as const);
 
 /**
@@ -103,9 +103,9 @@ export const LEGACY_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze({
  * Provides faster feedback for development workflows.
  */
 export const DEVELOPMENT_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze({
-  parseDelayMs: 150,    // Faster parsing for development
-  renderDelayMs: 50,    // Immediate rendering feedback
-  saveDelayMs: 500,     // More frequent auto-save
+  parseDelayMs: 150, // Faster parsing for development
+  renderDelayMs: 50, // Immediate rendering feedback
+  saveDelayMs: 500, // More frequent auto-save
 } as const);
 
 /**
@@ -113,9 +113,9 @@ export const DEVELOPMENT_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.free
  * Minimal delays for accurate performance measurements.
  */
 export const TESTING_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze({
-  parseDelayMs: 0,      // No debouncing for tests
-  renderDelayMs: 0,     // Immediate rendering for tests
-  saveDelayMs: 0,       // No save delays for tests
+  parseDelayMs: 0, // No debouncing for tests
+  renderDelayMs: 0, // Immediate rendering for tests
+  saveDelayMs: 0, // No save delays for tests
 } as const);
 
 /**
@@ -190,11 +190,11 @@ export const getEnvironmentDebounceConfig = (): Readonly<DebounceConfig> => {
  * Used to ensure optimizations meet performance targets.
  */
 export const DEBOUNCE_PERFORMANCE_TARGETS = Object.freeze({
-  maxTotalDelay: 500,           // Maximum acceptable total delay (ms)
-  maxTypingDelay: 200,          // Maximum typing response delay (ms)
-  maxParsingDelay: 300,         // Maximum parsing delay (ms)
-  maxRenderingDelay: 150,       // Maximum rendering delay (ms)
-  targetResponsiveness: 450,    // Target total responsiveness (ms) - matches optimized config
+  maxTotalDelay: 500, // Maximum acceptable total delay (ms)
+  maxTypingDelay: 200, // Maximum typing response delay (ms)
+  maxParsingDelay: 300, // Maximum parsing delay (ms)
+  maxRenderingDelay: 150, // Maximum rendering delay (ms)
+  targetResponsiveness: 450, // Target total responsiveness (ms) - matches optimized config
 } as const);
 
 /**
@@ -219,22 +219,36 @@ export const validateDebounceConfig = (
 
   // Check against performance targets
   if (totalDelay > DEBOUNCE_PERFORMANCE_TARGETS.maxTotalDelay) {
-    warnings.push(`Total delay ${totalDelay}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxTotalDelay}ms`);
+    warnings.push(
+      `Total delay ${totalDelay}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxTotalDelay}ms`
+    );
   }
 
   if (typing > DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay) {
-    warnings.push(`Typing delay ${typing}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay}ms`);
-    recommendations.push(`Consider reducing typing delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay}ms or less`);
+    warnings.push(
+      `Typing delay ${typing}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay}ms`
+    );
+    recommendations.push(
+      `Consider reducing typing delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay}ms or less`
+    );
   }
 
   if (config.parseDelayMs > DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay) {
-    warnings.push(`Parsing delay ${config.parseDelayMs}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay}ms`);
-    recommendations.push(`Consider reducing parsing delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay}ms or less`);
+    warnings.push(
+      `Parsing delay ${config.parseDelayMs}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay}ms`
+    );
+    recommendations.push(
+      `Consider reducing parsing delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay}ms or less`
+    );
   }
 
   if (config.renderDelayMs > DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay) {
-    warnings.push(`Rendering delay ${config.renderDelayMs}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay}ms`);
-    recommendations.push(`Consider reducing rendering delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay}ms or less`);
+    warnings.push(
+      `Rendering delay ${config.renderDelayMs}ms exceeds target ${DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay}ms`
+    );
+    recommendations.push(
+      `Consider reducing rendering delay to ${DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay}ms or less`
+    );
   }
 
   return {

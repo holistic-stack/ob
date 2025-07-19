@@ -29,9 +29,7 @@ import { StoreConnectedEditor } from './features/code-editor/components/store-co
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { useAppStore } from './features/store/app-store';
 import {
-  selectEditorCode,
   selectParsingAST,
-  selectParsingLastParsed, // Import the new selector
   selectRenderingErrors,
   selectRenderingIsRendering,
   selectRenderingMeshes,
@@ -60,26 +58,12 @@ export function App(): React.JSX.Element {
 
   // Store selectors for application state
   /**
-   * @property {string} editorCode
-   * @description The current OpenSCAD code from the editor, managed by the Zustand store.
-   * This state is reactive and updates whenever the user types in the editor.
-   */
-  const editorCode: string = useAppStore(selectEditorCode);
-
-  /**
    * @property {ReadonlyArray<ASTNode>} ast
    * @description The Abstract Syntax Tree (AST) generated from the OpenSCAD code.
    * This is a read-only array of AST nodes, representing the parsed structure of the code.
    * It's used by the 3D renderer to construct the visual scene.
    */
   const ast: ReadonlyArray<ASTNode> = useAppStore(selectParsingAST);
-
-  /**
-   * @property {Date | null} _lastParsed
-   * @description The timestamp of the last successful parsing operation.
-   * This can be used for debugging or to display parsing status to the user.
-   */
-  const _lastParsed: Date | null = useAppStore(selectParsingLastParsed); // Get the last parsed date
 
   /**
    * @property {boolean} applicationStatus
@@ -132,40 +116,14 @@ export function App(): React.JSX.Element {
 
   /**
    * @effect
-   * @description Logs a debug message when the App component is mounted and about to render the `StoreConnectedRenderer`.
-   * This helps in tracing the component lifecycle and understanding the initial rendering flow.
-   *
-   * @example
-   * ```typescript
-   * // On component mount, the logger will output:
-   * // [DEBUG][App] App component mounted and about to render StoreConnectedRenderer
-   * // [DEBUG][App] AST length: 10, Meshes: 5 (example values)
-   * ```
+   * @description Logs a debug message when the App component is mounted (performance optimized).
+   * Removed AST and mesh dependencies to prevent expensive logging on every change.
    */
   useEffect(() => {
-    logger.debug('[DEBUG][App] App component mounted and about to render StoreConnectedRenderer');
-    logger.debug(`[DEBUG][App] AST length: ${ast.length}, Meshes: ${renderingStateMeshes.length}`);
-  }, [ast.length, renderingStateMeshes.length]);
+    logger.debug('[DEBUG][App] App component mounted and ready');
+  }, []); // Empty dependency array - runs only on mount
 
-  /**
-   * @effect
-   * @description Logs changes in the AST (Abstract Syntax Tree) within the App component.
-   * This effect is crucial for debugging the parsing pipeline and ensuring that the AST
-   * is correctly updated and propagated to the rendering components.
-   *
-   * @example
-   * ```typescript
-   * // If the AST changes from 5 nodes to 10 nodes, the logger will output:
-   * // [DEBUG][App] AST changed in App component: 10 nodes
-   * ```
-   *
-   * @edge_cases
-   * - **Empty AST**: If the OpenSCAD code is empty or invalid, the AST might be empty (`ast.length` will be 0).
-   * - **Large AST**: For very complex OpenSCAD code, the AST can become very large, potentially impacting performance.
-   */
-  useEffect(() => {
-    logger.debug(`[DEBUG][App] AST changed in App component: ${ast.length} nodes`);
-  }, [ast]);
+  // Removed expensive AST change logging to prevent performance issues during typing
 
   /**
    * @property {number} editorWidth
@@ -212,32 +170,8 @@ export function App(): React.JSX.Element {
     logger.init('Application mounted and ready');
   }, []);
 
-  /**
-   * @effect
-   * @description Logs changes in the application state, providing a snapshot of key metrics for debugging.
-   * This helps in understanding how the state evolves as the user interacts with the application,
-   * including editor code length, AST node count, and mesh count.
-   *
-   * @example
-   * ```typescript
-   * // When the application state updates (e.g., code changes, rendering completes):
-   * // [DEBUG][App] Application state updated: { status: false, codeLength: 120, astNodeCount: 15, isRendering: false, meshCount: 3 }
-   * ```
-   *
-   * @limitations
-   * The `applicationStatus` is derived from `selectRenderingIsRendering`, which might not cover all
-   * possible "application states" (e.g., parsing in progress). For a more granular status,
-   * additional state variables would be needed.
-   */
-  useEffect(() => {
-    logger.debug('Application state updated:', {
-      status: applicationStatus,
-      codeLength: editorCode.length,
-      astNodeCount: ast?.length ?? 0,
-      isRendering: applicationStatus,
-      meshCount: renderingStateMeshes.length,
-    });
-  }, [applicationStatus, editorCode, ast, renderingStateMeshes]);
+  // Removed expensive application state logging to prevent performance issues during typing
+  // State changes are logged by individual components when necessary
 
   /**
    * @function handleMouseDown

@@ -6,15 +6,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  OPTIMIZED_DEBOUNCE_CONFIG,
-  TYPING_DEBOUNCE_MS,
-  LEGACY_DEBOUNCE_CONFIG,
-  DEVELOPMENT_DEBOUNCE_CONFIG,
-  TESTING_DEBOUNCE_CONFIG,
   createDebounceConfig,
-  getEnvironmentDebounceConfig,
-  validateDebounceConfig,
   DEBOUNCE_PERFORMANCE_TARGETS,
+  DEVELOPMENT_DEBOUNCE_CONFIG,
+  getEnvironmentDebounceConfig,
+  LEGACY_DEBOUNCE_CONFIG,
+  OPTIMIZED_DEBOUNCE_CONFIG,
+  TESTING_DEBOUNCE_CONFIG,
+  TYPING_DEBOUNCE_MS,
+  validateDebounceConfig,
 } from './debounce-config.js';
 
 describe('Debounce Configuration', () => {
@@ -33,17 +33,19 @@ describe('Debounce Configuration', () => {
     });
 
     it('should improve performance over legacy config', () => {
-      const optimizedTotal = TYPING_DEBOUNCE_MS + 
-        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs + 
+      const optimizedTotal =
+        TYPING_DEBOUNCE_MS +
+        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs +
         OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs;
-      
-      const legacyTotal = 300 + // Monaco Editor legacy debouncing
-        LEGACY_DEBOUNCE_CONFIG.parseDelayMs + 
+
+      const legacyTotal =
+        300 + // Monaco Editor legacy debouncing
+        LEGACY_DEBOUNCE_CONFIG.parseDelayMs +
         LEGACY_DEBOUNCE_CONFIG.renderDelayMs;
 
       expect(optimizedTotal).toBeLessThan(legacyTotal);
       expect(optimizedTotal).toBe(450); // 150 + 200 + 100
-      expect(legacyTotal).toBe(900);    // 300 + 300 + 300
+      expect(legacyTotal).toBe(900); // 300 + 300 + 300
     });
   });
 
@@ -56,9 +58,15 @@ describe('Debounce Configuration', () => {
 
   describe('Environment-specific configurations', () => {
     it('should provide development configuration with faster feedback', () => {
-      expect(DEVELOPMENT_DEBOUNCE_CONFIG.parseDelayMs).toBeLessThan(OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs);
-      expect(DEVELOPMENT_DEBOUNCE_CONFIG.renderDelayMs).toBeLessThan(OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs);
-      expect(DEVELOPMENT_DEBOUNCE_CONFIG.saveDelayMs).toBeLessThan(OPTIMIZED_DEBOUNCE_CONFIG.saveDelayMs);
+      expect(DEVELOPMENT_DEBOUNCE_CONFIG.parseDelayMs).toBeLessThan(
+        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs
+      );
+      expect(DEVELOPMENT_DEBOUNCE_CONFIG.renderDelayMs).toBeLessThan(
+        OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs
+      );
+      expect(DEVELOPMENT_DEBOUNCE_CONFIG.saveDelayMs).toBeLessThan(
+        OPTIMIZED_DEBOUNCE_CONFIG.saveDelayMs
+      );
     });
 
     it('should provide testing configuration with no delays', () => {
@@ -77,7 +85,7 @@ describe('Debounce Configuration', () => {
   describe('createDebounceConfig', () => {
     it('should create configuration with defaults', () => {
       const config = createDebounceConfig();
-      
+
       expect(config.parseDelayMs).toBe(OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs);
       expect(config.renderDelayMs).toBe(OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs);
       expect(config.saveDelayMs).toBe(OPTIMIZED_DEBOUNCE_CONFIG.saveDelayMs);
@@ -89,7 +97,7 @@ describe('Debounce Configuration', () => {
         parseDelayMs: 250,
         typing: 100,
       });
-      
+
       expect(config.parseDelayMs).toBe(250);
       expect(config.typing).toBe(100);
       expect(config.renderDelayMs).toBe(OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs); // Default
@@ -109,7 +117,7 @@ describe('Debounce Configuration', () => {
 
     it('should return immutable configuration', () => {
       const config = createDebounceConfig();
-      
+
       expect(() => {
         // @ts-expect-error - Testing immutability
         config.parseDelayMs = 500;
@@ -131,7 +139,7 @@ describe('Debounce Configuration', () => {
         ...OPTIMIZED_DEBOUNCE_CONFIG,
         typing: TYPING_DEBOUNCE_MS,
       });
-      
+
       expect(result.isValid).toBe(true);
       expect(result.warnings).toHaveLength(0);
       expect(result.totalDelay).toBe(450); // 150 + 200 + 100
@@ -142,7 +150,7 @@ describe('Debounce Configuration', () => {
         ...LEGACY_DEBOUNCE_CONFIG,
         typing: 300, // Legacy Monaco Editor debouncing
       });
-      
+
       expect(result.isValid).toBe(false);
       expect(result.warnings.length).toBeGreaterThan(0);
       expect(result.totalDelay).toBe(900); // 300 + 300 + 300
@@ -155,9 +163,9 @@ describe('Debounce Configuration', () => {
         saveDelayMs: 1000,
         typing: 250,
       });
-      
+
       expect(result.recommendations.length).toBeGreaterThan(0);
-      expect(result.recommendations.some(r => r.includes('typing delay'))).toBe(true);
+      expect(result.recommendations.some((r) => r.includes('typing delay'))).toBe(true);
     });
 
     it('should calculate total delay correctly', () => {
@@ -167,7 +175,7 @@ describe('Debounce Configuration', () => {
         saveDelayMs: 500,
         typing: 75,
       };
-      
+
       const result = validateDebounceConfig(config);
       expect(result.totalDelay).toBe(225); // 75 + 100 + 50
     });
@@ -183,14 +191,19 @@ describe('Debounce Configuration', () => {
     });
 
     it('should ensure optimized config meets performance targets', () => {
-      const totalDelay = TYPING_DEBOUNCE_MS + 
-        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs + 
+      const totalDelay =
+        TYPING_DEBOUNCE_MS +
+        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs +
         OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs;
-      
+
       expect(totalDelay).toBeLessThanOrEqual(DEBOUNCE_PERFORMANCE_TARGETS.maxTotalDelay);
       expect(TYPING_DEBOUNCE_MS).toBeLessThanOrEqual(DEBOUNCE_PERFORMANCE_TARGETS.maxTypingDelay);
-      expect(OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs).toBeLessThanOrEqual(DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay);
-      expect(OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs).toBeLessThanOrEqual(DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay);
+      expect(OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs).toBeLessThanOrEqual(
+        DEBOUNCE_PERFORMANCE_TARGETS.maxParsingDelay
+      );
+      expect(OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs).toBeLessThanOrEqual(
+        DEBOUNCE_PERFORMANCE_TARGETS.maxRenderingDelay
+      );
     });
   });
 
@@ -199,15 +212,16 @@ describe('Debounce Configuration', () => {
       const legacyTotal = 300 + 300 + 300; // 900ms total
       const optimizedTotal = 150 + 200 + 100; // 450ms total
       const improvement = (legacyTotal - optimizedTotal) / legacyTotal;
-      
+
       expect(improvement).toBeCloseTo(0.5, 1); // 50% improvement (even better than target 42%)
     });
 
     it('should meet target responsiveness', () => {
-      const optimizedTotal = TYPING_DEBOUNCE_MS + 
-        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs + 
+      const optimizedTotal =
+        TYPING_DEBOUNCE_MS +
+        OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs +
         OPTIMIZED_DEBOUNCE_CONFIG.renderDelayMs;
-      
+
       expect(optimizedTotal).toBeLessThanOrEqual(DEBOUNCE_PERFORMANCE_TARGETS.targetResponsiveness);
     });
   });

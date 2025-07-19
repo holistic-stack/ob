@@ -345,9 +345,7 @@ export class OptimizedMeshGeneratorService {
   /**
    * Convert GenericMeshData to BabylonJS mesh
    */
-  private async convertGenericMeshToBabylon(
-    genericMesh: GenericMeshData,
-  ): Promise<AbstractMesh> {
+  private async convertGenericMeshToBabylon(genericMesh: GenericMeshData): Promise<AbstractMesh> {
     const mesh = new Mesh(genericMesh.metadata.name, this.scene);
 
     const vertexData = new VertexData();

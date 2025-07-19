@@ -26,7 +26,7 @@
  * - **Initialization Time**: <200ms for complete Monaco setup with OpenSCAD language
  * - **Keystroke Latency**: <50ms response time for immediate visual feedback
  * - **Memory Footprint**: ~12MB baseline + 500KB per 1000 lines of code
- * - **Debounced Updates**: 150ms optimized for responsive real-time editing (50% faster than legacy)
+ * - **Immediate Updates**: No debouncing at editor level (handled by parent components for optimal performance)
  * - **Virtual Scrolling**: Handles files up to 100,000 lines with constant performance
  *
  * **Real-time Features**:
@@ -252,8 +252,6 @@ import MonacoEditor from '@monaco-editor/react';
 import type * as monaco from 'monaco-editor';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../shared/services/logger.service.js';
-import { TYPING_DEBOUNCE_MS } from '../../../shared/config/debounce-config.js';
-import { debounce } from '../../../shared/utils/functional/pipe.js';
 import { tryCatch } from '../../../shared/utils/functional/result.js';
 import type {
   EditorChangeEvent,
@@ -362,7 +360,7 @@ const DEFAULT_CONFIG: MonacoEditorConfig = {
  * - **Callback Stability**: useCallback hooks for consistent event handler references
  *
  * **Performance Optimizations**:
- * - **Debounced Events**: 150ms optimized debouncing for onChange events (centralized configuration)
+ * - **Direct Events**: Immediate onChange events (debouncing handled by parent components)
  * - **Memoized Configuration**: React.useMemo for configuration objects to prevent prop drilling
  * - **Selective Re-rendering**: Careful dependency management to minimize unnecessary renders
  * - **Lazy Loading**: Monaco Editor loaded on-demand with fallback error handling
@@ -482,12 +480,12 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
     [config]
   );
 
-  // Debounced change handler for performance - using centralized configuration
-  const debouncedOnChange = useCallback(
-    debounce((event: EditorChangeEvent) => {
+  // Direct change handler - debouncing is now handled at component level
+  const handleChange = useCallback(
+    (event: EditorChangeEvent) => {
       onChange?.(event);
-    }, TYPING_DEBOUNCE_MS),
-    []
+    },
+    [onChange]
   );
 
   /**
@@ -535,7 +533,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
                   changes: e.changes,
                   versionId: e.versionId,
                 };
-                debouncedOnChange(changeEvent);
+                handleChange(changeEvent);
               }
             })
           );
@@ -624,7 +622,7 @@ export const MonacoEditorComponent: React.FC<MonacoEditorProps> = ({
       theme,
       editorConfig,
       readOnly,
-      debouncedOnChange,
+      handleChange,
       onCursorPositionChange,
       onSelectionChange,
       onFocus,

@@ -193,9 +193,11 @@
  * accessible code editing with comprehensive state management.
  */
 
+import debounce from 'lodash.debounce';
 import type React from 'react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { TYPING_DEBOUNCE_MS } from '../../../shared/config/debounce-config.js';
 import { createLogger } from '../../../shared/services/logger.service.js';
 import type { AppStore } from '../../store/app-store.js';
 import { useAppStore } from '../../store/app-store.js';
@@ -242,8 +244,6 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   height = '100%',
   width = '100%',
 }) => {
-  logger.init('Initializing store-connected Monaco Editor');
-
   // Convert numeric values to CSS pixel values
   const heightStyle = typeof height === 'number' ? `${height}px` : height;
   const widthStyle = typeof width === 'number' ? `${width}px` : width;
@@ -282,32 +282,58 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     parseAST: _parseAST,
   } = storeActions;
 
+  // Local state for immediate UI updates
+  const [localCode, setLocalCode] = useState(code);
+
+  // Initialize component only once to prevent repeated [INIT] logs on every keystroke
+  useEffect(() => {
+    logger.init('[INIT][StoreConnectedEditor] Initializing store-connected Monaco Editor');
+  }, []); // Empty dependency array ensures this runs only once
+
+  // Sync local state with store when store changes externally
+  useEffect(() => {
+    setLocalCode(code);
+  }, [code]);
+
+  // Simple debounced store update using lodash.debounce
+  const debouncedUpdateCode = useCallback(
+    debounce((newCode: string) => {
+      logger.debug(`[DEBOUNCED] Store update: ${newCode.length} characters`);
+
+      // Only update store if code actually changed
+      if (newCode !== code) {
+        updateCode(newCode);
+        markDirty();
+      }
+    }, TYPING_DEBOUNCE_MS),
+    [updateCode, markDirty, code]
+  );
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedUpdateCode.cancel();
+    };
+  }, [debouncedUpdateCode]);
+
   /**
    * @function handleCodeChange
-   * @description Callback for handling code changes in the editor.
-   * It updates the code in the store and marks the editor as dirty.
-   * The update is debounced within the store's `updateCode` action.
+   * @description Simple callback for handling code changes in the editor.
+   * Updates local state immediately for responsive UI, debounces store updates.
    *
    * @param {EditorChangeEvent} event - The editor change event.
    */
   const handleCodeChange = useCallback(
     (event: EditorChangeEvent) => {
-      logger.debug('Code changed, updating store');
+      logger.debug(`[IMMEDIATE] Code changed: ${event.value.length} characters`);
 
-      // Only update if the code has actually changed
-      if (event.value !== code) {
-        // Update code in store (this will trigger debounced parsing if enabled)
-        updateCode(event.value);
+      // Update local state immediately for responsive UI
+      setLocalCode(event.value);
 
-        // Mark as dirty for save state tracking
-        markDirty();
-
-        logger.debug(`Code updated: ${event.value.length} characters`);
-      } else {
-        logger.debug('Code content unchanged, skipping update');
-      }
+      // Trigger debounced store update
+      debouncedUpdateCode(event.value);
     },
-    [updateCode, markDirty, code]
+    [debouncedUpdateCode]
   );
 
   /**
@@ -350,10 +376,11 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
 
   /**
    * @effect
-   * @description Logs store state changes for debugging purposes.
-   * This helps in monitoring the editor's state and its interaction with the store.
+   * @description Logs store state changes for debugging purposes (optimized to reduce keystroke overhead).
+   * Only logs when significant state changes occur, not on every character typed.
    */
   useEffect(() => {
+    // Only log when non-code state changes occur to reduce keystroke overhead
     logger.debug('Store state updated:', {
       codeLength: code.length,
       isDirty,
@@ -362,20 +389,20 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       realTimeParsing: enableRealTimeParsing,
       hasSelection: selection !== null,
     });
-  }, [code, isDirty, parsingErrors, parsingWarnings, enableRealTimeParsing, selection]);
+  }, [isDirty, parsingErrors.length, parsingWarnings.length, enableRealTimeParsing, selection]); // Removed 'code' dependency to reduce keystroke overhead
 
   /**
    * @effect
    * @description Triggers manual parsing when real-time parsing is disabled.
-   * This is a placeholder for a potential feature and currently relies on the store's debounced parsing.
+   * Optimized to only trigger when parsing mode changes, not on every keystroke.
    */
   useEffect(() => {
     if (!enableRealTimeParsing && code.length > 0) {
-      logger.debug('Manual parsing trigger');
+      logger.debug('Manual parsing trigger - real-time parsing disabled');
       // Manual parsing can be triggered here if needed
       // For now, we rely on the store's debounced parsing
     }
-  }, [code, enableRealTimeParsing]);
+  }, [enableRealTimeParsing]); // Removed 'code' dependency to prevent triggering on every keystroke
 
   return (
     <div
@@ -416,7 +443,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       {/* Monaco Editor */}
       <div className="editor-container" style={{ height: 'calc(100% - 40px)' }}>
         <MonacoEditorComponent
-          value={code}
+          value={localCode}
           language="openscad"
           theme="vs-dark"
           onChange={handleCodeChange}

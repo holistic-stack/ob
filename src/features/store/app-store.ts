@@ -305,8 +305,8 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { createLogger } from '../../shared/services/logger.service.js';
 import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../shared/config/debounce-config.js';
+import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
 import {
