@@ -53,19 +53,36 @@ vi.mock('./monaco-editor', () => ({
   },
 }));
 
-// Mock store state
+// Mock store state - complete AppState structure
 const mockStoreState = {
   editor: {
     code: '',
+    cursorPosition: { line: 1, column: 1 },
     selection: null as EditorSelection | null,
     isDirty: false,
+    lastSaved: null,
   },
   parsing: {
+    ast: [],
     errors: [] as string[],
     warnings: [] as string[],
+    isLoading: false,
+    lastParsed: null,
+    lastParsedCode: null,
+    parseTime: 0,
+  },
+  babylonRendering: {
+    isInitialized: false,
+    scene: null,
+    camera: null,
+    meshes: [],
+    lastRendered: null,
+    renderTime: 0,
   },
   config: {
     enableRealTimeParsing: true,
+    theme: 'dark',
+    enableDevtools: false,
   },
 };
 
@@ -77,22 +94,17 @@ const mockStoreActions = {
   parseAST: vi.fn(),
 };
 
-// Mock the store
+// Mock the store - properly handle selector functions
 vi.mock('../../store/app-store', () => ({
   useAppStore: vi.fn((selector) => {
     if (typeof selector === 'function') {
-      // Handle selectors
-      const selectorName = selector.name;
-      if (selectorName === 'selectEditorCode') return mockStoreState.editor.code;
-      if (selectorName === 'selectEditorSelection') return mockStoreState.editor.selection;
-      if (selectorName === 'selectEditorIsDirty') return mockStoreState.editor.isDirty;
-      if (selectorName === 'selectParsingErrors') return mockStoreState.parsing.errors;
-      if (selectorName === 'selectParsingWarnings') return mockStoreState.parsing.warnings;
-      if (selectorName === 'selectConfigEnableRealTimeParsing')
-        return mockStoreState.config.enableRealTimeParsing;
-
-      // Handle action selectors
-      return selector(mockStoreActions);
+      try {
+        // Execute the selector with the mock state
+        return selector({ ...mockStoreState, ...mockStoreActions });
+      } catch {
+        // Fallback for action selectors
+        return selector(mockStoreActions);
+      }
     }
     return vi.fn();
   }),

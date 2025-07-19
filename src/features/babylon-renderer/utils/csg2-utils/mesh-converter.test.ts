@@ -25,6 +25,7 @@ const createMockScene = () =>
 const createMockMesh = (id: string) =>
   ({
     id,
+    name: id, // Add name property
     getVerticesData: vi.fn((kind: string) => {
       if (kind === 'position') return new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
       if (kind === 'normal') return new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
@@ -36,8 +37,8 @@ const createMockMesh = (id: string) =>
     optimizeIndices: vi.fn(),
     getBoundingInfo: vi.fn(() => ({
       boundingBox: {
-        minimum: { x: 0, y: 0, z: 0 },
-        maximum: { x: 1, y: 1, z: 1 },
+        minimumWorld: { x: 0, y: 0, z: 0 }, // Fix property name
+        maximumWorld: { x: 1, y: 1, z: 1 }, // Fix property name
       },
     })),
     getWorldMatrix: vi.fn(() => ({

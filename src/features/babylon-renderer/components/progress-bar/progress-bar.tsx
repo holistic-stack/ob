@@ -28,7 +28,29 @@ import type React from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ProgressOperation } from '../../services/progress/progress.service';
 
-const logger = createLogger('ProgressBar');
+/**
+ * @architectural_decision Safe logger initialization to prevent test isolation issues
+ * Create logger lazily to avoid module-level initialization problems in test environment
+ */
+let logger: ReturnType<typeof createLogger> | null = null;
+const getLogger = (): ReturnType<typeof createLogger> => {
+  if (!logger) {
+    try {
+      logger = createLogger('ProgressBar');
+    } catch {
+      // Fallback to console in case logger service fails during tests
+      logger = {
+        debug: console.debug.bind(console, '[ProgressBar]'),
+        info: console.info.bind(console, '[ProgressBar]'),
+        warn: console.warn.bind(console, '[ProgressBar]'),
+        error: console.error.bind(console, '[ProgressBar]'),
+        end: console.log.bind(console, '[ProgressBar]'),
+      } as ReturnType<typeof createLogger>;
+    }
+  }
+  // biome-ignore lint/style/noNonNullAssertion: Safe because we always initialize logger above
+  return logger!;
+};
 
 /**
  * Progress bar size variants
@@ -193,7 +215,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     if (onCancel) {
       onCancel();
     } else if (operation) {
-      logger.debug(`[CANCEL] Cancel requested for operation: ${operation.id}`);
+      getLogger().debug(`[CANCEL] Cancel requested for operation: ${operation.id}`);
       // The parent component should handle cancellation through the progress hook
     }
   };

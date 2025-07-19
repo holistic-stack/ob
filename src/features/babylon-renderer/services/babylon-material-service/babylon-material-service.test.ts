@@ -224,8 +224,9 @@ describe('BabylonMaterialService', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect((result.data as any).metallicFactor).toBe(0.8);
-        expect((result.data as any).roughnessFactor).toBe(0.2);
+        // BabylonJS PBRMaterial uses 'metallic' and 'roughness' properties, not 'metallicFactor'/'roughnessFactor'
+        expect((result.data as any).metallic).toBe(0.8);
+        expect((result.data as any).roughness).toBe(0.2);
         expect((result.data as any).clearCoat.isEnabled).toBe(true);
         expect((result.data as any).clearCoat.intensity).toBe(1.0);
       }

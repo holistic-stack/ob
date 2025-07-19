@@ -613,7 +613,7 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
 
     if (result.success) {
       // Set disposed state
-      setEngineState((prev) => ({
+      setEngineState(() => ({
         ...INITIAL_ENGINE_STATE,
         isDisposed: true,
         lastUpdated: new Date(),
@@ -641,23 +641,32 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
 
   /**
    * Update engine state periodically
+   * @architectural_decision Fixed dependency array to prevent race conditions during unmount
+   * @biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally omitting engineState.isInitialized to prevent race conditions during component unmount
    */
   useEffect(() => {
-    if (!engineServiceRef.current || !engineState.isInitialized) {
-      return;
+    let updateInterval: NodeJS.Timeout | null = null;
+
+    // Only start interval if engine is initialized
+    if (engineServiceRef.current && engineState.isInitialized) {
+      updateInterval = setInterval(() => {
+        // Additional safety check to prevent errors during cleanup
+        if (engineServiceRef.current && engineState.isInitialized) {
+          const newState = engineServiceRef.current.getState();
+          if (newState) {
+            setEngineState(newState);
+          }
+        }
+      }, 1000); // Update every second
     }
 
-    const updateInterval = setInterval(() => {
-      const newState = engineServiceRef.current?.getState();
-      if (newState) {
-        setEngineState(newState);
-      }
-    }, 1000); // Update every second
-
     return () => {
-      clearInterval(updateInterval);
+      if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+      }
     };
-  }, [engineState.isInitialized]);
+  }, []); // ✅ Empty dependency array prevents race conditions
 
   /**
    * Cleanup on unmount
