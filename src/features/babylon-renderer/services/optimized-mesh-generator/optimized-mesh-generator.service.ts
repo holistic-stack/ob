@@ -1,19 +1,29 @@
 /**
  * @file Optimized Mesh Generator Service
  *
- * Service that integrates performance optimization (LOD) with the existing mesh generation pipeline.
- * Automatically applies LOD optimization to complex meshes based on configurable thresholds.
- *
+ * This service integrates performance optimization (LOD) with mesh generation.
+ * It provides a streamlined process for creating optimized meshes from AST nodes.
  * @example
  * ```typescript
- * const generator = new OptimizedMeshGeneratorService(scene);
- * await generator.initialize();
+ * const meshGenerator = new OptimizedMeshGeneratorService();
+ * meshGenerator.init(scene, logger);
  *
- * const result = await generator.generateOptimizedMesh(astNode, {
- *   enableLOD: true,
- *   complexityThreshold: 1000,
- *   lodQuality: 'medium'
- * });
+ * const astNode = { type: 'cube', size: [10, 10, 10] }; // Simplified AST node
+ * const options: OptimizedMeshGenerationOptions = {
+ *   optimization: {
+ *     enabled: true,
+ *     quality: 'medium',
+ *   },
+ * };
+ *
+ * const result = await meshGenerator.generate(astNode, options);
+ *
+ * if (result.success) {
+ *   const mesh = result.data;
+ *   console.log(`Mesh ${mesh.name} created successfully.`);
+ * } else {
+ *   console.error(`Mesh generation failed: ${result.error.message}`);
+ * }
  * ```
  */
 

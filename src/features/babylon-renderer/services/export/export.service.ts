@@ -1,23 +1,26 @@
 /**
- * @file Export Service
+ * @file Manages 3D model export from BabylonJS scenes.
  *
- * Service for exporting 3D models to various formats (STL, 3MF, GLTF).
- * Provides comprehensive export management with progress tracking and format-specific options.
- *
+ * This service provides functionality to export meshes into various formats (STL, 3MF, GLTF, GLB)
+ * with support for quality settings, progress tracking, and error handling.
+ * It follows the Single Responsibility Principle (SRP) by focusing exclusively on export-related tasks.
  * @example
  * ```typescript
- * const exportService = new ExportService(scene);
+ * const exportService = new ExportService();
+ * exportService.init(scene, logger);
  *
- * // Export selected meshes to STL
- * const result = await exportService.exportMeshes(selectedMeshes, {
- *   format: 'stl',
- *   filename: 'my-model.stl',
- *   binary: true
- * });
+ * const config: ExportConfig = {
+ *   format: ExportFormat.STL,
+ *   quality: ExportQuality.High,
+ *   fileName: 'my-model',
+ * };
+ *
+ * const result = await exportService.exportMeshes(config, [myMesh1, myMesh2]);
  *
  * if (result.success) {
- *   // File download initiated
- *   console.log('Export completed');
+ *   console.log('Export successful!');
+ * } else {
+ *   console.error('Export failed:', result.error.message);
  * }
  * ```
  */

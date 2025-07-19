@@ -3,6 +3,27 @@
  *
  * Service for managing BabylonJS particle systems with GPU acceleration.
  * Provides comprehensive particle system creation and management capabilities.
+ * @example
+ * ```typescript
+ * const particleService = new BabylonParticleService();
+ * particleService.init(scene);
+ *
+ * const config: ParticleSystemConfig = {
+ *   name: 'my-particle-system',
+ *   type: ParticleSystemType.GPU,
+ *   capacity: 5000,
+ *   // ... other config properties
+ * };
+ *
+ * const result = await particleService.createParticleSystem(config, myEmitterMesh);
+ *
+ * if (result.success) {
+ *   const particleSystem = result.data;
+ *   particleService.startParticleSystem(particleSystem.name);
+ * } else {
+ *   console.error('Failed to create particle system:', result.error.message);
+ * }
+ * ```
  */
 
 import {
