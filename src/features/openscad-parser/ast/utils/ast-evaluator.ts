@@ -319,26 +319,30 @@ export function processFunctionLiteral(_node: ASTNode): EvaluationResult {
  * - It directly calls other evaluation functions within this module, which might lead to
  *   tight coupling if not managed carefully.
  */
-export function tryEvaluateExpression(node: ExpressionNode): EvaluationResult {
-  switch (node.expressionType) {
-    case 'literal':
-      return evaluationSuccess(extractLiteralValue(node));
+export function tryEvaluateExpression(node: ExpressionNode | SpecialVariableNode): EvaluationResult {
+  // Handle SpecialVariableNode which has type property instead of expressionType
+  if ('type' in node && node.type === 'special_variable') {
+    return evaluateSpecialVariable(node as SpecialVariableNode);
+  }
 
-    case 'special_variable':
-      return evaluateSpecialVariable(node as unknown as SpecialVariableNode);
+  // Handle ExpressionNode which has expressionType property
+  const expressionNode = node as ExpressionNode;
+  switch (expressionNode.expressionType) {
+    case 'literal':
+      return evaluationSuccess(extractLiteralValue(expressionNode));
 
     case 'binary':
     case 'binary_expression':
-      return evaluateBinaryExpression(node as BinaryExpressionNode);
+      return evaluateBinaryExpression(expressionNode as BinaryExpressionNode);
 
     case 'parenthesized_expression':
-      return evaluateParenthesizedExpression(node as unknown as ParenthesizedExpressionNode);
+      return evaluateParenthesizedExpression(expressionNode as unknown as ParenthesizedExpressionNode);
 
     case 'list_comprehension_expression':
-      return evaluateListComprehension(node as unknown as ListComprehensionExpressionNode);
+      return evaluateListComprehension(expressionNode as unknown as ListComprehensionExpressionNode);
 
     default:
-      return evaluationError(`Cannot evaluate expression type: ${node.expressionType}`);
+      return evaluationError(`Cannot evaluate expression type: ${expressionNode.expressionType}`);
   }
 }
 

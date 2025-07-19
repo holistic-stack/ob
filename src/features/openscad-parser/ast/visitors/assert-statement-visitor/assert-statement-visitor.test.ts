@@ -300,7 +300,7 @@ describe('AssertStatementVisitor', () => {
       expect(ast.length).toBeGreaterThanOrEqual(3);
 
       // Check that we have assert statements (they may be mixed with other nodes)
-      const assertNodes = ast.filter((child) => child.type === 'assert');
+      const assertNodes = ast.filter((child) => child.type === 'assert_statement');
       expect(assertNodes.length).toBeGreaterThanOrEqual(1);
     });
   });

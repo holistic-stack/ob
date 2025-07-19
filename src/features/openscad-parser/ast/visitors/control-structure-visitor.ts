@@ -120,16 +120,30 @@ export class ControlStructureVisitor extends BaseASTVisitor {
 
   /**
    * @method visitModuleInstantiation
-   * @description Overrides the base `visitModuleInstantiation` to only handle control structure modules.
-   * @param {TSNode} _node - The module instantiation node to visit.
-   * @returns {null} Always returns null, as module instantiations are not control structures.
+   * @description Overrides the base `visitModuleInstantiation` to handle control structure modules.
+   * @param {TSNode} node - The module instantiation node to visit.
+   * @returns {ast.ASTNode | null} The control structure AST node, or null if this is not a control structure.
    * @override
    */
-  override visitModuleInstantiation(_node: TSNode): ast.ASTNode | null {
-    // ControlStructureVisitor only handles control structures (if, for, let, each)
-    // Module instantiations are not control structures, so return null
-    // to let other visitors handle module instantiations
-    return null;
+  override visitModuleInstantiation(node: TSNode): ast.ASTNode | null {
+    // Get the module name to check if it's a control structure
+    const nameNode = node.childForFieldName('name');
+    if (!nameNode) {
+      return null;
+    }
+
+    const moduleName = nameNode.text;
+
+    // Handle control structure modules
+    switch (moduleName) {
+      case 'if':
+        return this.ifElseVisitor.visitModuleInstantiation(node);
+      case 'for':
+        return this.forLoopVisitor.visitModuleInstantiation(node);
+      default:
+        // Not a control structure, return null to let other visitors handle it
+        return null;
+    }
   }
 
   /**
