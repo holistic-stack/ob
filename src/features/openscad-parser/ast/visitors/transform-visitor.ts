@@ -931,13 +931,14 @@ export class TransformVisitor extends BaseASTVisitor {
 
     const result: ast.RotateNode = {
       type: 'rotate',
-      a,
+      v: v || [0, 0, 1], // Default to Z-axis rotation if no vector specified
       children: [],
       location: getLocation(node),
     };
 
-    if (v !== undefined) {
-      result.v = v;
+    // Add 'a' property only if it's a number
+    if (typeof a === 'number') {
+      result.a = a;
     }
 
     return result;

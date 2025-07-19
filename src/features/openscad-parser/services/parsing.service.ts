@@ -120,13 +120,7 @@ export const unifiedParseOpenSCAD = async (
       }
     }
 
-    if (!isSuccess(parseResult)) {
-      const errorMessage = `Parse failed: ${parseResult.error}`;
-      logger.error(errorMessage);
-      const operationError = operationUtils.createOperationError('PARSE_ERROR', errorMessage);
-      return operationUtils.createError(operationError, metadata);
-    }
-
+    // At this point, parseResult is guaranteed to be successful due to the recovery logic above
     const rawAST = parseResult.data;
 
     // 4. Return the parsed AST (restructuring moved to conversion layer)

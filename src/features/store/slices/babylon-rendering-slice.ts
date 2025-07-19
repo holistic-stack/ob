@@ -497,7 +497,7 @@ import { disposeMeshesComprehensively } from '../../babylon-renderer/utils/mesh-
 import { forceSceneRefresh } from '../../babylon-renderer/utils/scene-refresh/scene-refresh';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
 import { DEFAULT_CAMERA } from '../app-store';
-import type { AppStore } from '../store.types';
+import type { AppStore } from '../types/store.types';
 
 const logger = createLogger('BabylonRenderingSlice');
 
