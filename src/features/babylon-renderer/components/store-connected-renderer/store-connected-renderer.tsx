@@ -570,7 +570,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     const currentASTString = JSON.stringify(ast);
     const isLastASTNull = lastASTRef.current === null;
 
-    logger.debug(`[DEBUG][StoreConnectedRenderer] Early exit check - lastAST: ${lastASTString}, currentAST: ${currentASTString}, isLastNull: ${isLastASTNull}`);
+    logger.debug(
+      `[DEBUG][StoreConnectedRenderer] Early exit check - lastAST: ${lastASTString}, currentAST: ${currentASTString}, isLastNull: ${isLastASTNull}`
+    );
 
     if (lastASTString === currentASTString && !isLastASTNull) {
       logger.debug('[DEBUG][StoreConnectedRenderer] Skipping render - AST unchanged');

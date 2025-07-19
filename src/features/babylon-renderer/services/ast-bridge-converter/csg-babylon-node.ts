@@ -55,7 +55,9 @@ export class CSGBabylonNode extends BabylonJSNode {
     if (scene) {
       const initResult = this.csgService.init(scene);
       if (!initResult.success) {
-        logger.error(`[ERROR][CSGBabylonNode] Failed to initialize CSG service: ${initResult.error.message}`);
+        logger.error(
+          `[ERROR][CSGBabylonNode] Failed to initialize CSG service: ${initResult.error.message}`
+        );
       }
     }
 

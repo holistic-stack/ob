@@ -89,7 +89,7 @@ describe('SelectionInfo', () => {
 
       expect(screen.getByText('Selection')).toBeInTheDocument();
       expect(screen.getByText('0')).toBeInTheDocument(); // Count
-      expect(screen.getByText('Single')).toBeInTheDocument(); // Mode
+      expect(screen.getByText('single')).toBeInTheDocument(); // Mode (CSS capitalize handles display)
     });
   });
 
@@ -120,9 +120,14 @@ describe('SelectionInfo', () => {
 
       render(<SelectionInfo scene={scene} />);
 
-      expect(screen.getByText('testBox1')).toBeInTheDocument();
+      // Use more specific selector to avoid multiple element issues
+      const meshContainer = screen.getByTestId('selected-mesh-0');
+      expect(meshContainer).toBeInTheDocument();
+      expect(meshContainer.querySelector('h4')).toHaveTextContent('testBox1');
       expect(screen.getByText('Mesh')).toBeInTheDocument(); // Type
-      expect(screen.getByText('Yes')).toBeInTheDocument(); // Visible
+      // Check for Visible and Enabled properties (both show "Yes")
+      const yesElements = screen.getAllByText('Yes');
+      expect(yesElements.length).toBeGreaterThanOrEqual(2); // Visible and Enabled both show "Yes"
     });
 
     it('should display multiple selected meshes', () => {
@@ -148,10 +153,16 @@ describe('SelectionInfo', () => {
 
       render(<SelectionInfo scene={scene} />);
 
-      expect(screen.getByText('testBox1')).toBeInTheDocument();
-      expect(screen.getByText('testSphere1')).toBeInTheDocument();
-      expect(screen.getByTestId('selected-mesh-0')).toBeInTheDocument();
-      expect(screen.getByTestId('selected-mesh-1')).toBeInTheDocument();
+      // Use more specific selectors to avoid multiple element issues
+      const mesh0 = screen.getByTestId('selected-mesh-0');
+      const mesh1 = screen.getByTestId('selected-mesh-1');
+
+      expect(mesh0).toBeInTheDocument();
+      expect(mesh1).toBeInTheDocument();
+
+      // Check mesh names within their specific containers
+      expect(mesh0.querySelector('h4')).toHaveTextContent('testBox1');
+      expect(mesh1.querySelector('h4')).toHaveTextContent('testSphere1');
     });
 
     it('should display hovered mesh', () => {
@@ -202,8 +213,9 @@ describe('SelectionInfo', () => {
       expect(screen.getByText('Rotation:')).toBeInTheDocument();
       expect(screen.getByText('Scaling:')).toBeInTheDocument();
 
-      // Check for vector format (x, y, z)
-      expect(screen.getByText('(0.00, 0.00, 0.00)')).toBeInTheDocument();
+      // Check for vector format (x, y, z) - use getAllByText since there are multiple instances
+      const vectorElements = screen.getAllByText('(0.00, 0.00, 0.00)');
+      expect(vectorElements.length).toBeGreaterThan(0); // Position, Rotation, and Center all show (0,0,0)
     });
 
     it('should display bounding box information when enabled', () => {
@@ -279,6 +291,14 @@ describe('SelectionInfo', () => {
         clearSelection: vi.fn(),
       });
 
+      mockUseSelectionStats.mockReturnValue({
+        selectedCount: 1,
+        hasSelection: true,
+        isMultiSelection: false,
+        lastSelectionTime: selectionTime,
+        selectionMode: 'single',
+      });
+
       render(<SelectionInfo scene={scene} showMetadata={true} />);
 
       expect(screen.getByText('Metadata')).toBeInTheDocument();
@@ -330,6 +350,14 @@ describe('SelectionInfo', () => {
         ],
         hoveredMesh: null,
         clearSelection: vi.fn(),
+      });
+
+      mockUseSelectionStats.mockReturnValue({
+        selectedCount: 1,
+        hasSelection: true,
+        isMultiSelection: false,
+        lastSelectionTime: selectionTime,
+        selectionMode: 'single',
       });
 
       render(<SelectionInfo scene={scene} showMetadata={true} />);
@@ -412,7 +440,7 @@ describe('SelectionInfo', () => {
 
       expect(screen.getByText('Selection')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument(); // Count
-      expect(screen.getByText('Multi')).toBeInTheDocument(); // Mode
+      expect(screen.getByText('multi')).toBeInTheDocument(); // Mode (CSS capitalize handles display)
       expect(screen.getByText(/Last:/)).toBeInTheDocument(); // Last selection time
     });
 
@@ -444,6 +472,11 @@ describe('SelectionInfo', () => {
       const meshWithoutName = CreateBox('', { size: 1 }, scene);
       meshWithoutName.name = '';
 
+      // Ensure the mesh has a valid ID for testing
+      if (!meshWithoutName.id || meshWithoutName.id === '') {
+        meshWithoutName.id = 'mesh-without-name-id';
+      }
+
       mockUseSelection.mockReturnValue({
         selectedMeshes: [meshWithoutName],
         selectedMeshInfos: [
@@ -467,8 +500,14 @@ describe('SelectionInfo', () => {
 
       render(<SelectionInfo scene={scene} />);
 
-      // Should display the mesh ID when name is empty
-      expect(screen.getByText(meshWithoutName.id)).toBeInTheDocument();
+      // Should display the mesh ID when name is empty (in the header as fallback)
+      const meshHeader = screen.getByTestId('selected-mesh-0').querySelector('h4');
+      expect(meshHeader).toHaveTextContent(meshWithoutName.id);
+
+      // Should also display the mesh ID in the ID field
+      expect(screen.getByText('ID:')).toBeInTheDocument();
+      const idSpan = screen.getByText('ID:').nextElementSibling;
+      expect(idSpan).toHaveTextContent(meshWithoutName.id);
     });
 
     it('should handle mesh without metadata', () => {

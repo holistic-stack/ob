@@ -1039,7 +1039,10 @@ export class ASTBridgeConverter {
         if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
           return error as BabylonJSError;
         }
-        return this.createError('INITIALIZATION_FAILED', `Failed to initialize bridge converter: ${error}`);
+        return this.createError(
+          'INITIALIZATION_FAILED',
+          `Failed to initialize bridge converter: ${error}`
+        );
       }
     );
   }

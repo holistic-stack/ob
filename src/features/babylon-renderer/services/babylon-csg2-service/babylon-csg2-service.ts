@@ -102,12 +102,7 @@ export class BabylonCSG2Service {
   ): Promise<CSGUnionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing union operation...');
 
-    return this.performOperation(
-      CSGOperationType.UNION,
-      meshA,
-      meshB,
-      config
-    );
+    return this.performOperation(CSGOperationType.UNION, meshA, meshB, config);
   }
 
   /**
@@ -120,12 +115,7 @@ export class BabylonCSG2Service {
   ): Promise<CSGDifferenceResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing difference operation...');
 
-    return this.performOperation(
-      CSGOperationType.DIFFERENCE,
-      meshA,
-      meshB,
-      config
-    );
+    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB, config);
   }
 
   /**
@@ -138,12 +128,7 @@ export class BabylonCSG2Service {
   ): Promise<CSGIntersectionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing intersection operation...');
 
-    return this.performOperation(
-      CSGOperationType.INTERSECTION,
-      meshA,
-      meshB,
-      config
-    );
+    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB, config);
   }
 
   /**
