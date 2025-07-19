@@ -234,6 +234,9 @@ export class ControlFlowOperationsService {
             return thenResult.data;
           } else if (isError(thenResult)) {
             throw new Error(`Then branch failed: ${thenResult.error.message}`);
+          } else {
+            // Then branch didn't succeed but wasn't an error
+            return null;
           }
         } else if (params.elseBody) {
           // Execute else body
@@ -245,6 +248,9 @@ export class ControlFlowOperationsService {
             return elseResult.data;
           } else if (isError(elseResult)) {
             throw new Error(`Else branch failed: ${elseResult.error.message}`);
+          } else {
+            // Else branch didn't succeed but wasn't an error
+            return null;
           }
         } else {
           // No else branch and condition is false

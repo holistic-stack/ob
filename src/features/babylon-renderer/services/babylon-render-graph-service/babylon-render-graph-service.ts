@@ -9,6 +9,7 @@ import {
   Color4,
   NodeRenderGraph,
   NodeRenderGraphBlock,
+  type NodeRenderGraphBlockConnectionPointValueType,
   type Scene,
   Vector2,
 } from '@babylonjs/core';
@@ -304,7 +305,7 @@ export class BabylonRenderGraphService {
         for (const [inputName, inputValue] of Object.entries(blockConfig.inputs || {})) {
           const input = block.getInputByName(inputName);
           if (input && inputValue !== undefined && inputValue !== null) {
-            input.value = inputValue;
+            input.value = inputValue as unknown as NodeRenderGraphBlockConnectionPointValueType;
           }
         }
 
@@ -312,7 +313,7 @@ export class BabylonRenderGraphService {
         if (blockConfig.properties) {
           for (const [propertyName, propertyValue] of Object.entries(blockConfig.properties)) {
             if (propertyName in block && propertyValue !== undefined) {
-              (block as Record<string, unknown>)[propertyName] = propertyValue;
+              (block as unknown as Record<string, unknown>)[propertyName] = propertyValue;
             }
           }
         }
@@ -562,7 +563,7 @@ export class BabylonRenderGraphService {
   ): NodeRenderGraphBlock {
     // Implementation would depend on specific BabylonJS API
     // This is a placeholder for the actual implementation
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -578,7 +579,7 @@ export class BabylonRenderGraphService {
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
     // Implementation would depend on specific BabylonJS API
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -593,7 +594,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -608,7 +609,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -623,7 +624,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -638,7 +639,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -653,7 +654,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -668,7 +669,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;
@@ -683,7 +684,7 @@ export class BabylonRenderGraphService {
     renderGraph: NodeRenderGraph,
     config: RenderGraphBlockConfig
   ): NodeRenderGraphBlock {
-    const BlockConstructor = NodeRenderGraphBlock as new (
+    const BlockConstructor = NodeRenderGraphBlock as unknown as new (
       name: string,
       renderGraph: NodeRenderGraph
     ) => NodeRenderGraphBlock;

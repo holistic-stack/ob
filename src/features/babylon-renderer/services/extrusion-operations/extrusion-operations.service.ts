@@ -405,7 +405,7 @@ export class ExtrusionOperationsService {
       message,
       operationType,
       timestamp: new Date(),
-      details,
+      ...(details && { details }),
     };
   }
 }

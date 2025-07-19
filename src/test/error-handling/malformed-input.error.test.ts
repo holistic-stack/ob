@@ -482,7 +482,7 @@ describe('Malformed Input Error Handling Tests', () => {
         expect(parser).toBeDefined();
 
         if (parseResult.success) {
-          const _conversionResult = await astConverter.convertAST(parseResult.data.body);
+          const _conversionResult = await astConverter.convertAST(parseResult.data);
           // Converter should remain stable regardless of result
           expect(astConverter).toBeDefined();
         }

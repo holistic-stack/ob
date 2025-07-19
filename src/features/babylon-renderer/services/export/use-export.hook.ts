@@ -38,6 +38,7 @@ import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { useCallback, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
+import { error, success } from '../../../../shared/utils/functional/result';
 import {
   type ExportConfig,
   type ExportError,
@@ -109,23 +110,23 @@ export const useExport = (scene: Scene | null): UseExportReturn => {
       onProgress?: ExportProgressCallback
     ) => {
       if (!exportService) {
-        const error: ExportError = {
+        const exportError: ExportError = {
           code: 'EXPORT_FAILED',
           message: 'No export service available',
           timestamp: new Date(),
         };
-        setLastExportError(error);
-        return { success: false, error };
+        setLastExportError(exportError);
+        return error<ExportResult, ExportError>(exportError);
       }
 
       if (isExporting) {
-        const error: ExportError = {
+        const exportError: ExportError = {
           code: 'EXPORT_FAILED',
           message: 'Export already in progress',
           timestamp: new Date(),
         };
-        setLastExportError(error);
-        return { success: false, error };
+        setLastExportError(exportError);
+        return error<ExportResult, ExportError>(exportError);
       }
 
       try {
@@ -151,23 +152,23 @@ export const useExport = (scene: Scene | null): UseExportReturn => {
           setLastExportResult(result.data);
           setExportMessage('Export completed successfully');
           logger.debug(`[EXPORT_MESHES] Export completed: ${result.data.filename}`);
-          return { success: true, data: result.data };
+          return success<ExportResult, ExportError>(result.data);
         } else {
           setLastExportError(result.error);
           setExportMessage(`Export failed: ${result.error.message}`);
           logger.error(`[EXPORT_MESHES] Export failed: ${result.error.message}`);
-          return { success: false, error: result.error };
+          return error<ExportResult, ExportError>(result.error);
         }
-      } catch (error) {
+      } catch (err) {
         const exportError: ExportError = {
           code: 'EXPORT_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown export error',
+          message: err instanceof Error ? err.message : 'Unknown export error',
           timestamp: new Date(),
         };
         setLastExportError(exportError);
         setExportMessage(`Export failed: ${exportError.message}`);
         logger.error(`[EXPORT_MESHES] Export error: ${exportError.message}`);
-        return { success: false, error: exportError };
+        return error<ExportResult, ExportError>(exportError);
       } finally {
         setIsExporting(false);
         abortControllerRef.current = null;
@@ -179,13 +180,13 @@ export const useExport = (scene: Scene | null): UseExportReturn => {
   const exportScene = useCallback(
     async (config: ExportConfig, onProgress?: ExportProgressCallback) => {
       if (!exportService) {
-        const error: ExportError = {
+        const exportError: ExportError = {
           code: 'EXPORT_FAILED',
           message: 'No export service available',
           timestamp: new Date(),
         };
-        setLastExportError(error);
-        return { success: false, error };
+        setLastExportError(exportError);
+        return error<ExportResult, ExportError>(exportError);
       }
 
       try {
@@ -211,23 +212,23 @@ export const useExport = (scene: Scene | null): UseExportReturn => {
           setLastExportResult(result.data);
           setExportMessage('Scene export completed successfully');
           logger.debug(`[EXPORT_SCENE] Export completed: ${result.data.filename}`);
-          return { success: true, data: result.data };
+          return success<ExportResult, ExportError>(result.data);
         } else {
           setLastExportError(result.error);
           setExportMessage(`Scene export failed: ${result.error.message}`);
           logger.error(`[EXPORT_SCENE] Export failed: ${result.error.message}`);
-          return { success: false, error: result.error };
+          return error<ExportResult, ExportError>(result.error);
         }
-      } catch (error) {
+      } catch (err) {
         const exportError: ExportError = {
           code: 'EXPORT_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown export error',
+          message: err instanceof Error ? err.message : 'Unknown export error',
           timestamp: new Date(),
         };
         setLastExportError(exportError);
         setExportMessage(`Scene export failed: ${exportError.message}`);
         logger.error(`[EXPORT_SCENE] Export error: ${exportError.message}`);
-        return { success: false, error: exportError };
+        return error<ExportResult, ExportError>(exportError);
       } finally {
         setIsExporting(false);
         abortControllerRef.current = null;

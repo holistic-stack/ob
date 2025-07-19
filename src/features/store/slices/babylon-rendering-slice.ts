@@ -467,7 +467,8 @@
  * ```
  */
 
-import type { AbstractMesh, Scene } from '@babylonjs/core';
+import type { AbstractMesh, Engine, Scene } from '@babylonjs/core';
+import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service';
 import type { CameraConfig } from '../../../shared/types/common.types';
@@ -730,8 +731,11 @@ export const createBabylonRenderingSlice = (
           }
 
           // Update state
-          set((state: AppStore) => {
-            state.babylonRendering.engine = engineService?.getState();
+          set((state: WritableDraft<AppStore>) => {
+            const engineState = engineService?.getState();
+            if (engineState) {
+              state.babylonRendering.engine = engineState as WritableDraft<BabylonEngineState>;
+            }
           });
 
           logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine initialized successfully');
@@ -764,8 +768,9 @@ export const createBabylonRenderingSlice = (
           }
 
           // Reset state
-          set((state: AppStore) => {
-            state.babylonRendering.engine = createInitialBabylonRenderingState().engine;
+          set((state: WritableDraft<AppStore>) => {
+            state.babylonRendering.engine = createInitialBabylonRenderingState()
+              .engine as WritableDraft<BabylonEngineState>;
           });
 
           logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine disposed successfully');
@@ -818,8 +823,11 @@ export const createBabylonRenderingSlice = (
       }
 
       // Update state
-      set((state: AppStore) => {
-        state.babylonRendering.inspector = inspectorService?.getState();
+      set((state: WritableDraft<AppStore>) => {
+        const inspectorState = inspectorService?.getState();
+        if (inspectorState) {
+          state.babylonRendering.inspector = inspectorState as WritableDraft<InspectorState>;
+        }
       });
 
       return { success: true, data: undefined };
@@ -846,8 +854,11 @@ export const createBabylonRenderingSlice = (
       }
 
       // Update state
-      set((state: AppStore) => {
-        state.babylonRendering.inspector = inspectorService?.getState();
+      set((state: WritableDraft<AppStore>) => {
+        const inspectorState = inspectorService?.getState();
+        if (inspectorState) {
+          state.babylonRendering.inspector = inspectorState as WritableDraft<InspectorState>;
+        }
       });
 
       return { success: true, data: undefined };
@@ -877,7 +888,7 @@ export const createBabylonRenderingSlice = (
           const result = { success: true, data: null };
 
           // Update state
-          set((state: AppStore) => {
+          set((state: WritableDraft<AppStore>) => {
             // Update CSG state - service doesn't have getState method
             state.babylonRendering.csg = {
               isEnabled: true,
@@ -919,9 +930,12 @@ export const createBabylonRenderingSlice = (
       // For now, return a placeholder
       const systemId = `particle-${Date.now()}`;
 
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         // Update particles state
-        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
+        const particleStates = particleService?.getAllParticleSystemStates();
+        if (particleStates) {
+          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
+        }
       });
 
       return { success: true, data: systemId };
@@ -943,8 +957,11 @@ export const createBabylonRenderingSlice = (
       }
 
       // Implementation would update particle system
-      set((state: AppStore) => {
-        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
+      set((state: WritableDraft<AppStore>) => {
+        const particleStates = particleService?.getAllParticleSystemStates();
+        if (particleStates) {
+          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
+        }
       });
 
       return { success: true, data: undefined };
@@ -970,8 +987,11 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state: AppStore) => {
-        state.babylonRendering.particles = particleService?.getAllParticleSystemStates();
+      set((state: WritableDraft<AppStore>) => {
+        const particleStates = particleService?.getAllParticleSystemStates();
+        if (particleStates) {
+          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
+        }
       });
 
       return { success: true, data: undefined };
@@ -990,8 +1010,13 @@ export const createBabylonRenderingSlice = (
       }
 
       // Implementation would enable IBL shadows with config
-      set((state: AppStore) => {
-        state.babylonRendering.iblShadows = iblShadowsService?.getState();
+      set((state: WritableDraft<AppStore>) => {
+        const iblShadowsState = iblShadowsService?.getState();
+        if (iblShadowsState) {
+          state.babylonRendering.iblShadows = iblShadowsState as WritableDraft<
+            typeof iblShadowsState
+          >;
+        }
       });
 
       return { success: true, data: undefined };
@@ -1005,8 +1030,13 @@ export const createBabylonRenderingSlice = (
       }
 
       // Implementation would disable IBL shadows
-      set((state: AppStore) => {
-        state.babylonRendering.iblShadows = iblShadowsService?.getState();
+      set((state: WritableDraft<AppStore>) => {
+        const iblShadowsState = iblShadowsService?.getState();
+        if (iblShadowsState) {
+          state.babylonRendering.iblShadows = iblShadowsState as WritableDraft<
+            typeof iblShadowsState
+          >;
+        }
       });
 
       return { success: true, data: undefined };
@@ -1029,8 +1059,11 @@ export const createBabylonRenderingSlice = (
           // Implementation would create material with config
           const materialId = `material-${Date.now()}`;
 
-          set((state: AppStore) => {
-            state.babylonRendering.materials = materialService?.getAllMaterialStates();
+          set((state: WritableDraft<AppStore>) => {
+            const materialStates = materialService?.getAllMaterialStates();
+            if (materialStates) {
+              state.babylonRendering.materials = materialStates as WritableDraft<MaterialState[]>;
+            }
           });
 
           return materialId;
@@ -1085,8 +1118,11 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state: AppStore) => {
-        state.babylonRendering.materials = materialService?.getAllMaterialStates();
+      set((state: WritableDraft<AppStore>) => {
+        const materialStates = materialService?.getAllMaterialStates();
+        if (materialStates) {
+          state.babylonRendering.materials = materialStates as WritableDraft<MaterialState[]>;
+        }
       });
 
       return { success: true, data: undefined };
@@ -1107,8 +1143,13 @@ export const createBabylonRenderingSlice = (
       // Implementation would create render graph with config
       const graphId = `graph-${Date.now()}`;
 
-      set((state: AppStore) => {
-        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
+      set((state: WritableDraft<AppStore>) => {
+        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
+        if (renderGraphStates) {
+          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
+            RenderGraphState[]
+          >;
+        }
       });
 
       return { success: true, data: graphId };
@@ -1142,8 +1183,13 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state: AppStore) => {
-        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
+      set((state: WritableDraft<AppStore>) => {
+        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
+        if (renderGraphStates) {
+          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
+            RenderGraphState[]
+          >;
+        }
       });
 
       return { success: true, data: undefined };
@@ -1169,8 +1215,13 @@ export const createBabylonRenderingSlice = (
         };
       }
 
-      set((state: AppStore) => {
-        state.babylonRendering.renderGraphs = renderGraphService?.getAllRenderGraphStates();
+      set((state: WritableDraft<AppStore>) => {
+        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
+        if (renderGraphStates) {
+          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
+            RenderGraphState[]
+          >;
+        }
       });
 
       return { success: true, data: undefined };
@@ -1178,8 +1229,8 @@ export const createBabylonRenderingSlice = (
 
     // Scene management
     setScene: (scene: Scene | null) => {
-      set((state: AppStore) => {
-        state.babylonRendering.scene = scene;
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.scene = scene as WritableDraft<Scene | null>;
       });
       logger.debug('[DEBUG][BabylonRenderingSlice] Scene reference updated');
     },
@@ -1207,7 +1258,7 @@ export const createBabylonRenderingSlice = (
           service: 'rendering' as const,
         };
 
-        set((state: AppStore) => {
+        set((state: WritableDraft<AppStore>) => {
           state.babylonRendering.renderErrors = [...state.babylonRendering.renderErrors, error];
         });
 
@@ -1229,7 +1280,7 @@ export const createBabylonRenderingSlice = (
       // Force complete scene refresh to ensure visual updates
       const engine = scene.getEngine();
       if (engine) {
-        const refreshResult = forceSceneRefresh(engine, scene);
+        const refreshResult = forceSceneRefresh(engine as Engine, scene);
         if (!refreshResult.success) {
           logger.warn(
             `[WARN][BabylonRenderingSlice] Scene refresh failed: ${refreshResult.error.message}`
@@ -1334,7 +1385,7 @@ export const createBabylonRenderingSlice = (
             `[DEBUG][BabylonRenderingSlice] 📊 Scene now has ${scene.meshes.length} meshes remaining`
           );
 
-          set((state: AppStore) => {
+          set((state: WritableDraft<AppStore>) => {
             state.babylonRendering.isRendering = true;
             state.babylonRendering.renderErrors = []; // Clear previous errors
             state.babylonRendering.meshes = []; // Clear meshes array in store
@@ -1459,8 +1510,8 @@ export const createBabylonRenderingSlice = (
             }
           }
 
-          set((state: AppStore) => {
-            state.babylonRendering.meshes = meshes;
+          set((state: WritableDraft<AppStore>) => {
+            state.babylonRendering.meshes = meshes as WritableDraft<readonly unknown[]>;
             state.babylonRendering.isRendering = false;
             state.babylonRendering.lastRendered = new Date();
             state.babylonRendering.renderTime = renderTime;
@@ -1471,7 +1522,7 @@ export const createBabylonRenderingSlice = (
           );
         },
         (error) => {
-          set((state: AppStore) => {
+          set((state: WritableDraft<AppStore>) => {
             state.babylonRendering.isRendering = false;
             state.babylonRendering.renderErrors = [
               ...state.babylonRendering.renderErrors,
@@ -1495,7 +1546,7 @@ export const createBabylonRenderingSlice = (
     },
 
     updateMeshes: (meshes: readonly unknown[]) => {
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         state.babylonRendering.meshes = [...meshes];
         state.babylonRendering.lastRendered = new Date();
       });
@@ -1504,12 +1555,12 @@ export const createBabylonRenderingSlice = (
     clearScene: () => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene...');
 
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         let clearedCount = 0;
 
         // Dispose of existing meshes if they exist
         if (state.babylonRendering?.meshes && Array.isArray(state.babylonRendering.meshes)) {
-          state.babylonRendering.meshes.forEach((mesh: AbstractMesh) => {
+          (state.babylonRendering.meshes as AbstractMesh[]).forEach((mesh: AbstractMesh) => {
             if (mesh && typeof mesh.dispose === 'function') {
               try {
                 mesh.dispose();
@@ -1530,7 +1581,7 @@ export const createBabylonRenderingSlice = (
         // Also clear meshes from the actual BabylonJS scene if available
         if (state.babylonRendering?.scene) {
           const scene = state.babylonRendering.scene;
-          const existingMeshes = [...scene.meshes];
+          const existingMeshes = [...(scene.meshes as unknown as AbstractMesh[])];
           existingMeshes.forEach((mesh: AbstractMesh) => {
             if (
               mesh?.name &&
@@ -1561,7 +1612,8 @@ export const createBabylonRenderingSlice = (
 
         // Ensure babylonRendering state exists
         if (!state.babylonRendering) {
-          state.babylonRendering = createInitialBabylonRenderingState();
+          state.babylonRendering =
+            createInitialBabylonRenderingState() as unknown as WritableDraft<BabylonRenderingState>;
         } else {
           state.babylonRendering.meshes = [];
           state.babylonRendering.renderErrors = [];
@@ -1573,7 +1625,7 @@ export const createBabylonRenderingSlice = (
     updatePerformanceMetrics: () => {
       if (engineService) {
         const engineState = engineService.getState();
-        set((state: AppStore) => {
+        set((state: WritableDraft<AppStore>) => {
           state.babylonRendering.performanceMetrics = engineState.performanceMetrics;
         });
       }
@@ -1581,7 +1633,7 @@ export const createBabylonRenderingSlice = (
 
     // Error management
     addRenderError: (error: { type: string; message: string }) => {
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         state.babylonRendering.renderErrors = [
           ...state.babylonRendering.renderErrors,
           {
@@ -1595,24 +1647,25 @@ export const createBabylonRenderingSlice = (
     },
 
     clearRenderErrors: () => {
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         state.babylonRendering.renderErrors = [];
       });
     },
 
     // Camera management
     updateCamera: (camera: Partial<CameraConfig>) => {
-      set((state: AppStore) => {
+      set((state: WritableDraft<AppStore>) => {
         state.babylonRendering.camera = {
           ...state.babylonRendering.camera,
           ...camera,
-        };
+        } as WritableDraft<CameraConfig>;
       });
     },
 
     resetCamera: () => {
-      set((state: AppStore) => {
-        state.babylonRendering.camera = createInitialBabylonRenderingState().camera;
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.camera = createInitialBabylonRenderingState()
+          .camera as WritableDraft<CameraConfig>;
       });
     },
   };

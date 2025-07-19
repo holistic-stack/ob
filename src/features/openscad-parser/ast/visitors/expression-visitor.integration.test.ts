@@ -195,7 +195,7 @@ describe('ExpressionVisitor Integration', () => {
       const binaryExpr = result as ast.BinaryExpressionNode;
       expect(binaryExpr.operator).toBe('>');
       expect(binaryExpr.left.expressionType).toBe('variable');
-      expect((binaryExpr.left as ast.VariableNode).name).toBe('x');
+      expect((binaryExpr.left as unknown as ast.VariableNode).name).toBe('x');
       expect(binaryExpr.right.expressionType).toBe('literal');
       expect((binaryExpr.right as ast.LiteralNode).value).toBe(5);
 

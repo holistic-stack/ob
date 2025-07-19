@@ -158,7 +158,7 @@ describe('BabylonRenderingSlice', () => {
     store = create<TestStore>()(
       immer((set, get) => ({
         babylonRendering: createInitialBabylonRenderingState(),
-        ...createBabylonRenderingSlice(set, get),
+        ...createBabylonRenderingSlice(set as any, get as any),
       }))
     );
 

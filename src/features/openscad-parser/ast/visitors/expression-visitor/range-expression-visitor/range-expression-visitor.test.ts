@@ -528,8 +528,9 @@ describe('RangeExpressionVisitor', () => {
         expect(result).toBeTruthy();
         expect(result?.type).toBe('expression');
         if (result?.type === 'expression') {
-          expect(result.expressionType).toBe('range_expression');
-          // Further checks can be done on (result as ast.RangeExpressionNode)
+          const rangeExpr = result as ast.RangeExpressionNode;
+          expect(rangeExpr.expressionType).toBe('range_expression');
+          // Further checks can be done on rangeExpr
         }
       }
     });

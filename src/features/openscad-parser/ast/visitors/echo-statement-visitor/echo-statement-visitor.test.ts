@@ -99,7 +99,7 @@ describe('EchoStatementVisitor', () => {
       const echoNode = ast[0] as EchoStatementNode;
       expect(echoNode.arguments).toHaveLength(1);
       expect(['variable', 'identifier']).toContain(echoNode.arguments[0]?.expressionType);
-      expect((echoNode.arguments[0] as VariableNode).name).toBe('x');
+      expect((echoNode.arguments[0] as unknown as VariableNode).name).toBe('x');
     });
   });
 
@@ -134,7 +134,7 @@ describe('EchoStatementVisitor', () => {
 
       // Second argument: variable
       expect(['variable', 'identifier']).toContain(echoNode.arguments[1]?.expressionType);
-      expect((echoNode.arguments[1] as VariableNode).name).toBe('x');
+      expect((echoNode.arguments[1] as unknown as VariableNode).name).toBe('x');
 
       // Third argument: number
       expect(echoNode.arguments[2]?.expressionType).toBe('literal');

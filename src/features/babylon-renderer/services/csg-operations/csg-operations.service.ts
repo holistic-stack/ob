@@ -12,12 +12,12 @@
  * ```
  */
 
-import { Matrix, Mesh, type Scene } from '@babylonjs/core';
+import { BoundingBox, Matrix, Mesh, type Scene, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatchAsync } from '../../../../shared/utils/functional/result';
 import type { GenericGeometry, GenericMeshData } from '../../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA } from '../../types/generic-mesh-data.types';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { createBoundingBoxFromGeometry } from '../../utils/generic-mesh-utils';
 import { BabylonCSG2Service } from '../babylon-csg2-service';
 
@@ -291,7 +291,15 @@ export class CSGOperationsService {
         indices,
         vertexCount: positions.length / 3,
         triangleCount: indices.length / 3,
-        boundingBox: inputMeshes[0]?.geometry.boundingBox,
+        boundingBox:
+          inputMeshes[0]?.geometry.boundingBox ||
+          createBoundingBoxFromGeometry({
+            positions: new Float32Array([0, 0, 0]),
+            indices: new Uint32Array([0]),
+            vertexCount: 1,
+            triangleCount: 0,
+            boundingBox: new BoundingBox(Vector3.Zero(), Vector3.Zero()),
+          }),
       }),
       ...(normals && { normals }),
       ...(uvs && { uvs }),
@@ -329,7 +337,7 @@ export class CSGOperationsService {
     return {
       id: babylonMesh.id,
       geometry,
-      material: baseMaterial,
+      material: baseMaterial || MATERIAL_PRESETS.DEFAULT,
       transform: Matrix.Identity(),
       metadata,
     };
@@ -349,7 +357,7 @@ export class CSGOperationsService {
       message,
       operationType,
       timestamp: new Date(),
-      details,
+      ...(details && { details }),
     };
 
     return error;

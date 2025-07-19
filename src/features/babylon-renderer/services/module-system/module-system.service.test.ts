@@ -69,12 +69,12 @@ describe('ModuleSystemService', () => {
         {
           type: 'module_parameter',
           name: 'size',
-          defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode,
+          defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
         },
         {
           type: 'module_parameter',
           name: 'center',
-          defaultValue: { type: 'boolean', value: false } as ASTNode,
+          defaultValue: { type: 'boolean', value: false } as ASTNode
         },
       ];
       const moduleDefNode = createModuleDefinition('parametric_box', parameters, []);
@@ -101,11 +101,7 @@ describe('ModuleSystemService', () => {
 
     it('should overwrite existing module with same name', async () => {
       const module1 = createModuleDefinition('test_module', [], []);
-      const module2 = createModuleDefinition(
-        'test_module',
-        [{ type: 'module_parameter', name: 'param' }],
-        []
-      );
+      const module2 = createModuleDefinition('test_module', [{ type: 'module_parameter', name: 'param' }], []);
 
       await moduleService.registerModule(module1);
       await moduleService.registerModule(module2);
@@ -125,12 +121,12 @@ describe('ModuleSystemService', () => {
           {
             type: 'module_parameter',
             name: 'size',
-            defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode,
+            defaultValue: { type: 'vector', value: [10, 10, 10] } as ASTNode
           },
           {
             type: 'module_parameter',
             name: 'center',
-            defaultValue: { type: 'boolean', value: false } as ASTNode,
+            defaultValue: { type: 'boolean', value: false } as ASTNode
           },
         ],
         []
@@ -311,7 +307,7 @@ describe('ModuleSystemService', () => {
     });
 
     it('should process children() with specific index', async () => {
-      const childrenNode: ChildrenNode = { type: 'children', index: 1 };
+      const childrenNode: ChildrenNode = { type: 'children', indices: [1] };
       const childNodes = [
         createTestASTNode('child1'),
         createTestASTNode('child2'),
@@ -338,7 +334,7 @@ describe('ModuleSystemService', () => {
     });
 
     it('should fail with invalid child index', async () => {
-      const childrenNode: ChildrenNode = { type: 'children', index: 5 };
+      const childrenNode: ChildrenNode = { type: 'children', indices: [5] };
       const context: ModuleExecutionContext = {
         variables: {},
         moduleParameters: {},
@@ -435,4 +431,6 @@ describe('ModuleSystemService', () => {
       },
     };
   }
+
+
 });

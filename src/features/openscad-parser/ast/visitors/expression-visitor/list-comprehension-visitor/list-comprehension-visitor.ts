@@ -461,7 +461,7 @@ export class ListComprehensionVisitor extends BaseASTVisitor {
     const resultNode: ast.ListComprehensionExpressionNode = {
       type: 'list_comprehension' as const,
       variable: forClause.variable, // Checked for null/empty and error propagation above
-      range: forClause.range, // Error propagation handled above
+      iterable: forClause.range, // Error propagation handled above
       expression: bodyExpressionAstNode, // Checked for null and error propagation above
       location: getLocation(node),
     };
