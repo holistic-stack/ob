@@ -368,6 +368,17 @@ export class ModuleSystemService {
    * Evaluate parameter value in context
    */
   private evaluateParameterValue(value: unknown, _context: VariableContext): unknown {
+    // Handle Value objects by extracting their values
+    if (typeof value === 'object' && value !== null && 'type' in value && 'value' in value) {
+      const valueObj = value as { type: string; value: unknown };
+      // For Value objects (boolean, number, string, vector, etc.), extract the actual value
+      if (
+        ['boolean', 'number', 'string', 'vector', 'range', 'identifier'].includes(valueObj.type)
+      ) {
+        return valueObj.value;
+      }
+    }
+
     // For now, return the value as-is
     // In a full implementation, this would evaluate expressions and resolve variables
     return value;

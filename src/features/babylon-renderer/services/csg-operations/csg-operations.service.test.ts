@@ -6,10 +6,43 @@
  */
 
 import { BoundingBox, Matrix, NullEngine, Scene, Vector3 } from '@babylonjs/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GenericMeshData } from '../../types/generic-mesh-data.types';
 import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
 import { CSGOperationsService } from './csg-operations.service';
+
+// Mock BabylonJS CSG2 functions to prevent timeouts
+vi.mock('@babylonjs/core', async () => {
+  const actual = await vi.importActual('@babylonjs/core');
+
+  // Create mock CSG instance
+  const mockCSGInstance = {
+    union: vi.fn().mockReturnThis(),
+    subtract: vi.fn().mockReturnThis(),
+    intersect: vi.fn().mockReturnThis(),
+    toMesh: vi.fn().mockReturnValue({
+      name: 'mock-result-mesh',
+      dispose: vi.fn(),
+      getVerticesData: vi.fn().mockReturnValue(new Float32Array([0, 0, 0])),
+      getIndices: vi.fn().mockReturnValue(new Uint32Array([0, 1, 2])),
+      getBoundingInfo: vi.fn().mockReturnValue({
+        boundingBox: {
+          minimum: { x: -1, y: -1, z: -1 },
+          maximum: { x: 1, y: 1, z: 1 },
+        },
+      }),
+    }),
+  };
+
+  return {
+    ...actual,
+    CSG2: {
+      FromMesh: vi.fn().mockReturnValue(mockCSGInstance),
+    },
+    InitializeCSG2Async: vi.fn().mockResolvedValue(undefined),
+    IsCSG2Ready: vi.fn().mockReturnValue(true),
+  };
+});
 
 describe('CSGOperationsService', () => {
   let engine: NullEngine;

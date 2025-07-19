@@ -9,6 +9,8 @@ import { NullEngine, Scene } from '@babylonjs/core';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
+import { InspectorTab } from '../../services/babylon-inspector-service';
 import { BabylonInspector, type BabylonInspectorProps } from './babylon-inspector';
 
 // Mock ResizeObserver for tests
@@ -24,6 +26,11 @@ vi.mock('@babylonjs/inspector', () => ({
     Show: vi.fn().mockResolvedValue(undefined),
     Hide: vi.fn(),
   },
+}));
+
+// Mock useBabylonInspector hook
+vi.mock('../../hooks/use-babylon-inspector', () => ({
+  useBabylonInspector: vi.fn(),
 }));
 
 describe('BabylonInspector', () => {
@@ -42,6 +49,31 @@ describe('BabylonInspector', () => {
     });
     scene = new Scene(engine);
     user = userEvent.setup();
+
+    // Setup useBabylonInspector mock
+    vi.mocked(useBabylonInspector).mockReturnValue({
+      inspectorService: null,
+      inspectorState: {
+        isVisible: false,
+        isEmbedded: false,
+        currentTab: InspectorTab.SCENE,
+        scene: null,
+        lastUpdated: new Date(),
+      },
+      deferredInspectorState: {
+        isVisible: false,
+        isEmbedded: false,
+        currentTab: InspectorTab.SCENE,
+        scene: null,
+        lastUpdated: new Date(),
+      },
+      showInspector: vi.fn().mockResolvedValue({ success: true }),
+      hideInspector: vi.fn().mockReturnValue({ success: true }),
+      switchTab: vi.fn().mockResolvedValue({ success: true }),
+      isInspectorAvailable: true,
+      isPending: false,
+      startTransition: vi.fn((callback) => callback()),
+    });
   });
 
   afterEach(() => {
@@ -49,6 +81,32 @@ describe('BabylonInspector', () => {
     scene.dispose();
     engine.dispose();
   });
+
+  const setupMockForVisibility = (isVisible: boolean) => {
+    vi.mocked(useBabylonInspector).mockReturnValue({
+      inspectorService: null,
+      inspectorState: {
+        isVisible,
+        isEmbedded: false,
+        currentTab: InspectorTab.SCENE,
+        scene: null,
+        lastUpdated: new Date(),
+      },
+      deferredInspectorState: {
+        isVisible,
+        isEmbedded: false,
+        currentTab: InspectorTab.SCENE,
+        scene: null,
+        lastUpdated: new Date(),
+      },
+      showInspector: vi.fn().mockResolvedValue({ success: true }),
+      hideInspector: vi.fn().mockReturnValue({ success: true }),
+      switchTab: vi.fn().mockResolvedValue({ success: true }),
+      isInspectorAvailable: true,
+      isPending: false,
+      startTransition: vi.fn((callback) => callback()),
+    });
+  };
 
   const renderInspector = (props: Partial<BabylonInspectorProps> = {}) => {
     const defaultProps: BabylonInspectorProps = {
@@ -58,6 +116,9 @@ describe('BabylonInspector', () => {
       enablePopup: false,
       ...props,
     };
+
+    // Setup mock based on isVisible prop
+    setupMockForVisibility(defaultProps.isVisible || false);
 
     return render(<BabylonInspector {...defaultProps} />);
   };

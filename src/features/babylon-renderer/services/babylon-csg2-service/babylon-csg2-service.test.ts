@@ -56,6 +56,8 @@ vi.mock('@babylonjs/core', async () => {
     CSG2: {
       FromMesh: vi.fn().mockReturnValue(mockCSGInstance),
     },
+    InitializeCSG2Async: vi.fn().mockResolvedValue(undefined),
+    IsCSG2Ready: vi.fn().mockReturnValue(true),
   };
 });
 
