@@ -178,13 +178,7 @@ export type {
 } from './extrusion-operations';
 // Extrusion Operations Service
 export { ExtrusionOperationsService } from './extrusion-operations';
-export type {
-  GridAxisConfig,
-  GridAxisError,
-  GridAxisSetup,
-} from './grid-axis';
-// Grid and Axis Service
-export { GridAxisService } from './grid-axis';
+
 export type {
   ImportError,
   ImportOperationParams,

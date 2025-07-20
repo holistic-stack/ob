@@ -17,8 +17,7 @@ import type {
   BabylonSceneConfig as ServiceSceneConfig,
 } from '../../services/babylon-scene-service';
 import { createBabylonSceneService } from '../../services/babylon-scene-service';
-import { GridAxisService } from '../../services/grid-axis';
-import type { GridAxisConfig } from '../../services/grid-axis';
+
 import { OrientationGizmoService } from '../../services/orientation-gizmo';
 import type { OrientationGizmoConfig } from '../../services/orientation-gizmo';
 import { performCompleteBufferClearing } from '../../utils/buffer-clearing/buffer-clearing';
@@ -85,7 +84,7 @@ export interface BabylonSceneProps {
   readonly config?: Partial<BabylonSceneConfig>;
   readonly camera?: Partial<CameraConfig>;
   readonly lighting?: Partial<LightingConfig>;
-  readonly grid?: Partial<GridAxisConfig>;
+
   readonly orientationGizmo?: Partial<OrientationGizmoConfig>;
   readonly children?: React.ReactNode;
   readonly onSceneReady?: (scene: BabylonSceneType) => void;
@@ -147,18 +146,7 @@ const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
   },
 } as const;
 
-/**
- * Default grid configuration
- */
-const DEFAULT_GRID_CONFIG: Partial<GridAxisConfig> = {
-  showGrid: true,
-  showAxes: true,
-  gridSize: 20,
-  gridSpacing: 1,
-  gridSubdivisions: 10,
-  axisLength: 5,
-  axisThickness: 0.1,
-} as const;
+
 
 /**
  * Default orientation gizmo configuration
@@ -181,7 +169,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   config: userConfig,
   camera: userCamera,
   lighting: userLighting,
-  grid: userGrid,
   orientationGizmo: userGizmo,
   onSceneReady,
   onEngineReady,
@@ -192,6 +179,9 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const engineRef = useRef<BabylonEngineType | null>(null);
+
+  // Store service references for proper cleanup
+  const orientationGizmoServiceRef = useRef<OrientationGizmoService | null>(null);
 
   // Merge configurations with defaults - use deep comparison to prevent unnecessary re-initialization
   const config = useMemo(
@@ -219,13 +209,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
     [JSON.stringify(userLighting)] // Deep comparison to prevent engine recreation
   );
 
-  const grid = useMemo(
-    () => ({
-      ...DEFAULT_GRID_CONFIG,
-      ...userGrid,
-    }),
-    [JSON.stringify(userGrid)]
-  );
+
 
   const orientationGizmo = useMemo(
     () => ({
@@ -303,21 +287,16 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService =
           sceneService;
 
-        // Initialize grid and axes if enabled
-        if (grid.showGrid || grid.showAxes) {
-          const gridAxisService = new GridAxisService(scene);
-          const gridResult = await gridAxisService.setupGridAndAxes(grid);
-          if (!gridResult.success) {
-            logger.warn('[WARN][BabylonScene] Grid setup failed:', gridResult.error);
-          }
-        }
+
 
         // Initialize orientation gizmo if enabled
         if (orientationGizmo.enabled && scene.activeCamera) {
-          const gizmoService = new OrientationGizmoService(scene, scene.activeCamera as any);
-          const gizmoResult = await gizmoService.setupOrientationGizmo(orientationGizmo);
+          orientationGizmoServiceRef.current = new OrientationGizmoService(scene, scene.activeCamera as any);
+          const gizmoResult = await orientationGizmoServiceRef.current.setupOrientationGizmo(orientationGizmo);
           if (!gizmoResult.success) {
             logger.warn('[WARN][BabylonScene] Orientation gizmo setup failed:', gizmoResult.error);
+          } else {
+            logger.debug('[DEBUG][BabylonScene] Orientation gizmo initialized successfully');
           }
         }
 
@@ -368,6 +347,13 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
       if (config.enableInspector && inspectorService) {
         hideInspector();
+      }
+
+      // Dispose gizmo service
+
+      if (orientationGizmoServiceRef.current) {
+        orientationGizmoServiceRef.current.dispose();
+        orientationGizmoServiceRef.current = null;
       }
 
       // Dispose scene service

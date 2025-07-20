@@ -122,20 +122,7 @@ export const EnhancedSceneDemo: React.FC = () => {
               direction: new Vector3(-1, -1, -1),
             },
           }}
-          grid={{
-            showGrid,
-            showAxes,
-            gridSize,
-            gridSpacing: 1,
-            gridSubdivisions: 10,
-            axisLength: 8,
-            axisThickness: 0.15,
-            gridColor: new Color3(0.4, 0.4, 0.4),
-            gridOpacity: 0.6,
-            xAxisColor: new Color3(1, 0.3, 0.3),
-            yAxisColor: new Color3(0.3, 1, 0.3),
-            zAxisColor: new Color3(0.3, 0.3, 1),
-          }}
+
           orientationGizmo={{
             enabled: showGizmo,
             position: gizmoPosition,

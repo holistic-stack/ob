@@ -18,7 +18,6 @@
  */
 
 import {
-  Color3,
   Vector3,
   type ArcRotateCamera,
   type Scene,
@@ -375,27 +374,85 @@ export class OrientationGizmoService {
   }
 
   /**
-   * Position gizmo in viewport
+   * Position gizmo in viewport relative to the BabylonJS canvas
    */
   private positionGizmo(element: HTMLElement, config: Required<OrientationGizmoConfig>): void {
-    const { position, size } = config;
+    const { position, padding } = config;
+
+    // Get the BabylonJS canvas to position relative to it
+    const canvas = this.scene.getEngine().getRenderingCanvas();
+    if (!canvas) {
+      logger.warn('[WARN][OrientationGizmo] No canvas found, using viewport positioning');
+      this.positionGizmoAbsolute(element, config);
+      return;
+    }
+
+    // Get the canvas container (parent element)
+    const canvasContainer = canvas.parentElement;
+    if (!canvasContainer) {
+      logger.warn('[WARN][OrientationGizmo] No canvas container found, using absolute positioning');
+      this.positionGizmoAbsolute(element, config);
+      return;
+    }
+
+    // Position relative to the canvas container
+    element.style.position = 'absolute';
+    element.style.zIndex = '1000'; // Ensure it's above the canvas
+
+    // Append to canvas container so positioning is relative to it
+    if (element.parentElement !== canvasContainer) {
+      canvasContainer.appendChild(element);
+    }
 
     switch (position) {
       case 'top-left':
-        element.style.top = '10px';
-        element.style.left = '10px';
+        element.style.top = `${padding}px`;
+        element.style.left = `${padding}px`;
         break;
       case 'top-right':
-        element.style.top = '10px';
-        element.style.right = '10px';
+        element.style.top = `${padding}px`;
+        element.style.right = `${padding}px`;
+        element.style.left = 'auto';
         break;
       case 'bottom-left':
-        element.style.bottom = '10px';
-        element.style.left = '10px';
+        element.style.bottom = `${padding}px`;
+        element.style.left = `${padding}px`;
+        element.style.top = 'auto';
         break;
       case 'bottom-right':
-        element.style.bottom = '10px';
-        element.style.right = '10px';
+        element.style.bottom = `${padding}px`;
+        element.style.right = `${padding}px`;
+        element.style.top = 'auto';
+        element.style.left = 'auto';
+        break;
+    }
+  }
+
+  /**
+   * Fallback positioning method for absolute viewport positioning
+   */
+  private positionGizmoAbsolute(element: HTMLElement, config: Required<OrientationGizmoConfig>): void {
+    const { position, padding } = config;
+
+    element.style.position = 'fixed';
+    element.style.zIndex = '1000';
+
+    switch (position) {
+      case 'top-left':
+        element.style.top = `${padding}px`;
+        element.style.left = `${padding}px`;
+        break;
+      case 'top-right':
+        element.style.top = `${padding}px`;
+        element.style.right = `${padding}px`;
+        break;
+      case 'bottom-left':
+        element.style.bottom = `${padding}px`;
+        element.style.left = `${padding}px`;
+        break;
+      case 'bottom-right':
+        element.style.bottom = `${padding}px`;
+        element.style.right = `${padding}px`;
         break;
     }
   }
@@ -406,8 +463,22 @@ export class OrientationGizmoService {
   private startRenderLoop(): void {
     this.renderObserver = () => {
       this.update();
+      this.updateGizmoPosition(); // Update position on each frame
     };
     this.scene.onBeforeRenderObservable.add(this.renderObserver);
+  }
+
+  /**
+   * Update gizmo position to stay relative to canvas
+   */
+  private updateGizmoPosition(): void {
+    if (!this.gizmoElement || !this.currentConfig) return;
+
+    // Only update position if using canvas-relative positioning
+    const canvas = this.scene.getEngine().getRenderingCanvas();
+    if (canvas) {
+      this.positionGizmo(this.gizmoElement, this.currentConfig);
+    }
   }
 
   /**

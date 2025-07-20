@@ -138,25 +138,7 @@ describe('BabylonScene', () => {
     expect(canvas).toBeInTheDocument();
   });
 
-  it('should accept grid configuration', () => {
-    const gridConfig = {
-      showGrid: true,
-      showAxes: true,
-      gridSize: 30,
-      gridSpacing: 2,
-      axisLength: 10,
-    };
 
-    render(
-      <BabylonScene
-        grid={gridConfig}
-        style={{ width: '800px', height: '600px' }}
-      />
-    );
-
-    const canvas = screen.getByRole('img');
-    expect(canvas).toBeInTheDocument();
-  });
 
   it('should accept orientation gizmo configuration', () => {
     const gizmoConfig = {
@@ -177,13 +159,7 @@ describe('BabylonScene', () => {
     expect(canvas).toBeInTheDocument();
   });
 
-  it('should accept both grid and gizmo configurations', () => {
-    const gridConfig = {
-      showGrid: true,
-      showAxes: false,
-      gridSize: 15,
-    };
-
+  it('should accept gizmo configuration', () => {
     const gizmoConfig = {
       enabled: true,
       position: 'top-left' as const,
@@ -192,7 +168,6 @@ describe('BabylonScene', () => {
 
     render(
       <BabylonScene
-        grid={gridConfig}
         orientationGizmo={gizmoConfig}
         style={{ width: '800px', height: '600px' }}
       />
