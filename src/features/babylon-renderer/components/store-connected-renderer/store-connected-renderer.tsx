@@ -591,7 +591,8 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       const startTime = performance.now();
 
       // Only clear scene if we have existing content and the new AST is significantly different
-      const shouldClearScene = lastASTRef.current &&
+      const shouldClearScene =
+        lastASTRef.current &&
         lastASTRef.current.length > 0 &&
         (ast.length === 0 || astContentChanged);
 

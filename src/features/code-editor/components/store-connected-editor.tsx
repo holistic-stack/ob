@@ -298,13 +298,14 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   // Simple debounced store update using lodash.debounce
   // CRITICAL: Stable function that doesn't depend on 'code' to prevent recreation
   const debouncedUpdateCode = useMemo(
-    () => debounce((newCode: string) => {
-      logger.debug(`[DEBOUNCED] Store update: ${newCode.length} characters`);
+    () =>
+      debounce((newCode: string) => {
+        logger.debug(`[DEBOUNCED] Store update: ${newCode.length} characters`);
 
-      // Always update - let the store handle duplicate detection
-      updateCode(newCode);
-      markDirty();
-    }, TYPING_DEBOUNCE_MS),
+        // Always update - let the store handle duplicate detection
+        updateCode(newCode);
+        markDirty();
+      }, TYPING_DEBOUNCE_MS),
     [updateCode, markDirty] // Stable dependencies only
   );
 

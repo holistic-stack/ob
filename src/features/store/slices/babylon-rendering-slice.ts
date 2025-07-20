@@ -1492,7 +1492,9 @@ export const createBabylonRenderingSlice = (
                 let minZ = Number.POSITIVE_INFINITY;
                 let maxZ = Number.NEGATIVE_INFINITY;
 
-                const allSceneMeshes = scene.meshes.filter(mesh => mesh.isVisible && mesh.isEnabled());
+                const allSceneMeshes = scene.meshes.filter(
+                  (mesh) => mesh.isVisible && mesh.isEnabled()
+                );
 
                 for (const mesh of allSceneMeshes) {
                   const boundingInfo = mesh.getBoundingInfo();
@@ -1517,11 +1519,7 @@ export const createBabylonRenderingSlice = (
                     (minZ + maxZ) / 2
                   );
 
-                  const sceneSize = new Vector3(
-                    maxX - minX,
-                    maxY - minY,
-                    maxZ - minZ
-                  );
+                  const sceneSize = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
                   const diagonal = sceneSize.length();
                   const optimalRadius = Math.max(diagonal * 1.5, 5); // Minimum radius of 5
@@ -1534,7 +1532,9 @@ export const createBabylonRenderingSlice = (
                     `[DEBUG][BabylonRenderingSlice] Auto-framing completed: target=(${sceneCenter.x.toFixed(1)}, ${sceneCenter.y.toFixed(1)}, ${sceneCenter.z.toFixed(1)}), radius=${optimalRadius.toFixed(1)}`
                   );
                 } else {
-                  logger.warn('[WARN][BabylonRenderingSlice] No valid meshes found for auto-framing');
+                  logger.warn(
+                    '[WARN][BabylonRenderingSlice] No valid meshes found for auto-framing'
+                  );
                 }
               } else {
                 logger.warn('[WARN][BabylonRenderingSlice] Auto-framing requires ArcRotateCamera');
@@ -1587,7 +1587,9 @@ export const createBabylonRenderingSlice = (
     },
 
     clearScene: () => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Clearing scene (optimized for no flickering)...');
+      logger.debug(
+        '[DEBUG][BabylonRenderingSlice] Clearing scene (optimized for no flickering)...'
+      );
 
       set((state: WritableDraft<AppStore>) => {
         let clearedCount = 0;

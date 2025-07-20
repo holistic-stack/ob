@@ -52,19 +52,43 @@ export class TransformationBabylonNode extends BabylonJSNode {
     childNodes: BabylonJSNode[] = [],
     sourceLocation?: SourceLocation
   ) {
-    super(
-      name,
-      scene,
-      BabylonJSNodeType.Translate, // Will be updated based on transformation type
-      originalOpenscadNode,
-      sourceLocation
+    // Map transformation type to correct BabylonJS node type
+    const nodeType = TransformationBabylonNode.mapTransformationTypeToNodeType(
+      originalOpenscadNode.type
     );
+
+    super(name, scene, nodeType, originalOpenscadNode, sourceLocation);
 
     this.transformationType = originalOpenscadNode.type;
     this.parameters = this.extractParameters(originalOpenscadNode);
     this.childNodes = childNodes;
 
-    logger.debug(`[INIT] Created transformation BabylonJS node for ${this.transformationType}`);
+    logger.debug(
+      `[INIT] Created transformation BabylonJS node for ${this.transformationType} (${nodeType})`
+    );
+  }
+
+  /**
+   * Map OpenSCAD transformation type to BabylonJS node type
+   */
+  private static mapTransformationTypeToNodeType(transformationType: string): BabylonJSNodeType {
+    switch (transformationType) {
+      case 'translate':
+        return BabylonJSNodeType.Translate;
+      case 'rotate':
+        return BabylonJSNodeType.Rotate;
+      case 'scale':
+        return BabylonJSNodeType.Scale;
+      case 'mirror':
+        return BabylonJSNodeType.Mirror;
+      case 'color':
+        return BabylonJSNodeType.Color;
+      default:
+        logger.warn(
+          `[INIT] Unknown transformation type: ${transformationType}, defaulting to Translate`
+        );
+        return BabylonJSNodeType.Translate;
+    }
   }
 
   /**
@@ -80,14 +104,28 @@ export class TransformationBabylonNode extends BabylonJSNode {
         }
 
         // Generate child meshes first
+        logger.debug(
+          `[GENERATE] Generating ${this.childNodes.length} child nodes for ${this.transformationType}`
+        );
         const childMeshes: AbstractMesh[] = [];
         for (const childNode of this.childNodes) {
+          logger.debug(
+            `[GENERATE] Generating child mesh for node: ${childNode.name} (${childNode.nodeType})`
+          );
           const childResult = await childNode.generateMesh();
           if (!childResult.success) {
+            logger.error(
+              `[GENERATE] Failed to generate child mesh for ${childNode.name}: ${childResult.error.message}`
+            );
             throw new Error(`Failed to generate child mesh: ${childResult.error.message}`);
           }
+          logger.debug(`[GENERATE] Successfully generated child mesh: ${childResult.data.name}`);
           childMeshes.push(childResult.data);
         }
+
+        logger.debug(
+          `[GENERATE] Generated ${childMeshes.length} child meshes, applying ${this.transformationType} transformation`
+        );
 
         // Apply transformation to child meshes
         const transformedMesh = this.applyTransformation(childMeshes);
@@ -127,6 +165,10 @@ export class TransformationBabylonNode extends BabylonJSNode {
       throw new Error('Scene is required');
     }
 
+    logger.debug(
+      `[APPLY_TRANSFORM] Applying transformation type: ${this.transformationType} to ${childMeshes.length} child meshes`
+    );
+
     switch (this.transformationType) {
       case 'translate':
         return this.applyTranslateTransformation(childMeshes);
@@ -164,15 +206,18 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
       logger.debug(
         `[TRANSLATE] Translated mesh '${childMesh.name}': ` +
-        `(${originalPosition.x}, ${originalPosition.y}, ${originalPosition.z}) → ` +
-        `(${childMesh.position.x}, ${childMesh.position.y}, ${childMesh.position.z})`
+          `(${originalPosition.x}, ${originalPosition.y}, ${originalPosition.z}) → ` +
+          `(${childMesh.position.x}, ${childMesh.position.y}, ${childMesh.position.z})`
       );
     }
 
     // Return the first child mesh as the representative mesh
     // In OpenSCAD, translate() returns the translated object, not a container
     if (childMeshes.length > 0) {
-      return childMeshes[0]!; // Non-null assertion since we checked length
+      const firstMesh = childMeshes[0];
+      if (firstMesh) {
+        return firstMesh;
+      }
     }
 
     // Fallback: create an empty transform node if no children
@@ -184,28 +229,55 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
   /**
    * Apply rotate transformation with OpenSCAD-compatible parameters
+   * Uses direct mesh rotation approach following KISS principles (same as translate fix)
    */
   private applyRotateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const rotation = this.extractRotationAngles();
 
-    // Create a parent mesh to hold the rotated children
-    const { MeshBuilder } = require('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
-    parentMesh.isVisible = false; // Make parent invisible
+    logger.debug(
+      `[ROTATE] Applying rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees to ${childMeshes.length} child meshes`
+    );
 
-    // Apply rotation to parent (convert degrees to radians)
-    parentMesh.rotation = new BabylonVector3(
+    // Apply rotation directly to each child mesh (KISS principle)
+    // This is the same direct approach that worked for translation
+    for (const childMesh of childMeshes) {
+      const originalRotation = childMesh.rotation.clone();
+
+      // Convert degrees to radians and apply rotation
+      const rotationRadians = new BabylonVector3(
+        (rotation.x * Math.PI) / 180,
+        (rotation.y * Math.PI) / 180,
+        (rotation.z * Math.PI) / 180
+      );
+
+      // Apply rotation by adding to current rotation
+      childMesh.rotation.addInPlace(rotationRadians);
+
+      logger.debug(
+        `[ROTATE] Rotated mesh '${childMesh.name}': ` +
+          `(${originalRotation.x}, ${originalRotation.y}, ${originalRotation.z}) → ` +
+          `(${childMesh.rotation.x}, ${childMesh.rotation.y}, ${childMesh.rotation.z}) radians`
+      );
+    }
+
+    // Return the first child mesh as the representative mesh
+    // In OpenSCAD, rotate() returns the rotated object, not a container
+    if (childMeshes.length > 0) {
+      const firstMesh = childMeshes[0];
+      if (firstMesh) {
+        return firstMesh;
+      }
+    }
+
+    // Fallback: create an empty transform node if no children
+    const { TransformNode } = require('@babylonjs/core');
+    const emptyNode = new TransformNode(`${this.name}_empty`, this.scene);
+    emptyNode.rotation = new BabylonVector3(
       (rotation.x * Math.PI) / 180,
       (rotation.y * Math.PI) / 180,
       (rotation.z * Math.PI) / 180
     );
-
-    // Parent all child meshes to the rotated parent
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentMesh;
-    }
-
-    return parentMesh;
+    return emptyNode as AbstractMesh; // Cast to AbstractMesh for compatibility
   }
 
   /**
@@ -269,7 +341,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
     // Apply color to all child meshes
     for (const childMesh of childMeshes) {
-      const material = new StandardMaterial(`${childMesh.name}_colored`, this.scene!);
+      const material = new StandardMaterial(`${childMesh.name}_colored`, this.scene || undefined);
       material.diffuseColor = color;
       material.alpha = alpha;
       childMesh.material = material;
@@ -301,8 +373,18 @@ export class TransformationBabylonNode extends BabylonJSNode {
    * Extract rotation angles from parameters
    */
   private extractRotationAngles(): Vector3 {
-    const rotateNode = this.originalOpenscadNode as RotateNode;
-    const rotation = rotateNode.a; // Use 'a' property for angle
+    const rotateNode = this.originalOpenscadNode as {
+      v?: number[] | number;
+      a?: number[] | number;
+    };
+
+    // Try 'v' property first (this is where the rotation values are stored)
+    let rotation = rotateNode.v;
+
+    // Fallback to 'a' property if 'v' is not available
+    if (!rotation) {
+      rotation = rotateNode.a;
+    }
 
     if (Array.isArray(rotation) && rotation.length >= 3) {
       return new BabylonVector3(

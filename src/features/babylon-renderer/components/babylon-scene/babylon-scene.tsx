@@ -345,7 +345,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     // Note: Camera and lighting updates would require more complex logic
     // For now, we prioritize preventing engine recreation over dynamic updates
-
   }, [config, camera, lighting]); // Only update configuration, don't recreate engine
 
   /**

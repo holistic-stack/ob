@@ -4,13 +4,13 @@
  * Tests the exact code: sphere(10); translate([15,0,0]) cube(15, center=true);
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import { NullEngine, Scene } from '@babylonjs/core';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import { TransformationBabylonNode } from './transformation-babylon-node.js';
-import { PrimitiveBabylonNode } from './primitive-babylon-node.js';
-import type { TranslateNode, CubeNode } from '../../../openscad-parser/ast/ast-types.js';
+import type { CubeNode, TranslateNode } from '../../../openscad-parser/ast/ast-types.js';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
+import { PrimitiveBabylonNode } from './primitive-babylon-node.js';
+import { TransformationBabylonNode } from './transformation-babylon-node.js';
 
 describe('OpenSCAD Translate Example', () => {
   let engine: NullEngine;
@@ -44,7 +44,7 @@ describe('OpenSCAD Translate Example', () => {
 
     // Parse the OpenSCAD code
     const ast = parser.parseAST(openscadCode);
-    
+
     expect(ast).toBeDefined();
     expect(Array.isArray(ast)).toBe(true);
     expect(ast.length).toBe(2); // sphere + translate
@@ -73,7 +73,7 @@ describe('OpenSCAD Translate Example', () => {
   it('should create BabylonJS nodes for the translate example', async () => {
     const openscadCode = 'translate([15,0,0]) cube(15, center=true);';
     const ast = parser.parseAST(openscadCode);
-    
+
     expect(ast.length).toBeGreaterThan(0);
     const translateNode = ast[0] as TranslateNode;
 
@@ -101,7 +101,7 @@ describe('OpenSCAD Translate Example', () => {
       expect(mesh.name).toBe('translate_example');
       expect(mesh.metadata?.isTransformation).toBe(true);
       expect(mesh.metadata?.transformationType).toBe('translate');
-      
+
       // Check that the translation was applied correctly
       expect(mesh.position.x).toBe(15);
       expect(mesh.position.y).toBe(0);
@@ -177,7 +177,7 @@ describe('OpenSCAD Translate Example', () => {
     for (const testCase of testCases) {
       const ast = parser.parseAST(testCase.code);
       expect(ast.length).toBeGreaterThan(0);
-      
+
       const translateNode = ast[0] as TranslateNode;
       expect(translateNode.type).toBe('translate');
       expect(translateNode.v).toEqual(testCase.expected);
