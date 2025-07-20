@@ -17,6 +17,10 @@ import type {
   BabylonSceneConfig as ServiceSceneConfig,
 } from '../../services/babylon-scene-service';
 import { createBabylonSceneService } from '../../services/babylon-scene-service';
+import { GridAxisService } from '../../services/grid-axis';
+import type { GridAxisConfig } from '../../services/grid-axis';
+import { OrientationGizmoService } from '../../services/orientation-gizmo';
+import type { OrientationGizmoConfig } from '../../services/orientation-gizmo';
 import { performCompleteBufferClearing } from '../../utils/buffer-clearing/buffer-clearing';
 
 const logger = createLogger('BabylonScene');
@@ -81,6 +85,8 @@ export interface BabylonSceneProps {
   readonly config?: Partial<BabylonSceneConfig>;
   readonly camera?: Partial<CameraConfig>;
   readonly lighting?: Partial<LightingConfig>;
+  readonly grid?: Partial<GridAxisConfig>;
+  readonly orientationGizmo?: Partial<OrientationGizmoConfig>;
   readonly children?: React.ReactNode;
   readonly onSceneReady?: (scene: BabylonSceneType) => void;
   readonly onEngineReady?: (engine: BabylonEngineType) => void;
@@ -142,6 +148,30 @@ const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
 } as const;
 
 /**
+ * Default grid configuration
+ */
+const DEFAULT_GRID_CONFIG: Partial<GridAxisConfig> = {
+  showGrid: true,
+  showAxes: true,
+  gridSize: 20,
+  gridSpacing: 1,
+  gridSubdivisions: 10,
+  axisLength: 5,
+  axisThickness: 0.1,
+} as const;
+
+/**
+ * Default orientation gizmo configuration
+ */
+const DEFAULT_GIZMO_CONFIG: Partial<OrientationGizmoConfig> = {
+  enabled: true,
+  position: 'top-right',
+  size: 90,
+  enableTransitions: true,
+  transitionDuration: 500,
+} as const;
+
+/**
  * BabylonJS Scene Component
  *
  * Provides declarative scene management with React 19 compatibility.
@@ -151,6 +181,8 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   config: userConfig,
   camera: userCamera,
   lighting: userLighting,
+  grid: userGrid,
+  orientationGizmo: userGizmo,
   onSceneReady,
   onEngineReady,
   onRenderLoop,
@@ -185,6 +217,22 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       environment: { ...DEFAULT_LIGHTING_CONFIG.environment, ...userLighting?.environment },
     }),
     [JSON.stringify(userLighting)] // Deep comparison to prevent engine recreation
+  );
+
+  const grid = useMemo(
+    () => ({
+      ...DEFAULT_GRID_CONFIG,
+      ...userGrid,
+    }),
+    [JSON.stringify(userGrid)]
+  );
+
+  const orientationGizmo = useMemo(
+    () => ({
+      ...DEFAULT_GIZMO_CONFIG,
+      ...userGizmo,
+    }),
+    [JSON.stringify(userGizmo)]
   );
 
   // Initialize BabylonJS services
@@ -249,11 +297,30 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       config: serviceConfig,
       camera: serviceCameraConfig,
       lighting: serviceLightingConfig,
-      onSceneReady: (scene: BabylonSceneType) => {
+      onSceneReady: async (scene: BabylonSceneType) => {
         sceneRef.current = scene;
         // Store scene service reference for camera controls
         (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService =
           sceneService;
+
+        // Initialize grid and axes if enabled
+        if (grid.showGrid || grid.showAxes) {
+          const gridAxisService = new GridAxisService(scene);
+          const gridResult = await gridAxisService.setupGridAndAxes(grid);
+          if (!gridResult.success) {
+            logger.warn('[WARN][BabylonScene] Grid setup failed:', gridResult.error);
+          }
+        }
+
+        // Initialize orientation gizmo if enabled
+        if (orientationGizmo.enabled && scene.activeCamera) {
+          const gizmoService = new OrientationGizmoService(scene, scene.activeCamera as any);
+          const gizmoResult = await gizmoService.setupOrientationGizmo(orientationGizmo);
+          if (!gizmoResult.success) {
+            logger.warn('[WARN][BabylonScene] Orientation gizmo setup failed:', gizmoResult.error);
+          }
+        }
+
         onSceneReady?.(scene);
       },
       ...(onRenderLoop && { onRenderLoop }),
