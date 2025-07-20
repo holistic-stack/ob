@@ -162,84 +162,107 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Apply union operation to multiple meshes
    */
   private async applyUnionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    logger.debug(`[UNION] Applying union operation to ${meshes.length} meshes`);
-
-    // Start with the first mesh
-    let result = meshes[0];
-    if (!result) {
-      throw new Error('Union operation requires at least one valid mesh');
-    }
-
-    // Union with each subsequent mesh
-    for (let i = 1; i < meshes.length; i++) {
-      const mesh = meshes[i];
-      if (!mesh) continue;
-      const unionResult = await this.csgService.union(result as Mesh, mesh as Mesh);
-
-      if (!unionResult.success) {
-        throw new Error(`Union operation failed: ${unionResult.error.message}`);
-      }
-
-      result = unionResult.data.resultMesh;
-    }
-
-    return result;
+    return this.applyCSGOperationToMeshes(
+      meshes,
+      'UNION',
+      (a, b) => this.csgService.union(a, b),
+      'Combined'
+    );
   }
 
   /**
    * Apply difference operation to multiple meshes
    */
   private async applyDifferenceOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    logger.debug(`[DIFFERENCE] Applying difference operation to ${meshes.length} meshes`);
-
-    // Start with the first mesh
-    let result = meshes[0];
-    if (!result) {
-      throw new Error('Difference operation requires at least one valid mesh');
-    }
-
-    // Subtract each subsequent mesh
-    for (let i = 1; i < meshes.length; i++) {
-      const mesh = meshes[i];
-      if (!mesh) continue;
-      const differenceResult = await this.csgService.difference(result as Mesh, mesh as Mesh);
-
-      if (!differenceResult.success) {
-        throw new Error(`Difference operation failed: ${differenceResult.error.message}`);
-      }
-
-      result = differenceResult.data.resultMesh;
-    }
-
-    return result;
+    return this.applyCSGOperationToMeshes(
+      meshes,
+      'DIFFERENCE',
+      (a, b) => this.csgService.difference(a, b),
+      'Subtracted'
+    );
   }
 
   /**
    * Apply intersection operation to multiple meshes
    */
   private async applyIntersectionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    logger.debug(`[INTERSECTION] Applying intersection operation to ${meshes.length} meshes`);
+    return this.applyCSGOperationToMeshes(
+      meshes,
+      'INTERSECTION',
+      (a, b) => this.csgService.intersection(a, b),
+      'Intersected'
+    );
+  }
 
-    // Start with the first mesh
-    let result = meshes[0];
-    if (!result) {
-      throw new Error('Intersection operation requires at least one valid mesh');
+  /**
+   * Generic method to apply CSG operations with proper mesh disposal
+   * Follows DRY principle by consolidating common CSG operation logic
+   */
+  private async applyCSGOperationToMeshes(
+    meshes: AbstractMesh[],
+    operationType: string,
+    csgOperation: (a: Mesh, b: Mesh) => Promise<any>,
+    actionVerb: string
+  ): Promise<AbstractMesh> {
+    logger.debug(`[${operationType}] Applying ${operationType.toLowerCase()} operation to ${meshes.length} meshes`);
+
+    // Validate input
+    if (!meshes[0]) {
+      throw new Error(`${operationType} operation requires at least one valid mesh`);
     }
 
-    // Intersect with each subsequent mesh
+    let result = meshes[0];
+
+    // Apply operation to each subsequent mesh
     for (let i = 1; i < meshes.length; i++) {
       const mesh = meshes[i];
       if (!mesh) continue;
-      const intersectionResult = await this.csgService.intersection(result as Mesh, mesh as Mesh);
 
-      if (!intersectionResult.success) {
-        throw new Error(`Intersection operation failed: ${intersectionResult.error.message}`);
+      const operationResult = await csgOperation(result as Mesh, mesh as Mesh);
+
+      if (!operationResult.success) {
+        throw new Error(`${operationType} operation failed: ${operationResult.error.message}`);
       }
 
-      result = intersectionResult.data.resultMesh;
+      // Dispose intermediate meshes to prevent memory leaks and visual artifacts
+      this.disposeIntermediateMesh(result, i);
+      this.disposeProcessedMesh(mesh);
+
+      result = operationResult.data.resultMesh;
+      logger.debug(`[${operationType}] ${actionVerb} mesh ${i} with base, intermediate meshes disposed`);
     }
 
+    // Dispose original base mesh if we performed operations
+    this.disposeOriginalBaseMesh(meshes, operationType);
+
     return result;
+  }
+
+  /**
+   * Dispose intermediate result mesh (follows SRP - single responsibility for mesh disposal)
+   */
+  private disposeIntermediateMesh(mesh: AbstractMesh, iteration: number): void {
+    // Only dispose intermediate results, not the original base mesh
+    if (iteration > 1) {
+      mesh.dispose();
+    }
+  }
+
+  /**
+   * Dispose processed mesh that's no longer needed (follows SRP)
+   */
+  private disposeProcessedMesh(mesh: AbstractMesh): void {
+    mesh.dispose();
+  }
+
+  /**
+   * Dispose original base mesh after all operations are complete (follows SRP)
+   */
+  private disposeOriginalBaseMesh(meshes: AbstractMesh[], operationType: string): void {
+    if (meshes.length > 1 && meshes[0]) {
+      meshes[0].dispose();
+      logger.debug(`[${operationType}] Disposed original base mesh, final result ready`);
+    }
   }
 
   /**

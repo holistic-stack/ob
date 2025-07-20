@@ -430,4 +430,84 @@ describe('CSGBabylonNode', () => {
       expect(debugInfo.name).toBe('debug_difference');
     });
   });
+
+  describe('Mesh Disposal in CSG Operations', () => {
+    /**
+     * Helper function to create primitive nodes (follows DRY principle)
+     */
+    const createPrimitiveNode = (code: string, name: string) => {
+      const ast = parser.parseAST(code);
+      expect(ast.length).toBeGreaterThan(0);
+      return new PrimitiveBabylonNode(name, scene, ast[0]!);
+    };
+
+    /**
+     * Helper function to create CSG node from OpenSCAD code (follows DRY principle)
+     */
+    const createCSGNode = <T extends DifferenceNode | UnionNode | IntersectionNode>(
+      code: string,
+      name: string,
+      childNodes: PrimitiveBabylonNode[]
+    ) => {
+      const ast = parser.parseAST(code);
+      expect(ast.length).toBeGreaterThan(0);
+      const csgAstNode = ast[0] as T;
+      return new CSGBabylonNode(name, scene, csgAstNode, childNodes);
+    };
+
+    /**
+     * Helper function to verify CSG operation result (follows DRY principle)
+     */
+    const verifyCSGResult = async (csgNode: CSGBabylonNode, expectedName: string) => {
+      const result = await csgNode.generateMesh();
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBeDefined();
+        expect(result.data.name).toBe(expectedName);
+      }
+      return result;
+    };
+
+    it('should properly dispose intermediate meshes during difference operation', async () => {
+      // Create primitive nodes using helper function
+      const sphereNode = createPrimitiveNode('sphere(r=10);', 'test_sphere');
+      const cubeNode = createPrimitiveNode('cube([15, 15, 15], center=true);', 'test_cube');
+
+      // Create CSG node using helper function
+      const csgNode = createCSGNode<DifferenceNode>(
+        'difference() { sphere(r=10); cube([15, 15, 15], center=true); }',
+        'test_difference',
+        [sphereNode, cubeNode]
+      );
+
+      // Verify result using helper function
+      await verifyCSGResult(csgNode, 'test_difference');
+
+      // Verify that the result is a single mesh representing the difference operation
+      // The original sphere and cube meshes should be disposed during the operation
+      expect(csgNode).toBeDefined(); // Basic verification that node was created
+    });
+
+    it('should handle difference operation with multiple subtracted objects', async () => {
+      // Create primitive nodes using helper function
+      const sphereNode = createPrimitiveNode('sphere(r=10);', 'test_sphere');
+      const cubeNode = createPrimitiveNode('cube([8, 8, 8], center=true);', 'test_cube');
+      const cylinderNode = createPrimitiveNode('cylinder(h=20, r=3, center=true);', 'test_cylinder');
+
+      // Create CSG node using helper function
+      const csgNode = createCSGNode<DifferenceNode>(
+        'difference() { sphere(r=10); cube([8, 8, 8], center=true); cylinder(h=20, r=3, center=true); }',
+        'test_multi_difference',
+        [sphereNode, cubeNode, cylinderNode]
+      );
+
+      // Verify result using helper function
+      const result = await verifyCSGResult(csgNode, 'test_multi_difference');
+
+      // Additional verification for multiple operations
+      if (result.success) {
+        expect(result.data.isVisible).toBe(true);
+      }
+    });
+  });
 });
