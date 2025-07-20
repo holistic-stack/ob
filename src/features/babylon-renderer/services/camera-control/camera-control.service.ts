@@ -105,12 +105,12 @@ export class CameraControlService {
 
     return tryCatchAsync(
       async () => {
-        // Default configuration optimized for CAD viewing
+        // Default configuration optimized for CAD viewing with OpenSCAD Z-up standard
         const defaultConfig: Required<CADCameraConfig> = {
           target: Vector3.Zero(),
-          radius: 10,
-          alpha: Math.PI / 4, // 45 degrees
-          beta: Math.PI / 3, // 60 degrees
+          radius: 17.32, // sqrt(10^2 + 10^2 + 10^2) for consistent distance
+          alpha: Math.PI / 4, // 45 degrees around Z-axis
+          beta: Math.PI / 3, // 60 degrees from Z-axis (looking down)
           enableOrbit: true,
           enablePan: true,
           enableZoom: true,
@@ -180,6 +180,9 @@ export class CameraControlService {
         } else {
           this.camera.inertia = 0;
         }
+
+        // Set camera up vector for Z-up coordinate system (OpenSCAD standard)
+        this.camera.upVector = new Vector3(0, 0, 1);
 
         // Attach camera controls to canvas
         const canvas = this.scene.getEngine().getRenderingCanvas();

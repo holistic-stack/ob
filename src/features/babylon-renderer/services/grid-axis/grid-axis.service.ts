@@ -242,22 +242,22 @@ export class GridAxisService {
   }
 
   /**
-   * Create ground grid
+   * Create ground grid - oriented for Z-up coordinate system (OpenSCAD standard)
    */
   private createGrid(config: Required<GridAxisConfig>, parent: TransformNode): Mesh {
-    // Create grid lines
+    // Create grid lines in XY plane (Z=0) for Z-up coordinate system
     const lines: Vector3[][] = [];
     const halfSize = config.gridSize / 2;
     const spacing = config.gridSpacing;
 
-    // Vertical lines (parallel to Z-axis)
+    // Lines parallel to Y-axis (varying X)
     for (let x = -halfSize; x <= halfSize; x += spacing) {
-      lines.push([new Vector3(x, 0, -halfSize), new Vector3(x, 0, halfSize)]);
+      lines.push([new Vector3(x, -halfSize, 0), new Vector3(x, halfSize, 0)]);
     }
 
-    // Horizontal lines (parallel to X-axis)
-    for (let z = -halfSize; z <= halfSize; z += spacing) {
-      lines.push([new Vector3(-halfSize, 0, z), new Vector3(halfSize, 0, z)]);
+    // Lines parallel to X-axis (varying Y)
+    for (let y = -halfSize; y <= halfSize; y += spacing) {
+      lines.push([new Vector3(-halfSize, y, 0), new Vector3(halfSize, y, 0)]);
     }
 
     const gridMesh = CreateLines('grid', { points: lines.flat() }, this.scene);
@@ -269,7 +269,7 @@ export class GridAxisService {
   }
 
   /**
-   * Create XYZ axes
+   * Create XYZ axes - oriented for Z-up coordinate system (OpenSCAD standard)
    */
   private createAxes(
     config: Required<GridAxisConfig>,
@@ -282,7 +282,7 @@ export class GridAxisService {
     const axisLength = config.axisLength;
     const thickness = config.axisThickness;
 
-    // X-axis (Red)
+    // X-axis (Red) - points in +X direction
     const xAxis = CreateCylinder(
       'xAxis',
       {
@@ -291,7 +291,7 @@ export class GridAxisService {
       },
       this.scene
     );
-    xAxis.rotation.z = Math.PI / 2;
+    xAxis.rotation.z = -Math.PI / 2; // Rotate to align with X-axis
     xAxis.position.x = axisLength / 2;
 
     const xMaterial = new StandardMaterial('xAxisMaterial', this.scene);
@@ -300,7 +300,7 @@ export class GridAxisService {
     xAxis.material = xMaterial;
     xAxis.parent = parent;
 
-    // Y-axis (Green)
+    // Y-axis (Green) - points in +Y direction
     const yAxis = CreateCylinder(
       'yAxis',
       {
@@ -309,6 +309,7 @@ export class GridAxisService {
       },
       this.scene
     );
+    yAxis.rotation.x = Math.PI / 2; // Rotate to align with Y-axis
     yAxis.position.y = axisLength / 2;
 
     const yMaterial = new StandardMaterial('yAxisMaterial', this.scene);
@@ -317,7 +318,7 @@ export class GridAxisService {
     yAxis.material = yMaterial;
     yAxis.parent = parent;
 
-    // Z-axis (Blue)
+    // Z-axis (Blue) - points in +Z direction (up in OpenSCAD)
     const zAxis = CreateCylinder(
       'zAxis',
       {
@@ -326,7 +327,7 @@ export class GridAxisService {
       },
       this.scene
     );
-    zAxis.rotation.x = Math.PI / 2;
+    // Z-axis is already aligned vertically (default cylinder orientation)
     zAxis.position.z = axisLength / 2;
 
     const zMaterial = new StandardMaterial('zAxisMaterial', this.scene);

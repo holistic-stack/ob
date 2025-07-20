@@ -627,15 +627,15 @@ const DEFAULT_SCENE_CONFIG: BabylonSceneConfig = {
 } as const;
 
 /**
- * Default camera configuration
+ * Default camera configuration - OpenSCAD standard (Z-up, right-handed)
  */
 const DEFAULT_CAMERA_CONFIG: SceneCameraConfig = {
   type: 'arcRotate',
-  position: new Vector3(0, 5, -10),
+  position: new Vector3(10, 10, 10), // Position camera in positive octant for Z-up view
   target: new Vector3(0, 0, 0),
-  radius: 10,
-  alpha: -Math.PI / 2,
-  beta: Math.PI / 2.5,
+  radius: 17.32, // sqrt(10^2 + 10^2 + 10^2) for consistent distance
+  alpha: Math.PI / 4, // 45 degrees around Z-axis (looking from +X toward +Y)
+  beta: Math.PI / 3, // 60 degrees from Z-axis (looking down at XY plane)
   fov: Math.PI / 3,
   minZ: 0.1,
   maxZ: 1000,
@@ -819,7 +819,10 @@ export function createBabylonSceneService(): BabylonSceneService {
       camera.minZ = config.minZ ?? DEFAULT_CAMERA_CONFIG.minZ ?? 0.1;
       camera.maxZ = config.maxZ ?? DEFAULT_CAMERA_CONFIG.maxZ ?? 1000;
 
-      logger.debug('[DEBUG][BabylonSceneService] Enhanced camera controls setup completed');
+      // Set camera up vector for Z-up coordinate system (OpenSCAD standard)
+      camera.upVector = new Vector3(0, 0, 1);
+
+      logger.debug('[DEBUG][BabylonSceneService] Enhanced camera controls setup completed with Z-up orientation');
       return {
         success: true,
         data: { camera, cameraControlService },
@@ -898,7 +901,8 @@ export function createBabylonSceneService(): BabylonSceneService {
         // Create scene
         const scene = new BabylonScene(options.engine);
 
-        // Configure scene
+        // Configure scene for OpenSCAD standard coordinate system
+        scene.useRightHandedSystem = true; // Enable right-handed coordinate system
         scene.autoClear = config.autoClear;
         scene.autoClearDepthAndStencil = config.autoClearDepthAndStencil;
         scene.clearColor = new Color4(

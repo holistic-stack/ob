@@ -132,11 +132,11 @@ export function useBabylonScene(): UseBabylonSceneReturn {
           },
           camera: {
             type: 'arcRotate',
-            position: options.cameraPosition ?? new Vector3(0, 5, -10),
+            position: options.cameraPosition ?? new Vector3(10, 10, 10), // OpenSCAD Z-up standard
             target: options.cameraTarget ?? new Vector3(0, 0, 0),
-            radius: 10,
-            alpha: -Math.PI / 2,
-            beta: Math.PI / 2.5,
+            radius: 17.32, // sqrt(10^2 + 10^2 + 10^2) for consistent distance
+            alpha: Math.PI / 4, // 45 degrees around Z-axis
+            beta: Math.PI / 3, // 60 degrees from Z-axis (looking down)
             fov: Math.PI / 3,
             minZ: 0.1,
             maxZ: 1000,

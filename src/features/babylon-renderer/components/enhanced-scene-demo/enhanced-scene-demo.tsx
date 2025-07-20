@@ -103,9 +103,11 @@ export const EnhancedSceneDemo: React.FC = () => {
             enableInspector: false,
           }}
           camera={{
-            position: new Vector3(15, 10, 15),
+            position: new Vector3(15, 15, 15), // OpenSCAD Z-up standard positioning
             target: new Vector3(0, 0, 0),
-            radius: 25,
+            radius: 25.98, // sqrt(15^2 + 15^2 + 15^2) for consistent distance
+            alpha: Math.PI / 4, // 45 degrees around Z-axis
+            beta: Math.PI / 3, // 60 degrees from Z-axis
           }}
           lighting={{
             ambient: {
