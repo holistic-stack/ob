@@ -78,7 +78,6 @@
 
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
-import { evaluateExpression } from '../evaluation/expression-evaluator-registry.js';
 
 /**
  * Check if a value is an expression node.
@@ -94,8 +93,8 @@ import { evaluateExpression } from '../evaluation/expression-evaluator-registry.
  * const param = { value: { type: 'expression', expressionType: 'binary', ... } };
  *
  * if (isExpressionNode(param.value)) {
- *   // Handle expression evaluation
- *   const result = evaluateExpression(param.value, errorHandler);
+ *   // Handle expression evaluation (simplified)
+ *   const result = null; // Expression evaluation not supported
  * } else {
  *   // Handle literal value
  *   const result = param.value;
@@ -274,17 +273,14 @@ export function extractNumberParameter(
     // Handle other expression types
     if (errorHandler) {
       console.log(
-        `[extractNumberParameter] DEBUG - Attempting to evaluate expression via registry:`,
+        `[extractNumberParameter] DEBUG - Expression evaluation not supported:`,
         JSON.stringify(param.value, null, 2)
       );
       try {
-        // Use the expression evaluator registry for non-binary expressions
-        const result = evaluateExpression(param.value, errorHandler);
+        // Expression evaluation not supported - return null
+        const result = null;
 
-        console.log(
-          `[extractNumberParameter] DEBUG - Expression evaluation registry result:`,
-          result
-        );
+        console.log(`[extractNumberParameter] DEBUG - Expression evaluation result:`, result);
 
         // Check if the result is a number
         if (result !== null && typeof result === 'number') {

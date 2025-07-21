@@ -106,5 +106,5 @@ export * from './csg-visitor';
 export * from './function-visitor';
 export * from './module-visitor';
 export * from './primitive-visitor';
-export * from './query-visitor';
+
 export * from './transform-visitor';

@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import type {
   BinaryExpressionNode,
   ExpressionNode,
-  ListComprehensionExpressionNode,
   LiteralNode,
   ParenthesizedExpressionNode,
   SpecialVariableNode,
@@ -18,7 +17,6 @@ import type {
 import {
   createDefaultValue,
   evaluateBinaryExpression,
-  evaluateListComprehension,
   evaluateParenthesizedExpression,
   evaluateSpecialVariable,
   evaluationError,
@@ -157,28 +155,6 @@ describe('AST Evaluator Handlers', () => {
         expect(result.success).toBe(true);
         expect(result.value).toBe(0);
       }
-    });
-  });
-
-  describe('evaluateListComprehension handler', () => {
-    it('should return successful Result for list comprehensions', () => {
-      const listComp: ListComprehensionExpressionNode = {
-        type: 'list_comprehension',
-        variable: 'i',
-        iterable: {
-          type: 'expression',
-          expressionType: 'array',
-          items: [createLiteral(1), createLiteral(2), createLiteral(3)],
-          location: createLocation(),
-        } as ExpressionNode,
-        expression: createLiteral('i'),
-        location: createLocation(),
-      };
-
-      const result = evaluateListComprehension(listComp);
-
-      expect(result.success).toBe(true);
-      expect(result.value).toBe(null);
     });
   });
 

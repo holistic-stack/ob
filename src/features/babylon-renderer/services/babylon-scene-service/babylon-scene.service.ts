@@ -822,7 +822,9 @@ export function createBabylonSceneService(): BabylonSceneService {
       // Set camera up vector for Z-up coordinate system (OpenSCAD standard)
       camera.upVector = new Vector3(0, 0, 1);
 
-      logger.debug('[DEBUG][BabylonSceneService] Enhanced camera controls setup completed with Z-up orientation');
+      logger.debug(
+        '[DEBUG][BabylonSceneService] Enhanced camera controls setup completed with Z-up orientation'
+      );
       return {
         success: true,
         data: { camera, cameraControlService },

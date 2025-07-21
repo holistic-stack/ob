@@ -556,8 +556,6 @@ export interface BabylonRenderingActions {
   ) => Promise<Result<unknown, BabylonRenderingError>>;
   readonly getCSGState: () => CSG2State;
 
-
-
   // Materials
   readonly createMaterial: (config: unknown) => Promise<Result<string, BabylonRenderingError>>;
   readonly applyMaterial: (
@@ -565,8 +563,6 @@ export interface BabylonRenderingActions {
     meshId: string
   ) => Result<void, BabylonRenderingError>;
   readonly removeMaterial: (materialId: string) => Result<void, BabylonRenderingError>;
-
-
 
   // Scene management
   readonly setScene: (scene: Scene | null) => void;
@@ -875,10 +871,6 @@ export const createBabylonRenderingSlice = (
       return createInitialBabylonRenderingState().csg;
     },
 
-
-
-
-
     // Materials
     createMaterial: async (_config: unknown) => {
       logger.debug('[DEBUG][BabylonRenderingSlice] Creating material...');
@@ -964,8 +956,6 @@ export const createBabylonRenderingSlice = (
 
       return { success: true, data: undefined };
     },
-
-
 
     // Scene management
     setScene: (scene: Scene | null) => {

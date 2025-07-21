@@ -138,8 +138,6 @@ describe('BabylonScene', () => {
     expect(canvas).toBeInTheDocument();
   });
 
-
-
   it('should accept orientation gizmo configuration', () => {
     const gizmoConfig = {
       enabled: true,
@@ -148,12 +146,7 @@ describe('BabylonScene', () => {
       enableTransitions: false,
     };
 
-    render(
-      <BabylonScene
-
-        style={{ width: '800px', height: '600px' }}
-      />
-    );
+    render(<BabylonScene style={{ width: '800px', height: '600px' }} />);
 
     const canvas = screen.getByRole('img');
     expect(canvas).toBeInTheDocument();
@@ -166,12 +159,7 @@ describe('BabylonScene', () => {
       size: 80,
     };
 
-    render(
-      <BabylonScene
-
-        style={{ width: '800px', height: '600px' }}
-      />
-    );
+    render(<BabylonScene style={{ width: '800px', height: '600px' }} />);
 
     const canvas = screen.getByRole('img');
     expect(canvas).toBeInTheDocument();

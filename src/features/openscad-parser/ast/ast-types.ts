@@ -513,23 +513,6 @@ export interface SpecialVariableNode extends BaseNode {
 }
 
 /**
- * @interface ListComprehensionExpressionNode
- * @description Represents a list comprehension expression in OpenSCAD.
- * @property {'list_comprehension'} type - The node type.
- * @property {ExpressionNode} expression - The expression to evaluate for each item.
- * @property {string} variable - The iteration variable name.
- * @property {ExpressionNode} iterable - The collection to iterate over.
- * @property {ExpressionNode} [condition] - Optional condition to filter items.
- */
-export interface ListComprehensionExpressionNode extends BaseNode {
-  type: 'list_comprehension';
-  expression: ExpressionNode;
-  variable: string;
-  iterable: ExpressionNode;
-  condition?: ExpressionNode;
-}
-
-/**
  * @interface ParenthesizedExpressionNode
  * @description Represents a parenthesized expression in OpenSCAD.
  * @property {'parenthesized_expression'} type - The node type.
@@ -1032,7 +1015,6 @@ export type ASTNode =
   | AssignmentNode
   | VectorExpressionNode
   | SpecialVariableNode
-  | ListComprehensionExpressionNode
   | ParenthesizedExpressionNode
   | ForLoopVariable
   | IdentifierExpressionNode

@@ -5,12 +5,9 @@
  * It coordinates a hierarchy of specialized visitors to handle different parts of the OpenSCAD language.
  *
  * @architectural_decision
- * The AST generation process is designed around a layered visitor architecture. A `QueryVisitor` serves as the entry point,
- * traversing the CST and delegating to a `CompositeVisitor`. The `CompositeVisitor` then routes each node to the
- * appropriate specialized visitor (e.g., `PrimitiveVisitor`, `TransformVisitor`). This separation of concerns makes the
- * system highly modular, maintainable, and extensible. New language features can be supported by simply adding new visitors
- * without modifying existing ones. This design is crucial for managing the complexity of the OpenSCAD language and ensuring
- * that the parser is easy to maintain and extend.
+ * The AST generation process is designed around a visitor architecture. A `CompositeVisitor` serves as the entry point,
+ * routing each node to the appropriate specialized visitor (e.g., `PrimitiveVisitor`, `TransformVisitor`). This separation
+ * of concerns makes the system highly modular, maintainable, and extensible.
  *
  * @example
  * ```typescript
@@ -70,7 +67,7 @@ import { ExpressionVisitor } from './visitors/expression-visitor.js';
 import { FunctionVisitor } from './visitors/function-visitor.js';
 import { ModuleVisitor } from './visitors/module-visitor.js';
 import { PrimitiveVisitor } from './visitors/primitive-visitor.js';
-import { QueryVisitor } from './visitors/query-visitor.js';
+
 import { TransformVisitor } from './visitors/transform-visitor.js';
 import { VariableVisitor } from './visitors/variable-visitor.js';
 
@@ -81,14 +78,13 @@ import { VariableVisitor } from './visitors/variable-visitor.js';
  */
 export class VisitorASTGenerator {
   private visitor: ASTVisitor;
-  private queryVisitor: QueryVisitor;
   private previousAST: ast.ASTNode[] | null = null;
 
   /**
    * @constructor
    * @description Initializes a new instance of the `VisitorASTGenerator`, setting up the visitor hierarchy.
-   * The constructor establishes a chain of responsibility, where the `QueryVisitor` acts as the primary visitor,
-   * delegating to a `CompositeVisitor` that, in turn, delegates to a collection of specialized visitors.
+   * The constructor establishes a chain of responsibility, where the `CompositeVisitor` acts as the primary visitor,
+   * delegating to a collection of specialized visitors.
    *
    * @param {Tree} tree - The Tree-sitter parse tree (CST).
    * @param {string} source - The original OpenSCAD source code.
@@ -168,17 +164,8 @@ export class VisitorASTGenerator {
     // Set the composite visitor on the Control Structure visitor to enable child delegation
     controlStructureVisitor.setCompositeVisitor(compositeVisitor);
 
-    // Create a query visitor that uses the composite visitor
-    this.queryVisitor = new QueryVisitor(
-      this.source,
-      this.tree, // Used this.tree
-      this.language,
-      compositeVisitor,
-      this.errorHandler // Added errorHandler
-    );
-
-    // Use the query visitor as the main visitor
-    this.visitor = this.queryVisitor;
+    // Use the composite visitor as the main visitor
+    this.visitor = compositeVisitor;
   }
 
   /**
@@ -213,16 +200,9 @@ export class VisitorASTGenerator {
 
   /**
    * @method dispose
-   * @description Cleans up resources used by the generator, particularly the `QueryVisitor`,
-   * to prevent memory leaks from Tree-sitter queries. It is crucial to call this method
-   * when the generator is no longer needed to avoid retaining references to the CST and other objects.
+   * @description Cleans up resources used by the generator.
    */
   public dispose(): void {
-    // Dispose the query visitor which will clean up Query objects
-    if (this.queryVisitor && typeof this.queryVisitor.dispose === 'function') {
-      this.queryVisitor.dispose();
-    }
-
     // Clear references
     this.previousAST = null;
   }

@@ -204,7 +204,9 @@ export class CSGBabylonNode extends BabylonJSNode {
     csgOperation: (a: Mesh, b: Mesh) => Promise<any>,
     actionVerb: string
   ): Promise<AbstractMesh> {
-    logger.debug(`[${operationType}] Applying ${operationType.toLowerCase()} operation to ${meshes.length} meshes`);
+    logger.debug(
+      `[${operationType}] Applying ${operationType.toLowerCase()} operation to ${meshes.length} meshes`
+    );
 
     // Validate input
     if (!meshes[0]) {
@@ -229,7 +231,9 @@ export class CSGBabylonNode extends BabylonJSNode {
       this.disposeProcessedMesh(mesh);
 
       result = operationResult.data.resultMesh;
-      logger.debug(`[${operationType}] ${actionVerb} mesh ${i} with base, intermediate meshes disposed`);
+      logger.debug(
+        `[${operationType}] ${actionVerb} mesh ${i} with base, intermediate meshes disposed`
+      );
     }
 
     // Dispose original base mesh if we performed operations

@@ -76,7 +76,6 @@ describe('Store Selectors', () => {
         inspector: {} as any,
         csg: {} as any,
 
-
         materials: [],
 
         performanceMetrics: {} as any,

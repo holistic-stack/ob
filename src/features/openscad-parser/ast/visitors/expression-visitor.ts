@@ -71,7 +71,7 @@ import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 import { FunctionCallVisitor } from './expression-visitor/function-call-visitor.js';
-import { ListComprehensionVisitor } from './expression-visitor/list-comprehension-visitor/list-comprehension-visitor.js';
+
 import { RangeExpressionVisitor } from './expression-visitor/range-expression-visitor/range-expression-visitor.js';
 
 // List of reserved keywords that cannot be used as standalone expressions.
@@ -102,7 +102,7 @@ const _RESERVED_KEYWORDS_AS_EXPRESSION_BLOCKLIST = new Set([
 export class ExpressionVisitor extends BaseASTVisitor {
   public override variableScope: Map<string, ast.ParameterValue> = new Map();
   private readonly functionCallVisitor: FunctionCallVisitor;
-  private readonly listComprehensionVisitor: ListComprehensionVisitor;
+
   private readonly rangeExpressionVisitor: RangeExpressionVisitor;
 
   /**
@@ -122,7 +122,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
     // Initialize specialized visitors
     // This follows SRP by keeping only essential dependencies
     this.functionCallVisitor = new FunctionCallVisitor(this, errorHandler);
-    this.listComprehensionVisitor = new ListComprehensionVisitor(this, errorHandler);
+
     this.rangeExpressionVisitor = new RangeExpressionVisitor(this, errorHandler);
   }
 
@@ -429,7 +429,15 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return null;
       }
       case 'list_comprehension':
-        return this.listComprehensionVisitor.visitListComprehension(node);
+        // List comprehension not supported yet
+        return {
+          type: 'error',
+          errorCode: 'UNSUPPORTED_LIST_COMPREHENSION',
+          message: 'List comprehension expressions are not yet supported',
+          originalNodeType: node.type,
+          cstNodeText: node.text,
+          location: getLocation(node),
+        } as ast.ErrorNode;
       case 'range_expression':
         return this.rangeExpressionVisitor.visitRangeExpression(node);
       case 'module_instantiation':
@@ -817,7 +825,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return {
           type: 'error',
           errorCode: 'INVALID_PARENTHESIZED_EXPRESSION',
-          message: `Parenthesized expression contains invalid inner expression type: ${innerExpr?.type ?? 'unknown'}`,
+          message: `Parenthesized expression contains invalid inner expression type: ${(innerExpr as any)?.type ?? 'unknown'}`,
           originalNodeType: node.type,
           cstNodeText: node.text,
           location: getLocation(node),
@@ -841,8 +849,15 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return null;
       }
       case 'list_comprehension':
-        // Handle list comprehension expressions
-        return this.listComprehensionVisitor.visitListComprehension(node);
+        // List comprehension not supported yet
+        return {
+          type: 'error',
+          errorCode: 'UNSUPPORTED_LIST_COMPREHENSION',
+          message: 'List comprehension expressions are not yet supported',
+          originalNodeType: node.type,
+          cstNodeText: node.text,
+          location: getLocation(node),
+        } as ast.ErrorNode;
       case 'range_expression':
         // Handle range expressions
         return this.rangeExpressionVisitor.visitRangeExpression(node);

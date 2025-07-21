@@ -143,8 +143,6 @@ const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
   },
 } as const;
 
-
-
 // Orientation gizmo functionality removed
 
 /**
@@ -195,8 +193,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
     }),
     [JSON.stringify(userLighting)] // Deep comparison to prevent engine recreation
   );
-
-
 
   // Orientation gizmo functionality removed
 
@@ -267,8 +263,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         // Store scene service reference for camera controls
         (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService =
           sceneService;
-
-
 
         // Orientation gizmo functionality removed
 

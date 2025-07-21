@@ -492,7 +492,10 @@ describe('CSGBabylonNode', () => {
       // Create primitive nodes using helper function
       const sphereNode = createPrimitiveNode('sphere(r=10);', 'test_sphere');
       const cubeNode = createPrimitiveNode('cube([8, 8, 8], center=true);', 'test_cube');
-      const cylinderNode = createPrimitiveNode('cylinder(h=20, r=3, center=true);', 'test_cylinder');
+      const cylinderNode = createPrimitiveNode(
+        'cylinder(h=20, r=3, center=true);',
+        'test_cylinder'
+      );
 
       // Create CSG node using helper function
       const csgNode = createCSGNode<DifferenceNode>(

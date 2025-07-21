@@ -61,7 +61,6 @@ import type {
   BinaryExpressionNode,
   BinaryOperator,
   ExpressionNode,
-  ListComprehensionExpressionNode,
   ParenthesizedExpressionNode,
   SpecialVariableNode,
 } from '../ast-types.js';
@@ -251,25 +250,6 @@ export function evaluateParenthesizedExpression(
 }
 
 /**
- * @function evaluateListComprehension
- * @description Handles the evaluation of a `ListComprehensionExpressionNode`.
- * Currently returns `null` as a placeholder, as list comprehensions do not directly produce geometry.
- *
- * @param {ListComprehensionExpressionNode} _node - The list comprehension expression node (parameter is currently unused).
- * @returns {EvaluationResult} A success result with a `null` value.
- * @limitations
- * - This is a placeholder implementation. Full evaluation of list comprehensions
- *   would involve iterating and evaluating the contained expression for each item in the range.
- */
-export function evaluateListComprehension(
-  _node: ListComprehensionExpressionNode
-): EvaluationResult {
-  // List comprehensions are complex and don't produce geometry directly
-  // Return empty array as placeholder
-  return evaluationSuccess(null);
-}
-
-/**
  * @function isFunctionLiteral
  * @description Checks if an `ASTNode` represents a function literal or a function call.
  *
@@ -343,9 +323,8 @@ export function tryEvaluateExpression(
       );
 
     case 'list_comprehension_expression':
-      return evaluateListComprehension(
-        expressionNode as unknown as ListComprehensionExpressionNode
-      );
+      // List comprehension not supported yet
+      return evaluationError('List comprehension expressions are not yet supported');
 
     default:
       return evaluationError(`Cannot evaluate expression type: ${expressionNode.expressionType}`);
