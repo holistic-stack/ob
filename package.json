@@ -25,7 +25,7 @@
     "test:ct:headed": "playwright test --config=playwright-ct.config.ts --headed",
     "test:ct:debug": "playwright test --config=playwright-ct.config.ts --debug",
     "test:ct:update-snapshots": "playwright test --config=playwright-ct.config.ts --update-snapshots",
-    "test:ct:hello": "playwright test src/shared/components/ui/ui-components.vspec.tsx --config=playwright-ct.config.ts --reporter=line",
+
     "test-ct": "playwright test -c playwright-ct.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -34,8 +34,7 @@
     "test:visual": "playwright test --config playwright-ct.config.ts",
     "test:watch": "vitest",
     "test:watch:integration": "vitest",
-    "test:ast-service": "vitest run src/features/ui-components/editor/code-editor/openscad-ast-service.test.ts",
-    "test:error-boundary": "vitest run src/features/ui-components/shared/error-boundary/openscad-error-boundary.test.tsx",
+
     "validate:types": "tsc --noEmit --strict",
     "validate:quality": "npm run lint && npm run validate:types && npm run validate:shared-utilities",
     "validate:all": "npm run validate:quality && npm run test:unit && npm run test:coverage",

@@ -70,7 +70,7 @@ import resolve from 'resolve';
 import { afterEach } from 'vitest';
 
 import { createLogger } from './shared/services/logger.service.js';
-import './vitest-helpers/openscad-parser-test-utils.js';
+import './vitest-helpers/openscad-parser-test-utils.ts';
 
 /**
  * @mock Zustand
