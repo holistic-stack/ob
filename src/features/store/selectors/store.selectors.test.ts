@@ -75,10 +75,10 @@ describe('Store Selectors', () => {
         engine: {} as any,
         inspector: {} as any,
         csg: {} as any,
-        particles: [],
-        iblShadows: {} as any,
+
+
         materials: [],
-        renderGraphs: [],
+
         performanceMetrics: {} as any,
       },
       config: {

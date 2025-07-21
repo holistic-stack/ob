@@ -18,8 +18,7 @@ import type {
 } from '../../services/babylon-scene-service';
 import { createBabylonSceneService } from '../../services/babylon-scene-service';
 
-import { OrientationGizmoService } from '../../services/orientation-gizmo';
-import type { OrientationGizmoConfig } from '../../services/orientation-gizmo';
+// Orientation gizmo service removed - functionality simplified
 import { performCompleteBufferClearing } from '../../utils/buffer-clearing/buffer-clearing';
 
 const logger = createLogger('BabylonScene');
@@ -84,8 +83,6 @@ export interface BabylonSceneProps {
   readonly config?: Partial<BabylonSceneConfig>;
   readonly camera?: Partial<CameraConfig>;
   readonly lighting?: Partial<LightingConfig>;
-
-  readonly orientationGizmo?: Partial<OrientationGizmoConfig>;
   readonly children?: React.ReactNode;
   readonly onSceneReady?: (scene: BabylonSceneType) => void;
   readonly onEngineReady?: (engine: BabylonEngineType) => void;
@@ -148,16 +145,7 @@ const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
 
 
 
-/**
- * Default orientation gizmo configuration
- */
-const DEFAULT_GIZMO_CONFIG: Partial<OrientationGizmoConfig> = {
-  enabled: true,
-  position: 'top-right',
-  size: 90,
-  enableTransitions: true,
-  transitionDuration: 500,
-} as const;
+// Orientation gizmo functionality removed
 
 /**
  * BabylonJS Scene Component
@@ -169,7 +157,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   config: userConfig,
   camera: userCamera,
   lighting: userLighting,
-  orientationGizmo: userGizmo,
+
   onSceneReady,
   onEngineReady,
   onRenderLoop,
@@ -181,7 +169,6 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const engineRef = useRef<BabylonEngineType | null>(null);
 
   // Store service references for proper cleanup
-  const orientationGizmoServiceRef = useRef<OrientationGizmoService | null>(null);
 
   // Merge configurations with defaults - use deep comparison to prevent unnecessary re-initialization
   const config = useMemo(
@@ -211,13 +198,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
 
 
-  const orientationGizmo = useMemo(
-    () => ({
-      ...DEFAULT_GIZMO_CONFIG,
-      ...userGizmo,
-    }),
-    [JSON.stringify(userGizmo)]
-  );
+  // Orientation gizmo functionality removed
 
   // Initialize BabylonJS services
   const { inspectorService, hideInspector } = useBabylonInspector();
@@ -289,16 +270,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
 
 
-        // Initialize orientation gizmo if enabled
-        if (orientationGizmo.enabled && scene.activeCamera) {
-          orientationGizmoServiceRef.current = new OrientationGizmoService(scene, scene.activeCamera as any);
-          const gizmoResult = await orientationGizmoServiceRef.current.setupOrientationGizmo(orientationGizmo);
-          if (!gizmoResult.success) {
-            logger.warn('[WARN][BabylonScene] Orientation gizmo setup failed:', gizmoResult.error);
-          } else {
-            logger.debug('[DEBUG][BabylonScene] Orientation gizmo initialized successfully');
-          }
-        }
+        // Orientation gizmo functionality removed
 
         onSceneReady?.(scene);
       },
@@ -349,12 +321,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         hideInspector();
       }
 
-      // Dispose gizmo service
-
-      if (orientationGizmoServiceRef.current) {
-        orientationGizmoServiceRef.current.dispose();
-        orientationGizmoServiceRef.current = null;
-      }
+      // Orientation gizmo disposal removed
 
       // Dispose scene service
       sceneService.dispose();

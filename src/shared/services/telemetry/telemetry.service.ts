@@ -171,7 +171,7 @@ export class TelemetryService {
   private readonly config: Required<TelemetryConfig>;
   private readonly sessionId: string;
   private readonly eventQueue: TelemetryEvent[] = [];
-  private flushTimer?: NodeJS.Timeout;
+  private flushTimer: NodeJS.Timeout | undefined;
   private isEnabled: boolean;
 
   constructor(config: TelemetryConfig = {}) {
@@ -214,8 +214,8 @@ export class TelemetryService {
         width: window.innerWidth,
         height: window.innerHeight,
       },
-      ...(context.component && { component: context.component }),
-      ...(context.operation && { operation: context.operation }),
+      ...(context.component !== undefined && { component: context.component }),
+      ...(context.operation !== undefined && { operation: context.operation }),
     };
 
     const errorEvent = {
@@ -251,7 +251,7 @@ export class TelemetryService {
 
     const performanceEventContext: PerformanceEvent['context'] = {
       browserInfo: this.getBrowserInfo(),
-      ...(context.operation && { operation: context.operation }),
+      ...(context.operation !== undefined && { operation: context.operation }),
       ...(context.modelComplexity !== undefined && { modelComplexity: context.modelComplexity }),
     };
 
@@ -296,19 +296,19 @@ export class TelemetryService {
       timestamp: new Date(),
       type: 'user',
       sessionId: this.sessionId,
-      userId: context.userId ?? 'anonymous',
+      ...(context.userId !== undefined && { userId: context.userId }),
       action: {
         name: action,
         category: context.category || 'edit',
-        ...(context.target && { target: context.target }),
+        ...(context.target !== undefined && { target: context.target }),
         ...(context.value !== undefined && { value: context.value }),
       },
       context: {
-        ...(context.feature && { feature: context.feature }),
+        ...(context.feature !== undefined && { feature: context.feature }),
         ...(context.duration !== undefined && { duration: context.duration }),
       },
       metadata: {},
-    };
+    } as UserEvent;
 
     this.addEvent(userEvent);
     logger.debug(`[USER] Event tracked: ${action}`);
@@ -342,7 +342,7 @@ export class TelemetryService {
       context: {
         version: context.version || '1.0.0',
         environment: context.environment || 'production',
-        ...(context.deployment && { deployment: context.deployment }),
+        ...(context.deployment !== undefined && { deployment: context.deployment }),
       },
       metadata: {},
     };
@@ -448,13 +448,16 @@ export class TelemetryService {
   private extractErrorInfo(error: unknown): ErrorEvent['error'] {
     if (error instanceof Error) {
       // Check if it's an enhanced error with additional properties
-      const enhancedError = error as Error & { code?: string; severity?: string };
+      const enhancedError = error as Error & {
+        code?: string;
+        severity?: 'low' | 'medium' | 'high' | 'critical';
+      };
       return {
         name: error.name,
         message: error.message,
-        ...(error.stack && { stack: error.stack }),
-        ...(enhancedError.code && { code: enhancedError.code }),
-        severity: (enhancedError.severity as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+        ...(error.stack !== undefined && { stack: error.stack }),
+        ...(enhancedError.code !== undefined && { code: enhancedError.code }),
+        severity: enhancedError.severity ?? 'medium',
       };
     }
 
@@ -478,15 +481,15 @@ export class TelemetryService {
     if (userAgent.includes('Chrome')) {
       name = 'Chrome';
       const match = userAgent.match(/Chrome\/(\d+)/);
-      version = match?.[1] ?? 'Unknown';
+      version = match?.[1] || 'Unknown';
     } else if (userAgent.includes('Firefox')) {
       name = 'Firefox';
       const match = userAgent.match(/Firefox\/(\d+)/);
-      version = match?.[1] ?? 'Unknown';
+      version = match?.[1] || 'Unknown';
     } else if (userAgent.includes('Safari')) {
       name = 'Safari';
       const match = userAgent.match(/Version\/(\d+)/);
-      version = match?.[1] ?? 'Unknown';
+      version = match?.[1] || 'Unknown';
     }
 
     return {
@@ -533,7 +536,7 @@ export class TelemetryService {
   dispose(): void {
     if (this.flushTimer) {
       clearInterval(this.flushTimer);
-      delete (this as any).flushTimer;
+      this.flushTimer = undefined;
     }
 
     // Flush remaining events

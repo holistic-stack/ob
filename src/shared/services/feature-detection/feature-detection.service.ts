@@ -317,7 +317,15 @@ export class FeatureDetectionService {
           };
         }
 
-        const adapter = await navigator.gpu?.requestAdapter();
+        if (!navigator.gpu) {
+          return {
+            supported: false,
+            adapter: false,
+            features: [],
+          };
+        }
+
+        const adapter = await navigator.gpu.requestAdapter();
         if (!adapter) {
           return {
             supported: true,
@@ -387,16 +395,7 @@ export class FeatureDetectionService {
       })
     );
 
-    return result.success
-      ? result.data
-      : {
-          hardwareConcurrency: 1,
-          deviceMemory: null,
-          connection: {
-            effectiveType: null,
-            downlink: null,
-          },
-        };
+    return result.success ? result.data : result.error;
   }
 
   /**
@@ -443,7 +442,7 @@ export class FeatureDetectionService {
   private getWebGLSupport(): FeatureSupport {
     const webgl = this.capabilities?.webgl;
 
-    if (!webgl?.supported) {
+    if (!webgl || !webgl.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGL is not supported by this browser',
@@ -456,7 +455,7 @@ export class FeatureDetectionService {
       };
     }
 
-    if (webgl?.maxTextureSize && webgl.maxTextureSize < 2048) {
+    if (webgl.maxTextureSize < 2048) {
       return {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'Limited WebGL capabilities detected',
@@ -479,7 +478,7 @@ export class FeatureDetectionService {
   private getWebGPUSupport(): FeatureSupport {
     const webgpu = this.capabilities?.webgpu;
 
-    if (!webgpu?.supported) {
+    if (!webgpu || !webgpu.supported) {
       return {
         level: FeatureSupportLevel.UNSUPPORTED,
         reason: 'WebGPU is not supported by this browser',
@@ -492,7 +491,7 @@ export class FeatureDetectionService {
       };
     }
 
-    if (!webgpu?.adapter) {
+    if (!webgpu.adapter) {
       return {
         level: FeatureSupportLevel.FALLBACK,
         reason: 'WebGPU adapter not available',

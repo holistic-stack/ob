@@ -150,7 +150,7 @@ describe('BabylonScene', () => {
 
     render(
       <BabylonScene
-        orientationGizmo={gizmoConfig}
+
         style={{ width: '800px', height: '600px' }}
       />
     );
@@ -168,7 +168,7 @@ describe('BabylonScene', () => {
 
     render(
       <BabylonScene
-        orientationGizmo={gizmoConfig}
+
         style={{ width: '800px', height: '600px' }}
       />
     );

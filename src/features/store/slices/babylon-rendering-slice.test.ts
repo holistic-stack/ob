@@ -128,17 +128,11 @@ interface TestStore {
   getInspectorState: BabylonRenderingActions['getInspectorState'];
   performCSGOperation: BabylonRenderingActions['performCSGOperation'];
   getCSGState: BabylonRenderingActions['getCSGState'];
-  createParticleSystem: BabylonRenderingActions['createParticleSystem'];
-  updateParticleSystem: BabylonRenderingActions['updateParticleSystem'];
-  removeParticleSystem: BabylonRenderingActions['removeParticleSystem'];
-  enableIBLShadows: BabylonRenderingActions['enableIBLShadows'];
-  disableIBLShadows: BabylonRenderingActions['disableIBLShadows'];
+
   createMaterial: BabylonRenderingActions['createMaterial'];
   applyMaterial: BabylonRenderingActions['applyMaterial'];
   removeMaterial: BabylonRenderingActions['removeMaterial'];
-  createRenderGraph: BabylonRenderingActions['createRenderGraph'];
-  buildRenderGraph: BabylonRenderingActions['buildRenderGraph'];
-  removeRenderGraph: BabylonRenderingActions['removeRenderGraph'];
+
   renderAST: BabylonRenderingActions['renderAST'];
   updateMeshes: BabylonRenderingActions['updateMeshes'];
   clearScene: BabylonRenderingActions['clearScene'];

@@ -138,12 +138,8 @@
  *     updatePerformanceMetrics
  *   } = useAppStore(state => ({
  *     materials: state.babylonRendering.materials,
- *     iblShadows: state.babylonRendering.iblShadows,
- *     performanceMetrics: state.babylonRendering.performanceMetrics,
  *     createMaterial: state.createMaterial,
  *     applyMaterial: state.applyMaterial,
- *     enableIBLShadows: state.enableIBLShadows,
- *     disableIBLShadows: state.disableIBLShadows,
  *     updatePerformanceMetrics: state.updatePerformanceMetrics
  *   }));
  *
@@ -477,20 +473,14 @@ import { tryCatchAsync } from '../../../shared/utils/functional/result';
 import type {
   BabylonEngineState,
   CSG2State,
-  IBLShadowState,
   InspectorState,
   MaterialState,
-  ParticleSystemState,
-  RenderGraphState,
 } from '../../babylon-renderer/services';
 import {
   BabylonCSG2Service,
   BabylonEngineService,
-  BabylonIBLShadowsService,
   BabylonInspectorService,
   BabylonMaterialService,
-  BabylonParticleService,
-  BabylonRenderGraphService,
   InspectorTab,
 } from '../../babylon-renderer/services';
 import { ASTBridgeConverter } from '../../babylon-renderer/services/ast-bridge-converter';
@@ -509,10 +499,7 @@ export interface BabylonRenderingState {
   readonly engine: BabylonEngineState;
   readonly inspector: InspectorState;
   readonly csg: CSG2State;
-  readonly particles: ParticleSystemState[];
-  readonly iblShadows: IBLShadowState;
   readonly materials: readonly MaterialState[];
-  readonly renderGraphs: readonly RenderGraphState[];
   readonly meshes: readonly unknown[]; // BabylonJS mesh type
   readonly isRendering: boolean;
   readonly renderErrors: readonly BabylonRenderingError[];
@@ -569,17 +556,7 @@ export interface BabylonRenderingActions {
   ) => Promise<Result<unknown, BabylonRenderingError>>;
   readonly getCSGState: () => CSG2State;
 
-  // Particle systems
-  readonly createParticleSystem: (config: unknown) => Result<string, BabylonRenderingError>;
-  readonly updateParticleSystem: (
-    id: string,
-    config: unknown
-  ) => Result<void, BabylonRenderingError>;
-  readonly removeParticleSystem: (id: string) => Result<void, BabylonRenderingError>;
 
-  // IBL shadows
-  readonly enableIBLShadows: (config: unknown) => Result<void, BabylonRenderingError>;
-  readonly disableIBLShadows: () => Result<void, BabylonRenderingError>;
 
   // Materials
   readonly createMaterial: (config: unknown) => Promise<Result<string, BabylonRenderingError>>;
@@ -589,10 +566,7 @@ export interface BabylonRenderingActions {
   ) => Result<void, BabylonRenderingError>;
   readonly removeMaterial: (materialId: string) => Result<void, BabylonRenderingError>;
 
-  // Render graphs
-  readonly createRenderGraph: (config: unknown) => Result<string, BabylonRenderingError>;
-  readonly buildRenderGraph: (graphId: string) => Result<void, BabylonRenderingError>;
-  readonly removeRenderGraph: (graphId: string) => Result<void, BabylonRenderingError>;
+
 
   // Scene management
   readonly setScene: (scene: Scene | null) => void;
@@ -651,17 +625,7 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
     error: null,
     lastUpdated: new Date(),
   },
-  particles: [],
-  iblShadows: {
-    isEnabled: false,
-    environmentTexture: null,
-    affectedMeshes: [],
-    shadowIntensity: 1.0,
-    environmentIntensity: 1.0,
-    lastUpdated: new Date(),
-  },
   materials: [],
-  renderGraphs: [],
   meshes: [],
   isRendering: false,
   renderErrors: [],
@@ -691,10 +655,7 @@ export const createBabylonRenderingSlice = (
   let engineService: BabylonEngineService | null = null;
   let inspectorService: BabylonInspectorService | null = null;
   let csgService: BabylonCSG2Service | null = null;
-  let particleService: BabylonParticleService | null = null;
-  let iblShadowsService: BabylonIBLShadowsService | null = null;
   let materialService: BabylonMaterialService | null = null;
-  let renderGraphService: BabylonRenderGraphService | null = null;
 
   return {
     // Engine management
@@ -914,133 +875,9 @@ export const createBabylonRenderingSlice = (
       return createInitialBabylonRenderingState().csg;
     },
 
-    // Particle systems
-    createParticleSystem: (_config: unknown) => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Creating particle system...');
 
-      if (!particleService) {
-        particleService = new BabylonParticleService();
-        const scene = engineService?.getState().engine?.scenes?.[0];
-        if (scene) {
-          particleService.init(scene);
-        }
-      }
 
-      // Implementation would create particle system with config
-      // For now, return a placeholder
-      const systemId = `particle-${Date.now()}`;
 
-      set((state: WritableDraft<AppStore>) => {
-        // Update particles state
-        const particleStates = particleService?.getAllParticleSystemStates();
-        if (particleStates) {
-          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
-        }
-      });
-
-      return { success: true, data: systemId };
-    },
-
-    updateParticleSystem: (id: string, _config: unknown) => {
-      logger.debug(`[DEBUG][BabylonRenderingSlice] Updating particle system: ${id}`);
-
-      if (!particleService) {
-        return {
-          success: false,
-          error: {
-            code: 'PARTICLE_SERVICE_NOT_INITIALIZED',
-            message: 'Particle service not initialized',
-            timestamp: new Date(),
-            service: 'particles',
-          },
-        };
-      }
-
-      // Implementation would update particle system
-      set((state: WritableDraft<AppStore>) => {
-        const particleStates = particleService?.getAllParticleSystemStates();
-        if (particleStates) {
-          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
-
-    removeParticleSystem: (id: string) => {
-      logger.debug(`[DEBUG][BabylonRenderingSlice] Removing particle system: ${id}`);
-
-      if (!particleService) {
-        return { success: true, data: undefined };
-      }
-
-      const result = particleService.removeParticleSystem(id);
-      if (!result.success) {
-        return {
-          success: false,
-          error: {
-            code: result.error.code,
-            message: result.error.message,
-            timestamp: new Date(),
-            service: 'particles',
-          },
-        };
-      }
-
-      set((state: WritableDraft<AppStore>) => {
-        const particleStates = particleService?.getAllParticleSystemStates();
-        if (particleStates) {
-          state.babylonRendering.particles = particleStates as WritableDraft<ParticleSystemState[]>;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
-
-    // IBL shadows
-    enableIBLShadows: (_config: unknown) => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Enabling IBL shadows...');
-
-      if (!iblShadowsService) {
-        iblShadowsService = new BabylonIBLShadowsService();
-        const scene = engineService?.getState().engine?.scenes?.[0];
-        if (scene) {
-          iblShadowsService.init(scene);
-        }
-      }
-
-      // Implementation would enable IBL shadows with config
-      set((state: WritableDraft<AppStore>) => {
-        const iblShadowsState = iblShadowsService?.getState();
-        if (iblShadowsState) {
-          state.babylonRendering.iblShadows = iblShadowsState as WritableDraft<
-            typeof iblShadowsState
-          >;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
-
-    disableIBLShadows: () => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Disabling IBL shadows...');
-
-      if (!iblShadowsService) {
-        return { success: true, data: undefined };
-      }
-
-      // Implementation would disable IBL shadows
-      set((state: WritableDraft<AppStore>) => {
-        const iblShadowsState = iblShadowsService?.getState();
-        if (iblShadowsState) {
-          state.babylonRendering.iblShadows = iblShadowsState as WritableDraft<
-            typeof iblShadowsState
-          >;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
 
     // Materials
     createMaterial: async (_config: unknown) => {
@@ -1128,104 +965,7 @@ export const createBabylonRenderingSlice = (
       return { success: true, data: undefined };
     },
 
-    // Render graphs
-    createRenderGraph: (_config: unknown) => {
-      logger.debug('[DEBUG][BabylonRenderingSlice] Creating render graph...');
 
-      if (!renderGraphService) {
-        renderGraphService = new BabylonRenderGraphService();
-        const scene = engineService?.getState().engine?.scenes?.[0];
-        if (scene) {
-          renderGraphService.init(scene);
-        }
-      }
-
-      // Implementation would create render graph with config
-      const graphId = `graph-${Date.now()}`;
-
-      set((state: WritableDraft<AppStore>) => {
-        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
-        if (renderGraphStates) {
-          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
-            RenderGraphState[]
-          >;
-        }
-      });
-
-      return { success: true, data: graphId };
-    },
-
-    buildRenderGraph: (graphId: string) => {
-      logger.debug(`[DEBUG][BabylonRenderingSlice] Building render graph: ${graphId}`);
-
-      if (!renderGraphService) {
-        return {
-          success: false,
-          error: {
-            code: 'RENDER_GRAPH_SERVICE_NOT_INITIALIZED',
-            message: 'Render graph service not initialized',
-            timestamp: new Date(),
-            service: 'renderGraphs',
-          },
-        };
-      }
-
-      const result = renderGraphService.buildRenderGraph(graphId);
-      if (!result.success) {
-        return {
-          success: false,
-          error: {
-            code: result.error.code,
-            message: result.error.message,
-            timestamp: new Date(),
-            service: 'renderGraphs',
-          },
-        };
-      }
-
-      set((state: WritableDraft<AppStore>) => {
-        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
-        if (renderGraphStates) {
-          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
-            RenderGraphState[]
-          >;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
-
-    removeRenderGraph: (graphId: string) => {
-      logger.debug(`[DEBUG][BabylonRenderingSlice] Removing render graph: ${graphId}`);
-
-      if (!renderGraphService) {
-        return { success: true, data: undefined };
-      }
-
-      const result = renderGraphService.removeRenderGraph(graphId);
-      if (!result.success) {
-        return {
-          success: false,
-          error: {
-            code: result.error.code,
-            message: result.error.message,
-            timestamp: new Date(),
-            service: 'renderGraphs',
-          },
-        };
-      }
-
-      set((state: WritableDraft<AppStore>) => {
-        const renderGraphStates = renderGraphService?.getAllRenderGraphStates();
-        if (renderGraphStates) {
-          state.babylonRendering.renderGraphs = renderGraphStates as WritableDraft<
-            RenderGraphState[]
-          >;
-        }
-      });
-
-      return { success: true, data: undefined };
-    },
 
     // Scene management
     setScene: (scene: Scene | null) => {
