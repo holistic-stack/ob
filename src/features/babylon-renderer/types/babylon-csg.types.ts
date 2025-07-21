@@ -22,8 +22,6 @@ export enum CSGOperationType {
  */
 export interface CSGOperationConfig {
   readonly operation: CSGOperationType;
-  readonly preserveMaterials: boolean;
-  readonly optimizeResult: boolean;
   readonly tolerance: number;
   readonly maxIterations: number;
 }
@@ -115,8 +113,6 @@ export type CSGIntersectionResult = Result<CSGOperationResult, CSGError>;
  */
 export const DEFAULT_CSG_CONFIG: CSGOperationConfig = {
   operation: CSGOperationType.UNION,
-  preserveMaterials: true,
-  optimizeResult: true,
   tolerance: 1e-6,
   maxIterations: 1000,
 } as const;

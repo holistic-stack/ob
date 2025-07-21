@@ -95,40 +95,28 @@ export class BabylonCSG2Service {
   /**
    * Perform union operation on two meshes
    */
-  async union(
-    meshA: Mesh,
-    meshB: Mesh,
-    config?: Partial<CSGOperationConfig>
-  ): Promise<CSGUnionResult> {
+  async union(meshA: Mesh, meshB: Mesh): Promise<CSGUnionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing union operation...');
 
-    return this.performOperation(CSGOperationType.UNION, meshA, meshB, config);
+    return this.performOperation(CSGOperationType.UNION, meshA, meshB);
   }
 
   /**
    * Perform difference operation on two meshes
    */
-  async difference(
-    meshA: Mesh,
-    meshB: Mesh,
-    config?: Partial<CSGOperationConfig>
-  ): Promise<CSGDifferenceResult> {
+  async difference(meshA: Mesh, meshB: Mesh): Promise<CSGDifferenceResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing difference operation...');
 
-    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB, config);
+    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB);
   }
 
   /**
    * Perform intersection operation on two meshes
    */
-  async intersection(
-    meshA: Mesh,
-    meshB: Mesh,
-    config?: Partial<CSGOperationConfig>
-  ): Promise<CSGIntersectionResult> {
+  async intersection(meshA: Mesh, meshB: Mesh): Promise<CSGIntersectionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing intersection operation...');
 
-    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB, config);
+    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB);
   }
 
   /**
@@ -137,8 +125,7 @@ export class BabylonCSG2Service {
   private async performOperation(
     operation: CSGOperationType,
     meshA: Mesh,
-    meshB: Mesh,
-    config?: Partial<CSGOperationConfig>
+    meshB: Mesh
   ): Promise<Result<CSGOperationResult, CSGError>> {
     const startTime = performance.now();
     const operationId = this.generateOperationId();
@@ -147,9 +134,6 @@ export class BabylonCSG2Service {
       async () => {
         // Validate inputs
         this.validateMeshes(meshA, meshB);
-
-        // Merge configuration
-        const effectiveConfig = config ? { ...this.config, ...config } : this.config;
 
         // Import CSG2 and initialization functions
         const { CSG2, InitializeCSG2Async, IsCSG2Ready } = await import('@babylonjs/core');
@@ -207,15 +191,7 @@ export class BabylonCSG2Service {
         );
         const conversionTime = performance.now() - conversionStartTime;
 
-        // Apply optimization if requested
-        if (effectiveConfig.optimizeResult) {
-          this.optimizeMesh(resultMesh);
-        }
 
-        // Preserve materials if requested
-        if (effectiveConfig.preserveMaterials && meshA.material) {
-          resultMesh.material = meshA.material;
-        }
 
         const totalTime = performance.now() - startTime;
 
@@ -245,7 +221,7 @@ export class BabylonCSG2Service {
           operationTime: totalTime,
           triangleCount: this.getTriangleCount(resultMesh),
           vertexCount: this.getVertexCount(resultMesh),
-          isOptimized: effectiveConfig.optimizeResult,
+          isOptimized: false,
           metadata,
         };
 
@@ -304,15 +280,7 @@ export class BabylonCSG2Service {
     return !!(positions && indices && positions.length > 0 && indices.length > 0);
   }
 
-  /**
-   * Optimize mesh after CSG operation
-   */
-  private optimizeMesh(mesh: Mesh): void {
-    // Apply mesh optimization techniques
-    // This could include vertex welding, normal recalculation, etc.
-    mesh.createNormals(true);
-    mesh.optimizeIndices();
-  }
+
 
   /**
    * Get triangle count from mesh

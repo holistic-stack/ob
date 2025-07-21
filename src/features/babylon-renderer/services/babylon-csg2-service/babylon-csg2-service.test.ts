@@ -94,22 +94,22 @@ describe('BabylonCSG2Service', () => {
       const config = service.getConfig();
 
       expect(config.operation).toBe(DEFAULT_CSG_CONFIG.operation);
-      expect(config.preserveMaterials).toBe(DEFAULT_CSG_CONFIG.preserveMaterials);
-      expect(config.optimizeResult).toBe(DEFAULT_CSG_CONFIG.optimizeResult);
+      expect(config.tolerance).toBe(DEFAULT_CSG_CONFIG.tolerance);
+      expect(config.maxIterations).toBe(DEFAULT_CSG_CONFIG.maxIterations);
     });
 
     it('should initialize with custom configuration', () => {
       const customConfig: CSGOperationConfig = {
         ...DEFAULT_CSG_CONFIG,
         operation: CSGOperationType.DIFFERENCE,
-        preserveMaterials: false,
+        tolerance: 1e-5,
       };
 
       const service = new BabylonCSG2Service(customConfig);
       const config = service.getConfig();
 
       expect(config.operation).toBe(CSGOperationType.DIFFERENCE);
-      expect(config.preserveMaterials).toBe(false);
+      expect(config.tolerance).toBe(1e-5);
     });
   });
 
@@ -161,17 +161,13 @@ describe('BabylonCSG2Service', () => {
       }
     });
 
-    it('should apply custom configuration', async () => {
-      const customConfig = {
-        preserveMaterials: false,
-        optimizeResult: false,
-      };
-
-      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh, customConfig);
+    it('should perform union operation successfully', async () => {
+      const result = await csgService.union(mockMeshA as Mesh, mockMeshB as Mesh);
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isOptimized).toBe(false);
+        expect(result.data.operationType).toBe(CSGOperationType.UNION);
       }
     });
   });
@@ -225,15 +221,15 @@ describe('BabylonCSG2Service', () => {
 
     it('should return updated configuration', () => {
       const newConfig = {
-        preserveMaterials: false,
-        optimizeResult: false,
+        tolerance: 1e-5,
+        maxIterations: 500,
       };
 
       csgService.updateConfig(newConfig);
       const config = csgService.getConfig();
 
-      expect(config.preserveMaterials).toBe(false);
-      expect(config.optimizeResult).toBe(false);
+      expect(config.tolerance).toBe(1e-5);
+      expect(config.maxIterations).toBe(500);
     });
   });
 
@@ -241,11 +237,11 @@ describe('BabylonCSG2Service', () => {
     it('should update configuration partially', () => {
       const originalConfig = csgService.getConfig();
 
-      csgService.updateConfig({ preserveMaterials: false });
+      csgService.updateConfig({ tolerance: 1e-4 });
       const updatedConfig = csgService.getConfig();
 
-      expect(updatedConfig.preserveMaterials).toBe(false);
-      expect(updatedConfig.optimizeResult).toBe(originalConfig.optimizeResult);
+      expect(updatedConfig.tolerance).toBe(1e-4);
+      expect(updatedConfig.operation).toBe(originalConfig.operation);
     });
   });
 
