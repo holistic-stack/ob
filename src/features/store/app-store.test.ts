@@ -311,6 +311,7 @@ describe('App Store', () => {
         enableControls: true,
         enableAutoRotate: false,
         autoRotateSpeed: 1,
+        enableAutoFrame: false,
       };
       store.getState().updateCamera(customCamera);
       expect(store.getState().babylonRendering?.camera).toEqual(customCamera);

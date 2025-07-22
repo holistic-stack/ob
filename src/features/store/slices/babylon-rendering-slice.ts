@@ -1067,7 +1067,11 @@ export const createBabylonRenderingSlice = (
         };
 
         set((state: WritableDraft<AppStore>) => {
-          state.babylonRendering.renderErrors = [...state.babylonRendering.renderErrors, error];
+          // Ensure renderErrors is an array before spreading
+          const currentErrors = Array.isArray(state.babylonRendering.renderErrors)
+            ? state.babylonRendering.renderErrors
+            : [];
+          state.babylonRendering.renderErrors = [...currentErrors, error];
         });
 
         return { success: false, error };
@@ -1241,6 +1245,25 @@ export const createBabylonRenderingSlice = (
           );
           const renderTime = performance.now() - startTime;
 
+          // Dispose old meshes before creating new ones to prevent flickering and memory leaks
+          const stateForDisposal = _get();
+          const currentMeshes = stateForDisposal.babylonRendering.meshes;
+          if (currentMeshes && currentMeshes.length > 0) {
+            logger.debug('[DEBUG][BabylonRenderingSlice] Disposing old meshes before creating new ones');
+            (currentMeshes as any[]).forEach((mesh: any) => {
+              if (mesh && typeof mesh.dispose === 'function') {
+                try {
+                  // Hide first to reduce visual flicker
+                  if (mesh.setEnabled) mesh.setEnabled(false);
+                  if ('isVisible' in mesh) mesh.isVisible = false;
+                  mesh.dispose();
+                } catch (error) {
+                  logger.warn('[WARN][BabylonRenderingSlice] Failed to dispose old mesh:', error);
+                }
+              }
+            });
+          }
+
           // CRITICAL FIX: Generate actual BabylonJS meshes from BabylonJSNode objects
           // The ASTBridgeConverter returns BabylonJSNode objects, not actual meshes
           const meshes: AbstractMesh[] = [];
@@ -1302,8 +1325,12 @@ export const createBabylonRenderingSlice = (
         (error) => {
           set((state: WritableDraft<AppStore>) => {
             state.babylonRendering.isRendering = false;
+            // Ensure renderErrors is an array before spreading
+            const currentErrors = Array.isArray(state.babylonRendering.renderErrors)
+              ? state.babylonRendering.renderErrors
+              : [];
             state.babylonRendering.renderErrors = [
-              ...state.babylonRendering.renderErrors,
+              ...currentErrors,
               {
                 code: 'RENDER_FAILED',
                 message: `AST rendering failed: ${error}`,
@@ -1424,8 +1451,12 @@ export const createBabylonRenderingSlice = (
     // Error management
     addRenderError: (error: { type: string; message: string }) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure renderErrors is an array before spreading
+        const currentErrors = Array.isArray(state.babylonRendering.renderErrors)
+          ? state.babylonRendering.renderErrors
+          : [];
         state.babylonRendering.renderErrors = [
-          ...state.babylonRendering.renderErrors,
+          ...currentErrors,
           {
             code: error.type,
             message: error.message,

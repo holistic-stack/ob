@@ -71,6 +71,7 @@ describe('Store Selectors', () => {
           enableControls: true,
           enableAutoRotate: false,
           autoRotateSpeed: 1,
+          enableAutoFrame: false,
         },
         engine: {} as any,
         inspector: {} as any,

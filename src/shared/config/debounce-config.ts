@@ -78,7 +78,7 @@ import type { DebounceConfig } from '../types/common.types.js';
  */
 export const OPTIMIZED_DEBOUNCE_CONFIG: Readonly<DebounceConfig> = Object.freeze({
   parseDelayMs: 200, // Reduced from 300ms (33% improvement)
-  renderDelayMs: 100, // Reduced from 300ms (67% improvement)
+  renderDelayMs: 200, // Increased from 100ms to reduce flickering during rapid typing
   saveDelayMs: 1000, // Keep current (optimal for user experience)
 } as const);
 

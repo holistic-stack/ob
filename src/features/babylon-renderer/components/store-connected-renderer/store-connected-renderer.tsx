@@ -590,11 +590,11 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     renderTimeoutRef.current = setTimeout(async () => {
       const startTime = performance.now();
 
-      // Only clear scene if we have existing content and the new AST is significantly different
+      // Only clear scene when absolutely necessary to prevent flickering
       const shouldClearScene =
         lastASTRef.current &&
         lastASTRef.current.length > 0 &&
-        (ast.length === 0 || astContentChanged);
+        ast.length === 0; // Only clear when going from content to empty
 
       if (shouldClearScene) {
         safeClearScene();
