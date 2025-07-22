@@ -6,6 +6,7 @@
  */
 
 import type { CSG2, Mesh, Scene } from '@babylonjs/core';
+import { CSG2 as CSG2Class, InitializeCSG2Async, IsCSG2Ready } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -98,7 +99,7 @@ export class BabylonCSG2Service {
   async union(meshA: Mesh, meshB: Mesh): Promise<CSGUnionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing union operation...');
 
-    return this.performOperation(CSGOperationType.UNION, meshA, meshB);
+    return this.performOperation(CSGOperationType.UNION, meshA, meshB) as Promise<CSGUnionResult>;
   }
 
   /**
@@ -107,7 +108,7 @@ export class BabylonCSG2Service {
   async difference(meshA: Mesh, meshB: Mesh): Promise<CSGDifferenceResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing difference operation...');
 
-    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB);
+    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB) as Promise<CSGDifferenceResult>;
   }
 
   /**
@@ -116,7 +117,7 @@ export class BabylonCSG2Service {
   async intersection(meshA: Mesh, meshB: Mesh): Promise<CSGIntersectionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing intersection operation...');
 
-    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB);
+    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB) as Promise<CSGIntersectionResult>;
   }
 
   /**
@@ -135,10 +136,8 @@ export class BabylonCSG2Service {
         // Validate inputs
         this.validateMeshes(meshA, meshB);
 
-        // Import CSG2 and initialization functions
-        const { CSG2, InitializeCSG2Async, IsCSG2Ready } = await import('@babylonjs/core');
-
-        if (!CSG2) {
+        // Use static imports for CSG2 and initialization functions
+        if (!CSG2Class) {
           throw this.createError(
             CSGErrorCode.CSG_ERROR,
             'CSG2 is not available in this BabylonJS build'
@@ -156,8 +155,8 @@ export class BabylonCSG2Service {
 
         // Prepare meshes for CSG operation
         const preparationStartTime = performance.now();
-        const csgA = CSG2.FromMesh(meshA);
-        const csgB = CSG2.FromMesh(meshB);
+        const csgA = CSG2Class.FromMesh(meshA);
+        const csgB = CSG2Class.FromMesh(meshB);
         const preparationTime = performance.now() - preparationStartTime;
 
         // Perform the operation
@@ -166,7 +165,7 @@ export class BabylonCSG2Service {
 
         switch (operation) {
           case CSGOperationType.UNION:
-            resultCSG = (csgA as unknown as { union: (other: CSG2) => CSG2 }).union(csgB);
+            resultCSG = (csgA as unknown as { add: (other: CSG2) => CSG2 }).add(csgB);
             break;
           case CSGOperationType.DIFFERENCE:
             resultCSG = (csgA as unknown as { subtract: (other: CSG2) => CSG2 }).subtract(csgB);

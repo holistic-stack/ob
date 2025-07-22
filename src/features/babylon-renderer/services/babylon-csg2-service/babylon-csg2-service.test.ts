@@ -45,7 +45,7 @@ vi.mock('@babylonjs/core', async () => {
 
   // Create mock CSG instance
   const mockCSGInstance = {
-    union: vi.fn().mockReturnThis(),
+    add: vi.fn().mockReturnThis(),
     subtract: vi.fn().mockReturnThis(),
     intersect: vi.fn().mockReturnThis(),
     toMesh: vi.fn(),

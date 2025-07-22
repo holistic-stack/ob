@@ -182,8 +182,9 @@ export const convertGenericMeshToBabylon = (
 
       // Apply transform if available
       if (meshData.transform) {
-        // TODO: Apply transformation matrix
-        // mesh.setPreTransformMatrix(meshData.transform);
+        // Apply transformation matrix to the mesh
+        mesh.setPreTransformMatrix(meshData.transform);
+        logger.debug('[DEBUG][CSG2MeshConverter] Applied transformation matrix to mesh');
       }
 
       logger.debug('[DEBUG][CSG2MeshConverter] Generic mesh converted successfully');

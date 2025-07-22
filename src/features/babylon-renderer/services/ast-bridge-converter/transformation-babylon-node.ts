@@ -187,7 +187,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
   /**
    * Apply translate transformation with OpenSCAD-compatible parameters
-   * Uses direct mesh translation approach following KISS principles
+   * FIXED: Properly handle multiple children by ensuring all are visible
    */
   private applyTranslateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const translation = this.extractTranslationVector();
@@ -196,40 +196,54 @@ export class TransformationBabylonNode extends BabylonJSNode {
       `[TRANSLATE] Applying translation [${translation.x}, ${translation.y}, ${translation.z}] to ${childMeshes.length} child meshes`
     );
 
-    // Apply translation directly to each child mesh (OpenSCAD approach)
-    // This is the simplest and most direct approach - just move the meshes
+    // CRITICAL FIX: For multiple children, we need to ensure all are properly positioned
+    // Apply translation directly to each child mesh to ensure they're all visible
     for (const childMesh of childMeshes) {
-      const originalPosition = childMesh.position.clone();
-
-      // Apply translation by adding to current position
-      childMesh.position.addInPlace(translation);
-
+      // Apply translation directly to each child mesh
+      childMesh.position = childMesh.position.add(translation);
+      
       logger.debug(
-        `[TRANSLATE] Translated mesh '${childMesh.name}': ` +
-          `(${originalPosition.x}, ${originalPosition.y}, ${originalPosition.z}) → ` +
-          `(${childMesh.position.x}, ${childMesh.position.y}, ${childMesh.position.z})`
+        `[TRANSLATE] Applied translation [${translation.x}, ${translation.y}, ${translation.z}] directly to mesh '${childMesh.name}'`
       );
     }
 
-    // Return the first child mesh as the representative mesh
-    // In OpenSCAD, translate() returns the translated object, not a container
-    if (childMeshes.length > 0) {
-      const firstMesh = childMeshes[0];
-      if (firstMesh) {
-        return firstMesh;
-      }
+    // If there's only one child, return it directly
+    if (childMeshes.length === 1) {
+      return childMeshes[0];
     }
 
-    // Fallback: create an empty transform node if no children
-    const { TransformNode } = require('@babylonjs/core');
-    const emptyNode = new TransformNode(`${this.name}_empty`, this.scene);
-    emptyNode.position = translation;
-    return emptyNode as AbstractMesh; // Cast to AbstractMesh for compatibility
+    // For multiple children, create a parent group but ensure all children remain visible
+    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
+    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
+    
+    // Parent all child meshes to the transform node to maintain hierarchy
+    for (const childMesh of childMeshes) {
+      childMesh.parent = parentNode;
+    }
+
+    // Create an invisible container mesh that represents this transformation
+    const containerMesh = MeshBuilder.CreateBox(`${this.name}_container`, { size: 0.001 }, this.scene);
+    containerMesh.isVisible = false;
+    containerMesh.parent = parentNode;
+    
+    // CRITICAL: Store reference to all child meshes and mark them as independently visible
+    containerMesh.metadata = {
+      ...containerMesh.metadata,
+      transformedChildren: childMeshes,
+      isTransformationContainer: true,
+      hasMultipleChildren: childMeshes.length > 1
+    };
+
+    logger.debug(
+      `[TRANSLATE] Created transformation container with ${childMeshes.length} children, all positioned independently`
+    );
+
+    return containerMesh;
   }
 
   /**
    * Apply rotate transformation with OpenSCAD-compatible parameters
-   * Uses direct mesh rotation approach following KISS principles (same as translate fix)
+   * FIXED: Properly handle multiple children by ensuring all are visible
    */
   private applyRotateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const rotation = this.extractRotationAngles();
@@ -238,46 +252,55 @@ export class TransformationBabylonNode extends BabylonJSNode {
       `[ROTATE] Applying rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees to ${childMeshes.length} child meshes`
     );
 
-    // Apply rotation directly to each child mesh (KISS principle)
-    // This is the same direct approach that worked for translation
-    for (const childMesh of childMeshes) {
-      const originalRotation = childMesh.rotation.clone();
-
-      // Convert degrees to radians and apply rotation
-      const rotationRadians = new BabylonVector3(
-        (rotation.x * Math.PI) / 180,
-        (rotation.y * Math.PI) / 180,
-        (rotation.z * Math.PI) / 180
-      );
-
-      // Apply rotation by adding to current rotation
-      childMesh.rotation.addInPlace(rotationRadians);
-
-      logger.debug(
-        `[ROTATE] Rotated mesh '${childMesh.name}': ` +
-          `(${originalRotation.x}, ${originalRotation.y}, ${originalRotation.z}) → ` +
-          `(${childMesh.rotation.x}, ${childMesh.rotation.y}, ${childMesh.rotation.z}) radians`
-      );
-    }
-
-    // Return the first child mesh as the representative mesh
-    // In OpenSCAD, rotate() returns the rotated object, not a container
-    if (childMeshes.length > 0) {
-      const firstMesh = childMeshes[0];
-      if (firstMesh) {
-        return firstMesh;
-      }
-    }
-
-    // Fallback: create an empty transform node if no children
-    const { TransformNode } = require('@babylonjs/core');
-    const emptyNode = new TransformNode(`${this.name}_empty`, this.scene);
-    emptyNode.rotation = new BabylonVector3(
+    // Convert degrees to radians
+    const rotationRadians = new BabylonVector3(
       (rotation.x * Math.PI) / 180,
       (rotation.y * Math.PI) / 180,
       (rotation.z * Math.PI) / 180
     );
-    return emptyNode as AbstractMesh; // Cast to AbstractMesh for compatibility
+
+    // CRITICAL FIX: For multiple children, apply rotation directly to each child
+    for (const childMesh of childMeshes) {
+      // Apply rotation directly to each child mesh
+      childMesh.rotation = childMesh.rotation.add(rotationRadians);
+      
+      logger.debug(
+        `[ROTATE] Applied rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees directly to mesh '${childMesh.name}'`
+      );
+    }
+
+    // If there's only one child, return it directly
+    if (childMeshes.length === 1) {
+      return childMeshes[0];
+    }
+
+    // For multiple children, create a parent group but ensure all children remain visible
+    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
+    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
+    
+    // Parent all child meshes to the transform node to maintain hierarchy
+    for (const childMesh of childMeshes) {
+      childMesh.parent = parentNode;
+    }
+
+    // Create an invisible container mesh that represents this transformation
+    const containerMesh = MeshBuilder.CreateBox(`${this.name}_container`, { size: 0.001 }, this.scene);
+    containerMesh.isVisible = false;
+    containerMesh.parent = parentNode;
+    
+    // CRITICAL: Store reference to all child meshes and mark them as independently visible
+    containerMesh.metadata = {
+      ...containerMesh.metadata,
+      transformedChildren: childMeshes,
+      isTransformationContainer: true,
+      hasMultipleChildren: childMeshes.length > 1
+    };
+
+    logger.debug(
+      `[ROTATE] Created transformation container with ${childMeshes.length} children, all rotated independently`
+    );
+
+    return containerMesh;
   }
 
   /**

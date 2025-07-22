@@ -165,7 +165,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.applyCSGOperationToMeshes(
       meshes,
       'UNION',
-      (a, b) => this.csgService.union(a, b),
+      async (a, b) => {
+        const result = await this.csgService.union(a, b);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data;
+      },
       'Combined'
     );
   }
@@ -177,7 +183,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.applyCSGOperationToMeshes(
       meshes,
       'DIFFERENCE',
-      (a, b) => this.csgService.difference(a, b),
+      async (a, b) => {
+        const result = await this.csgService.difference(a, b);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data;
+      },
       'Subtracted'
     );
   }
@@ -189,7 +201,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.applyCSGOperationToMeshes(
       meshes,
       'INTERSECTION',
-      (a, b) => this.csgService.intersection(a, b),
+      async (a, b) => {
+        const result = await this.csgService.intersection(a, b);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data;
+      },
       'Intersected'
     );
   }
@@ -222,15 +240,12 @@ export class CSGBabylonNode extends BabylonJSNode {
 
       const operationResult = await csgOperation(result as Mesh, mesh as Mesh);
 
-      if (!operationResult.success) {
-        throw new Error(`${operationType} operation failed: ${operationResult.error.message}`);
-      }
-
+      // The csgOperation now returns CSGOperationResult directly (after unwrapping Result)
       // Dispose intermediate meshes to prevent memory leaks and visual artifacts
       this.disposeIntermediateMesh(result, i);
       this.disposeProcessedMesh(mesh);
 
-      result = operationResult.data.resultMesh;
+      result = operationResult.resultMesh;
       logger.debug(
         `[${operationType}] ${actionVerb} mesh ${i} with base, intermediate meshes disposed`
       );
