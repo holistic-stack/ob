@@ -108,7 +108,11 @@ export class BabylonCSG2Service {
   async difference(meshA: Mesh, meshB: Mesh): Promise<CSGDifferenceResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing difference operation...');
 
-    return this.performOperation(CSGOperationType.DIFFERENCE, meshA, meshB) as Promise<CSGDifferenceResult>;
+    return this.performOperation(
+      CSGOperationType.DIFFERENCE,
+      meshA,
+      meshB
+    ) as Promise<CSGDifferenceResult>;
   }
 
   /**
@@ -117,7 +121,11 @@ export class BabylonCSG2Service {
   async intersection(meshA: Mesh, meshB: Mesh): Promise<CSGIntersectionResult> {
     logger.debug('[DEBUG][BabylonCSG2Service] Performing intersection operation...');
 
-    return this.performOperation(CSGOperationType.INTERSECTION, meshA, meshB) as Promise<CSGIntersectionResult>;
+    return this.performOperation(
+      CSGOperationType.INTERSECTION,
+      meshA,
+      meshB
+    ) as Promise<CSGIntersectionResult>;
   }
 
   /**
@@ -189,8 +197,6 @@ export class BabylonCSG2Service {
           this.scene || undefined
         );
         const conversionTime = performance.now() - conversionStartTime;
-
-
 
         const totalTime = performance.now() - startTime;
 
@@ -278,8 +284,6 @@ export class BabylonCSG2Service {
 
     return !!(positions && indices && positions.length > 0 && indices.length > 0);
   }
-
-
 
   /**
    * Get triangle count from mesh

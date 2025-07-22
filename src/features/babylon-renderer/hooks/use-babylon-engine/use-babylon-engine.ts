@@ -666,7 +666,7 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
         updateInterval = null;
       }
     };
-  }, []); // ✅ Empty dependency array prevents race conditions
+  }, [engineState.isInitialized]); // ✅ Empty dependency array prevents race conditions
 
   /**
    * Cleanup on unmount

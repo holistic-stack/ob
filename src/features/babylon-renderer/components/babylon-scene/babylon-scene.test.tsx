@@ -139,7 +139,7 @@ describe('BabylonScene', () => {
   });
 
   it('should accept orientation gizmo configuration', () => {
-    const gizmoConfig = {
+    const _gizmoConfig = {
       enabled: true,
       position: 'bottom-left' as const,
       size: 120,
@@ -153,7 +153,7 @@ describe('BabylonScene', () => {
   });
 
   it('should accept gizmo configuration', () => {
-    const gizmoConfig = {
+    const _gizmoConfig = {
       enabled: true,
       position: 'top-left' as const,
       size: 80,

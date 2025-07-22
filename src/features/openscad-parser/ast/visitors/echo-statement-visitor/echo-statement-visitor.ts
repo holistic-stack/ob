@@ -12,7 +12,7 @@ import type { ErrorHandler } from '../../../error-handling/error-handler.js';
 import { Logger } from '../../../error-handling/logger.js';
 import { Severity } from '../../../error-handling/types/error-types.js';
 import type * as ast from '../../ast-types.js';
-import type { EchoStatementNode, ExpressionNode, Parameter } from '../../ast-types.js';
+import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { findDescendantOfType } from '../../utils/node-utils.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';

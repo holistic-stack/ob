@@ -18,7 +18,7 @@ describe('User Nested CSG Test', () => {
   beforeEach(async () => {
     parser = new OpenscadParser();
     await parser.init();
-    
+
     // Create real BabylonJS NullEngine for testing (no mocks)
     engine = new NullEngine({
       renderHeight: 600,
@@ -27,7 +27,7 @@ describe('User Nested CSG Test', () => {
       deterministicLockstep: false,
       lockstepMaxSteps: 1,
     });
-    
+
     scene = new Scene(engine);
     converter = new ASTBridgeConverter();
     const initResult = await converter.initialize(scene);
@@ -69,20 +69,20 @@ describe('User Nested CSG Test', () => {
     console.log('Step 2: Converting AST to Babylon nodes...');
     const conversionResult = await converter.convertAST(ast);
     console.log('Step 2: Conversion result:', conversionResult.success);
-    
+
     expect(conversionResult.success).toBe(true);
-    
+
     if (conversionResult.success) {
       const babylonNodes = conversionResult.data;
       console.log('Step 2: Got', babylonNodes.length, 'babylon nodes');
-      
+
       // Log the structure of the nodes
       babylonNodes.forEach((node, index) => {
         console.log(`Node ${index}: type=${node.nodeType}, name=${node.name}`);
       });
-      
+
       expect(babylonNodes.length).toBeGreaterThan(0);
-      
+
       // Test that we can generate debug info without actually generating meshes
       console.log('Step 3: Getting debug info...');
       const debugInfo = babylonNodes[0]?.getDebugInfo();
@@ -109,14 +109,14 @@ describe('User Nested CSG Test', () => {
     console.log('Step 2: Converting to Babylon nodes...');
     const conversionResult = await converter.convertAST(ast);
     console.log('Step 2: Conversion result:', conversionResult.success);
-    
+
     expect(conversionResult.success).toBe(true);
-    
+
     if (conversionResult.success) {
       const babylonNodes = conversionResult.data;
       expect(babylonNodes.length).toBe(1);
       console.log('Step 2: Got babylon node:', babylonNodes[0]?.nodeType);
-      
+
       // Validate the node structure without generating meshes
       const validationResult = babylonNodes[0]?.validateNode();
       console.log('Step 3: Validation result:', validationResult?.success);

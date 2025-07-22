@@ -8,7 +8,7 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { ForLoopNode, IfNode, LetNode } from '../../../openscad-parser/ast/ast-types';
+import type { ForLoopNode, IfNode } from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ControlFlowBabylonNode } from './control-flow-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';

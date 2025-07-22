@@ -187,7 +187,6 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
   /**
    * Apply translate transformation with OpenSCAD-compatible parameters
-   * FIXED: Properly handle multiple children by ensuring all are visible
    */
   private applyTranslateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const translation = this.extractTranslationVector();
@@ -196,54 +195,16 @@ export class TransformationBabylonNode extends BabylonJSNode {
       `[TRANSLATE] Applying translation [${translation.x}, ${translation.y}, ${translation.z}] to ${childMeshes.length} child meshes`
     );
 
-    // CRITICAL FIX: For multiple children, we need to ensure all are properly positioned
-    // Apply translation directly to each child mesh to ensure they're all visible
-    for (const childMesh of childMeshes) {
-      // Apply translation directly to each child mesh
-      childMesh.position = childMesh.position.add(translation);
-      
-      logger.debug(
-        `[TRANSLATE] Applied translation [${translation.x}, ${translation.y}, ${translation.z}] directly to mesh '${childMesh.name}'`
-      );
-    }
+    // Apply translation directly to each child mesh
+    this.applyDirectTransformation(childMeshes, (mesh) => {
+      mesh.position = mesh.position.add(translation);
+    });
 
-    // If there's only one child, return it directly
-    if (childMeshes.length === 1) {
-      return childMeshes[0];
-    }
-
-    // For multiple children, create a parent group but ensure all children remain visible
-    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
-    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
-    
-    // Parent all child meshes to the transform node to maintain hierarchy
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentNode;
-    }
-
-    // Create an invisible container mesh that represents this transformation
-    const containerMesh = MeshBuilder.CreateBox(`${this.name}_container`, { size: 0.001 }, this.scene);
-    containerMesh.isVisible = false;
-    containerMesh.parent = parentNode;
-    
-    // CRITICAL: Store reference to all child meshes and mark them as independently visible
-    containerMesh.metadata = {
-      ...containerMesh.metadata,
-      transformedChildren: childMeshes,
-      isTransformationContainer: true,
-      hasMultipleChildren: childMeshes.length > 1
-    };
-
-    logger.debug(
-      `[TRANSLATE] Created transformation container with ${childMeshes.length} children, all positioned independently`
-    );
-
-    return containerMesh;
+    return this.createTransformationContainer(childMeshes, 'translate');
   }
 
   /**
    * Apply rotate transformation with OpenSCAD-compatible parameters
-   * FIXED: Properly handle multiple children by ensuring all are visible
    */
   private applyRotateTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const rotation = this.extractRotationAngles();
@@ -259,48 +220,12 @@ export class TransformationBabylonNode extends BabylonJSNode {
       (rotation.z * Math.PI) / 180
     );
 
-    // CRITICAL FIX: For multiple children, apply rotation directly to each child
-    for (const childMesh of childMeshes) {
-      // Apply rotation directly to each child mesh
-      childMesh.rotation = childMesh.rotation.add(rotationRadians);
-      
-      logger.debug(
-        `[ROTATE] Applied rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees directly to mesh '${childMesh.name}'`
-      );
-    }
+    // Apply rotation directly to each child mesh
+    this.applyDirectTransformation(childMeshes, (mesh) => {
+      mesh.rotation = mesh.rotation.add(rotationRadians);
+    });
 
-    // If there's only one child, return it directly
-    if (childMeshes.length === 1) {
-      return childMeshes[0];
-    }
-
-    // For multiple children, create a parent group but ensure all children remain visible
-    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
-    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
-    
-    // Parent all child meshes to the transform node to maintain hierarchy
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentNode;
-    }
-
-    // Create an invisible container mesh that represents this transformation
-    const containerMesh = MeshBuilder.CreateBox(`${this.name}_container`, { size: 0.001 }, this.scene);
-    containerMesh.isVisible = false;
-    containerMesh.parent = parentNode;
-    
-    // CRITICAL: Store reference to all child meshes and mark them as independently visible
-    containerMesh.metadata = {
-      ...containerMesh.metadata,
-      transformedChildren: childMeshes,
-      isTransformationContainer: true,
-      hasMultipleChildren: childMeshes.length > 1
-    };
-
-    logger.debug(
-      `[ROTATE] Created transformation container with ${childMeshes.length} children, all rotated independently`
-    );
-
-    return containerMesh;
+    return this.createTransformationContainer(childMeshes, 'rotate');
   }
 
   /**
@@ -308,21 +233,9 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyScaleTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const scale = this.extractScaleVector();
-
-    // Create a parent mesh to hold the scaled children
-    const { MeshBuilder } = require('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
-    parentMesh.isVisible = false; // Make parent invisible
-
-    // Apply scaling to parent
-    parentMesh.scaling = scale;
-
-    // Parent all child meshes to the scaled parent
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentMesh;
-    }
-
-    return parentMesh;
+    return this.createParentBasedTransformation(childMeshes, 'scale', (parent) => {
+      parent.scaling = scale;
+    });
   }
 
   /**
@@ -330,24 +243,11 @@ export class TransformationBabylonNode extends BabylonJSNode {
    */
   private applyMirrorTransformation(childMeshes: AbstractMesh[]): AbstractMesh {
     const normal = this.extractMirrorNormal();
-
-    // Create a parent mesh to hold the mirrored children
-    const { MeshBuilder } = require('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
-    parentMesh.isVisible = false; // Make parent invisible
-
-    // Create mirror matrix based on normal vector
     const mirrorMatrix = this.createMirrorMatrix(normal);
 
-    // Apply mirror transformation to parent
-    parentMesh.setPreTransformMatrix(mirrorMatrix);
-
-    // Parent all child meshes to the mirrored parent
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentMesh;
-    }
-
-    return parentMesh;
+    return this.createParentBasedTransformation(childMeshes, 'mirror', (parent) => {
+      parent.setPreTransformMatrix(mirrorMatrix);
+    });
   }
 
   /**
@@ -357,21 +257,15 @@ export class TransformationBabylonNode extends BabylonJSNode {
     const color = this.extractColor();
     const alpha = this.extractAlpha();
 
-    // Create a parent mesh to hold the colored children
-    const { MeshBuilder } = require('@babylonjs/core');
-    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
-    parentMesh.isVisible = false; // Make parent invisible
-
-    // Apply color to all child meshes
-    for (const childMesh of childMeshes) {
-      const material = new StandardMaterial(`${childMesh.name}_colored`, this.scene || undefined);
-      material.diffuseColor = color;
-      material.alpha = alpha;
-      childMesh.material = material;
-      childMesh.parent = parentMesh;
-    }
-
-    return parentMesh;
+    return this.createParentBasedTransformation(childMeshes, 'color', (_parent) => {
+      // Apply color to all child meshes
+      for (const childMesh of childMeshes) {
+        const material = new StandardMaterial(`${childMesh.name}_colored`, this.scene || undefined);
+        material.diffuseColor = color;
+        material.alpha = alpha;
+        childMesh.material = material;
+      }
+    });
   }
 
   /**
@@ -496,6 +390,94 @@ export class TransformationBabylonNode extends BabylonJSNode {
     }
 
     return 1; // Default alpha (opaque)
+  }
+
+  /**
+   * Apply transformation directly to each child mesh (DRY helper)
+   */
+  private applyDirectTransformation(
+    childMeshes: AbstractMesh[],
+    transformFn: (mesh: AbstractMesh) => void
+  ): void {
+    for (const childMesh of childMeshes) {
+      transformFn(childMesh);
+    }
+  }
+
+  /**
+   * Create transformation container for multiple children (DRY helper)
+   */
+  private createTransformationContainer(
+    childMeshes: AbstractMesh[],
+    transformationType: string
+  ): AbstractMesh {
+    // If there's only one child, return it directly
+    if (childMeshes.length === 1 && childMeshes[0]) {
+      return childMeshes[0];
+    }
+
+    // For multiple children, create a parent group
+    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
+    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
+
+    // Parent all child meshes to the transform node
+    for (const childMesh of childMeshes) {
+      childMesh.parent = parentNode;
+    }
+
+    // Create an invisible container mesh
+    const containerMesh = MeshBuilder.CreateBox(
+      `${this.name}_container`,
+      { size: 0.001 },
+      this.scene
+    );
+    containerMesh.isVisible = false;
+    containerMesh.parent = parentNode;
+
+    // Store metadata
+    containerMesh.metadata = {
+      ...containerMesh.metadata,
+      transformedChildren: childMeshes,
+      isTransformationContainer: true,
+      hasMultipleChildren: true,
+      transformationType,
+    };
+
+    logger.debug(
+      `[${transformationType.toUpperCase()}] Created transformation container with ${childMeshes.length} children`
+    );
+
+    return containerMesh;
+  }
+
+  /**
+   * Create parent-based transformation (DRY helper for scale, mirror, color)
+   */
+  private createParentBasedTransformation(
+    childMeshes: AbstractMesh[],
+    transformationType: string,
+    applyTransform: (parent: AbstractMesh) => void
+  ): AbstractMesh {
+    const { MeshBuilder } = require('@babylonjs/core');
+    const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
+    parentMesh.isVisible = false;
+
+    // Apply the specific transformation to parent
+    applyTransform(parentMesh);
+
+    // Parent all child meshes
+    for (const childMesh of childMeshes) {
+      childMesh.parent = parentMesh;
+    }
+
+    // Add metadata
+    parentMesh.metadata = {
+      ...parentMesh.metadata,
+      transformationType,
+      childCount: childMeshes.length,
+    };
+
+    return parentMesh;
   }
 
   /**

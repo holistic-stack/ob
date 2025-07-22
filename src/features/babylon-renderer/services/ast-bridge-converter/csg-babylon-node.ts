@@ -162,16 +162,10 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Apply union operation to multiple meshes
    */
   private async applyUnionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    return this.applyCSGOperationToMeshes(
+    return this.executeCSGOperation(
       meshes,
       'UNION',
-      async (a, b) => {
-        const result = await this.csgService.union(a, b);
-        if (!result.success) {
-          throw new Error(result.error.message);
-        }
-        return result.data;
-      },
+      (a, b) => this.csgService.union(a as Mesh, b as Mesh),
       'Combined'
     );
   }
@@ -180,16 +174,10 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Apply difference operation to multiple meshes
    */
   private async applyDifferenceOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    return this.applyCSGOperationToMeshes(
+    return this.executeCSGOperation(
       meshes,
       'DIFFERENCE',
-      async (a, b) => {
-        const result = await this.csgService.difference(a, b);
-        if (!result.success) {
-          throw new Error(result.error.message);
-        }
-        return result.data;
-      },
+      (a, b) => this.csgService.difference(a as Mesh, b as Mesh),
       'Subtracted'
     );
   }
@@ -198,17 +186,34 @@ export class CSGBabylonNode extends BabylonJSNode {
    * Apply intersection operation to multiple meshes
    */
   private async applyIntersectionOperation(meshes: AbstractMesh[]): Promise<AbstractMesh> {
-    return this.applyCSGOperationToMeshes(
+    return this.executeCSGOperation(
       meshes,
       'INTERSECTION',
+      (a, b) => this.csgService.intersection(a as Mesh, b as Mesh),
+      'Intersected'
+    );
+  }
+
+  /**
+   * Execute CSG operation with error handling (DRY helper)
+   */
+  private async executeCSGOperation(
+    meshes: AbstractMesh[],
+    operationType: string,
+    operation: (a: AbstractMesh, b: AbstractMesh) => Promise<Mesh>,
+    resultPrefix: string
+  ): Promise<AbstractMesh> {
+    return this.applyCSGOperationToMeshes(
+      meshes,
+      operationType,
       async (a, b) => {
-        const result = await this.csgService.intersection(a, b);
+        const result = await operation(a, b);
         if (!result.success) {
           throw new Error(result.error.message);
         }
         return result.data;
       },
-      'Intersected'
+      resultPrefix
     );
   }
 
@@ -219,7 +224,7 @@ export class CSGBabylonNode extends BabylonJSNode {
   private async applyCSGOperationToMeshes(
     meshes: AbstractMesh[],
     operationType: string,
-    csgOperation: (a: Mesh, b: Mesh) => Promise<any>,
+    csgOperation: (a: Mesh, b: Mesh) => Promise<Mesh>,
     actionVerb: string
   ): Promise<AbstractMesh> {
     logger.debug(

@@ -389,7 +389,14 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       realTimeParsing: enableRealTimeParsing,
       hasSelection: selection !== null,
     });
-  }, [isDirty, parsingErrors.length, parsingWarnings.length, enableRealTimeParsing, selection]); // Removed 'code' dependency to reduce keystroke overhead
+  }, [
+    isDirty,
+    parsingErrors.length,
+    parsingWarnings.length,
+    enableRealTimeParsing,
+    selection,
+    code.length,
+  ]); // Removed 'code' dependency to reduce keystroke overhead
 
   /**
    * @effect
@@ -402,7 +409,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
       // Manual parsing can be triggered here if needed
       // For now, we rely on the store's debounced parsing
     }
-  }, [enableRealTimeParsing]); // Removed 'code' dependency to prevent triggering on every keystroke
+  }, [enableRealTimeParsing, code.length]); // Removed 'code' dependency to prevent triggering on every keystroke
 
   return (
     <div

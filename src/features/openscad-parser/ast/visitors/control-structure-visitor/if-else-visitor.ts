@@ -145,7 +145,7 @@ export class IfElseVisitor extends BaseASTVisitor {
       }
     }
 
-    let elseBranch: ast.ASTNode[] | undefined;
+    let _elseBranch: ast.ASTNode[] | undefined;
 
     if (elseNode) {
       // Check if this is an else-if or a simple else
@@ -154,11 +154,11 @@ export class IfElseVisitor extends BaseASTVisitor {
         // This is an else-if, so process it as an if statement
         const elseIfResult = this.visitIfStatement(elseIfNode);
         if (elseIfResult) {
-          elseBranch = [elseIfResult];
+          _elseBranch = [elseIfResult];
         }
       } else {
         // This is a simple else, so process its block
-        elseBranch = this.visitBlock(elseNode);
+        _elseBranch = this.visitBlock(elseNode);
       }
     }
 
