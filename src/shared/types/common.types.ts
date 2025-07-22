@@ -84,6 +84,7 @@ export interface CameraConfig {
   readonly enableControls: boolean;
   readonly enableAutoRotate: boolean;
   readonly autoRotateSpeed: number;
+  readonly enableAutoFrame: boolean;
 }
 
 export interface SceneState {

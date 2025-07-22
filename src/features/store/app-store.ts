@@ -467,6 +467,7 @@ export const DEFAULT_CAMERA: CameraConfig = {
   enableControls: true,
   enableAutoRotate: false,
   autoRotateSpeed: 1,
+  enableAutoFrame: false, // Disabled by default to prevent disorienting camera movements
 };
 
 /**

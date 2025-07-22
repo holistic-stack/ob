@@ -581,6 +581,12 @@ export interface BabylonRenderingActions {
   // Camera management
   readonly updateCamera: (camera: Partial<CameraConfig>) => void;
   readonly resetCamera: () => void;
+
+  // Auto-framing control
+  readonly enableAutoFrame: () => void;
+  readonly disableAutoFrame: () => void;
+  readonly toggleAutoFrame: () => void;
+  readonly frameScene: () => void;
 }
 
 /**
@@ -640,6 +646,77 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
   },
   camera: DEFAULT_CAMERA,
 });
+
+/**
+ * Helper function to perform camera framing on a scene
+ */
+const performSceneFraming = (scene: Scene, framingType: string): void => {
+  try {
+    logger.debug(`[DEBUG][BabylonRenderingSlice] ${framingType} framing scene`);
+
+    // Direct BabylonJS auto-framing implementation
+    const camera = scene.activeCamera;
+    if (camera && camera.getClassName() === 'ArcRotateCamera') {
+      const arcCamera = camera as any; // ArcRotateCamera
+
+      // Calculate scene bounds from all visible meshes
+      let minX = Number.POSITIVE_INFINITY;
+      let maxX = Number.NEGATIVE_INFINITY;
+      let minY = Number.POSITIVE_INFINITY;
+      let maxY = Number.NEGATIVE_INFINITY;
+      let minZ = Number.POSITIVE_INFINITY;
+      let maxZ = Number.NEGATIVE_INFINITY;
+
+      const allSceneMeshes = scene.meshes.filter(
+        (mesh: any) => mesh.isVisible && mesh.isEnabled()
+      );
+
+      for (const mesh of allSceneMeshes) {
+        const boundingInfo = mesh.getBoundingInfo();
+        if (boundingInfo) {
+          const min = boundingInfo.boundingBox.minimumWorld;
+          const max = boundingInfo.boundingBox.maximumWorld;
+
+          minX = Math.min(minX, min.x);
+          maxX = Math.max(maxX, max.x);
+          minY = Math.min(minY, min.y);
+          maxY = Math.max(maxY, max.y);
+          minZ = Math.min(minZ, min.z);
+          maxZ = Math.max(maxZ, max.z);
+        }
+      }
+
+      if (Number.isFinite(minX) && Number.isFinite(maxX)) {
+        const sceneCenter = new Vector3(
+          (minX + maxX) / 2,
+          (minY + maxY) / 2,
+          (minZ + maxZ) / 2
+        );
+
+        const sceneSize = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
+
+        const diagonal = sceneSize.length();
+        const optimalRadius = Math.max(diagonal * 1.5, 5); // Minimum radius of 5
+
+        // Update camera target and radius
+        arcCamera.setTarget(sceneCenter);
+        arcCamera.radius = optimalRadius;
+
+        logger.debug(
+          `[DEBUG][BabylonRenderingSlice] ${framingType} framing completed: target=(${sceneCenter.x.toFixed(1)}, ${sceneCenter.y.toFixed(1)}, ${sceneCenter.z.toFixed(1)}), radius=${optimalRadius.toFixed(1)}`
+        );
+      } else {
+        logger.warn(
+          `[WARN][BabylonRenderingSlice] No valid meshes found for ${framingType.toLowerCase()} framing`
+        );
+      }
+    } else {
+      logger.warn(`[WARN][BabylonRenderingSlice] ${framingType} framing requires ArcRotateCamera`);
+    }
+  } catch (error) {
+    logger.warn(`[WARN][BabylonRenderingSlice] ${framingType} framing failed:`, error);
+  }
+};
 
 /**
  * Create BabylonJS rendering slice
@@ -1205,73 +1282,10 @@ export const createBabylonRenderingSlice = (
             `[DEBUG][BabylonRenderingSlice] Scene now has ${scene.meshes.length} meshes total`
           );
 
-          // Auto-frame the scene if meshes were generated
-          if (meshes.length > 0) {
-            try {
-              logger.debug('[DEBUG][BabylonRenderingSlice] Auto-framing scene with new meshes');
-
-              // Direct BabylonJS auto-framing implementation
-              const camera = scene.activeCamera;
-              if (camera && camera.getClassName() === 'ArcRotateCamera') {
-                const arcCamera = camera as any; // ArcRotateCamera
-
-                // Calculate scene bounds from all visible meshes
-                let minX = Number.POSITIVE_INFINITY;
-                let maxX = Number.NEGATIVE_INFINITY;
-                let minY = Number.POSITIVE_INFINITY;
-                let maxY = Number.NEGATIVE_INFINITY;
-                let minZ = Number.POSITIVE_INFINITY;
-                let maxZ = Number.NEGATIVE_INFINITY;
-
-                const allSceneMeshes = scene.meshes.filter(
-                  (mesh) => mesh.isVisible && mesh.isEnabled()
-                );
-
-                for (const mesh of allSceneMeshes) {
-                  const boundingInfo = mesh.getBoundingInfo();
-                  if (boundingInfo) {
-                    const min = boundingInfo.boundingBox.minimumWorld;
-                    const max = boundingInfo.boundingBox.maximumWorld;
-
-                    minX = Math.min(minX, min.x);
-                    maxX = Math.max(maxX, max.x);
-                    minY = Math.min(minY, min.y);
-                    maxY = Math.max(maxY, max.y);
-                    minZ = Math.min(minZ, min.z);
-                    maxZ = Math.max(maxZ, max.z);
-                  }
-                }
-
-                if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-                  const sceneCenter = new Vector3(
-                    (minX + maxX) / 2,
-                    (minY + maxY) / 2,
-                    (minZ + maxZ) / 2
-                  );
-
-                  const sceneSize = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
-
-                  const diagonal = sceneSize.length();
-                  const optimalRadius = Math.max(diagonal * 1.5, 5); // Minimum radius of 5
-
-                  // Update camera target and radius
-                  arcCamera.setTarget(sceneCenter);
-                  arcCamera.radius = optimalRadius;
-
-                  logger.debug(
-                    `[DEBUG][BabylonRenderingSlice] Auto-framing completed: target=(${sceneCenter.x.toFixed(1)}, ${sceneCenter.y.toFixed(1)}, ${sceneCenter.z.toFixed(1)}), radius=${optimalRadius.toFixed(1)}`
-                  );
-                } else {
-                  logger.warn(
-                    '[WARN][BabylonRenderingSlice] No valid meshes found for auto-framing'
-                  );
-                }
-              } else {
-                logger.warn('[WARN][BabylonRenderingSlice] Auto-framing requires ArcRotateCamera');
-              }
-            } catch (error) {
-              logger.warn('[WARN][BabylonRenderingSlice] Auto-framing failed:', error);
-            }
+          // Auto-frame the scene if meshes were generated and auto-framing is enabled
+          const currentState = _get();
+          if (meshes.length > 0 && currentState.babylonRendering.camera.enableAutoFrame) {
+            performSceneFraming(scene, 'Auto');
           }
 
           set((state: WritableDraft<AppStore>) => {
@@ -1443,6 +1457,39 @@ export const createBabylonRenderingSlice = (
         state.babylonRendering.camera = createInitialBabylonRenderingState()
           .camera as WritableDraft<CameraConfig>;
       });
+    },
+
+    // Auto-framing control
+    enableAutoFrame: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.camera.enableAutoFrame = true;
+      });
+    },
+
+    disableAutoFrame: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.camera.enableAutoFrame = false;
+      });
+    },
+
+    toggleAutoFrame: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.camera.enableAutoFrame = !state.babylonRendering.camera.enableAutoFrame;
+      });
+    },
+
+    // Manual framing action
+    frameScene: () => {
+      const currentState = _get();
+      const scene = currentState.babylonRendering.scene;
+
+      if (!scene) {
+        logger.warn('[WARN][BabylonRenderingSlice] Cannot frame scene: no scene available');
+        return;
+      }
+
+      // Use the same framing logic as auto-framing
+      performSceneFraming(scene, 'Manual');
     },
   };
 };

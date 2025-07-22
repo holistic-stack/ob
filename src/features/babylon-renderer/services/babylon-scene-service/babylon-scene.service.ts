@@ -649,7 +649,7 @@ const DEFAULT_CAMERA_CONFIG: SceneCameraConfig = {
   minRadius: 0.5,
   maxRadius: 500,
   smoothing: true,
-  autoFrame: true,
+  autoFrame: false, // Disabled by default to prevent disorienting camera movements during code editing
 } as const;
 
 /**

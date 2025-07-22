@@ -51,6 +51,7 @@ export interface CameraConfig {
   readonly fov?: number;
   readonly minZ?: number;
   readonly maxZ?: number;
+  readonly enableAutoFrame?: boolean;
 }
 
 /**
@@ -119,6 +120,7 @@ const DEFAULT_CAMERA_CONFIG: CameraConfig = {
   fov: Math.PI / 3,
   minZ: 0.1,
   maxZ: 1000,
+  enableAutoFrame: false, // Disabled by default to prevent disorienting camera movements
 } as const;
 
 /**
