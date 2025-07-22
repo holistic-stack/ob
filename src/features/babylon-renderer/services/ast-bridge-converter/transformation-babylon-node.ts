@@ -11,6 +11,7 @@ import {
   Vector3 as BabylonVector3,
   Color3,
   StandardMaterial,
+  MeshBuilder,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -192,15 +193,13 @@ export class TransformationBabylonNode extends BabylonJSNode {
     const translation = this.extractTranslationVector();
 
     logger.debug(
-      `[TRANSLATE] Applying translation [${translation.x}, ${translation.y}, ${translation.z}] to ${childMeshes.length} child meshes`
+      `[TRANSLATE] Applying translation [${translation.x}, ${translation.y}, ${translation.z}] to ${childMeshes.length} child meshes using parent-based transformation`
     );
 
-    // Apply translation directly to each child mesh
-    this.applyDirectTransformation(childMeshes, (mesh) => {
-      mesh.position = mesh.position.add(translation);
+    // Use parent-based transformation to ensure CSG operations preserve transformations
+    return this.createParentBasedTransformation(childMeshes, 'translate', (parent) => {
+      parent.position = translation;
     });
-
-    return this.createTransformationContainer(childMeshes, 'translate');
   }
 
   /**
@@ -210,7 +209,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
     const rotation = this.extractRotationAngles();
 
     logger.debug(
-      `[ROTATE] Applying rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees to ${childMeshes.length} child meshes`
+      `[ROTATE] Applying rotation [${rotation.x}, ${rotation.y}, ${rotation.z}] degrees to ${childMeshes.length} child meshes using parent-based transformation`
     );
 
     // Convert degrees to radians
@@ -220,12 +219,10 @@ export class TransformationBabylonNode extends BabylonJSNode {
       (rotation.z * Math.PI) / 180
     );
 
-    // Apply rotation directly to each child mesh
-    this.applyDirectTransformation(childMeshes, (mesh) => {
-      mesh.rotation = mesh.rotation.add(rotationRadians);
+    // Use parent-based transformation to ensure CSG operations preserve transformations
+    return this.createParentBasedTransformation(childMeshes, 'rotate', (parent) => {
+      parent.rotation = rotationRadians;
     });
-
-    return this.createTransformationContainer(childMeshes, 'rotate');
   }
 
   /**
@@ -392,63 +389,7 @@ export class TransformationBabylonNode extends BabylonJSNode {
     return 1; // Default alpha (opaque)
   }
 
-  /**
-   * Apply transformation directly to each child mesh (DRY helper)
-   */
-  private applyDirectTransformation(
-    childMeshes: AbstractMesh[],
-    transformFn: (mesh: AbstractMesh) => void
-  ): void {
-    for (const childMesh of childMeshes) {
-      transformFn(childMesh);
-    }
-  }
 
-  /**
-   * Create transformation container for multiple children (DRY helper)
-   */
-  private createTransformationContainer(
-    childMeshes: AbstractMesh[],
-    transformationType: string
-  ): AbstractMesh {
-    // If there's only one child, return it directly
-    if (childMeshes.length === 1 && childMeshes[0]) {
-      return childMeshes[0];
-    }
-
-    // For multiple children, create a parent group
-    const { TransformNode, MeshBuilder } = require('@babylonjs/core');
-    const parentNode = new TransformNode(`${this.name}_transform`, this.scene);
-
-    // Parent all child meshes to the transform node
-    for (const childMesh of childMeshes) {
-      childMesh.parent = parentNode;
-    }
-
-    // Create an invisible container mesh
-    const containerMesh = MeshBuilder.CreateBox(
-      `${this.name}_container`,
-      { size: 0.001 },
-      this.scene
-    );
-    containerMesh.isVisible = false;
-    containerMesh.parent = parentNode;
-
-    // Store metadata
-    containerMesh.metadata = {
-      ...containerMesh.metadata,
-      transformedChildren: childMeshes,
-      isTransformationContainer: true,
-      hasMultipleChildren: true,
-      transformationType,
-    };
-
-    logger.debug(
-      `[${transformationType.toUpperCase()}] Created transformation container with ${childMeshes.length} children`
-    );
-
-    return containerMesh;
-  }
 
   /**
    * Create parent-based transformation (DRY helper for scale, mirror, color)
@@ -458,7 +399,6 @@ export class TransformationBabylonNode extends BabylonJSNode {
     transformationType: string,
     applyTransform: (parent: AbstractMesh) => void
   ): AbstractMesh {
-    const { MeshBuilder } = require('@babylonjs/core');
     const parentMesh = MeshBuilder.CreateBox(`${this.name}_parent`, { size: 0.001 }, this.scene);
     parentMesh.isVisible = false;
 

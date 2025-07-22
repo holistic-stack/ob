@@ -165,7 +165,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.executeCSGOperation(
       meshes,
       'UNION',
-      (a, b) => this.csgService.union(a as Mesh, b as Mesh),
+      async (a, b) => {
+        const result = await this.csgService.union(a as Mesh, b as Mesh);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data.resultMesh;
+      },
       'Combined'
     );
   }
@@ -177,7 +183,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.executeCSGOperation(
       meshes,
       'DIFFERENCE',
-      (a, b) => this.csgService.difference(a as Mesh, b as Mesh),
+      async (a, b) => {
+        const result = await this.csgService.difference(a as Mesh, b as Mesh);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data.resultMesh;
+      },
       'Subtracted'
     );
   }
@@ -189,7 +201,13 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.executeCSGOperation(
       meshes,
       'INTERSECTION',
-      (a, b) => this.csgService.intersection(a as Mesh, b as Mesh),
+      async (a, b) => {
+        const result = await this.csgService.intersection(a as Mesh, b as Mesh);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        return result.data.resultMesh;
+      },
       'Intersected'
     );
   }
@@ -206,13 +224,7 @@ export class CSGBabylonNode extends BabylonJSNode {
     return this.applyCSGOperationToMeshes(
       meshes,
       operationType,
-      async (a, b) => {
-        const result = await operation(a, b);
-        if (!result.success) {
-          throw new Error(result.error.message);
-        }
-        return result.data;
-      },
+      operation,
       resultPrefix
     );
   }
@@ -245,12 +257,12 @@ export class CSGBabylonNode extends BabylonJSNode {
 
       const operationResult = await csgOperation(result as Mesh, mesh as Mesh);
 
-      // The csgOperation now returns CSGOperationResult directly (after unwrapping Result)
+      // The csgOperation now returns Mesh directly (after unwrapping Result)
       // Dispose intermediate meshes to prevent memory leaks and visual artifacts
       this.disposeIntermediateMesh(result, i);
       this.disposeProcessedMesh(mesh);
 
-      result = operationResult.resultMesh;
+      result = operationResult;
       logger.debug(
         `[${operationType}] ${actionVerb} mesh ${i} with base, intermediate meshes disposed`
       );

@@ -464,6 +464,7 @@
  */
 
 import type { AbstractMesh, Engine, Scene } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
 import { createLogger } from '../../../shared/services/logger.service';
@@ -1242,7 +1243,6 @@ export const createBabylonRenderingSlice = (
                 }
 
                 if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-                  const { Vector3 } = require('@babylonjs/core');
                   const sceneCenter = new Vector3(
                     (minX + maxX) / 2,
                     (minY + maxY) / 2,
