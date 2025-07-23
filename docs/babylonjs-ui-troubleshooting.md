@@ -2,22 +2,161 @@
 
 ## Overview
 
-This guide provides solutions to common issues encountered when working with BabylonJS UI components including gizmos, grids, and GUI overlays. It covers performance problems, rendering issues, and integration challenges.
+This guide provides solutions to common issues encountered when working with BabylonJS UI components including orientation gizmos, transformation gizmos, grids, and GUI overlays. It covers performance problems, rendering issues, and integration challenges.
 
 ## Table of Contents
 
-1. [Gizmo System Issues](#gizmo-system-issues)
-2. [Grid Overlay Problems](#grid-overlay-problems)
-3. [GUI Component Issues](#gui-component-issues)
-4. [Performance Problems](#performance-problems)
-5. [Integration Issues](#integration-issues)
-6. [Common Error Messages](#common-error-messages)
+1. [Orientation Gizmo Issues](#orientation-gizmo-issues)
+2. [Transformation Gizmo Issues](#transformation-gizmo-issues)
+3. [Grid Overlay Problems](#grid-overlay-problems)
+4. [GUI Component Issues](#gui-component-issues)
+5. [Performance Problems](#performance-problems)
+6. [Integration Issues](#integration-issues)
+7. [Common Error Messages](#common-error-messages)
 
-## Gizmo System Issues
+## Orientation Gizmo Issues
 
-### Gizmo Not Visible
+### Orientation Gizmo Not Visible
 
-**Symptoms**: Transformation gizmo doesn't appear when mesh is selected
+**Symptoms**: Navigation gizmo doesn't appear in the top-right corner of 3D renderer
+
+**Diagnosis**:
+```typescript
+// Check gizmo initialization and positioning
+console.log('Camera available:', !!camera);
+console.log('Gizmo visible state:', isGizmoVisible);
+console.log('Scene ready:', isSceneReady);
+
+// Check DOM positioning
+const gizmoCanvas = document.querySelector('canvas[width="90"][height="90"]');
+console.log('Gizmo canvas found:', !!gizmoCanvas);
+console.log('Gizmo position:', gizmoCanvas?.getBoundingClientRect());
+```
+
+**Solutions**:
+
+1. **Verify Positioning Relative to 3D Renderer**:
+```typescript
+// Correct positioning relative to 3D renderer container
+<div className="relative h-full w-full"> {/* 3D renderer container */}
+  <BabylonScene />
+  <SimpleOrientationGizmo
+    camera={camera}
+    style={{
+      position: 'absolute', // Relative to renderer container
+      top: '16px',
+      right: '112px', // Offset to avoid UI controls
+      zIndex: 20,
+    }}
+  />
+</div>
+```
+
+2. **Check Store State Initialization**:
+```typescript
+// Ensure gizmo state is properly initialized
+const setGizmoVisibility = (visible: boolean) => {
+  set((state: WritableDraft<AppStore>) => {
+    // Safety check to prevent undefined errors
+    if (!state.babylonRendering.gizmo) {
+      state.babylonRendering.gizmo = createInitialGizmoState();
+    }
+    state.babylonRendering.gizmo.isVisible = visible;
+  });
+};
+```
+
+3. **Validate Camera and Scene Setup**:
+```typescript
+// Ensure camera is properly initialized
+function validateGizmoRequirements(camera: ArcRotateCamera | null): boolean {
+  if (!camera) {
+    console.error('Camera is null - gizmo cannot render');
+    return false;
+  }
+
+  if (!camera.getScene()) {
+    console.error('Camera has no scene - gizmo cannot render');
+    return false;
+  }
+
+  return true;
+}
+```
+
+### Orientation Gizmo Positioning Issues
+
+**Symptoms**: Gizmo appears outside viewport or in wrong position
+
+**Solutions**:
+
+1. **Use Inline Styles Instead of Tailwind Classes**:
+```typescript
+// Reliable positioning with inline styles
+<SimpleOrientationGizmo
+  camera={camera}
+  style={{
+    position: 'absolute',
+    top: '16px',
+    right: '112px',
+    zIndex: 20,
+  }}
+  // Avoid Tailwind classes that may not apply correctly
+  // className="absolute top-4 right-28 z-20" // Can fail
+/>
+```
+
+2. **Verify Container Positioning Context**:
+```typescript
+// Ensure parent container has relative positioning
+const RendererContainer = styled.div`
+  position: relative; /* Required for absolute positioning of children */
+  width: 100%;
+  height: 100%;
+`;
+```
+
+### Orientation Gizmo Canvas Content Issues
+
+**Symptoms**: Gizmo canvas exists but shows no visual content
+
+**Solutions**:
+
+1. **Check Canvas Rendering Loop**:
+```typescript
+// Ensure render loop is active
+useEffect(() => {
+  if (!camera || !canvasRef.current) return;
+
+  const renderLoop = () => {
+    update(); // Update gizmo visual content
+    animationFrameRef.current = requestAnimationFrame(renderLoop);
+  };
+
+  renderLoop();
+
+  return () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+  };
+}, [camera, update]);
+```
+
+2. **Validate Canvas Context**:
+```typescript
+// Ensure 2D context is available
+const context = canvasRef.current.getContext('2d');
+if (!context) {
+  throw new Error('Failed to get 2D context for orientation gizmo');
+}
+```
+
+## Transformation Gizmo Issues
+
+### Transformation Gizmo Not Visible
+
+**Symptoms**: Object manipulation gizmo doesn't appear when mesh is selected
 
 **Diagnosis**:
 ```typescript
@@ -543,9 +682,38 @@ function safeDispose(component: IDisposable | null): void {
 }
 ```
 
+### "Cannot set properties of undefined (setting 'isVisible')"
+
+**Cause**: Gizmo state object not initialized in Zustand store before accessing properties
+
+**Solution**:
+```typescript
+// Add safety checks to all gizmo store actions
+const setGizmoVisibility = (visible: boolean) => {
+  set((state: WritableDraft<AppStore>) => {
+    // Ensure gizmo object exists before setting visibility
+    if (!state.babylonRendering.gizmo) {
+      state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+    }
+    state.babylonRendering.gizmo.isVisible = visible;
+  });
+};
+
+const setGizmoSelectedAxis = (axis: AxisDirection | null) => {
+  set((state: WritableDraft<AppStore>) => {
+    // Ensure gizmo object exists before setting selected axis
+    if (!state.babylonRendering.gizmo) {
+      state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+    }
+    state.babylonRendering.gizmo.selectedAxis = axis;
+    state.babylonRendering.gizmo.lastInteraction = new Date();
+  });
+};
+```
+
 ### "Gizmo manager not found"
 
-**Cause**: Trying to use gizmo before initialization
+**Cause**: Trying to use transformation gizmo before initialization
 
 **Solution**:
 ```typescript
@@ -556,6 +724,30 @@ async function ensureGizmoReady(gizmoService: TransformationGizmoService): Promi
   }
   return true;
 }
+```
+
+### "Gizmo positioned outside viewport"
+
+**Cause**: Using `position: fixed` instead of `position: absolute` relative to 3D renderer
+
+**Solution**:
+```typescript
+// Correct positioning strategy
+<div className="relative h-full w-full"> {/* 3D renderer container */}
+  <BabylonScene />
+  <SimpleOrientationGizmo
+    camera={camera}
+    style={{
+      position: 'absolute', // Relative to renderer container
+      top: '16px',
+      right: '112px',
+      zIndex: 20,
+    }}
+  />
+</div>
+
+// Avoid viewport-relative positioning
+// style={{ position: 'fixed' }} // Wrong - positions relative to viewport
 ```
 
 ### "GUI texture creation failed"

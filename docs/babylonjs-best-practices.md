@@ -338,6 +338,144 @@ class TextureCache {
 }
 ```
 
+## UI Component Architecture Patterns
+
+### 1. Gizmo System Separation of Concerns
+
+**✅ DO**: Separate orientation gizmos from transformation gizmos
+```typescript
+// Orientation gizmo - always visible for camera navigation
+<SimpleOrientationGizmo
+  camera={camera}
+  style={{
+    position: 'absolute', // Relative to 3D renderer
+    top: '16px',
+    right: '112px',
+    zIndex: 20,
+  }}
+  onAxisSelected={handleCameraNavigation}
+/>
+
+// Transformation gizmo - conditional on object selection
+{selectedMesh && (
+  <TransformationGizmo
+    scene={scene}
+    selectedMesh={selectedMesh}
+    mode={transformationMode}
+    onTransformationComplete={handleObjectTransform}
+  />
+)}
+```
+
+**❌ DON'T**: Mix navigation and manipulation concerns
+```typescript
+// Avoid combining different gizmo types
+function BadGizmoComponent({ camera, selectedMesh }) {
+  // This mixes camera navigation with object manipulation
+  return (
+    <UnifiedGizmo
+      camera={camera}
+      selectedMesh={selectedMesh}
+      mode={mode} // Unclear what this controls
+    />
+  );
+}
+```
+
+### 2. Positioning Strategy
+
+**✅ DO**: Position UI elements relative to their functional context
+```typescript
+// Position orientation gizmo relative to 3D renderer
+<div className="relative h-full w-full"> {/* 3D renderer container */}
+  <BabylonScene />
+  <SimpleOrientationGizmo
+    camera={camera}
+    style={{
+      position: 'absolute', // Relative to renderer
+      top: '16px',
+      right: '112px',
+      zIndex: 20,
+    }}
+  />
+</div>
+```
+
+**❌ DON'T**: Use viewport-relative positioning for 3D UI
+```typescript
+// Avoid positioning relative to entire viewport
+<SimpleOrientationGizmo
+  camera={camera}
+  style={{
+    position: 'fixed', // Wrong - relative to viewport
+    top: '16px',
+    right: '16px',
+  }}
+/>
+```
+
+### 3. Store State Safety
+
+**✅ DO**: Add safety checks to prevent undefined access
+```typescript
+const setGizmoVisibility = (visible: boolean) => {
+  set((state: WritableDraft<AppStore>) => {
+    // Ensure gizmo object exists before setting properties
+    if (!state.babylonRendering.gizmo) {
+      state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+    }
+    state.babylonRendering.gizmo.isVisible = visible;
+  });
+};
+```
+
+**❌ DON'T**: Access nested properties without safety checks
+```typescript
+// This can cause "Cannot set properties of undefined" errors
+const badSetGizmoVisibility = (visible: boolean) => {
+  set((state: WritableDraft<AppStore>) => {
+    state.babylonRendering.gizmo.isVisible = visible; // May fail if gizmo is undefined
+  });
+};
+```
+
+### 4. Component Implementation Strategy
+
+**✅ DO**: Use appropriate rendering techniques for each component type
+```typescript
+// Canvas-based rendering for 2D-looking 3D widgets
+class OrientationGizmo {
+  private canvas: HTMLCanvasElement;
+  private context: CanvasRenderingContext2D;
+
+  update(): void {
+    this.clear();
+    this.drawAxes();
+    this.drawLabels();
+  }
+}
+
+// BabylonJS-based rendering for true 3D manipulation
+class TransformationGizmo {
+  private gizmoManager: GizmoManager;
+  private positionGizmo: PositionGizmo;
+
+  attachToMesh(mesh: AbstractMesh): void {
+    this.gizmoManager.attachToMesh(mesh);
+  }
+}
+```
+
+**❌ DON'T**: Use complex 3D rendering for simple navigation widgets
+```typescript
+// Avoid over-engineering simple UI elements
+class OverEngineeredOrientationGizmo {
+  private scene: Scene; // Unnecessary complexity
+  private meshes: AbstractMesh[]; // Too heavy for navigation widget
+  private materials: Material[]; // Overkill for simple compass
+}
+```
+
 ## Service Layer Patterns
 
 ### 1. Service Initialization

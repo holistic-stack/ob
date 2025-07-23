@@ -171,12 +171,15 @@ import {
   selectRenderingErrors,
   selectRenderingIsRendering,
   selectRenderingMeshes,
+  selectSelectedMesh,
+  selectTransformationGizmoMode,
 } from '../../../store/selectors';
 import type { BabylonSceneService } from '../../services/babylon-scene-service';
 import type { BabylonSceneProps } from '../babylon-scene';
 import { BabylonScene } from '../babylon-scene';
 import { CameraControls } from '../camera-controls';
-import { OrientationGizmo } from '../orientation-gizmo';
+import { SimpleOrientationGizmo } from '../orientation-gizmo/simple-orientation-gizmo';
+import { TransformationGizmo } from '../transformation-gizmo';
 
 const logger = createLogger('StoreConnectedRenderer');
 
@@ -305,11 +308,21 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const renderErrors = useAppStore(selectRenderingErrors);
   const meshes = useAppStore(selectRenderingMeshes);
   const isGizmoVisible = useAppStore(selectGizmoIsVisible);
+  const selectedMesh = useAppStore(selectSelectedMesh);
+  const transformationGizmoMode = useAppStore(selectTransformationGizmoMode);
 
   // Debug initial AST value on mount only (performance optimized)
   useEffect(() => {
     logger.info('[INFO][StoreConnectedRenderer] Component mounted');
+
+    // Ensure gizmo is visible by default
+    if (!isGizmoVisible) {
+      setGizmoVisibility(true);
+      logger.info('[INFO][StoreConnectedRenderer] Setting gizmo visibility to true');
+    }
   }, []); // Empty dependency array - runs only on mount
+
+
 
   // Store actions - use individual selectors to avoid infinite loops
   const renderAST = useAppStore((state) => state.renderAST);
@@ -318,6 +331,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const updatePerformanceMetrics = useAppStore((state) => state.updatePerformanceMetrics);
   const showInspector = useAppStore((state) => state.showInspector);
   const hideInspector = useAppStore((state) => state.hideInspector);
+  const setSelectedMesh = useAppStore((state) => state.setSelectedMesh);
+  const setTransformationGizmoMode = useAppStore((state) => state.setTransformationGizmoMode);
+  const setGizmoVisibility = useAppStore((state) => state.setGizmoVisibility);
 
   // Create stable fallback functions to prevent infinite loops
   const safeRenderAST = useCallback(
@@ -464,12 +480,15 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleSceneReady = useCallback(
     async (scene: BabylonSceneType) => {
       logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
+      logger.info(`[INFO][StoreConnectedRenderer] Scene object type: ${scene?.constructor?.name || 'unknown'}`);
       logger.info(
         `[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`
       );
 
       sceneRef.current = scene;
       setIsSceneReady(!!scene);
+
+      logger.info(`[INFO][StoreConnectedRenderer] Scene ready state set to: ${!!scene}`);
 
       // Capture scene service for camera controls
       const service = scene._sceneService;
@@ -490,6 +509,8 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         logger.info(
           `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine()?.getRenderingCanvas() ? 'exists' : 'missing'}`
         );
+
+
       }
 
       logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
@@ -713,6 +734,10 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         onSceneReady={handleSceneReady}
         onEngineReady={handleEngineReady}
         onRenderLoop={handleRenderLoop}
+        onMeshSelected={(mesh) => {
+          logger.debug(`[DEBUG][StoreConnectedRenderer] Mesh selection: ${mesh?.name || 'none'}`);
+          setSelectedMesh(mesh);
+        }}
         className="w-full h-full"
       />
       {renderStatusOverlay()}
@@ -722,16 +747,40 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         <CameraControls sceneService={sceneService} className="absolute top-4 right-4 z-10" />
       )}
 
-      {/* Orientation Gizmo */}
+
+
+      {/* Orientation Gizmo - Positioned relative to 3D renderer canvas */}
       {isSceneReady && isGizmoVisible && sceneService && (
-        <OrientationGizmo
+        <SimpleOrientationGizmo
           camera={sceneService.getCameraControlService()?.getCamera() || null}
-          className="absolute top-4 left-4 z-10"
-          onAxisSelected={(event) => {
-            logger.debug(`[DEBUG][StoreConnectedRenderer] Gizmo axis selected: ${event.axis}`);
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '112px', // right-28 = 7rem = 112px
+            zIndex: 20,
+          }}
+          onAxisSelected={(axis) => {
+            logger.debug(`[DEBUG][StoreConnectedRenderer] Gizmo axis selected: ${axis.axis}`);
           }}
           onError={(error) => {
             logger.error(`[ERROR][StoreConnectedRenderer] Gizmo error: ${error.message}`);
+          }}
+        />
+      )}
+
+      {/* Transformation Gizmo - Only visible when mesh is selected */}
+      {isSceneReady && selectedMesh && sceneService && sceneService.getState().scene && (
+        <TransformationGizmo
+          scene={sceneService.getState().scene}
+          selectedMesh={selectedMesh}
+          mode={transformationGizmoMode}
+          onTransformationComplete={(event) => {
+            logger.debug(
+              `[DEBUG][StoreConnectedRenderer] Mesh transformed: ${event.mesh.name} (${event.mode})`
+            );
+          }}
+          onError={(error) => {
+            logger.error(`[ERROR][StoreConnectedRenderer] Transformation gizmo error: ${error.message}`);
           }}
         />
       )}

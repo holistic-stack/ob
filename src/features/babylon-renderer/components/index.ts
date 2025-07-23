@@ -24,6 +24,10 @@ export { BabylonScene } from './babylon-scene';
 export type { CameraControlsProps } from './camera-controls';
 export { CameraControls } from './camera-controls';
 
+// Transformation Gizmo Component
+export type { TransformationGizmoProps } from './transformation-gizmo';
+export { TransformationGizmo } from './transformation-gizmo';
+
 // Store Connected Renderer - Main Component
 export type { StoreConnectedRendererProps } from './store-connected-renderer';
 export { StoreConnectedRenderer } from './store-connected-renderer';

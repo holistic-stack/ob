@@ -5,8 +5,8 @@
  * with React 19 compatibility and hook-based integration.
  */
 
-import type { Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
-import { Color3, Engine, Vector3 } from '@babylonjs/core';
+import type { AbstractMesh, Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
+import { Color3, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
@@ -88,6 +88,7 @@ export interface BabylonSceneProps {
   readonly onSceneReady?: (scene: BabylonSceneType) => void;
   readonly onEngineReady?: (engine: BabylonEngineType) => void;
   readonly onRenderLoop?: () => void;
+  readonly onMeshSelected?: (mesh: AbstractMesh | null) => void;
   readonly className?: string;
   readonly style?: React.CSSProperties;
 }
@@ -161,6 +162,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   onSceneReady,
   onEngineReady,
   onRenderLoop,
+  onMeshSelected,
   className,
   style,
 }) => {
@@ -266,7 +268,21 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         (scene as BabylonSceneType & { _sceneService?: typeof sceneService })._sceneService =
           sceneService;
 
-        // Orientation gizmo functionality removed
+        // Setup mesh selection handling
+        if (onMeshSelected) {
+          scene.onPointerObservable.add((pointerInfo) => {
+            if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+              if (pointerInfo.pickInfo?.hit && pointerInfo.pickInfo.pickedMesh) {
+                const mesh = pointerInfo.pickInfo.pickedMesh as AbstractMesh;
+                logger.debug(`[DEBUG][BabylonScene] Mesh selected: ${mesh.name}`);
+                onMeshSelected(mesh);
+              } else {
+                logger.debug('[DEBUG][BabylonScene] No mesh selected (clicked on empty space)');
+                onMeshSelected(null);
+              }
+            }
+          });
+        }
 
         onSceneReady?.(scene);
       },

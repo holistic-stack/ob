@@ -2,23 +2,120 @@
 
 ## Overview
 
-This guide provides comprehensive documentation for building advanced UI components in BabylonJS 8.16.1, including transformation gizmos, 2D grid overlays, and GUI systems. It incorporates the latest 2025 best practices for performance, accessibility, and modern web development.
+This guide provides comprehensive documentation for building advanced UI components in BabylonJS 8.16.1, including orientation gizmos, transformation gizmos, 2D grid overlays, and GUI systems. It incorporates the latest 2025 best practices for performance, accessibility, and modern web development.
 
 ## Table of Contents
 
-1. [Transformation Gizmo System](#transformation-gizmo-system)
-2. [2D Grid Overlay System](#2d-grid-overlay-system)
-3. [GUI Overlay Components](#gui-overlay-components)
-4. [Integration Patterns](#integration-patterns)
-5. [Performance Optimization](#performance-optimization)
-6. [Testing Strategies](#testing-strategies)
-7. [Accessibility Guidelines](#accessibility-guidelines)
+1. [Orientation Gizmo System](#orientation-gizmo-system)
+2. [Transformation Gizmo System](#transformation-gizmo-system)
+3. [2D Grid Overlay System](#2d-grid-overlay-system)
+4. [GUI Overlay Components](#gui-overlay-components)
+5. [Integration Patterns](#integration-patterns)
+6. [Performance Optimization](#performance-optimization)
+7. [Testing Strategies](#testing-strategies)
+8. [Accessibility Guidelines](#accessibility-guidelines)
+
+## Orientation Gizmo System
+
+### Modern Orientation Gizmo Architecture
+
+The orientation gizmo system provides intuitive camera navigation with a 3D-looking compass widget positioned relative to the 3D renderer canvas. This system is completely separate from object transformation gizmos to ensure clean separation of concerns.
+
+#### Core Features
+- **Camera Navigation**: Click axes to snap camera to standard orthographic views
+- **Real-time Updates**: Visual representation updates as camera rotates
+- **Canvas-relative Positioning**: Positioned relative to 3D renderer, not viewport
+- **2D Canvas Rendering**: Efficient 2D canvas implementation with 3D appearance
+- **Performance Optimized**: 60fps updates with minimal overhead
+
+#### Basic Implementation
+
+```typescript
+// SimpleOrientationGizmo component
+import { SimpleOrientationGizmo } from '../orientation-gizmo/simple-orientation-gizmo';
+
+function CameraNavigationWidget({ camera }: { camera: ArcRotateCamera | null }) {
+  return (
+    <SimpleOrientationGizmo
+      camera={camera}
+      style={{
+        position: 'absolute',
+        top: '16px',
+        right: '112px', // Offset to avoid UI controls
+        zIndex: 20,
+      }}
+      onAxisSelected={(axis) => {
+        console.log('Camera navigating to:', axis.axis);
+      }}
+      onError={(error) => {
+        console.error('Gizmo error:', error.message);
+      }}
+    />
+  );
+}
+```
+
+#### Advanced Configuration
+
+```typescript
+const gizmoOptions: Partial<GizmoOptions> = {
+  size: 90,
+  padding: 8,
+  bubbleSizePrimary: 8,
+  bubbleSizeSecondary: 6,
+  showSecondary: true,
+  colors: {
+    x: ['#f73c3c', '#942424'], // Red axis
+    y: ['#6ccb26', '#417a17'], // Green axis
+    z: ['#178cf0', '#0e5490'], // Blue axis
+  },
+};
+
+<SimpleOrientationGizmo
+  camera={camera}
+  options={gizmoOptions}
+  className="orientation-gizmo"
+  onAxisSelected={handleAxisSelection}
+/>
+```
+
+#### Positioning Strategy
+
+**✅ DO**: Position relative to 3D renderer canvas
+```typescript
+// Correct positioning relative to 3D renderer
+<div className="relative h-full w-full"> {/* 3D renderer container */}
+  <BabylonScene />
+  <SimpleOrientationGizmo
+    camera={camera}
+    style={{
+      position: 'absolute', // Relative to renderer container
+      top: '16px',
+      right: '112px',
+      zIndex: 20,
+    }}
+  />
+</div>
+```
+
+**❌ DON'T**: Position relative to viewport
+```typescript
+// Incorrect - positions relative to entire viewport
+<SimpleOrientationGizmo
+  camera={camera}
+  style={{
+    position: 'fixed', // Wrong - relative to viewport
+    top: '16px',
+    right: '16px',
+  }}
+/>
+```
 
 ## Transformation Gizmo System
 
-### Modern Gizmo Architecture
+### Modern Transformation Gizmo Architecture
 
-The transformation gizmo system provides intuitive 3D object manipulation with visual feedback and precise control.
+The transformation gizmo system provides intuitive 3D object manipulation with visual feedback and precise control. This system is completely separate from the orientation gizmo and only appears when objects are selected.
 
 #### Core Features
 - **Multi-mode Support**: Position, rotation, and scale transformations
@@ -26,6 +123,7 @@ The transformation gizmo system provides intuitive 3D object manipulation with v
 - **Snap-to-Grid**: Configurable grid snapping for precise positioning
 - **Performance Optimized**: Efficient rendering with minimal draw calls
 - **Event-Driven**: Observable pattern for transformation updates
+- **Conditional Rendering**: Only visible when meshes are selected
 
 #### Basic Implementation
 
@@ -369,28 +467,65 @@ export function useBabylonUISystem(scene: Scene | null, camera: ArcRotateCamera 
 ### Store Integration
 
 ```typescript
-// Zustand slice for UI state
+// Zustand slice for UI state with orientation gizmo support
 interface UIState {
-  gizmoMode: 'position' | 'rotation' | 'scale';
+  // Transformation gizmo state (object manipulation)
+  transformationGizmoMode: 'position' | 'rotation' | 'scale';
+  selectedMesh: AbstractMesh | null;
+
+  // Orientation gizmo state (camera navigation)
+  orientationGizmoVisible: boolean;
+
+  // Grid and theme state
   gridVisible: boolean;
   gridSize: number;
-  selectedMesh: AbstractMesh | null;
   theme: 'light' | 'dark';
 }
 
 const useUIStore = create<UIState>((set) => ({
-  gizmoMode: 'position',
+  transformationGizmoMode: 'position',
+  selectedMesh: null,
+  orientationGizmoVisible: true, // Always visible for navigation
   gridVisible: true,
   gridSize: 1.0,
-  selectedMesh: null,
   theme: 'dark',
-  
-  setGizmoMode: (mode) => set({ gizmoMode: mode }),
+
+  // Transformation gizmo actions (conditional on selection)
+  setTransformationGizmoMode: (mode) => set({ transformationGizmoMode: mode }),
+  setSelectedMesh: (mesh) => set({ selectedMesh: mesh }),
+
+  // Orientation gizmo actions (independent of selection)
+  setOrientationGizmoVisible: (visible) => set({ orientationGizmoVisible: visible }),
+
+  // Grid and theme actions
   setGridVisible: (visible) => set({ gridVisible: visible }),
   setGridSize: (size) => set({ gridSize: size }),
-  setSelectedMesh: (mesh) => set({ selectedMesh: mesh }),
   setTheme: (theme) => set({ theme }),
 }));
+
+// Store actions with safety checks to prevent undefined errors
+const babylonRenderingSlice = {
+  setGizmoVisibility: (visible: boolean) => {
+    set((state: WritableDraft<AppStore>) => {
+      // Ensure gizmo object exists before setting visibility
+      if (!state.babylonRendering.gizmo) {
+        state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+      }
+      state.babylonRendering.gizmo.isVisible = visible;
+    });
+  },
+
+  setGizmoSelectedAxis: (axis: AxisDirection | null) => {
+    set((state: WritableDraft<AppStore>) => {
+      // Ensure gizmo object exists before setting selected axis
+      if (!state.babylonRendering.gizmo) {
+        state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+      }
+      state.babylonRendering.gizmo.selectedAxis = axis;
+      state.babylonRendering.gizmo.lastInteraction = new Date();
+    });
+  },
+};
 ```
 
 ## Performance Optimization

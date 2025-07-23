@@ -484,6 +484,7 @@ import {
   BabylonMaterialService,
   InspectorTab,
 } from '../../babylon-renderer/services';
+import type { GizmoMode } from '../../babylon-renderer/services/transformation-gizmo-service';
 import { ASTBridgeConverter } from '../../babylon-renderer/services/ast-bridge-converter';
 import type {
   AxisDirection,
@@ -521,6 +522,8 @@ export interface BabylonRenderingState {
   readonly performanceMetrics: BabylonPerformanceMetrics;
   readonly camera: CameraConfig;
   readonly gizmo: GizmoState; // Orientation gizmo state
+  readonly selectedMesh: AbstractMesh | null; // Currently selected mesh for transformation
+  readonly transformationGizmoMode: GizmoMode; // Current transformation gizmo mode
 }
 
 /**
@@ -600,7 +603,7 @@ export interface BabylonRenderingActions {
   readonly toggleAutoFrame: () => void;
   readonly frameScene: () => void;
 
-  // Gizmo management
+  // Gizmo management (Orientation)
   readonly setGizmoVisibility: (visible: boolean) => void;
   readonly setGizmoPosition: (position: GizmoPosition) => void;
   readonly updateGizmoConfig: (config: Partial<GizmoConfig>) => void;
@@ -609,6 +612,10 @@ export interface BabylonRenderingActions {
   readonly setGizmoError: (error: GizmoError | null) => void;
   readonly resetGizmo: () => void;
   readonly initializeGizmo: () => void;
+
+  // Transformation Gizmo management
+  readonly setSelectedMesh: (mesh: AbstractMesh | null) => void;
+  readonly setTransformationGizmoMode: (mode: GizmoMode) => void;
 }
 
 /**
@@ -695,6 +702,8 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
   },
   camera: DEFAULT_CAMERA,
   gizmo: createInitialGizmoState(),
+  selectedMesh: null,
+  transformationGizmoMode: 'position',
 });
 
 /**
@@ -1573,6 +1582,10 @@ export const createBabylonRenderingSlice = (
     // Gizmo management actions
     setGizmoVisibility: (visible: boolean) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before setting visibility
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.isVisible = visible;
       });
       logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo visibility set to: ${visible}`);
@@ -1580,6 +1593,10 @@ export const createBabylonRenderingSlice = (
 
     setGizmoPosition: (position: GizmoPosition) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before setting position
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.position = position;
       });
       logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo position set to: ${position}`);
@@ -1587,6 +1604,10 @@ export const createBabylonRenderingSlice = (
 
     updateGizmoConfig: (config: Partial<GizmoConfig>) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before updating config
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.config = {
           ...state.babylonRendering.gizmo.config,
           ...config,
@@ -1597,6 +1618,10 @@ export const createBabylonRenderingSlice = (
 
     setGizmoSelectedAxis: (axis: AxisDirection | null) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before setting selected axis
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.selectedAxis = axis;
         state.babylonRendering.gizmo.lastInteraction = new Date();
       });
@@ -1605,6 +1630,10 @@ export const createBabylonRenderingSlice = (
 
     setGizmoAnimating: (isAnimating: boolean) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before setting animation state
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.cameraAnimation.isAnimating = isAnimating;
         if (isAnimating) {
           state.babylonRendering.gizmo.cameraAnimation.startTime = performance.now();
@@ -1615,6 +1644,10 @@ export const createBabylonRenderingSlice = (
 
     setGizmoError: (error: GizmoError | null) => {
       set((state: WritableDraft<AppStore>) => {
+        // Ensure gizmo object exists before setting error
+        if (!state.babylonRendering.gizmo) {
+          state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+        }
         state.babylonRendering.gizmo.error = error;
       });
       if (error) {
@@ -1635,6 +1668,21 @@ export const createBabylonRenderingSlice = (
         state.babylonRendering.gizmo.error = null;
       });
       logger.debug('[DEBUG][BabylonRenderingSlice] Gizmo initialized successfully');
+    },
+
+    // Transformation Gizmo actions
+    setSelectedMesh: (mesh: AbstractMesh | null) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.selectedMesh = mesh as WritableDraft<AbstractMesh | null>;
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Selected mesh: ${mesh?.name || 'none'}`);
+    },
+
+    setTransformationGizmoMode: (mode: GizmoMode) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.transformationGizmoMode = mode;
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Transformation gizmo mode: ${mode}`);
     },
   };
 };

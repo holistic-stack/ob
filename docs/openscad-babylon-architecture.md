@@ -62,7 +62,7 @@ The OpenSCAD Babylon project is **100% complete** with comprehensive test covera
 5. **Translate Transformation**: ✅ **FULLY FUNCTIONAL** with direct mesh approach
 6. **Auto-Framing**: Camera automatically positions to show all objects
 7. **OpenSCAD Coordinate System**: Z-up, right-handed coordinate system fully implemented
-8. **Orientation Gizmo**: ✅ **FULLY INTEGRATED** 3D navigation aid with camera synchronization
+8. **Orientation Gizmo**: ✅ **FULLY INTEGRATED** 2D canvas-based 3D navigation widget with camera synchronization and renderer-relative positioning
 9. **Error Handling**: Comprehensive Result<T,E> patterns throughout
 9. **Testing Framework**: 95%+ test coverage with real implementations
 
@@ -166,7 +166,7 @@ graph TD
 
 ### **3D Rendering & Visualization**
 - **BabylonJS 8.16.1** - Advanced 3D graphics library with WebGL2
-- **Orientation Gizmo System** - Integrated 3D navigation aid with camera synchronization
+- **Orientation Gizmo System** - Canvas-based 3D navigation widget with renderer-relative positioning and real-time camera synchronization
 - **manifold-3d 3.1.1** - Advanced CSG operations with WASM integration
 - **gl-matrix 3.4.3** - High-performance matrix operations
 
@@ -228,9 +228,46 @@ interface IBabylonUIComponent {
 
 ### BabylonJS UI Component Architecture
 
-#### 1. **Transformation Gizmo System**
+#### 1. **Orientation Gizmo System**
 
-**Design Decision**: Service-based gizmo management with observable transformation events
+**Design Decision**: Canvas-based 3D navigation widget positioned relative to 3D renderer
+**Location**: `src/features/babylon-renderer/components/orientation-gizmo/`
+
+```typescript
+interface SimpleOrientationGizmoProps {
+  readonly camera: ArcRotateCamera | null;
+  readonly options?: Partial<GizmoOptions>;
+  readonly className?: string;
+  readonly style?: React.CSSProperties;
+  readonly onAxisSelected?: (axis: AxisBubble) => void;
+  readonly onError?: (error: Error) => void;
+}
+
+interface GizmoOptions {
+  readonly size: number;
+  readonly padding: number;
+  readonly bubbleSizePrimary: number;
+  readonly bubbleSizeSecondary: number;
+  readonly showSecondary: boolean;
+  readonly colors: {
+    readonly x: readonly [string, string];
+    readonly y: readonly [string, string];
+    readonly z: readonly [string, string];
+  };
+}
+```
+
+**File Structure**:
+```
+src/features/babylon-renderer/components/orientation-gizmo/
+├── simple-orientation-gizmo.tsx
+├── orientation-gizmo.tsx (legacy)
+└── index.ts
+```
+
+#### 2. **Transformation Gizmo System**
+
+**Design Decision**: Service-based object manipulation gizmos with conditional rendering
 **Location**: `src/features/babylon-renderer/components/transformation-gizmo/`
 
 ```typescript
@@ -689,7 +726,8 @@ src/features/babylon-renderer/
 │   │   ├── camera-controls.tsx         # Camera interaction controls
 │   │   └── camera-controls.test.tsx    # Co-located tests
 │   ├── orientation-gizmo/              # SRP: 3D navigation gizmo
-│   │   ├── orientation-gizmo.tsx       # Main gizmo component
+│   │   ├── simple-orientation-gizmo.tsx # Canvas-based gizmo component
+│   │   ├── orientation-gizmo.tsx       # Legacy gizmo component
 │   │   ├── orientation-gizmo.test.tsx  # Component tests
 │   │   └── orientation-gizmo-integration.test.tsx # Integration tests
 │   ├── gizmo-config-panel/             # SRP: Gizmo configuration UI
@@ -715,8 +753,8 @@ src/features/babylon-renderer/
 │   ├── babylon-engine-service/         # SRP: Engine management only
 │   │   ├── babylon-engine.service.ts   # BabylonJS engine management
 │   │   └── babylon-engine.service.test.ts # Co-located tests
-│   ├── orientation-gizmo-service/      # SRP: Gizmo rendering service
-│   │   ├── orientation-gizmo.service.ts # Core gizmo functionality
+│   ├── orientation-gizmo-service/      # SRP: Legacy gizmo service (deprecated)
+│   │   ├── orientation-gizmo.service.ts # Legacy service implementation
 │   │   └── orientation-gizmo.service.test.ts # Co-located tests
 │   ├── camera-gizmo-sync/              # SRP: Camera-gizmo synchronization
 │   │   ├── camera-gizmo-sync.service.ts # Bidirectional sync service

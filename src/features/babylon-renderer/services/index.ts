@@ -83,3 +83,14 @@ export type {
   CameraControlError,
 } from './camera-control';
 export { CameraControlService } from './camera-control';
+
+export type {
+  GizmoMode,
+  TransformationEvent,
+  TransformationGizmoConfig,
+  TransformationGizmoError,
+} from './transformation-gizmo-service';
+export {
+  DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
+  TransformationGizmoService,
+} from './transformation-gizmo-service';
