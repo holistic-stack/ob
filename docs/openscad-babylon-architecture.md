@@ -62,7 +62,8 @@ The OpenSCAD Babylon project is **100% complete** with comprehensive test covera
 5. **Translate Transformation**: ✅ **FULLY FUNCTIONAL** with direct mesh approach
 6. **Auto-Framing**: Camera automatically positions to show all objects
 7. **OpenSCAD Coordinate System**: Z-up, right-handed coordinate system fully implemented
-8. **Error Handling**: Comprehensive Result<T,E> patterns throughout
+8. **Orientation Gizmo**: ✅ **FULLY INTEGRATED** 3D navigation aid with camera synchronization
+9. **Error Handling**: Comprehensive Result<T,E> patterns throughout
 9. **Testing Framework**: 95%+ test coverage with real implementations
 
 #### **🔄 IN PROGRESS COMPONENTS**
@@ -165,6 +166,7 @@ graph TD
 
 ### **3D Rendering & Visualization**
 - **BabylonJS 8.16.1** - Advanced 3D graphics library with WebGL2
+- **Orientation Gizmo System** - Integrated 3D navigation aid with camera synchronization
 - **manifold-3d 3.1.1** - Advanced CSG operations with WASM integration
 - **gl-matrix 3.4.3** - High-performance matrix operations
 
@@ -189,6 +191,461 @@ graph TD
 ### **Styling & UI**
 - **Tailwind CSS 4.1.10** - Utility-first CSS framework
 - **class-variance-authority 0.7.1** - Component variant management
+
+## BabylonJS Component Architecture
+
+### Overview
+
+The OpenSCAD Babylon project implements a service-based BabylonJS architecture with specialized UI components for 3D CAD workflows. This section defines the architectural patterns, interfaces, and integration guidelines for BabylonJS components following 2025 best practices.
+
+### Architecture Principles
+
+**Service-Based Design**: All BabylonJS functionality encapsulated in services with single responsibility
+**Resource Management**: Automatic tracking and disposal of 3D resources
+**Result<T,E> Patterns**: Functional error handling throughout the component layer
+**Framework Agnostic**: BabylonJS services independent of React/UI framework
+
+### Core Service Interfaces
+
+```typescript
+interface IBabylonService {
+  readonly isInitialized: boolean;
+  initialize(config: ServiceConfig): Promise<Result<void, BabylonError>>;
+  dispose(): Result<void, BabylonError>;
+}
+
+interface IResourceTracker {
+  track<T extends IDisposable>(resource: T): T;
+  dispose(): void;
+}
+
+interface IBabylonUIComponent {
+  readonly isVisible: boolean;
+  setVisibility(visible: boolean): Result<void, UIError>;
+  updateConfiguration(config: Partial<ComponentConfig>): Result<void, UIError>;
+}
+```
+
+### BabylonJS UI Component Architecture
+
+#### 1. **Transformation Gizmo System**
+
+**Design Decision**: Service-based gizmo management with observable transformation events
+**Location**: `src/features/babylon-renderer/components/transformation-gizmo/`
+
+```typescript
+interface ITransformationGizmoService extends IBabylonService {
+  readonly currentMode: GizmoMode;
+  readonly attachedMesh: AbstractMesh | null;
+
+  setMode(mode: GizmoMode): Result<void, GizmoError>;
+  attachToMesh(mesh: AbstractMesh): Result<void, GizmoError>;
+  detach(): Result<void, GizmoError>;
+}
+
+type GizmoMode = 'position' | 'rotation' | 'scale';
+
+interface GizmoConfig {
+  readonly size: number;
+  readonly snapToGrid: boolean;
+  readonly gridSize: number;
+  readonly colors: GizmoColorScheme;
+}
+```
+
+**File Structure**:
+```
+src/features/babylon-renderer/components/transformation-gizmo/
+├── transformation-gizmo.service.ts
+├── transformation-gizmo.service.test.ts
+├── transformation-gizmo.types.ts
+├── gizmo-config/
+│   ├── gizmo-config.interface.ts
+│   └── default-gizmo-config.ts
+└── index.ts
+```
+
+#### 2. **2D Grid Overlay System**
+
+**Design Decision**: Shader-based infinite grid with dynamic LOD scaling
+**Location**: `src/features/babylon-renderer/components/grid-overlay/`
+
+```typescript
+interface IGridOverlayService extends IBabylonService, IBabylonUIComponent {
+  readonly gridSize: number;
+  readonly isInfinite: boolean;
+
+  setGridSize(size: number): Result<void, GridError>;
+  snapToGrid(position: Vector3): Vector3;
+  setInfiniteMode(enabled: boolean): Result<void, GridError>;
+}
+
+interface GridConfig {
+  readonly spacing: number;
+  readonly subdivisions: number;
+  readonly colors: GridColorScheme;
+  readonly fadeDistance: number;
+  readonly infiniteGrid: boolean;
+}
+```
+
+**File Structure**:
+```
+src/features/babylon-renderer/components/grid-overlay/
+├── grid-overlay.service.ts
+├── grid-overlay.service.test.ts
+├── grid-overlay.types.ts
+├── shaders/
+│   ├── infinite-grid.vertex.glsl
+│   └── infinite-grid.fragment.glsl
+├── grid-config/
+│   └── default-grid-config.ts
+└── index.ts
+```
+
+#### 3. **GUI Overlay Components**
+
+**Design Decision**: BabylonJS GUI with responsive design and theme support
+**Location**: `src/features/babylon-renderer/components/gui-overlay/`
+
+```typescript
+interface IGUIOverlayService extends IBabylonService {
+  readonly theme: UITheme;
+  readonly advancedTexture: AdvancedDynamicTexture;
+
+  createToolbar(config: ToolbarConfig): Result<Rectangle, GUIError>;
+  createStatusPanel(config: StatusConfig): Result<Rectangle, GUIError>;
+  createContextMenu(items: ContextMenuItem[]): Result<Rectangle, GUIError>;
+  setTheme(theme: UITheme): Result<void, GUIError>;
+}
+
+type UITheme = 'light' | 'dark' | 'auto';
+
+interface GUIComponentConfig {
+  readonly responsive: boolean;
+  readonly animations: boolean;
+  readonly accessibility: AccessibilityConfig;
+}
+```
+
+**File Structure**:
+```
+src/features/babylon-renderer/components/gui-overlay/
+├── gui-overlay.service.ts
+├── gui-overlay.service.test.ts
+├── gui-overlay.types.ts
+├── components/
+│   ├── toolbar/
+│   ├── status-panel/
+│   └── context-menu/
+├── themes/
+│   ├── light-theme.ts
+│   └── dark-theme.ts
+└── index.ts
+```
+
+#### 4. **Additional Essential Components**
+
+**Viewport Controls**:
+```typescript
+interface IViewportControlService extends IBabylonService {
+  readonly camera: ArcRotateCamera;
+
+  frameObjects(meshes: AbstractMesh[]): Result<void, ViewportError>;
+  setViewDirection(direction: ViewDirection): Result<void, ViewportError>;
+  resetView(): Result<void, ViewportError>;
+}
+
+type ViewDirection = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'isometric';
+```
+
+**Selection System**:
+```typescript
+interface ISelectionService extends IBabylonService {
+  readonly selectedMeshes: readonly AbstractMesh[];
+
+  selectMesh(mesh: AbstractMesh, addToSelection?: boolean): Result<void, SelectionError>;
+  clearSelection(): Result<void, SelectionError>;
+  getSelectionBounds(): BoundingInfo | null;
+}
+```
+
+**Performance Monitor**:
+```typescript
+interface IPerformanceMonitorService extends IBabylonService {
+  readonly metrics: PerformanceMetrics;
+
+  startMonitoring(): Result<void, MonitorError>;
+  getFrameStats(): FrameStats;
+  getMemoryUsage(): MemoryStats;
+}
+```
+
+### Component Integration Architecture
+
+#### 1. **Service Container Pattern**
+
+**Design Decision**: Dependency injection container for service management and lifecycle
+
+```typescript
+interface IBabylonServiceContainer {
+  register<T extends IBabylonService>(key: string, service: T): void;
+  resolve<T extends IBabylonService>(key: string): T;
+  initializeAll(): Promise<Result<void, ServiceContainerError>>;
+  disposeAll(): Result<void, ServiceContainerError>;
+}
+
+interface ServiceDependencies {
+  readonly engine: IBabylonEngineService;
+  readonly scene: IBabylonSceneService;
+  readonly resourceTracker: IResourceTracker;
+}
+```
+
+**File Structure**:
+```
+src/features/babylon-renderer/services/
+├── service-container/
+│   ├── babylon-service-container.ts
+│   ├── service-container.interface.ts
+│   └── service-container.test.ts
+├── babylon-engine-service/
+├── babylon-scene-service/
+└── index.ts
+```
+
+#### 2. **Event-Driven Communication**
+
+**Design Decision**: Observable pattern for loose coupling between UI components
+
+```typescript
+interface IBabylonEventBus {
+  emit<T>(event: string, data: T): void;
+  subscribe<T>(event: string, handler: (data: T) => void): () => void;
+  unsubscribe(event: string, handler: Function): void;
+}
+
+// Standard Events
+interface BabylonUIEvents {
+  'mesh.selected': { mesh: AbstractMesh; timestamp: Date };
+  'gizmo.transform': { mesh: AbstractMesh; transform: TransformData };
+  'grid.snap': { originalPosition: Vector3; snappedPosition: Vector3 };
+  'viewport.changed': { camera: ArcRotateCamera; bounds: BoundingInfo };
+}
+```
+
+#### 3. **React Integration Patterns**
+
+**Design Decision**: Custom hooks for BabylonJS service lifecycle management
+
+```typescript
+interface UseBabylonUISystemProps {
+  scene: Scene | null;
+  camera: ArcRotateCamera | null;
+  config?: Partial<UISystemConfig>;
+}
+
+interface UseBabylonUISystemReturn {
+  readonly isInitialized: boolean;
+  readonly error: BabylonError | null;
+  readonly services: BabylonUIServices;
+  setSelectedMesh: (mesh: AbstractMesh | null) => void;
+  setGizmoMode: (mode: GizmoMode) => void;
+  setGridVisible: (visible: boolean) => void;
+}
+
+// Hook implementation in React layer
+function useBabylonUISystem(props: UseBabylonUISystemProps): UseBabylonUISystemReturn;
+```
+
+#### 4. **Store Integration**
+
+**Design Decision**: Zustand slice for BabylonJS UI state with memoized selectors
+
+```typescript
+interface BabylonUIState {
+  readonly gizmoMode: GizmoMode;
+  readonly gridVisible: boolean;
+  readonly gridSize: number;
+  readonly selectedMeshes: readonly string[]; // Mesh IDs
+  readonly uiTheme: UITheme;
+  readonly viewportConfig: ViewportConfig;
+}
+
+interface BabylonUIActions {
+  setGizmoMode: (mode: GizmoMode) => void;
+  setGridVisible: (visible: boolean) => void;
+  setSelectedMeshes: (meshIds: readonly string[]) => void;
+  updateViewportConfig: (config: Partial<ViewportConfig>) => void;
+}
+
+// Memoized selectors for performance
+const selectGizmoMode = (state: AppState) => state.babylonUI.gizmoMode;
+const selectGridConfig = createSelector(
+  [(state: AppState) => state.babylonUI.gridVisible, (state: AppState) => state.babylonUI.gridSize],
+  (visible, size) => ({ visible, size })
+);
+```
+
+### Performance Considerations
+
+#### 1. **Render Loop Optimization**
+- **Target**: <16ms frame times for 60fps
+- **Strategy**: Batched updates with requestAnimationFrame
+- **Monitoring**: Built-in performance metrics collection
+
+#### 2. **Memory Management**
+- **Resource Tracking**: Automatic disposal of BabylonJS resources
+- **Event Cleanup**: Observable unsubscription on component unmount
+- **Texture Pooling**: Reuse textures across components
+
+#### 3. **GPU Optimization**
+- **Shader-based Grids**: Infinite grids using fragment shaders
+- **Instanced Rendering**: For repeated UI elements
+- **LOD Systems**: Dynamic detail levels based on camera distance
+
+### Testing Strategy
+
+#### 1. **Service Testing**
+```typescript
+// Use NullEngine for headless testing
+describe('TransformationGizmoService', () => {
+  let engine: NullEngine;
+  let scene: Scene;
+  let service: ITransformationGizmoService;
+
+  beforeEach(() => {
+    engine = new NullEngine();
+    scene = new Scene(engine);
+    service = new TransformationGizmoService(scene);
+  });
+});
+```
+
+#### 2. **Integration Testing**
+- **Real BabylonJS instances**: No mocks for core BabylonJS functionality
+- **Component interaction**: Test service communication through event bus
+- **Performance validation**: Frame time and memory usage assertions
+
+### Implementation Guidelines
+
+#### 1. **Service Initialization Order**
+1. **Engine Service** → **Scene Service** → **UI Components**
+2. **Resource Tracker** initialization before any component creation
+3. **Event Bus** setup before service registration
+
+#### 2. **Error Handling Strategy**
+- All services return `Result<T, E>` for consistent error handling
+- Component errors bubble up through service container
+- UI components gracefully degrade on service failures
+
+#### 3. **Performance Targets**
+- **Frame Time**: <16ms for 60fps operation
+- **Memory**: Automatic cleanup with zero leaks
+- **Startup**: <500ms for complete UI system initialization
+
+### Architecture Benefits
+
+**Maintainability**: Service-based design with clear separation of concerns
+**Testability**: Real BabylonJS instances with NullEngine for headless testing
+**Performance**: GPU-optimized rendering with automatic resource management
+**Extensibility**: Event-driven communication enables easy component addition
+**Type Safety**: Comprehensive TypeScript interfaces throughout
+
+
+This BabylonJS component architecture provides a scalable foundation for building professional 3D CAD applications with modern UI components, following 2025 best practices for performance, maintainability, and developer experience.
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Additional BabylonJS Resources
+
+For comprehensive guidance on working with BabylonJS in this project, refer to these specialized guides:
+
+#### **📚 Essential BabylonJS Documentation**
+
+1. **[BabylonJS Best Practices Guide](./babylonjs-best-practices.md)**
+   - Service-based architecture patterns
+   - Performance optimization techniques
+   - Memory management strategies
+   - Testing approaches with NullEngine
+   - Common pitfalls and solutions
+
+2. **[BabylonJS Troubleshooting Guide](./babylonjs-troubleshooting.md)**
+   - Performance issue diagnosis and solutions
+   - Memory leak detection and prevention
+   - Rendering problem resolution
+   - WebGL error handling
+   - CSG operation debugging
+   - Common error messages and fixes
+
+#### **🔧 Quick Reference**
+
+**Service Initialization Pattern**:
+```typescript
+// Standard service initialization
+const engineService = new BabylonEngineService();
+const engineResult = await engineService.initialize(canvas);
+
+if (engineResult.success) {
+  const sceneService = new BabylonSceneService();
+  const sceneResult = await sceneService.initialize(engineResult.data);
+  // Continue with other services...
+}
+```
+
+**Resource Management Pattern**:
+```typescript
+// Always track and dispose resources
+class ResourceManager {
+  private resources: Set<IDisposable> = new Set();
+
+  track<T extends IDisposable>(resource: T): T {
+    this.resources.add(resource);
+    return resource;
+  }
+
+  dispose(): void {
+    this.resources.forEach(r => r.dispose());
+    this.resources.clear();
+  }
+}
+```
+
+**Performance Monitoring**:
+```typescript
+// Monitor frame rate and memory usage
+const monitor = new PerformanceMonitor();
+monitor.startMonitoring(scene);
+console.log('FPS:', monitor.getFPS());
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Project Structure
 
@@ -231,6 +688,13 @@ src/features/babylon-renderer/
 │   ├── camera-controls/                # SRP: Camera controls only
 │   │   ├── camera-controls.tsx         # Camera interaction controls
 │   │   └── camera-controls.test.tsx    # Co-located tests
+│   ├── orientation-gizmo/              # SRP: 3D navigation gizmo
+│   │   ├── orientation-gizmo.tsx       # Main gizmo component
+│   │   ├── orientation-gizmo.test.tsx  # Component tests
+│   │   └── orientation-gizmo-integration.test.tsx # Integration tests
+│   ├── gizmo-config-panel/             # SRP: Gizmo configuration UI
+│   │   ├── gizmo-config-panel.tsx      # Configuration panel component
+│   │   └── gizmo-config-panel.test.tsx # Co-located tests
 │   └── store-connected-renderer/       # SRP: Store connection only
 │       ├── store-connected-renderer.tsx # Zustand-connected renderer
 │       └── store-connected-renderer.test.tsx # Co-located tests
@@ -251,6 +715,12 @@ src/features/babylon-renderer/
 │   ├── babylon-engine-service/         # SRP: Engine management only
 │   │   ├── babylon-engine.service.ts   # BabylonJS engine management
 │   │   └── babylon-engine.service.test.ts # Co-located tests
+│   ├── orientation-gizmo-service/      # SRP: Gizmo rendering service
+│   │   ├── orientation-gizmo.service.ts # Core gizmo functionality
+│   │   └── orientation-gizmo.service.test.ts # Co-located tests
+│   ├── camera-gizmo-sync/              # SRP: Camera-gizmo synchronization
+│   │   ├── camera-gizmo-sync.service.ts # Bidirectional sync service
+│   │   └── camera-gizmo-sync.service.test.ts # Co-located tests
 │   └── mesh-generation-service/        # SRP: Mesh generation only
 │       ├── mesh-generation.service.ts  # Scene & mesh generation
 │       └── mesh-generation.service.test.ts # Co-located tests

@@ -166,6 +166,7 @@ import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
 import { useAppStore } from '../../../store/app-store';
 import {
+  selectGizmoIsVisible,
   selectParsingAST,
   selectRenderingErrors,
   selectRenderingIsRendering,
@@ -175,6 +176,7 @@ import type { BabylonSceneService } from '../../services/babylon-scene-service';
 import type { BabylonSceneProps } from '../babylon-scene';
 import { BabylonScene } from '../babylon-scene';
 import { CameraControls } from '../camera-controls';
+import { OrientationGizmo } from '../orientation-gizmo';
 
 const logger = createLogger('StoreConnectedRenderer');
 
@@ -302,6 +304,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const isRendering = useAppStore(selectRenderingIsRendering);
   const renderErrors = useAppStore(selectRenderingErrors);
   const meshes = useAppStore(selectRenderingMeshes);
+  const isGizmoVisible = useAppStore(selectGizmoIsVisible);
 
   // Debug initial AST value on mount only (performance optimized)
   useEffect(() => {
@@ -592,9 +595,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
 
       // Only clear scene when absolutely necessary to prevent flickering
       const shouldClearScene =
-        lastASTRef.current &&
-        lastASTRef.current.length > 0 &&
-        ast.length === 0; // Only clear when going from content to empty
+        lastASTRef.current && lastASTRef.current.length > 0 && ast.length === 0; // Only clear when going from content to empty
 
       if (shouldClearScene) {
         safeClearScene();
@@ -719,6 +720,20 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       {/* Camera Controls */}
       {isSceneReady && sceneService && (
         <CameraControls sceneService={sceneService} className="absolute top-4 right-4 z-10" />
+      )}
+
+      {/* Orientation Gizmo */}
+      {isSceneReady && isGizmoVisible && sceneService && (
+        <OrientationGizmo
+          camera={sceneService.getCameraControlService()?.getCamera() || null}
+          className="absolute top-4 left-4 z-10"
+          onAxisSelected={(event) => {
+            logger.debug(`[DEBUG][StoreConnectedRenderer] Gizmo axis selected: ${event.axis}`);
+          }}
+          onError={(error) => {
+            logger.error(`[ERROR][StoreConnectedRenderer] Gizmo error: ${error.message}`);
+          }}
+        />
       )}
     </div>
   );

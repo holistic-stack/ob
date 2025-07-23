@@ -10,8 +10,8 @@ import {
   Matrix as BabylonMatrix,
   Vector3 as BabylonVector3,
   Color3,
-  StandardMaterial,
   MeshBuilder,
+  StandardMaterial,
 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
@@ -388,8 +388,6 @@ export class TransformationBabylonNode extends BabylonJSNode {
 
     return 1; // Default alpha (opaque)
   }
-
-
 
   /**
    * Create parent-based transformation (DRY helper for scale, mirror, color)

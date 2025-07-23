@@ -76,3 +76,36 @@ export {
   isGenericMeshData,
   MATERIAL_PRESETS,
 } from './generic-mesh-data.types';
+
+// Orientation Gizmo types
+export type {
+  GizmoAnimationConfig,
+  GizmoAxis,
+  GizmoCameraAnimation,
+  GizmoColors,
+  GizmoConfig,
+  GizmoConfigResult,
+  GizmoDisposeResult,
+  GizmoError,
+  GizmoEventHandlers,
+  GizmoFontConfig,
+  GizmoId,
+  GizmoInitOptions,
+  GizmoInitResult,
+  GizmoInteractionEvent,
+  GizmoInteractionResult,
+  GizmoMouseState,
+  GizmoState,
+  GizmoStateUpdate,
+  GizmoUpdateResult,
+  GizmoUpdateResult_Type,
+  IGizmoService,
+} from './orientation-gizmo.types';
+export {
+  AxisDirection,
+  createGizmoId,
+  DEFAULT_GIZMO_CONFIG,
+  GizmoErrorCode,
+  GizmoPosition,
+  isSupportedCamera,
+} from './orientation-gizmo.types';

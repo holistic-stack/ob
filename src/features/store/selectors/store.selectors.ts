@@ -464,6 +464,33 @@ export const selectRenderingMeshCount = (state: AppState): number =>
   state.babylonRendering?.meshes?.length ?? 0;
 
 /**
+ * Gizmo selectors for orientation gizmo state management
+ */
+export const selectGizmoState = (state: AppState) => state.babylonRendering?.gizmo ?? null;
+
+export const selectGizmoIsVisible = (state: AppState): boolean =>
+  state.babylonRendering?.gizmo?.isVisible ?? false;
+
+export const selectGizmoPosition = (state: AppState) =>
+  state.babylonRendering?.gizmo?.position ?? null;
+
+export const selectGizmoConfig = (state: AppState) => state.babylonRendering?.gizmo?.config ?? null;
+
+export const selectGizmoSelectedAxis = (state: AppState) =>
+  state.babylonRendering?.gizmo?.selectedAxis ?? null;
+
+export const selectGizmoIsAnimating = (state: AppState): boolean =>
+  state.babylonRendering?.gizmo?.cameraAnimation?.isAnimating ?? false;
+
+export const selectGizmoError = (state: AppState) => state.babylonRendering?.gizmo?.error ?? null;
+
+export const selectGizmoIsInitialized = (state: AppState): boolean =>
+  state.babylonRendering?.gizmo?.isInitialized ?? false;
+
+export const selectGizmoLastInteraction = (state: AppState) =>
+  state.babylonRendering?.gizmo?.lastInteraction ?? null;
+
+/**
  * Rendering stats selector
  */
 export const selectRenderingStats = createSelector(
@@ -594,6 +621,36 @@ export const selectBabylonRenderingStats = createSelector(
     lastRendered: babylonRendering?.lastRendered ?? null,
     isRendering: babylonRendering?.isRendering ?? false,
     camera: babylonRendering?.camera ?? null,
+    gizmo: babylonRendering?.gizmo ?? null,
+  })
+);
+
+/**
+ * Memoized gizmo selectors for performance optimization
+ */
+export const selectGizmoStats = createSelector(
+  [(state: AppState) => state.babylonRendering?.gizmo],
+  (gizmo) => ({
+    isVisible: gizmo?.isVisible ?? false,
+    isInitialized: gizmo?.isInitialized ?? false,
+    isAnimating: gizmo?.cameraAnimation?.isAnimating ?? false,
+    hasError: gizmo?.error !== null,
+    selectedAxis: gizmo?.selectedAxis ?? null,
+    lastInteraction: gizmo?.lastInteraction ?? null,
+  })
+);
+
+export const selectGizmoInteractionState = createSelector(
+  [
+    (state: AppState) => state.babylonRendering?.gizmo?.selectedAxis,
+    (state: AppState) => state.babylonRendering?.gizmo?.cameraAnimation?.isAnimating,
+    (state: AppState) => state.babylonRendering?.gizmo?.mouseState,
+  ],
+  (selectedAxis, isAnimating, mouseState) => ({
+    selectedAxis: selectedAxis ?? null,
+    isAnimating: isAnimating ?? false,
+    mouseState: mouseState ?? null,
+    canInteract: !isAnimating && mouseState?.isHovering === true,
   })
 );
 

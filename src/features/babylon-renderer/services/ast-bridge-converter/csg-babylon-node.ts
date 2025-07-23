@@ -221,12 +221,7 @@ export class CSGBabylonNode extends BabylonJSNode {
     operation: (a: AbstractMesh, b: AbstractMesh) => Promise<Mesh>,
     resultPrefix: string
   ): Promise<AbstractMesh> {
-    return this.applyCSGOperationToMeshes(
-      meshes,
-      operationType,
-      operation,
-      resultPrefix
-    );
+    return this.applyCSGOperationToMeshes(meshes, operationType, operation, resultPrefix);
   }
 
   /**

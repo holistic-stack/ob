@@ -463,7 +463,7 @@
  * ```
  */
 
-import type { AbstractMesh, Engine, Scene } from '@babylonjs/core';
+import type { AbstractMesh, ArcRotateCamera, Engine, Scene } from '@babylonjs/core';
 import { Vector3 } from '@babylonjs/core';
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
@@ -485,6 +485,17 @@ import {
   InspectorTab,
 } from '../../babylon-renderer/services';
 import { ASTBridgeConverter } from '../../babylon-renderer/services/ast-bridge-converter';
+import type {
+  AxisDirection,
+  GizmoConfig,
+  GizmoError,
+  GizmoState,
+} from '../../babylon-renderer/types/orientation-gizmo.types';
+import {
+  createGizmoId,
+  DEFAULT_GIZMO_CONFIG,
+  GizmoPosition,
+} from '../../babylon-renderer/types/orientation-gizmo.types';
 import { disposeMeshesComprehensively } from '../../babylon-renderer/utils/mesh-disposal/mesh-disposal';
 import { forceSceneRefresh } from '../../babylon-renderer/utils/scene-refresh/scene-refresh';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
@@ -509,6 +520,7 @@ export interface BabylonRenderingState {
   readonly renderTime: number;
   readonly performanceMetrics: BabylonPerformanceMetrics;
   readonly camera: CameraConfig;
+  readonly gizmo: GizmoState; // Orientation gizmo state
 }
 
 /**
@@ -587,7 +599,44 @@ export interface BabylonRenderingActions {
   readonly disableAutoFrame: () => void;
   readonly toggleAutoFrame: () => void;
   readonly frameScene: () => void;
+
+  // Gizmo management
+  readonly setGizmoVisibility: (visible: boolean) => void;
+  readonly setGizmoPosition: (position: GizmoPosition) => void;
+  readonly updateGizmoConfig: (config: Partial<GizmoConfig>) => void;
+  readonly setGizmoSelectedAxis: (axis: AxisDirection | null) => void;
+  readonly setGizmoAnimating: (isAnimating: boolean) => void;
+  readonly setGizmoError: (error: GizmoError | null) => void;
+  readonly resetGizmo: () => void;
+  readonly initializeGizmo: () => void;
 }
+
+/**
+ * Create initial gizmo state
+ */
+const createInitialGizmoState = (): GizmoState => ({
+  id: createGizmoId('main-gizmo'),
+  isVisible: true,
+  position: GizmoPosition.TOP_RIGHT,
+  config: DEFAULT_GIZMO_CONFIG,
+  selectedAxis: null,
+  mouseState: {
+    position: null,
+    isHovering: false,
+    hoveredAxis: null,
+    isDragging: false,
+  },
+  cameraAnimation: {
+    isAnimating: false,
+    targetPosition: null,
+    startTime: 0,
+    duration: 0,
+    easingFunction: 'quadratic',
+  },
+  lastInteraction: null,
+  isInitialized: false,
+  error: null,
+});
 
 /**
  * Initial BabylonJS rendering state
@@ -645,6 +694,7 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
     gpuMemoryUsage: 0,
   },
   camera: DEFAULT_CAMERA,
+  gizmo: createInitialGizmoState(),
 });
 
 /**
@@ -657,7 +707,7 @@ const performSceneFraming = (scene: Scene, framingType: string): void => {
     // Direct BabylonJS auto-framing implementation
     const camera = scene.activeCamera;
     if (camera && camera.getClassName() === 'ArcRotateCamera') {
-      const arcCamera = camera as any; // ArcRotateCamera
+      const arcCamera = camera as ArcRotateCamera;
 
       // Calculate scene bounds from all visible meshes
       let minX = Number.POSITIVE_INFINITY;
@@ -667,9 +717,7 @@ const performSceneFraming = (scene: Scene, framingType: string): void => {
       let minZ = Number.POSITIVE_INFINITY;
       let maxZ = Number.NEGATIVE_INFINITY;
 
-      const allSceneMeshes = scene.meshes.filter(
-        (mesh: any) => mesh.isVisible && mesh.isEnabled()
-      );
+      const allSceneMeshes = scene.meshes.filter((mesh) => mesh.isVisible && mesh.isEnabled());
 
       for (const mesh of allSceneMeshes) {
         const boundingInfo = mesh.getBoundingInfo();
@@ -687,11 +735,7 @@ const performSceneFraming = (scene: Scene, framingType: string): void => {
       }
 
       if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-        const sceneCenter = new Vector3(
-          (minX + maxX) / 2,
-          (minY + maxY) / 2,
-          (minZ + maxZ) / 2
-        );
+        const sceneCenter = new Vector3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
 
         const sceneSize = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
@@ -1249,8 +1293,10 @@ export const createBabylonRenderingSlice = (
           const stateForDisposal = _get();
           const currentMeshes = stateForDisposal.babylonRendering.meshes;
           if (currentMeshes && currentMeshes.length > 0) {
-            logger.debug('[DEBUG][BabylonRenderingSlice] Disposing old meshes before creating new ones');
-            (currentMeshes as any[]).forEach((mesh: any) => {
+            logger.debug(
+              '[DEBUG][BabylonRenderingSlice] Disposing old meshes before creating new ones'
+            );
+            (currentMeshes as AbstractMesh[]).forEach((mesh) => {
               if (mesh && typeof mesh.dispose === 'function') {
                 try {
                   // Hide first to reduce visual flicker
@@ -1505,7 +1551,8 @@ export const createBabylonRenderingSlice = (
 
     toggleAutoFrame: () => {
       set((state: WritableDraft<AppStore>) => {
-        state.babylonRendering.camera.enableAutoFrame = !state.babylonRendering.camera.enableAutoFrame;
+        state.babylonRendering.camera.enableAutoFrame =
+          !state.babylonRendering.camera.enableAutoFrame;
       });
     },
 
@@ -1521,6 +1568,73 @@ export const createBabylonRenderingSlice = (
 
       // Use the same framing logic as auto-framing
       performSceneFraming(scene, 'Manual');
+    },
+
+    // Gizmo management actions
+    setGizmoVisibility: (visible: boolean) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.isVisible = visible;
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo visibility set to: ${visible}`);
+    },
+
+    setGizmoPosition: (position: GizmoPosition) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.position = position;
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo position set to: ${position}`);
+    },
+
+    updateGizmoConfig: (config: Partial<GizmoConfig>) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.config = {
+          ...state.babylonRendering.gizmo.config,
+          ...config,
+        } as WritableDraft<GizmoConfig>;
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Gizmo configuration updated');
+    },
+
+    setGizmoSelectedAxis: (axis: AxisDirection | null) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.selectedAxis = axis;
+        state.babylonRendering.gizmo.lastInteraction = new Date();
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo selected axis: ${axis || 'none'}`);
+    },
+
+    setGizmoAnimating: (isAnimating: boolean) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.cameraAnimation.isAnimating = isAnimating;
+        if (isAnimating) {
+          state.babylonRendering.gizmo.cameraAnimation.startTime = performance.now();
+        }
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Gizmo animation state: ${isAnimating}`);
+    },
+
+    setGizmoError: (error: GizmoError | null) => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.error = error;
+      });
+      if (error) {
+        logger.error(`[ERROR][BabylonRenderingSlice] Gizmo error: ${error.message}`);
+      }
+    },
+
+    resetGizmo: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo = createInitialGizmoState() as WritableDraft<GizmoState>;
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Gizmo state reset to initial values');
+    },
+
+    initializeGizmo: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.gizmo.isInitialized = true;
+        state.babylonRendering.gizmo.error = null;
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Gizmo initialized successfully');
     },
   };
 };
