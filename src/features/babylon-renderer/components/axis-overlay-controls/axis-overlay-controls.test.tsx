@@ -75,15 +75,13 @@ describe('AxisOverlayControls', () => {
     it('should render the controls panel', () => {
       render(<AxisOverlayControls />);
 
-      expect(screen.getByText('3D Axis Overlay Controls')).toBeInTheDocument();
-      expect(screen.getByText('Show Axis Overlay')).toBeInTheDocument();
+      expect(screen.getByText('SketchUp-Style Axes')).toBeInTheDocument();
+      expect(screen.getByText('Show Coordinate Axes')).toBeInTheDocument();
     });
 
     it('should display current configuration values', () => {
       render(<AxisOverlayControls />);
 
-      expect(screen.getByText('Tick Interval: 1')).toBeInTheDocument();
-      expect(screen.getByText('Font Size: 12px')).toBeInTheDocument();
       expect(screen.getByText('Opacity: 80%')).toBeInTheDocument();
     });
 
@@ -92,7 +90,18 @@ describe('AxisOverlayControls', () => {
 
       expect(screen.getByText('Status: Initialized')).toBeInTheDocument();
       expect(screen.getByText('Zoom Level: 1.0')).toBeInTheDocument();
-      expect(screen.getByText('Dynamic Interval: 1.00')).toBeInTheDocument();
+    });
+
+    it('should show SketchUp-style axis information', () => {
+      render(<AxisOverlayControls />);
+
+      expect(screen.getByText('SketchUp-Style Coordinate System:')).toBeInTheDocument();
+      expect(screen.getByText('Red')).toBeInTheDocument();
+      expect(screen.getByText(/= X-axis \(solid positive, dotted negative\)/)).toBeInTheDocument();
+      expect(screen.getByText('Green')).toBeInTheDocument();
+      expect(screen.getByText(/= Y-axis \(solid positive, dotted negative\)/)).toBeInTheDocument();
+      expect(screen.getByText('Blue')).toBeInTheDocument();
+      expect(screen.getByText(/= Z-axis \(solid positive, dotted negative\)/)).toBeInTheDocument();
     });
   });
 
@@ -100,7 +109,7 @@ describe('AxisOverlayControls', () => {
     it('should handle visibility toggle', () => {
       render(<AxisOverlayControls />);
 
-      const visibilityCheckbox = screen.getByRole('checkbox', { name: /show axis overlay/i });
+      const visibilityCheckbox = screen.getByRole('checkbox', { name: /show coordinate axes/i });
       expect(visibilityCheckbox).not.toBeChecked();
 
       fireEvent.click(visibilityCheckbox);
@@ -115,7 +124,7 @@ describe('AxisOverlayControls', () => {
 
       render(<AxisOverlayControls />);
 
-      const visibilityCheckbox = screen.getByRole('checkbox', { name: /show axis overlay/i });
+      const visibilityCheckbox = screen.getByRole('checkbox', { name: /show coordinate axes/i });
       expect(visibilityCheckbox).toBeChecked();
 
       // Reset state for other tests
@@ -125,24 +134,6 @@ describe('AxisOverlayControls', () => {
   });
 
   describe('Configuration Controls', () => {
-    it('should handle tick interval changes', () => {
-      render(<AxisOverlayControls />);
-
-      const tickIntervalSlider = screen.getByDisplayValue('1');
-      fireEvent.change(tickIntervalSlider, { target: { value: '2.5' } });
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ tickInterval: 2.5 });
-    });
-
-    it('should handle font size changes', () => {
-      render(<AxisOverlayControls />);
-
-      const fontSizeSlider = screen.getByDisplayValue('12');
-      fireEvent.change(fontSizeSlider, { target: { value: '16' } });
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ fontSize: 16 });
-    });
-
     it('should handle opacity changes', () => {
       render(<AxisOverlayControls />);
 
@@ -152,40 +143,19 @@ describe('AxisOverlayControls', () => {
       expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 0.5 });
     });
 
-    it('should handle units selection', () => {
+    it('should display opacity percentage correctly', () => {
       render(<AxisOverlayControls />);
 
-      const unitsSelect = screen.getByDisplayValue('Units');
-      fireEvent.change(unitsSelect, { target: { value: 'mm' } });
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({
-        units: {
-          ...mockAxisOverlayState.config.units,
-          type: 'mm',
-        },
-      });
+      expect(screen.getByText('Opacity: 80%')).toBeInTheDocument();
     });
 
-    it('should handle show ticks toggle', () => {
+    it('should have correct opacity slider attributes', () => {
       render(<AxisOverlayControls />);
 
-      const showTicksCheckbox = screen.getByRole('checkbox', { name: /show tick marks/i });
-      expect(showTicksCheckbox).toBeChecked();
-
-      fireEvent.click(showTicksCheckbox);
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ showTicks: false });
-    });
-
-    it('should handle show labels toggle', () => {
-      render(<AxisOverlayControls />);
-
-      const showLabelsCheckbox = screen.getByRole('checkbox', { name: /show labels/i });
-      expect(showLabelsCheckbox).toBeChecked();
-
-      fireEvent.click(showLabelsCheckbox);
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ showLabels: false });
+      const opacitySlider = screen.getByDisplayValue('0.8');
+      expect(opacitySlider).toHaveAttribute('min', '0.1');
+      expect(opacitySlider).toHaveAttribute('max', '1');
+      expect(opacitySlider).toHaveAttribute('step', '0.1');
     });
   });
 
@@ -214,22 +184,27 @@ describe('AxisOverlayControls', () => {
   });
 
   describe('Input Validation', () => {
-    it('should handle valid tick interval changes', () => {
+    it('should handle valid opacity changes', () => {
       render(<AxisOverlayControls />);
 
-      const tickIntervalSlider = screen.getByDisplayValue('1');
-      fireEvent.change(tickIntervalSlider, { target: { value: '2.5' } });
+      const opacitySlider = screen.getByDisplayValue('0.8');
+      fireEvent.change(opacitySlider, { target: { value: '0.5' } });
 
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ tickInterval: 2.5 });
+      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 0.5 });
     });
 
-    it('should handle valid font size changes', () => {
+    it('should handle edge case opacity values', () => {
       render(<AxisOverlayControls />);
 
-      const fontSizeSlider = screen.getByDisplayValue('12');
-      fireEvent.change(fontSizeSlider, { target: { value: '16' } });
-
-      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ fontSize: 16 });
+      const opacitySlider = screen.getByDisplayValue('0.8');
+      
+      // Test minimum value
+      fireEvent.change(opacitySlider, { target: { value: '0.1' } });
+      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 0.1 });
+      
+      // Test maximum value
+      fireEvent.change(opacitySlider, { target: { value: '1' } });
+      expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 1 });
     });
   });
 
@@ -237,9 +212,8 @@ describe('AxisOverlayControls', () => {
     it('should have proper labels for form controls', () => {
       render(<AxisOverlayControls />);
 
-      expect(screen.getByLabelText(/show axis overlay/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/show tick marks/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/show labels/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/show coordinate axes/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/opacity/i)).toBeInTheDocument();
     });
 
     it('should have proper form structure', () => {
@@ -247,11 +221,16 @@ describe('AxisOverlayControls', () => {
 
       const checkboxes = screen.getAllByRole('checkbox');
       const sliders = screen.getAllByRole('slider');
-      const select = screen.getByRole('combobox');
 
-      expect(checkboxes).toHaveLength(3); // visibility, ticks, labels
-      expect(sliders).toHaveLength(3); // tick interval, font size, opacity
-      expect(select).toBeInTheDocument(); // units selection
+      expect(checkboxes).toHaveLength(1); // visibility only
+      expect(sliders).toHaveLength(1); // opacity only
+    });
+
+    it('should have proper heading structure', () => {
+      render(<AxisOverlayControls />);
+
+      const heading = screen.getByRole('heading', { name: /sketchup-style axes/i });
+      expect(heading).toBeInTheDocument();
     });
   });
 });

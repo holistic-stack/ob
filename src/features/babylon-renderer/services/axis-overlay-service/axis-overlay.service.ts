@@ -18,6 +18,7 @@ import {
   type Mesh,
   type Scene,
   type StandardMaterial,
+  type ShaderMaterial,
   Vector3,
 } from '@babylonjs/core';
 import { AdvancedDynamicTexture, type TextBlock } from '@babylonjs/gui';
@@ -35,7 +36,7 @@ import {
   DEFAULT_AXIS_OVERLAY_CONFIG,
   validateAxisOverlayConfig,
 } from '../../types/axis-overlay.types';
-import { createCoordinateAxes } from './axis-creator';
+import { createScreenSpaceCoordinateAxes } from './axis-creator';
 
 const logger = createLogger('AxisOverlayService');
 
@@ -51,7 +52,7 @@ export class AxisOverlayService implements IAxisOverlayService {
   private _axisLines: (LinesMesh | Mesh)[] = [];
   private _tickLines: LinesMesh[] = [];
   private _labelBlocks: TextBlock[] = [];
-  private _materials: StandardMaterial[] = [];
+  private _materials: (StandardMaterial | ShaderMaterial)[] = [];
   private _state: AxisOverlayState;
 
   constructor(config: Partial<AxisOverlayConfig> = {}) {
@@ -311,6 +312,7 @@ export class AxisOverlayService implements IAxisOverlayService {
 
   /**
    * Create SketchUp-style axis lines with solid positive and dotted negative directions
+   * using screen-space rendering for constant pixel width
    */
   private _createAxisLines(): void {
     if (!this._scene) return;
@@ -328,8 +330,12 @@ export class AxisOverlayService implements IAxisOverlayService {
       `[INFO][AxisOverlayService] Creating SketchUp-style axis lines from origin (${origin.x},${origin.y},${origin.z}) with length ${length}`
     );
 
-    // Use the dedicated axis creator module
-    const result = createCoordinateAxes(this._scene, origin, length, 0.3);
+    // Convert diameter to pixel width (approximate conversion)
+    // The diameter was in world units, we convert to a reasonable pixel width
+    const pixelWidth = Math.max(1.0, 0.3 * 100);
+
+    // Use the dedicated screen-space axis creator module
+    const result = createScreenSpaceCoordinateAxes(this._scene, origin, length, pixelWidth);
 
     if (!result.success) {
       logger.error(
@@ -343,7 +349,7 @@ export class AxisOverlayService implements IAxisOverlayService {
     this._materials.push(...result.data.materials);
 
     logger.info(
-      `[INFO][AxisOverlayService] Created ${this._axisLines.length} SketchUp-style axis lines`
+      `[INFO][AxisOverlayService] Created ${this._axisLines.length} SketchUp-style axis lines with pixel width: ${pixelWidth}`
     );
   }
 
