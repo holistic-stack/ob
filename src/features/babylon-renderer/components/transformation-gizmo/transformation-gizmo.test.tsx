@@ -6,11 +6,14 @@
  */
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { CreateBox, Engine, NullEngine } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TransformationEvent, TransformationGizmoError } from '../../services/transformation-gizmo-service';
+import type {
+  TransformationEvent,
+  TransformationGizmoError,
+} from '../../services/transformation-gizmo-service';
 import type { TransformationGizmoProps } from './transformation-gizmo';
 import { TransformationGizmo } from './transformation-gizmo';
 
@@ -188,7 +191,7 @@ describe('TransformationGizmo', () => {
 
     it('should handle multiple mesh changes', async () => {
       const secondMesh = CreateBox('secondBox', { size: 1 }, scene);
-      
+
       const { rerender } = renderTransformationGizmo({
         scene,
         selectedMesh: testMesh,

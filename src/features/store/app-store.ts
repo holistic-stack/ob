@@ -804,6 +804,8 @@ export const createAppStore = (
           },
           babylonRendering: {
             camera: state.babylonRendering?.camera,
+            gizmo: state.babylonRendering?.gizmo,
+            axisOverlay: state.babylonRendering?.axisOverlay,
           },
         }),
       })

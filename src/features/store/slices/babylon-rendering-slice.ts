@@ -484,8 +484,18 @@ import {
   BabylonMaterialService,
   InspectorTab,
 } from '../../babylon-renderer/services';
-import type { GizmoMode } from '../../babylon-renderer/services/transformation-gizmo-service';
 import { ASTBridgeConverter } from '../../babylon-renderer/services/ast-bridge-converter';
+import type { GizmoMode } from '../../babylon-renderer/services/transformation-gizmo-service';
+import type {
+  AxisOverlayConfig,
+  AxisOverlayError,
+  AxisOverlayState,
+} from '../../babylon-renderer/types/axis-overlay.types';
+import {
+  createAxisOverlayId,
+  DEFAULT_AXIS_OVERLAY_CONFIG,
+} from '../../babylon-renderer/types/axis-overlay.types';
+
 import type {
   AxisDirection,
   GizmoConfig,
@@ -497,6 +507,7 @@ import {
   DEFAULT_GIZMO_CONFIG,
   GizmoPosition,
 } from '../../babylon-renderer/types/orientation-gizmo.types';
+
 import { disposeMeshesComprehensively } from '../../babylon-renderer/utils/mesh-disposal/mesh-disposal';
 import { forceSceneRefresh } from '../../babylon-renderer/utils/scene-refresh/scene-refresh';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
@@ -522,6 +533,7 @@ export interface BabylonRenderingState {
   readonly performanceMetrics: BabylonPerformanceMetrics;
   readonly camera: CameraConfig;
   readonly gizmo: GizmoState; // Orientation gizmo state
+  readonly axisOverlay: AxisOverlayState; // Axis overlay state
   readonly selectedMesh: AbstractMesh | null; // Currently selected mesh for transformation
   readonly transformationGizmoMode: GizmoMode; // Current transformation gizmo mode
 }
@@ -613,6 +625,14 @@ export interface BabylonRenderingActions {
   readonly resetGizmo: () => void;
   readonly initializeGizmo: () => void;
 
+  // Axis Overlay management
+  readonly setAxisOverlayVisibility: (visible: boolean) => void;
+  readonly updateAxisOverlayConfig: (config: Partial<AxisOverlayConfig>) => void;
+  readonly updateAxisOverlayDynamicTicks: (cameraDistance: number) => void;
+  readonly setAxisOverlayError: (error: AxisOverlayError | null) => void;
+  readonly resetAxisOverlay: () => void;
+  readonly initializeAxisOverlay: () => void;
+
   // Transformation Gizmo management
   readonly setSelectedMesh: (mesh: AbstractMesh | null) => void;
   readonly setTransformationGizmoMode: (mode: GizmoMode) => void;
@@ -642,6 +662,20 @@ const createInitialGizmoState = (): GizmoState => ({
   },
   lastInteraction: null,
   isInitialized: false,
+  error: null,
+});
+
+/**
+ * Create initial axis overlay state
+ */
+const createInitialAxisOverlayState = (): AxisOverlayState => ({
+  id: createAxisOverlayId('main-axis-overlay'),
+  isInitialized: false,
+  isVisible: false,
+  config: DEFAULT_AXIS_OVERLAY_CONFIG,
+  currentZoomLevel: 1.0,
+  dynamicTickInterval: 1.0,
+  lastUpdated: new Date(),
   error: null,
 });
 
@@ -702,6 +736,7 @@ export const createInitialBabylonRenderingState = (): BabylonRenderingState => (
   },
   camera: DEFAULT_CAMERA,
   gizmo: createInitialGizmoState(),
+  axisOverlay: createInitialAxisOverlayState(),
   selectedMesh: null,
   transformationGizmoMode: 'position',
 });
@@ -1668,6 +1703,92 @@ export const createBabylonRenderingSlice = (
         state.babylonRendering.gizmo.error = null;
       });
       logger.debug('[DEBUG][BabylonRenderingSlice] Gizmo initialized successfully');
+    },
+
+    // Axis Overlay management actions
+    setAxisOverlayVisibility: (visible: boolean) => {
+      set((state: WritableDraft<AppStore>) => {
+        // Ensure axis overlay object exists before setting visibility
+        if (!state.babylonRendering.axisOverlay) {
+          state.babylonRendering.axisOverlay =
+            createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+        }
+        state.babylonRendering.axisOverlay.isVisible = visible;
+        state.babylonRendering.axisOverlay.lastUpdated = new Date();
+      });
+      logger.debug(`[DEBUG][BabylonRenderingSlice] Axis overlay visibility set to: ${visible}`);
+    },
+
+    updateAxisOverlayConfig: (config: Partial<AxisOverlayConfig>) => {
+      set((state: WritableDraft<AppStore>) => {
+        // Ensure axis overlay object exists before updating config
+        if (!state.babylonRendering.axisOverlay) {
+          state.babylonRendering.axisOverlay =
+            createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+        }
+        state.babylonRendering.axisOverlay.config = {
+          ...state.babylonRendering.axisOverlay.config,
+          ...config,
+        } as WritableDraft<AxisOverlayConfig>;
+        state.babylonRendering.axisOverlay.lastUpdated = new Date();
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Axis overlay configuration updated');
+    },
+
+    updateAxisOverlayDynamicTicks: (cameraDistance: number) => {
+      set((state: WritableDraft<AppStore>) => {
+        // Ensure axis overlay object exists before updating ticks
+        if (!state.babylonRendering.axisOverlay) {
+          state.babylonRendering.axisOverlay =
+            createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+        }
+        state.babylonRendering.axisOverlay.currentZoomLevel = cameraDistance;
+        // Calculate dynamic tick interval (simplified version for store)
+        const baseInterval = state.babylonRendering.axisOverlay.config.tickInterval;
+        const scale = 10 ** Math.floor(Math.log10(cameraDistance / 10));
+        state.babylonRendering.axisOverlay.dynamicTickInterval = baseInterval * scale;
+        state.babylonRendering.axisOverlay.lastUpdated = new Date();
+      });
+      logger.debug(
+        `[DEBUG][BabylonRenderingSlice] Axis overlay dynamic ticks updated for distance: ${cameraDistance}`
+      );
+    },
+
+    setAxisOverlayError: (error: AxisOverlayError | null) => {
+      set((state: WritableDraft<AppStore>) => {
+        // Ensure axis overlay object exists before setting error
+        if (!state.babylonRendering.axisOverlay) {
+          state.babylonRendering.axisOverlay =
+            createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+        }
+        state.babylonRendering.axisOverlay.error = error as WritableDraft<AxisOverlayError | null>;
+        state.babylonRendering.axisOverlay.lastUpdated = new Date();
+      });
+      if (error) {
+        logger.error(`[ERROR][BabylonRenderingSlice] Axis overlay error: ${error.message}`);
+      }
+    },
+
+    resetAxisOverlay: () => {
+      set((state: WritableDraft<AppStore>) => {
+        state.babylonRendering.axisOverlay =
+          createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Axis overlay state reset to initial values');
+    },
+
+    initializeAxisOverlay: () => {
+      set((state: WritableDraft<AppStore>) => {
+        // Ensure axis overlay object exists before initializing
+        if (!state.babylonRendering.axisOverlay) {
+          state.babylonRendering.axisOverlay =
+            createInitialAxisOverlayState() as WritableDraft<AxisOverlayState>;
+        }
+        state.babylonRendering.axisOverlay.isInitialized = true;
+        state.babylonRendering.axisOverlay.error = null;
+        state.babylonRendering.axisOverlay.lastUpdated = new Date();
+      });
+      logger.debug('[DEBUG][BabylonRenderingSlice] Axis overlay initialized successfully');
     },
 
     // Transformation Gizmo actions

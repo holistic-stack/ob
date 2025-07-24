@@ -6,7 +6,7 @@
  */
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { CreateBox, Engine, Mesh, NullEngine } from '@babylonjs/core';
+import { CreateBox, type Engine, Mesh, NullEngine } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
@@ -70,7 +70,7 @@ describe('TransformationGizmoService', () => {
 
     it('should use default configuration when none provided', () => {
       const defaultService = new TransformationGizmoService();
-      
+
       // Access private config through initialization
       expect(defaultService.getCurrentMode()).toBe('position');
     });
@@ -78,7 +78,7 @@ describe('TransformationGizmoService', () => {
     it('should merge custom configuration with defaults', () => {
       const customConfig = { size: 2.0, snapToGrid: true };
       const customService = new TransformationGizmoService(customConfig);
-      
+
       expect(customService.getCurrentMode()).toBe('position');
     });
   });
@@ -180,7 +180,7 @@ describe('TransformationGizmoService', () => {
 
     it('should emit transformation events when mesh is transformed', () => {
       const transformationEvents: any[] = [];
-      
+
       service.onTransformationObservable.add((event) => {
         transformationEvents.push(event);
       });
@@ -202,7 +202,7 @@ describe('TransformationGizmoService', () => {
 
     it('should include correct transformation data in events', () => {
       let capturedEvent: any = null;
-      
+
       service.onTransformationObservable.add((event) => {
         capturedEvent = event;
       });
@@ -244,14 +244,14 @@ describe('TransformationGizmoService', () => {
 
     it('should clear transformation observable on disposal', async () => {
       await service.initialize(scene);
-      
+
       const observerCount = service.onTransformationObservable.observers.length;
       service.onTransformationObservable.add(() => {});
-      
+
       expect(service.onTransformationObservable.observers.length).toBeGreaterThan(observerCount);
-      
+
       service.dispose();
-      
+
       expect(service.onTransformationObservable.observers.length).toBe(0);
     });
   });
@@ -259,7 +259,7 @@ describe('TransformationGizmoService', () => {
   describe('Configuration', () => {
     it('should use default configuration values', () => {
       const defaultService = new TransformationGizmoService();
-      
+
       expect(DEFAULT_TRANSFORMATION_GIZMO_CONFIG.size).toBe(1.0);
       expect(DEFAULT_TRANSFORMATION_GIZMO_CONFIG.snapToGrid).toBe(false);
       expect(DEFAULT_TRANSFORMATION_GIZMO_CONFIG.gridSize).toBe(1.0);
@@ -269,7 +269,7 @@ describe('TransformationGizmoService', () => {
     it('should accept partial configuration overrides', () => {
       const customConfig = { size: 2.5, snapToGrid: true };
       const customService = new TransformationGizmoService(customConfig);
-      
+
       // Configuration is private, but we can verify it's used during initialization
       expect(customService.getCurrentMode()).toBe('position');
     });
@@ -279,10 +279,10 @@ describe('TransformationGizmoService', () => {
     it('should handle scene disposal during operation', async () => {
       await service.initialize(scene);
       service.attachToMesh(testMesh);
-      
+
       // Dispose scene while service is active
       scene.dispose();
-      
+
       // Service should handle this gracefully
       const result = service.setMode('rotation');
       expect(result.success).toBe(true); // BabylonJS handles disposed scenes gracefully

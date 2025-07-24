@@ -58,7 +58,7 @@ import type { ArcRotateCamera, Scene } from '@babylonjs/core';
 import { Animation, EasingFunction, QuadraticEase, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { useAppStore } from '../../../store/app-store';
+import type { useAppStore } from '../../../store/app-store';
 import type { AxisDirection, GizmoError } from '../../types/orientation-gizmo.types';
 import { GizmoErrorCode } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';

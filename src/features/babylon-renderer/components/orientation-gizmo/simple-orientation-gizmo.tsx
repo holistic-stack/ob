@@ -95,7 +95,7 @@ export interface SimpleOrientationGizmoProps {
 
 /**
  * SimpleOrientationGizmo component
- * 
+ *
  * Renders a 3D orientation gizmo using 2D canvas based on the reference implementation
  * from docs/gizmo-snippet.js. Provides visual feedback for camera orientation and
  * allows clicking on axes to animate camera to standard views.
@@ -178,16 +178,19 @@ export function SimpleOrientationGizmo({
   /**
    * Get bubble position in 2D canvas coordinates
    */
-  const getBubblePosition = useCallback((direction: Vector3): Vector3 => {
-    const center = options.size / 2;
-    const radius = center - options.padding;
-    
-    return new Vector3(
-      center + direction.x * radius,
-      center - direction.y * radius, // Flip Y for canvas coordinates
-      direction.z
-    );
-  }, [options.size, options.padding]);
+  const getBubblePosition = useCallback(
+    (direction: Vector3): Vector3 => {
+      const center = options.size / 2;
+      const radius = center - options.padding;
+
+      return new Vector3(
+        center + direction.x * radius,
+        center - direction.y * radius, // Flip Y for canvas coordinates
+        direction.z
+      );
+    },
+    [options.size, options.padding]
+  );
 
   /**
    * Clear canvas
@@ -202,7 +205,7 @@ export function SimpleOrientationGizmo({
    */
   const drawCircle = useCallback((position: Vector3, radius: number, color: string) => {
     if (!contextRef.current) return;
-    
+
     const ctx = contextRef.current;
     ctx.beginPath();
     ctx.arc(position.x, position.y, radius, 0, 2 * Math.PI, false);
@@ -216,7 +219,7 @@ export function SimpleOrientationGizmo({
    */
   const drawLine = useCallback((p1: Vector3, p2: Vector3, width: number, color: string) => {
     if (!contextRef.current) return;
-    
+
     const ctx = contextRef.current;
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
@@ -230,16 +233,19 @@ export function SimpleOrientationGizmo({
   /**
    * Draw text label
    */
-  const drawText = useCallback((position: Vector3, text: string, color: string) => {
-    if (!contextRef.current) return;
-    
-    const ctx = contextRef.current;
-    ctx.font = `${options.fontWeight} ${options.fontSize} ${options.fontFamily}`;
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, position.x, position.y);
-  }, [options.fontSize, options.fontFamily, options.fontWeight]);
+  const drawText = useCallback(
+    (position: Vector3, text: string, color: string) => {
+      if (!contextRef.current) return;
+
+      const ctx = contextRef.current;
+      ctx.font = `${options.fontWeight} ${options.fontSize} ${options.fontFamily}`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, position.x, position.y);
+    },
+    [options.fontSize, options.fontFamily, options.fontWeight]
+  );
 
   /**
    * Update gizmo rendering
@@ -262,8 +268,8 @@ export function SimpleOrientationGizmo({
       }
 
       // Generate layers to draw (filter secondary axes if disabled)
-      const layers = bubbles.filter(bubble => 
-        options.showSecondary || !bubble.axis.startsWith('-')
+      const layers = bubbles.filter(
+        (bubble) => options.showSecondary || !bubble.axis.startsWith('-')
       );
 
       // Sort layers by Z position (back to front)
@@ -273,10 +279,10 @@ export function SimpleOrientationGizmo({
       selectedAxisRef.current = null;
       if (mouseRef.current) {
         let closestDist = Infinity;
-        
+
         for (const bubble of layers) {
           const distance = Vector3.Distance(mouseRef.current, bubble.position!);
-          
+
           if (distance < closestDist || distance < bubble.size) {
             closestDist = distance;
             selectedAxisRef.current = bubble;
@@ -286,12 +292,12 @@ export function SimpleOrientationGizmo({
 
       // Draw layers
       const center = new Vector3(options.size / 2, options.size / 2, 0);
-      
+
       for (const bubble of layers) {
         const position = bubble.position!;
         const isSelected = selectedAxisRef.current === bubble;
         const isFront = position.z >= -0.01;
-        
+
         // Choose color based on selection and depth
         let color: string;
         if (isSelected) {
@@ -304,10 +310,10 @@ export function SimpleOrientationGizmo({
 
         // Draw line from center to bubble
         drawLine(center, position, bubble.line, color);
-        
+
         // Draw bubble circle
         drawCircle(position, bubble.size, color);
-        
+
         // Draw label
         if (isFront) {
           drawText(position, bubble.label, options.fontColor);
@@ -324,13 +330,9 @@ export function SimpleOrientationGizmo({
    */
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
-    
+
     const rect = canvasRef.current.getBoundingClientRect();
-    mouseRef.current = new Vector3(
-      event.clientX - rect.left,
-      event.clientY - rect.top,
-      0
-    );
+    mouseRef.current = new Vector3(event.clientX - rect.left, event.clientY - rect.top, 0);
   }, []);
 
   /**
@@ -345,14 +347,14 @@ export function SimpleOrientationGizmo({
    */
   const handleClick = useCallback(() => {
     if (!selectedAxisRef.current || !camera) return;
-    
+
     const selectedAxis = selectedAxisRef.current;
     logger.debug(`[DEBUG][SimpleOrientationGizmo] Axis selected: ${selectedAxis.axis}`);
-    
+
     // Animate camera to selected axis
     const targetDirection = selectedAxis.direction.clone();
     targetDirection.scaleInPlace(camera.radius);
-    
+
     Animation.CreateAndStartAnimation(
       'gizmoOrbitCam',
       camera,
@@ -364,7 +366,7 @@ export function SimpleOrientationGizmo({
       Animation.ANIMATIONLOOPMODE_CONSTANT,
       easingFunction.current
     );
-    
+
     onAxisSelected?.(selectedAxis);
   }, [camera, onAxisSelected]);
 
@@ -388,7 +390,7 @@ export function SimpleOrientationGizmo({
         update();
         animationFrameRef.current = requestAnimationFrame(renderLoop);
       };
-      
+
       renderLoop();
 
       return () => {

@@ -25,7 +25,6 @@
     "test:ct:headed": "playwright test --config=playwright-ct.config.ts --headed",
     "test:ct:debug": "playwright test --config=playwright-ct.config.ts --debug",
     "test:ct:update-snapshots": "playwright test --config=playwright-ct.config.ts --update-snapshots",
-
     "test-ct": "playwright test -c playwright-ct.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -34,7 +33,6 @@
     "test:visual": "playwright test --config playwright-ct.config.ts",
     "test:watch": "vitest",
     "test:watch:integration": "vitest",
-
     "validate:types": "tsc --noEmit --strict",
     "validate:quality": "npm run lint && npm run validate:types && npm run validate:shared-utilities",
     "validate:all": "npm run validate:quality && npm run test:unit && npm run test:coverage",
@@ -44,6 +42,7 @@
   },
   "dependencies": {
     "@babylonjs/core": "^8.16.1",
+    "@babylonjs/gui": "^8.17.2",
     "@babylonjs/loaders": "^8.16.1",
     "@babylonjs/materials": "^8.16.1",
     "@monaco-editor/react": "4.7.0",

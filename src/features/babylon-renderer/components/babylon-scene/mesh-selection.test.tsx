@@ -5,7 +5,7 @@
  */
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { CreateBox, Engine, NullEngine, PointerEventTypes } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine, PointerEventTypes } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -235,7 +235,7 @@ describe('BabylonScene Mesh Selection', () => {
       });
 
       const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
-      
+
       // Dispose scene
       scene.dispose();
 

@@ -8,7 +8,7 @@
  * ```typescript
  * const service = new TransformationGizmoService();
  * const initResult = await service.initialize(scene);
- * 
+ *
  * if (initResult.success) {
  *   const attachResult = service.attachToMesh(selectedMesh);
  *   service.setMode('position');
@@ -76,7 +76,7 @@ export const DEFAULT_TRANSFORMATION_GIZMO_CONFIG: TransformationGizmoConfig = {
 
 /**
  * BabylonJS transformation gizmo service
- * 
+ *
  * Provides position, rotation, and scale manipulation capabilities for 3D meshes
  * using BabylonJS GizmoManager with React integration and store connectivity.
  */
@@ -96,7 +96,7 @@ export class TransformationGizmoService {
       ...DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
       ...config,
     });
-    
+
     logger.init('[INIT][TransformationGizmoService] Service created');
   }
 
@@ -113,13 +113,13 @@ export class TransformationGizmoService {
       }
 
       this.scene = scene;
-      
+
       // Create gizmo manager
       this.gizmoManager = new GizmoManager(scene);
-      
+
       // Configure gizmo manager
       this.gizmoManager.usePointerToAttachGizmos = this.config.enablePointerToAttach;
-      
+
       // Set initial mode (position gizmo enabled by default)
       this.gizmoManager.positionGizmoEnabled = true;
       this.gizmoManager.rotationGizmoEnabled = false;
@@ -350,7 +350,9 @@ export class TransformationGizmoService {
     };
 
     this.onTransformationObservable.notifyObservers(transformationEvent);
-    logger.debug(`[DEBUG][TransformationGizmoService] Transformation event emitted for mode: ${mode}`);
+    logger.debug(
+      `[DEBUG][TransformationGizmoService] Transformation event emitted for mode: ${mode}`
+    );
   }
 
   /**
@@ -361,7 +363,7 @@ export class TransformationGizmoService {
       logger.debug('[DEBUG][TransformationGizmoService] Disposing service');
 
       this.onTransformationObservable.clear();
-      
+
       if (this.gizmoManager) {
         this.gizmoManager.dispose();
         this.gizmoManager = null;

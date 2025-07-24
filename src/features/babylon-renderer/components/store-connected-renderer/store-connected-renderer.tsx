@@ -322,8 +322,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
     }
   }, []); // Empty dependency array - runs only on mount
 
-
-
   // Store actions - use individual selectors to avoid infinite loops
   const renderAST = useAppStore((state) => state.renderAST);
   const setScene = useAppStore((state) => state.setScene);
@@ -480,7 +478,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const handleSceneReady = useCallback(
     async (scene: BabylonSceneType) => {
       logger.info('[INFO][StoreConnectedRenderer] 🎬 Scene ready callback triggered!');
-      logger.info(`[INFO][StoreConnectedRenderer] Scene object type: ${scene?.constructor?.name || 'unknown'}`);
+      logger.info(
+        `[INFO][StoreConnectedRenderer] Scene object type: ${scene?.constructor?.name || 'unknown'}`
+      );
       logger.info(
         `[INFO][StoreConnectedRenderer] Scene details: ${scene ? 'Scene object exists' : 'Scene is null'}`
       );
@@ -509,8 +509,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         logger.info(
           `[INFO][StoreConnectedRenderer] Engine info - canvas: ${scene.getEngine()?.getRenderingCanvas() ? 'exists' : 'missing'}`
         );
-
-
       }
 
       logger.info('[DEBUG][StoreConnectedRenderer] Scene and engine ready for rendering');
@@ -747,8 +745,6 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         <CameraControls sceneService={sceneService} className="absolute top-4 right-4 z-10" />
       )}
 
-
-
       {/* Orientation Gizmo - Positioned relative to 3D renderer canvas */}
       {isSceneReady && isGizmoVisible && sceneService && (
         <SimpleOrientationGizmo
@@ -780,7 +776,9 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
             );
           }}
           onError={(error) => {
-            logger.error(`[ERROR][StoreConnectedRenderer] Transformation gizmo error: ${error.message}`);
+            logger.error(
+              `[ERROR][StoreConnectedRenderer] Transformation gizmo error: ${error.message}`
+            );
           }}
         />
       )}

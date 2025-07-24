@@ -24,6 +24,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
 import { StoreConnectedRenderer } from './features/babylon-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
@@ -325,6 +326,11 @@ export function App(): React.JSX.Element {
                 data-testid="main-renderer"
               />
             </ErrorBoundary>
+
+            {/* Axis Overlay Controls - Floating Panel */}
+            <div className="absolute top-4 right-4 z-10 w-80">
+              <AxisOverlayControls />
+            </div>
           </div>
         </div>
       </main>

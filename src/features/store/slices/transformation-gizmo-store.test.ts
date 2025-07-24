@@ -5,13 +5,10 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import { CreateBox, Engine, NullEngine, Scene } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAppStore } from '../app-store';
-import {
-  selectSelectedMesh,
-  selectTransformationGizmoMode,
-} from '../selectors/store.selectors';
+import { selectSelectedMesh, selectTransformationGizmoMode } from '../selectors/store.selectors';
 
 // Mock ResizeObserver for headless testing
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -242,7 +239,9 @@ describe('Transformation Gizmo Store Integration', () => {
       // Existing babylon rendering state should be preserved
       expect(newState.babylonRendering.isRendering).toBe(initialState.babylonRendering.isRendering);
       expect(newState.babylonRendering.meshes).toBe(initialState.babylonRendering.meshes);
-      expect(newState.babylonRendering.renderErrors).toBe(initialState.babylonRendering.renderErrors);
+      expect(newState.babylonRendering.renderErrors).toBe(
+        initialState.babylonRendering.renderErrors
+      );
       expect(newState.babylonRendering.gizmo).toBe(initialState.babylonRendering.gizmo);
 
       // Only transformation gizmo state should change

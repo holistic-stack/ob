@@ -6,7 +6,7 @@
  */
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { CreateBox, Engine, NullEngine } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -134,11 +134,7 @@ describe('TransformationGizmo Integration Tests', () => {
       // Select mesh
       rerender(
         <AppStoreProvider>
-          <TestTransformationGizmoWithStore
-            scene={scene}
-            selectedMesh={testMesh}
-            mode="position"
-          />
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />
         </AppStoreProvider>
       );
 
@@ -162,11 +158,7 @@ describe('TransformationGizmo Integration Tests', () => {
       // Change to rotation mode
       rerender(
         <AppStoreProvider>
-          <TestTransformationGizmoWithStore
-            scene={scene}
-            selectedMesh={testMesh}
-            mode="rotation"
-          />
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="rotation" />
         </AppStoreProvider>
       );
 
@@ -177,11 +169,7 @@ describe('TransformationGizmo Integration Tests', () => {
       // Change to scale mode
       rerender(
         <AppStoreProvider>
-          <TestTransformationGizmoWithStore
-            scene={scene}
-            selectedMesh={testMesh}
-            mode="scale"
-          />
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="scale" />
         </AppStoreProvider>
       );
 
@@ -205,11 +193,7 @@ describe('TransformationGizmo Integration Tests', () => {
       // Add scene
       rerender(
         <AppStoreProvider>
-          <TestTransformationGizmoWithStore
-            scene={scene}
-            selectedMesh={testMesh}
-            mode="position"
-          />
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />
         </AppStoreProvider>
       );
 
@@ -277,11 +261,7 @@ describe('TransformationGizmo Integration Tests', () => {
       for (const mode of modes) {
         rerender(
           <AppStoreProvider>
-            <TestTransformationGizmoWithStore
-              scene={scene}
-              selectedMesh={testMesh}
-              mode={mode}
-            />
+            <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode={mode} />
           </AppStoreProvider>
         );
 
@@ -335,11 +315,7 @@ describe('TransformationGizmo Integration Tests', () => {
 
         rerender(
           <AppStoreProvider>
-            <TestTransformationGizmoWithStore
-              scene={scene}
-              selectedMesh={mesh}
-              mode={mode}
-            />
+            <TestTransformationGizmoWithStore scene={scene} selectedMesh={mesh} mode={mode} />
           </AppStoreProvider>
         );
       }

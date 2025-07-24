@@ -57,7 +57,7 @@ export interface TransformationGizmoProps {
 
 /**
  * TransformationGizmo React component
- * 
+ *
  * Provides BabylonJS transformation gizmos (position, rotation, scale) with React
  * lifecycle integration. Automatically manages gizmo service initialization,
  * mesh attachment, and mode switching based on props.
@@ -163,7 +163,7 @@ export function TransformationGizmo({
     if (selectedMesh) {
       logger.debug(`[DEBUG][TransformationGizmo] Attaching gizmo to mesh: ${selectedMesh.name}`);
       const attachResult = serviceRef.current.attachToMesh(selectedMesh);
-      
+
       if (!attachResult.success) {
         handleError(attachResult.error);
         return;
@@ -171,7 +171,7 @@ export function TransformationGizmo({
     } else {
       logger.debug('[DEBUG][TransformationGizmo] Detaching gizmo from mesh');
       const detachResult = serviceRef.current.detach();
-      
+
       if (!detachResult.success) {
         handleError(detachResult.error);
         return;
@@ -189,7 +189,7 @@ export function TransformationGizmo({
 
     logger.debug(`[DEBUG][TransformationGizmo] Setting gizmo mode to: ${mode}`);
     const modeResult = serviceRef.current.setMode(mode);
-    
+
     if (!modeResult.success) {
       handleError(modeResult.error);
       return;
@@ -204,7 +204,7 @@ export function TransformationGizmo({
   useEffect(() => {
     logger.debug(
       `[DEBUG][TransformationGizmo] State - Scene: ${scene ? 'available' : 'null'}, ` +
-      `Mesh: ${selectedMesh?.name || 'none'}, Mode: ${mode}, Initialized: ${isInitialized}`
+        `Mesh: ${selectedMesh?.name || 'none'}, Mode: ${mode}, Initialized: ${isInitialized}`
     );
   }, [scene, selectedMesh, mode, isInitialized]);
 

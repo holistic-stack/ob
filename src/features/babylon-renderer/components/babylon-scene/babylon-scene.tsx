@@ -5,11 +5,16 @@
  * with React 19 compatibility and hook-based integration.
  */
 
-import type { AbstractMesh, Engine as BabylonEngineType, Scene as BabylonSceneType } from '@babylonjs/core';
+import type {
+  AbstractMesh,
+  Engine as BabylonEngineType,
+  Scene as BabylonSceneType,
+} from '@babylonjs/core';
 import { Color3, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
+import { useAxisOverlay } from '../../hooks/use-axis-overlay';
 import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
 import type {
   SceneCameraConfig as ServiceCameraConfig,
@@ -202,6 +207,11 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
   // Initialize BabylonJS services
   const { inspectorService, hideInspector } = useBabylonInspector();
+  const {
+    initialize: initializeAxisOverlay,
+    updateDynamicTicks,
+    dispose: disposeAxisOverlay,
+  } = useAxisOverlay();
 
   /**
    * Initialize BabylonJS engine ONCE - separate from scene configuration
@@ -284,6 +294,24 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
           });
         }
 
+        // Initialize axis overlay if scene has a camera
+        const camera = scene.activeCamera;
+        if (camera) {
+          try {
+            const axisOverlayResult = await initializeAxisOverlay(scene, camera);
+            if (!axisOverlayResult.success) {
+              logger.error(
+                '[ERROR][BabylonScene] Axis overlay initialization failed:',
+                axisOverlayResult.error.message
+              );
+            } else {
+              logger.debug('[DEBUG][BabylonScene] Axis overlay initialized successfully');
+            }
+          } catch (error) {
+            logger.error('[ERROR][BabylonScene] Axis overlay initialization error:', error);
+          }
+        }
+
         onSceneReady?.(scene);
       },
       ...(onRenderLoop && { onRenderLoop }),
@@ -303,10 +331,21 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
     initializeScene();
 
     // Setup render loop with explicit buffer clearing to prevent camera trails
+    let lastCameraDistance = 0;
     engine.runRenderLoop(() => {
       if (sceneRef.current) {
         // Perform complete buffer clearing to prevent camera trails/ghosting
         performCompleteBufferClearing(engine, sceneRef.current);
+
+        // Update axis overlay dynamic ticks based on camera distance
+        const camera = sceneRef.current.activeCamera;
+        if (camera && 'radius' in camera) {
+          const currentDistance = (camera as any).radius;
+          if (Math.abs(currentDistance - lastCameraDistance) > 0.1) {
+            updateDynamicTicks(currentDistance);
+            lastCameraDistance = currentDistance;
+          }
+        }
 
         // Render the scene
         sceneRef.current.render();
@@ -333,7 +372,18 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         hideInspector();
       }
 
-      // Orientation gizmo disposal removed
+      // Dispose axis overlay
+      try {
+        const disposeResult = disposeAxisOverlay();
+        if (!disposeResult.success) {
+          logger.error(
+            '[ERROR][BabylonScene] Axis overlay disposal failed:',
+            disposeResult.error.message
+          );
+        }
+      } catch (error) {
+        logger.error('[ERROR][BabylonScene] Axis overlay disposal error:', error);
+      }
 
       // Dispose scene service
       sceneService.dispose();

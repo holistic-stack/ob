@@ -5,6 +5,12 @@
  */
 
 // Core Services - Actually Used
+export type {
+  AxisOverlayConfig,
+  AxisOverlayError,
+  AxisOverlayState,
+  IAxisOverlayService,
+} from '../types/axis-overlay.types';
 export type { BridgeConversionConfig } from './ast-bridge-converter';
 export {
   ASTBridgeConverter,
@@ -17,6 +23,7 @@ export {
   PrimitiveBabylonNode,
   TransformationBabylonNode,
 } from './ast-bridge-converter';
+export { createAxisOverlayService } from './axis-overlay-service';
 
 export type {
   CSG2Config,

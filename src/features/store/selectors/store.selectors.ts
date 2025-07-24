@@ -493,8 +493,7 @@ export const selectGizmoLastInteraction = (state: AppState) =>
 /**
  * Transformation gizmo selectors for mesh manipulation
  */
-export const selectSelectedMesh = (state: AppState) =>
-  state.babylonRendering?.selectedMesh ?? null;
+export const selectSelectedMesh = (state: AppState) => state.babylonRendering?.selectedMesh ?? null;
 
 export const selectTransformationGizmoMode = (state: AppState) =>
   state.babylonRendering?.transformationGizmoMode ?? 'position';
