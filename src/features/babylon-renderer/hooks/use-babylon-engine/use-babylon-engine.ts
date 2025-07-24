@@ -52,6 +52,7 @@
  *   } = useBabylonEngine();
  *
  *   useEffect(() => {
+    isMounted.current = true;
  *     if (!canvasRef.current) return;
  *
  *     const initEngine = async () => {
@@ -84,6 +85,7 @@
  *
  *     // Cleanup on unmount
  *     return () => {
+      isMounted.current = false;
  *       console.log('🧹 Disposing engine...');
  *       disposeEngine();
  *     };
@@ -467,7 +469,8 @@ const INITIAL_ENGINE_STATE: BabylonEngineState = {
  * Provides declarative engine initialization, disposal, and state management.
  */
 export const useBabylonEngine = (): UseBabylonEngineReturn => {
-  const [engineState, setEngineState] = useState<BabylonEngineState>(INITIAL_ENGINE_STATE);
+  const isMounted = useRef(false);
+    const [engineState, setEngineState] = useState<BabylonEngineState>(INITIAL_ENGINE_STATE);
   const engineServiceRef = useRef<BabylonEngineService | null>(null);
   const isInitializingRef = useRef(false);
 
@@ -648,7 +651,7 @@ export const useBabylonEngine = (): UseBabylonEngineReturn => {
     let updateInterval: NodeJS.Timeout | null = null;
 
     // Only start interval if engine is initialized
-    if (engineServiceRef.current && engineState.isInitialized) {
+    if (engineServiceRef.current && engineState.isInitialized && isMounted.current) {
       updateInterval = setInterval(() => {
         // Additional safety check to prevent errors during cleanup
         if (engineServiceRef.current && engineState.isInitialized) {

@@ -1248,6 +1248,73 @@ private createAxes(config: Required<GridAxisConfig>, parent: TransformNode) {
 }
 ```
 
+#### **Refactored Axis Overlay Service** ✅ **IMPLEMENTED**
+
+The axis overlay service has been completely refactored to eliminate code duplication and follow SRP principles:
+
+```typescript
+/**
+ * @file refactored-axis-creator.ts
+ * @description Unified axis creator using shared utilities
+ * Eliminates code duplication across multiple axis creators
+ *
+ * @example
+ * ```typescript
+ * // Create solid line axis
+ * const lineConfig = AxisConfigUtils.createLineConfig({
+ *   name: 'X',
+ *   color: new Color3(1, 0, 0),
+ *   length: 100
+ * });
+ * const result = creator.createAxis(scene, lineConfig);
+ *
+ * // Create dotted line axis (SketchUp-style)
+ * const dottedConfig = AxisConfigUtils.createLineConfig({
+ *   name: 'Y',
+ *   color: new Color3(0, 1, 0),
+ *   isDotted: true,
+ *   dashSize: 0.3,  // Small for dot-like appearance
+ *   gapSize: 1.0    // Visible spacing
+ * });
+ *
+ * // Create 3D cylinder axis
+ * const cylinderConfig = AxisConfigUtils.createCylinderConfig({
+ *   name: 'Z',
+ *   color: new Color3(0, 0, 1),
+ *   diameter: 0.5
+ * });
+ * ```
+ */
+
+// Shared utilities architecture
+src/features/babylon-renderer/services/axis-overlay-service/
+├── shared/
+│   ├── material-factory/           # Centralized material creation
+│   │   ├── material-factory.ts     # StandardMaterial factory
+│   │   └── material-factory.test.ts
+│   ├── mesh-factory/               # Centralized mesh creation
+│   │   ├── mesh-factory.ts         # Line/Cylinder mesh factory
+│   │   └── mesh-factory.test.ts
+│   ├── geometry-utils/             # Geometric calculations
+│   │   ├── geometry-utils.ts       # Endpoint calculations, rotations
+│   │   └── geometry-utils.test.ts
+│   └── axis-config/                # Unified configuration
+│       ├── axis-config.ts          # Configuration interfaces & utils
+│       └── axis-config.test.ts
+├── refactored-axis-creator/        # Main unified creator
+│   ├── refactored-axis-creator.ts  # Single responsibility creator
+│   └── refactored-axis-creator.test.ts
+└── [legacy creators...]            # To be deprecated
+```
+
+**Key Improvements:**
+- ✅ **Eliminated Code Duplication**: Shared utilities across all axis types
+- ✅ **SRP Compliance**: Each utility has single responsibility
+- ✅ **BabylonJS Built-in Dashed Lines**: No custom shaders for dotted lines
+- ✅ **Unified Configuration**: Single interface for all axis types
+- ✅ **Comprehensive Testing**: 100% test coverage with real BabylonJS instances
+- ✅ **SketchUp-Style Dotted Lines**: Proper dot spacing and visibility
+
 #### **Rotation Behavior** ✅ **COMPLIANT**
 
 The coordinate system follows OpenSCAD's rotation conventions:

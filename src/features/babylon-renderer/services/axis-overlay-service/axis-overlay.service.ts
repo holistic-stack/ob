@@ -344,9 +344,9 @@ export class AxisOverlayService implements IAxisOverlayService {
       return;
     }
 
-    // Store the created meshes and materials
-    this._axisLines.push(...result.data.meshes);
-    this._materials.push(...result.data.materials);
+    // Store the created meshes and materials (both positive and negative segments)
+    this._axisLines.push(...result.data.positiveMeshes, ...result.data.negativeMeshes);
+    this._materials.push(...result.data.positiveMaterials, ...result.data.negativeMaterials);
 
     logger.info(
       `[INFO][AxisOverlayService] Created ${this._axisLines.length} SketchUp-style axis lines with pixel width: ${pixelWidth}`
