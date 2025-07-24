@@ -14,7 +14,6 @@ import {
   MESH_NAMES,
   PERFORMANCE_CONSTANTS,
   SCREEN_SPACE_CONSTANTS,
-  type AxisName,
 } from './axis-constants';
 
 describe('AxisConstants', () => {
@@ -50,7 +49,7 @@ describe('AxisConstants', () => {
 
     it('should be orthogonal to each other', () => {
       const { X, Y, Z } = AXIS_DIRECTIONS;
-      
+
       expect(Vector3.Dot(X, Y)).toBeCloseTo(0, 5);
       expect(Vector3.Dot(Y, Z)).toBeCloseTo(0, 5);
       expect(Vector3.Dot(Z, X)).toBeCloseTo(0, 5);
@@ -101,12 +100,12 @@ describe('AxisConstants', () => {
       expect(Object.keys(AXIS_ROTATIONS)).toContain('X');
       expect(Object.keys(AXIS_ROTATIONS)).toContain('Y');
       expect(Object.keys(AXIS_ROTATIONS)).toContain('Z');
-      
+
       // Test that each rotation is defined and has the correct structure
       expect(AXIS_ROTATIONS.X).toBeDefined();
       expect(AXIS_ROTATIONS.Y).toBeDefined();
       expect(AXIS_ROTATIONS.Z).toBeDefined();
-      
+
       // Test that each rotation has x, y, z properties
       Object.values(AXIS_ROTATIONS).forEach((rotation) => {
         expect(rotation).toHaveProperty('x');
@@ -159,8 +158,12 @@ describe('AxisConstants', () => {
     it('should have consistent performance values', () => {
       const expectedFrameTime = 1000 / PERFORMANCE_CONSTANTS.RENDER_TARGET_FPS;
       // MAX_RENDER_TIME_MS should be close to the frame time (allowing for floor rounding)
-      expect(PERFORMANCE_CONSTANTS.MAX_RENDER_TIME_MS).toBeGreaterThanOrEqual(Math.floor(expectedFrameTime));
-      expect(PERFORMANCE_CONSTANTS.MAX_RENDER_TIME_MS).toBeLessThanOrEqual(Math.ceil(expectedFrameTime));
+      expect(PERFORMANCE_CONSTANTS.MAX_RENDER_TIME_MS).toBeGreaterThanOrEqual(
+        Math.floor(expectedFrameTime)
+      );
+      expect(PERFORMANCE_CONSTANTS.MAX_RENDER_TIME_MS).toBeLessThanOrEqual(
+        Math.ceil(expectedFrameTime)
+      );
     });
   });
 });

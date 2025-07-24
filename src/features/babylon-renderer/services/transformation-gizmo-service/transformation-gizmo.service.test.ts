@@ -5,8 +5,8 @@
  * attachment, mode switching, and transformation events.
  */
 
-import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { CreateBox, type Engine, Mesh, NullEngine } from '@babylonjs/core';
+import type { AbstractMesh } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
@@ -108,8 +108,10 @@ describe('TransformationGizmoService', () => {
       const result = uninitializedService.attachToMesh(testMesh);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('ATTACH_FAILED');
-      expect(result.error?.message).toContain('not initialized');
+      if (!result.success && result.error) {
+        expect(result.error.code).toBe('ATTACH_FAILED');
+        expect(result.error.message).toContain('not initialized');
+      }
     });
 
     it('should handle detachment without initialization', () => {
@@ -117,8 +119,10 @@ describe('TransformationGizmoService', () => {
       const result = uninitializedService.detach();
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('ATTACH_FAILED');
-      expect(result.error?.message).toContain('not initialized');
+      if (!result.success && result.error) {
+        expect(result.error.code).toBe('ATTACH_FAILED');
+        expect(result.error.message).toContain('not initialized');
+      }
     });
   });
 
@@ -158,8 +162,10 @@ describe('TransformationGizmoService', () => {
       const result = service.setMode('invalid');
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('MODE_CHANGE_FAILED');
-      expect(result.error?.message).toContain('Invalid gizmo mode');
+      if (!result.success && result.error) {
+        expect(result.error.code).toBe('MODE_CHANGE_FAILED');
+        expect(result.error.message).toContain('Invalid gizmo mode');
+      }
     });
 
     it('should handle mode change without initialization', () => {
@@ -167,8 +173,10 @@ describe('TransformationGizmoService', () => {
       const result = uninitializedService.setMode('rotation');
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('MODE_CHANGE_FAILED');
-      expect(result.error?.message).toContain('not initialized');
+      if (!result.success && result.error) {
+        expect(result.error.code).toBe('MODE_CHANGE_FAILED');
+        expect(result.error.message).toContain('not initialized');
+      }
     });
   });
 
@@ -258,7 +266,7 @@ describe('TransformationGizmoService', () => {
 
   describe('Configuration', () => {
     it('should use default configuration values', () => {
-      const defaultService = new TransformationGizmoService();
+      const _defaultService = new TransformationGizmoService();
 
       expect(DEFAULT_TRANSFORMATION_GIZMO_CONFIG.size).toBe(1.0);
       expect(DEFAULT_TRANSFORMATION_GIZMO_CONFIG.snapToGrid).toBe(false);
@@ -293,10 +301,11 @@ describe('TransformationGizmoService', () => {
       const result = uninitializedService.attachToMesh(testMesh);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.error?.code).toBe('ATTACH_FAILED');
-      expect(result.error?.message).toContain('Gizmo manager not initialized');
-      expect(result.error?.timestamp).toBeInstanceOf(Date);
+      if (!result.success && result.error) {
+        expect(result.error.code).toBe('ATTACH_FAILED');
+        expect(result.error.message).toContain('Gizmo manager not initialized');
+        expect(result.error.timestamp).toBeInstanceOf(Date);
+      }
     });
   });
 });

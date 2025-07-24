@@ -127,7 +127,6 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
   className = '',
   style,
   showAdvancedOptions = false,
-  enablePreview = true,
   onConfigChange,
   onVisibilityToggle,
   onPositionChange,
@@ -229,10 +228,9 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
   }, [updateGizmoConfig, onConfigChange]);
 
   return (
-    <div
+    <section
       className={`gizmo-config-panel bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
       style={style}
-      role="region"
       aria-label="Orientation Gizmo Configuration"
     >
       {/* Header */}
@@ -271,9 +269,7 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
 
       {/* Position Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
-          Position
-        </label>
+        <h4 className="block text-sm font-medium text-gray-900 dark:text-white mb-3">Position</h4>
         <div className="grid grid-cols-2 gap-2">
           {POSITION_OPTIONS.map((option) => (
             <button
@@ -298,7 +294,7 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
 
       {/* Size Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">Size</label>
+        <h4 className="block text-sm font-medium text-gray-900 dark:text-white mb-3">Size</h4>
         <div className="space-y-3">
           {/* Size Presets */}
           <div className="flex space-x-2">
@@ -340,9 +336,9 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
 
       {/* Color Presets */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+        <h4 className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
           Color Theme
-        </label>
+        </h4>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(COLOR_PRESETS).map(([presetName, colors]) => (
             <button
@@ -398,16 +394,20 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
         <div id="advanced-options" className="space-y-4 border-t pt-4">
           {/* Individual Color Controls */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+            <h4 className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
               Custom Colors
-            </label>
+            </h4>
             <div className="space-y-3">
               {(['x', 'y', 'z'] as const).map((axis) => (
                 <div key={axis} className="flex items-center space-x-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-4 uppercase">
+                  <label
+                    htmlFor={`${axis}-primary-color`}
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 w-4 uppercase"
+                  >
                     {axis}:
-                  </span>
+                  </label>
                   <input
+                    id={`${axis}-primary-color`}
                     type="color"
                     value={currentConfig.colors[axis][0]}
                     onChange={(e) => handleColorChange(axis, 0, e.target.value)}
@@ -415,6 +415,7 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
                     aria-label={`${axis.toUpperCase()} axis primary color`}
                   />
                   <input
+                    id={`${axis}-secondary-color`}
                     type="color"
                     value={currentConfig.colors[axis][1]}
                     onChange={(e) => handleColorChange(axis, 1, e.target.value)}
@@ -428,8 +429,9 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
 
           {/* Additional Settings */}
           <div className="space-y-3">
-            <label className="flex items-center space-x-3">
+            <label htmlFor="show-secondary-axes" className="flex items-center space-x-3">
               <input
+                id="show-secondary-axes"
                 type="checkbox"
                 checked={currentConfig.showSecondary}
                 onChange={(e) => handleConfigUpdate({ showSecondary: e.target.checked })}
@@ -439,8 +441,11 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
             </label>
 
             <div className="flex items-center space-x-3">
-              <label className="text-sm text-gray-700 dark:text-gray-300">Padding:</label>
+              <label htmlFor="gizmo-padding" className="text-sm text-gray-700 dark:text-gray-300">
+                Padding:
+              </label>
               <input
+                id="gizmo-padding"
                 type="range"
                 min="5"
                 max="20"
@@ -456,6 +461,6 @@ export const GizmoConfigPanel: React.FC<GizmoConfigPanelProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

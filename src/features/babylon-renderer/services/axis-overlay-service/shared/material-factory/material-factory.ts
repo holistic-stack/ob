@@ -4,7 +4,7 @@
  * Centralizes material creation logic to eliminate duplication across axis creators
  */
 
-import { Color3, StandardMaterial, type Scene } from '@babylonjs/core';
+import { Color3, type Scene, StandardMaterial } from '@babylonjs/core';
 import type { Result } from '../../../../../../shared/types/result.types';
 
 /**
@@ -29,7 +29,7 @@ export interface MaterialCreationError {
 
 /**
  * Factory for creating standardized materials for axis rendering
- * 
+ *
  * @example
  * ```typescript
  * const factory = new MaterialFactory();
@@ -43,7 +43,7 @@ export interface MaterialCreationError {
 export class MaterialFactory {
   /**
    * Creates a standard material for axis rendering
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Material configuration
    * @returns Result containing the created material or error
@@ -64,15 +64,15 @@ export class MaterialFactory {
 
     try {
       const material = new StandardMaterial(config.name, scene);
-      
+
       // Set base color properties
       material.diffuseColor = config.color;
       material.emissiveColor = config.color.scale(config.emissiveScale ?? 0.8);
       material.specularColor = new Color3(1, 1, 1);
-      
+
       // Set opacity
       material.alpha = config.opacity ?? 1.0;
-      
+
       // Disable lighting if requested (common for axis lines)
       if (config.disableLighting) {
         material.disableLighting = true;
@@ -96,7 +96,7 @@ export class MaterialFactory {
 
   /**
    * Creates a material specifically for solid axis lines
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param name - Material name
    * @param color - Line color
@@ -118,7 +118,7 @@ export class MaterialFactory {
 
   /**
    * Creates a material specifically for dotted axis lines
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param name - Material name
    * @param color - Line color
@@ -140,7 +140,7 @@ export class MaterialFactory {
 
   /**
    * Creates a material for 3D cylinder axes
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param name - Material name
    * @param color - Cylinder color

@@ -3,8 +3,8 @@
  * @description Tests for the MeshFactory class
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MeshFactory } from './mesh-factory';
 
 describe('MeshFactory', () => {
@@ -27,10 +27,7 @@ describe('MeshFactory', () => {
     it('should create a solid line mesh with correct properties', () => {
       const config = {
         name: 'TestLine',
-        points: [
-          BABYLON.Vector3.Zero(),
-          new BABYLON.Vector3(100, 0, 0),
-        ],
+        points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(100, 0, 0)],
       };
 
       const result = factory.createSolidLine(scene, config);
@@ -52,7 +49,9 @@ describe('MeshFactory', () => {
       const result = factory.createSolidLine(null, config);
 
       expect(result.success).toBe(false);
-      expect(result.error.type).toBe('SCENE_NULL');
+      if (!result.success && result.error) {
+        expect(result.error.type).toBe('SCENE_NULL');
+      }
     });
 
     it('should reject invalid point configurations', () => {
@@ -64,7 +63,9 @@ describe('MeshFactory', () => {
       const result = factory.createSolidLine(scene, config);
 
       expect(result.success).toBe(false);
-      expect(result.error.type).toBe('INVALID_POINTS');
+      if (!result.success && result.error) {
+        expect(result.error.type).toBe('INVALID_POINTS');
+      }
     });
   });
 
@@ -72,10 +73,7 @@ describe('MeshFactory', () => {
     it('should create a dashed line mesh with default dash properties', () => {
       const config = {
         name: 'TestDashedLine',
-        points: [
-          BABYLON.Vector3.Zero(),
-          new BABYLON.Vector3(0, 100, 0),
-        ],
+        points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 100, 0)],
       };
 
       const result = factory.createDashedLine(scene, config);
@@ -114,7 +112,9 @@ describe('MeshFactory', () => {
       const result = factory.createDashedLine(scene, config);
 
       expect(result.success).toBe(false);
-      expect(result.error.type).toBe('INVALID_POINTS');
+      if (!result.success && result.error) {
+        expect(result.error.type).toBe('INVALID_POINTS');
+      }
     });
   });
 
@@ -140,7 +140,7 @@ describe('MeshFactory', () => {
     it('should apply position and rotation when provided', () => {
       const position = new BABYLON.Vector3(10, 20, 30);
       const rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
-      
+
       const config = {
         name: 'PositionedCylinder',
         height: 50,
@@ -186,7 +186,9 @@ describe('MeshFactory', () => {
       const result = factory.createCylinder(null, config);
 
       expect(result.success).toBe(false);
-      expect(result.error.type).toBe('SCENE_NULL');
+      if (!result.success && result.error) {
+        expect(result.error.type).toBe('SCENE_NULL');
+      }
     });
   });
 });

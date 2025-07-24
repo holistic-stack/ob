@@ -8,21 +8,21 @@ import type { LinesMesh, Mesh, Scene, StandardMaterial } from '@babylonjs/core';
 import { createLogger } from '../../../../../shared/services/logger.service';
 import type { Result } from '../../../../../shared/types/result.types';
 import { AxisColorUtils } from '../axis-colors/axis-colors';
+import { AxisResultUtils } from '../axis-errors/axis-errors';
 import { AxisValidationUtils } from '../axis-validation/axis-validation';
-import { AxisErrorFactory, AxisResultUtils } from '../axis-errors/axis-errors';
+import {
+  AXIS_DIRECTIONS,
+  AXIS_NAMES,
+  type AxisConfig,
+  AxisConfigUtils,
+  type AxisName,
+  type CoordinateAxesConfig,
+  type CylinderAxisConfig,
+  type LineAxisConfig,
+} from '../shared/axis-config/axis-config';
+import { GeometryUtils } from '../shared/geometry-utils/geometry-utils';
 import { defaultMaterialFactory } from '../shared/material-factory/material-factory';
 import { defaultMeshFactory } from '../shared/mesh-factory/mesh-factory';
-import { GeometryUtils } from '../shared/geometry-utils/geometry-utils';
-import {
-  type AxisConfig,
-  type LineAxisConfig,
-  type CylinderAxisConfig,
-  type CoordinateAxesConfig,
-  type AxisName,
-  AXIS_NAMES,
-  AXIS_DIRECTIONS,
-  AxisConfigUtils,
-} from '../shared/axis-config/axis-config';
 
 const logger = createLogger('RefactoredAxisCreator');
 
@@ -40,7 +40,11 @@ export interface AxisCreationResult {
  * Error types for axis creation
  */
 export interface AxisCreationError {
-  readonly type: 'SCENE_NULL' | 'INVALID_CONFIG' | 'MESH_CREATION_FAILED' | 'MATERIAL_CREATION_FAILED';
+  readonly type:
+    | 'SCENE_NULL'
+    | 'INVALID_CONFIG'
+    | 'MESH_CREATION_FAILED'
+    | 'MATERIAL_CREATION_FAILED';
   readonly message: string;
   readonly details?: unknown;
 }
@@ -48,7 +52,7 @@ export interface AxisCreationError {
 /**
  * Refactored unified axis creator that eliminates code duplication
  * Uses shared utilities for material creation, mesh creation, and geometry calculations
- * 
+ *
  * @example
  * ```typescript
  * const creator = new RefactoredAxisCreator();
@@ -63,7 +67,7 @@ export interface AxisCreationError {
 export class RefactoredAxisCreator {
   /**
    * Creates a single axis based on configuration
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Axis configuration
    * @returns Result containing created axis or error
@@ -105,7 +109,7 @@ export class RefactoredAxisCreator {
 
   /**
    * Creates a line-based axis (solid or dashed)
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Line axis configuration
    * @returns Result containing created line axis or error
@@ -148,8 +152,16 @@ export class RefactoredAxisCreator {
 
       // Create material
       const materialResult = config.isDotted
-        ? defaultMaterialFactory.createDottedLineMaterial(scene, `${config.name}Material`, config.color)
-        : defaultMaterialFactory.createSolidLineMaterial(scene, `${config.name}Material`, config.color);
+        ? defaultMaterialFactory.createDottedLineMaterial(
+            scene,
+            `${config.name}Material`,
+            config.color
+          )
+        : defaultMaterialFactory.createSolidLineMaterial(
+            scene,
+            `${config.name}Material`,
+            config.color
+          );
 
       if (!materialResult.success) {
         meshResult.data.dispose();
@@ -166,14 +178,16 @@ export class RefactoredAxisCreator {
       // Apply material and opacity
       const mesh = meshResult.data;
       const material = materialResult.data;
-      
+
       if (config.opacity !== undefined) {
         material.alpha = config.opacity;
       }
-      
+
       mesh.material = material;
 
-      logger.info(`[INFO][RefactoredAxisCreator] Created ${config.isDotted ? 'dashed' : 'solid'} line axis: ${config.name}`);
+      logger.info(
+        `[INFO][RefactoredAxisCreator] Created ${config.isDotted ? 'dashed' : 'solid'} line axis: ${config.name}`
+      );
 
       return {
         success: true,
@@ -198,7 +212,7 @@ export class RefactoredAxisCreator {
 
   /**
    * Creates a cylinder-based 3D axis
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Cylinder axis configuration
    * @returns Result containing created cylinder axis or error
@@ -279,7 +293,7 @@ export class RefactoredAxisCreator {
 
   /**
    * Creates all three coordinate axes (X, Y, Z)
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Coordinate axes configuration
    * @returns Result containing array of created axes or error
@@ -293,33 +307,36 @@ export class RefactoredAxisCreator {
     const finalConfig = AxisConfigUtils.createCoordinateAxesConfig(config);
 
     for (const axisName of Object.values(AXIS_NAMES)) {
-      const axisConfig: AxisConfig = finalConfig.type === 'line'
-        ? AxisConfigUtils.createLineConfig({
-            name: axisName,
-            color: colors[axisName],
-            ...(finalConfig.origin && { origin: finalConfig.origin }),
-            direction: AXIS_DIRECTIONS[axisName],
-            ...(finalConfig.length !== undefined && { length: finalConfig.length }),
-            ...(finalConfig.opacity !== undefined && { opacity: finalConfig.opacity }),
-            ...(finalConfig.pixelWidth !== undefined && { pixelWidth: finalConfig.pixelWidth }),
-            ...(finalConfig.dashSize !== undefined && { dashSize: finalConfig.dashSize }),
-            ...(finalConfig.gapSize !== undefined && { gapSize: finalConfig.gapSize }),
-          })
-        : AxisConfigUtils.createCylinderConfig({
-            name: axisName,
-            color: colors[axisName],
-            ...(finalConfig.origin && { origin: finalConfig.origin }),
-            direction: AXIS_DIRECTIONS[axisName],
-            ...(finalConfig.length !== undefined && { length: finalConfig.length }),
-            ...(finalConfig.opacity !== undefined && { opacity: finalConfig.opacity }),
-            ...(finalConfig.diameter !== undefined && { diameter: finalConfig.diameter }),
-            ...(finalConfig.tessellation !== undefined && { tessellation: finalConfig.tessellation }),
-          });
+      const axisConfig: AxisConfig =
+        finalConfig.type === 'line'
+          ? AxisConfigUtils.createLineConfig({
+              name: axisName,
+              color: colors[axisName],
+              ...(finalConfig.origin && { origin: finalConfig.origin }),
+              direction: AXIS_DIRECTIONS[axisName],
+              ...(finalConfig.length !== undefined && { length: finalConfig.length }),
+              ...(finalConfig.opacity !== undefined && { opacity: finalConfig.opacity }),
+              ...(finalConfig.pixelWidth !== undefined && { pixelWidth: finalConfig.pixelWidth }),
+              ...(finalConfig.dashSize !== undefined && { dashSize: finalConfig.dashSize }),
+              ...(finalConfig.gapSize !== undefined && { gapSize: finalConfig.gapSize }),
+            })
+          : AxisConfigUtils.createCylinderConfig({
+              name: axisName,
+              color: colors[axisName],
+              ...(finalConfig.origin && { origin: finalConfig.origin }),
+              direction: AXIS_DIRECTIONS[axisName],
+              ...(finalConfig.length !== undefined && { length: finalConfig.length }),
+              ...(finalConfig.opacity !== undefined && { opacity: finalConfig.opacity }),
+              ...(finalConfig.diameter !== undefined && { diameter: finalConfig.diameter }),
+              ...(finalConfig.tessellation !== undefined && {
+                tessellation: finalConfig.tessellation,
+              }),
+            });
 
       const result = this.createAxis(scene, axisConfig);
       if (!result.success) {
         // Clean up previously created axes
-        results.forEach(axis => {
+        results.forEach((axis) => {
           axis.mesh.dispose();
           axis.material.dispose();
         });

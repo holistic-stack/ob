@@ -75,7 +75,6 @@ import type {
   AxisDirection,
   GizmoConfig,
   GizmoError,
-  GizmoEventHandlers,
   GizmoInteractionEvent,
   GizmoPosition,
 } from '../../types/orientation-gizmo.types';
@@ -167,7 +166,7 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
         position: effectivePosition,
       });
 
-      if (!result.success) {
+      if (!result.success && result.error) {
         const error = result.error;
         setLocalError(error);
         setGizmoError(error);
@@ -205,7 +204,7 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
     if (!serviceRef.current || !isInitialized) return;
 
     const result = serviceRef.current.update();
-    if (!result.success) {
+    if (!result.success && result.error) {
       const error = result.error;
       setLocalError(error);
       setGizmoError(error);
@@ -215,7 +214,7 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
     }
 
     // Update store with interaction state
-    if (result.data.selectedAxis !== selectedAxis) {
+    if (result.success && result.data.selectedAxis !== selectedAxis) {
       setGizmoSelectedAxis(result.data.selectedAxis);
     }
 
@@ -252,7 +251,7 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
    * Handle axis selection clicks
    */
   const handleClick = useCallback(
-    async (event: React.MouseEvent<HTMLCanvasElement>) => {
+    async (_event: React.MouseEvent<HTMLCanvasElement>) => {
       if (!serviceRef.current || !selectedAxis) return;
 
       try {
@@ -261,7 +260,7 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
 
         const result = await serviceRef.current.selectAxis(selectedAxis);
 
-        if (!result.success) {
+        if (!result.success && result.error) {
           const error = result.error;
           setLocalError(error);
           setGizmoError(error);
@@ -270,7 +269,9 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
           return;
         }
 
-        onAxisSelected?.(result.data);
+        if (result.success) {
+          onAxisSelected?.(result.data);
+        }
         onAnimationComplete?.(selectedAxis);
 
         // Animation will complete automatically, reset state after delay

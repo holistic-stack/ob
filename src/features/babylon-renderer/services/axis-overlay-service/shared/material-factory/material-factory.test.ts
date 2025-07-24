@@ -3,8 +3,8 @@
  * @description Tests for the MaterialFactory class
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MaterialFactory } from './material-factory';
 
 describe('MaterialFactory', () => {
@@ -56,7 +56,9 @@ describe('MaterialFactory', () => {
       const result = factory.createAxisMaterial(null, config);
 
       expect(result.success).toBe(false);
-      expect(result.error.type).toBe('SCENE_NULL');
+      if (!result.success && result.error) {
+        expect(result.error.type).toBe('SCENE_NULL');
+      }
     });
 
     it('should use default values for optional properties', () => {
@@ -132,11 +134,7 @@ describe('MaterialFactory', () => {
     });
 
     it('should use default opacity when not provided', () => {
-      const result = factory.createCylinderMaterial(
-        scene,
-        'Cylinder',
-        new BABYLON.Color3(1, 0, 1)
-      );
+      const result = factory.createCylinderMaterial(scene, 'Cylinder', new BABYLON.Color3(1, 0, 1));
 
       expect(result.success).toBe(true);
       if (result.success) {

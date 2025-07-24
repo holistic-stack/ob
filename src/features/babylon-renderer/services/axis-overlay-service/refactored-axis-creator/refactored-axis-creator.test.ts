@@ -3,10 +3,10 @@
  * @description Tests for the RefactoredAxisCreator class
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
-import { RefactoredAxisCreator } from './refactored-axis-creator';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AxisConfigUtils } from '../shared/axis-config/axis-config';
+import { RefactoredAxisCreator } from './refactored-axis-creator';
 
 describe('RefactoredAxisCreator', () => {
   let engine: BABYLON.NullEngine;
@@ -129,13 +129,13 @@ describe('RefactoredAxisCreator', () => {
       if (result.success) {
         const axes = result.data;
         expect(axes).toHaveLength(3);
-        
-        const axisNames = axes.map(axis => axis.name);
+
+        const axisNames = axes.map((axis) => axis.name);
         expect(axisNames).toContain('X');
         expect(axisNames).toContain('Y');
         expect(axisNames).toContain('Z');
 
-        axes.forEach(axis => {
+        axes.forEach((axis) => {
           expect(axis.type).toBe('line');
           expect(axis.mesh).toBeInstanceOf(BABYLON.LinesMesh);
           expect(axis.material).toBeInstanceOf(BABYLON.StandardMaterial);
@@ -157,7 +157,7 @@ describe('RefactoredAxisCreator', () => {
         const axes = result.data;
         expect(axes).toHaveLength(3);
 
-        axes.forEach(axis => {
+        axes.forEach((axis) => {
           expect(axis.type).toBe('cylinder');
           expect(axis.mesh).toBeInstanceOf(BABYLON.Mesh);
         });
@@ -175,19 +175,19 @@ describe('RefactoredAxisCreator', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const axes = result.data;
-        const materials = axes.map(axis => axis.material);
-        
+        const materials = axes.map((axis) => axis.material);
+
         // Check that materials have different colors
-        const colors = materials.map(material => ({
+        const _colors = materials.map((material) => ({
           r: material.diffuseColor.r,
           g: material.diffuseColor.g,
           b: material.diffuseColor.b,
         }));
 
         // X should be red, Y should be green, Z should be blue
-        const xAxis = axes.find(axis => axis.name === 'X');
-        const yAxis = axes.find(axis => axis.name === 'Y');
-        const zAxis = axes.find(axis => axis.name === 'Z');
+        const xAxis = axes.find((axis) => axis.name === 'X');
+        const yAxis = axes.find((axis) => axis.name === 'Y');
+        const zAxis = axes.find((axis) => axis.name === 'Z');
 
         expect(xAxis?.material.diffuseColor.r).toBe(1);
         expect(yAxis?.material.diffuseColor.g).toBe(1);

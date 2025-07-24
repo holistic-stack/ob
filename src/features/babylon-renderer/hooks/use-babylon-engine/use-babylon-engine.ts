@@ -470,7 +470,7 @@ const INITIAL_ENGINE_STATE: BabylonEngineState = {
  */
 export const useBabylonEngine = (): UseBabylonEngineReturn => {
   const isMounted = useRef(false);
-    const [engineState, setEngineState] = useState<BabylonEngineState>(INITIAL_ENGINE_STATE);
+  const [engineState, setEngineState] = useState<BabylonEngineState>(INITIAL_ENGINE_STATE);
   const engineServiceRef = useRef<BabylonEngineService | null>(null);
   const isInitializingRef = useRef(false);
 

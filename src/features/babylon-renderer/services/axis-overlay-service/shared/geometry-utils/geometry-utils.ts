@@ -37,14 +37,14 @@ export const STANDARD_AXIS_DIRECTIONS = {
  * Standard axis rotations for cylinder alignment
  */
 export const STANDARD_AXIS_ROTATIONS = {
-  X: new Vector3(0, 0, Math.PI / 2),  // Rotate 90° around Z
-  Y: new Vector3(0, 0, 0),            // Default orientation
-  Z: new Vector3(Math.PI / 2, 0, 0),  // Rotate 90° around X
+  X: new Vector3(0, 0, Math.PI / 2), // Rotate 90° around Z
+  Y: new Vector3(0, 0, 0), // Default orientation
+  Z: new Vector3(Math.PI / 2, 0, 0), // Rotate 90° around X
 } as const;
 
 /**
  * Utility class for geometric calculations in axis rendering
- * 
+ *
  * @example
  * ```typescript
  * const endpoints = GeometryUtils.calculateAxisEndpoints({
@@ -57,17 +57,17 @@ export const STANDARD_AXIS_ROTATIONS = {
 export class GeometryUtils {
   /**
    * Calculates the positive and negative endpoints of an axis
-   * 
+   *
    * @param config - Axis configuration
    * @returns Calculated endpoints and total length
    */
   static calculateAxisEndpoints(config: AxisEndpointsConfig): AxisEndpoints {
     const halfLength = config.length / 2;
     const scaledDirection = config.direction.scale(halfLength);
-    
+
     const positiveEnd = config.origin.add(scaledDirection);
     const negativeEnd = config.origin.subtract(scaledDirection);
-    
+
     return {
       positiveEnd,
       negativeEnd,
@@ -77,16 +77,16 @@ export class GeometryUtils {
 
   /**
    * Calculates endpoints for a full-length axis (from negative to positive)
-   * 
+   *
    * @param config - Axis configuration
    * @returns Endpoints for full axis length
    */
   static calculateFullAxisEndpoints(config: AxisEndpointsConfig): AxisEndpoints {
     const scaledDirection = config.direction.scale(config.length);
-    
+
     const positiveEnd = config.origin.add(scaledDirection);
     const negativeEnd = config.origin.subtract(scaledDirection);
-    
+
     return {
       positiveEnd,
       negativeEnd,
@@ -96,7 +96,7 @@ export class GeometryUtils {
 
   /**
    * Gets the standard rotation for aligning a cylinder with an axis
-   * 
+   *
    * @param axisName - Name of the axis ('X', 'Y', or 'Z')
    * @returns Rotation vector for cylinder alignment
    */
@@ -106,7 +106,7 @@ export class GeometryUtils {
 
   /**
    * Gets the standard direction vector for an axis
-   * 
+   *
    * @param axisName - Name of the axis ('X', 'Y', or 'Z')
    * @returns Direction vector for the axis
    */
@@ -116,7 +116,7 @@ export class GeometryUtils {
 
   /**
    * Normalizes a direction vector to ensure unit length
-   * 
+   *
    * @param direction - Direction vector to normalize
    * @returns Normalized direction vector
    */
@@ -130,7 +130,7 @@ export class GeometryUtils {
 
   /**
    * Calculates the distance between two points
-   * 
+   *
    * @param point1 - First point
    * @param point2 - Second point
    * @returns Distance between the points
@@ -141,7 +141,7 @@ export class GeometryUtils {
 
   /**
    * Creates a point array for a line from origin to endpoint
-   * 
+   *
    * @param origin - Starting point
    * @param endpoint - Ending point
    * @returns Array of points for line creation
@@ -152,7 +152,7 @@ export class GeometryUtils {
 
   /**
    * Creates point arrays for positive and negative axis segments
-   * 
+   *
    * @param config - Axis configuration
    * @returns Object containing positive and negative line points
    */
@@ -160,17 +160,17 @@ export class GeometryUtils {
     positive: Vector3[];
     negative: Vector3[];
   } {
-    const endpoints = this.calculateAxisEndpoints(config);
-    
+    const endpoints = GeometryUtils.calculateAxisEndpoints(config);
+
     return {
-      positive: this.createLinePoints(config.origin, endpoints.positiveEnd),
-      negative: this.createLinePoints(endpoints.negativeEnd, config.origin),
+      positive: GeometryUtils.createLinePoints(config.origin, endpoints.positiveEnd),
+      negative: GeometryUtils.createLinePoints(endpoints.negativeEnd, config.origin),
     };
   }
 
   /**
    * Validates that a direction vector is not zero
-   * 
+   *
    * @param direction - Direction vector to validate
    * @returns True if direction is valid (non-zero)
    */
@@ -180,7 +180,7 @@ export class GeometryUtils {
 
   /**
    * Validates that a length value is positive
-   * 
+   *
    * @param length - Length value to validate
    * @returns True if length is positive
    */
@@ -190,7 +190,7 @@ export class GeometryUtils {
 
   /**
    * Clamps a value between minimum and maximum bounds
-   * 
+   *
    * @param value - Value to clamp
    * @param min - Minimum bound
    * @param max - Maximum bound

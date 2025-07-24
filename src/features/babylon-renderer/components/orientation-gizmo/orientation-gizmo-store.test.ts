@@ -24,6 +24,7 @@ import {
   selectGizmoState,
   selectGizmoStats,
 } from '../../../store/selectors/store.selectors';
+import type { AppStore } from '../../../store/types/store.types';
 import type { GizmoConfig, GizmoError } from '../../types/orientation-gizmo.types';
 import {
   AxisDirection,
@@ -33,7 +34,7 @@ import {
 } from '../../types/orientation-gizmo.types';
 
 describe('OrientationGizmo Store Integration', () => {
-  let store: ReturnType<typeof useAppStore>;
+  let store: AppStore;
 
   beforeEach(() => {
     // Get fresh store instance and reset gizmo state
@@ -325,7 +326,7 @@ describe('OrientationGizmo Store Integration', () => {
     });
 
     it('should preserve state structure during updates', () => {
-      const initialState = selectGizmoState(store);
+      const _initialState = selectGizmoState(store);
 
       // Perform various updates
       store.setGizmoVisibility(false);

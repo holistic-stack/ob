@@ -4,7 +4,7 @@
  * Centralizes mesh creation logic to eliminate duplication across axis creators
  */
 
-import { LinesMesh, MeshBuilder, type Scene, Vector3 } from '@babylonjs/core';
+import { type LinesMesh, MeshBuilder, type Scene, type Vector3 } from '@babylonjs/core';
 import type { Result } from '../../../../../../shared/types/result.types';
 
 /**
@@ -48,7 +48,7 @@ export interface MeshCreationError {
 
 /**
  * Factory for creating standardized meshes for axis rendering
- * 
+ *
  * @example
  * ```typescript
  * const factory = new MeshFactory();
@@ -61,15 +61,12 @@ export interface MeshCreationError {
 export class MeshFactory {
   /**
    * Creates a solid line mesh
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Line configuration
    * @returns Result containing the created mesh or error
    */
-  createSolidLine(
-    scene: Scene | null,
-    config: LineConfig
-  ): Result<LinesMesh, MeshCreationError> {
+  createSolidLine(scene: Scene | null, config: LineConfig): Result<LinesMesh, MeshCreationError> {
     if (!scene) {
       return {
         success: false,
@@ -128,7 +125,7 @@ export class MeshFactory {
 
   /**
    * Creates a dashed line mesh for dotted axis appearance
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Dashed line configuration
    * @returns Result containing the created mesh or error
@@ -163,8 +160,8 @@ export class MeshFactory {
         {
           points: config.points as Vector3[],
           dashSize: config.dashSize ?? 0.3, // Small for dot-like appearance
-          gapSize: config.gapSize ?? 1.0,    // Visible spacing
-          dashNb: config.dashNb ?? 100,      // Sufficient number of dashes
+          gapSize: config.gapSize ?? 1.0, // Visible spacing
+          dashNb: config.dashNb ?? 100, // Sufficient number of dashes
           updatable: config.updatable ?? false,
         },
         scene
@@ -198,7 +195,7 @@ export class MeshFactory {
 
   /**
    * Creates a cylinder mesh for 3D axis representation
-   * 
+   *
    * @param scene - BabylonJS scene
    * @param config - Cylinder configuration
    * @returns Result containing the created mesh or error

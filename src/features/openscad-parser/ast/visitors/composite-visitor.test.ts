@@ -84,7 +84,12 @@ describe('CompositeVisitor', () => {
     expect(tree).not.toBeNull();
     expect(tree?.rootNode).not.toBeNull();
 
-    const testableNode = findTestableNode(tree?.rootNode);
+    const rootNode = tree?.rootNode;
+    if (!rootNode) {
+      throw new Error('Failed to parse code: root node is null');
+    }
+
+    const testableNode = findTestableNode(rootNode);
     expect(testableNode).not.toBeNull();
 
     return testableNode as TSNode;

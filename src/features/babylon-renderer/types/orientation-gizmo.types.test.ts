@@ -16,9 +16,7 @@ import type {
   GizmoConfig,
   GizmoError,
   GizmoId,
-  GizmoInitOptions,
   GizmoInteractionEvent,
-  GizmoState,
 } from './orientation-gizmo.types';
 import {
   AxisDirection,

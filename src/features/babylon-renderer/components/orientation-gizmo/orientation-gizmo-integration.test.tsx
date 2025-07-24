@@ -14,6 +14,7 @@ import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../../store/app-store';
+import type { AppStore } from '../../../store/types/store.types';
 import { CameraGizmoSyncService } from '../../services/camera-gizmo-sync/camera-gizmo-sync.service';
 import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
 import {
@@ -58,12 +59,12 @@ const mockContext = {
 };
 
 // Mock HTMLCanvasElement methods
-HTMLCanvasElement.prototype.getContext = vi.fn((type: string) => {
+HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((type: string) => {
   if (type === '2d') {
     return mockContext;
   }
   return null;
-});
+}) as any;
 
 HTMLCanvasElement.prototype.getBoundingClientRect = vi.fn(() => ({
   left: 0,
@@ -83,7 +84,7 @@ describe('OrientationGizmo Integration Tests', () => {
   let camera: BABYLON.ArcRotateCamera;
   let gizmoService: OrientationGizmoService;
   let syncService: CameraGizmoSyncService;
-  let store: ReturnType<typeof useAppStore>;
+  let store: AppStore;
 
   beforeEach(async () => {
     // Reset all mocks
@@ -110,7 +111,7 @@ describe('OrientationGizmo Integration Tests', () => {
     gizmoService = new OrientationGizmoService();
 
     // Create sync service
-    syncService = new CameraGizmoSyncService(scene, useAppStore);
+    syncService = new CameraGizmoSyncService(scene, useAppStore.getState());
   });
 
   afterEach(() => {
@@ -279,7 +280,7 @@ describe('OrientationGizmo Integration Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (!result.success && result.error) {
         expect(result.error.code).toBe('CAMERA_NOT_SUPPORTED');
       }
     });
@@ -301,7 +302,7 @@ describe('OrientationGizmo Integration Tests', () => {
       const result = await syncService.animateCameraToAxis(AxisDirection.POSITIVE_Z);
 
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (!result.success && result.error) {
         expect(result.error.code).toBe('ANIMATION_FAILED');
       }
     });
@@ -380,9 +381,9 @@ describe('OrientationGizmo Integration Tests', () => {
       const newConfig = {
         size: 120,
         colors: {
-          x: ['#ff0000', '#cc0000'],
-          y: ['#00ff00', '#00cc00'],
-          z: ['#0000ff', '#0000cc'],
+          x: ['#ff0000', '#cc0000'] as const,
+          y: ['#00ff00', '#00cc00'] as const,
+          z: ['#0000ff', '#0000cc'] as const,
         },
       };
 

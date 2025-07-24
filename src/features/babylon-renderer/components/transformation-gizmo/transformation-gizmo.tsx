@@ -73,7 +73,7 @@ export function TransformationGizmo({
 }: TransformationGizmoProps): React.JSX.Element | null {
   const serviceRef = useRef<TransformationGizmoService | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [localError, setLocalError] = useState<TransformationGizmoError | null>(null);
+  const [_localError, setLocalError] = useState<TransformationGizmoError | null>(null);
 
   /**
    * Handle transformation events from the gizmo service

@@ -67,9 +67,9 @@ describe('Nested Transform CSG Test', () => {
 
       console.log('Starting mesh generation...');
       const meshResult = await babylonNodes[0]?.generateMesh();
-      console.log('Mesh generation result:', meshResult.success);
+      console.log('Mesh generation result:', meshResult?.success);
 
-      expect(meshResult.success).toBe(true);
+      expect(meshResult?.success).toBe(true);
     }
   }, 10000);
 
@@ -127,13 +127,13 @@ describe('Nested Transform CSG Test', () => {
 
       console.log('Step 3: Starting mesh generation...');
       const meshResult = await babylonNodes[0]?.generateMesh();
-      console.log('Step 3: Mesh generation result:', meshResult.success);
+      console.log('Step 3: Mesh generation result:', meshResult?.success);
 
-      if (!meshResult.success) {
-        console.error('Mesh generation error:', meshResult.error?.message);
+      if (!meshResult?.success) {
+        console.error('Mesh generation error:', meshResult?.error?.message);
       }
 
-      expect(meshResult.success).toBe(true);
+      expect(meshResult?.success).toBe(true);
     }
   }, 15000);
 
@@ -165,13 +165,13 @@ describe('Nested Transform CSG Test', () => {
 
       console.log('Step 3: Starting mesh generation...');
       const meshResult = await babylonNodes[0]?.generateMesh();
-      console.log('Step 3: Mesh generation result:', meshResult.success);
+      console.log('Step 3: Mesh generation result:', meshResult?.success);
 
-      if (!meshResult.success) {
-        console.error('Mesh generation error:', meshResult.error?.message);
+      if (!meshResult?.success) {
+        console.error('Mesh generation error:', meshResult?.error?.message);
       }
 
-      expect(meshResult.success).toBe(true);
+      expect(meshResult?.success).toBe(true);
     }
   }, 15000);
 

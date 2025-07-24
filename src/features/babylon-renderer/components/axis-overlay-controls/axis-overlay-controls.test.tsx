@@ -197,11 +197,11 @@ describe('AxisOverlayControls', () => {
       render(<AxisOverlayControls />);
 
       const opacitySlider = screen.getByDisplayValue('0.8');
-      
+
       // Test minimum value
       fireEvent.change(opacitySlider, { target: { value: '0.1' } });
       expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 0.1 });
-      
+
       // Test maximum value
       fireEvent.change(opacitySlider, { target: { value: '1' } });
       expect(mockUpdateAxisOverlayConfig).toHaveBeenCalledWith({ opacity: 1 });

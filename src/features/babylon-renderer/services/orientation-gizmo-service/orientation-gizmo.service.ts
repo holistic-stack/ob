@@ -57,7 +57,6 @@ import type {
   GizmoInteractionEvent,
   GizmoInteractionResult,
   GizmoState,
-  GizmoUpdateResult,
   GizmoUpdateResult_Type,
   IGizmoService,
 } from '../../types/orientation-gizmo.types';
@@ -605,7 +604,7 @@ export class OrientationGizmoService implements IGizmoService {
         code,
         message,
         timestamp: new Date(),
-        details,
+        details: details ?? {},
       },
     };
   }

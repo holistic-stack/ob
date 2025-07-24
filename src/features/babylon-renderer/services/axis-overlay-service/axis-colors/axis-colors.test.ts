@@ -11,10 +11,9 @@ import {
   AxisColorUtils,
   DEFAULT_AXIS_COLORS,
   DEFAULT_AXIS_COLORS_3,
-  STANDARD_AXIS_COLORS,
-  type AxisColorScheme,
   type RGBAColor,
   type RGBColor,
+  STANDARD_AXIS_COLORS,
 } from './axis-colors';
 
 describe('AxisColors', () => {
@@ -57,7 +56,7 @@ describe('AxisColors', () => {
       it('should convert RGB tuple to Color3', () => {
         const rgb: RGBColor = [0.5, 0.7, 0.9];
         const color3 = AxisColorUtils.rgbToColor3(rgb);
-        
+
         expect(color3).toBeInstanceOf(Color3);
         expect(color3.r).toBe(0.5);
         expect(color3.g).toBe(0.7);
@@ -69,7 +68,7 @@ describe('AxisColors', () => {
       it('should convert RGBA tuple to Color3 ignoring alpha', () => {
         const rgba: RGBAColor = [0.5, 0.7, 0.9, 0.8];
         const color3 = AxisColorUtils.rgbaToColor3(rgba);
-        
+
         expect(color3).toBeInstanceOf(Color3);
         expect(color3.r).toBe(0.5);
         expect(color3.g).toBe(0.7);
@@ -81,7 +80,7 @@ describe('AxisColors', () => {
       it('should convert Color3 to RGB tuple', () => {
         const color3 = new Color3(0.3, 0.6, 0.9);
         const rgb = AxisColorUtils.color3ToRgb(color3);
-        
+
         expect(rgb).toEqual([0.3, 0.6, 0.9]);
       });
     });
@@ -167,7 +166,7 @@ describe('AxisColors', () => {
         const original: RGBColor = [1, 0.8, 0.6];
         const dimmed1 = AxisColorUtils.dimColor(original, -0.1);
         const dimmed2 = AxisColorUtils.dimColor(original, 1.5);
-        
+
         expect(dimmed1).toEqual([0, 0, 0]);
         expect(dimmed2).toEqual([1, 0.8, 0.6]);
       });
@@ -210,11 +209,11 @@ describe('AxisColors', () => {
     describe('getAllAxisColors3', () => {
       it('should return all axis colors as Color3 objects', () => {
         const colors = AxisColorUtils.getAllAxisColors3();
-        
+
         expect(colors.X).toBeInstanceOf(Color3);
         expect(colors.Y).toBeInstanceOf(Color3);
         expect(colors.Z).toBeInstanceOf(Color3);
-        
+
         expect(colors.X.r).toBe(1);
         expect(colors.X.g).toBe(0);
         expect(colors.X.b).toBe(0);

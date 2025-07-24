@@ -10,6 +10,10 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { InspectorTab } from './features/babylon-renderer/services/babylon-inspector-service/babylon-inspector-service';
+import {
+  createGizmoId,
+  GizmoPosition,
+} from './features/babylon-renderer/types/orientation-gizmo.types';
 import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
 import { appStoreInstance, DEFAULT_CAMERA } from './features/store/app-store';
 
@@ -115,9 +119,9 @@ describe('App', () => {
         },
         camera: DEFAULT_CAMERA,
         gizmo: {
-          id: 'test-gizmo',
+          id: createGizmoId('test-gizmo'),
           isVisible: true,
-          position: 'TOP_RIGHT' as const,
+          position: GizmoPosition.TOP_RIGHT,
           config: {} as any,
           selectedAxis: null,
           mouseState: {

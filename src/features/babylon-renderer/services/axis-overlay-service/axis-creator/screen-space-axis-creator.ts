@@ -6,7 +6,7 @@
 
 import {
   Color3,
-  LinesMesh,
+  type LinesMesh,
   MeshBuilder,
   type Scene,
   StandardMaterial,
@@ -81,8 +81,8 @@ function createDottedLine(
     name,
     {
       points,
-      dashSize,    // Small dash size for dot-like appearance
-      gapSize,     // Larger gap for visible spacing
+      dashSize, // Small dash size for dot-like appearance
+      gapSize, // Larger gap for visible spacing
       dashNb: 100, // Number of dashes along the line
     },
     scene
@@ -213,7 +213,7 @@ export function createScreenSpaceAxis(
       scene,
       config.color,
       0.3, // Very small dash size for dot-like appearance
-      1.0  // Gap size for visible spacing between dots
+      1.0 // Gap size for visible spacing between dots
     );
 
     if (!negativeMesh) {

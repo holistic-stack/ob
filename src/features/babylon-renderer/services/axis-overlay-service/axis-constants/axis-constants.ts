@@ -15,7 +15,7 @@ export const AXIS_NAMES = {
   Z: 'Z',
 } as const;
 
-export type AxisName = typeof AXIS_NAMES[keyof typeof AXIS_NAMES];
+export type AxisName = (typeof AXIS_NAMES)[keyof typeof AXIS_NAMES];
 
 /**
  * Standard axis directions as unit vectors

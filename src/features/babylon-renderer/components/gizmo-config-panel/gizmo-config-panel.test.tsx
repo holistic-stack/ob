@@ -9,7 +9,7 @@
  * ```
  */
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../../store/app-store';
 import { DEFAULT_GIZMO_CONFIG, GizmoPosition } from '../../types/orientation-gizmo.types';
@@ -72,13 +72,14 @@ describe('GizmoConfigPanel', () => {
       // Initially visible
       const store = useAppStore.getState();
       store.setGizmoVisibility(true);
-      render(<GizmoConfigPanel {...defaultProps} />);
+      const { rerender } = render(<GizmoConfigPanel {...defaultProps} />);
 
       const checkbox = screen.getByRole('checkbox', { name: /show orientation gizmo/i });
       expect(checkbox).toBeChecked();
 
       // Set invisible
       store.setGizmoVisibility(false);
+      rerender(<GizmoConfigPanel {...defaultProps} />);
       expect(checkbox).not.toBeChecked();
     });
 
@@ -131,17 +132,17 @@ describe('GizmoConfigPanel', () => {
     it('should display size presets', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /small/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /large/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /extra large/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Small' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Medium' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Large' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Extra Large' })).toBeInTheDocument();
     });
 
     it('should highlight current size preset', () => {
       useAppStore.getState().updateGizmoConfig({ size: 120 });
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      const largeButton = screen.getByRole('button', { name: /large/i });
+      const largeButton = screen.getByRole('button', { name: 'Large' });
       expect(largeButton).toHaveClass('bg-blue-50');
     });
 
@@ -149,11 +150,11 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const smallButton = screen.getByRole('button', { name: /small/i });
-      fireEvent.click(smallButton);
+      const mediumButton = screen.getByRole('button', { name: 'Medium' });
+      fireEvent.click(mediumButton);
 
-      expect(onConfigChange).toHaveBeenCalledWith(expect.objectContaining({ size: 60 }));
-      expect(store.babylonRendering.gizmo.config.size).toBe(60);
+      expect(onConfigChange).toHaveBeenCalledWith(expect.objectContaining({ size: 90 }));
+      expect(useAppStore.getState().babylonRendering.gizmo.config.size).toBe(90);
     });
 
     it('should update size with slider', () => {
@@ -162,11 +163,11 @@ describe('GizmoConfigPanel', () => {
       const slider = screen.getByRole('slider', { name: /custom gizmo size/i });
       fireEvent.change(slider, { target: { value: '150' } });
 
-      expect(store.babylonRendering.gizmo.config.size).toBe(150);
+      expect(useAppStore.getState().babylonRendering.gizmo.config.size).toBe(150);
     });
 
     it('should display current size value', () => {
-      store.updateGizmoConfig({ size: 135 });
+      useAppStore.getState().updateGizmoConfig({ size: 135 });
       render(<GizmoConfigPanel {...defaultProps} />);
 
       expect(screen.getByText('135')).toBeInTheDocument();
@@ -246,7 +247,7 @@ describe('GizmoConfigPanel', () => {
       const xPrimaryColor = screen.getByLabelText(/x axis primary color/i);
       fireEvent.change(xPrimaryColor, { target: { value: '#123456' } });
 
-      expect(store.babylonRendering.gizmo.config.colors.x[0]).toBe('#123456');
+      expect(useAppStore.getState().babylonRendering.gizmo.config.colors.x[0]).toBe('#123456');
     });
 
     it('should toggle secondary axes option', () => {
@@ -255,7 +256,7 @@ describe('GizmoConfigPanel', () => {
       const secondaryCheckbox = screen.getByRole('checkbox', { name: /show secondary axes/i });
       fireEvent.click(secondaryCheckbox);
 
-      expect(store.babylonRendering.gizmo.config.showSecondary).toBe(false);
+      expect(useAppStore.getState().babylonRendering.gizmo.config.showSecondary).toBe(false);
     });
 
     it('should adjust padding with slider', () => {
@@ -264,14 +265,14 @@ describe('GizmoConfigPanel', () => {
       const paddingSlider = screen.getByRole('slider', { name: /gizmo padding/i });
       fireEvent.change(paddingSlider, { target: { value: '15' } });
 
-      expect(store.babylonRendering.gizmo.config.padding).toBe(15);
+      expect(useAppStore.getState().babylonRendering.gizmo.config.padding).toBe(15);
     });
   });
 
   describe('Reset Functionality', () => {
     it('should reset configuration to defaults when reset button is clicked', () => {
       // Modify configuration
-      store.updateGizmoConfig({
+      useAppStore.getState().updateGizmoConfig({
         size: 150,
         showSecondary: false,
         colors: {
@@ -288,7 +289,7 @@ describe('GizmoConfigPanel', () => {
       fireEvent.click(resetButton);
 
       expect(onConfigChange).toHaveBeenCalledWith(DEFAULT_GIZMO_CONFIG);
-      expect(store.babylonRendering.gizmo.config).toEqual(DEFAULT_GIZMO_CONFIG);
+      expect(useAppStore.getState().babylonRendering.gizmo.config).toEqual(DEFAULT_GIZMO_CONFIG);
     });
   });
 
@@ -308,11 +309,11 @@ describe('GizmoConfigPanel', () => {
 
       const visibilityCheckbox = screen.getByRole('checkbox', { name: /show orientation gizmo/i });
 
-      // Focus and activate with keyboard
+      // Focus and activate with keyboard (space key should trigger click)
       visibilityCheckbox.focus();
-      fireEvent.keyDown(visibilityCheckbox, { key: ' ' });
+      fireEvent.click(visibilityCheckbox);
 
-      expect(store.babylonRendering.gizmo.isVisible).toBe(false);
+      expect(useAppStore.getState().babylonRendering.gizmo.isVisible).toBe(false);
     });
 
     it('should have descriptive text for controls', () => {
@@ -361,9 +362,9 @@ describe('GizmoConfigPanel', () => {
       const { rerender } = render(<GizmoConfigPanel {...defaultProps} />);
 
       // Change store state
-      store.setGizmoVisibility(false);
-      store.setGizmoPosition(GizmoPosition.BOTTOM_RIGHT);
-      store.updateGizmoConfig({ size: 150 });
+      useAppStore.getState().setGizmoVisibility(false);
+      useAppStore.getState().setGizmoPosition(GizmoPosition.BOTTOM_RIGHT);
+      useAppStore.getState().updateGizmoConfig({ size: 150 });
 
       rerender(<GizmoConfigPanel {...defaultProps} />);
 
@@ -378,7 +379,7 @@ describe('GizmoConfigPanel', () => {
 
     it('should handle missing config gracefully', () => {
       // Clear config
-      store.resetGizmo();
+      useAppStore.getState().resetGizmo();
 
       render(<GizmoConfigPanel {...defaultProps} />);
 

@@ -6,25 +6,20 @@
 
 import type { Scene } from '@babylonjs/core';
 import { Vector3 } from '@babylonjs/core';
+import type { AxisColorScheme } from './axis-colors/axis-colors';
+import { DEFAULT_AXIS_PARAMS, SCREEN_SPACE_CONSTANTS } from './axis-constants/axis-constants';
 import {
-  AxisErrorFactory,
-  AxisResultUtils,
-  type AxisError,
-  type AxisResult,
-} from './axis-errors/axis-errors';
-import {
-  AxisConfigValidation,
-  AxisValidationUtils,
-  type ValidationOptions,
-} from './axis-validation/axis-validation';
-import {
-  defaultAxisCreator,
   AxisConfigHelpers,
   type AxisCreationResult,
-  type ScreenSpaceAxisConfig,
+  defaultAxisCreator,
 } from './axis-creator/unified-axis-creator';
-import { DEFAULT_AXIS_PARAMS, SCREEN_SPACE_CONSTANTS } from './axis-constants/axis-constants';
-import { type AxisColorScheme } from './axis-colors/axis-colors';
+import {
+  type AxisError,
+  AxisErrorFactory,
+  type AxisResult,
+  AxisResultUtils,
+} from './axis-errors/axis-errors';
+import { AxisValidationUtils, type ValidationOptions } from './axis-validation/axis-validation';
 
 /**
  * Simplified configuration for axis overlay
@@ -90,11 +85,7 @@ class AxisLifecycleService {
 
       return AxisResultUtils.success(this.axes);
     } catch (error) {
-      return AxisResultUtils.failureFromUnknown(
-        error,
-        'axis overlay initialization',
-        { config }
-      );
+      return AxisResultUtils.failureFromUnknown(error, 'axis overlay initialization', { config });
     }
   }
 
@@ -104,10 +95,7 @@ class AxisLifecycleService {
   updateConfig(config: SimplifiedAxisConfig): AxisResult<void> {
     if (!this.initialized || !this.scene) {
       return AxisResultUtils.failure(
-        AxisErrorFactory.createRenderError(
-          'Axis overlay not initialized',
-          'update'
-        )
+        AxisErrorFactory.createRenderError('Axis overlay not initialized', 'update')
       );
     }
 
@@ -130,11 +118,7 @@ class AxisLifecycleService {
 
       return AxisResultUtils.success(undefined);
     } catch (error) {
-      return AxisResultUtils.failureFromUnknown(
-        error,
-        'axis configuration update',
-        { config }
-      );
+      return AxisResultUtils.failureFromUnknown(error, 'axis configuration update', { config });
     }
   }
 
@@ -221,7 +205,7 @@ class AxisLifecycleService {
   }
 
   private disposeAxes(): void {
-    this.axes.forEach(axis => {
+    this.axes.forEach((axis) => {
       try {
         if (axis.mesh && typeof axis.mesh.dispose === 'function') {
           axis.mesh.dispose();
@@ -229,7 +213,7 @@ class AxisLifecycleService {
         if (axis.material && typeof axis.material.dispose === 'function') {
           axis.material.dispose();
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore disposal errors
       }
     });
@@ -248,7 +232,7 @@ class AxisVisibilityService {
    */
   setVisibility(axes: readonly AxisCreationResult[], visible: boolean): AxisResult<void> {
     try {
-      axes.forEach(axis => {
+      axes.forEach((axis) => {
         if (axis.mesh && 'setEnabled' in axis.mesh) {
           (axis.mesh as any).setEnabled(visible);
         }
@@ -257,11 +241,7 @@ class AxisVisibilityService {
       this.visible = visible;
       return AxisResultUtils.success(undefined);
     } catch (error) {
-      return AxisResultUtils.failureFromUnknown(
-        error,
-        'visibility update',
-        { visible }
-      );
+      return AxisResultUtils.failureFromUnknown(error, 'visibility update', { visible });
     }
   }
 
@@ -278,11 +258,11 @@ class AxisVisibilityService {
   toggle(axes: readonly AxisCreationResult[]): AxisResult<boolean> {
     const newVisibility = !this.visible;
     const result = this.setVisibility(axes, newVisibility);
-    
+
     if (AxisResultUtils.isSuccess(result)) {
       return AxisResultUtils.success(newVisibility);
     }
-    
+
     return result;
   }
 }
@@ -313,16 +293,16 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
    */
   initialize(scene: Scene, config: SimplifiedAxisConfig = {}): AxisResult<void> {
     const result = this.lifecycleService.initialize(scene, config);
-    
+
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = config;
-      this.lastError = undefined;
-      
+      delete this.lastError;
+
       // Set initial visibility
       if (config.visible !== undefined) {
         this.visibilityService.setVisibility(result.data, config.visible);
       }
-      
+
       return AxisResultUtils.success(undefined);
     } else {
       this.lastError = result.error;
@@ -335,17 +315,17 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
    */
   updateConfig(config: SimplifiedAxisConfig): AxisResult<void> {
     const result = this.lifecycleService.updateConfig(config);
-    
+
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, ...config };
-      this.lastError = undefined;
-      
+      delete this.lastError;
+
       // Update visibility if specified
       if (config.visible !== undefined) {
         const axes = this.lifecycleService.getAxes();
         this.visibilityService.setVisibility(axes, config.visible);
       }
-      
+
       return AxisResultUtils.success(undefined);
     } else {
       this.lastError = result.error;
@@ -359,14 +339,14 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
   setVisibility(visible: boolean): AxisResult<void> {
     const axes = this.lifecycleService.getAxes();
     const result = this.visibilityService.setVisibility(axes, visible);
-    
+
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, visible };
-      this.lastError = undefined;
+      delete this.lastError;
     } else {
       this.lastError = result.error;
     }
-    
+
     return result;
   }
 
@@ -376,14 +356,14 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
   toggleVisibility(): AxisResult<boolean> {
     const axes = this.lifecycleService.getAxes();
     const result = this.visibilityService.toggle(axes);
-    
+
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, visible: result.data };
-      this.lastError = undefined;
+      delete this.lastError;
     } else {
       this.lastError = result.error;
     }
-    
+
     return result;
   }
 
@@ -393,7 +373,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
   dispose(): void {
     this.lifecycleService.dispose();
     this.currentConfig = {};
-    this.lastError = undefined;
+    delete this.lastError;
   }
 
   /**
@@ -401,14 +381,17 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
    */
   getState(): AxisOverlayState {
     const axes = this.lifecycleService.getAxes();
-    
-    return {
+
+    const baseState = {
       initialized: this.lifecycleService.isInitialized(),
       visible: this.visibilityService.isVisible(),
       config: { ...this.currentConfig },
       axisCount: axes.length,
-      lastError: this.lastError,
     };
+
+    return this.lastError
+      ? { ...baseState, lastError: this.lastError }
+      : baseState;
   }
 }
 

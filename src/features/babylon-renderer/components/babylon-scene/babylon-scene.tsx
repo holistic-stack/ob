@@ -177,13 +177,13 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
   // Store service references for proper cleanup
 
-  // Merge configurations with defaults - use deep comparison to prevent unnecessary re-initialization
+  // Merge configurations with defaults - use stable references to prevent unnecessary re-initialization
   const config = useMemo(
     () => ({
       ...DEFAULT_SCENE_CONFIG,
       ...userConfig,
     }),
-    [JSON.stringify(userConfig)] // Deep comparison to prevent engine recreation
+    [userConfig]
   );
 
   const camera = useMemo(
@@ -191,7 +191,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       ...DEFAULT_CAMERA_CONFIG,
       ...userCamera,
     }),
-    [JSON.stringify(userCamera)] // Deep comparison to prevent engine recreation
+    [userCamera]
   );
 
   const lighting = useMemo(
@@ -200,7 +200,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       directional: { ...DEFAULT_LIGHTING_CONFIG.directional, ...userLighting?.directional },
       environment: { ...DEFAULT_LIGHTING_CONFIG.environment, ...userLighting?.environment },
     }),
-    [JSON.stringify(userLighting)] // Deep comparison to prevent engine recreation
+    [userLighting]
   );
 
   // Orientation gizmo functionality removed
@@ -299,7 +299,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         if (camera) {
           try {
             const axisOverlayResult = await initializeAxisOverlay(scene, camera);
-            if (!axisOverlayResult.success) {
+            if (!axisOverlayResult.success && axisOverlayResult.error) {
               logger.error(
                 '[ERROR][BabylonScene] Axis overlay initialization failed:',
                 axisOverlayResult.error.message
@@ -320,7 +320,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
     const initializeScene = async () => {
       const result = await sceneService.init(initOptions);
 
-      if (!result.success) {
+      if (!result.success && result.error) {
         logger.error('[ERROR][BabylonScene] Scene initialization failed:', result.error);
         return;
       }
@@ -375,7 +375,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       // Dispose axis overlay
       try {
         const disposeResult = disposeAxisOverlay();
-        if (!disposeResult.success) {
+        if (!disposeResult.success && disposeResult.error) {
           logger.error(
             '[ERROR][BabylonScene] Axis overlay disposal failed:',
             disposeResult.error.message

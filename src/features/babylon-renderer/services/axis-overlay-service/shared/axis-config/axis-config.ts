@@ -4,7 +4,7 @@
  * Centralizes configuration types to eliminate duplication across axis creators
  */
 
-import { Color3, Vector3 } from '@babylonjs/core';
+import { type Color3, Vector3 } from '@babylonjs/core';
 import type { AxisColorScheme } from '../../axis-colors/axis-colors';
 
 /**
@@ -54,12 +54,12 @@ export interface CoordinateAxesConfig {
   readonly opacity?: number;
   readonly colorScheme?: AxisColorScheme;
   readonly type: 'line' | 'cylinder';
-  
+
   // Line-specific options
   readonly pixelWidth?: number;
   readonly dashSize?: number;
   readonly gapSize?: number;
-  
+
   // Cylinder-specific options
   readonly diameter?: number;
   readonly tessellation?: number;
@@ -101,7 +101,7 @@ export const DEFAULT_AXIS_CONFIG = {
 
 /**
  * Utility class for creating and validating axis configurations
- * 
+ *
  * @example
  * ```typescript
  * const config = AxisConfigUtils.createLineConfig({
@@ -114,7 +114,7 @@ export const DEFAULT_AXIS_CONFIG = {
 export class AxisConfigUtils {
   /**
    * Creates a line axis configuration with defaults
-   * 
+   *
    * @param params - Partial configuration parameters
    * @returns Complete line axis configuration
    */
@@ -134,7 +134,8 @@ export class AxisConfigUtils {
       type: 'line',
       name: params.name,
       origin: params.origin ?? Vector3.Zero(),
-      direction: params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
+      direction:
+        params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
       length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
       color: params.color,
       opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
@@ -148,7 +149,7 @@ export class AxisConfigUtils {
 
   /**
    * Creates a cylinder axis configuration with defaults
-   * 
+   *
    * @param params - Partial configuration parameters
    * @returns Complete cylinder axis configuration
    */
@@ -166,7 +167,8 @@ export class AxisConfigUtils {
       type: 'cylinder',
       name: params.name,
       origin: params.origin ?? Vector3.Zero(),
-      direction: params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
+      direction:
+        params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
       length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
       color: params.color,
       opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
@@ -177,7 +179,7 @@ export class AxisConfigUtils {
 
   /**
    * Validates an axis configuration
-   * 
+   *
    * @param config - Configuration to validate
    * @returns True if configuration is valid
    */
@@ -221,7 +223,7 @@ export class AxisConfigUtils {
 
   /**
    * Creates a standard coordinate axes configuration
-   * 
+   *
    * @param baseConfig - Base configuration for all axes
    * @returns Configuration for creating X, Y, Z axes
    */

@@ -4,10 +4,10 @@
  * Tests click detection, mesh selection events, and integration with pointer observables.
  */
 
-import type { AbstractMesh, Scene } from '@babylonjs/core';
+import type { AbstractMesh } from '@babylonjs/core';
+import { Scene } from '@babylonjs/core';
 import { CreateBox, type Engine, NullEngine, PointerEventTypes } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
-import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BabylonSceneProps } from './babylon-scene';
 import { BabylonScene } from './babylon-scene';
@@ -60,20 +60,24 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
-      expect(scene).toBeDefined();
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
       expect(scene.onPointerObservable).toBeDefined();
     });
 
     it('should not setup mesh selection when onMeshSelected callback is not provided', async () => {
-      renderBabylonScene({ onMeshSelected: undefined });
+      renderBabylonScene({});
 
       await waitFor(() => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
-      expect(scene).toBeDefined();
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
       // Scene should still be created normally
       expect(scene.onPointerObservable).toBeDefined();
     });
@@ -86,7 +90,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalledWith(expect.any(Object));
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
       expect(scene.onPointerObservable).toBeDefined();
     });
   });
@@ -102,7 +109,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      scene = mockOnSceneReady.mock.calls[0][0] as Scene;
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      scene = sceneArg as Scene;
       testMesh = CreateBox('testBox', { size: 2 }, scene);
     });
 
@@ -234,7 +244,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
 
       // Dispose scene
       scene.dispose();
@@ -259,7 +272,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
 
       // Test with malformed events
       const malformedEvents = [
@@ -288,7 +304,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
       const testMesh = CreateBox('testBox', { size: 2 }, scene);
 
       // Mesh selection should work immediately
@@ -318,8 +337,10 @@ describe('BabylonScene Mesh Selection', () => {
         expect(mockOnSceneReady).toHaveBeenCalled();
       });
 
-      const scene = mockOnSceneReady.mock.calls[0][0] as Scene;
-      expect(scene).toBeDefined();
+      const sceneArg = mockOnSceneReady.mock.calls[0]?.[0];
+      expect(sceneArg).toBeDefined();
+      expect(sceneArg).toBeInstanceOf(Scene);
+      const scene = sceneArg as Scene;
 
       // Mesh selection should still work with custom config
       const testMesh = CreateBox('testBox', { size: 2 }, scene);

@@ -76,10 +76,12 @@ describe('Store Selectors', () => {
         engine: {} as any,
         inspector: {} as any,
         csg: {} as any,
-
         materials: [],
-
         performanceMetrics: {} as any,
+        gizmo: {} as any,
+        axisOverlay: {} as any,
+        selectedMesh: null,
+        transformationGizmoMode: 'position' as any,
       },
       config: {
         debounceMs: 300,
@@ -291,8 +293,9 @@ describe('Store Selectors', () => {
                 near: 0.1,
                 far: 1000,
                 enableControls: true,
-                enableAutoRotate: false,
-                autoRotateSpeed: 2.0,
+          enableAutoRotate: false,
+          autoRotateSpeed: 2.0,
+          enableAutoFrame: false,
               },
               renderTime: 0,
               lastRendered: null,
@@ -305,6 +308,10 @@ describe('Store Selectors', () => {
               materials: [],
               renderGraphs: [],
               performanceMetrics: {} as any,
+              gizmo: {} as any,
+              axisOverlay: {} as any,
+              selectedMesh: null,
+              transformationGizmoMode: 'position' as any,
             },
       };
       expect(selectLastActivity(noActivityState)).toBeNull();
@@ -326,6 +333,7 @@ describe('Store Selectors', () => {
             enableControls: true,
             enableAutoRotate: false,
             autoRotateSpeed: 2.0,
+            enableAutoFrame: false,
           },
           renderTime: 0,
           lastRendered: null,
@@ -338,6 +346,10 @@ describe('Store Selectors', () => {
           materials: [],
           renderGraphs: [],
           performanceMetrics: {} as any,
+          gizmo: {} as any,
+          axisOverlay: {} as any,
+          selectedMesh: null,
+          transformationGizmoMode: 'position' as any,
         },
       };
       expect(selectLastActivity(noRenderingState)).toEqual(new Date('2024-01-01T10:01:00Z')); // parsing.lastParsed is most recent

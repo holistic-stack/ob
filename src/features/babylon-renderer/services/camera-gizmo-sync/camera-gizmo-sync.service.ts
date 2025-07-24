@@ -54,13 +54,12 @@
  * @since 2025-07-23
  */
 
-import type { ArcRotateCamera, Scene } from '@babylonjs/core';
+import type { ArcRotateCamera, Scene, Animatable } from '@babylonjs/core';
 import { Animation, EasingFunction, QuadraticEase, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import type { useAppStore } from '../../../store/app-store';
-import type { AxisDirection, GizmoError } from '../../types/orientation-gizmo.types';
-import { GizmoErrorCode } from '../../types/orientation-gizmo.types';
+import { useAppStore, type AppStore } from '../../../store/app-store';
+import type { AxisDirection } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';
 
 const logger = createLogger('CameraGizmoSync');
@@ -115,13 +114,13 @@ interface SyncState {
  */
 export class CameraGizmoSyncService {
   private readonly scene: Scene;
-  private readonly store: ReturnType<typeof useAppStore>;
+  private readonly store: AppStore;
   private config: CameraGizmoSyncConfig | null = null;
   private camera: ArcRotateCamera | null = null;
   private gizmoService: OrientationGizmoService | null = null;
   private easingFunction: EasingFunction | null = null;
   private updateThrottleId: number | null = null;
-  private animationGroup: Animation[] = [];
+  private animationGroup: Animatable[] = [];
 
   private state: SyncState = {
     isInitialized: false,
@@ -131,7 +130,7 @@ export class CameraGizmoSyncService {
     selectedAxis: null,
   };
 
-  constructor(scene: Scene, store: ReturnType<typeof useAppStore>) {
+  constructor(scene: Scene, store: AppStore) {
     this.scene = scene;
     this.store = store;
     logger.init('[INIT][CameraGizmoSync] Service initialized');
@@ -215,7 +214,7 @@ export class CameraGizmoSyncService {
       logger.debug(`[DEBUG][CameraGizmoSync] Animating camera to axis: ${axis}`);
 
       this.state = { ...this.state, isAnimating: true, selectedAxis: axis };
-      this.store.getState().setGizmoAnimating(true);
+      this.store.setGizmoAnimating(true);
       this.config.onAnimationStart?.();
 
       // Calculate target camera position based on axis
@@ -236,7 +235,7 @@ export class CameraGizmoSyncService {
         () => {
           // Animation complete callback
           this.state = { ...this.state, isAnimating: false };
-          this.store.getState().setGizmoAnimating(false);
+          this.store.setGizmoAnimating(false);
           this.config?.onAnimationComplete?.();
           logger.debug('[DEBUG][CameraGizmoSync] Camera animation completed');
         }
@@ -252,7 +251,7 @@ export class CameraGizmoSyncService {
       return { success: true, data: undefined };
     } catch (error) {
       this.state = { ...this.state, isAnimating: false };
-      this.store.getState().setGizmoAnimating(false);
+          this.store.setGizmoAnimating(false);
 
       return this.createErrorResult(
         'ANIMATION_FAILED',
@@ -320,10 +319,10 @@ export class CameraGizmoSyncService {
    */
   private setupStoreListeners(): void {
     // Subscribe to gizmo axis selection changes
-    this.store.subscribe(
-      (state) => state.babylonRendering.gizmo.selectedAxis,
-      (selectedAxis, previousAxis) => {
-        if (selectedAxis && selectedAxis !== previousAxis && !this.state.isAnimating) {
+    useAppStore.subscribe(
+      (state) => {
+        const selectedAxis = state.babylonRendering.gizmo.selectedAxis;
+        if (selectedAxis && !this.state.isAnimating) {
           // Axis was selected, animate camera
           this.animateCameraToAxis(selectedAxis);
         }
@@ -404,9 +403,7 @@ export class CameraGizmoSyncService {
       }
 
       // Stop any running animations
-      for (const animation of this.animationGroup) {
-        animation.dispose();
-      }
+      this.scene.stopAnimation(this.camera);
       this.animationGroup = [];
 
       // Reset state
@@ -448,7 +445,7 @@ export class CameraGizmoSyncService {
         code,
         message,
         timestamp: new Date(),
-        details,
+        details: details ?? {},
       },
     };
   }

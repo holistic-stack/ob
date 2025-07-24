@@ -1,10 +1,10 @@
 /**
  * @file screen-space-axis-creator.test.ts
- * @description Tests for screen-space axis creation functions using real BabylonJS NullEngine
+ * @description Tests for screen-space axis creator functionality
  */
 
 import * as BABYLON from '@babylonjs/core';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createScreenSpaceAxis,
   createScreenSpaceCoordinateAxes,
@@ -15,7 +15,9 @@ describe('ScreenSpaceAxisCreator', () => {
   let scene: BABYLON.Scene;
   let engine: BABYLON.NullEngine;
 
-  beforeEach(() => {
+  // No global setup needed for axis creator tests
+
+  beforeEach(async () => {
     // Create a null engine (headless)
     engine = new BABYLON.NullEngine();
 
@@ -30,7 +32,7 @@ describe('ScreenSpaceAxisCreator', () => {
   });
 
   describe('createScreenSpaceAxis', () => {
-    it('should create a screen-space axis with correct properties', () => {
+    it('should create axis with correct properties', () => {
       const config: ScreenSpaceAxisConfig = {
         name: 'X',
         origin: new BABYLON.Vector3(0, 0, 0),
@@ -44,11 +46,16 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.mesh).toBeDefined();
-        expect(result.data.material).toBeDefined();
-        expect(result.data.mesh.name).toBe('XAxisScreenSpace');
-        expect(result.data.material.name).toBe('XScreenSpaceMaterial');
-        expect(result.data.mesh.isVisible).toBe(true);
+        expect(result.data.positiveMesh).toBeDefined();
+        expect(result.data.negativeMesh).toBeDefined();
+        expect(result.data.positiveMaterial).toBeDefined();
+        expect(result.data.negativeMaterial).toBeDefined();
+        expect(result.data.positiveMesh.name).toBe('XAxisPositive');
+        expect(result.data.negativeMesh.name).toBe('XAxisNegative');
+        expect(result.data.positiveMaterial.name).toBe('XAxisPositiveMaterial');
+        expect(result.data.negativeMaterial.name).toBe('XAxisNegativeMaterial');
+        expect(result.data.positiveMesh.isVisible).toBe(true);
+        expect(result.data.negativeMesh.isVisible).toBe(true);
       }
     });
 
@@ -85,13 +92,18 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        const mesh = result.data.mesh;
-        expect(mesh).toBeDefined();
-        
-        // Check that the mesh has the correct geometry
-        const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-        expect(positions).toBeDefined();
-        expect(positions?.length).toBeGreaterThan(0);
+        const positiveMesh = result.data.positiveMesh;
+        const negativeMesh = result.data.negativeMesh;
+        expect(positiveMesh).toBeDefined();
+        expect(negativeMesh).toBeDefined();
+
+        // Check that the meshes have the correct geometry
+        const positivePositions = positiveMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+        const negativePositions = negativeMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+        expect(positivePositions).toBeDefined();
+        expect(negativePositions).toBeDefined();
+        expect(positivePositions?.length).toBeGreaterThan(0);
+        expect(negativePositions?.length).toBeGreaterThan(0);
       }
     });
 
@@ -109,13 +121,16 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        const material = result.data.material;
-        expect(material).toBeInstanceOf(BABYLON.ShaderMaterial);
-        
-        // Verify that the material has the expected uniforms
+        const positiveMaterial = result.data.positiveMaterial;
+        const negativeMaterial = result.data.negativeMaterial;
+        expect(positiveMaterial).toBeInstanceOf(BABYLON.StandardMaterial);
+        expect(negativeMaterial).toBeInstanceOf(BABYLON.StandardMaterial);
+
+        // Verify that the materials have the expected uniforms
         // Note: In a real test environment, we would check uniform values
-        // but with NullEngine, we mainly verify the material was created
-        expect(material.name).toBe('ZScreenSpaceMaterial');
+        // but with NullEngine, we mainly verify the materials were created
+        expect(positiveMaterial.name).toBe('ZAxisPositiveMaterial');
+        expect(negativeMaterial.name).toBe('ZAxisNegativeMaterial');
       }
     });
   });
@@ -130,20 +145,38 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.meshes).toHaveLength(3);
-        expect(result.data.materials).toHaveLength(3);
+        expect(result.data.positiveMeshes).toHaveLength(3);
+        expect(result.data.negativeMeshes).toHaveLength(3);
+        expect(result.data.positiveMaterials).toHaveLength(3);
+        expect(result.data.negativeMaterials).toHaveLength(3);
 
-        // Check that all axes are created with correct names
-        const names = result.data.meshes.map((mesh) => mesh.name);
-        expect(names).toContain('XAxisScreenSpace');
-        expect(names).toContain('YAxisScreenSpace');
-        expect(names).toContain('ZAxisScreenSpace');
+        // Check that all positive axes are created with correct names
+        const positiveNames = result.data.positiveMeshes.map((mesh) => mesh.name);
+        expect(positiveNames).toContain('XAxisPositive');
+        expect(positiveNames).toContain('YAxisPositive');
+        expect(positiveNames).toContain('ZAxisPositive');
 
-        // Check material names
-        const materialNames = result.data.materials.map((material) => material.name);
-        expect(materialNames).toContain('XScreenSpaceMaterial');
-        expect(materialNames).toContain('YScreenSpaceMaterial');
-        expect(materialNames).toContain('ZScreenSpaceMaterial');
+        // Check that all negative axes are created with correct names
+        const negativeNames = result.data.negativeMeshes.map((mesh) => mesh.name);
+        expect(negativeNames).toContain('XAxisNegative');
+        expect(negativeNames).toContain('YAxisNegative');
+        expect(negativeNames).toContain('ZAxisNegative');
+
+        // Check positive material names
+        const positiveMaterialNames = result.data.positiveMaterials.map(
+          (material) => material.name
+        );
+        expect(positiveMaterialNames).toContain('XAxisPositiveMaterial');
+        expect(positiveMaterialNames).toContain('YAxisPositiveMaterial');
+        expect(positiveMaterialNames).toContain('ZAxisPositiveMaterial');
+
+        // Check negative material names
+        const negativeMaterialNames = result.data.negativeMaterials.map(
+          (material) => material.name
+        );
+        expect(negativeMaterialNames).toContain('XAxisNegativeMaterial');
+        expect(negativeMaterialNames).toContain('YAxisNegativeMaterial');
+        expect(negativeMaterialNames).toContain('ZAxisNegativeMaterial');
       }
     });
 
@@ -169,10 +202,16 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.meshes).toHaveLength(3);
-        
-        // Verify all meshes are visible
-        result.data.meshes.forEach((mesh) => {
+        expect(result.data.positiveMeshes).toHaveLength(3);
+        expect(result.data.negativeMeshes).toHaveLength(3);
+
+        // Verify all positive meshes are visible
+        result.data.positiveMeshes.forEach((mesh) => {
+          expect(mesh.isVisible).toBe(true);
+        });
+
+        // Verify all negative meshes are visible
+        result.data.negativeMeshes.forEach((mesh) => {
           expect(mesh.isVisible).toBe(true);
         });
       }
@@ -189,12 +228,19 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        // Verify that meshes and materials arrays have the same length
-        expect(result.data.meshes.length).toBe(result.data.materials.length);
-        
-        // Verify each mesh has a corresponding material
-        result.data.meshes.forEach((mesh, index) => {
-          expect(mesh.material).toBe(result.data.materials[index]);
+        // Verify that positive and negative arrays have the same length
+        expect(result.data.positiveMeshes.length).toBe(result.data.positiveMaterials.length);
+        expect(result.data.negativeMeshes.length).toBe(result.data.negativeMaterials.length);
+        expect(result.data.positiveMeshes.length).toBe(result.data.negativeMeshes.length);
+
+        // Verify each positive mesh has a corresponding material
+        result.data.positiveMeshes.forEach((mesh, index) => {
+          expect(mesh.material).toBe(result.data.positiveMaterials[index]);
+        });
+
+        // Verify each negative mesh has a corresponding material
+        result.data.negativeMeshes.forEach((mesh, index) => {
+          expect(mesh.material).toBe(result.data.negativeMaterials[index]);
         });
       }
     });
@@ -208,16 +254,26 @@ describe('ScreenSpaceAxisCreator', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        const materials = result.data.materials;
-        
-        // Find materials by name and verify they exist
-        const xMaterial = materials.find(m => m.name === 'XScreenSpaceMaterial');
-        const yMaterial = materials.find(m => m.name === 'YScreenSpaceMaterial');
-        const zMaterial = materials.find(m => m.name === 'ZScreenSpaceMaterial');
-        
-        expect(xMaterial).toBeDefined();
-        expect(yMaterial).toBeDefined();
-        expect(zMaterial).toBeDefined();
+        const positiveMaterials = result.data.positiveMaterials;
+        const negativeMaterials = result.data.negativeMaterials;
+
+        // Find positive materials by name and verify they exist
+        const xPositiveMaterial = positiveMaterials.find((m) => m.name === 'XAxisPositiveMaterial');
+        const yPositiveMaterial = positiveMaterials.find((m) => m.name === 'YAxisPositiveMaterial');
+        const zPositiveMaterial = positiveMaterials.find((m) => m.name === 'ZAxisPositiveMaterial');
+
+        expect(xPositiveMaterial).toBeDefined();
+        expect(yPositiveMaterial).toBeDefined();
+        expect(zPositiveMaterial).toBeDefined();
+
+        // Find negative materials by name and verify they exist
+        const xNegativeMaterial = negativeMaterials.find((m) => m.name === 'XAxisNegativeMaterial');
+        const yNegativeMaterial = negativeMaterials.find((m) => m.name === 'YAxisNegativeMaterial');
+        const zNegativeMaterial = negativeMaterials.find((m) => m.name === 'ZAxisNegativeMaterial');
+
+        expect(xNegativeMaterial).toBeDefined();
+        expect(yNegativeMaterial).toBeDefined();
+        expect(zNegativeMaterial).toBeDefined();
       }
     });
   });
@@ -244,8 +300,10 @@ describe('ScreenSpaceAxisCreator', () => {
 
       // Both should succeed, indicating shader reuse works
       if (result1.success && result2.success) {
-        expect(result1.data.mesh).toBeDefined();
-        expect(result2.data.mesh).toBeDefined();
+        expect(result1.data.positiveMesh).toBeDefined();
+        expect(result1.data.negativeMesh).toBeDefined();
+        expect(result2.data.positiveMesh).toBeDefined();
+        expect(result2.data.negativeMesh).toBeDefined();
       }
     });
   });

@@ -72,7 +72,7 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
   // Zustand store selectors with defensive check
   const axisOverlayState = useAppStore((state) => state.babylonRendering?.axisOverlay);
   const lastRendered = useAppStore((state) => state.babylonRendering?.lastRendered);
-  const scene = useAppStore((state) => state.babylonRendering?.scene);
+  const _scene = useAppStore((state) => state.babylonRendering?.scene);
   const setAxisOverlayVisibility = useAppStore((state) => state.setAxisOverlayVisibility);
   const updateAxisOverlayConfig = useAppStore((state) => state.updateAxisOverlayConfig);
   const updateAxisOverlayDynamicTicks = useAppStore((state) => state.updateAxisOverlayDynamicTicks);
@@ -144,7 +144,13 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
         return { success: false, error: axisError };
       }
     },
-    [axisOverlayState?.config, setAxisOverlayError, initializeAxisOverlay, setAxisOverlayVisibility]
+    [
+      axisOverlayState?.config,
+      setAxisOverlayError,
+      initializeAxisOverlay,
+      setAxisOverlayVisibility,
+      axisOverlayState,
+    ]
   );
 
   /**
@@ -341,7 +347,7 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
     };
 
     recreateAxes();
-  }, [lastRendered, setAxisOverlayError]);
+  }, [lastRendered, setAxisOverlayError, axisOverlayState.config]);
 
   /**
    * Cleanup on unmount

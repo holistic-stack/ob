@@ -4,17 +4,16 @@
  */
 
 import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { AXIS_NAMES } from '../axis-constants/axis-constants';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AxisResultUtils } from '../axis-errors/axis-errors';
 import {
   AxisConfigHelpers,
+  type CylinderAxisConfig,
   CylinderAxisStrategy,
   defaultAxisCreator,
+  type ScreenSpaceAxisConfig,
   ScreenSpaceAxisStrategy,
   UnifiedAxisCreator,
-  type CylinderAxisConfig,
-  type ScreenSpaceAxisConfig,
 } from './unified-axis-creator';
 
 describe('UnifiedAxisCreator', () => {
@@ -221,10 +220,10 @@ describe('UnifiedAxisCreator', () => {
 
         if (AxisResultUtils.isSuccess(result)) {
           expect(result.data).toHaveLength(3);
-          const names = result.data.map(axis => axis.name);
-          expect(names.some(name => name.includes('X'))).toBe(true);
-          expect(names.some(name => name.includes('Y'))).toBe(true);
-          expect(names.some(name => name.includes('Z'))).toBe(true);
+          const names = result.data.map((axis) => axis.name);
+          expect(names.some((name) => name.includes('X'))).toBe(true);
+          expect(names.some((name) => name.includes('Y'))).toBe(true);
+          expect(names.some((name) => name.includes('Z'))).toBe(true);
         }
       });
 
@@ -267,10 +266,10 @@ describe('UnifiedAxisCreator', () => {
 
         if (AxisResultUtils.isSuccess(result)) {
           expect(result.data).toHaveLength(3);
-          const names = result.data.map(axis => axis.name);
-          expect(names.some(name => name.includes('X'))).toBe(true);
-          expect(names.some(name => name.includes('Y'))).toBe(true);
-          expect(names.some(name => name.includes('Z'))).toBe(true);
+          const names = result.data.map((axis) => axis.name);
+          expect(names.some((name) => name.includes('X'))).toBe(true);
+          expect(names.some((name) => name.includes('Y'))).toBe(true);
+          expect(names.some((name) => name.includes('Z'))).toBe(true);
         }
       });
 
@@ -367,7 +366,7 @@ describe('UnifiedAxisCreator', () => {
     describe('createSketchUpScreenSpaceConfig', () => {
       it('should create a valid SketchUp-style configuration', () => {
         const config = AxisConfigHelpers.createSketchUpScreenSpaceConfig();
-        
+
         expect(config.origin).toEqual(Vector3.Zero());
         expect(config.length).toBe(1000);
         expect(config.pixelWidth).toBe(2.0);
@@ -398,7 +397,7 @@ describe('UnifiedAxisCreator', () => {
     describe('createStandardCylinderConfig', () => {
       it('should create a valid cylinder configuration', () => {
         const config = AxisConfigHelpers.createStandardCylinderConfig();
-        
+
         expect(config.origin).toEqual(Vector3.Zero());
         expect(config.length).toBe(1000);
         expect(config.diameter).toBe(0.3);

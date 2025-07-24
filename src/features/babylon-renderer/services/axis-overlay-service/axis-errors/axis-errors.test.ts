@@ -3,15 +3,12 @@
  * @description Tests for axis error handling module
  */
 
-import { describe, expect, it, vi } from 'vitest';
-import { AXIS_NAMES } from '../axis-constants/axis-constants';
+import { describe, expect, it } from 'vitest';
 import {
+  type AxisCreationError,
   AxisErrorFactory,
   AxisErrorUtils,
   AxisResultUtils,
-  type AxisCreationError,
-  type AxisError,
-  type AxisResult,
 } from './axis-errors';
 
 describe('AxisErrors', () => {
@@ -67,11 +64,9 @@ describe('AxisErrors', () => {
 
     describe('createRenderError', () => {
       it('should create a render error', () => {
-        const error = AxisErrorFactory.createRenderError(
-          'Render failed',
-          'initialization',
-          { sceneId: 'test-scene' }
-        );
+        const error = AxisErrorFactory.createRenderError('Render failed', 'initialization', {
+          sceneId: 'test-scene',
+        });
 
         expect(error.code).toBe('AXIS_RENDER_ERROR');
         expect(error.message).toBe('Render failed');
@@ -113,10 +108,7 @@ describe('AxisErrors', () => {
     describe('fromUnknownError', () => {
       it('should create error from Error instance', () => {
         const originalError = new Error('Original error message');
-        const error = AxisErrorFactory.fromUnknownError(
-          originalError,
-          'test operation'
-        );
+        const error = AxisErrorFactory.fromUnknownError(originalError, 'test operation');
 
         expect(error.code).toBe('AXIS_RENDER_ERROR');
         expect(error.message).toContain('test operation');
@@ -126,10 +118,7 @@ describe('AxisErrors', () => {
       });
 
       it('should create error from string', () => {
-        const error = AxisErrorFactory.fromUnknownError(
-          'String error',
-          'test operation'
-        );
+        const error = AxisErrorFactory.fromUnknownError('String error', 'test operation');
 
         expect(error.code).toBe('AXIS_RENDER_ERROR');
         expect(error.message).toContain('String error');
@@ -138,10 +127,7 @@ describe('AxisErrors', () => {
 
       it('should create error from unknown type', () => {
         const unknownError = { custom: 'object' };
-        const error = AxisErrorFactory.fromUnknownError(
-          unknownError,
-          'test operation'
-        );
+        const error = AxisErrorFactory.fromUnknownError(unknownError, 'test operation');
 
         expect(error.code).toBe('AXIS_RENDER_ERROR');
         expect(error.message).toContain('[object Object]');
@@ -177,29 +163,20 @@ describe('AxisErrors', () => {
 
     describe('isAxisErrorOfType', () => {
       it('should identify specific error types', () => {
-        expect(
-          AxisErrorUtils.isAxisErrorOfType(mockError, 'AXIS_CREATION_ERROR')
-        ).toBe(true);
-        expect(
-          AxisErrorUtils.isAxisErrorOfType(mockError, 'AXIS_RENDER_ERROR')
-        ).toBe(false);
+        expect(AxisErrorUtils.isAxisErrorOfType(mockError, 'AXIS_CREATION_ERROR')).toBe(true);
+        expect(AxisErrorUtils.isAxisErrorOfType(mockError, 'AXIS_RENDER_ERROR')).toBe(false);
       });
 
       it('should reject non-axis errors', () => {
-        expect(
-          AxisErrorUtils.isAxisErrorOfType({}, 'AXIS_CREATION_ERROR')
-        ).toBe(false);
+        expect(AxisErrorUtils.isAxisErrorOfType({}, 'AXIS_CREATION_ERROR')).toBe(false);
       });
     });
 
     describe('formatError', () => {
       it('should format creation error', () => {
-        const error = AxisErrorFactory.createCreationError(
-          'Test error',
-          'create_cylinder',
-          'X',
-          { test: 'context' }
-        );
+        const error = AxisErrorFactory.createCreationError('Test error', 'create_cylinder', 'X', {
+          test: 'context',
+        });
 
         const formatted = AxisErrorUtils.formatError(error);
         expect(formatted).toContain('AXIS_CREATION_ERROR');
@@ -223,10 +200,7 @@ describe('AxisErrors', () => {
       });
 
       it('should format render error', () => {
-        const renderError = AxisErrorFactory.createRenderError(
-          'Render error',
-          'update'
-        );
+        const renderError = AxisErrorFactory.createRenderError('Render error', 'update');
         const formatted = AxisErrorUtils.formatError(renderError);
         expect(formatted).toContain('AXIS_RENDER_ERROR');
         expect(formatted).toContain('stage: update');
@@ -268,10 +242,7 @@ describe('AxisErrors', () => {
       });
 
       it('should handle errors without context', () => {
-        const errorWithoutContext = AxisErrorFactory.createRenderError(
-          'Test',
-          'initialization'
-        );
+        const errorWithoutContext = AxisErrorFactory.createRenderError('Test', 'initialization');
         const context = AxisErrorUtils.extractContext(errorWithoutContext);
         expect(context.code).toBe('AXIS_RENDER_ERROR');
         expect(context.timestamp).toBeTypeOf('number');
@@ -280,43 +251,27 @@ describe('AxisErrors', () => {
 
     describe('getUserFriendlyMessage', () => {
       it('should return user-friendly messages for each error type', () => {
-        const creationError = AxisErrorFactory.createCreationError(
-          'Test',
-          'create_cylinder'
-        );
+        const creationError = AxisErrorFactory.createCreationError('Test', 'create_cylinder');
         expect(AxisErrorUtils.getUserFriendlyMessage(creationError)).toContain(
           'Failed to create 3D axis'
         );
 
-        const configError = AxisErrorFactory.createConfigurationError(
-          'Test',
-          'testField',
-          'value'
-        );
+        const configError = AxisErrorFactory.createConfigurationError('Test', 'testField', 'value');
         expect(AxisErrorUtils.getUserFriendlyMessage(configError)).toContain(
           'Invalid axis configuration'
         );
 
-        const renderError = AxisErrorFactory.createRenderError(
-          'Test',
-          'initialization'
-        );
+        const renderError = AxisErrorFactory.createRenderError('Test', 'initialization');
         expect(AxisErrorUtils.getUserFriendlyMessage(renderError)).toContain(
           'Failed to render 3D axes'
         );
 
-        const validationError = AxisErrorFactory.createValidationError(
-          'Test',
-          'color'
-        );
+        const validationError = AxisErrorFactory.createValidationError('Test', 'color');
         expect(AxisErrorUtils.getUserFriendlyMessage(validationError)).toContain(
           'Invalid axis settings'
         );
 
-        const shaderError = AxisErrorFactory.createShaderError(
-          'Test',
-          'vertex'
-        );
+        const shaderError = AxisErrorFactory.createShaderError('Test', 'vertex');
         expect(AxisErrorUtils.getUserFriendlyMessage(shaderError)).toContain(
           'Graphics rendering error'
         );
@@ -329,7 +284,9 @@ describe('AxisErrors', () => {
       it('should create successful result', () => {
         const result = AxisResultUtils.success('test data');
         expect(result.success).toBe(true);
-        expect(result.data).toBe('test data');
+        if (result.success) {
+          expect(result.data).toBe('test data');
+        }
       });
     });
 
@@ -338,7 +295,9 @@ describe('AxisErrors', () => {
         const error = AxisErrorFactory.createRenderError('Test', 'initialization');
         const result = AxisResultUtils.failure(error);
         expect(result.success).toBe(false);
-        expect(result.error).toBe(error);
+        if (!result.success) {
+          expect(result.error).toBe(error);
+        }
       });
     });
 
@@ -349,8 +308,10 @@ describe('AxisErrors', () => {
           'test operation'
         );
         expect(result.success).toBe(false);
-        expect(result.error.code).toBe('AXIS_RENDER_ERROR');
-        expect(result.error.message).toContain('test operation');
+        if (!result.success) {
+          expect(result.error.code).toBe('AXIS_RENDER_ERROR');
+          expect(result.error.message).toContain('test operation');
+        }
       });
     });
 

@@ -1,4 +1,4 @@
-var createScene = () => {
+var _createScene = () => {
   // This creates a basic Babylon Scene object (non-mesh)
   var scene = new BABYLON.Scene(engine);
 
@@ -20,7 +20,7 @@ var createScene = () => {
   sphere.position.y = 1;
 
   // Our built-in 'ground' shape.
-  var ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene);
+  var _ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene);
 
   if (window.gizmo) {
     document.body.removeChild(window.gizmo);
@@ -151,7 +151,7 @@ class OrientationGizmo extends HTMLElement {
     this.mouse = new BABYLON.Vector3(evt.clientX - rect.left, evt.clientY - rect.top, 0);
   }
 
-  onMouseOut(evt) {
+  onMouseOut(_evt) {
     this.mouse = null;
   }
 
@@ -189,7 +189,7 @@ class OrientationGizmo extends HTMLElement {
   }
 
   ontest() {}
-  onMouseClick(evt) {
+  onMouseClick(_evt) {
     if (!this.selectedAxis) {
       return;
     }
@@ -319,4 +319,4 @@ class OrientationGizmo extends HTMLElement {
     );
   }
 }
-window.customElements.define('orientation-gizmo' + Math.random(), OrientationGizmo);
+window.customElements.define(`orientation-gizmo${Math.random()}`, OrientationGizmo);

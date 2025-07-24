@@ -14,16 +14,8 @@ import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../../store/app-store';
-import type {
-  GizmoConfig,
-  GizmoError,
-  GizmoInteractionEvent,
-} from '../../types/orientation-gizmo.types';
-import {
-  AxisDirection,
-  DEFAULT_GIZMO_CONFIG,
-  GizmoPosition,
-} from '../../types/orientation-gizmo.types';
+import type { GizmoConfig, GizmoError } from '../../types/orientation-gizmo.types';
+import { AxisDirection, GizmoErrorCode } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoProps } from './orientation-gizmo';
 import { OrientationGizmo } from './orientation-gizmo';
 
@@ -67,7 +59,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn((type: string) => {
     return mockContext;
   }
   return null;
-});
+}) as any;
 
 // Mock getBoundingClientRect
 HTMLCanvasElement.prototype.getBoundingClientRect = vi.fn(() => ({
@@ -395,7 +387,7 @@ describe('OrientationGizmo', () => {
 
       // Simulate a render error in store
       const renderError: GizmoError = {
-        code: 'RENDER_FAILED' as const,
+        code: GizmoErrorCode.RENDER_FAILED,
         message: 'Test render error',
         timestamp: new Date(),
       };
@@ -412,7 +404,7 @@ describe('OrientationGizmo', () => {
 
       // Simulate critical error
       const criticalError: GizmoError = {
-        code: 'INITIALIZATION_FAILED' as const,
+        code: GizmoErrorCode.INITIALIZATION_FAILED,
         message: 'Critical initialization error',
         timestamp: new Date(),
       };

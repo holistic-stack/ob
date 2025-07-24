@@ -4,15 +4,15 @@
  */
 
 import { NullEngine, Scene, Vector3 } from '@babylonjs/core';
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AxisResultUtils } from './axis-errors/axis-errors';
 import {
   createSimplifiedAxisOverlayService,
   DEFAULT_SKETCHUP_CONFIG,
   defaultSimplifiedAxisOverlayService,
-  SimplifiedAxisOverlayService,
   type ISimplifiedAxisOverlayService,
   type SimplifiedAxisConfig,
+  SimplifiedAxisOverlayService,
 } from './simplified-axis-overlay.service';
 
 describe('SimplifiedAxisOverlayService', () => {

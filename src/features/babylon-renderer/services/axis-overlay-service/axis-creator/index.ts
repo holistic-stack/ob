@@ -9,8 +9,8 @@ export { createCoordinateAxes, createInfiniteAxis } from './axis-creator';
 // Screen-space axis creator exports
 export type {
   ScreenSpaceAxisConfig,
-  ScreenSpaceAxisResult,
   ScreenSpaceAxisError,
+  ScreenSpaceAxisResult,
 } from './screen-space-axis-creator';
 export {
   createScreenSpaceAxis,

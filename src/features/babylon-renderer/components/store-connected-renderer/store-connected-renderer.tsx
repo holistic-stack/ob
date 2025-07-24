@@ -311,6 +311,17 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const selectedMesh = useAppStore(selectSelectedMesh);
   const transformationGizmoMode = useAppStore(selectTransformationGizmoMode);
 
+  // Store actions - use individual selectors to avoid infinite loops
+  const renderAST = useAppStore((state) => state.renderAST);
+  const setScene = useAppStore((state) => state.setScene);
+  const clearScene = useAppStore((state) => state.clearScene);
+  const updatePerformanceMetrics = useAppStore((state) => state.updatePerformanceMetrics);
+  const showInspector = useAppStore((state) => state.showInspector);
+  const hideInspector = useAppStore((state) => state.hideInspector);
+  const setSelectedMesh = useAppStore((state) => state.setSelectedMesh);
+  const _setTransformationGizmoMode = useAppStore((state) => state.setTransformationGizmoMode);
+  const setGizmoVisibility = useAppStore((state) => state.setGizmoVisibility);
+
   // Debug initial AST value on mount only (performance optimized)
   useEffect(() => {
     logger.info('[INFO][StoreConnectedRenderer] Component mounted');
@@ -320,18 +331,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       setGizmoVisibility(true);
       logger.info('[INFO][StoreConnectedRenderer] Setting gizmo visibility to true');
     }
-  }, []); // Empty dependency array - runs only on mount
-
-  // Store actions - use individual selectors to avoid infinite loops
-  const renderAST = useAppStore((state) => state.renderAST);
-  const setScene = useAppStore((state) => state.setScene);
-  const clearScene = useAppStore((state) => state.clearScene);
-  const updatePerformanceMetrics = useAppStore((state) => state.updatePerformanceMetrics);
-  const showInspector = useAppStore((state) => state.showInspector);
-  const hideInspector = useAppStore((state) => state.hideInspector);
-  const setSelectedMesh = useAppStore((state) => state.setSelectedMesh);
-  const setTransformationGizmoMode = useAppStore((state) => state.setTransformationGizmoMode);
-  const setGizmoVisibility = useAppStore((state) => state.setGizmoVisibility);
+  }, [isGizmoVisible, setGizmoVisibility]); // Empty dependency array - runs only on mount
 
   // Create stable fallback functions to prevent infinite loops
   const safeRenderAST = useCallback(

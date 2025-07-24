@@ -17,8 +17,8 @@ import {
   type LinesMesh,
   type Mesh,
   type Scene,
-  type StandardMaterial,
   type ShaderMaterial,
+  type StandardMaterial,
   Vector3,
 } from '@babylonjs/core';
 import { AdvancedDynamicTexture, type TextBlock } from '@babylonjs/gui';

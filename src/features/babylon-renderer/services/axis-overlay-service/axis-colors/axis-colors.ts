@@ -78,22 +78,16 @@ export class AxisColorUtils {
   /**
    * Get axis color from a scheme
    */
-  static getAxisColor(
-    axis: AxisName,
-    scheme: AxisColorScheme = 'STANDARD'
-  ): RGBColor {
+  static getAxisColor(axis: AxisName, scheme: AxisColorScheme = 'STANDARD'): RGBColor {
     return AXIS_COLOR_SCHEMES[scheme][axis];
   }
 
   /**
    * Get axis color as Color3
    */
-  static getAxisColor3(
-    axis: AxisName,
-    scheme: AxisColorScheme = 'STANDARD'
-  ): Color3 {
-    const rgb = this.getAxisColor(axis, scheme);
-    return this.rgbToColor3(rgb);
+  static getAxisColor3(axis: AxisName, scheme: AxisColorScheme = 'STANDARD'): Color3 {
+    const rgb = AxisColorUtils.getAxisColor(axis, scheme);
+    return AxisColorUtils.rgbToColor3(rgb);
   }
 
   /**
@@ -138,11 +132,7 @@ export class AxisColorUtils {
    */
   static dimColor(rgb: RGBColor, factor: number = 0.5): RGBColor {
     const clampedFactor = Math.max(0, Math.min(1, factor));
-    return [
-      rgb[0] * clampedFactor,
-      rgb[1] * clampedFactor,
-      rgb[2] * clampedFactor,
-    ] as const;
+    return [rgb[0] * clampedFactor, rgb[1] * clampedFactor, rgb[2] * clampedFactor] as const;
   }
 
   /**
@@ -150,7 +140,7 @@ export class AxisColorUtils {
    */
   static brightenColor(rgb: RGBColor, factor: number = 1.5): RGBColor {
     const clampedFactor = Math.max(1, factor);
-    return this.clampRgb([
+    return AxisColorUtils.clampRgb([
       rgb[0] * clampedFactor,
       rgb[1] * clampedFactor,
       rgb[2] * clampedFactor,
@@ -168,11 +158,11 @@ export class AxisColorUtils {
    * Get all axis colors as Color3 objects
    */
   static getAllAxisColors3(scheme: AxisColorScheme = 'STANDARD'): Record<AxisName, Color3> {
-    const colors = this.getAllAxisColors(scheme);
+    const colors = AxisColorUtils.getAllAxisColors(scheme);
     return {
-      [AXIS_NAMES.X]: this.rgbToColor3(colors[AXIS_NAMES.X]),
-      [AXIS_NAMES.Y]: this.rgbToColor3(colors[AXIS_NAMES.Y]),
-      [AXIS_NAMES.Z]: this.rgbToColor3(colors[AXIS_NAMES.Z]),
+      [AXIS_NAMES.X]: AxisColorUtils.rgbToColor3(colors[AXIS_NAMES.X]),
+      [AXIS_NAMES.Y]: AxisColorUtils.rgbToColor3(colors[AXIS_NAMES.Y]),
+      [AXIS_NAMES.Z]: AxisColorUtils.rgbToColor3(colors[AXIS_NAMES.Z]),
     };
   }
 }

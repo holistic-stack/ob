@@ -5,9 +5,9 @@
  */
 
 import type { Scene } from '@babylonjs/core';
-import { AxisErrorFactory, type AxisResult, AxisResultUtils } from '../axis-errors/axis-errors';
 import { AxisColorUtils, type RGBColor } from '../axis-colors/axis-colors';
 import { DEFAULT_AXIS_PARAMS, SCREEN_SPACE_CONSTANTS } from '../axis-constants/axis-constants';
+import { AxisErrorFactory, type AxisResult, AxisResultUtils } from '../axis-errors/axis-errors';
 
 /**
  * Validation configuration options
@@ -50,18 +50,13 @@ export class AxisValidationUtils {
    * Validate that a value is a positive number
    */
   static isPositiveNumber(value: unknown, allowZero = false): value is number {
-    return this.isFiniteNumber(value) && (allowZero ? value >= 0 : value > 0);
+    return AxisValidationUtils.isFiniteNumber(value) && (allowZero ? value >= 0 : value > 0);
   }
 
   /**
    * Validate that a value is within a specified range
    */
-  static isInRange(
-    value: number,
-    min: number,
-    max: number,
-    inclusive = true
-  ): boolean {
+  static isInRange(value: number, min: number, max: number, inclusive = true): boolean {
     return inclusive ? value >= min && value <= max : value > min && value < max;
   }
 
@@ -98,11 +93,7 @@ export class AxisValidationUtils {
   static validateRgbColor(color: unknown): AxisResult<RGBColor> {
     if (!Array.isArray(color)) {
       return AxisResultUtils.failure(
-        AxisErrorFactory.createValidationError(
-          'Color must be an array',
-          'color',
-          'color'
-        )
+        AxisErrorFactory.createValidationError('Color must be an array', 'color', 'color')
       );
     }
 
@@ -117,7 +108,11 @@ export class AxisValidationUtils {
     }
 
     const [r, g, b] = color;
-    if (!this.isFiniteNumber(r) || !this.isFiniteNumber(g) || !this.isFiniteNumber(b)) {
+    if (
+      !AxisValidationUtils.isFiniteNumber(r) ||
+      !AxisValidationUtils.isFiniteNumber(g) ||
+      !AxisValidationUtils.isFiniteNumber(b)
+    ) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           'Color values must be finite numbers',
@@ -148,7 +143,7 @@ export class AxisValidationUtils {
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
-    if (!this.isFiniteNumber(value)) {
+    if (!AxisValidationUtils.isFiniteNumber(value)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           'Pixel width must be a finite number',
@@ -158,7 +153,7 @@ export class AxisValidationUtils {
       );
     }
 
-    if (!this.isPositiveNumber(value, options.allowZero)) {
+    if (!AxisValidationUtils.isPositiveNumber(value, options.allowZero)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           `Pixel width must be ${options.allowZero ? 'non-negative' : 'positive'}`,
@@ -168,10 +163,12 @@ export class AxisValidationUtils {
       );
     }
 
-    const [min, max] = options.customRanges?.pixelWidth || 
-      [SCREEN_SPACE_CONSTANTS.MIN_PIXEL_WIDTH, SCREEN_SPACE_CONSTANTS.MAX_PIXEL_WIDTH];
-    
-    if (!this.isInRange(value, min, max)) {
+    const [min, max] = options.customRanges?.pixelWidth || [
+      SCREEN_SPACE_CONSTANTS.MIN_PIXEL_WIDTH,
+      SCREEN_SPACE_CONSTANTS.MAX_PIXEL_WIDTH,
+    ];
+
+    if (!AxisValidationUtils.isInRange(value, min, max)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           `Pixel width must be between ${min} and ${max}`,
@@ -191,7 +188,7 @@ export class AxisValidationUtils {
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
-    if (!this.isFiniteNumber(value)) {
+    if (!AxisValidationUtils.isFiniteNumber(value)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           'Opacity must be a finite number',
@@ -202,8 +199,8 @@ export class AxisValidationUtils {
     }
 
     const [min, max] = options.customRanges?.opacity || [0, 1];
-    
-    if (!this.isInRange(value, min, max)) {
+
+    if (!AxisValidationUtils.isInRange(value, min, max)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           `Opacity must be between ${min} and ${max}`,
@@ -223,7 +220,7 @@ export class AxisValidationUtils {
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
-    if (!this.isFiniteNumber(value)) {
+    if (!AxisValidationUtils.isFiniteNumber(value)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           'Axis length must be a finite number',
@@ -233,7 +230,7 @@ export class AxisValidationUtils {
       );
     }
 
-    if (!this.isPositiveNumber(value, options.allowZero)) {
+    if (!AxisValidationUtils.isPositiveNumber(value, options.allowZero)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           `Axis length must be ${options.allowZero ? 'non-negative' : 'positive'}`,
@@ -244,8 +241,8 @@ export class AxisValidationUtils {
     }
 
     const [min, max] = options.customRanges?.length || [0.1, 10000];
-    
-    if (!this.isInRange(value, min, max)) {
+
+    if (!AxisValidationUtils.isInRange(value, min, max)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           `Axis length must be between ${min} and ${max}`,
@@ -262,13 +259,9 @@ export class AxisValidationUtils {
    * Validate scene object
    */
   static validateScene(scene: unknown): AxisResult<Scene> {
-    if (!this.isValidScene(scene)) {
+    if (!AxisValidationUtils.isValidScene(scene)) {
       return AxisResultUtils.failure(
-        AxisErrorFactory.createValidationError(
-          'Invalid or null scene provided',
-          'scene',
-          'scene'
-        )
+        AxisErrorFactory.createValidationError('Invalid or null scene provided', 'scene', 'scene')
       );
     }
 
@@ -300,7 +293,10 @@ export class AxisValidationUtils {
     }
 
     const [width, height] = resolution;
-    if (!this.isPositiveNumber(width) || !this.isPositiveNumber(height)) {
+    if (
+      !AxisValidationUtils.isPositiveNumber(width) ||
+      !AxisValidationUtils.isPositiveNumber(height)
+    ) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(
           'Resolution values must be positive numbers',
@@ -341,7 +337,7 @@ export class AxisConfigValidation {
 
     // Validate each known property
     for (const [key, value] of Object.entries(configObj)) {
-      const validationResult = this.validateConfigProperty(key, value, options);
+      const validationResult = AxisConfigValidation.validateConfigProperty(key, value, options);
       if (!AxisResultUtils.isSuccess(validationResult)) {
         return validationResult;
       }
@@ -415,9 +411,7 @@ export class AxisConfigValidation {
   /**
    * Sanitize and provide defaults for configuration
    */
-  static sanitizeConfig(
-    config: Record<string, unknown>
-  ): Record<string, unknown> {
+  static sanitizeConfig(config: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...config };
 
     // Provide defaults for missing values

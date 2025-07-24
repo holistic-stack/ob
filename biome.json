@@ -118,7 +118,7 @@
     }
   ],
   "javascript": {
-    "globals": ["vi"],
+    "globals": ["vi", "BABYLON"],
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",

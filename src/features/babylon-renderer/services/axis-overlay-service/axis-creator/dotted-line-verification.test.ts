@@ -3,8 +3,8 @@
  * @description Tests to verify the new BabylonJS built-in dotted line implementation
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createScreenSpaceAxis } from './screen-space-axis-creator';
 
 describe('Dotted Line Verification', () => {
@@ -32,14 +32,14 @@ describe('Dotted Line Verification', () => {
       color: new BABYLON.Color3(1, 0, 0), // Red
       pixelWidth: 2.0,
       dashLength: 0.3, // Small for dot-like appearance
-      gapLength: 1.0,  // Visible spacing
+      gapLength: 1.0, // Visible spacing
     };
 
     const result = createScreenSpaceAxis(scene, config);
 
     // Verify creation was successful
     expect(result.success).toBe(true);
-    
+
     if (result.success) {
       const { positiveMesh, negativeMesh, positiveMaterial, negativeMaterial } = result.data;
 
@@ -73,7 +73,7 @@ describe('Dotted Line Verification', () => {
       // For dashed lines, vertex count should be different from solid lines
       const positiveVertexCount = positiveMesh.getTotalVertices();
       const negativeVertexCount = negativeMesh.getTotalVertices();
-      
+
       // Dashed lines typically have more vertices due to dash segments
       expect(negativeVertexCount).toBeGreaterThanOrEqual(positiveVertexCount);
     }
@@ -103,7 +103,7 @@ describe('Dotted Line Verification', () => {
 
       if (result.success) {
         const { positiveMaterial, negativeMaterial } = result.data;
-        
+
         // Verify colors match expected axis colors
         expect(positiveMaterial.diffuseColor.r).toBe(axis.color.r);
         expect(positiveMaterial.diffuseColor.g).toBe(axis.color.g);
@@ -131,6 +131,8 @@ describe('Dotted Line Verification', () => {
     const result = createScreenSpaceAxis(null, config);
 
     expect(result.success).toBe(false);
-    expect(result.error.type).toBe('SCENE_NULL');
+    if (!result.success) {
+      expect(result.error.type).toBe('SCENE_NULL');
+    }
   });
 });

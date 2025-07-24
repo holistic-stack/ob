@@ -3,9 +3,9 @@
  * @description Tests for the GeometryUtils class
  */
 
-import { describe, it, expect } from 'vitest';
 import * as BABYLON from '@babylonjs/core';
-import { GeometryUtils, STANDARD_AXIS_DIRECTIONS, STANDARD_AXIS_ROTATIONS } from './geometry-utils';
+import { describe, expect, it } from 'vitest';
+import { GeometryUtils } from './geometry-utils';
 
 describe('GeometryUtils', () => {
   describe('calculateAxisEndpoints', () => {
@@ -21,11 +21,11 @@ describe('GeometryUtils', () => {
       expect(result.positiveEnd.x).toBe(50);
       expect(result.positiveEnd.y).toBe(0);
       expect(result.positiveEnd.z).toBe(0);
-      
+
       expect(result.negativeEnd.x).toBe(-50);
       expect(result.negativeEnd.y).toBe(0);
       expect(result.negativeEnd.z).toBe(0);
-      
+
       expect(result.fullLength).toBe(100);
     });
 
@@ -41,7 +41,7 @@ describe('GeometryUtils', () => {
       expect(result.positiveEnd.x).toBe(10);
       expect(result.positiveEnd.y).toBe(120);
       expect(result.positiveEnd.z).toBe(30);
-      
+
       expect(result.negativeEnd.x).toBe(10);
       expect(result.negativeEnd.y).toBe(-80);
       expect(result.negativeEnd.z).toBe(30);
@@ -59,7 +59,7 @@ describe('GeometryUtils', () => {
       // For normalized diagonal direction, endpoints should be at distance 50 from origin
       const positiveDistance = BABYLON.Vector3.Distance(config.origin, result.positiveEnd);
       const negativeDistance = BABYLON.Vector3.Distance(config.origin, result.negativeEnd);
-      
+
       expect(positiveDistance).toBeCloseTo(50, 5);
       expect(negativeDistance).toBeCloseTo(50, 5);
     });
@@ -165,12 +165,14 @@ describe('GeometryUtils', () => {
       expect(result.negative).toHaveLength(2);
 
       // Positive segment: origin to positive end
-      expect(result.positive[0].equals(BABYLON.Vector3.Zero())).toBe(true);
-      expect(result.positive[1].x).toBe(50);
+      expect(result.positive).toHaveLength(2);
+      expect(result.positive[0]?.equals(BABYLON.Vector3.Zero())).toBe(true);
+      expect(result.positive[1]?.x).toBe(50);
 
       // Negative segment: negative end to origin
-      expect(result.negative[0].x).toBe(-50);
-      expect(result.negative[1].equals(BABYLON.Vector3.Zero())).toBe(true);
+      expect(result.negative).toHaveLength(2);
+      expect(result.negative[0]?.x).toBe(-50);
+      expect(result.negative[1]?.equals(BABYLON.Vector3.Zero())).toBe(true);
     });
   });
 

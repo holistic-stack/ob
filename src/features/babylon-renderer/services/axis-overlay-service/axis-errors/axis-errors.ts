@@ -52,7 +52,7 @@ export interface AxisShaderError extends BaseAxisError {
 /**
  * Union type for all axis errors
  */
-export type AxisError = 
+export type AxisError =
   | AxisCreationError
   | AxisConfigurationError
   | AxisRenderError
@@ -76,9 +76,9 @@ export class AxisErrorFactory {
       code: 'AXIS_CREATION_ERROR',
       message,
       timestamp: Date.now(),
-      axisName,
       operation,
-      context,
+      ...(axisName !== undefined && { axisName }),
+      ...(context !== undefined && { context }),
     };
   }
 
@@ -98,8 +98,8 @@ export class AxisErrorFactory {
       timestamp: Date.now(),
       field,
       value,
-      expectedType,
-      context,
+      ...(expectedType !== undefined && { expectedType }),
+      ...(context !== undefined && { context }),
     };
   }
 
@@ -116,7 +116,7 @@ export class AxisErrorFactory {
       message,
       timestamp: Date.now(),
       renderStage,
-      context,
+      ...(context !== undefined && { context }),
     };
   }
 
@@ -134,8 +134,8 @@ export class AxisErrorFactory {
       message,
       timestamp: Date.now(),
       validationType,
-      field,
-      context,
+      ...(field !== undefined && { field }),
+      ...(context !== undefined && { context }),
     };
   }
 
@@ -153,8 +153,8 @@ export class AxisErrorFactory {
       message,
       timestamp: Date.now(),
       shaderType,
-      shaderName,
-      context,
+      ...(shaderName !== undefined && { shaderName }),
+      ...(context !== undefined && { context }),
     };
   }
 
@@ -167,7 +167,7 @@ export class AxisErrorFactory {
     context?: Record<string, unknown>
   ): AxisRenderError {
     const message = error instanceof Error ? error.message : String(error);
-    return this.createRenderError(
+    return AxisErrorFactory.createRenderError(
       `Unexpected error during ${operation}: ${message}`,
       'initialization',
       { originalError: error, ...context }
@@ -201,7 +201,7 @@ export class AxisErrorUtils {
     error: unknown,
     code: T
   ): error is Extract<AxisError, { code: T }> {
-    return this.isAxisError(error) && error.code === code;
+    return AxisErrorUtils.isAxisError(error) && error.code === code;
   }
 
   /**
@@ -271,9 +271,7 @@ export class AxisErrorUtils {
 /**
  * Result type for operations that can fail
  */
-export type AxisResult<T> = 
-  | { success: true; data: T }
-  | { success: false; error: AxisError };
+export type AxisResult<T> = { success: true; data: T } | { success: false; error: AxisError };
 
 /**
  * Helper functions for creating results
@@ -301,7 +299,7 @@ export class AxisResultUtils {
     operation: string,
     context?: Record<string, unknown>
   ): AxisResult<T> {
-    return this.failure(AxisErrorFactory.fromUnknownError(error, operation, context));
+    return AxisResultUtils.failure(AxisErrorFactory.fromUnknownError(error, operation, context));
   }
 
   /**

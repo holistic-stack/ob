@@ -115,7 +115,7 @@ export function SimpleOrientationGizmo({
   const animationFrameRef = useRef<number | null>(null);
   const easingFunction = useRef(new QuadraticEase());
 
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [_isInitialized, setIsInitialized] = useState(false);
 
   // Merge user options with defaults
   const options: GizmoOptions = {
@@ -273,7 +273,7 @@ export function SimpleOrientationGizmo({
       );
 
       // Sort layers by Z position (back to front)
-      layers.sort((a, b) => (a.position!.z > b.position!.z ? 1 : -1));
+      layers.sort((a, b) => ((a.position?.z ?? 0) > (b.position?.z ?? 0) ? 1 : -1));
 
       // Find selected axis based on mouse position
       selectedAxisRef.current = null;
@@ -281,7 +281,8 @@ export function SimpleOrientationGizmo({
         let closestDist = Infinity;
 
         for (const bubble of layers) {
-          const distance = Vector3.Distance(mouseRef.current, bubble.position!);
+          if (!bubble.position) continue;
+          const distance = Vector3.Distance(mouseRef.current, bubble.position);
 
           if (distance < closestDist || distance < bubble.size) {
             closestDist = distance;
@@ -323,7 +324,7 @@ export function SimpleOrientationGizmo({
       logger.error('[ERROR][SimpleOrientationGizmo] Update failed:', error);
       onError?.(error instanceof Error ? error : new Error('Unknown update error'));
     }
-  }, [camera, clear, getBubblePosition, drawCircle, drawLine, drawText, options, onError]);
+  }, [camera, clear, getBubblePosition, drawCircle, drawLine, drawText, options, onError, bubbles]);
 
   /**
    * Handle mouse move
@@ -374,7 +375,7 @@ export function SimpleOrientationGizmo({
    * Initialize canvas and start render loop
    */
   useEffect(() => {
-    if (!canvasRef.current || !camera) return;
+    if (!canvasRef.current || !camera) return undefined;
 
     try {
       contextRef.current = canvasRef.current.getContext('2d');
@@ -401,6 +402,7 @@ export function SimpleOrientationGizmo({
     } catch (error) {
       logger.error('[ERROR][SimpleOrientationGizmo] Initialization failed:', error);
       onError?.(error instanceof Error ? error : new Error('Initialization failed'));
+      return undefined;
     }
   }, [camera, update, onError]);
 
