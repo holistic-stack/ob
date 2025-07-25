@@ -59,7 +59,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('test_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('test_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode(
         'test_translate',
@@ -89,7 +90,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode(
         'test_translate_position',
@@ -132,7 +134,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode('test_rotate', scene, rotateNode, [
         cubeNode,
@@ -158,7 +161,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode(
         'test_rotate_angle',
@@ -195,7 +199,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode('test_scale', scene, scaleNode, [
         cubeNode,
@@ -221,7 +226,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode(
         'test_scale_factor',
@@ -255,7 +261,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode('test_color', scene, colorNode, [
         cubeNode,
@@ -281,7 +288,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const transformationNode = new TransformationBabylonNode(
         'test_color_alpha',
@@ -349,7 +357,8 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const originalNode = new TransformationBabylonNode('original_scale', scene, scaleNode, [
         cubeNode,

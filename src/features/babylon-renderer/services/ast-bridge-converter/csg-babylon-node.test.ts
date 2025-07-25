@@ -42,6 +42,61 @@ vi.mock('@babylonjs/core', async () => {
   };
 });
 
+// Mock BabylonCSG2Service to avoid real CSG operations
+vi.mock('../babylon-csg2-service', () => ({
+  BabylonCSG2Service: vi.fn().mockImplementation(() => ({
+    init: vi.fn().mockReturnValue({ success: true }), // Synchronous return
+    union: vi.fn().mockImplementation(async (meshA, meshB) => {
+      const { Mesh } = await import('@babylonjs/core');
+      const resultMesh = new Mesh('mock_union_result', meshA.getScene());
+      resultMesh.metadata = { isCSGOperation: true, csgType: 'union' };
+      return {
+        success: true,
+        data: {
+          resultMesh,
+          operationType: 'UNION',
+          operationTime: 10,
+          triangleCount: 100,
+          vertexCount: 50,
+          isOptimized: false,
+        },
+      };
+    }),
+    difference: vi.fn().mockImplementation(async (meshA, meshB) => {
+      const { Mesh } = await import('@babylonjs/core');
+      const resultMesh = new Mesh('mock_difference_result', meshA.getScene());
+      resultMesh.metadata = { isCSGOperation: true, csgType: 'difference' };
+      return {
+        success: true,
+        data: {
+          resultMesh,
+          operationType: 'DIFFERENCE',
+          operationTime: 10,
+          triangleCount: 100,
+          vertexCount: 50,
+          isOptimized: false,
+        },
+      };
+    }),
+    intersection: vi.fn().mockImplementation(async (meshA, meshB) => {
+      const { Mesh } = await import('@babylonjs/core');
+      const resultMesh = new Mesh('mock_intersection_result', meshA.getScene());
+      resultMesh.metadata = { isCSGOperation: true, csgType: 'intersection' };
+      return {
+        success: true,
+        data: {
+          resultMesh,
+          operationType: 'INTERSECTION',
+          operationTime: 10,
+          triangleCount: 100,
+          vertexCount: 50,
+          isOptimized: false,
+        },
+      };
+    }),
+  })),
+}));
+
 // Import after mocking
 import { NullEngine, Scene } from '@babylonjs/core';
 
@@ -91,12 +146,22 @@ describe('CSGBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
+      if (!cubeAstNode) throw new Error('Expected cube AST node');
       const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
 
       const sphereCode = 'sphere(r=0.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereAstNode = sphereAst[0];
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
+      if (!sphereAstNode) throw new Error('Expected sphere AST node');
       if (!sphereAstNode) throw new Error('Expected sphere AST node');
       const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
 
@@ -142,6 +207,8 @@ describe('CSGBabylonNode', () => {
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
       const cylinderAstNode = cylinderAst[0];
+      if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
+      if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
       if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
       const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAstNode);
 
@@ -293,12 +360,14 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const sphereCode = 'sphere(r=0.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      if (!sphereAst[0]) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const csgNode = new CSGBabylonNode('test_union_validation', scene, unionNode, [
         cubeNode,
@@ -318,7 +387,8 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const csgNode = new CSGBabylonNode(
         'test_union_insufficient',
@@ -366,12 +436,14 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      if (!cubeAst[0]) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const sphereCode = 'sphere(r=0.5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      if (!sphereAst[0]) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const originalNode = new CSGBabylonNode('original_intersection', scene, intersectionNode, [
         cubeNode,
@@ -424,7 +496,8 @@ describe('CSGBabylonNode', () => {
       const sphereCode = 'sphere(r=1);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      if (!sphereAst[0]) throw new Error('Expected sphere AST node');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const csgNode = new CSGBabylonNode('debug_difference', scene, differenceNode, [
         cubeNode,
@@ -449,7 +522,8 @@ describe('CSGBabylonNode', () => {
     const createPrimitiveNode = (code: string, name: string) => {
       const ast = parser.parseAST(code);
       expect(ast.length).toBeGreaterThan(0);
-      return new PrimitiveBabylonNode(name, scene, ast[0]!);
+      if (!ast[0]) throw new Error(`Expected AST node for ${name}`);
+      return new PrimitiveBabylonNode(name, scene, ast[0]);
     };
 
     /**

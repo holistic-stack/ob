@@ -81,7 +81,10 @@ describe('OpenSCAD Translate Example', () => {
     const cubeCode = 'cube(15, center=true);';
     const cubeAst = parser.parseAST(cubeCode);
     expect(cubeAst.length).toBeGreaterThan(0);
-    const cubeNode = new PrimitiveBabylonNode('translated_cube', scene, cubeAst[0]!);
+    expect(cubeAst[0]).toBeDefined();
+    expect(cubeAst[0]).toBeDefined();
+    if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+    const cubeNode = new PrimitiveBabylonNode('translated_cube', scene, cubeAst[0]);
 
     // Create the transformation node
     const transformationNode = new TransformationBabylonNode(
@@ -117,7 +120,9 @@ describe('OpenSCAD Translate Example', () => {
     // Parse sphere
     const sphereAst = parser.parseAST(sphereCode);
     expect(sphereAst.length).toBeGreaterThan(0);
-    const sphereNode = new PrimitiveBabylonNode('example_sphere', scene, sphereAst[0]!);
+    expect(sphereAst[0]).toBeDefined();
+    if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
+    const sphereNode = new PrimitiveBabylonNode('example_sphere', scene, sphereAst[0]);
 
     // Parse translate + cube
     const translateAst = parser.parseAST(translateCode);
@@ -128,7 +133,9 @@ describe('OpenSCAD Translate Example', () => {
     const cubeCode = 'cube(15, center=true);';
     const cubeAst = parser.parseAST(cubeCode);
     expect(cubeAst.length).toBeGreaterThan(0);
-    const cubeNode = new PrimitiveBabylonNode('example_cube', scene, cubeAst[0]!);
+    expect(cubeAst[0]).toBeDefined();
+    if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+    const cubeNode = new PrimitiveBabylonNode('example_cube', scene, cubeAst[0]);
 
     // Create transformation node
     const transformationNode = new TransformationBabylonNode(

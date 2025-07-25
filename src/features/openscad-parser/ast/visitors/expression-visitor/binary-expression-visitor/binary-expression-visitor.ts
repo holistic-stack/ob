@@ -116,8 +116,10 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
       node
     );
 
-    const leftAST = this.parentVisitor.dispatchSpecificExpression(leftNode);
-    const rightAST = this.parentVisitor.dispatchSpecificExpression(rightNode);
+    const leftAST: ast.ExpressionNode | ast.ErrorNode | null =
+      this.parentVisitor.dispatchSpecificExpression(leftNode);
+    const rightAST: ast.ExpressionNode | ast.ErrorNode | null =
+      this.parentVisitor.dispatchSpecificExpression(rightNode);
 
     // Debug: Log operand results
     this.errorHandler.logInfo(
@@ -134,7 +136,8 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
     }
 
     if (!leftAST || leftAST.type !== 'expression') {
-      const errorMessage = `Left operand is not an expression node. Type: ${(leftAST as { type?: string })?.type ?? 'null'}`;
+      const leftType = leftAST ? (leftAST as { type: string }).type : 'null';
+      const errorMessage = `Left operand is not an expression node. Type: ${leftType}`;
       const error = this.errorHandler.createParserError(errorMessage, {
         line: getLocation(node).start.line,
         column: getLocation(node).start.column,
@@ -152,7 +155,8 @@ export class BinaryExpressionVisitor extends BaseASTVisitor {
     }
 
     if (!rightAST || rightAST.type !== 'expression') {
-      const errorMessage = `Right operand is not an expression node. Type: ${(rightAST as { type?: string })?.type ?? 'null'}`;
+      const rightType = rightAST ? (rightAST as { type: string }).type : 'null';
+      const errorMessage = `Right operand is not an expression node. Type: ${rightType}`;
       const error = this.errorHandler.createParserError(errorMessage, {
         line: getLocation(node).start.line,
         column: getLocation(node).start.column,

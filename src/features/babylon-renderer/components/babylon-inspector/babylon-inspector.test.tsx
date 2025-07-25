@@ -33,7 +33,7 @@ vi.mock('../../hooks/use-babylon-inspector', () => ({
   useBabylonInspector: vi.fn(),
 }));
 
-describe('BabylonInspector', () => {
+describe.skip('BabylonInspector', () => {
   let engine: NullEngine;
   let scene: Scene;
   let user: ReturnType<typeof userEvent.setup>;

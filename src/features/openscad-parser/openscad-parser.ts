@@ -914,8 +914,8 @@ export class OpenscadParser {
       // Check if the line contains both transform and primitive (e.g., "translate([10,0,0]) sphere(10);")
       // We need to find the primitive that comes AFTER the transform, not any primitive in the line
       const transformMatch = transformLine.match(/(translate|rotate|scale|mirror)\s*\([^)]+\)/);
-      if (transformMatch) {
-        const transformEnd = transformMatch.index! + transformMatch[0].length;
+      if (transformMatch && transformMatch.index !== undefined) {
+        const transformEnd = transformMatch.index + transformMatch[0].length;
         const afterTransform = transformLine.substring(transformEnd);
 
         const primitiveMatch = afterTransform.match(

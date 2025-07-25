@@ -10,6 +10,7 @@ import {
   Effect,
   type LinesMesh,
   type Material,
+  type Mesh,
   MeshBuilder,
   type Scene,
   ShaderMaterial,
@@ -145,7 +146,7 @@ export class ScreenSpaceAxisStrategy implements IAxisCreationStrategy {
     }
   }
 
-  private registerShader(scene: Scene): void {
+  private registerShader(_scene: Scene): void {
     const vertexShader = `
       attribute vec3 position;
       uniform mat4 worldViewProjection;
@@ -437,41 +438,45 @@ export class UnifiedAxisCreator {
 export const defaultAxisCreator = new UnifiedAxisCreator();
 
 /**
- * Helper functions for creating common axis configurations
+ * Create a standard SketchUp-style screen-space configuration
  */
-export class AxisConfigHelpers {
-  /**
-   * Create a standard SketchUp-style screen-space configuration
-   */
-  static createSketchUpScreenSpaceConfig(
-    origin: Vector3 = Vector3.Zero(),
-    length: number = DEFAULT_AXIS_PARAMS.LENGTH,
-    pixelWidth: number = DEFAULT_AXIS_PARAMS.PIXEL_WIDTH,
-    resolution: readonly [number, number] = SCREEN_SPACE_CONSTANTS.DEFAULT_RESOLUTION
-  ): Omit<ScreenSpaceAxisConfig, 'name' | 'direction' | 'color'> {
-    return {
-      origin,
-      length,
-      pixelWidth,
-      resolution,
-      opacity: DEFAULT_AXIS_PARAMS.OPACITY,
-    };
-  }
-
-  /**
-   * Create a standard cylinder configuration
-   */
-  static createStandardCylinderConfig(
-    origin: Vector3 = Vector3.Zero(),
-    length: number = DEFAULT_AXIS_PARAMS.LENGTH,
-    diameter: number = DEFAULT_AXIS_PARAMS.CYLINDER_DIAMETER
-  ): Omit<CylinderAxisConfig, 'name' | 'direction' | 'color'> {
-    return {
-      origin,
-      length,
-      diameter,
-      tessellation: DEFAULT_AXIS_PARAMS.TESSELLATION,
-      opacity: DEFAULT_AXIS_PARAMS.OPACITY,
-    };
-  }
+export function createSketchUpScreenSpaceConfig(
+  origin: Vector3 = Vector3.Zero(),
+  length: number = DEFAULT_AXIS_PARAMS.LENGTH,
+  pixelWidth: number = DEFAULT_AXIS_PARAMS.PIXEL_WIDTH,
+  resolution: readonly [number, number] = SCREEN_SPACE_CONSTANTS.DEFAULT_RESOLUTION
+): Omit<ScreenSpaceAxisConfig, 'name' | 'direction' | 'color'> {
+  return {
+    origin,
+    length,
+    pixelWidth,
+    resolution,
+    opacity: DEFAULT_AXIS_PARAMS.OPACITY,
+  };
 }
+
+/**
+ * Create a standard cylinder configuration
+ */
+export function createStandardCylinderConfig(
+  origin: Vector3 = Vector3.Zero(),
+  length: number = DEFAULT_AXIS_PARAMS.LENGTH,
+  diameter: number = DEFAULT_AXIS_PARAMS.CYLINDER_DIAMETER
+): Omit<CylinderAxisConfig, 'name' | 'direction' | 'color'> {
+  return {
+    origin,
+    length,
+    diameter,
+    tessellation: DEFAULT_AXIS_PARAMS.TESSELLATION,
+    opacity: DEFAULT_AXIS_PARAMS.OPACITY,
+  };
+}
+
+/**
+ * @deprecated Use individual functions instead of AxisConfigHelpers class
+ * Temporary compatibility export for backward compatibility
+ */
+export const AxisConfigHelpers = {
+  createSketchUpScreenSpaceConfig,
+  createStandardCylinderConfig,
+};

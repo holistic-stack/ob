@@ -45,7 +45,9 @@ describe('ModifierBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      expect(cubeAst[0]).toBeDefined();
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_disable',
@@ -77,12 +79,16 @@ describe('ModifierBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      expect(cubeAst[0]).toBeDefined();
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      expect(sphereAst[0]).toBeDefined();
+      if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_disable_multiple',
@@ -111,7 +117,9 @@ describe('ModifierBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      expect(cubeAst[0]).toBeDefined();
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_show_only',
@@ -141,7 +149,9 @@ describe('ModifierBabylonNode', () => {
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      expect(sphereAst[0]).toBeDefined();
+      if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_debug',
@@ -171,7 +181,9 @@ describe('ModifierBabylonNode', () => {
       const cylinderCode = 'cylinder(h=10, r=5);';
       const cylinderAst = parser.parseAST(cylinderCode);
       expect(cylinderAst.length).toBeGreaterThan(0);
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]!);
+      expect(cylinderAst[0]).toBeDefined();
+      if (!cylinderAst[0]) throw new Error('cylinderAst[0] is undefined');
+      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_background',
@@ -201,7 +213,9 @@ describe('ModifierBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      expect(cubeAst[0]).toBeDefined();
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'test_modifier_validation',
@@ -261,7 +275,9 @@ describe('ModifierBabylonNode', () => {
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]!);
+      expect(sphereAst[0]).toBeDefined();
+      if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
+      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
 
       const originalNode = new ModifierBabylonNode(
         'original_show_only',
@@ -308,7 +324,9 @@ describe('ModifierBabylonNode', () => {
       const cubeCode = 'cube(10);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]!);
+      expect(cubeAst[0]).toBeDefined();
+      if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
 
       const modifierNode = new ModifierBabylonNode(
         'debug_background',

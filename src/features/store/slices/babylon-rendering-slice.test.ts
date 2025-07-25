@@ -270,16 +270,20 @@ describe('BabylonRenderingSlice', () => {
       const createResult = store.getState().createParticleSystem({});
       expect(createResult.success).toBe(true);
 
-      const updateResult = store.getState().updateParticleSystem(createResult.data!, {});
-      expect(updateResult.success).toBe(true);
+      if (createResult.success) {
+        const updateResult = store.getState().updateParticleSystem(createResult.data, {});
+        expect(updateResult.success).toBe(true);
+      }
     });
 
     it('should remove particle system successfully', () => {
       const createResult = store.getState().createParticleSystem({});
       expect(createResult.success).toBe(true);
 
-      const removeResult = store.getState().removeParticleSystem(createResult.data!);
-      expect(removeResult.success).toBe(true);
+      if (createResult.success) {
+        const removeResult = store.getState().removeParticleSystem(createResult.data);
+        expect(removeResult.success).toBe(true);
+      }
     });
   });
 
@@ -310,16 +314,20 @@ describe('BabylonRenderingSlice', () => {
       const createResult = await store.getState().createMaterial({});
       expect(createResult.success).toBe(true);
 
-      const applyResult = store.getState().applyMaterial(createResult.data!, 'mesh-1');
-      expect(applyResult.success).toBe(true);
+      if (createResult.success) {
+        const applyResult = store.getState().applyMaterial(createResult.data, 'mesh-1');
+        expect(applyResult.success).toBe(true);
+      }
     });
 
     it('should remove material successfully', async () => {
       const createResult = await store.getState().createMaterial({});
       expect(createResult.success).toBe(true);
 
-      const removeResult = store.getState().removeMaterial(createResult.data!);
-      expect(removeResult.success).toBe(true);
+      if (createResult.success) {
+        const removeResult = store.getState().removeMaterial(createResult.data);
+        expect(removeResult.success).toBe(true);
+      }
     });
   });
 
@@ -335,16 +343,20 @@ describe('BabylonRenderingSlice', () => {
       const createResult = store.getState().createRenderGraph({});
       expect(createResult.success).toBe(true);
 
-      const buildResult = store.getState().buildRenderGraph(createResult.data!);
-      expect(buildResult.success).toBe(true);
+      if (createResult.success) {
+        const buildResult = store.getState().buildRenderGraph(createResult.data);
+        expect(buildResult.success).toBe(true);
+      }
     });
 
     it('should remove render graph successfully', () => {
       const createResult = store.getState().createRenderGraph({});
       expect(createResult.success).toBe(true);
 
-      const removeResult = store.getState().removeRenderGraph(createResult.data!);
-      expect(removeResult.success).toBe(true);
+      if (createResult.success) {
+        const removeResult = store.getState().removeRenderGraph(createResult.data);
+        expect(removeResult.success).toBe(true);
+      }
     });
   });
 

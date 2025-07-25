@@ -140,8 +140,8 @@ export const convertGenericMeshToBabylon = (
         vertexData.uvs = Array.isArray(geometry.uvs)
           ? new Float32Array(geometry.uvs)
           : geometry.uvs;
-      } else if (options.generateUVs) {
-        vertexData.uvs = generateBasicUVs(vertexData.positions!);
+      } else if (options.generateUVs && vertexData.positions) {
+        vertexData.uvs = generateBasicUVs(vertexData.positions);
       }
 
       // Apply vertex data to mesh
@@ -318,10 +318,23 @@ const generateBasicUVs = (positions: FloatArray): Float32Array => {
   const uvs = new Float32Array((positions.length / 3) * 2);
 
   for (let i = 0; i < positions.length; i += 3) {
+    // Ensure we have valid indices for x, y coordinates
+    if (i + 1 >= positions.length) {
+      break; // Skip incomplete coordinate pairs
+    }
+
     const uvIndex = (i / 3) * 2;
+    const x = positions[i];
+    const y = positions[i + 1];
+
+    // Skip if coordinates are undefined
+    if (x === undefined || y === undefined) {
+      continue;
+    }
+
     // Simple planar projection
-    uvs[uvIndex] = (positions[i]! + 1) * 0.5; // X -> U
-    uvs[uvIndex + 1] = (positions[i + 1]! + 1) * 0.5; // Y -> V
+    uvs[uvIndex] = (x + 1) * 0.5; // X -> U
+    uvs[uvIndex + 1] = (y + 1) * 0.5; // Y -> V
   }
 
   return uvs;

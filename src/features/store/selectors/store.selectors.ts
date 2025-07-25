@@ -642,7 +642,7 @@ export const selectGizmoStats = createSelector(
     isVisible: gizmo?.isVisible ?? false,
     isInitialized: gizmo?.isInitialized ?? false,
     isAnimating: gizmo?.cameraAnimation?.isAnimating ?? false,
-    hasError: gizmo?.error !== null,
+    hasError: gizmo?.error != null,
     selectedAxis: gizmo?.selectedAxis ?? null,
     lastInteraction: gizmo?.lastInteraction ?? null,
   })

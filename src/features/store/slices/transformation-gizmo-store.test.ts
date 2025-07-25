@@ -41,8 +41,12 @@ describe('Transformation Gizmo Store Integration', () => {
   });
 
   afterEach(() => {
-    scene.dispose();
-    engine.dispose();
+    if (scene) {
+      scene.dispose();
+    }
+    if (engine) {
+      engine.dispose();
+    }
   });
 
   describe('Initial State', () => {

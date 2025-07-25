@@ -180,7 +180,10 @@ describe('CompositeVisitor', () => {
       expect(rootNode?.childCount).toBeGreaterThan(0);
 
       // Visit the children
-      const results = visitor.visitChildren(rootNode!);
+      if (!rootNode) {
+        throw new Error('Root node is null');
+      }
+      const results = visitor.visitChildren(rootNode);
 
       // Verify we got some results (the exact number depends on the tree structure)
       expect(results.length).toBeGreaterThan(0);

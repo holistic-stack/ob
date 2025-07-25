@@ -58,7 +58,7 @@ import type { Animatable, ArcRotateCamera, Scene } from '@babylonjs/core';
 import { Animation, EasingFunction, QuadraticEase, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { type AppStore, useAppStore } from '../../../store/app-store';
+import type { AppStore } from '../../../store/app-store';
 import type { AxisDirection } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';
 
@@ -114,13 +114,14 @@ interface SyncState {
  */
 export class CameraGizmoSyncService {
   private readonly scene: Scene;
-  private readonly store: AppStore;
+  private readonly store: ReturnType<typeof import('../../../store/app-store').createAppStore>;
   private config: CameraGizmoSyncConfig | null = null;
   private camera: ArcRotateCamera | null = null;
   private gizmoService: OrientationGizmoService | null = null;
   private easingFunction: EasingFunction | null = null;
   private updateThrottleId: number | null = null;
   private animationGroup: Animatable[] = [];
+  private storeUnsubscribe: (() => void) | null = null;
 
   private state: SyncState = {
     isInitialized: false,
@@ -130,7 +131,10 @@ export class CameraGizmoSyncService {
     selectedAxis: null,
   };
 
-  constructor(scene: Scene, store: AppStore) {
+  constructor(
+    scene: Scene,
+    store: ReturnType<typeof import('../../../store/app-store').createAppStore>
+  ) {
     this.scene = scene;
     this.store = store;
     logger.init('[INIT][CameraGizmoSync] Service initialized');
@@ -222,7 +226,7 @@ export class CameraGizmoSyncService {
       logger.debug(`[DEBUG][CameraGizmoSync] Animating camera to axis: ${axis}`);
 
       this.state = { ...this.state, isAnimating: true, selectedAxis: axis };
-      this.store.setGizmoAnimating(true);
+      this.store.getState().setGizmoAnimating(true);
       this.config.onAnimationStart?.();
 
       // Calculate target camera position based on axis
@@ -243,7 +247,7 @@ export class CameraGizmoSyncService {
         () => {
           // Animation complete callback
           this.state = { ...this.state, isAnimating: false };
-          this.store.setGizmoAnimating(false);
+          this.store.getState().setGizmoAnimating(false);
           this.config?.onAnimationComplete?.();
           logger.debug('[DEBUG][CameraGizmoSync] Camera animation completed');
         }
@@ -259,7 +263,7 @@ export class CameraGizmoSyncService {
       return { success: true, data: undefined };
     } catch (error) {
       this.state = { ...this.state, isAnimating: false };
-      this.store.setGizmoAnimating(false);
+      this.store.getState().setGizmoAnimating(false);
 
       return this.createErrorResult(
         'ANIMATION_FAILED',
@@ -326,12 +330,22 @@ export class CameraGizmoSyncService {
    * Setup store listeners for gizmo interactions
    */
   private setupStoreListeners(): void {
+    let previousSelectedAxis: AxisDirection | null = null;
+
     // Subscribe to gizmo axis selection changes
-    useAppStore.subscribe((state) => {
-      const selectedAxis = state.babylonRendering.gizmo.selectedAxis;
-      if (selectedAxis && !this.state.isAnimating) {
-        // Axis was selected, animate camera
-        this.animateCameraToAxis(selectedAxis);
+    // Use the store instance directly since it's passed in constructor
+    this.storeUnsubscribe = this.store.subscribe((state: AppStore) => {
+      const selectedAxis = state.babylonRendering?.gizmo?.selectedAxis;
+
+      // Only react to actual changes in selectedAxis
+      if (selectedAxis !== previousSelectedAxis && selectedAxis && !this.state.isAnimating) {
+        previousSelectedAxis = selectedAxis;
+        // Axis was selected, animate camera (async but don't await to avoid blocking)
+        this.animateCameraToAxis(selectedAxis).catch((error) => {
+          logger.error('[ERROR][CameraGizmoSync] Failed to animate camera to axis:', error);
+        });
+      } else if (!selectedAxis) {
+        previousSelectedAxis = null;
       }
     });
   }
@@ -427,6 +441,12 @@ export class CameraGizmoSyncService {
       if (this.updateThrottleId) {
         clearTimeout(this.updateThrottleId);
         this.updateThrottleId = null;
+      }
+
+      // Unsubscribe from store
+      if (this.storeUnsubscribe) {
+        this.storeUnsubscribe();
+        this.storeUnsubscribe = null;
       }
 
       // Stop any running animations

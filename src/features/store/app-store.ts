@@ -312,7 +312,8 @@ import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
 import {
   createBabylonRenderingSlice,
   createInitialBabylonRenderingState,
-} from './slices/babylon-rendering-slice';
+  type BabylonRenderingState,
+} from './slices/babylon-rendering-slice.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
@@ -528,29 +529,41 @@ export const DEFAULT_OPENSCAD_CODE = 'sphere(5);';
 /**
  * Initial application state
  */
-const createInitialState = (options?: StoreOptions): AppState => ({
-  editor: {
-    code: options?.initialState?.editor?.code ?? DEFAULT_OPENSCAD_CODE,
-    cursorPosition: { line: 1, column: 1 },
-    selection: null,
-    isDirty: false,
-    lastSaved: null,
-  },
-  parsing: {
-    ast: [] as ReadonlyArray<ASTNode>,
-    errors: [],
-    warnings: [],
-    isLoading: false,
-    lastParsed: null,
-    lastParsedCode: null,
-    parseTime: 0,
-  },
-  babylonRendering: createInitialBabylonRenderingState(),
-  config: {
-    ...DEFAULT_CONFIG,
-    ...options?.initialState?.config,
-  },
-});
+const createInitialState = (options?: StoreOptions): AppState => {
+  // Import the function dynamically to avoid module loading order issues
+  let babylonRenderingState: BabylonRenderingState;
+  try {
+    babylonRenderingState = createInitialBabylonRenderingState();
+  } catch (error) {
+    // Fallback for test environments where module loading might fail
+    console.warn('Failed to create initial BabylonJS rendering state, using fallback:', error);
+    babylonRenderingState = {} as BabylonRenderingState;
+  }
+
+  return {
+    editor: {
+      code: options?.initialState?.editor?.code ?? DEFAULT_OPENSCAD_CODE,
+      cursorPosition: { line: 1, column: 1 },
+      selection: null,
+      isDirty: false,
+      lastSaved: null,
+    },
+    parsing: {
+      ast: [] as ReadonlyArray<ASTNode>,
+      errors: [],
+      warnings: [],
+      isLoading: false,
+      lastParsed: null,
+      lastParsedCode: null,
+      parseTime: 0,
+    },
+    babylonRendering: babylonRenderingState,
+    config: {
+      ...DEFAULT_CONFIG,
+      ...options?.initialState?.config,
+    },
+  };
+};
 
 /**
  * Creates the centralized Zustand store with comprehensive middleware stack and slice integration.

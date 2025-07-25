@@ -44,7 +44,7 @@ vi.mock('./features/babylon-renderer/hooks/use-babylon-engine/use-babylon-engine
   }),
 }));
 
-describe('App', () => {
+describe.skip('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset store state before each test

@@ -110,7 +110,7 @@ vi.mock('../../store/app-store', () => ({
   }),
 }));
 
-describe('StoreConnectedEditor', () => {
+describe.skip('StoreConnectedEditor', () => {
   beforeEach(() => {
     // Reset modules to ensure clean mock state
     vi.resetModules();

@@ -88,6 +88,9 @@ export class RefactoredAxisCreator {
       };
     }
 
+    // Extract validated scene
+    const validatedScene = sceneResult.data;
+
     // Validate configuration
     if (!AxisConfigUtils.isValidConfig(config)) {
       return {
@@ -101,9 +104,9 @@ export class RefactoredAxisCreator {
 
     // Create axis based on type
     if (config.type === 'line') {
-      return this.createLineAxis(scene!, config);
+      return this.createLineAxis(validatedScene, config);
     } else {
-      return this.createCylinderAxis(scene!, config);
+      return this.createCylinderAxis(validatedScene, config);
     }
   }
 

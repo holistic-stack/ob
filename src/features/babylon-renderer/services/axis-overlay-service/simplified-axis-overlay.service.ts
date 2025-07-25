@@ -286,7 +286,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
   private lifecycleService = new AxisLifecycleService();
   private visibilityService = new AxisVisibilityService();
   private currentConfig: SimplifiedAxisConfig = {};
-  private lastError?: AxisError;
+  private lastError: AxisError | undefined = undefined;
 
   /**
    * Initialize the axis overlay with optional configuration
@@ -314,6 +314,12 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
    * Update the axis configuration
    */
   updateConfig(config: SimplifiedAxisConfig): AxisResult<void> {
+    if (!this.lifecycleService.isInitialized()) {
+      return AxisResultUtils.failure(
+        AxisErrorFactory.createRenderError('Axis overlay not initialized', 'update')
+      );
+    }
+
     const result = this.lifecycleService.updateConfig(config);
 
     if (AxisResultUtils.isSuccess(result)) {
@@ -337,6 +343,12 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
    * Set visibility of the axis overlay
    */
   setVisibility(visible: boolean): AxisResult<void> {
+    if (!this.lifecycleService.isInitialized()) {
+      return AxisResultUtils.failure(
+        AxisErrorFactory.createRenderError('Axis overlay not initialized', 'update')
+      );
+    }
+
     const axes = this.lifecycleService.getAxes();
     const result = this.visibilityService.setVisibility(axes, visible);
 
@@ -396,7 +408,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
 /**
  * Default configuration for SketchUp-style axes
  */
-export const DEFAULT_SKETCHUP_CONFIG: SimplifiedAxisConfig = {
+export const DEFAULT_SKETCHUP_CONFIG: SimplifiedAxisConfig = Object.freeze({
   visible: true,
   pixelWidth: DEFAULT_AXIS_PARAMS.PIXEL_WIDTH,
   length: DEFAULT_AXIS_PARAMS.LENGTH,
@@ -404,7 +416,7 @@ export const DEFAULT_SKETCHUP_CONFIG: SimplifiedAxisConfig = {
   colorScheme: 'STANDARD',
   origin: Vector3.Zero(),
   resolution: SCREEN_SPACE_CONSTANTS.DEFAULT_RESOLUTION,
-} as const;
+} as const);
 
 /**
  * Factory function to create a new simplified axis overlay service

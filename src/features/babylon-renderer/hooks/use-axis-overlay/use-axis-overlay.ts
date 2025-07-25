@@ -72,7 +72,7 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
   // Zustand store selectors with defensive check
   const axisOverlayState = useAppStore((state) => state.babylonRendering?.axisOverlay);
   const lastRendered = useAppStore((state) => state.babylonRendering?.lastRendered);
-  const _scene = useAppStore((state) => state.babylonRendering?.scene);
+
   const setAxisOverlayVisibility = useAppStore((state) => state.setAxisOverlayVisibility);
   const updateAxisOverlayConfig = useAppStore((state) => state.updateAxisOverlayConfig);
   const updateAxisOverlayDynamicTicks = useAppStore((state) => state.updateAxisOverlayDynamicTicks);
@@ -116,6 +116,7 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
         const result = await serviceRef.current.initialize(scene, camera);
 
         if (!result.success) {
+          resetAxisOverlay(); // Reset initialization state on failure
           setAxisOverlayError(result.error);
           logger.error(
             '[ERROR][useAxisOverlay] Service initialization failed:',
@@ -149,6 +150,7 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
       setAxisOverlayError,
       initializeAxisOverlay,
       setAxisOverlayVisibility,
+      resetAxisOverlay,
       axisOverlayState,
     ]
   );

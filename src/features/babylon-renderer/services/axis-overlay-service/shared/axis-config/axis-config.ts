@@ -111,134 +111,141 @@ export const DEFAULT_AXIS_CONFIG = {
  * });
  * ```
  */
-export class AxisConfigUtils {
-  /**
-   * Creates a line axis configuration with defaults
-   *
-   * @param params - Partial configuration parameters
-   * @returns Complete line axis configuration
-   */
-  static createLineConfig(params: {
-    name: string;
-    color: Color3;
-    origin?: Vector3;
-    direction?: Vector3;
-    length?: number;
-    opacity?: number;
-    pixelWidth?: number;
-    isDotted?: boolean;
-    dashSize?: number;
-    gapSize?: number;
-  }): LineAxisConfig {
-    return {
-      type: 'line',
-      name: params.name,
-      origin: params.origin ?? Vector3.Zero(),
-      direction:
-        params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
-      length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
-      color: params.color,
-      opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
-      pixelWidth: params.pixelWidth ?? DEFAULT_AXIS_CONFIG.PIXEL_WIDTH,
-      isDotted: params.isDotted ?? false,
-      dashSize: params.dashSize ?? DEFAULT_AXIS_CONFIG.DASH_SIZE,
-      gapSize: params.gapSize ?? DEFAULT_AXIS_CONFIG.GAP_SIZE,
-      dashNb: DEFAULT_AXIS_CONFIG.DASH_NB,
-    };
-  }
-
-  /**
-   * Creates a cylinder axis configuration with defaults
-   *
-   * @param params - Partial configuration parameters
-   * @returns Complete cylinder axis configuration
-   */
-  static createCylinderConfig(params: {
-    name: string;
-    color: Color3;
-    origin?: Vector3;
-    direction?: Vector3;
-    length?: number;
-    opacity?: number;
-    diameter?: number;
-    tessellation?: number;
-  }): CylinderAxisConfig {
-    return {
-      type: 'cylinder',
-      name: params.name,
-      origin: params.origin ?? Vector3.Zero(),
-      direction:
-        params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
-      length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
-      color: params.color,
-      opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
-      diameter: params.diameter ?? DEFAULT_AXIS_CONFIG.DIAMETER,
-      tessellation: params.tessellation ?? DEFAULT_AXIS_CONFIG.TESSELLATION,
-    };
-  }
-
-  /**
-   * Validates an axis configuration
-   *
-   * @param config - Configuration to validate
-   * @returns True if configuration is valid
-   */
-  static isValidConfig(config: AxisConfig): boolean {
-    if (!config.name || config.name.trim().length === 0) {
-      return false;
-    }
-
-    if (!config.origin || !config.direction || !config.color) {
-      return false;
-    }
-
-    if (config.length <= 0 || !Number.isFinite(config.length)) {
-      return false;
-    }
-
-    if (config.direction.length() === 0) {
-      return false;
-    }
-
-    if (config.opacity !== undefined && (config.opacity < 0 || config.opacity > 1)) {
-      return false;
-    }
-
-    // Type-specific validation
-    if (config.type === 'line') {
-      if (config.pixelWidth !== undefined && config.pixelWidth <= 0) {
-        return false;
-      }
-    } else if (config.type === 'cylinder') {
-      if (config.diameter <= 0 || !Number.isFinite(config.diameter)) {
-        return false;
-      }
-      if (config.tessellation !== undefined && config.tessellation < 3) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Creates a standard coordinate axes configuration
-   *
-   * @param baseConfig - Base configuration for all axes
-   * @returns Configuration for creating X, Y, Z axes
-   */
-  static createCoordinateAxesConfig(baseConfig: CoordinateAxesConfig): CoordinateAxesConfig {
-    return {
-      origin: Vector3.Zero(),
-      length: DEFAULT_AXIS_CONFIG.LENGTH,
-      opacity: DEFAULT_AXIS_CONFIG.OPACITY,
-      colorScheme: 'STANDARD',
-      pixelWidth: DEFAULT_AXIS_CONFIG.PIXEL_WIDTH,
-      diameter: DEFAULT_AXIS_CONFIG.DIAMETER,
-      tessellation: DEFAULT_AXIS_CONFIG.TESSELLATION,
-      dashSize: DEFAULT_AXIS_CONFIG.DASH_SIZE,
-      gapSize: DEFAULT_AXIS_CONFIG.GAP_SIZE,
-      ...baseConfig,
-    };
-  }
+/**
+ * Creates a line axis configuration with defaults
+ *
+ * @param params - Partial configuration parameters
+ * @returns Complete line axis configuration
+ */
+export function createLineAxisConfig(params: {
+  name: string;
+  color: Color3;
+  origin?: Vector3;
+  direction?: Vector3;
+  length?: number;
+  opacity?: number;
+  pixelWidth?: number;
+  isDotted?: boolean;
+  dashSize?: number;
+  gapSize?: number;
+}): LineAxisConfig {
+  return {
+    type: 'line',
+    name: params.name,
+    origin: params.origin ?? Vector3.Zero(),
+    direction: params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
+    length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
+    color: params.color,
+    opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
+    pixelWidth: params.pixelWidth ?? DEFAULT_AXIS_CONFIG.PIXEL_WIDTH,
+    isDotted: params.isDotted ?? false,
+    dashSize: params.dashSize ?? DEFAULT_AXIS_CONFIG.DASH_SIZE,
+    gapSize: params.gapSize ?? DEFAULT_AXIS_CONFIG.GAP_SIZE,
+    dashNb: DEFAULT_AXIS_CONFIG.DASH_NB,
+  };
 }
+
+/**
+ * Creates a cylinder axis configuration with defaults
+ *
+ * @param params - Partial configuration parameters
+ * @returns Complete cylinder axis configuration
+ */
+export function createCylinderAxisConfig(params: {
+  name: string;
+  color: Color3;
+  origin?: Vector3;
+  direction?: Vector3;
+  length?: number;
+  opacity?: number;
+  diameter?: number;
+  tessellation?: number;
+}): CylinderAxisConfig {
+  return {
+    type: 'cylinder',
+    name: params.name,
+    origin: params.origin ?? Vector3.Zero(),
+    direction: params.direction ?? AXIS_DIRECTIONS[params.name as AxisName] ?? new Vector3(1, 0, 0),
+    length: params.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
+    color: params.color,
+    opacity: params.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
+    diameter: params.diameter ?? DEFAULT_AXIS_CONFIG.DIAMETER,
+    tessellation: params.tessellation ?? DEFAULT_AXIS_CONFIG.TESSELLATION,
+  };
+}
+
+/**
+ * Validates an axis configuration
+ *
+ * @param config - Configuration to validate
+ * @returns True if configuration is valid
+ */
+export function isValidAxisConfig(config: AxisConfig): boolean {
+  if (!config.name || config.name.trim().length === 0) {
+    return false;
+  }
+
+  if (!config.origin || !config.direction || !config.color) {
+    return false;
+  }
+
+  if (config.length <= 0 || !Number.isFinite(config.length)) {
+    return false;
+  }
+
+  if (config.direction.length() === 0) {
+    return false;
+  }
+
+  if (config.opacity !== undefined && (config.opacity < 0 || config.opacity > 1)) {
+    return false;
+  }
+
+  // Type-specific validation
+  if (config.type === 'line') {
+    if (config.pixelWidth !== undefined && config.pixelWidth <= 0) {
+      return false;
+    }
+  } else if (config.type === 'cylinder') {
+    if (config.diameter <= 0 || !Number.isFinite(config.diameter)) {
+      return false;
+    }
+    if (config.tessellation !== undefined && config.tessellation < 3) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Creates a standard coordinate axes configuration
+ *
+ * @param baseConfig - Base configuration for all axes
+ * @returns Configuration for creating X, Y, Z axes
+ */
+export function createCoordinateAxesConfig(baseConfig: CoordinateAxesConfig): CoordinateAxesConfig {
+  return {
+    origin: Vector3.Zero(),
+    length: DEFAULT_AXIS_CONFIG.LENGTH,
+    opacity: DEFAULT_AXIS_CONFIG.OPACITY,
+    colorScheme: 'STANDARD',
+    pixelWidth: DEFAULT_AXIS_CONFIG.PIXEL_WIDTH,
+    diameter: DEFAULT_AXIS_CONFIG.DIAMETER,
+    tessellation: DEFAULT_AXIS_CONFIG.TESSELLATION,
+    dashSize: DEFAULT_AXIS_CONFIG.DASH_SIZE,
+    gapSize: DEFAULT_AXIS_CONFIG.GAP_SIZE,
+    ...baseConfig,
+  };
+}
+
+/**
+ * @deprecated Use individual functions instead of AxisConfigUtils class
+ * Temporary compatibility export for backward compatibility
+ */
+export const AxisConfigUtils = {
+  createLineConfig: createLineAxisConfig,
+  createCylinderConfig: createCylinderAxisConfig,
+  isValidConfig: isValidAxisConfig,
+  createCoordinateAxesConfig,
+};

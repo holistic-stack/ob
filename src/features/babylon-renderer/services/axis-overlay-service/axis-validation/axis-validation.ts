@@ -311,135 +311,139 @@ export class AxisValidationUtils {
 }
 
 /**
- * Configuration validation utilities
+ * Validate a complete axis configuration object
  */
-export class AxisConfigValidation {
-  /**
-   * Validate a complete axis configuration object
-   */
-  static validateAxisConfig(
-    config: unknown,
-    options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
-  ): AxisResult<Record<string, unknown>> {
-    if (typeof config !== 'object' || config === null) {
-      return AxisResultUtils.failure(
-        AxisErrorFactory.createConfigurationError(
-          'Configuration must be an object',
-          'config',
-          config,
-          'object'
-        )
-      );
-    }
-
-    const configObj = config as Record<string, unknown>;
-    const validatedConfig: Record<string, unknown> = {};
-
-    // Validate each known property
-    for (const [key, value] of Object.entries(configObj)) {
-      const validationResult = AxisConfigValidation.validateConfigProperty(key, value, options);
-      if (!AxisResultUtils.isSuccess(validationResult)) {
-        return validationResult;
-      }
-      validatedConfig[key] = validationResult.data;
-    }
-
-    return AxisResultUtils.success(validatedConfig);
+export function validateAxisConfig(
+  config: unknown,
+  options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
+): AxisResult<Record<string, unknown>> {
+  if (typeof config !== 'object' || config === null) {
+    return AxisResultUtils.failure(
+      AxisErrorFactory.createConfigurationError(
+        'Configuration must be an object',
+        'config',
+        config,
+        'object'
+      )
+    );
   }
 
-  /**
-   * Validate a single configuration property
-   */
-  private static validateConfigProperty(
-    key: string,
-    value: unknown,
-    options: ValidationOptions
-  ): AxisResult<unknown> {
-    switch (key) {
-      case 'pixelWidth':
-        return AxisValidationUtils.validatePixelWidth(value, options);
-      case 'opacity':
-        return AxisValidationUtils.validateOpacity(value, options);
-      case 'length':
-        return AxisValidationUtils.validateAxisLength(value, options);
-      case 'visible':
-        if (!AxisValidationUtils.isBoolean(value)) {
-          return AxisResultUtils.failure(
-            AxisErrorFactory.createConfigurationError(
-              'Visible property must be a boolean',
-              key,
-              value,
-              'boolean'
-            )
-          );
-        }
-        return AxisResultUtils.success(value);
-      case 'colors':
-        if (typeof value === 'object' && value !== null) {
-          // Validate color object properties
-          const colorObj = value as Record<string, unknown>;
-          for (const [colorKey, colorValue] of Object.entries(colorObj)) {
-            const colorResult = AxisValidationUtils.validateRgbColor(colorValue);
-            if (!AxisResultUtils.isSuccess(colorResult)) {
-              return AxisResultUtils.failure(
-                AxisErrorFactory.createConfigurationError(
-                  `Invalid color for ${colorKey}`,
-                  `colors.${colorKey}`,
-                  colorValue,
-                  'RGB array'
-                )
-              );
-            }
+  const configObj = config as Record<string, unknown>;
+  const validatedConfig: Record<string, unknown> = {};
+
+  // Validate each known property
+  for (const [key, value] of Object.entries(configObj)) {
+    const validationResult = validateConfigProperty(key, value, options);
+    if (!AxisResultUtils.isSuccess(validationResult)) {
+      return validationResult;
+    }
+    validatedConfig[key] = validationResult.data;
+  }
+
+  return AxisResultUtils.success(validatedConfig);
+}
+
+/**
+ * Validate a single configuration property
+ */
+function validateConfigProperty(
+  key: string,
+  value: unknown,
+  options: ValidationOptions
+): AxisResult<unknown> {
+  switch (key) {
+    case 'pixelWidth':
+      return AxisValidationUtils.validatePixelWidth(value, options);
+    case 'opacity':
+      return AxisValidationUtils.validateOpacity(value, options);
+    case 'length':
+      return AxisValidationUtils.validateAxisLength(value, options);
+    case 'visible':
+      if (!AxisValidationUtils.isBoolean(value)) {
+        return AxisResultUtils.failure(
+          AxisErrorFactory.createConfigurationError(
+            'Visible property must be a boolean',
+            key,
+            value,
+            'boolean'
+          )
+        );
+      }
+      return AxisResultUtils.success(value);
+    case 'colors':
+      if (typeof value === 'object' && value !== null) {
+        // Validate color object properties
+        const colorObj = value as Record<string, unknown>;
+        for (const [colorKey, colorValue] of Object.entries(colorObj)) {
+          const colorResult = AxisValidationUtils.validateRgbColor(colorValue);
+          if (!AxisResultUtils.isSuccess(colorResult)) {
+            return AxisResultUtils.failure(
+              AxisErrorFactory.createConfigurationError(
+                `Invalid color for ${colorKey}`,
+                `colors.${colorKey}`,
+                colorValue,
+                'RGB array'
+              )
+            );
           }
         }
-        return AxisResultUtils.success(value);
-      default:
-        // Allow unknown properties in non-strict mode
-        if (options.strict) {
-          return AxisResultUtils.failure(
-            AxisErrorFactory.createConfigurationError(
-              `Unknown configuration property: ${key}`,
-              key,
-              value
-            )
-          );
-        }
-        return AxisResultUtils.success(value);
-    }
-  }
-
-  /**
-   * Sanitize and provide defaults for configuration
-   */
-  static sanitizeConfig(config: Record<string, unknown>): Record<string, unknown> {
-    const sanitized = { ...config };
-
-    // Provide defaults for missing values
-    if (sanitized.pixelWidth === undefined) {
-      sanitized.pixelWidth = DEFAULT_AXIS_PARAMS.PIXEL_WIDTH;
-    }
-    if (sanitized.opacity === undefined) {
-      sanitized.opacity = DEFAULT_AXIS_PARAMS.OPACITY;
-    }
-    if (sanitized.length === undefined) {
-      sanitized.length = DEFAULT_AXIS_PARAMS.LENGTH;
-    }
-    if (sanitized.visible === undefined) {
-      sanitized.visible = true;
-    }
-
-    // Clamp values to valid ranges
-    if (typeof sanitized.pixelWidth === 'number') {
-      sanitized.pixelWidth = Math.max(
-        SCREEN_SPACE_CONSTANTS.MIN_PIXEL_WIDTH,
-        Math.min(SCREEN_SPACE_CONSTANTS.MAX_PIXEL_WIDTH, sanitized.pixelWidth)
-      );
-    }
-
-    if (typeof sanitized.opacity === 'number') {
-      sanitized.opacity = Math.max(0, Math.min(1, sanitized.opacity));
-    }
-
-    return sanitized;
+      }
+      return AxisResultUtils.success(value);
+    default:
+      // Allow unknown properties in non-strict mode
+      if (options.strict) {
+        return AxisResultUtils.failure(
+          AxisErrorFactory.createConfigurationError(
+            `Unknown configuration property: ${key}`,
+            key,
+            value
+          )
+        );
+      }
+      return AxisResultUtils.success(value);
   }
 }
+
+/**
+ * Sanitize and provide defaults for configuration
+ */
+export function sanitizeAxisConfig(config: Record<string, unknown>): Record<string, unknown> {
+  const sanitized = { ...config };
+
+  // Provide defaults for missing values
+  if (sanitized.pixelWidth === undefined) {
+    sanitized.pixelWidth = DEFAULT_AXIS_PARAMS.PIXEL_WIDTH;
+  }
+  if (sanitized.opacity === undefined) {
+    sanitized.opacity = DEFAULT_AXIS_PARAMS.OPACITY;
+  }
+  if (sanitized.length === undefined) {
+    sanitized.length = DEFAULT_AXIS_PARAMS.LENGTH;
+  }
+  if (sanitized.visible === undefined) {
+    sanitized.visible = true;
+  }
+
+  // Clamp values to valid ranges
+  if (typeof sanitized.pixelWidth === 'number') {
+    sanitized.pixelWidth = Math.max(
+      SCREEN_SPACE_CONSTANTS.MIN_PIXEL_WIDTH,
+      Math.min(SCREEN_SPACE_CONSTANTS.MAX_PIXEL_WIDTH, sanitized.pixelWidth)
+    );
+  }
+
+  if (typeof sanitized.opacity === 'number') {
+    sanitized.opacity = Math.max(0, Math.min(1, sanitized.opacity));
+  }
+
+  return sanitized;
+}
+
+/**
+ * @deprecated Use individual functions instead of AxisConfigValidation class
+ * Temporary compatibility export for backward compatibility
+ */
+export const AxisConfigValidation = {
+  validateAxisConfig,
+  sanitizeConfig: sanitizeAxisConfig,
+};

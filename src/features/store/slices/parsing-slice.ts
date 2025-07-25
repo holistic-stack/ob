@@ -466,11 +466,6 @@ export const createParsingSlice = (
     AsyncOperationResult<ReadonlyArray<ASTNode>, OperationError>
   >();
 
-  // Helper function to calculate parse time
-  const _calculateParseTime = (startTime: number): number => {
-    return Date.now() - startTime;
-  };
-
   return {
     parseCode: async (
       code: string,
@@ -503,7 +498,10 @@ export const createParsingSlice = (
       // If there's already a parsing operation for this code, wait for it
       if (parsingPromises.has(code)) {
         logger.debug('Parsing already in progress for this code, waiting for completion...');
-        return parsingPromises.get(code)!;
+        const existingPromise = parsingPromises.get(code);
+        if (existingPromise) {
+          return existingPromise;
+        }
       }
 
       // Set loading state for fresh parsing

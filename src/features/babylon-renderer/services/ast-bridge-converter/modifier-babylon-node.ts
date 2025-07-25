@@ -223,13 +223,17 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Create a parent mesh to hold child meshes
    */
   private async createParentMesh(modifierType: string): Promise<AbstractMesh> {
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for creating parent mesh');
+    }
+
     const { MeshBuilder } = await import('@babylonjs/core');
 
     // Create an invisible parent mesh
     const parentMesh = MeshBuilder.CreateBox(
       `${this.name}_${modifierType}_parent`,
       { size: 0.001 },
-      this.scene!
+      this.scene
     );
     parentMesh.isVisible = false;
 
@@ -240,9 +244,13 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Create debug material (bright red/yellow for highlighting)
    */
   private async createDebugMaterial(): Promise<StandardMaterial> {
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for creating debug material');
+    }
+
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
 
-    const material = new StandardMaterial(`${this.name}_debug_material`, this.scene!);
+    const material = new StandardMaterial(`${this.name}_debug_material`, this.scene);
     material.diffuseColor = new Color3(1, 0, 0); // Bright red
     material.emissiveColor = new Color3(0.2, 0, 0); // Slight glow
     material.specularColor = new Color3(0.5, 0.5, 0.5);
@@ -254,9 +262,13 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Create show-only material (bright highlighting)
    */
   private async createShowOnlyMaterial(): Promise<StandardMaterial> {
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for creating show-only material');
+    }
+
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
 
-    const material = new StandardMaterial(`${this.name}_show_only_material`, this.scene!);
+    const material = new StandardMaterial(`${this.name}_show_only_material`, this.scene);
     material.diffuseColor = new Color3(1, 1, 0); // Bright yellow
     material.emissiveColor = new Color3(0.3, 0.3, 0); // Yellow glow
     material.specularColor = new Color3(0.8, 0.8, 0.8);
@@ -268,9 +280,13 @@ export class ModifierBabylonNode extends BabylonJSNode {
    * Create background material (transparent)
    */
   private async createBackgroundMaterial(): Promise<StandardMaterial> {
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for creating background material');
+    }
+
     const { StandardMaterial, Color3 } = await import('@babylonjs/core');
 
-    const material = new StandardMaterial(`${this.name}_background_material`, this.scene!);
+    const material = new StandardMaterial(`${this.name}_background_material`, this.scene);
     material.diffuseColor = new Color3(0.7, 0.7, 0.7); // Light gray
     material.alpha = 0.3; // Transparent
     material.specularColor = new Color3(0.2, 0.2, 0.2);

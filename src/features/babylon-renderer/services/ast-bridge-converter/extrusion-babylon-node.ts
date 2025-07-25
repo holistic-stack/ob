@@ -172,6 +172,10 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
     // Convert profile to BabylonJS Vector3 array
     const babylonProfile = profile2D.map((p) => new BabylonVector3(p.x, p.y, 0));
 
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for linear extrusion');
+    }
+
     // Create extruded mesh
     const extrudedMesh = MeshBuilder.ExtrudeShape(
       `${this.name}_linear_extrude`,
@@ -181,7 +185,7 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         cap: 3, // CAP_ALL equivalent
         updatable: false,
       },
-      this.scene!
+      this.scene
     );
 
     return extrudedMesh;
@@ -205,6 +209,10 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
     // Convert profile to BabylonJS Vector3 array (assuming profile is in XY plane)
     const babylonProfile = profile2D.map((p) => new BabylonVector3(p.x, p.y, 0));
 
+    if (!this.scene) {
+      throw this.createError('NO_SCENE', 'Scene is required for rotate extrusion');
+    }
+
     // Create lathe mesh (rotational extrusion)
     const latheMesh = MeshBuilder.CreateLathe(
       `${this.name}_rotate_extrude`,
@@ -216,7 +224,7 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         cap: 3, // CAP_ALL equivalent
         updatable: false,
       },
-      this.scene!
+      this.scene
     );
 
     return latheMesh;

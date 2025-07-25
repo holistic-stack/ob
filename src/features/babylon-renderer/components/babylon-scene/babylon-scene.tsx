@@ -10,7 +10,15 @@ import type {
   Engine as BabylonEngineType,
   Scene as BabylonSceneType,
 } from '@babylonjs/core';
-import { Color3, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
+import {
+  type ArcRotateCamera,
+  Color3,
+  Color4,
+  Engine,
+  NullEngine,
+  PointerEventTypes,
+  Vector3,
+} from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
@@ -222,17 +230,26 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     logger.init('[INIT][BabylonScene] Initializing BabylonJS engine (one-time initialization)');
 
-    // Create engine
-    const engine = new Engine(
-      canvasRef.current,
-      config.antialias,
-      {
-        preserveDrawingBuffer: true,
-        stencil: true,
-        loseContextOnDispose: true,
-      },
-      config.adaptToDeviceRatio
-    );
+    // Create engine - use NullEngine in test environment for headless testing
+    const isTestEnvironment = import.meta.env.NODE_ENV === 'test' || import.meta.env.VITEST;
+    const engine = isTestEnvironment
+      ? new NullEngine({
+          renderHeight: 600,
+          renderWidth: 800,
+          textureSize: 512,
+          deterministicLockstep: false,
+          lockstepMaxSteps: 1,
+        })
+      : new Engine(
+          canvasRef.current,
+          config.antialias,
+          {
+            preserveDrawingBuffer: true,
+            stencil: true,
+            loseContextOnDispose: true,
+          },
+          config.adaptToDeviceRatio
+        );
 
     engineRef.current = engine;
 
@@ -340,7 +357,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         // Update axis overlay dynamic ticks based on camera distance
         const camera = sceneRef.current.activeCamera;
         if (camera && 'radius' in camera) {
-          const currentDistance = (camera as BABYLON.ArcRotateCamera).radius;
+          const currentDistance = (camera as ArcRotateCamera).radius;
           if (Math.abs(currentDistance - lastCameraDistance) > 0.1) {
             updateDynamicTicks(currentDistance);
             lastCameraDistance = currentDistance;
@@ -440,7 +457,12 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     // Update background color if changed
     if (config.backgroundColor) {
-      scene.clearColor = config.backgroundColor.toColor4(1.0); // Convert Color3 to Color4
+      scene.clearColor = new Color4(
+        config.backgroundColor.r,
+        config.backgroundColor.g,
+        config.backgroundColor.b,
+        1.0
+      ); // Convert Color3 to Color4
     }
 
     // Update environment intensity if changed

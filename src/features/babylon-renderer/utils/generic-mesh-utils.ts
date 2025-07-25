@@ -119,9 +119,19 @@ export const createBoundingBoxFromGeometry = (geometry: GenericGeometry): Boundi
   let maxZ = Number.NEGATIVE_INFINITY;
 
   for (let i = 0; i < positions.length; i += 3) {
-    const x = positions[i]!;
-    const y = positions[i + 1]!;
-    const z = positions[i + 2]!;
+    // Ensure we have valid indices for x, y, z coordinates
+    if (i + 2 >= positions.length) {
+      break; // Skip incomplete triplets
+    }
+
+    const x = positions[i];
+    const y = positions[i + 1];
+    const z = positions[i + 2];
+
+    // Skip if any coordinate is undefined
+    if (x === undefined || y === undefined || z === undefined) {
+      continue;
+    }
 
     minX = Math.min(minX, x);
     minY = Math.min(minY, y);
