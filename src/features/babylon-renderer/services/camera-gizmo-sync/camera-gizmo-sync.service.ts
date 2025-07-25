@@ -54,11 +54,11 @@
  * @since 2025-07-23
  */
 
-import type { ArcRotateCamera, Scene, Animatable } from '@babylonjs/core';
+import type { Animatable, ArcRotateCamera, Scene } from '@babylonjs/core';
 import { Animation, EasingFunction, QuadraticEase, Vector3 } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { Result } from '../../../../shared/types/result.types';
-import { useAppStore, type AppStore } from '../../../store/app-store';
+import { type AppStore, useAppStore } from '../../../store/app-store';
 import type { AxisDirection } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';
 
@@ -210,6 +210,14 @@ export class CameraGizmoSyncService {
       );
     }
 
+    // Check if camera is disposed
+    if (this.isCameraDisposed()) {
+      return this.createErrorResult(
+        'ANIMATION_FAILED',
+        'Camera has been disposed and is no longer available'
+      );
+    }
+
     try {
       logger.debug(`[DEBUG][CameraGizmoSync] Animating camera to axis: ${axis}`);
 
@@ -251,7 +259,7 @@ export class CameraGizmoSyncService {
       return { success: true, data: undefined };
     } catch (error) {
       this.state = { ...this.state, isAnimating: false };
-          this.store.setGizmoAnimating(false);
+      this.store.setGizmoAnimating(false);
 
       return this.createErrorResult(
         'ANIMATION_FAILED',
@@ -319,15 +327,13 @@ export class CameraGizmoSyncService {
    */
   private setupStoreListeners(): void {
     // Subscribe to gizmo axis selection changes
-    useAppStore.subscribe(
-      (state) => {
-        const selectedAxis = state.babylonRendering.gizmo.selectedAxis;
-        if (selectedAxis && !this.state.isAnimating) {
-          // Axis was selected, animate camera
-          this.animateCameraToAxis(selectedAxis);
-        }
+    useAppStore.subscribe((state) => {
+      const selectedAxis = state.babylonRendering.gizmo.selectedAxis;
+      if (selectedAxis && !this.state.isAnimating) {
+        // Axis was selected, animate camera
+        this.animateCameraToAxis(selectedAxis);
       }
-    );
+    });
   }
 
   /**
@@ -352,6 +358,27 @@ export class CameraGizmoSyncService {
       default:
         this.easingFunction = new QuadraticEase();
         this.easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
+    }
+  }
+
+  /**
+   * Check if camera is disposed
+   */
+  private isCameraDisposed(): boolean {
+    if (!this.camera) return true;
+
+    // Check if camera has isDisposed method and use it
+    if ('isDisposed' in this.camera && typeof this.camera.isDisposed === 'function') {
+      return this.camera.isDisposed();
+    }
+
+    // Fallback: try to access camera properties - if disposed, this will throw
+    try {
+      this.camera.position;
+      this.camera.radius;
+      return false;
+    } catch {
+      return true;
     }
   }
 
@@ -438,7 +465,7 @@ export class CameraGizmoSyncService {
     code: CameraGizmoSyncError['code'],
     message: string,
     details?: Record<string, unknown>
-  ): Result<any, CameraGizmoSyncError> {
+  ): Result<never, CameraGizmoSyncError> {
     return {
       success: false,
       error: {

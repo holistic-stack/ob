@@ -6,12 +6,11 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import { Scene } from '@babylonjs/core';
-import { CreateBox, type Engine, NullEngine } from '@babylonjs/core';
-import { render, waitFor } from '@testing-library/react';
+import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAppStore } from '../../../store/app-store';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { appStoreInstance, useAppStore } from '../../../store/app-store';
 import type { GizmoMode } from '../../services/transformation-gizmo-service';
 import { TransformationGizmo } from './transformation-gizmo';
 
@@ -73,6 +72,12 @@ describe('TransformationGizmo Integration Tests', () => {
   let testMesh: AbstractMesh;
 
   beforeEach(async () => {
+    // Reset store state before each test
+    const store = appStoreInstance.getState();
+    store.resetGizmo();
+    store.setSelectedMesh(null);
+    store.setTransformationGizmoMode('position');
+
     // Create NullEngine for headless testing
     engine = new NullEngine({
       renderHeight: 512,
@@ -90,8 +95,18 @@ describe('TransformationGizmo Integration Tests', () => {
   });
 
   afterEach(() => {
+    // Clean up React Testing Library components
+    cleanup();
+
+    // Dispose BabylonJS resources
     scene.dispose();
     engine.dispose();
+
+    // Reset store state after each test
+    const store = appStoreInstance.getState();
+    store.resetGizmo();
+    store.setSelectedMesh(null);
+    store.setTransformationGizmoMode('position');
   });
 
   const renderWithStore = (props: {
@@ -129,7 +144,9 @@ describe('TransformationGizmo Integration Tests', () => {
       });
 
       // Select mesh
-      rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />);
+      rerender(
+        <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />
+      );
 
       await waitFor(() => {
         expect(getByTestId('store-selected-mesh')).toHaveTextContent('testBox');
@@ -149,14 +166,18 @@ describe('TransformationGizmo Integration Tests', () => {
       });
 
       // Change to rotation mode
-      rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="rotation" />);
+      rerender(
+        <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="rotation" />
+      );
 
       await waitFor(() => {
         expect(getByTestId('store-gizmo-mode')).toHaveTextContent('rotation');
       });
 
       // Change to scale mode
-      rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="scale" />);
+      rerender(
+        <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="scale" />
+      );
 
       await waitFor(() => {
         expect(getByTestId('store-gizmo-mode')).toHaveTextContent('scale');
@@ -176,7 +197,9 @@ describe('TransformationGizmo Integration Tests', () => {
       expect(getByTestId('transformation-gizmo-container')).toBeInTheDocument();
 
       // Add scene
-      rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />);
+      rerender(
+        <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode="position" />
+      );
 
       await waitFor(() => {
         expect(getByTestId('store-selected-mesh')).toHaveTextContent('testBox');
@@ -198,11 +221,7 @@ describe('TransformationGizmo Integration Tests', () => {
 
       // Switch to second mesh
       rerender(
-        <TestTransformationGizmoWithStore
-          scene={scene}
-          selectedMesh={secondMesh}
-          mode="position"
-        />
+        <TestTransformationGizmoWithStore scene={scene} selectedMesh={secondMesh} mode="position" />
       );
 
       await waitFor(() => {
@@ -215,12 +234,16 @@ describe('TransformationGizmo Integration Tests', () => {
     it('should handle all gizmo modes', async () => {
       const modes: GizmoMode[] = ['position', 'rotation', 'scale'];
 
+      const { getByTestId, rerender } = renderWithStore({
+        scene,
+        selectedMesh: testMesh,
+        mode: 'position',
+      });
+
       for (const mode of modes) {
-        const { getByTestId } = renderWithStore({
-          scene,
-          selectedMesh: testMesh,
-          mode,
-        });
+        rerender(
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode={mode} />
+        );
 
         await waitFor(() => {
           expect(getByTestId('store-gizmo-mode')).toHaveTextContent(mode);
@@ -238,7 +261,9 @@ describe('TransformationGizmo Integration Tests', () => {
       const modes: GizmoMode[] = ['position', 'rotation', 'scale', 'position', 'rotation'];
 
       for (const mode of modes) {
-        rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode={mode} />);
+        rerender(
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={testMesh} mode={mode} />
+        );
 
         await waitFor(() => {
           expect(getByTestId('store-gizmo-mode')).toHaveTextContent(mode);
@@ -288,7 +313,9 @@ describe('TransformationGizmo Integration Tests', () => {
         const mesh = i % 2 === 0 ? testMesh : null;
         const mode: GizmoMode = i % 3 === 0 ? 'position' : i % 3 === 1 ? 'rotation' : 'scale';
 
-        rerender(<TestTransformationGizmoWithStore scene={scene} selectedMesh={mesh} mode={mode} />);
+        rerender(
+          <TestTransformationGizmoWithStore scene={scene} selectedMesh={mesh} mode={mode} />
+        );
       }
 
       // Should still be functional after rapid changes

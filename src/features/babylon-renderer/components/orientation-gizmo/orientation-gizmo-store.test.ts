@@ -10,7 +10,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useAppStore } from '../../../store/app-store';
+import { appStoreInstance } from '../../../store/app-store';
 import {
   selectGizmoConfig,
   selectGizmoError,
@@ -38,13 +38,13 @@ describe('OrientationGizmo Store Integration', () => {
 
   beforeEach(() => {
     // Get fresh store instance and reset gizmo state
-    store = useAppStore.getState();
+    store = appStoreInstance.getState();
     store.resetGizmo();
   });
 
   describe('Gizmo State Management', () => {
     it('should initialize with default gizmo state', () => {
-      const gizmoState = selectGizmoState(store);
+      const gizmoState = selectGizmoState(appStoreInstance.getState());
 
       expect(gizmoState).toBeDefined();
       expect(gizmoState?.isVisible).toBe(true);
@@ -57,15 +57,15 @@ describe('OrientationGizmo Store Integration', () => {
 
     it('should update gizmo visibility', () => {
       // Initially visible
-      expect(selectGizmoIsVisible(store)).toBe(true);
+      expect(selectGizmoIsVisible(appStoreInstance.getState())).toBe(true);
 
       // Hide gizmo
       store.setGizmoVisibility(false);
-      expect(selectGizmoIsVisible(store)).toBe(false);
+      expect(selectGizmoIsVisible(appStoreInstance.getState())).toBe(false);
 
       // Show gizmo
       store.setGizmoVisibility(true);
-      expect(selectGizmoIsVisible(store)).toBe(true);
+      expect(selectGizmoIsVisible(appStoreInstance.getState())).toBe(true);
     });
 
     it('should update gizmo position', () => {
@@ -79,7 +79,7 @@ describe('OrientationGizmo Store Integration', () => {
 
       for (const position of positions) {
         store.setGizmoPosition(position);
-        expect(selectGizmoPosition(store)).toBe(position);
+        expect(selectGizmoPosition(appStoreInstance.getState())).toBe(position);
       }
     });
 
@@ -95,7 +95,7 @@ describe('OrientationGizmo Store Integration', () => {
       };
 
       store.updateGizmoConfig(newConfig);
-      const config = selectGizmoConfig(store);
+      const config = selectGizmoConfig(appStoreInstance.getState());
 
       expect(config?.size).toBe(120);
       expect(config?.showSecondary).toBe(false);
@@ -107,11 +107,11 @@ describe('OrientationGizmo Store Integration', () => {
 
     it('should update selected axis', () => {
       // Initially no axis selected
-      expect(selectGizmoSelectedAxis(store)).toBeNull();
+      expect(selectGizmoSelectedAxis(appStoreInstance.getState())).toBeNull();
 
       // Select positive X axis
       store.setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
-      expect(selectGizmoSelectedAxis(store)).toBe(AxisDirection.POSITIVE_X);
+      expect(selectGizmoSelectedAxis(appStoreInstance.getState())).toBe(AxisDirection.POSITIVE_X);
 
       // Test all axes
       const axes = [
@@ -124,24 +124,24 @@ describe('OrientationGizmo Store Integration', () => {
 
       for (const axis of axes) {
         store.setGizmoSelectedAxis(axis);
-        expect(selectGizmoSelectedAxis(store)).toBe(axis);
+        expect(selectGizmoSelectedAxis(appStoreInstance.getState())).toBe(axis);
       }
 
       // Clear selection
       store.setGizmoSelectedAxis(null);
-      expect(selectGizmoSelectedAxis(store)).toBeNull();
+      expect(selectGizmoSelectedAxis(appStoreInstance.getState())).toBeNull();
     });
 
     it('should track last interaction time', () => {
       // Initially no interaction
-      expect(selectGizmoLastInteraction(store)).toBeNull();
+      expect(selectGizmoLastInteraction(appStoreInstance.getState())).toBeNull();
 
       // Select axis should update interaction time
       const beforeTime = new Date();
       store.setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
       const afterTime = new Date();
 
-      const lastInteraction = selectGizmoLastInteraction(store);
+      const lastInteraction = selectGizmoLastInteraction(appStoreInstance.getState());
       expect(lastInteraction).toBeInstanceOf(Date);
       if (lastInteraction) {
         expect(lastInteraction.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
@@ -153,21 +153,21 @@ describe('OrientationGizmo Store Integration', () => {
   describe('Animation State Management', () => {
     it('should manage animation state', () => {
       // Initially not animating
-      expect(selectGizmoIsAnimating(store)).toBe(false);
+      expect(selectGizmoIsAnimating(appStoreInstance.getState())).toBe(false);
 
       // Start animation
       store.setGizmoAnimating(true);
-      expect(selectGizmoIsAnimating(store)).toBe(true);
+      expect(selectGizmoIsAnimating(appStoreInstance.getState())).toBe(true);
 
       // Stop animation
       store.setGizmoAnimating(false);
-      expect(selectGizmoIsAnimating(store)).toBe(false);
+      expect(selectGizmoIsAnimating(appStoreInstance.getState())).toBe(false);
     });
 
     it('should set animation start time when starting animation', () => {
       store.setGizmoAnimating(true);
 
-      const gizmoState = selectGizmoState(store);
+      const gizmoState = selectGizmoState(appStoreInstance.getState());
       const startTime = gizmoState?.cameraAnimation.startTime || 0;
 
       // Should have a valid start time
@@ -178,7 +178,7 @@ describe('OrientationGizmo Store Integration', () => {
   describe('Error State Management', () => {
     it('should manage error state', () => {
       // Initially no error
-      expect(selectGizmoError(store)).toBeNull();
+      expect(selectGizmoError(appStoreInstance.getState())).toBeNull();
 
       // Set error
       const error: GizmoError = {
@@ -188,11 +188,11 @@ describe('OrientationGizmo Store Integration', () => {
       };
 
       store.setGizmoError(error);
-      expect(selectGizmoError(store)).toEqual(error);
+      expect(selectGizmoError(appStoreInstance.getState())).toEqual(error);
 
       // Clear error
       store.setGizmoError(null);
-      expect(selectGizmoError(store)).toBeNull();
+      expect(selectGizmoError(appStoreInstance.getState())).toBeNull();
     });
 
     it('should handle different error types', () => {
@@ -214,7 +214,7 @@ describe('OrientationGizmo Store Integration', () => {
         };
 
         store.setGizmoError(error);
-        const storedError = selectGizmoError(store);
+        const storedError = selectGizmoError(appStoreInstance.getState());
         expect(storedError?.code).toBe(errorCode);
       }
     });
@@ -223,11 +223,11 @@ describe('OrientationGizmo Store Integration', () => {
   describe('Initialization State', () => {
     it('should manage initialization state', () => {
       // Initially not initialized
-      expect(selectGizmoIsInitialized(store)).toBe(false);
+      expect(selectGizmoIsInitialized(appStoreInstance.getState())).toBe(false);
 
       // Initialize
       store.initializeGizmo();
-      expect(selectGizmoIsInitialized(store)).toBe(true);
+      expect(selectGizmoIsInitialized(appStoreInstance.getState())).toBe(true);
 
       // Should clear error on initialization
       const error: GizmoError = {
@@ -238,7 +238,7 @@ describe('OrientationGizmo Store Integration', () => {
       store.setGizmoError(error);
 
       store.initializeGizmo();
-      expect(selectGizmoError(store)).toBeNull();
+      expect(selectGizmoError(appStoreInstance.getState())).toBeNull();
     });
 
     it('should reset all state', () => {
@@ -252,7 +252,7 @@ describe('OrientationGizmo Store Integration', () => {
       // Reset should restore defaults
       store.resetGizmo();
 
-      const gizmoState = selectGizmoState(store);
+      const gizmoState = selectGizmoState(appStoreInstance.getState());
       expect(gizmoState?.isVisible).toBe(true);
       expect(gizmoState?.position).toBe(GizmoPosition.TOP_RIGHT);
       expect(gizmoState?.selectedAxis).toBeNull();
@@ -269,7 +269,7 @@ describe('OrientationGizmo Store Integration', () => {
       store.initializeGizmo();
       store.setGizmoSelectedAxis(AxisDirection.POSITIVE_Y);
 
-      const stats = selectGizmoStats(store);
+      const stats = selectGizmoStats(appStoreInstance.getState());
 
       expect(stats.isVisible).toBe(true);
       expect(stats.isInitialized).toBe(true);
@@ -284,7 +284,7 @@ describe('OrientationGizmo Store Integration', () => {
       store.setGizmoSelectedAxis(AxisDirection.POSITIVE_Z);
       store.setGizmoAnimating(false);
 
-      const interactionState = selectGizmoInteractionState(store);
+      const interactionState = selectGizmoInteractionState(appStoreInstance.getState());
 
       expect(interactionState.selectedAxis).toBe(AxisDirection.POSITIVE_Z);
       expect(interactionState.isAnimating).toBe(false);
@@ -300,21 +300,25 @@ describe('OrientationGizmo Store Integration', () => {
 
       store.setGizmoError(error);
 
-      const stats = selectGizmoStats(store);
+      // Get fresh state after setting error
+      const freshState = appStoreInstance.getState();
+      const stats = selectGizmoStats(freshState);
       expect(stats.hasError).toBe(true);
     });
   });
 
   describe('State Immutability', () => {
     it('should maintain immutable state updates', () => {
-      const initialState = selectGizmoState(store);
-      const initialConfig = selectGizmoConfig(store);
+      const initialState = selectGizmoState(appStoreInstance.getState());
+      const initialConfig = selectGizmoConfig(appStoreInstance.getState());
 
       // Update configuration
       store.updateGizmoConfig({ size: 150 });
 
-      const newState = selectGizmoState(store);
-      const newConfig = selectGizmoConfig(store);
+      // Get fresh state after updates
+      const freshState = appStoreInstance.getState();
+      const newState = selectGizmoState(freshState);
+      const newConfig = selectGizmoConfig(freshState);
 
       // State objects should be different (immutable)
       expect(newState).not.toBe(initialState);
@@ -326,14 +330,16 @@ describe('OrientationGizmo Store Integration', () => {
     });
 
     it('should preserve state structure during updates', () => {
-      const _initialState = selectGizmoState(store);
+      const _initialState = selectGizmoState(appStoreInstance.getState());
 
       // Perform various updates
       store.setGizmoVisibility(false);
       store.setGizmoPosition(GizmoPosition.BOTTOM_RIGHT);
       store.setGizmoSelectedAxis(AxisDirection.NEGATIVE_X);
 
-      const updatedState = selectGizmoState(store);
+      // Get fresh state after updates
+      const freshState = appStoreInstance.getState();
+      const updatedState = selectGizmoState(freshState);
 
       // Structure should remain consistent
       expect(updatedState).toHaveProperty('isVisible');
@@ -386,9 +392,9 @@ describe('OrientationGizmo Store Integration', () => {
 
       // Call selectors many times
       for (let i = 0; i < 1000; i++) {
-        selectGizmoStats(store);
-        selectGizmoInteractionState(store);
-        selectGizmoConfig(store);
+        selectGizmoStats(appStoreInstance.getState());
+        selectGizmoInteractionState(appStoreInstance.getState());
+        selectGizmoConfig(appStoreInstance.getState());
       }
 
       const endTime = performance.now();

@@ -193,7 +193,7 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
   private async applyRotateExtrusion(profile2D: Vector3[]): Promise<AbstractMesh> {
     const rotateExtrudeNode = this.originalOpenscadNode as RotateExtrudeNode;
     const angle = rotateExtrudeNode.angle || 360;
-    const segments = (rotateExtrudeNode as any).$fn || 16;
+    const segments = rotateExtrudeNode.$fn || 16;
 
     logger.debug(
       `[ROTATE_EXTRUDE] Applying rotate extrusion with angle: ${angle}, segments: ${segments}`
@@ -233,20 +233,20 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
         const linearExtrudeNode = node as LinearExtrudeNode;
         params.height = linearExtrudeNode.height;
         params.center = linearExtrudeNode.center;
-        params.convexity = (linearExtrudeNode as any).convexity;
+        params.convexity = linearExtrudeNode.convexity;
         params.twist = linearExtrudeNode.twist;
-        params.slices = (linearExtrudeNode as any).slices;
+        params.slices = linearExtrudeNode.slices;
         params.scale = linearExtrudeNode.scale;
-        params.$fn = (linearExtrudeNode as any).$fn;
+        params.$fn = linearExtrudeNode.$fn;
         break;
       }
       case 'rotate_extrude': {
         const rotateExtrudeNode = node as RotateExtrudeNode;
         params.angle = rotateExtrudeNode.angle;
-        params.convexity = (rotateExtrudeNode as any).convexity;
-        params.$fn = (rotateExtrudeNode as any).$fn;
-        params.$fa = (rotateExtrudeNode as any).$fa;
-        params.$fs = (rotateExtrudeNode as any).$fs;
+        params.convexity = rotateExtrudeNode.convexity;
+        params.$fn = rotateExtrudeNode.$fn;
+        params.$fa = rotateExtrudeNode.$fa;
+        params.$fs = rotateExtrudeNode.$fs;
         break;
       }
     }

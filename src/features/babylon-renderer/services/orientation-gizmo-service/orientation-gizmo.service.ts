@@ -452,13 +452,13 @@ export class OrientationGizmoService implements IGizmoService {
     let closestAxis: GizmoAxis | null = null;
     let closestDistance = Number.POSITIVE_INFINITY;
 
-    for (const axis of visibleAxes) {
-      const distance = Vector3.Distance(this.mousePosition, axis.position);
+    for (const axisCandidate of visibleAxes) {
+      const distance = Vector3.Distance(this.mousePosition, axisCandidate.position);
 
       // Select if within bubble radius or closest to mouse
-      if (distance < axis.size || distance < closestDistance) {
+      if (distance < axisCandidate.size || distance < closestDistance) {
         closestDistance = distance;
-        closestAxis = axis;
+        closestAxis = axisCandidate;
       }
     }
 
@@ -598,6 +598,7 @@ export class OrientationGizmoService implements IGizmoService {
     message: string,
     details?: Record<string, unknown>
   ): Result<T, GizmoError> {
+    const error = new Error(message);
     return {
       success: false,
       error: {
@@ -605,6 +606,7 @@ export class OrientationGizmoService implements IGizmoService {
         message,
         timestamp: new Date(),
         details: details ?? {},
+        stack: error.stack ?? '',
       },
     };
   }

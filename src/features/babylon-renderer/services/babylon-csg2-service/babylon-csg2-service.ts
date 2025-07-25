@@ -261,10 +261,6 @@ export class BabylonCSG2Service {
       );
     }
 
-    if (!meshA.geometry || !meshB.geometry) {
-      throw this.createError(CSGErrorCode.INVALID_MESH, 'Meshes must have valid geometry');
-    }
-
     // Check for manifold geometry (simplified check)
     if (!this.isManifoldGeometry(meshA) || !this.isManifoldGeometry(meshB)) {
       throw this.createError(

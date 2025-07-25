@@ -62,7 +62,7 @@ export interface CylinderAxisConfig extends AxisCreationConfig {
  * Result of axis creation
  */
 export interface AxisCreationResult {
-  readonly mesh: LinesMesh | any; // Babylon.js mesh type
+  readonly mesh: LinesMesh | Mesh; // Babylon.js mesh type
   readonly material: Material;
   readonly name: string;
 }
@@ -209,10 +209,7 @@ export class ScreenSpaceAxisStrategy implements IAxisCreationStrategy {
       // In test environments, setting uniforms might fail, so wrap in try-catch
       try {
         material.setFloat('pixelWidth', config.pixelWidth);
-        material.setVector2(
-          'resolution',
-          new Vector2(config.resolution[0], config.resolution[1])
-        );
+        material.setVector2('resolution', new Vector2(config.resolution[0], config.resolution[1]));
         material.setColor3('color', color3);
         material.setFloat('opacity', config.opacity || DEFAULT_AXIS_PARAMS.OPACITY);
       } catch (uniformError) {
@@ -282,7 +279,7 @@ export class CylinderAxisStrategy implements IAxisCreationStrategy {
     }
   }
 
-  private createCylinderMesh(config: CylinderAxisConfig, scene: Scene): any | null {
+  private createCylinderMesh(config: CylinderAxisConfig, scene: Scene): Mesh | null {
     try {
       const name = `${config.name}${MESH_NAMES.CYLINDER_SUFFIX}`;
       return MeshBuilder.CreateCylinder(
@@ -319,7 +316,7 @@ export class CylinderAxisStrategy implements IAxisCreationStrategy {
     }
   }
 
-  private positionAndRotateMesh(mesh: any, config: CylinderAxisConfig): void {
+  private positionAndRotateMesh(mesh: Mesh, config: CylinderAxisConfig): void {
     // Position the mesh at the origin
     mesh.position = config.origin.clone();
 

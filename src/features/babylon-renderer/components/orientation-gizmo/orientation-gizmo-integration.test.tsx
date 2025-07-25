@@ -13,7 +13,7 @@
 import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAppStore } from '../../../store/app-store';
+import { appStoreInstance } from '../../../store/app-store';
 import type { AppStore } from '../../../store/types/store.types';
 import { CameraGizmoSyncService } from '../../services/camera-gizmo-sync/camera-gizmo-sync.service';
 import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
@@ -103,7 +103,7 @@ describe('OrientationGizmo Integration Tests', () => {
     );
 
     // Reset store state
-    store = useAppStore.getState();
+    store = appStoreInstance.getState();
     store.resetGizmo();
     store.setGizmoVisibility(true);
 
@@ -111,7 +111,7 @@ describe('OrientationGizmo Integration Tests', () => {
     gizmoService = new OrientationGizmoService();
 
     // Create sync service
-    syncService = new CameraGizmoSyncService(scene, useAppStore.getState());
+    syncService = new CameraGizmoSyncService(scene, appStoreInstance.getState());
   });
 
   afterEach(() => {

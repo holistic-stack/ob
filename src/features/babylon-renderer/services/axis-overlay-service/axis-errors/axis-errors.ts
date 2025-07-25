@@ -189,8 +189,8 @@ export class AxisErrorUtils {
       'code' in error &&
       'message' in error &&
       'timestamp' in error &&
-      typeof (error as any).code === 'string' &&
-      (error as any).code.endsWith('_ERROR')
+      typeof (error as Record<string, unknown>).code === 'string' &&
+      (error as Record<string, unknown>).code.endsWith('_ERROR')
     );
   }
 

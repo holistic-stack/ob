@@ -1,3 +1,6 @@
+// Assume these are available in the global scope
+var engine, canvas;
+
 var _createScene = () => {
   // This creates a basic Babylon Scene object (non-mesh)
   var scene = new BABYLON.Scene(engine);
@@ -188,7 +191,6 @@ class OrientationGizmo extends HTMLElement {
     );
   }
 
-  ontest() {}
   onMouseClick(_evt) {
     if (!this.selectedAxis) {
       return;
@@ -253,13 +255,13 @@ class OrientationGizmo extends HTMLElement {
       let closestDist = Infinity;
 
       // Loop through each layer
-      for (var bubble of layers) {
-        const distance = BABYLON.Vector3.Distance(this.mouse, bubble.position);
+      for (var layer of layers) {
+        const distance = BABYLON.Vector3.Distance(this.mouse, layer.position);
 
         // Only select the axis if its closer to the mouse than the previous or if its within its bubble circle
-        if (distance < closestDist || distance < bubble.size) {
+        if (distance < closestDist || distance < layer.size) {
           closestDist = distance;
-          this.selectedAxis = bubble;
+          this.selectedAxis = layer;
         }
       }
     }

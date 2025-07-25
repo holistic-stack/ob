@@ -13,7 +13,7 @@
 import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAppStore } from '../../../store/app-store';
+import { appStoreInstance } from '../../../store/app-store';
 import type { GizmoConfig, GizmoError } from '../../types/orientation-gizmo.types';
 import { AxisDirection, GizmoErrorCode } from '../../types/orientation-gizmo.types';
 import type { OrientationGizmoProps } from './orientation-gizmo';
@@ -97,7 +97,7 @@ describe('OrientationGizmo', () => {
     );
 
     // Reset store state
-    useAppStore.getState().resetGizmo();
+    appStoreInstance.getState().resetGizmo();
 
     defaultProps = {
       camera,
@@ -114,7 +114,7 @@ describe('OrientationGizmo', () => {
   describe('Component Rendering', () => {
     it('should render gizmo when visible', async () => {
       // Set gizmo visible in store
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
 
       render(<OrientationGizmo {...defaultProps} />);
 
@@ -126,7 +126,7 @@ describe('OrientationGizmo', () => {
 
     it('should not render when not visible', () => {
       // Set gizmo not visible in store
-      useAppStore.getState().setGizmoVisibility(false);
+      appStoreInstance.getState().setGizmoVisibility(false);
 
       render(<OrientationGizmo {...defaultProps} />);
 
@@ -134,7 +134,7 @@ describe('OrientationGizmo', () => {
     });
 
     it('should not render when camera is null', () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
 
       render(<OrientationGizmo {...defaultProps} camera={null} />);
 
@@ -142,7 +142,7 @@ describe('OrientationGizmo', () => {
     });
 
     it('should apply custom className and style', async () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
 
       const customStyle = { top: '20px', left: '20px' };
       render(<OrientationGizmo {...defaultProps} className="custom-gizmo" style={customStyle} />);
@@ -164,7 +164,7 @@ describe('OrientationGizmo', () => {
       expect(screen.queryByTestId('orientation-gizmo')).not.toBeInTheDocument();
 
       // Make visible through store
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
       rerender(<OrientationGizmo {...defaultProps} />);
 
       await waitFor(() => {
@@ -172,15 +172,15 @@ describe('OrientationGizmo', () => {
       });
 
       // Hide through store
-      useAppStore.getState().setGizmoVisibility(false);
+      appStoreInstance.getState().setGizmoVisibility(false);
       rerender(<OrientationGizmo {...defaultProps} />);
 
       expect(screen.queryByTestId('orientation-gizmo')).not.toBeInTheDocument();
     });
 
     it('should use store configuration', async () => {
-      useAppStore.getState().setGizmoVisibility(true);
-      useAppStore.getState().updateGizmoConfig({ size: 120 });
+      appStoreInstance.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().updateGizmoConfig({ size: 120 });
 
       render(<OrientationGizmo {...defaultProps} />);
 
@@ -192,8 +192,8 @@ describe('OrientationGizmo', () => {
     });
 
     it('should override store config with prop config', async () => {
-      useAppStore.getState().setGizmoVisibility(true);
-      useAppStore.getState().updateGizmoConfig({ size: 90 });
+      appStoreInstance.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().updateGizmoConfig({ size: 90 });
 
       const propConfig: Partial<GizmoConfig> = { size: 150 };
       render(<OrientationGizmo {...defaultProps} config={propConfig} />);
@@ -208,7 +208,7 @@ describe('OrientationGizmo', () => {
 
   describe('Mouse Interactions', () => {
     beforeEach(async () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
     });
 
     it('should handle mouse move events', async () => {
@@ -243,7 +243,7 @@ describe('OrientationGizmo', () => {
       fireEvent.mouseLeave(canvas);
 
       // Should clear selected axis in store
-      expect(useAppStore.getState().babylonRendering.gizmo.selectedAxis).toBeNull();
+      expect(appStoreInstance.getState().babylonRendering.gizmo.selectedAxis).toBeNull();
     });
 
     it('should handle click events when axis is selected', async () => {
@@ -256,14 +256,14 @@ describe('OrientationGizmo', () => {
       });
 
       // Simulate axis selection in store
-      useAppStore.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
+      appStoreInstance.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
 
       const canvas = screen.getByTestId('gizmo-canvas');
       fireEvent.click(canvas);
 
       // Should trigger animation state
       await waitFor(() => {
-        expect(useAppStore.getState().babylonRendering.gizmo.cameraAnimation.isAnimating).toBe(
+        expect(appStoreInstance.getState().babylonRendering.gizmo.cameraAnimation.isAnimating).toBe(
           true
         );
       });
@@ -283,7 +283,7 @@ describe('OrientationGizmo', () => {
       expect(canvas).toHaveStyle('cursor: default');
 
       // Select an axis
-      useAppStore.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
+      appStoreInstance.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_X);
 
       await waitFor(() => {
         expect(canvas).toHaveStyle('cursor: pointer');
@@ -293,7 +293,7 @@ describe('OrientationGizmo', () => {
 
   describe('Event Handlers', () => {
     beforeEach(async () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
     });
 
     it('should call onAxisSelected when axis is clicked', async () => {
@@ -306,7 +306,7 @@ describe('OrientationGizmo', () => {
       });
 
       // Simulate axis selection and click
-      useAppStore.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_Y);
+      appStoreInstance.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_Y);
 
       const canvas = screen.getByTestId('gizmo-canvas');
       fireEvent.click(canvas);
@@ -338,7 +338,7 @@ describe('OrientationGizmo', () => {
       });
 
       // Simulate axis selection and click
-      useAppStore.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_Z);
+      appStoreInstance.getState().setGizmoSelectedAxis(AxisDirection.POSITIVE_Z);
 
       const canvas = screen.getByTestId('gizmo-canvas');
       fireEvent.click(canvas);
@@ -374,7 +374,7 @@ describe('OrientationGizmo', () => {
 
   describe('Error Handling', () => {
     beforeEach(async () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
     });
 
     it('should display error indicator when there is a non-critical error', async () => {
@@ -392,7 +392,7 @@ describe('OrientationGizmo', () => {
         timestamp: new Date(),
       };
 
-      useAppStore.getState().setGizmoError(renderError);
+      appStoreInstance.getState().setGizmoError(renderError);
 
       await waitFor(() => {
         expect(screen.getByTestId('gizmo-error-indicator')).toBeInTheDocument();
@@ -400,7 +400,7 @@ describe('OrientationGizmo', () => {
     });
 
     it('should not render when there is a critical initialization error', () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
 
       // Simulate critical error
       const criticalError: GizmoError = {
@@ -409,7 +409,7 @@ describe('OrientationGizmo', () => {
         timestamp: new Date(),
       };
 
-      useAppStore.getState().setGizmoError(criticalError);
+      appStoreInstance.getState().setGizmoError(criticalError);
 
       render(<OrientationGizmo {...defaultProps} />);
 
@@ -419,7 +419,7 @@ describe('OrientationGizmo', () => {
 
   describe('Accessibility', () => {
     beforeEach(async () => {
-      useAppStore.getState().setGizmoVisibility(true);
+      appStoreInstance.getState().setGizmoVisibility(true);
     });
 
     it('should have proper ARIA attributes', async () => {

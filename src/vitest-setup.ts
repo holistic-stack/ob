@@ -200,8 +200,9 @@ Object.defineProperty(performance, 'now', {
   value: vi.fn(() => {
     const baseTime = 1000;
     const increment = 0.1;
-    const callCount = (performance.now as any).__callCount || 0;
-    (performance.now as any).__callCount = callCount + 1;
+    const mockFn = performance.now as unknown as { __callCount?: number };
+    const callCount = mockFn.__callCount || 0;
+    mockFn.__callCount = callCount + 1;
     return baseTime + callCount * increment;
   }),
 });
@@ -249,16 +250,23 @@ Object.defineProperty(window, 'detachEvent', {
  * to all newly created DOM elements. This prevents React DOM errors in JSDOM.
  */
 const originalCreateElement = document.createElement;
-document.createElement = function (tagName: string, options?: ElementCreationOptions) {
-  const element = originalCreateElement.call(this, tagName, options);
-  if (!(element as any).attachEvent) {
-    (element as any).attachEvent = vi.fn();
-  }
-  if (!(element as any).detachEvent) {
-    (element as any).detachEvent = vi.fn();
-  }
-  return element;
-};
+Object.defineProperty(document, 'createElement', {
+  value: function (tagName: string, options?: ElementCreationOptions) {
+    const element = originalCreateElement.call(this, tagName, options) as HTMLElement & {
+      attachEvent?: () => void;
+      detachEvent?: () => void;
+    };
+    if (!element.attachEvent) {
+      element.attachEvent = vi.fn();
+    }
+    if (!element.detachEvent) {
+      element.detachEvent = vi.fn();
+    }
+    return element;
+  },
+  writable: true,
+  configurable: true,
+});
 
 /**
  * @mock window.getComputedStyle
@@ -292,7 +300,14 @@ Object.defineProperty(window, 'getComputedStyle', {
     const inlineWidth = parseInlineStyle(style, 'width');
     const inlineHeight = parseInlineStyle(style, 'height');
 
-    const computedStyle: any = {
+    const computedStyle: {
+      getPropertyValue: (property: string) => string;
+      overflow: string;
+      overflowX: string;
+      overflowY: string;
+      width: string;
+      height: string;
+    } = {
       getPropertyValue: vi.fn((property: string) => {
         switch (property) {
           case 'width':
@@ -718,7 +733,7 @@ export function forceGarbageCollection(): void {
  */
 export function resetPerformanceMock(): void {
   if (performance.now && typeof performance.now === 'function') {
-    (performance.now as any).__callCount = 0;
+    (performance.now as unknown as { __callCount: number }).__callCount = 0;
   }
 }
 

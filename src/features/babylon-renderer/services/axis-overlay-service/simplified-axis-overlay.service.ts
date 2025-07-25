@@ -234,7 +234,7 @@ class AxisVisibilityService {
     try {
       axes.forEach((axis) => {
         if (axis.mesh && 'setEnabled' in axis.mesh) {
-          (axis.mesh as any).setEnabled(visible);
+          (axis.mesh as { setEnabled: (enabled: boolean) => void }).setEnabled(visible);
         }
       });
 
@@ -296,7 +296,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
 
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = config;
-      delete this.lastError;
+      this.lastError = undefined;
 
       // Set initial visibility
       if (config.visible !== undefined) {
@@ -318,7 +318,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
 
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, ...config };
-      delete this.lastError;
+      this.lastError = undefined;
 
       // Update visibility if specified
       if (config.visible !== undefined) {
@@ -342,7 +342,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
 
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, visible };
-      delete this.lastError;
+      this.lastError = undefined;
     } else {
       this.lastError = result.error;
     }
@@ -359,7 +359,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
 
     if (AxisResultUtils.isSuccess(result)) {
       this.currentConfig = { ...this.currentConfig, visible: result.data };
-      delete this.lastError;
+      this.lastError = undefined;
     } else {
       this.lastError = result.error;
     }
@@ -373,7 +373,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
   dispose(): void {
     this.lifecycleService.dispose();
     this.currentConfig = {};
-    delete this.lastError;
+    this.lastError = undefined;
   }
 
   /**
@@ -389,9 +389,7 @@ export class SimplifiedAxisOverlayService implements ISimplifiedAxisOverlayServi
       axisCount: axes.length,
     };
 
-    return this.lastError
-      ? { ...baseState, lastError: this.lastError }
-      : baseState;
+    return this.lastError ? { ...baseState, lastError: this.lastError } : baseState;
   }
 }
 

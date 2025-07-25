@@ -54,16 +54,17 @@ describe('ControlStructureVisitor', () => {
 
   describe('createASTNodeForFunction', () => {
     it('should create an if node with condition', () => {
-      // Create a mock if node
+      // Create a mock if_statement node that matches the actual tree-sitter grammar
       const mockIfNode = {
-        type: 'module_instantiation',
+        type: 'if_statement',
         text: 'if (true) { cube(10); }',
         childCount: 3,
+        namedChildCount: 2,
         child: (index: number) => {
           if (index === 0) {
             return {
-              type: 'identifier',
-              text: 'if',
+              type: 'expression',
+              text: 'true',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
@@ -71,30 +72,27 @@ describe('ControlStructureVisitor', () => {
             };
           } else if (index === 1) {
             return {
-              type: 'argument_list',
-              text: '(true)',
-              childCount: 1,
-              child: () => ({
-                type: 'true',
-                text: 'true',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              }),
+              type: 'block',
+              text: '{ cube(10); }',
+              childCount: 3,
+              child: () => null,
               childForFieldName: () => null,
-              namedChildren: [
-                {
-                  type: 'true',
-                  text: 'true',
-                  childCount: 0,
-                  child: () => null,
-                  childForFieldName: () => null,
-                  namedChildren: [],
-                },
-              ],
+              namedChildren: [],
             };
-          } else if (index === 2) {
+          }
+          return null;
+        },
+        namedChild: (index: number) => {
+          if (index === 0) {
+            return {
+              type: 'expression',
+              text: 'true',
+              childCount: 0,
+              child: () => null,
+              childForFieldName: () => null,
+              namedChildren: [],
+            };
+          } else if (index === 1) {
             return {
               type: 'block',
               text: '{ cube(10); }',
@@ -107,46 +105,23 @@ describe('ControlStructureVisitor', () => {
           return null;
         },
         childForFieldName: (name: string) => {
-          if (name === 'name') {
+          if (name === 'condition') {
             return {
-              type: 'identifier',
-              text: 'if',
+              type: 'expression',
+              text: 'true',
               childCount: 0,
               child: () => null,
               childForFieldName: () => null,
               namedChildren: [],
             };
-          } else if (name === 'arguments') {
-            return {
-              type: 'argument_list',
-              text: '(true)',
-              childCount: 1,
-              child: () => ({
-                type: 'true',
-                text: 'true',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              }),
-              childForFieldName: () => null,
-              namedChildren: [
-                {
-                  type: 'true',
-                  text: 'true',
-                  childCount: 0,
-                  child: () => null,
-                  childForFieldName: () => null,
-                  namedChildren: [],
-                },
-              ],
-            };
-          } else if (name === 'block') {
+          } else if (name === 'consequence') {
             return {
               type: 'block',
               text: '{ cube(10); }',
               childCount: 3,
+              namedChildCount: 0,
               child: () => null,
+              namedChild: () => null,
               childForFieldName: () => null,
               namedChildren: [],
             };
@@ -155,50 +130,28 @@ describe('ControlStructureVisitor', () => {
         },
         namedChildren: [
           {
-            type: 'identifier',
-            text: 'if',
+            type: 'expression',
+            text: 'true',
             childCount: 0,
             child: () => null,
             childForFieldName: () => null,
             namedChildren: [],
           },
           {
-            type: 'argument_list',
-            text: '(true)',
-            childCount: 1,
-            child: () => ({
-              type: 'true',
-              text: 'true',
-              childCount: 0,
-              child: () => null,
-              childForFieldName: () => null,
-              namedChildren: [],
-            }),
-            childForFieldName: () => null,
-            namedChildren: [
-              {
-                type: 'true',
-                text: 'true',
-                childCount: 0,
-                child: () => null,
-                childForFieldName: () => null,
-                namedChildren: [],
-              },
-            ],
-          },
-          {
             type: 'block',
             text: '{ cube(10); }',
             childCount: 3,
+            namedChildCount: 0,
             child: () => null,
+            namedChild: () => null,
             childForFieldName: () => null,
             namedChildren: [],
           },
         ],
       } as unknown as TSNode;
 
-      // Visit the node
-      const result = visitor.visitModuleInstantiation(mockIfNode);
+      // Visit the node using the correct method for if_statement
+      const result = visitor.visitIfStatement(mockIfNode);
 
       // Verify the result
       expect(result).not.toBeNull();

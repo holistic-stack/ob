@@ -59,6 +59,7 @@
  */
 
 import type { ArcRotateCamera } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
@@ -229,13 +230,9 @@ export const OrientationGizmo: React.FC<OrientationGizmoProps> = ({
     if (!serviceRef.current || !canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const mousePosition = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-      z: 0,
-    };
+    const mousePosition = new Vector3(event.clientX - rect.left, event.clientY - rect.top, 0);
 
-    serviceRef.current.updateMousePosition(mousePosition as any);
+    serviceRef.current.updateMousePosition(mousePosition);
   }, []);
 
   /**

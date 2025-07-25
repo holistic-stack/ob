@@ -5,7 +5,6 @@
  * Uses real OpenSCAD parser instances and BabylonJS NullEngine (no mocks).
  */
 
-import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type {
@@ -17,30 +16,39 @@ import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { CSGBabylonNode } from './csg-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
+// Mock CSG2 functions to avoid WASM download during tests
+vi.mock('@babylonjs/core', async () => {
+  const actual = await vi.importActual('@babylonjs/core');
+
+  // Create mock CSG2 instance
+  const mockCSG2Instance = {
+    add: vi.fn().mockReturnThis(),
+    subtract: vi.fn().mockReturnThis(),
+    intersect: vi.fn().mockReturnThis(),
+    toMesh: vi.fn((name, scene) => {
+      // Create a simple mock mesh using actual Mesh constructor
+      return new (actual as any).Mesh(name || 'mock_result', scene);
+    }),
+  };
+
+  return {
+    ...actual,
+    IsCSG2Ready: vi.fn(() => true), // Always return true to skip initialization
+    InitializeCSG2Async: vi.fn(() => Promise.resolve()), // Mock initialization
+    CSG2: {
+      ...(actual as any).CSG2,
+      FromMesh: vi.fn(() => mockCSG2Instance),
+    },
+  };
+});
+
+// Import after mocking
+import { NullEngine, Scene } from '@babylonjs/core';
+
 describe('CSGBabylonNode', () => {
   let parser: OpenscadParser;
   let engine: NullEngine;
   let scene: Scene;
-
-  // Mock CSG2 initialization to avoid network dependency in tests
-  beforeAll(async () => {
-    // Mock the CSG2 functions to avoid WASM download during tests
-    vi.doMock('@babylonjs/core', async () => {
-      const actual = await vi.importActual('@babylonjs/core');
-      return {
-        ...actual,
-        IsCSG2Ready: vi.fn(() => true), // Always return true to skip initialization
-        InitializeCSG2Async: vi.fn(() => Promise.resolve()), // Mock initialization
-        CSG2: {
-          FromMesh: vi.fn((mesh) => ({
-            union: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
-            subtract: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
-            intersect: vi.fn(() => ({ toMesh: vi.fn(() => mesh) })),
-          })),
-        },
-      };
-    });
-  });
 
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
@@ -59,6 +67,9 @@ describe('CSGBabylonNode', () => {
     scene.dispose();
     engine.dispose();
     parser.dispose();
+
+    // Clear all mocks to prevent test interference
+    vi.clearAllMocks();
   });
 
   describe('Union Operation', () => {
@@ -460,6 +471,9 @@ describe('CSGBabylonNode', () => {
      */
     const verifyCSGResult = async (csgNode: CSGBabylonNode, expectedName: string) => {
       const result = await csgNode.generateMesh();
+      if (!result.success) {
+        throw new Error(`CSG operation failed: ${JSON.stringify(result.error, null, 2)}`);
+      }
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toBeDefined();

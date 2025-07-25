@@ -5,8 +5,7 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import { Scene } from '@babylonjs/core';
-import { CreateBox, type Engine, NullEngine, PointerEventTypes } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine, PointerEventTypes, Scene } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BabylonSceneProps } from './babylon-scene';

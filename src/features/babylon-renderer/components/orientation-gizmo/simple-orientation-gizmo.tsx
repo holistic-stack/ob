@@ -21,7 +21,7 @@
 import type { ArcRotateCamera } from '@babylonjs/core';
 import { Animation, Matrix, QuadraticEase, Vector3 } from '@babylonjs/core';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
 
 const logger = createLogger('SimpleOrientationGizmo');
@@ -118,62 +118,75 @@ export function SimpleOrientationGizmo({
   const [_isInitialized, setIsInitialized] = useState(false);
 
   // Merge user options with defaults
-  const options: GizmoOptions = {
-    ...DEFAULT_GIZMO_OPTIONS,
-    ...userOptions,
-  };
+  const options: GizmoOptions = useMemo(
+    () => ({
+      ...DEFAULT_GIZMO_OPTIONS,
+      ...userOptions,
+    }),
+    [userOptions]
+  );
 
   // Generate axis bubbles
-  const bubbles: AxisBubble[] = [
-    {
-      axis: 'x',
-      direction: new Vector3(1, 0, 0),
-      size: options.bubbleSizePrimary,
-      color: options.colors.x,
-      line: options.lineWidth,
-      label: 'X',
-    },
-    {
-      axis: 'y',
-      direction: new Vector3(0, 1, 0),
-      size: options.bubbleSizePrimary,
-      color: options.colors.y,
-      line: options.lineWidth,
-      label: 'Y',
-    },
-    {
-      axis: 'z',
-      direction: new Vector3(0, 0, 1),
-      size: options.bubbleSizePrimary,
-      color: options.colors.z,
-      line: options.lineWidth,
-      label: 'Z',
-    },
-    {
-      axis: '-x',
-      direction: new Vector3(-1, 0, 0),
-      size: options.bubbleSizeSecondary,
-      color: options.colors.x,
-      line: options.lineWidth,
-      label: '-X',
-    },
-    {
-      axis: '-y',
-      direction: new Vector3(0, -1, 0),
-      size: options.bubbleSizeSecondary,
-      color: options.colors.y,
-      line: options.lineWidth,
-      label: '-Y',
-    },
-    {
-      axis: '-z',
-      direction: new Vector3(0, 0, -1),
-      size: options.bubbleSizeSecondary,
-      color: options.colors.z,
-      line: options.lineWidth,
-      label: '-Z',
-    },
-  ];
+  const bubbles: AxisBubble[] = useMemo(
+    () => [
+      {
+        axis: 'x',
+        direction: new Vector3(1, 0, 0),
+        size: options.bubbleSizePrimary,
+        color: options.colors.x,
+        line: options.lineWidth,
+        label: 'X',
+      },
+      {
+        axis: 'y',
+        direction: new Vector3(0, 1, 0),
+        size: options.bubbleSizePrimary,
+        color: options.colors.y,
+        line: options.lineWidth,
+        label: 'Y',
+      },
+      {
+        axis: 'z',
+        direction: new Vector3(0, 0, 1),
+        size: options.bubbleSizePrimary,
+        color: options.colors.z,
+        line: options.lineWidth,
+        label: 'Z',
+      },
+      {
+        axis: '-x',
+        direction: new Vector3(-1, 0, 0),
+        size: options.bubbleSizeSecondary,
+        color: options.colors.x,
+        line: options.lineWidth,
+        label: '-X',
+      },
+      {
+        axis: '-y',
+        direction: new Vector3(0, -1, 0),
+        size: options.bubbleSizeSecondary,
+        color: options.colors.y,
+        line: options.lineWidth,
+        label: '-Y',
+      },
+      {
+        axis: '-z',
+        direction: new Vector3(0, 0, -1),
+        size: options.bubbleSizeSecondary,
+        color: options.colors.z,
+        line: options.lineWidth,
+        label: '-Z',
+      },
+    ],
+    [
+      options.bubbleSizePrimary,
+      options.bubbleSizeSecondary,
+      options.colors.x,
+      options.colors.y,
+      options.colors.z,
+      options.lineWidth,
+    ]
+  );
 
   /**
    * Get bubble position in 2D canvas coordinates
@@ -280,13 +293,13 @@ export function SimpleOrientationGizmo({
       if (mouseRef.current) {
         let closestDist = Infinity;
 
-        for (const bubble of layers) {
-          if (!bubble.position) continue;
-          const distance = Vector3.Distance(mouseRef.current, bubble.position);
+        for (const layer of layers) {
+          if (!layer.position) continue;
+          const distance = Vector3.Distance(mouseRef.current, layer.position);
 
-          if (distance < closestDist || distance < bubble.size) {
+          if (distance < closestDist || distance < layer.size) {
             closestDist = distance;
-            selectedAxisRef.current = bubble;
+            selectedAxisRef.current = layer;
           }
         }
       }
@@ -294,9 +307,9 @@ export function SimpleOrientationGizmo({
       // Draw layers
       const center = new Vector3(options.size / 2, options.size / 2, 0);
 
-      for (const bubble of layers) {
-        const position = bubble.position!;
-        const isSelected = selectedAxisRef.current === bubble;
+      for (const layer of layers) {
+        const position = layer.position!;
+        const isSelected = selectedAxisRef.current === layer;
         const isFront = position.z >= -0.01;
 
         // Choose color based on selection and depth
@@ -304,20 +317,20 @@ export function SimpleOrientationGizmo({
         if (isSelected) {
           color = '#FFFFFF';
         } else if (isFront) {
-          color = bubble.color[0]; // Primary color
+          color = layer.color[0]; // Primary color
         } else {
-          color = bubble.color[1]; // Secondary color
+          color = layer.color[1]; // Secondary color
         }
 
         // Draw line from center to bubble
-        drawLine(center, position, bubble.line, color);
+        drawLine(center, position, layer.line, color);
 
         // Draw bubble circle
-        drawCircle(position, bubble.size, color);
+        drawCircle(position, layer.size, color);
 
         // Draw label
         if (isFront) {
-          drawText(position, bubble.label, options.fontColor);
+          drawText(position, layer.label, options.fontColor);
         }
       }
     } catch (error) {

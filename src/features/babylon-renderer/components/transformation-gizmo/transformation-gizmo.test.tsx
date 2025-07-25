@@ -6,8 +6,7 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import { Scene } from '@babylonjs/core';
-import { CreateBox, type Engine, NullEngine } from '@babylonjs/core';
+import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TransformationGizmoProps } from './transformation-gizmo';

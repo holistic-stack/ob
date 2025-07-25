@@ -68,7 +68,7 @@ const createMockNodeMaterial = (name: string) =>
       name: 'test-input',
       value: null,
     })),
-    build: vi.fn(),
+    build: vi.fn().mockReturnValue(true),
     isReady: vi.fn(() => true),
     dispose: vi.fn(),
   }) as any;

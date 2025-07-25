@@ -460,6 +460,17 @@ export const createParsingSlice = (
   get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
   _config?: ParsingSliceConfig
 ): ParsingActions => {
+  // Track ongoing parsing operations to prevent race conditions
+  const parsingPromises = new Map<
+    string,
+    AsyncOperationResult<ReadonlyArray<ASTNode>, OperationError>
+  >();
+
+  // Helper function to calculate parse time
+  const _calculateParseTime = (startTime: number): number => {
+    return Date.now() - startTime;
+  };
+
   return {
     parseCode: async (
       code: string,
@@ -489,43 +500,67 @@ export const createParsingSlice = (
         return operationUtils.createSuccess(currentState.parsing.ast, metadata);
       }
 
+      // If there's already a parsing operation for this code, wait for it
+      if (parsingPromises.has(code)) {
+        logger.debug('Parsing already in progress for this code, waiting for completion...');
+        return parsingPromises.get(code)!;
+      }
+
       // Set loading state for fresh parsing
       set((state) => {
         state.parsing.isLoading = true;
         state.parsing.errors = [];
       });
 
-      // Delegate all parsing logic to the unified service
-      const parseResult = await unifiedParseOpenSCAD(code);
+      // Create and track the parsing promise
+      const parsingPromise = (async (): AsyncOperationResult<
+        ReadonlyArray<ASTNode>,
+        OperationError
+      > => {
+        try {
+          // Delegate all parsing logic to the unified service
+          const parseResult = await unifiedParseOpenSCAD(code);
 
-      if (isSuccess(parseResult)) {
-        // Extract AST from the nested structure: parseResult.data.data contains the actual AST
-        const ast = Array.isArray(parseResult.data.data) ? parseResult.data.data : [];
+          if (isSuccess(parseResult)) {
+            // The unified service already returns the correct structure
+            // parseResult.data.data contains the actual AST array
+            const ast = parseResult.data.data as ReadonlyArray<ASTNode>;
 
-        set((state: WritableDraft<AppStore>) => {
-          state.parsing.ast = [...ast];
-          state.parsing.isLoading = false;
-          state.parsing.lastParsed = new Date();
-          state.parsing.lastParsedCode = code;
-          state.parsing.errors = [];
-        });
+            set((state: WritableDraft<AppStore>) => {
+              state.parsing.ast = [...ast];
+              state.parsing.isLoading = false;
+              state.parsing.lastParsed = new Date();
+              state.parsing.lastParsedCode = code;
+              state.parsing.errors = [];
+            });
 
-        // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
-        logger.debug(
-          `[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`
-        );
-        return operationUtils.createSuccess(ast, metadata);
-      } else {
-        // Handle parsing failure
-        const errorMessage = parseResult.error.error?.message || 'Unknown parsing error';
-        set((state: WritableDraft<AppStore>) => {
-          state.parsing.isLoading = false;
-          state.parsing.errors = [errorMessage];
-          state.parsing.lastParsedCode = null; // Invalidate cache
-        });
-        logger.error(`Unified parsing failed: ${errorMessage}`);
-        return operationUtils.createError(parseResult.error.error, metadata);
-      }
+            // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
+            logger.debug(
+              `[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`
+            );
+            // Return the parseResult directly since it already has the correct structure
+            return parseResult;
+          } else {
+            // Handle parsing failure
+            const errorMessage = parseResult.error.error?.message || 'Unknown parsing error';
+            set((state: WritableDraft<AppStore>) => {
+              state.parsing.isLoading = false;
+              state.parsing.errors = [errorMessage];
+              state.parsing.lastParsedCode = null; // Invalidate cache
+            });
+            logger.error(`Unified parsing failed: ${errorMessage}`);
+            // Return the parseResult directly since it already has the correct structure
+            return parseResult;
+          }
+        } finally {
+          // Clear the parsing promise for this code when done
+          parsingPromises.delete(code);
+        }
+      })();
+
+      // Store the promise in the map
+      parsingPromises.set(code, parsingPromise);
+      return parsingPromise;
     },
 
     parseAST: async (
@@ -545,6 +580,8 @@ export const createParsingSlice = (
         state.parsing.lastParsed = null;
         state.parsing.lastParsedCode = null;
       });
+      // Clear any ongoing parsing promises
+      parsingPromises.clear();
     },
 
     debouncedParse: (code: string) => {

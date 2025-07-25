@@ -83,7 +83,7 @@ export class AxisValidationUtils {
       scene !== undefined &&
       typeof scene === 'object' &&
       'dispose' in scene &&
-      typeof (scene as any).dispose === 'function'
+      typeof (scene as Record<string, unknown>).dispose === 'function'
     );
   }
 

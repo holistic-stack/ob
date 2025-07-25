@@ -340,7 +340,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         // Update axis overlay dynamic ticks based on camera distance
         const camera = sceneRef.current.activeCamera;
         if (camera && 'radius' in camera) {
-          const currentDistance = (camera as any).radius;
+          const currentDistance = (camera as BABYLON.ArcRotateCamera).radius;
           if (Math.abs(currentDistance - lastCameraDistance) > 0.1) {
             updateDynamicTicks(currentDistance);
             lastCameraDistance = currentDistance;
@@ -396,7 +396,35 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
       logger.end('[END][BabylonScene] Cleanup complete');
     };
-  }, []); // CRITICAL: Empty dependency array prevents engine recreation on every prop change
+  }, [
+    disposeAxisOverlay,
+    updateDynamicTicks,
+    inspectorService,
+    initializeAxisOverlay,
+    config.antialias,
+    config.adaptToDeviceRatio,
+    config.backgroundColor,
+    config.environmentIntensity,
+    config.enablePhysics,
+    config.enableInspector,
+    config.imageProcessingEnabled,
+    camera.type,
+    camera.position,
+    camera.target,
+    camera.radius,
+    camera.alpha,
+    camera.beta,
+    camera.fov,
+    camera.minZ,
+    camera.maxZ,
+    lighting.ambient,
+    lighting.directional,
+    hideInspector,
+    onMeshSelected,
+    onSceneReady,
+    onRenderLoop,
+    onEngineReady,
+  ]); // CRITICAL: Dependencies prevent engine recreation on every prop change
 
   /**
    * Handle configuration updates without recreating the engine
@@ -427,7 +455,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     // Note: Camera and lighting updates would require more complex logic
     // For now, we prioritize preventing engine recreation over dynamic updates
-  }, [config, camera, lighting]); // Only update configuration, don't recreate engine
+  }, [config.backgroundColor, config.environmentIntensity, config.imageProcessingEnabled]); // Only update configuration, don't recreate engine
 
   /**
    * Render the canvas element

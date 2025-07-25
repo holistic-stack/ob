@@ -265,7 +265,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
 
     // Extract parameters
-    let moduleParameters: any[] = []; // TODO: Use ast.ModuleParameter[] once TypeScript recognizes it
+    let moduleParameters: unknown[] = []; // TODO: Use ast.ModuleParameter[] once TypeScript recognizes it
 
     // Extract parameters from the node
     const paramListNode = node.childForFieldName('parameters');

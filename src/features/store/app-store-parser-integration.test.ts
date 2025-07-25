@@ -42,6 +42,9 @@ describe('App Store Parser Integration', () => {
         saveDelayMs: 0,
       },
     });
+
+    // Clear any residual parsing state
+    store.getState().clearParsingState();
   });
 
   afterEach(() => {
@@ -142,7 +145,7 @@ describe('App Store Parser Integration', () => {
       // Should fail gracefully
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect((result.error as any).code).toContain('PARSER_INIT_FAILED');
+        expect((result.error as { code: string }).code).toContain('PARSER_INIT_FAILED');
       }
 
       // Store should reflect the error
@@ -224,12 +227,19 @@ describe('App Store Parser Integration', () => {
       const state = store.getState();
 
       // Create many rapid calls
-      const rapidCalls = Array.from({ length: 10 }, (_, i) => state.parseCode(`cube(${i + 1});`));
+      const rapidCalls = Array.from({ length: 10 }, (_, i) => {
+        const code = `cube(${i + 1});`;
+        return { promise: state.parseCode(code), code };
+      });
 
-      const results = await Promise.all(rapidCalls);
+      const results = await Promise.all(rapidCalls.map((call) => call.promise));
 
       // All should succeed
       results.forEach((result, i) => {
+        if (!result.success) {
+          console.error(`❌ Rapid call ${i + 1} failed:`, result.error);
+          console.error(`Code was: ${rapidCalls[i]?.code}`);
+        }
         expect(result.success).toBe(true);
         logger.debug(`✅ Rapid call ${i + 1} succeeded`);
       });

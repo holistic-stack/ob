@@ -747,6 +747,9 @@ export interface IntersectionNode extends BaseNode {
  * @property {boolean} [center] - Whether to center the extrusion.
  * @property {number} [twist] - The twist angle.
  * @property {number | Vector2D} [scale] - The scale factor.
+ * @property {number} [convexity] - The convexity parameter.
+ * @property {number} [slices] - The number of slices.
+ * @property {number} [$fn] - The number of fragments.
  * @property {ASTNode[]} children - The 2D shapes to extrude.
  */
 export interface LinearExtrudeNode extends BaseNode {
@@ -755,6 +758,9 @@ export interface LinearExtrudeNode extends BaseNode {
   center?: boolean;
   twist?: number;
   scale?: number | Vector2D;
+  convexity?: number;
+  slices?: number;
+  $fn?: number;
   children: ASTNode[];
 }
 
@@ -763,11 +769,19 @@ export interface LinearExtrudeNode extends BaseNode {
  * @description Represents a `rotate_extrude()` operation in OpenSCAD.
  * @property {'rotate_extrude'} type - The node type.
  * @property {number} [angle] - The rotation angle (default 360).
+ * @property {number} [convexity] - The convexity parameter.
+ * @property {number} [$fn] - The number of fragments.
+ * @property {number} [$fa] - The minimum angle.
+ * @property {number} [$fs] - The minimum size.
  * @property {ASTNode[]} children - The 2D shapes to extrude.
  */
 export interface RotateExtrudeNode extends BaseNode {
   type: 'rotate_extrude';
   angle?: number;
+  convexity?: number;
+  $fn?: number;
+  $fa?: number;
+  $fs?: number;
   children: ASTNode[];
 }
 

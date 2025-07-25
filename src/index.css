@@ -214,10 +214,10 @@ code {
 }
 
 /**
- * @class .focus\:ring-2:focus
+ * @class .focus-ring:focus
  * @description Provides enhanced focus styles for interactive elements, improving keyboard navigation visibility.
  */
-.focus\\:ring-2:focus {
+.focus-ring:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow:

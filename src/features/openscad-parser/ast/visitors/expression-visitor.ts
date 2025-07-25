@@ -825,7 +825,7 @@ export class ExpressionVisitor extends BaseASTVisitor {
         return {
           type: 'error',
           errorCode: 'INVALID_PARENTHESIZED_EXPRESSION',
-          message: `Parenthesized expression contains invalid inner expression type: ${(innerExpr as any)?.type ?? 'unknown'}`,
+          message: `Parenthesized expression contains invalid inner expression type: ${(innerExpr as { type?: string })?.type ?? 'unknown'}`,
           originalNodeType: node.type,
           cstNodeText: node.text,
           location: getLocation(node),
