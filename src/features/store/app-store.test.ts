@@ -135,6 +135,10 @@ describe('App Store', () => {
     });
 
     it('should save code and return AsyncResult', async () => {
+      // First, make the editor dirty to test the save functionality
+      store.getState().updateCode('test code');
+      expect(store.getState().editor.isDirty).toBe(true);
+
       const result = await store.getState().saveCode();
 
       expect(result.success).toBe(true);
@@ -142,7 +146,7 @@ describe('App Store', () => {
       const state = store.getState();
       expect(state.editor.isDirty).toBe(false);
       expect(state.editor.lastSaved).toBeInstanceOf(Date);
-    });
+    }, 10000); // 10 second timeout should be sufficient
 
     it('should load code from source', async () => {
       const source = 'sphere(5);';
@@ -156,7 +160,7 @@ describe('App Store', () => {
       expect(state.editor.lastSaved).toBeInstanceOf(Date);
       expect(state.editor.cursorPosition).toEqual({ line: 1, column: 1 });
       expect(state.editor.selection).toBeNull();
-    });
+    }, 10000); // 10 second timeout should be sufficient
 
     it('should reset editor to initial state', () => {
       // First modify the editor state

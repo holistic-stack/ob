@@ -310,9 +310,9 @@ import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
 import {
+  type BabylonRenderingState,
   createBabylonRenderingSlice,
   createInitialBabylonRenderingState,
-  type BabylonRenderingState,
 } from './slices/babylon-rendering-slice.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';

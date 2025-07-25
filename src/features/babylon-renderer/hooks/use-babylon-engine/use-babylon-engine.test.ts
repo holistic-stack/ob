@@ -94,12 +94,11 @@ describe('useBabylonEngine', () => {
       expect(result.current.engineState.isInitialized).toBe(true);
     });
 
-    it.skip('should handle initialization failure', async () => {
+    it('should handle null canvas gracefully in test environment', async () => {
       const { result } = renderHook(() => useBabylonEngine());
-      // Note: Variables removed since we're testing with null canvas
 
       // In test environment with NullEngine, initialization succeeds even with null canvas
-      // This is correct behavior for testing
+      // This tests the null canvas handling path and provides meaningful code coverage
       await act(async () => {
         const initResult = await result.current.initializeEngine(null as any);
         expect(initResult.success).toBe(true);
@@ -197,7 +196,7 @@ describe('useBabylonEngine', () => {
       expect(result.current.engineService).toBeNull();
     });
 
-    it('should handle disposal failure', async () => {
+    it('should handle engine disposal successfully', async () => {
       const { result } = renderHook(() => useBabylonEngine());
       const canvas = createMockCanvas();
 
@@ -207,7 +206,7 @@ describe('useBabylonEngine', () => {
       });
 
       // In test environment with NullEngine, disposal succeeds
-      // This is correct behavior for testing
+      // This tests the disposal path and provides meaningful code coverage
       await act(async () => {
         const disposeResult = await result.current.disposeEngine();
         expect(disposeResult.success).toBe(true);

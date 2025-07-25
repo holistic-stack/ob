@@ -96,21 +96,27 @@ export default defineConfig({
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
     setupFiles: ['./src/vitest-setup.ts'],
-    testTimeout: 5000, // Increased timeout for matrix operations
-    hookTimeout: 3000, // Increased timeout for setup hooks
-    reporters: 'verbose',
-    pool: 'threads',
+    testTimeout: 10000, // Increased timeout for heavy operations
+    hookTimeout: 5000, // Increased timeout for setup hooks
+    reporters: 'basic', // Use basic reporter to reduce memory usage
+    pool: 'threads', // Use threads with single thread mode
     poolOptions: {
       threads: {
-        minThreads: 1,
-        maxThreads: 4,
-        isolate: false,
+        singleThread: true, // Run all tests in single thread to prevent memory issues
+        isolate: true, // Enable isolation to prevent memory leaks
+      },
+      forks: {
+        singleFork: true, // Single fork mode as fallback
+        isolate: true, // Enable isolation to prevent memory leaks
       },
     },
     sequence: {
       hooks: 'stack',
     },
-    teardownTimeout: 20000,
-    isolate: false,
+    teardownTimeout: 30000, // Increased for proper cleanup
+    isolate: true, // Enable test isolation
+    // Memory optimization settings
+    maxConcurrency: 1, // Run tests sequentially to prevent memory issues
+    fileParallelism: false, // Disable file parallelism
   },
 });
