@@ -35,7 +35,7 @@ import * as BABYLON from '@babylonjs/core';
 const createCanvasPolyfill = () => {
   const originalCreateElement = document.createElement;
 
-  document.createElement = function(tagName: string, options?: any) {
+  document.createElement = function (tagName: string, options?: any) {
     const element = originalCreateElement.call(this, tagName, options);
 
     if (tagName.toLowerCase() === 'canvas') {
@@ -43,7 +43,7 @@ const createCanvasPolyfill = () => {
 
       // Ensure setAttribute works correctly for React 19
       const originalSetAttribute = canvas.setAttribute;
-      canvas.setAttribute = function(name: string, value: string) {
+      canvas.setAttribute = function (name: string, value: string) {
         try {
           if (name === 'width' || name === 'height') {
             const numValue = Number.parseInt(value, 10);
@@ -69,7 +69,7 @@ const createCanvasPolyfill = () => {
 
       // Ensure getContext works
       if (!canvas.getContext) {
-        canvas.getContext = vi.fn(() => ({}));
+        canvas.getContext = vi.fn(() => null);
       }
     }
 

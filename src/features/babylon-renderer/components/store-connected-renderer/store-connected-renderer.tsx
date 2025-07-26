@@ -184,6 +184,21 @@ import { TransformationGizmo } from '../transformation-gizmo';
 const logger = createLogger('StoreConnectedRenderer');
 
 /**
+ * Static lighting configuration objects to prevent recreation on every render.
+ *
+ * @performance These objects are created once and reused to prevent infinite loops.
+ * Previously, new Color3() and Vector3() objects were created in useMemo, causing
+ * the lightingConfig to change on every render, triggering BabylonScene recreation.
+ *
+ * @pattern Static object pattern - create expensive objects outside component scope
+ * to ensure stable references across renders.
+ */
+const STATIC_AMBIENT_COLOR = new Color3(1, 1, 1);
+const STATIC_AMBIENT_DIRECTION = new Vector3(0, 1, 0);
+const STATIC_DIRECTIONAL_COLOR = new Color3(1, 1, 1);
+const STATIC_DIRECTIONAL_DIRECTION = new Vector3(-1, -1, -1);
+
+/**
  * Store-connected renderer component properties interface.
  * Defines the configuration options for integrating BabylonJS rendering
  * with Zustand store state management in a production environment.
@@ -319,7 +334,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const showInspector = useAppStore((state) => state.showInspector);
   const hideInspector = useAppStore((state) => state.hideInspector);
   const setSelectedMesh = useAppStore((state) => state.setSelectedMesh);
-  const _setTransformationGizmoMode = useAppStore((state) => state.setTransformationGizmoMode);
+  // const setTransformationGizmoMode = useAppStore((state) => state.setTransformationGizmoMode); // Reserved for future use
   const setGizmoVisibility = useAppStore((state) => state.setGizmoVisibility);
 
   // Debug initial AST value on mount only (performance optimized)
@@ -455,14 +470,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       ambient: {
         enabled: true,
         intensity: 0.6,
-        color: new Color3(1, 1, 1), // White ambient light
-        direction: new Vector3(0, 1, 0), // Up direction
+        color: STATIC_AMBIENT_COLOR, // Static object to prevent recreation
+        direction: STATIC_AMBIENT_DIRECTION, // Static object to prevent recreation
       },
       directional: {
         enabled: true,
         intensity: 1.0,
-        color: new Color3(1, 1, 1), // White directional light
-        direction: new Vector3(-1, -1, -1), // Top-left-front direction
+        color: STATIC_DIRECTIONAL_COLOR, // Static object to prevent recreation
+        direction: STATIC_DIRECTIONAL_DIRECTION, // Static object to prevent recreation
       },
       environment: {
         enabled: false,

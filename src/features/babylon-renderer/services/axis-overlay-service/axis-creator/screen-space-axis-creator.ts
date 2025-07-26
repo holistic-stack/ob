@@ -76,14 +76,25 @@ function createDottedLine(
 ): LinesMesh | null {
   if (points.length < 2 || !scene) return null;
 
-  // Use BabylonJS built-in CreateDashedLines for dotted effect
+  /**
+   * Calculate optimal number of dashes based on line length to prevent excessive mesh creation.
+   * This prevents the infinite loop issue where too many dashes (previously 100) caused
+   * browser freezing due to excessive BabylonJS mesh creation.
+   *
+   * @performance Limits dash count to 5-20 range for optimal rendering performance
+   * @see https://github.com/BabylonJS/Babylon.js/issues/performance-dashed-lines
+   */
+  const lineLength =
+    points.length >= 2 ? Vector3.Distance(points[0]!, points[points.length - 1]!) : 10;
+  const dashCount = Math.min(20, Math.max(5, Math.floor(lineLength / 10))); // 5-20 dashes max
+
   const dashedLine = MeshBuilder.CreateDashedLines(
     name,
     {
       points,
       dashSize, // Small dash size for dot-like appearance
       gapSize, // Larger gap for visible spacing
-      dashNb: 100, // Number of dashes along the line
+      dashNb: dashCount, // Reasonable number of dashes based on line length
     },
     scene
   );

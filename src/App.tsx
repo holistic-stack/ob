@@ -23,7 +23,7 @@
  */
 
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
 import { StoreConnectedRenderer } from './features/babylon-renderer/components/store-connected-renderer';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
@@ -175,6 +175,24 @@ export function App(): React.JSX.Element {
   // State changes are logged by individual components when necessary
 
   /**
+   * Memoized callbacks to prevent StoreConnectedRenderer recreation
+   *
+   * @performance These callbacks are memoized to prevent infinite re-renders.
+   * Previously, inline functions were passed as props, causing StoreConnectedRenderer
+   * to recreate on every render, which triggered BabylonScene recreation loops.
+   *
+   * @pattern Callback memoization pattern - use useCallback for stable function references
+   * when passing callbacks to child components that depend on reference equality.
+   */
+  const handleRenderComplete = useCallback((meshCount: number) => {
+    logger.debug(`[DEBUG][App] Render completed with ${meshCount} meshes`);
+  }, []);
+
+  const handleRenderError = useCallback((error: Error) => {
+    logger.error(`[ERROR][App] Render error: ${error.message}`);
+  }, []);
+
+  /**
    * @function handleMouseDown
    * @description Handles the mouse down event on the resize handle to initiate panel resizing.
    * It sets up mouse move and mouse up listeners to track the resize operation,
@@ -317,12 +335,8 @@ export function App(): React.JSX.Element {
                 className="h-full w-full"
                 enableWebGPU={true}
                 enableInspector={false}
-                onRenderComplete={(meshCount) => {
-                  logger.debug(`[DEBUG][App] Render completed with ${meshCount} meshes`);
-                }}
-                onRenderError={(error) => {
-                  logger.error(`[ERROR][App] Render error: ${error.message}`);
-                }}
+                onRenderComplete={handleRenderComplete}
+                onRenderError={handleRenderError}
                 data-testid="main-renderer"
               />
             </ErrorBoundary>

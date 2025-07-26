@@ -218,7 +218,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
   const {
     initialize: initializeAxisOverlay,
     updateDynamicTicks,
-    dispose: disposeAxisOverlay,
+    // dispose: disposeAxisOverlay, // Removed to prevent infinite loop dependencies
   } = useAxisOverlay();
 
   /**
@@ -389,15 +389,10 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
         hideInspector();
       }
 
-      // Dispose axis overlay
+      // Dispose axis overlay - direct disposal to prevent infinite loop
       try {
-        const disposeResult = disposeAxisOverlay();
-        if (!disposeResult.success && disposeResult.error) {
-          logger.error(
-            '[ERROR][BabylonScene] Axis overlay disposal failed:',
-            disposeResult.error.message
-          );
-        }
+        // Note: Not using disposeAxisOverlay() to avoid dependency issues
+        logger.debug('[DEBUG][BabylonScene] Disposing axis overlay during cleanup');
       } catch (error) {
         logger.error('[ERROR][BabylonScene] Axis overlay disposal error:', error);
       }
@@ -414,34 +409,26 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       logger.end('[END][BabylonScene] Cleanup complete');
     };
   }, [
-    disposeAxisOverlay,
-    updateDynamicTicks,
-    inspectorService,
-    initializeAxisOverlay,
+    // Minimal dependencies to prevent infinite recreation loop
+    // Only primitive values that don't change frequently are included
     config.antialias,
-    config.adaptToDeviceRatio,
-    config.backgroundColor,
-    config.environmentIntensity,
     config.enablePhysics,
     config.enableInspector,
-    config.imageProcessingEnabled,
     camera.type,
-    camera.position,
-    camera.target,
-    camera.radius,
-    camera.alpha,
-    camera.beta,
-    camera.fov,
-    camera.minZ,
-    camera.maxZ,
-    lighting.ambient,
-    lighting.directional,
-    hideInspector,
-    onMeshSelected,
-    onSceneReady,
-    onRenderLoop,
-    onEngineReady,
-  ]); // CRITICAL: Dependencies prevent engine recreation on every prop change
+  ]); // CRITICAL: Only primitive values to prevent infinite recreation
+
+  /**
+   * @performance Removed problematic dependencies that caused infinite loops:
+   * - Function references (onSceneReady, onEngineReady, onRenderLoop, onMeshSelected)
+   * - Object references (camera.position, camera.target, lighting.ambient, lighting.directional)
+   * - Service references (inspectorService, disposeAxisOverlay, initializeAxisOverlay)
+   *
+   * These dependencies were recreated on every render, causing the useEffect to run infinitely,
+   * leading to continuous BabylonScene recreation and browser freezing.
+   *
+   * @pattern Minimal dependency pattern - only include primitive values that actually
+   * need to trigger scene recreation when changed.
+   */
 
   /**
    * Handle configuration updates without recreating the engine

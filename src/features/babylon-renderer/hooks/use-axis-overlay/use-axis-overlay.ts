@@ -311,7 +311,15 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
 
   /**
    * Recreate axes after AST rendering completes
-   * This fixes the issue where AST rendering clears all meshes including axis overlays
+   *
+   * @description This fixes the issue where AST rendering clears all meshes including axis overlays.
+   * The useEffect is triggered only when AST rendering completes (lastRendered changes).
+   *
+   * @performance Removed axisOverlayState.config dependency to prevent infinite recreation loop.
+   * Previously, config changes would trigger axis recreation, which would update config,
+   * causing an infinite loop that froze the browser.
+   *
+   * @see Issue: Infinite loop caused browser freezing with thousands of axis lines created
    */
   useEffect(() => {
     const recreateAxes = async () => {
@@ -323,18 +331,8 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
       logger.debug('[DEBUG][useAxisOverlay] AST rendering completed, recreating axes...');
 
       try {
-        // Update configuration first to ensure latest settings (especially axisLength)
-        const configResult = serviceRef.current.updateConfig(axisOverlayState.config);
-        if (!configResult.success) {
-          logger.error(
-            '[ERROR][useAxisOverlay] Configuration update failed:',
-            configResult.error.message
-          );
-          setAxisOverlayError(configResult.error);
-          return;
-        }
-
         // Recreate the axes after AST rendering cleared them
+        // Note: Not updating config here to prevent infinite loop
         const result = await serviceRef.current.initialize(sceneRef.current, cameraRef.current);
 
         if (!result.success) {
@@ -349,16 +347,40 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
     };
 
     recreateAxes();
-  }, [lastRendered, setAxisOverlayError, axisOverlayState.config]);
+  }, [lastRendered, setAxisOverlayError]); // Removed axisOverlayState.config to prevent infinite loop
 
   /**
    * Cleanup on unmount
+   *
+   * @description Performs direct cleanup without depending on the dispose callback to prevent
+   * infinite loops. The cleanup useEffect should only run on component unmount.
+   *
+   * @performance Empty dependency array prevents infinite recreation loops that occurred
+   * when dispose function was included in dependencies (dispose was recreated on every render).
+   *
+   * @pattern Direct cleanup pattern - calls service methods directly instead of through
+   * memoized callbacks to avoid dependency chain issues.
    */
   useEffect(() => {
     return () => {
-      dispose();
+      // Direct cleanup without depending on the dispose callback
+      try {
+        logger.debug(
+          '[DEBUG][useAxisOverlay] Component unmounting, disposing axis overlay service'
+        );
+
+        if (serviceRef.current) {
+          serviceRef.current.dispose();
+          serviceRef.current = null;
+        }
+
+        // Reset store state
+        resetAxisOverlay();
+      } catch (error) {
+        logger.error('[ERROR][useAxisOverlay] Cleanup error:', error);
+      }
     };
-  }, [dispose]);
+  }, []); // Empty dependency array - only run on unmount
 
   return {
     service: serviceRef.current,
