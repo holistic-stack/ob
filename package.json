@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --project tsconfig.lib.json && vite build",
-    "test": "vitest run --pool=threads --poolOptions.threads.singleThread=true --reporter=basic",
-    "test:memory-safe": "vitest run --pool=threads --poolOptions.threads.singleThread=true --reporter=basic --fileParallelism=false",
+    "test": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run",
+    "test:memory-safe": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run --fileParallelism=false",
     "validate": "npx tsx scripts/validate-complete-pipeline.ts",
     "validate:pipeline": "vitest run src/features/openscad-pipeline --reporter=verbose",
     "typecheck": "npx tsc --noEmit",
@@ -102,6 +102,7 @@
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^1.6.1",
+    "vitest-canvas-mock": "^0.3.3",
     "vitest-fetch-mock": "^0.4.5"
   },
   "keywords": [],

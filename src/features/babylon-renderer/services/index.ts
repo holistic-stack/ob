@@ -11,7 +11,7 @@ export type {
   AxisOverlayState,
   IAxisOverlayService,
 } from '../types/axis-overlay.types';
-export type { BridgeConversionConfig } from './ast-bridge-converter';
+export type { BridgeConversionConfig } from './ast-bridge-converter/index.js';
 export {
   ASTBridgeConverter,
   ControlFlowBabylonNode,
@@ -22,8 +22,8 @@ export {
   PlaceholderBabylonNode,
   PrimitiveBabylonNode,
   TransformationBabylonNode,
-} from './ast-bridge-converter';
-export { createAxisOverlayService } from './axis-overlay-service';
+} from './ast-bridge-converter/index.js';
+export { createAxisOverlayService } from './axis-overlay-service/index.js';
 
 export type {
   CSG2Config,
@@ -32,8 +32,12 @@ export type {
   CSG2InitResult,
   CSG2OperationResult,
   CSG2State,
-} from './babylon-csg2-service';
-export { BabylonCSG2Service, CSG2ErrorCode, DEFAULT_CSG2_CONFIG } from './babylon-csg2-service';
+} from './babylon-csg2-service/index.js';
+export {
+  BabylonCSG2Service,
+  CSG2ErrorCode,
+  DEFAULT_CSG2_CONFIG,
+} from './babylon-csg2-service/index.js';
 
 export type {
   BabylonEngineConfig,
@@ -42,12 +46,12 @@ export type {
   EngineError,
   EngineInitResult,
   EngineUpdateResult,
-} from './babylon-engine-service';
+} from './babylon-engine-service/index.js';
 export {
   BabylonEngineService,
   DEFAULT_ENGINE_CONFIG,
   EngineErrorCode,
-} from './babylon-engine-service';
+} from './babylon-engine-service/index.js';
 
 export type {
   InspectorConfig,
@@ -56,13 +60,13 @@ export type {
   InspectorShowResult,
   InspectorState,
   InspectorTabSwitchResult,
-} from './babylon-inspector-service';
+} from './babylon-inspector-service/index.js';
 export {
   BabylonInspectorService,
   DEFAULT_INSPECTOR_CONFIG,
   InspectorErrorCode,
   InspectorTab,
-} from './babylon-inspector-service';
+} from './babylon-inspector-service/index.js';
 
 export type {
   MaterialApplyResult,
@@ -76,28 +80,28 @@ export type {
   PBRMaterialConfig,
   PBRSheenConfig,
   PBRTextureConfig,
-} from './babylon-material-service';
+} from './babylon-material-service/index.js';
 export {
   BabylonMaterialService,
   DEFAULT_PBR_CONFIG,
   MaterialErrorCode,
   MaterialType,
-} from './babylon-material-service';
+} from './babylon-material-service/index.js';
 
 export type {
   CADCameraConfig,
   CameraBounds,
   CameraControlError,
-} from './camera-control';
-export { CameraControlService } from './camera-control';
+} from './camera-control/index.js';
+export { CameraControlService } from './camera-control/index.js';
 
 export type {
   GizmoMode,
   TransformationEvent,
   TransformationGizmoConfig,
   TransformationGizmoError,
-} from './transformation-gizmo-service';
+} from './transformation-gizmo-service/index.js';
 export {
   DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
   TransformationGizmoService,
-} from './transformation-gizmo-service';
+} from './transformation-gizmo-service/index.js';

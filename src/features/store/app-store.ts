@@ -309,6 +309,7 @@ import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../shared/config/debounce-config.j
 import { createLogger } from '../../shared/services/logger.service.js';
 import type { AppConfig, CameraConfig } from '../../shared/types/common.types.js';
 import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
+import { DEFAULT_CAMERA, DEFAULT_OPENSCAD_CODE } from './constants/store.constants.js';
 import {
   type BabylonRenderingState,
   createBabylonRenderingSlice,
@@ -391,134 +392,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   },
 };
 
-/**
- * Default camera configuration optimized for OpenSCAD 3D visualization.
- *
- * @architectural_decision
- * **Camera Positioning**: The default position [10, 10, 10] provides an isometric
- * view that works well for most OpenSCAD models, allowing clear visibility of
- * all three dimensions without perspective distortion.
- *
- * **Field of View**: 75-degree FOV provides a good balance between wide viewing
- * angle and minimal perspective distortion for technical 3D models.
- *
- * **Control Settings**: Interactive controls are enabled by default to provide
- * immediate 3D navigation capabilities essential for CAD model inspection.
- *
- * @performance_characteristics
- * - **Near/Far Planes**: 0.1 to 1000 range handles both small details and large assemblies
- * - **Auto-rotate**: Disabled by default to prevent motion sickness and maintain user control
- * - **Control Responsiveness**: Optimized for precision modeling inspection
- *
- * @example Custom Camera for Different Model Types
- * ```typescript
- * import { DEFAULT_CAMERA } from '@/features/store';
- *
- * // Configuration for large architectural models
- * const architecturalCamera = {
- *   ...DEFAULT_CAMERA,
- *   position: [50, 50, 50],
- *   far: 10000, // Extended far plane for large structures
- *   autoRotateSpeed: 0.5 // Gentle rotation for presentations
- * };
- *
- * // Configuration for precision mechanical parts
- * const mechanicalCamera = {
- *   ...DEFAULT_CAMERA,
- *   position: [5, 5, 5],
- *   near: 0.01, // Closer near plane for fine details
- *   fov: 45 // Narrower FOV for less distortion
- * };
- * ```
- *
- * @example Dynamic Camera Adaptation
- * ```typescript
- * import { useAppStore } from '@/features/store';
- *
- * function AdaptiveCameraController() {
- *   const { ast, updateCameraConfig } = useAppStore(state => ({
- *     ast: state.parsing.ast,
- *     updateCameraConfig: state.updateCameraConfig
- *   }));
- *
- *   // Automatically adjust camera based on model bounds
- *   useEffect(() => {
- *     if (ast.length > 0) {
- *       const bounds = calculateModelBounds(ast);
- *       const distance = bounds.diagonal * 1.5;
- *
- *       updateCameraConfig({
- *         position: [distance, distance, distance],
- *         far: distance * 10
- *       });
- *     }
- *   }, [ast, updateCameraConfig]);
- *
- *   return null;
- * }
- * ```
- */
-export const DEFAULT_CAMERA: CameraConfig = {
-  position: [10, 10, 10],
-  target: [0, 0, 0],
-  zoom: 1,
-  fov: 75,
-  near: 0.1,
-  far: 1000,
-  enableControls: true,
-  enableAutoRotate: false,
-  autoRotateSpeed: 1,
-  enableAutoFrame: false, // Disabled by default to prevent disorienting camera movements
-};
-
-/**
- * Default OpenSCAD code for application initialization.
- *
- * @architectural_decision
- * **Simple Primitive**: Using `sphere(5)` as the default provides:
- * - Quick parsing validation (simple AST structure)
- * - Fast rendering performance (basic geometry)
- * - Immediate visual feedback (recognizable 3D shape)
- * - Non-intimidating starting point for new users
- *
- * @example Alternative Default Codes for Different Contexts
- * ```typescript
- * // For educational contexts
- * const EDUCATIONAL_DEFAULT = `
- * // Welcome to OpenSCAD!
- * // Try modifying these shapes:
- * union() {
- *   cube(10);
- *   translate([15, 0, 0]) sphere(5);
- * }
- * `;
- *
- * // For mechanical design contexts
- * const MECHANICAL_DEFAULT = `
- * // Basic bracket design
- * difference() {
- *   cube([20, 10, 5]);
- *   translate([10, 5, -1]) cylinder(h=7, r=3);
- * }
- * `;
- *
- * // For testing and development
- * const TESTING_DEFAULT = 'cube(1);'; // Minimal for fast tests
- * ```
- *
- * @example Dynamic Default Code Selection
- * ```typescript
- * function getDefaultCode(context: 'educational' | 'mechanical' | 'testing') {
- *   switch (context) {
- *     case 'educational': return EDUCATIONAL_DEFAULT;
- *     case 'mechanical': return MECHANICAL_DEFAULT;
- *     case 'testing': return TESTING_DEFAULT;
- *     default: return DEFAULT_OPENSCAD_CODE;
- *   }
- * }
- * ```
- */
-export const DEFAULT_OPENSCAD_CODE = 'sphere(5);';
+// Re-export for backward compatibility
+export { DEFAULT_CAMERA, DEFAULT_OPENSCAD_CODE };
 
 /**
  * Parser initialization is now handled by the parser initialization service

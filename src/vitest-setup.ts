@@ -30,6 +30,74 @@ import React from 'react';
 import { vi } from 'vitest';
 
 /**
+ * @polyfill HTMLCanvasElement for React 19 compatibility
+ * @description React 19 requires proper setAttribute support on canvas elements.
+ * This polyfill ensures jsdom canvas elements work correctly with React 19.
+ * Applied globally to prevent test interference.
+ */
+if (typeof HTMLCanvasElement !== 'undefined') {
+  // Store original methods to prevent interference
+  const originalSetAttribute = HTMLCanvasElement.prototype.setAttribute;
+  const originalGetAttribute = HTMLCanvasElement.prototype.getAttribute;
+
+  // Enhanced setAttribute that handles React 19 requirements
+  HTMLCanvasElement.prototype.setAttribute = function (name: string, value: string) {
+    try {
+      // Handle React 19 specific attributes
+      if (name === 'width' || name === 'height') {
+        const numValue = Number.parseInt(value, 10);
+        if (!Number.isNaN(numValue)) {
+          // Type-safe property assignment for canvas dimensions
+          if (name === 'width') {
+            this.width = numValue;
+          } else if (name === 'height') {
+            this.height = numValue;
+          }
+        }
+      }
+
+      // Call original setAttribute if it exists
+      if (originalSetAttribute && typeof originalSetAttribute === 'function') {
+        return originalSetAttribute.call(this, name, value);
+      } else {
+        // Fallback: store as data attribute
+        this.dataset[name] = value;
+      }
+    } catch {
+      // Graceful fallback for any setAttribute errors
+      this.dataset[name] = value;
+    }
+  };
+
+  // Enhanced getAttribute that handles React 19 requirements
+  HTMLCanvasElement.prototype.getAttribute = function (name: string) {
+    try {
+      if (originalGetAttribute && typeof originalGetAttribute === 'function') {
+        return originalGetAttribute.call(this, name);
+      } else {
+        // Fallback: get from data attributes or canvas properties
+        if (name === 'width') {
+          return this.width.toString();
+        } else if (name === 'height') {
+          return this.height.toString();
+        } else {
+          return this.dataset[name] || null;
+        }
+      }
+    } catch {
+      // Graceful fallback for any getAttribute errors
+      if (name === 'width') {
+        return this.width.toString();
+      } else if (name === 'height') {
+        return this.height.toString();
+      } else {
+        return this.dataset[name] || null;
+      }
+    }
+  };
+}
+
+/**
  * @mock MonacoEditorComponent
  * @description Mocks the `MonacoEditorComponent` to prevent actual editor rendering during tests.
  * This improves test performance and isolates UI component tests from the Monaco Editor's complexities.
@@ -74,14 +142,14 @@ import './vitest-helpers/openscad-parser-test-utils.ts';
 
 /**
  * @mock Zustand
- * @description Mocks the Zustand library to ensure proper isolation and control over store state during tests.
+ * @description Zustand mocking is handled by __mocks__/zustand.ts file
  * This allows for predictable state management without relying on actual store instances.
  * @example
  * Basic usage:
  * In tests, you can mock Zustand hooks for predictable state management.
  * This allows for isolated testing without actual store instances.
  */
-vi.mock('zustand');
+// vi.mock('zustand'); // Commented out - handled by __mocks__/zustand.ts
 
 /**
  * @constant logger

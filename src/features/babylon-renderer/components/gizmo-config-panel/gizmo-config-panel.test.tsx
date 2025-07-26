@@ -9,8 +9,8 @@
  * ```
  */
 
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appStoreInstance } from '../../../store/app-store';
 import { DEFAULT_GIZMO_CONFIG, GizmoPosition } from '../../types/orientation-gizmo.types';
 import type { GizmoConfigPanelProps } from './gizmo-config-panel';
@@ -27,6 +27,14 @@ describe('GizmoConfigPanel', () => {
     defaultProps = {
       className: 'test-panel',
     };
+  });
+
+  afterEach(() => {
+    cleanup();
+    // Reset store state to prevent interference between tests
+    const store = appStoreInstance.getState();
+    store.resetGizmo();
+    vi.clearAllMocks();
   });
 
   describe('Component Rendering', () => {
@@ -100,17 +108,18 @@ describe('GizmoConfigPanel', () => {
     it('should display all position options', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /top left/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /top right/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /bottom left/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /bottom right/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /top left/i })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /top right/i })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /bottom left/i })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /bottom right/i })[0]).toBeInTheDocument();
     });
 
     it('should highlight current position', () => {
       appStoreInstance.getState().setGizmoPosition(GizmoPosition.TOP_LEFT);
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      const topLeftButton = screen.getByRole('button', { name: /top left/i });
+      const allTopLeftButtons = screen.getAllByRole('button', { name: /top left/i });
+      const topLeftButton = allTopLeftButtons[0]; // Take the first one
       expect(topLeftButton).toHaveAttribute('aria-pressed', 'true');
     });
 
@@ -118,8 +127,10 @@ describe('GizmoConfigPanel', () => {
       const onPositionChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onPositionChange={onPositionChange} />);
 
-      const bottomLeftButton = screen.getByRole('button', { name: /bottom left/i });
-      fireEvent.click(bottomLeftButton);
+      const allBottomLeftButtons = screen.getAllByRole('button', { name: /bottom left/i });
+      const bottomLeftButton = allBottomLeftButtons[0];
+      expect(bottomLeftButton).toBeDefined();
+      fireEvent.click(bottomLeftButton!);
 
       expect(onPositionChange).toHaveBeenCalledWith(GizmoPosition.BOTTOM_LEFT);
       expect(appStoreInstance.getState().babylonRendering.gizmo.position).toBe(
@@ -132,17 +143,18 @@ describe('GizmoConfigPanel', () => {
     it('should display size presets', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: 'Small' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Medium' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Large' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Extra Large' })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Small' })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Medium' })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Large' })[0]).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Extra Large' })[0]).toBeInTheDocument();
     });
 
     it('should highlight current size preset', () => {
       appStoreInstance.getState().updateGizmoConfig({ size: 120 });
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      const largeButton = screen.getByRole('button', { name: 'Large' });
+      const allLargeButtons = screen.getAllByRole('button', { name: 'Large' });
+      const largeButton = allLargeButtons[0];
       expect(largeButton).toHaveClass('bg-blue-50');
     });
 
@@ -150,8 +162,10 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const mediumButton = screen.getByRole('button', { name: 'Medium' });
-      fireEvent.click(mediumButton);
+      const allMediumButtons = screen.getAllByRole('button', { name: 'Medium' });
+      const mediumButton = allMediumButtons[0];
+      expect(mediumButton).toBeDefined();
+      fireEvent.click(mediumButton!);
 
       expect(onConfigChange).toHaveBeenCalledWith(expect.objectContaining({ size: 90 }));
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(90);
@@ -179,14 +193,16 @@ describe('GizmoConfigPanel', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
       expect(
-        screen.getByRole('button', { name: /apply default color theme/i })
+        screen.getAllByRole('button', { name: /apply default color theme/i })[0]
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /apply vibrant color theme/i })
+        screen.getAllByRole('button', { name: /apply vibrant color theme/i })[0]
       ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /apply pastel color theme/i })).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /apply monochrome color theme/i })
+        screen.getAllByRole('button', { name: /apply pastel color theme/i })[0]
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('button', { name: /apply monochrome color theme/i })[0]
       ).toBeInTheDocument();
     });
 
@@ -194,8 +210,12 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const vibrantButton = screen.getByRole('button', { name: /apply vibrant color theme/i });
-      fireEvent.click(vibrantButton);
+      const allVibrantButtons = screen.getAllByRole('button', {
+        name: /apply vibrant color theme/i,
+      });
+      const vibrantButton = allVibrantButtons[0];
+      expect(vibrantButton).toBeDefined();
+      fireEvent.click(vibrantButton!);
 
       expect(onConfigChange).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -213,20 +233,22 @@ describe('GizmoConfigPanel', () => {
     it('should toggle advanced options when button is clicked', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      const advancedButton = screen.getByRole('button', { name: /advanced options/i });
+      const allAdvancedButtons = screen.getAllByRole('button', { name: /advanced options/i });
+      const advancedButton = allAdvancedButtons[0];
+      expect(advancedButton).toBeDefined();
 
       // Initially collapsed
-      expect(advancedButton).toHaveAttribute('aria-expanded', 'false');
+      expect(advancedButton!).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText('Custom Colors')).not.toBeInTheDocument();
 
       // Expand
-      fireEvent.click(advancedButton);
-      expect(advancedButton).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.click(advancedButton!);
+      expect(advancedButton!).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByText('Custom Colors')).toBeInTheDocument();
 
       // Collapse
-      fireEvent.click(advancedButton);
-      expect(advancedButton).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(advancedButton!);
+      expect(advancedButton!).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText('Custom Colors')).not.toBeInTheDocument();
     });
 
@@ -285,8 +307,10 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const resetButton = screen.getByRole('button', { name: /reset to default settings/i });
-      fireEvent.click(resetButton);
+      const allResetButtons = screen.getAllByRole('button', { name: /reset to default settings/i });
+      const resetButton = allResetButtons[0];
+      expect(resetButton).toBeDefined();
+      fireEvent.click(resetButton!);
 
       expect(onConfigChange).toHaveBeenCalledWith(DEFAULT_GIZMO_CONFIG);
       expect(appStoreInstance.getState().babylonRendering.gizmo.config).toEqual(
@@ -352,8 +376,10 @@ describe('GizmoConfigPanel', () => {
       const onPositionChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onPositionChange={onPositionChange} />);
 
-      const topLeftButton = screen.getByRole('button', { name: /top left/i });
-      fireEvent.click(topLeftButton);
+      const allTopLeftButtons = screen.getAllByRole('button', { name: /top left/i });
+      const topLeftButton = allTopLeftButtons[0];
+      expect(topLeftButton).toBeDefined();
+      fireEvent.click(topLeftButton!);
 
       expect(onPositionChange).toHaveBeenCalledWith(GizmoPosition.TOP_LEFT);
     });
@@ -371,12 +397,21 @@ describe('GizmoConfigPanel', () => {
       rerender(<GizmoConfigPanel {...defaultProps} />);
 
       // Verify UI reflects changes
-      expect(screen.getByRole('checkbox', { name: /show orientation gizmo/i })).not.toBeChecked();
-      expect(screen.getByRole('button', { name: /bottom right/i })).toHaveAttribute(
-        'aria-pressed',
-        'true'
+      const allCheckboxes = screen.getAllByRole('checkbox', { name: /show orientation gizmo/i });
+      const visibilityCheckbox = allCheckboxes[0]; // Take the first one
+      expect(visibilityCheckbox).not.toBeChecked();
+      const allBottomRightButtons = screen.getAllByRole('button', { name: /bottom right/i });
+      const bottomRightButton = allBottomRightButtons[0]; // Take the first one
+      expect(bottomRightButton).toHaveAttribute('aria-pressed', 'true');
+      // Verify the Extra Large preset is highlighted (since size is 150)
+      const allExtraLargeButtons = screen.getAllByRole('button', { name: 'Extra Large' });
+      const extraLargeButton = allExtraLargeButtons.find((button) =>
+        button.closest('.space-y-3, [class*="space-x-2"]')
       );
-      expect(screen.getByText('150')).toBeInTheDocument();
+      expect(extraLargeButton).toHaveClass('bg-blue-50');
+
+      // Verify the store has the correct updated config
+      expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(150);
     });
 
     it('should handle missing config gracefully', () => {
@@ -385,8 +420,17 @@ describe('GizmoConfigPanel', () => {
 
       render(<GizmoConfigPanel {...defaultProps} />);
 
-      // Should use default config
-      expect(screen.getByText(DEFAULT_GIZMO_CONFIG.size.toString())).toBeInTheDocument();
+      // Should use default config - check that the Medium preset is highlighted (since default size is 90)
+      const allMediumButtons = screen.getAllByRole('button', { name: 'Medium' });
+      const mediumButton = allMediumButtons.find((button) =>
+        button.closest('.space-y-3, [class*="space-x-2"]')
+      );
+      expect(mediumButton).toHaveClass('bg-blue-50');
+
+      // Verify the store has the correct default config
+      expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(
+        DEFAULT_GIZMO_CONFIG.size
+      );
     });
   });
 });

@@ -6,8 +6,8 @@
  */
 
 import { Color3, Vector3 } from '@babylonjs/core';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BabylonScene } from './babylon-scene';
 
 // Mock ResizeObserver for tests
@@ -21,30 +21,87 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 Object.defineProperty(window, 'addEventListener', { value: vi.fn(), writable: true });
 Object.defineProperty(window, 'removeEventListener', { value: vi.fn(), writable: true });
 
-// Mock BabylonJS Engine to prevent actual WebGL initialization in tests
-vi.mock('@babylonjs/core', async () => {
-  const actual = await vi.importActual('@babylonjs/core');
-  return {
-    ...actual,
-    Engine: vi.fn().mockImplementation(() => ({
-      dispose: vi.fn(),
-      runRenderLoop: vi.fn(),
-      resize: vi.fn(),
-    })),
-    Scene: vi.fn().mockImplementation(() => ({
-      dispose: vi.fn(),
-      render: vi.fn(),
-      setActiveCameraByName: vi.fn(),
-    })),
-    ArcRotateCamera: vi.fn(),
-    HemisphericLight: vi.fn(),
-    DirectionalLight: vi.fn(),
-    MeshBuilder: {
-      CreateBox: vi.fn().mockReturnValue({
-        position: { x: 0, y: 0, z: 0 },
-      }),
-    },
+/**
+ * @description Following project best practices: Use BabylonJS NullEngine for testing
+ * instead of mocking. This provides real BabylonJS functionality in headless mode.
+ */
+import * as BABYLON from '@babylonjs/core';
+
+/**
+ * @polyfill Canvas for React 19 compatibility in BabylonScene tests
+ * @description React 19 requires proper canvas element support in test environment.
+ * This polyfill ensures canvas elements work correctly with React 19 rendering.
+ */
+const createCanvasPolyfill = () => {
+  const originalCreateElement = document.createElement;
+
+  document.createElement = function(tagName: string, options?: any) {
+    const element = originalCreateElement.call(this, tagName, options);
+
+    if (tagName.toLowerCase() === 'canvas') {
+      const canvas = element as HTMLCanvasElement;
+
+      // Ensure setAttribute works correctly for React 19
+      const originalSetAttribute = canvas.setAttribute;
+      canvas.setAttribute = function(name: string, value: string) {
+        try {
+          if (name === 'width' || name === 'height') {
+            const numValue = Number.parseInt(value, 10);
+            if (!Number.isNaN(numValue)) {
+              if (name === 'width') {
+                this.width = numValue;
+              } else if (name === 'height') {
+                this.height = numValue;
+              }
+            }
+          }
+
+          if (originalSetAttribute) {
+            return originalSetAttribute.call(this, name, value);
+          } else {
+            this.dataset[name] = value;
+          }
+        } catch {
+          // Graceful fallback
+          this.dataset[name] = value;
+        }
+      };
+
+      // Ensure getContext works
+      if (!canvas.getContext) {
+        canvas.getContext = vi.fn(() => ({}));
+      }
+    }
+
+    return element;
   };
+};
+
+// Apply canvas polyfill before tests
+createCanvasPolyfill();
+
+// Create a global NullEngine for tests
+let testEngine: BABYLON.NullEngine | null = null;
+let testScene: BABYLON.Scene | null = null;
+
+// Setup and cleanup for BabylonJS NullEngine
+beforeEach(() => {
+  // Create a null engine (headless)
+  testEngine = new BABYLON.NullEngine();
+  // Create a real scene
+  testScene = new BABYLON.Scene(testEngine);
+});
+
+afterEach(() => {
+  // Clean up BabylonJS resources
+  if (testScene) {
+    testScene.dispose();
+    testScene = null;
+  }
+  if (testEngine) {
+    testEngine.dispose();
+    testEngine = null;
+  }
 });
 
 // Mock hooks
@@ -68,6 +125,11 @@ vi.mock('../../../../shared/services/logger.service', () => ({
 }));
 
 describe('BabylonScene', () => {
+  afterEach(() => {
+    cleanup();
+    // Reset any global state that might interfere with other tests
+    vi.clearAllMocks();
+  });
   it('should render canvas element', () => {
     render(<BabylonScene />);
 
@@ -148,7 +210,7 @@ describe('BabylonScene', () => {
 
     render(<BabylonScene style={{ width: '800px', height: '600px' }} />);
 
-    const canvas = screen.getByRole('img');
+    const canvas = screen.getByTestId('babylon-canvas');
     expect(canvas).toBeInTheDocument();
   });
 
@@ -161,7 +223,7 @@ describe('BabylonScene', () => {
 
     render(<BabylonScene style={{ width: '800px', height: '600px' }} />);
 
-    const canvas = screen.getByRole('img');
+    const canvas = screen.getByTestId('babylon-canvas');
     expect(canvas).toBeInTheDocument();
   });
 });

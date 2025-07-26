@@ -511,7 +511,7 @@ import {
 import { disposeMeshesComprehensively } from '../../babylon-renderer/utils/mesh-disposal/mesh-disposal';
 import { forceSceneRefresh } from '../../babylon-renderer/utils/scene-refresh/scene-refresh';
 import type { ASTNode } from '../../openscad-parser/core/ast-types';
-import { DEFAULT_CAMERA } from '../app-store';
+import { DEFAULT_CAMERA } from '../constants/store.constants';
 import type { AppStore } from '../types/store.types';
 
 const logger = createLogger('BabylonRenderingSlice');
@@ -830,7 +830,7 @@ export const createBabylonRenderingSlice = (
             engineService = new BabylonEngineService();
           }
 
-          const result = await engineService.init({
+          const initResult = await engineService.init({
             canvas,
             config: {
               antialias: true,
@@ -844,16 +844,17 @@ export const createBabylonRenderingSlice = (
               failIfMajorPerformanceCaveat: false,
             },
           });
-          if (!result.success) {
+
+          if (!initResult.success) {
             throw {
-              code: result.error.code,
-              message: result.error.message,
+              code: initResult.error.code,
+              message: initResult.error.message,
               timestamp: new Date(),
               service: 'engine',
             };
           }
 
-          // Update state
+          // Update state after successful initialization
           set((state: WritableDraft<AppStore>) => {
             const engineState = engineService?.getState();
             if (engineState) {
@@ -862,6 +863,8 @@ export const createBabylonRenderingSlice = (
           });
 
           logger.debug('[DEBUG][BabylonRenderingSlice] BabylonJS engine initialized successfully');
+          // Return void as expected by the interface
+          return;
         },
         (error) => ({
           code: 'ENGINE_INIT_FAILED',
