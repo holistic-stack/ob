@@ -78,6 +78,7 @@ The OpenSCAD Babylon project is **100% complete** with comprehensive test covera
 3. **Extrusion Operations**: linear_extrude, rotate_extrude
 4. **Control Flow**: for, if, let statement evaluation
 5. **Import/Include**: File loading and module system
+6. **🔄 IN PROGRESS: Module System Support** - Comprehensive module definition, instantiation, variable scoping, and conditional evaluation system (see tasks/improve-plan.md)
 
 ## Architecture Overview
 
