@@ -6,9 +6,10 @@
  * handling through Result<T,E> types.
  *
  * @architectural_decision
- * **Slice-Based Architecture**: The store is divided into four main domain slices:
+ * **Slice-Based Architecture**: The store is divided into five main domain slices:
  * - `editor-slice`: Monaco Editor state (code, cursor, selection)
  * - `parsing-slice`: OpenSCAD AST parsing with Tree-sitter integration
+ * - `openscad-globals-slice`: OpenSCAD global variables ($fn, $fa, $fs, etc.)
  * - `babylon-rendering-slice`: 3D scene state and mesh generation
  * - `config-slice`: Application configuration and user preferences
  *
@@ -317,6 +318,10 @@ import {
 } from './slices/babylon-rendering-slice.js';
 import { createConfigSlice } from './slices/config-slice.js';
 import { createEditorSlice } from './slices/editor-slice.js';
+import {
+  createOpenSCADGlobalsSlice,
+  OPENSCAD_DEFAULTS,
+} from './slices/openscad-globals-slice/index.js';
 import { createParsingSlice } from './slices/parsing-slice.js';
 import type { AppState, AppStore, StoreOptions } from './types/store.types.js';
 
@@ -433,6 +438,9 @@ const createInitialState = (options?: StoreOptions): AppState => {
       parseTime: 0,
     },
     babylonRendering: babylonRenderingState,
+    openscadGlobals: {
+      ...OPENSCAD_DEFAULTS,
+    },
     config: {
       ...DEFAULT_CONFIG,
       ...options?.initialState?.config,
@@ -676,7 +684,7 @@ export const createAppStore = (
       debounceConfig: options.debounceConfig,
     }),
     ...createParsingSlice(set, get),
-
+    ...createOpenSCADGlobalsSlice(set, get),
     ...createBabylonRenderingSlice(set, get),
     ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
   }));
@@ -690,6 +698,7 @@ export const createAppStore = (
             code: state.editor.code,
             lastSaved: state.editor.lastSaved,
           },
+          openscadGlobals: state.openscadGlobals,
           babylonRendering: {
             camera: state.babylonRendering?.camera,
             gizmo: state.babylonRendering?.gizmo,
