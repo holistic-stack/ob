@@ -105,6 +105,10 @@ import type {
   BabylonRenderingActions,
   BabylonRenderingState,
 } from '../slices/babylon-rendering-slice';
+import type {
+  OpenSCADGlobalsActions,
+  OpenSCADGlobalsState,
+} from '../slices/openscad-globals-slice';
 import type { ParseOptions } from '../slices/parsing-slice.types.js';
 
 // Re-export types for external use
@@ -412,6 +416,7 @@ export interface AppState {
   readonly editor: EditorState;
   readonly parsing: ParsingState;
   readonly babylonRendering: BabylonRenderingState;
+  readonly openscadGlobals: OpenSCADGlobalsState;
   readonly config: AppConfig;
 }
 
@@ -472,6 +477,7 @@ export type AppStore = AppState &
   EditorActions &
   ParsingActions &
   BabylonRenderingActions &
+  OpenSCADGlobalsActions &
   ConfigActions;
 
 /**
