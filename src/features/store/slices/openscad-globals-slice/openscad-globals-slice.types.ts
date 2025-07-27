@@ -236,6 +236,16 @@ export interface OpenSCADGlobalsActions {
    * @param category - Category to reset
    */
   resetCategory: (category: 'geometry' | 'animation' | 'viewport' | 'modules' | 'debug') => void;
+
+  /**
+   * Extract and apply global variables from OpenSCAD AST nodes.
+   * Processes assignment nodes for special variables like $fs, $fa, $fn, etc.
+   * @param ast - Array of AST nodes to process
+   * @returns Result indicating success or extraction errors
+   */
+  extractGlobalsFromAST: (
+    ast: ReadonlyArray<any>
+  ) => Result<void, OpenSCADGlobalsValidationError[]>;
 }
 
 /**

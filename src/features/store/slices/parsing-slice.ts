@@ -563,6 +563,18 @@ export const createParsingSlice = (
               state.parsing.errors = [];
             });
 
+            // Extract global variables from the AST and update the store
+            try {
+              get().extractGlobalsFromAST(resolvedAST);
+              logger.debug(
+                `[DEBUG][ParsingSlice] Global variables extracted from AST with ${resolvedAST.length} nodes`
+              );
+            } catch (error) {
+              logger.warn(
+                `[WARN][ParsingSlice] Failed to extract global variables from AST: ${error}`
+              );
+            }
+
             // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
             logger.debug(
               `[DEBUG][ParsingSlice] Fresh AST parsed with ${resolvedAST.length} resolved nodes - StoreConnectedRenderer will handle rendering`

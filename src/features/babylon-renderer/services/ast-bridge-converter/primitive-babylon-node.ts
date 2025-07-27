@@ -1,23 +1,42 @@
 /**
  * @file Primitive BabylonJS Node Implementation
  *
- * Implements proper BabylonJS mesh generation for OpenSCAD primitive types.
- * Supports cube, sphere, cylinder, and polyhedron with OpenSCAD-compatible parameters.
+ * Implements BabylonJS mesh generation for OpenSCAD primitive types including
+ * 3D primitives (cube, sphere, cylinder, polyhedron) and 2D primitives (circle, square, polygon).
+ * Provides OpenSCAD-compatible parameter handling and global variables integration.
+ *
+ * @example
+ * ```typescript
+ * // Create a sphere primitive with OpenSCAD globals
+ * const sphereNode = new PrimitiveBabylonNode(
+ *   'sphere-1',
+ *   scene,
+ *   sphereASTNode,
+ *   openscadGlobals,
+ *   sourceLocation
+ * );
+ * const result = await sphereNode.generateMesh();
+ * ```
  */
 
 import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
-import { MeshBuilder } from '@babylonjs/core';
+import { Vector3 as BabylonVector3, MeshBuilder } from '@babylonjs/core';
+import earcut from 'earcut';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 
 import type {
   ASTNode,
+  CircleNode,
   CubeNode,
   CylinderNode,
+  PolygonNode,
   PolyhedronNode,
   SourceLocation,
   SphereNode,
+  SquareNode,
 } from '../../../openscad-parser/ast/ast-types';
+import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import {
   type BabylonJSError,
   BabylonJSNode,
@@ -37,11 +56,13 @@ const logger = createLogger('PrimitiveBabylonNode');
 export class PrimitiveBabylonNode extends BabylonJSNode {
   private readonly primitiveType: string;
   private readonly parameters: Record<string, unknown>;
+  private readonly openscadGlobals: OpenSCADGlobalsState;
 
   constructor(
     name: string,
     scene: Scene | null,
     originalOpenscadNode: ASTNode,
+    openscadGlobals: OpenSCADGlobalsState,
     sourceLocation?: SourceLocation
   ) {
     super(
@@ -54,8 +75,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     this.primitiveType = originalOpenscadNode.type;
     this.parameters = this.extractParameters(originalOpenscadNode);
-
-    logger.debug(`[INIT] Created primitive BabylonJS node for ${this.primitiveType}`);
+    this.openscadGlobals = openscadGlobals;
   }
 
   /**
@@ -71,6 +91,12 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         return BabylonJSNodeType.Cylinder;
       case 'polyhedron':
         return BabylonJSNodeType.Polyhedron;
+      case 'circle':
+        return BabylonJSNodeType.Circle;
+      case 'square':
+        return BabylonJSNodeType.Square;
+      case 'polygon':
+        return BabylonJSNodeType.Polygon;
       default:
         return BabylonJSNodeType.Cube; // Default fallback
     }
@@ -80,8 +106,6 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    * Generate proper BabylonJS mesh for the primitive type
    */
   async generateMesh(): Promise<NodeGenerationResult> {
-    logger.debug(`[GENERATE] Generating ${this.primitiveType} mesh`);
-
     return tryCatch(
       () => {
         if (!this.scene) {
@@ -103,7 +127,6 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
           generatedAt: new Date().toISOString(),
         };
 
-        logger.debug(`[GENERATE] Generated ${this.primitiveType} mesh successfully`);
         return mesh;
       },
       (error) => {
@@ -134,6 +157,12 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         return this.createCylinderMesh(scene);
       case 'polyhedron':
         return this.createPolyhedronMesh(scene);
+      case 'circle':
+        return this.createCircleMesh(scene);
+      case 'square':
+        return this.createSquareMesh(scene);
+      case 'polygon':
+        return this.createPolygonMesh(scene);
       default:
         throw new Error(`Unsupported primitive type: ${this.primitiveType}`);
     }
@@ -170,12 +199,21 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
   /**
    * Create sphere mesh with OpenSCAD-compatible parameters
+   *
+   * @param scene - BabylonJS scene for mesh creation
+   * @returns AbstractMesh representing the sphere
+   *
+   * @example
+   * ```typescript
+   * const sphere = this.createSphereMesh(scene);
+   * // Creates sphere with radius and tessellation based on OpenSCAD globals
+   * ```
    */
   private createSphereMesh(scene: Scene): AbstractMesh {
     const radius = this.extractSphereRadius();
     const segments = this.extractSphereSegments();
 
-    return MeshBuilder.CreateSphere(
+    const sphere = MeshBuilder.CreateSphere(
       this.name,
       {
         diameter: radius * 2,
@@ -183,6 +221,14 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       },
       scene
     );
+
+    // Apply flat shading to make angular edges visible for low-poly spheres
+    // This is crucial for OpenSCAD compatibility where coarse resolution should show facets
+    if (segments <= 16) {
+      sphere.convertToFlatShadedMesh();
+    }
+
+    return sphere;
   }
 
   /**
@@ -217,10 +263,15 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
   /**
    * Create polyhedron mesh with OpenSCAD-compatible parameters
+   *
+   * Currently creates a tetrahedron placeholder. Full polyhedron implementation
+   * with custom points and faces requires additional BabylonJS mesh construction.
+   *
+   * @param scene - BabylonJS scene for mesh creation
+   * @returns AbstractMesh representing a basic polyhedron (tetrahedron)
    */
   private createPolyhedronMesh(scene: Scene): AbstractMesh {
-    // For now, create a simple tetrahedron as placeholder
-    // TODO: Implement proper polyhedron creation from points and faces
+    // Create a simple tetrahedron as placeholder for polyhedron functionality
     logger.warn(
       '[WARN] Polyhedron mesh generation not fully implemented, using tetrahedron placeholder'
     );
@@ -233,6 +284,126 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       },
       scene
     );
+  }
+
+  /**
+   * Create circle mesh using BabylonJS CreateDisc
+   *
+   * Uses native BabylonJS disc creation for optimal visibility and performance.
+   * Supports OpenSCAD global variables ($fn, $fa, $fs) for tessellation control.
+   *
+   * @param scene - BabylonJS scene for mesh creation
+   * @returns AbstractMesh representing the 2D circle as a flat disc
+   *
+   * @example
+   * ```typescript
+   * // Creates a circle with 5 segments (pentagon) when $fn = 5
+   * const circle = this.createCircleMesh(scene);
+   * ```
+   */
+  private createCircleMesh(scene: Scene): AbstractMesh {
+    const radius = this.extractCircleRadius();
+    const segments = this.extractCircleSegments();
+
+    // Create disc mesh using BabylonJS native CreateDisc
+    const mesh = MeshBuilder.CreateDisc(
+      this.name,
+      {
+        radius: radius,
+        tessellation: segments,
+        sideOrientation: 2, // Double-sided for visibility
+      },
+      scene
+    );
+
+    // Position at Z=0 (2D shape in 3D space)
+    mesh.position.z = 0;
+
+    return mesh;
+  }
+
+  /**
+   * Create square mesh using BabylonJS CreatePlane
+   *
+   * Uses native BabylonJS plane creation for optimal visibility and performance.
+   * Supports both square and rectangular shapes with OpenSCAD-compatible positioning.
+   *
+   * @param scene - BabylonJS scene for mesh creation
+   * @returns AbstractMesh representing the 2D square/rectangle as a flat plane
+   *
+   * @example
+   * ```typescript
+   * // Creates a 50x30 rectangle positioned in first quadrant (OpenSCAD default)
+   * const square = this.createSquareMesh(scene);
+   * ```
+   */
+  private createSquareMesh(scene: Scene): AbstractMesh {
+    const size = this.extractSquareSize();
+    const center = this.extractSquareCenter();
+
+    // Create plane mesh using BabylonJS native CreatePlane
+    const mesh = MeshBuilder.CreatePlane(
+      this.name,
+      {
+        width: size.x,
+        height: size.y,
+        sideOrientation: 2, // Double-sided for visibility
+      },
+      scene
+    );
+
+    // Position based on center parameter
+    if (center) {
+      // Centered at origin (default for CreatePlane)
+      mesh.position.set(0, 0, 0);
+    } else {
+      // OpenSCAD default: positioned in first quadrant
+      mesh.position.set(size.x / 2, size.y / 2, 0);
+    }
+
+    return mesh;
+  }
+
+  /**
+   * Create polygon mesh for arbitrary 2D shapes
+   *
+   * Handles arbitrary polygon shapes from OpenSCAD using CreatePolygon with earcut triangulation.
+   * Supports complex polygon shapes with proper triangulation for non-convex polygons.
+   *
+   * @param scene - BabylonJS scene for mesh creation
+   * @returns AbstractMesh representing the 2D polygon as a flat shape
+   *
+   * @example
+   * ```typescript
+   * // Creates a polygon from array of [x, y] points
+   * const polygon = this.createPolygonMesh(scene);
+   * ```
+   */
+  private createPolygonMesh(scene: Scene): AbstractMesh {
+    const points = this.extractPolygonPoints();
+
+    // Convert points to Vector3 array for BabylonJS polygon creation
+    const shape: Vector3[] = points.map((point) => {
+      const x = typeof point[0] === 'number' ? point[0] : 0;
+      const y = typeof point[1] === 'number' ? point[1] : 0;
+      return new BabylonVector3(x, y, 0);
+    });
+
+    // Create polygon mesh using BabylonJS
+    const mesh = MeshBuilder.CreatePolygon(
+      this.name,
+      {
+        shape: shape,
+        sideOrientation: 2, // Double-sided for visibility
+      },
+      scene,
+      earcut // Earcut library for polygon triangulation
+    );
+
+    // Position at Z=0 (2D shape in 3D space)
+    mesh.position.z = 0;
+
+    return mesh;
   }
 
   /**
@@ -283,11 +454,38 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
-   * Extract sphere segments for tessellation
+   * Extract sphere segments for tessellation using OpenSCAD global variables
    */
   private extractSphereSegments(): number {
     const sphereNode = this.originalOpenscadNode as SphereNode;
-    return (sphereNode as SphereNode & { $fn?: number }).$fn ?? 32; // Default segments
+    const radius = this.extractSphereRadius();
+
+    // Check for local $fn first (node-specific override)
+    const localFn = (sphereNode as SphereNode & { $fn?: number }).$fn;
+    if (localFn !== undefined) {
+      return localFn;
+    }
+
+    // Use OpenSCAD global variables for fragment calculation
+    const globals = this.openscadGlobals;
+
+    // Calculate fragments according to OpenSCAD specification
+    const fragmentsFromFn = globals.$fn || 0;
+    const fragmentsFromFa = globals.$fa ? Math.ceil(360 / globals.$fa) : Infinity;
+    const fragmentsFromFs = globals.$fs
+      ? Math.ceil((2 * Math.PI * radius) / globals.$fs)
+      : Infinity;
+
+    // OpenSCAD uses the minimum of calculated values for best quality
+    const calculatedFragments = Math.max(
+      fragmentsFromFn,
+      Math.min(fragmentsFromFa, fragmentsFromFs)
+    );
+
+    // Ensure minimum of 3 fragments for valid geometry
+    const finalFragments = Math.max(3, calculatedFragments);
+
+    return finalFragments;
   }
 
   /**
@@ -332,6 +530,96 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
+   * Extract circle radius from parameters
+   */
+  private extractCircleRadius(): number {
+    const circleNode = this.originalOpenscadNode as CircleNode;
+
+    if (circleNode.r !== undefined) {
+      return circleNode.r;
+    }
+
+    if (circleNode.d !== undefined) {
+      return circleNode.d / 2;
+    }
+
+    return 1; // Default radius
+  }
+
+  /**
+   * Extract circle segments for tessellation using OpenSCAD global variables
+   */
+  private extractCircleSegments(): number {
+    const circleNode = this.originalOpenscadNode as CircleNode;
+    const radius = this.extractCircleRadius();
+
+    // Check for local $fn first (node-specific override)
+    const localFn = circleNode.$fn;
+    if (localFn !== undefined) {
+      return localFn;
+    }
+
+    // Use OpenSCAD global variables for fragment calculation
+    const globals = this.openscadGlobals;
+
+    // Calculate fragments according to OpenSCAD specification
+    const fragmentsFromFn = globals.$fn || 0;
+    const fragmentsFromFa = globals.$fa ? Math.ceil(360 / globals.$fa) : Infinity;
+    const fragmentsFromFs = globals.$fs
+      ? Math.ceil((2 * Math.PI * radius) / globals.$fs)
+      : Infinity;
+
+    // OpenSCAD uses the minimum of calculated values for best quality
+    const calculatedFragments = Math.max(
+      fragmentsFromFn,
+      Math.min(fragmentsFromFa, fragmentsFromFs)
+    );
+
+    // Ensure minimum of 3 fragments for valid geometry
+    const finalFragments = Math.max(3, calculatedFragments);
+
+    return finalFragments;
+  }
+
+  /**
+   * Extract square size from parameters
+   */
+  private extractSquareSize(): Vector3 {
+    const squareNode = this.originalOpenscadNode as SquareNode;
+    const size = squareNode.size;
+
+    if (Array.isArray(size) && size.length >= 2) {
+      return {
+        x: typeof size[0] === 'number' ? size[0] : 1,
+        y: typeof size[1] === 'number' ? size[1] : 1,
+        z: 0, // 2D shape has no depth
+      } as Vector3;
+    }
+
+    if (typeof size === 'number') {
+      return { x: size, y: size, z: 0 } as Vector3;
+    }
+
+    return { x: 1, y: 1, z: 0 } as Vector3; // Default size
+  }
+
+  /**
+   * Extract square center parameter
+   */
+  private extractSquareCenter(): boolean {
+    const squareNode = this.originalOpenscadNode as SquareNode;
+    return squareNode.center ?? false; // OpenSCAD default is false
+  }
+
+  /**
+   * Extract polygon points from parameters
+   */
+  private extractPolygonPoints(): number[][] {
+    const polygonNode = this.originalOpenscadNode as PolygonNode;
+    return polygonNode.points ?? []; // Default empty points
+  }
+
+  /**
    * Extract parameters from the original OpenSCAD node
    */
   private extractParameters(node: ASTNode): Record<string, unknown> {
@@ -369,6 +657,28 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         params.convexity = polyhedronNode.convexity;
         break;
       }
+      case 'circle': {
+        const circleNode = node as CircleNode;
+        params.radius = circleNode.r;
+        params.diameter = circleNode.d;
+        params.fn = circleNode.$fn;
+        params.fa = circleNode.$fa;
+        params.fs = circleNode.$fs;
+        break;
+      }
+      case 'square': {
+        const squareNode = node as SquareNode;
+        params.size = squareNode.size;
+        params.center = squareNode.center;
+        break;
+      }
+      case 'polygon': {
+        const polygonNode = node as PolygonNode;
+        params.points = polygonNode.points;
+        params.paths = polygonNode.paths;
+        params.convexity = polygonNode.convexity;
+        break;
+      }
     }
 
     return params;
@@ -390,10 +700,6 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
         // Validate type-specific parameters
         this.validatePrimitiveParameters();
-
-        logger.debug(
-          `[VALIDATE] Primitive node ${this.name} (${this.primitiveType}) validated successfully`
-        );
       },
       (error) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -431,6 +737,27 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       case 'polyhedron':
         // Polyhedron validation logic
         break;
+      case 'circle': {
+        const radius = this.extractCircleRadius();
+        if (radius <= 0) {
+          throw new Error('Circle radius must be positive');
+        }
+        break;
+      }
+      case 'square': {
+        const size = this.extractSquareSize();
+        if (size.x <= 0 || size.y <= 0) {
+          throw new Error('Square dimensions must be positive');
+        }
+        break;
+      }
+      case 'polygon': {
+        const points = this.extractPolygonPoints();
+        if (points.length < 3) {
+          throw new Error('Polygon must have at least 3 points');
+        }
+        break;
+      }
     }
   }
 
@@ -442,10 +769,10 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       `${this.name}_clone_${Date.now()}`,
       this.scene,
       this.originalOpenscadNode as ASTNode,
+      this.openscadGlobals,
       this.sourceLocation
     );
 
-    logger.debug(`[CLONE] Cloned primitive node ${this.name} to ${clonedNode.name}`);
     return clonedNode;
   }
 

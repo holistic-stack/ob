@@ -1309,6 +1309,13 @@ export const createBabylonRenderingSlice = (
             `[DEBUG][BabylonRenderingSlice] bridgeConverter.initialize completed successfully`
           );
 
+          // Pass OpenSCAD global variables to the bridge converter
+          const openscadGlobals = currentState.openscadGlobals;
+          bridgeConverter.setOpenSCADGlobals(openscadGlobals);
+          logger.debug(
+            `[DEBUG][BabylonRenderingSlice] OpenSCAD globals set: $fn=${openscadGlobals.$fn}, $fa=${openscadGlobals.$fa}, $fs=${openscadGlobals.$fs}`
+          );
+
           console.log(
             `[DEBUG][BabylonRenderingSlice] About to call bridgeConverter.convertAST with ${ast.length} AST nodes`
           );
@@ -1399,8 +1406,8 @@ export const createBabylonRenderingSlice = (
           );
 
           // Auto-frame the scene if meshes were generated and auto-framing is enabled
-          const currentState = _get();
-          if (meshes.length > 0 && currentState.babylonRendering.camera.enableAutoFrame) {
+          const stateForFraming = _get();
+          if (meshes.length > 0 && stateForFraming.babylonRendering.camera.enableAutoFrame) {
             performSceneFraming(scene, 'Auto');
           }
 

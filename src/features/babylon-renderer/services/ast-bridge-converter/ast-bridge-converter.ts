@@ -503,6 +503,7 @@ import type { Result } from '../../../../shared/types/result.types';
 import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
 
 import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
+import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import type {
   BabylonJSError,
   BabylonJSNode,
@@ -831,10 +832,19 @@ export class ASTBridgeConverter {
   private config: BridgeConversionConfig;
   private isInitialized = false;
   private conversionCache = new Map<string, BabylonJSNode>();
+  private openscadGlobals: OpenSCADGlobalsState | null = null;
 
   constructor(config: BridgeConversionConfig = DEFAULT_BRIDGE_CONFIG) {
     this.config = { ...config };
     logger.init('[INIT][ASTBridgeConverter] Bridge converter initialized');
+  }
+
+  /**
+   * Set OpenSCAD global variables for mesh generation
+   */
+  setOpenSCADGlobals(globals: OpenSCADGlobalsState): void {
+    this.openscadGlobals = globals;
+    logger.debug('[SET_GLOBALS] OpenSCAD global variables updated for mesh generation');
   }
 
   /**
@@ -1417,7 +1427,29 @@ export class ASTBridgeConverter {
     // Check if this is a primitive type
     if (this.isPrimitiveType(openscadNode.type)) {
       const { PrimitiveBabylonNode } = await import('./primitive-babylon-node');
-      return new PrimitiveBabylonNode(nodeId, this.scene, openscadNode, openscadNode.location);
+
+      // Use default globals if not set
+      const globals = this.openscadGlobals || {
+        $fn: undefined,
+        $fa: 12,
+        $fs: 2,
+        $t: 0,
+        $vpr: [55, 0, 25] as const,
+        $vpt: [0, 0, 0] as const,
+        $vpd: 140,
+        $children: 0,
+        $preview: true,
+        lastUpdated: 0,
+        isModified: false,
+      };
+
+      return new PrimitiveBabylonNode(
+        nodeId,
+        this.scene,
+        openscadNode,
+        globals,
+        openscadNode.location
+      );
     }
 
     // Check if this is a transformation type

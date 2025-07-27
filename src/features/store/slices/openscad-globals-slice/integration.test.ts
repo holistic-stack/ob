@@ -4,7 +4,7 @@
  * to verify proper integration, persistence, and cross-slice interactions.
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createAppStore } from '../../app-store.js';
 import type { AppStore } from '../../types/store.types.js';
 
@@ -18,7 +18,7 @@ describe('OpenSCAD Globals Store Integration', () => {
   describe('Store Integration', () => {
     it('should include OpenSCAD globals in the store', () => {
       const state = store.getState();
-      
+
       expect(state.openscadGlobals).toBeDefined();
       expect(state.openscadGlobals.$fn).toBe(undefined);
       expect(state.openscadGlobals.$fa).toBe(12);
@@ -40,7 +40,7 @@ describe('OpenSCAD Globals Store Integration', () => {
 
     it('should update OpenSCAD globals through store actions', () => {
       const { updateGeometryResolution } = store.getState();
-      
+
       const result = updateGeometryResolution({ $fn: 32, $fa: 6 });
       expect(result.success).toBe(true);
 
@@ -53,10 +53,10 @@ describe('OpenSCAD Globals Store Integration', () => {
 
     it('should handle validation errors through store', () => {
       const { updateGeometryResolution } = store.getState();
-      
+
       const result = updateGeometryResolution({ $fn: -1, $fa: 0 });
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
         expect(result.error).toHaveLength(2);
         expect(result.error[0].variable).toBe('$fn');
@@ -72,7 +72,7 @@ describe('OpenSCAD Globals Store Integration', () => {
 
     it('should reset OpenSCAD globals through store', () => {
       const { updateGeometryResolution, resetToDefaults } = store.getState();
-      
+
       // Modify state
       updateGeometryResolution({ $fn: 64 });
       expect(store.getState().openscadGlobals.$fn).toBe(64);
@@ -97,7 +97,7 @@ describe('OpenSCAD Globals Store Integration', () => {
 
     it('should reset categories through store', () => {
       const { updateGeometryResolution, updateAnimation, resetCategory } = store.getState();
-      
+
       // Modify multiple categories
       updateGeometryResolution({ $fn: 32 });
       updateAnimation({ $t: 0.7 });
@@ -114,10 +114,10 @@ describe('OpenSCAD Globals Store Integration', () => {
   describe('State Persistence', () => {
     it('should include OpenSCAD globals in persisted state', () => {
       const { updateGeometryResolution } = store.getState();
-      
+
       // Modify state
       updateGeometryResolution({ $fn: 16, $fa: 8 });
-      
+
       // Check that the state would be persisted
       const state = store.getState();
       expect(state.openscadGlobals.$fn).toBe(16);
@@ -129,13 +129,13 @@ describe('OpenSCAD Globals Store Integration', () => {
   describe('Cross-Slice Interactions', () => {
     it('should maintain OpenSCAD globals state independently of other slices', () => {
       const { updateGeometryResolution, updateCode } = store.getState();
-      
+
       // Update OpenSCAD globals
       updateGeometryResolution({ $fn: 24 });
-      
+
       // Update editor (different slice)
       updateCode('cube([1,2,3]);');
-      
+
       // OpenSCAD globals should remain unchanged
       const state = store.getState();
       expect(state.openscadGlobals.$fn).toBe(24);
@@ -145,13 +145,13 @@ describe('OpenSCAD Globals Store Integration', () => {
 
     it('should allow access to OpenSCAD globals from other parts of the store', () => {
       const { updateGeometryResolution } = store.getState();
-      
+
       // Update OpenSCAD globals
       updateGeometryResolution({ $fn: 48, $fa: 4, $fs: 1 });
-      
+
       // Verify other slices can access the globals
       const state = store.getState();
-      
+
       // These values should be available for use by the renderer or parser
       expect(state.openscadGlobals.$fn).toBe(48);
       expect(state.openscadGlobals.$fa).toBe(4);
@@ -165,7 +165,9 @@ describe('OpenSCAD Globals Store Integration', () => {
 
       // TypeScript should enforce correct types
       // $fn can be undefined by default
-      expect(state.openscadGlobals.$fn === undefined || typeof state.openscadGlobals.$fn === 'number').toBe(true);
+      expect(
+        state.openscadGlobals.$fn === undefined || typeof state.openscadGlobals.$fn === 'number'
+      ).toBe(true);
       expect(typeof state.openscadGlobals.$fa).toBe('number');
       expect(typeof state.openscadGlobals.$fs).toBe('number');
       expect(typeof state.openscadGlobals.$t).toBe('number');

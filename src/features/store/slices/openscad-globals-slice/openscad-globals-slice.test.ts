@@ -19,7 +19,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { create } from 'zustand';
 import { createOpenSCADGlobalsSlice, OPENSCAD_DEFAULTS } from './openscad-globals-slice.js';
-import type { OpenSCADGlobalsActions, OpenSCADGlobalsState } from './openscad-globals-slice.types.js';
+import type {
+  OpenSCADGlobalsActions,
+  OpenSCADGlobalsState,
+} from './openscad-globals-slice.types.js';
 
 // Mock store state structure
 interface MockStoreState {
