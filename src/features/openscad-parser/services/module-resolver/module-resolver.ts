@@ -43,7 +43,7 @@
 
 import type { Result } from '../../../../shared/types/index.js';
 import type { ASTNode, ModuleDefinitionNode, ModuleInstantiationNode } from '../../ast/ast-types.js';
-import type { ModuleRegistryInterface } from '../module-registry/module-registry.js';
+import { ModuleRegistry, type ModuleRegistryInterface } from '../module-registry/module-registry.js';
 
 /**
  * Error types for module resolution operations
@@ -106,6 +106,8 @@ interface ResolutionContext {
   resolutionStack: string[];
   /** Variable scope for parameter binding */
   variableScope: Map<string, any>;
+  /** Scoped module registry for nested modules */
+  scopedRegistry: ModuleRegistryInterface;
 }
 
 /**
@@ -162,6 +164,7 @@ export class ModuleResolver implements ModuleResolverInterface {
         depth: 0,
         resolutionStack: [],
         variableScope: new Map(),
+        scopedRegistry: this.moduleRegistry, // Use the main registry for top-level scope
       };
 
       const resolvedNodes: ASTNode[] = [];
@@ -269,8 +272,8 @@ export class ModuleResolver implements ModuleResolverInterface {
       };
     }
 
-    // Lookup the module definition
-    const lookupResult = this.moduleRegistry.lookup(moduleName);
+    // Lookup the module definition in the current scope
+    const lookupResult = context.scopedRegistry.lookup(moduleName);
     if (!lookupResult.success) {
       return {
         success: false,
@@ -284,11 +287,32 @@ export class ModuleResolver implements ModuleResolverInterface {
 
     const moduleDefinition = lookupResult.data;
 
-    // Create new resolution context for this module
+    // Create a hierarchical scoped registry that inherits from the current scope
+    const localRegistry = this.createScopedRegistry(context.scopedRegistry);
+
+    // First, register any nested module definitions in the module body
+    for (const bodyNode of moduleDefinition.body) {
+      if (bodyNode.type === 'module_definition') {
+        const registrationResult = localRegistry.register(bodyNode as ModuleDefinitionNode);
+        if (!registrationResult.success) {
+          return {
+            success: false,
+            error: createModuleResolverError(
+              ModuleResolverErrorCode.INVALID_AST,
+              `Failed to register nested module: ${registrationResult.error.message}`,
+              (bodyNode as ModuleDefinitionNode).name.name
+            ),
+          };
+        }
+      }
+    }
+
+    // Create new resolution context for this module with local scope
     const newContext: ResolutionContext = {
       depth: context.depth + 1,
       resolutionStack: [...context.resolutionStack, moduleName],
       variableScope: new Map(context.variableScope), // Copy parent scope
+      scopedRegistry: localRegistry, // Use local registry for nested modules
     };
 
     // TODO: Bind parameters from instantiation.args to moduleDefinition.parameters
@@ -305,5 +329,31 @@ export class ModuleResolver implements ModuleResolverInterface {
     }
 
     return { success: true, data: resolvedBody };
+  }
+
+  /**
+   * Creates a scoped registry that inherits from a parent registry
+   * Local modules are registered in the new registry, but lookups fall back to parent
+   */
+  private createScopedRegistry(parentRegistry: ModuleRegistryInterface): ModuleRegistryInterface {
+    const localRegistry = new ModuleRegistry();
+
+    // Create a proxy that delegates lookups to parent if not found locally
+    return {
+      register: (moduleDefinition: ModuleDefinitionNode) => localRegistry.register(moduleDefinition),
+      lookup: (moduleName: string) => {
+        // First try local registry
+        const localResult = localRegistry.lookup(moduleName);
+        if (localResult.success) {
+          return localResult;
+        }
+        // Fall back to parent registry
+        return parentRegistry.lookup(moduleName);
+      },
+      has: (moduleName: string) => localRegistry.has(moduleName) || parentRegistry.has(moduleName),
+      getModuleNames: () => [...new Set([...localRegistry.getModuleNames(), ...parentRegistry.getModuleNames()])],
+      clear: () => localRegistry.clear(),
+      size: () => localRegistry.size() + parentRegistry.size(),
+    };
   }
 }
