@@ -448,10 +448,16 @@ import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
 import { unifiedParseOpenSCAD } from '../../openscad-parser/services/parsing.service.js';
+import { ModuleRegistry } from '../../openscad-parser/services/module-registry/module-registry.js';
+import { ModuleResolver } from '../../openscad-parser/services/module-resolver/module-resolver.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');
+
+// Module resolution services
+const moduleRegistry = new ModuleRegistry();
+const moduleResolver = new ModuleResolver(moduleRegistry);
 
 type ParsingSliceConfig = Record<string, never>;
 
@@ -522,10 +528,33 @@ export const createParsingSlice = (
           if (isSuccess(parseResult)) {
             // The unified service already returns the correct structure
             // parseResult.data.data contains the actual AST array
-            const ast = parseResult.data.data as ReadonlyArray<ASTNode>;
+            const rawAST = parseResult.data.data as ReadonlyArray<ASTNode>;
+
+            // Apply module resolution to expand module instantiations
+            logger.debug(`[DEBUG][ParsingSlice] Applying module resolution to ${rawAST.length} AST nodes`);
+
+            // Clear the module registry for fresh parsing
+            moduleRegistry.clear();
+
+            // Resolve modules in the AST
+            const resolutionResult = moduleResolver.resolveAST([...rawAST]);
+
+            let resolvedAST: ReadonlyArray<ASTNode>;
+            if (resolutionResult.success) {
+              resolvedAST = Object.freeze(resolutionResult.data);
+              logger.debug(
+                `[DEBUG][ParsingSlice] Module resolution successful: ${rawAST.length} -> ${resolvedAST.length} nodes`
+              );
+            } else {
+              // If module resolution fails, fall back to the raw AST and log the error
+              resolvedAST = rawAST;
+              logger.warn(
+                `[WARN][ParsingSlice] Module resolution failed: ${resolutionResult.error.message}. Using raw AST.`
+              );
+            }
 
             set((state: WritableDraft<AppStore>) => {
-              state.parsing.ast = [...ast];
+              state.parsing.ast = [...resolvedAST];
               state.parsing.isLoading = false;
               state.parsing.lastParsed = new Date();
               state.parsing.lastParsedCode = code;
@@ -534,10 +563,11 @@ export const createParsingSlice = (
 
             // Note: Rendering is handled by StoreConnectedRenderer watching AST changes
             logger.debug(
-              `[DEBUG][ParsingSlice] Fresh AST parsed with ${ast.length} nodes - StoreConnectedRenderer will handle rendering`
+              `[DEBUG][ParsingSlice] Fresh AST parsed with ${resolvedAST.length} resolved nodes - StoreConnectedRenderer will handle rendering`
             );
-            // Return the parseResult directly since it already has the correct structure
-            return parseResult;
+
+            // Return the result with resolved AST
+            return operationUtils.createSuccess(resolvedAST, parseResult.data.metadata);
           } else {
             // Handle parsing failure
             const errorMessage = parseResult.error.error?.message || 'Unknown parsing error';

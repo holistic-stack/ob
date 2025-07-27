@@ -134,12 +134,19 @@ export class VisitorASTGenerator {
       sharedVariableScope
     );
 
+    // Create module visitor instance to set composite visitor later
+    const moduleVisitor = new ModuleVisitor(
+      this.source,
+      this.errorHandler,
+      sharedVariableScope
+    );
+
     const compositeVisitor = new CompositeVisitor(
       [
         new AssignStatementVisitor(this.source, this.errorHandler, sharedVariableScope), // Handle assign statements first
         new AssertStatementVisitor(this.source, this.errorHandler, sharedVariableScope),
         // Module and function definitions must be processed before instantiations
-        new ModuleVisitor(this.source, this.errorHandler, sharedVariableScope), // Process module definitions first
+        moduleVisitor, // Process module definitions first
         new FunctionVisitor(this.source, this.errorHandler, sharedVariableScope), // Process function definitions first
         // Control structures must be processed before other visitors to handle if/for/let statements
         controlStructureVisitor,
@@ -163,6 +170,9 @@ export class VisitorASTGenerator {
 
     // Set the composite visitor on the Control Structure visitor to enable child delegation
     controlStructureVisitor.setCompositeVisitor(compositeVisitor);
+
+    // Set the composite visitor on the Module visitor to enable child delegation
+    moduleVisitor.setCompositeVisitor(compositeVisitor);
 
     // Use the composite visitor as the main visitor
     this.visitor = compositeVisitor;

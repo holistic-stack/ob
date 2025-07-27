@@ -70,6 +70,7 @@ import {
 } from '../extractors/module-parameter-extractor.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
+import type { ASTVisitor } from './ast-visitor.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 
 /**
@@ -84,13 +85,25 @@ export class ModuleVisitor extends BaseASTVisitor {
    * @param {string} source - The source code being parsed.
    * @param {ErrorHandler} errorHandler - The error handler instance.
    * @param {Map<string, ast.ParameterValue>} variableScope - The current variable scope.
+   * @param {ASTVisitor | undefined} compositeVisitor - The composite visitor for delegating child processing.
    */
   constructor(
     source: string,
     protected override errorHandler: ErrorHandler,
-    protected override variableScope: Map<string, ast.ParameterValue>
+    protected override variableScope: Map<string, ast.ParameterValue>,
+    private compositeVisitor?: ASTVisitor
   ) {
     super(source, errorHandler, variableScope);
+  }
+
+  /**
+   * @method setCompositeVisitor
+   * @description Sets the composite visitor for delegating child node processing.
+   * This is needed to resolve circular dependency issues during visitor creation.
+   * @param {ASTVisitor} compositeVisitor - The composite visitor instance.
+   */
+  setCompositeVisitor(compositeVisitor: ASTVisitor): void {
+    this.compositeVisitor = compositeVisitor;
   }
 
   /**
@@ -101,21 +114,25 @@ export class ModuleVisitor extends BaseASTVisitor {
    * @override
    */
   override visitStatement(node: TSNode): ast.ASTNode | null {
-    // Only handle statements that contain module definitions
-    // Check for module_definition
+    // Handle statements that contain module definitions
     const moduleDefinition = findDescendantOfType(node, 'module_definition');
     if (moduleDefinition) {
       return this.visitModuleDefinition(moduleDefinition);
     }
 
-    // Check for function_definition (functions are also handled by ModuleVisitor)
+    // Handle statements that contain function definitions
     const functionDefinition = findDescendantOfType(node, 'function_definition');
     if (functionDefinition) {
       return this.visitFunctionDefinition(functionDefinition);
     }
 
+    // Handle statements that contain module instantiations (user-defined module calls)
+    const moduleInstantiation = findDescendantOfType(node, 'module_instantiation');
+    if (moduleInstantiation) {
+      return this.visitModuleInstantiation(moduleInstantiation);
+    }
+
     // Return null for all other statement types to let specialized visitors handle them
-    // This includes module_instantiation which should be handled by specialized visitors
     return null;
   }
 
@@ -285,59 +302,48 @@ export class ModuleVisitor extends BaseASTVisitor {
       }
     }
 
-    // Extract body
+    // Extract body using proper visitor pattern with composite visitor delegation
     const bodyNode = node.childForFieldName('body');
     const body: ast.ASTNode[] = [];
     if (bodyNode) {
-      const blockChildren = this.visitBlock(bodyNode);
-      body.push(...blockChildren);
-    }
+      this.errorHandler.logDebug(
+        `[ModuleVisitor.visitModuleDefinition] Processing module body with ${bodyNode.namedChildCount} statements`,
+        'ModuleVisitor.visitModuleDefinition'
+      );
 
-    // For testing purposes, hardcode some values based on the node text
-    if (node.text.includes('module mycube()')) {
-      body.push({
-        type: 'cube',
-        size: 10,
-        center: false,
-        location: getLocation(node),
-      });
-    } else if (node.text.includes('module mycube(size)')) {
-      body.push({
-        type: 'cube',
-        size: 'size',
-        center: false,
-        location: getLocation(node),
-      });
-    } else if (node.text.includes('module mycube(size=10, center=false)')) {
-      body.push({
-        type: 'cube',
-        size: 10,
-        center: false,
-        location: getLocation(node),
-      });
-    } else if (node.text.includes('module mysphere(r=10)')) {
-      body.push({
-        type: 'sphere',
-        radius: 10,
-        location: getLocation(node),
-      });
-    } else if (node.text.includes('module wrapper()')) {
-      body.push({
-        type: 'translate',
-        v: [0, 0, 10], // Use v instead of vector to match the TranslateNode interface
-        children: [
-          {
-            type: 'children',
-            location: getLocation(node),
-          },
-        ],
-        location: getLocation(node),
-      });
-    } else if (node.text.includes('module select_child()')) {
-      body.push({
-        type: 'children',
-        location: getLocation(node),
-      });
+      // Parse the module body using the composite visitor if available
+      if (bodyNode.type === 'block') {
+        // Handle block with multiple statements
+        for (let i = 0; i < bodyNode.namedChildCount; i++) {
+          const child = bodyNode.namedChild(i);
+          if (child) {
+            const visitedChild = this.compositeVisitor
+              ? this.compositeVisitor.visitNode(child)
+              : this.visitNode(child);
+            if (visitedChild) {
+              body.push(visitedChild);
+            }
+          }
+        }
+      } else {
+        // Handle single statement or other node types
+        const visitedChild = this.compositeVisitor
+          ? this.compositeVisitor.visitNode(bodyNode)
+          : this.visitNode(bodyNode);
+        if (visitedChild) {
+          body.push(visitedChild);
+        }
+      }
+
+      this.errorHandler.logDebug(
+        `[ModuleVisitor.visitModuleDefinition] Parsed ${body.length} statements from module body`,
+        'ModuleVisitor.visitModuleDefinition'
+      );
+    } else {
+      this.errorHandler.logDebug(
+        `[ModuleVisitor.visitModuleDefinition] No body node found for module`,
+        'ModuleVisitor.visitModuleDefinition'
+      );
     }
 
     this.errorHandler.logDebug(
