@@ -58,7 +58,10 @@ describe('ModuleVisitor', () => {
         // Create a proper visitor setup with CompositeVisitor like the real parser
         const moduleVisitor = new ModuleVisitor(code, errorHandler, variableScope);
         const primitiveVisitor = new PrimitiveVisitor(code, errorHandler, variableScope);
-        const compositeVisitor = new CompositeVisitor([moduleVisitor, primitiveVisitor], errorHandler);
+        const compositeVisitor = new CompositeVisitor(
+          [moduleVisitor, primitiveVisitor],
+          errorHandler
+        );
 
         // Set the composite visitor on the module visitor to enable child delegation
         moduleVisitor.setCompositeVisitor(compositeVisitor);
@@ -114,7 +117,10 @@ describe('ModuleVisitor', () => {
         // Create a proper visitor setup with CompositeVisitor like the real parser
         const moduleVisitor = new ModuleVisitor(code, errorHandler, variableScope);
         const primitiveVisitor = new PrimitiveVisitor(code, errorHandler, variableScope);
-        const compositeVisitor = new CompositeVisitor([moduleVisitor, primitiveVisitor], errorHandler);
+        const compositeVisitor = new CompositeVisitor(
+          [moduleVisitor, primitiveVisitor],
+          errorHandler
+        );
 
         // Set the composite visitor on the module visitor to enable child delegation
         moduleVisitor.setCompositeVisitor(compositeVisitor);
@@ -164,7 +170,10 @@ describe('ModuleVisitor', () => {
         // Create a proper visitor setup with CompositeVisitor like the real parser
         const moduleVisitor = new ModuleVisitor(code, errorHandler, variableScope);
         const primitiveVisitor = new PrimitiveVisitor(code, errorHandler, variableScope);
-        const compositeVisitor = new CompositeVisitor([moduleVisitor, primitiveVisitor], errorHandler);
+        const compositeVisitor = new CompositeVisitor(
+          [moduleVisitor, primitiveVisitor],
+          errorHandler
+        );
 
         // Set the composite visitor on the module visitor to enable child delegation
         moduleVisitor.setCompositeVisitor(compositeVisitor);
@@ -217,7 +226,10 @@ describe('ModuleVisitor', () => {
         // Create a proper visitor setup with CompositeVisitor like the real parser
         const moduleVisitor = new ModuleVisitor(code, errorHandler, variableScope);
         const primitiveVisitor = new PrimitiveVisitor(code, errorHandler, variableScope);
-        const compositeVisitor = new CompositeVisitor([moduleVisitor, primitiveVisitor], errorHandler);
+        const compositeVisitor = new CompositeVisitor(
+          [moduleVisitor, primitiveVisitor],
+          errorHandler
+        );
 
         // Set the composite visitor on the module visitor to enable child delegation
         moduleVisitor.setCompositeVisitor(compositeVisitor);

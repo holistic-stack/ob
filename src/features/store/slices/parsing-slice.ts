@@ -447,9 +447,9 @@ import type {
 import { isSuccess } from '../../../shared/types/result.types.js';
 import { operationUtils } from '../../../shared/types/utils.js';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import { unifiedParseOpenSCAD } from '../../openscad-parser/services/parsing.service.js';
 import { ModuleRegistry } from '../../openscad-parser/services/module-registry/module-registry.js';
 import { ModuleResolver } from '../../openscad-parser/services/module-resolver/module-resolver.js';
+import { unifiedParseOpenSCAD } from '../../openscad-parser/services/parsing.service.js';
 import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
@@ -531,7 +531,9 @@ export const createParsingSlice = (
             const rawAST = parseResult.data.data as ReadonlyArray<ASTNode>;
 
             // Apply module resolution to expand module instantiations
-            logger.debug(`[DEBUG][ParsingSlice] Applying module resolution to ${rawAST.length} AST nodes`);
+            logger.debug(
+              `[DEBUG][ParsingSlice] Applying module resolution to ${rawAST.length} AST nodes`
+            );
 
             // Clear the module registry for fresh parsing
             moduleRegistry.clear();

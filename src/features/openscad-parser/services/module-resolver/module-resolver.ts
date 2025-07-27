@@ -42,8 +42,13 @@
  */
 
 import type { Result } from '../../../../shared/types/index.js';
-import type { ASTNode, ModuleDefinitionNode, ModuleInstantiationNode } from '../../ast/ast-types.js';
-import { ModuleRegistry, type ModuleRegistryInterface } from '../module-registry/module-registry.js';
+import type {
+  ASTNode,
+  ModuleDefinitionNode,
+  ModuleInstantiationNode,
+} from '../../ast/ast-types.js';
+import type { ModuleRegistryInterface } from '../module-registry/module-registry.js';
+import { ScopedRegistryService } from '../scoped-registry/scoped-registry.service.js';
 
 /**
  * Error types for module resolution operations
@@ -130,16 +135,64 @@ export interface ModuleResolverInterface {
  */
 export class ModuleResolver implements ModuleResolverInterface {
   private readonly config: ModuleResolverConfig;
+  private readonly scopedRegistryService: ScopedRegistryService;
 
   constructor(
     private readonly moduleRegistry: ModuleRegistryInterface,
     config: Partial<ModuleResolverConfig> = {}
   ) {
     this.config = { ...DEFAULT_MODULE_RESOLVER_CONFIG, ...config };
+    this.scopedRegistryService = new ScopedRegistryService();
   }
 
   /**
-   * Resolve an AST by expanding all module instantiations
+   * @method resolveAST
+   * @description Resolves an AST by expanding all module instantiations into their constituent operations.
+   *
+   * This method implements a two-pass resolution strategy:
+   * 1. **Registration Pass**: Registers all top-level module definitions in the registry
+   * 2. **Resolution Pass**: Recursively expands all module instantiations using hierarchical scoped registries
+   *
+   * The resolution process handles:
+   * - Nested module definitions within module bodies
+   * - Hierarchical scope inheritance (nested modules can access parent scope modules)
+   * - Circular dependency detection to prevent infinite recursion
+   * - Proper scope isolation (parent scopes cannot access child scope modules)
+   *
+   * @param {ASTNode[]} ast - The input AST containing module definitions and instantiations
+   * @returns {Result<ASTNode[], ModuleResolverError>} Result containing the resolved AST with all modules expanded, or error details
+   *
+   * @example Basic module resolution
+   * ```typescript
+   * const resolver = new ModuleResolver(registry);
+   * const ast = [
+   *   { type: 'module_definition', name: 'box', body: [{ type: 'cube', size: 10 }] },
+   *   { type: 'module_instantiation', name: 'box' }
+   * ];
+   * const result = resolver.resolveAST(ast);
+   * // result.data = [{ type: 'cube', size: 10 }]
+   * ```
+   *
+   * @example Nested module resolution
+   * ```typescript
+   * const ast = [
+   *   {
+   *     type: 'module_definition',
+   *     name: 'outer',
+   *     body: [
+   *       { type: 'module_definition', name: 'inner', body: [{ type: 'sphere', radius: 5 }] },
+   *       { type: 'module_instantiation', name: 'inner' }
+   *     ]
+   *   },
+   *   { type: 'module_instantiation', name: 'outer' }
+   * ];
+   * const result = resolver.resolveAST(ast);
+   * // result.data = [{ type: 'sphere', radius: 5 }]
+   * ```
+   *
+   * @throws {ModuleResolverError} When circular dependencies are detected
+   * @throws {ModuleResolverError} When referenced modules are not found
+   * @throws {ModuleResolverError} When maximum recursion depth is exceeded
    */
   resolveAST(ast: ASTNode[]): Result<ASTNode[], ModuleResolverError> {
     if (!Array.isArray(ast)) {
@@ -191,24 +244,28 @@ export class ModuleResolver implements ModuleResolverInterface {
   /**
    * Register all module definitions in the AST
    */
-  private registerModuleDefinitions(ast: ASTNode[]): Result<void, ModuleResolverError> {
+  private registerModuleDefinitions(ast: ASTNode[]): Result<ASTNode[], ModuleResolverError> {
     for (const node of ast) {
       if (node.type === 'module_definition') {
         const moduleDefinition = node as ModuleDefinitionNode;
         const registrationResult = this.moduleRegistry.register(moduleDefinition);
         if (!registrationResult.success) {
+          const errorMessage =
+            'error' in registrationResult
+              ? registrationResult.error.message
+              : 'Unknown registration error';
           return {
             success: false,
             error: createModuleResolverError(
               ModuleResolverErrorCode.INVALID_AST,
-              `Failed to register module: ${registrationResult.error.message}`,
+              `Failed to register module: ${errorMessage}`,
               moduleDefinition.name.name
             ),
           };
         }
       }
     }
-    return { success: true, data: undefined };
+    return { success: true, data: [] };
   }
 
   /**
@@ -243,9 +300,8 @@ export class ModuleResolver implements ModuleResolverInterface {
     instantiation: ModuleInstantiationNode,
     context: ResolutionContext
   ): Result<ASTNode[], ModuleResolverError> {
-    const moduleName = typeof instantiation.name === 'string' 
-      ? instantiation.name 
-      : instantiation.name.name;
+    const moduleName =
+      typeof instantiation.name === 'string' ? instantiation.name : instantiation.name.name;
 
     // Check recursion depth
     if (context.depth >= this.config.maxRecursionDepth) {
@@ -288,18 +344,22 @@ export class ModuleResolver implements ModuleResolverInterface {
     const moduleDefinition = lookupResult.data;
 
     // Create a hierarchical scoped registry that inherits from the current scope
-    const localRegistry = this.createScopedRegistry(context.scopedRegistry);
+    const localRegistry = this.scopedRegistryService.createScopedRegistry(context.scopedRegistry);
 
     // First, register any nested module definitions in the module body
     for (const bodyNode of moduleDefinition.body) {
       if (bodyNode.type === 'module_definition') {
         const registrationResult = localRegistry.register(bodyNode as ModuleDefinitionNode);
         if (!registrationResult.success) {
+          const errorMessage =
+            'error' in registrationResult
+              ? registrationResult.error.message
+              : 'Unknown registration error';
           return {
             success: false,
             error: createModuleResolverError(
               ModuleResolverErrorCode.INVALID_AST,
-              `Failed to register nested module: ${registrationResult.error.message}`,
+              `Failed to register nested module: ${errorMessage}`,
               (bodyNode as ModuleDefinitionNode).name.name
             ),
           };
@@ -329,31 +389,5 @@ export class ModuleResolver implements ModuleResolverInterface {
     }
 
     return { success: true, data: resolvedBody };
-  }
-
-  /**
-   * Creates a scoped registry that inherits from a parent registry
-   * Local modules are registered in the new registry, but lookups fall back to parent
-   */
-  private createScopedRegistry(parentRegistry: ModuleRegistryInterface): ModuleRegistryInterface {
-    const localRegistry = new ModuleRegistry();
-
-    // Create a proxy that delegates lookups to parent if not found locally
-    return {
-      register: (moduleDefinition: ModuleDefinitionNode) => localRegistry.register(moduleDefinition),
-      lookup: (moduleName: string) => {
-        // First try local registry
-        const localResult = localRegistry.lookup(moduleName);
-        if (localResult.success) {
-          return localResult;
-        }
-        // Fall back to parent registry
-        return parentRegistry.lookup(moduleName);
-      },
-      has: (moduleName: string) => localRegistry.has(moduleName) || parentRegistry.has(moduleName),
-      getModuleNames: () => [...new Set([...localRegistry.getModuleNames(), ...parentRegistry.getModuleNames()])],
-      clear: () => localRegistry.clear(),
-      size: () => localRegistry.size() + parentRegistry.size(),
-    };
   }
 }

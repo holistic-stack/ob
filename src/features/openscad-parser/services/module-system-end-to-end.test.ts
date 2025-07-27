@@ -56,7 +56,7 @@ describe('Module System End-to-End', () => {
   describe('User Example 2: Complex module with CSG operations', () => {
     it('should resolve complex module with multiple operations', () => {
       // Simulate the AST that would be generated from:
-      // module moduleName() { 
+      // module moduleName() {
       //   translate([-24,0,0]) {
       //     union() {
       //       cube(15, center=true);
@@ -73,7 +73,7 @@ describe('Module System End-to-End', () => {
       //       sphere(10);
       //     }
       //   }
-      // } 
+      // }
       // moduleName();
 
       const moduleDefinition: ModuleDefinitionNode = {
@@ -172,10 +172,10 @@ describe('Module System End-to-End', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(3); // 2 translates + 1 intersection
-      
-      const nodeTypes = result.data?.map(node => node.type) || [];
-      expect(nodeTypes.filter(type => type === 'translate')).toHaveLength(2);
-      expect(nodeTypes.filter(type => type === 'intersection')).toHaveLength(1);
+
+      const nodeTypes = result.data?.map((node) => node.type) || [];
+      expect(nodeTypes.filter((type) => type === 'translate')).toHaveLength(2);
+      expect(nodeTypes.filter((type) => type === 'intersection')).toHaveLength(1);
     });
   });
 
@@ -232,8 +232,8 @@ describe('Module System End-to-End', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(3); // 3 cubes
-      
-      result.data?.forEach(node => {
+
+      result.data?.forEach((node) => {
         expect(node.type).toBe('cube');
       });
     });
@@ -304,8 +304,8 @@ describe('Module System End-to-End', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(2); // 2 cubes from doubleCube
-      
-      result.data?.forEach(node => {
+
+      result.data?.forEach((node) => {
         expect(node.type).toBe('cube');
       });
     });
@@ -376,14 +376,14 @@ describe('Module System End-to-End', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(4); // directCube + directSphere + resolved cube + directCylinder
-      
-      const nodeTypes = result.data?.map(node => node.type) || [];
+
+      const nodeTypes = result.data?.map((node) => node.type) || [];
       expect(nodeTypes).toContain('cube');
       expect(nodeTypes).toContain('sphere');
       expect(nodeTypes).toContain('cylinder');
-      
+
       // Should have 2 cubes (direct + from module)
-      const cubeCount = nodeTypes.filter(type => type === 'cube').length;
+      const cubeCount = nodeTypes.filter((type) => type === 'cube').length;
       expect(cubeCount).toBe(2);
     });
   });

@@ -221,7 +221,7 @@ export class ModuleRegistry implements ModuleRegistryInterface {
    * Get all registered module names
    */
   getModuleNames(): readonly string[] {
-    return Object.freeze([...this.modules.keys()]);
+    return Object.freeze(Array.from(this.modules.keys()));
   }
 
   /**

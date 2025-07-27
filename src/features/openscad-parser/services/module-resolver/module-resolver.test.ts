@@ -1,5 +1,9 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import type { ASTNode, ModuleDefinitionNode, ModuleInstantiationNode } from '../../ast/ast-types.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type {
+  ASTNode,
+  ModuleDefinitionNode,
+  ModuleInstantiationNode,
+} from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver, ModuleResolverErrorCode } from './module-resolver.js';
 

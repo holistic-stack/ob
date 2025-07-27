@@ -135,11 +135,7 @@ export class VisitorASTGenerator {
     );
 
     // Create module visitor instance to set composite visitor later
-    const moduleVisitor = new ModuleVisitor(
-      this.source,
-      this.errorHandler,
-      sharedVariableScope
-    );
+    const moduleVisitor = new ModuleVisitor(this.source, this.errorHandler, sharedVariableScope);
 
     const compositeVisitor = new CompositeVisitor(
       [
