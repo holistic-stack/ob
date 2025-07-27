@@ -22,12 +22,10 @@ import type {
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
 import {
-  createTestModule,
+  createNestedTestModule,
+  createTestCube,
   createTestModuleCall,
   createTestSphere,
-  createTestCube,
-  createTestTranslate,
-  createNestedTestModule,
 } from '../test-utils.js';
 
 describe('Simple Nested Module Support', () => {
@@ -45,9 +43,11 @@ describe('Simple Nested Module Support', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('sphere');
-      expect((result.data?.[0] as any)?.radius).toBe(10);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0]?.type).toBe('sphere');
+        expect((result.data[0] as any)?.radius).toBe(10);
+      }
     });
 
     it('should resolve nested module with cube', () => {
@@ -63,9 +63,11 @@ describe('Simple Nested Module Support', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('cube');
-      expect((result.data?.[0] as any)?.size).toBe(5);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0]?.type).toBe('cube');
+        expect((result.data[0] as any)?.size).toBe(5);
+      }
     });
   });
 

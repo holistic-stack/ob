@@ -5,11 +5,11 @@
  */
 
 import type {
+  ASTNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
-  SourceLocation,
   Position,
-  ASTNode,
+  SourceLocation,
 } from '../ast/ast-types.js';
 
 /**
@@ -51,7 +51,7 @@ export const createSourceLocation = (
 ): SourceLocation => ({
   start: createPosition(startLine, startColumn, startOffset),
   end: createPosition(endLine, endColumn, endOffset),
-  text,
+  ...(text && { text }),
 });
 
 /**
@@ -108,7 +108,10 @@ export const createTestModule = (name: string, body?: ASTNode[]): ModuleDefiniti
  * const callWithArgs = createTestModuleCall('myModule', [10, true]);
  * ```
  */
-export const createTestModuleCall = (name: string, args: any[] = []): ModuleInstantiationNode => ({
+export const createTestModuleCall = (
+  name: string,
+  args: unknown[] = []
+): ModuleInstantiationNode => ({
   type: 'module_instantiation',
   name,
   args,

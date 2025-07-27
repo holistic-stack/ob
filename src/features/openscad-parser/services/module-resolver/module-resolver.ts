@@ -110,7 +110,7 @@ interface ResolutionContext {
   /** Stack of module names being resolved (for circular dependency detection) */
   resolutionStack: string[];
   /** Variable scope for parameter binding */
-  variableScope: Map<string, any>;
+  variableScope: Map<string, unknown>;
   /** Scoped module registry for nested modules */
   scopedRegistry: ModuleRegistryInterface;
 }

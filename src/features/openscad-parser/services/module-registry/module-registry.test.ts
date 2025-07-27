@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ModuleDefinitionNode } from '../../ast/ast-types.js';
+import { createSourceLocation, createTestModule } from '../test-utils.js';
 import { ModuleRegistry, ModuleRegistryErrorCode } from './module-registry.js';
-import { createTestModule, createSourceLocation } from '../test-utils.js';
 
 describe('ModuleRegistry', () => {
   let registry: ModuleRegistry;

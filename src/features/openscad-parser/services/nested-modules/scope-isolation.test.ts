@@ -18,11 +18,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type {
-  ASTNode,
-  ModuleDefinitionNode,
-  ModuleInstantiationNode,
-} from '../../ast/ast-types.js';
+import type { ASTNode, ModuleDefinitionNode } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
 
