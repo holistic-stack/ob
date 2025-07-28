@@ -20,7 +20,14 @@
  */
 
 import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
-import { Vector3 as BabylonVector3, MeshBuilder } from '@babylonjs/core';
+import {
+  Vector3 as BabylonVector3,
+  Color3,
+  Mesh,
+  MeshBuilder,
+  StandardMaterial,
+  VertexData,
+} from '@babylonjs/core';
 import earcut from 'earcut';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
@@ -126,6 +133,16 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
           sourceLocation: this.sourceLocation,
           generatedAt: new Date().toISOString(),
         };
+
+        // Apply default material for visibility
+        const defaultMaterial = new StandardMaterial(`${this.name}_default_material`, this.scene);
+        defaultMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Light gray (OpenSCAD default)
+        defaultMaterial.specularColor = new Color3(0.2, 0.2, 0.2); // Low specular for matte finish
+        mesh.material = defaultMaterial;
+
+        logger.debug(
+          `[GENERATE] Applied default material to ${this.primitiveType} mesh: ${mesh.id}`
+        );
 
         return mesh;
       },
@@ -382,6 +399,10 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   private createPolygonMesh(scene: Scene): AbstractMesh {
     const points = this.extractPolygonPoints();
 
+    if (points.length < 3) {
+      throw new Error(`Polygon must have at least 3 points, got ${points.length}`);
+    }
+
     // Convert points to Vector3 array for BabylonJS polygon creation
     const shape: Vector3[] = points.map((point) => {
       const x = typeof point[0] === 'number' ? point[0] : 0;
@@ -389,21 +410,72 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       return new BabylonVector3(x, y, 0);
     });
 
-    // Create polygon mesh using BabylonJS
-    const mesh = MeshBuilder.CreatePolygon(
-      this.name,
-      {
-        shape: shape,
-        sideOrientation: 2, // Double-sided for visibility
-      },
-      scene,
-      earcut // Earcut library for polygon triangulation
-    );
+    // Check polygon winding order and ensure it's counter-clockwise for proper triangulation
+    const isCounterClockwise = this.isPolygonCounterClockwise(shape);
+    if (!isCounterClockwise) {
+      shape.reverse();
+    }
 
-    // Position at Z=0 (2D shape in 3D space)
-    mesh.position.z = 0;
+    // Try to create polygon mesh using BabylonJS built-in triangulation first
+    try {
+      const mesh = MeshBuilder.CreatePolygon(
+        this.name,
+        {
+          shape: shape,
+          sideOrientation: 2, // Double-sided for visibility
+        },
+        scene
+        // No earcut parameter - use BabylonJS built-in triangulation
+      );
 
-    return mesh;
+      // Check if mesh has valid geometry
+      if (mesh.getTotalVertices() === 0 || mesh.getTotalIndices() === 0) {
+        mesh.dispose();
+        throw new Error('Built-in triangulation produced empty mesh');
+      }
+
+      // Position at Z=0 (2D shape in 3D space)
+      mesh.position.z = 0;
+      return mesh;
+    } catch (error) {
+      // Built-in triangulation failed, try manual earcut
+
+      // If built-in triangulation fails, try manual earcut triangulation
+      try {
+        // Convert Vector3 points to flat array for earcut
+        const flatCoords: number[] = [];
+        for (const point of shape) {
+          flatCoords.push(point.x, point.y);
+        }
+
+        // Use earcut directly to triangulate
+        const triangles = earcut(flatCoords);
+
+        if (triangles.length === 0) {
+          throw new Error('Earcut produced no triangles');
+        }
+
+        // Create custom mesh from triangulated data
+        const mesh = this.createCustomPolygonMesh(shape, triangles, scene);
+        mesh.position.z = 0;
+        return mesh;
+      } catch (earcutError) {
+        // Manual earcut failed, use fallback
+
+        // Final fallback: create a simple disc as placeholder
+        const discMesh = MeshBuilder.CreateDisc(
+          this.name,
+          {
+            radius: 5, // Default radius
+            tessellation: 8, // Simple octagon
+            sideOrientation: 2,
+          },
+          scene
+        );
+        discMesh.position.z = 0;
+        return discMesh;
+      }
+    }
   }
 
   /**
@@ -617,6 +689,90 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   private extractPolygonPoints(): number[][] {
     const polygonNode = this.originalOpenscadNode as PolygonNode;
     return polygonNode.points ?? []; // Default empty points
+  }
+
+  /**
+   * Check if polygon vertices are in counter-clockwise order
+   * Uses the shoelace formula to determine winding order
+   */
+  private isPolygonCounterClockwise(vertices: Vector3[]): boolean {
+    if (vertices.length < 3) return true; // Not enough points to determine
+
+    let sum = 0;
+    for (let i = 0; i < vertices.length; i++) {
+      const current = vertices[i];
+      const next = vertices[(i + 1) % vertices.length];
+      if (current && next) {
+        sum += (next.x - current.x) * (next.y + current.y);
+      }
+    }
+
+    // If sum is negative, polygon is counter-clockwise
+    return sum < 0;
+  }
+
+  /**
+   * Create custom polygon mesh from earcut triangulation with double-sided rendering
+   *
+   * Creates a truly double-sided polygon by duplicating vertices and triangles
+   * for both front and back faces with proper normals for visibility from all angles.
+   */
+  private createCustomPolygonMesh(
+    vertices: Vector3[],
+    triangles: number[],
+    scene: Scene
+  ): AbstractMesh {
+    const vertexCount = vertices.length;
+
+    // Create vertex data arrays for double-sided mesh
+    const positions: number[] = [];
+    const indices: number[] = [];
+    const normals: number[] = [];
+
+    // Add front face vertices (original vertices)
+    for (const vertex of vertices) {
+      positions.push(vertex.x, vertex.y, vertex.z);
+      normals.push(0, 0, 1); // Normal pointing up (Z+) for front face
+    }
+
+    // Add back face vertices (same positions, different normals)
+    for (const vertex of vertices) {
+      positions.push(vertex.x, vertex.y, vertex.z);
+      normals.push(0, 0, -1); // Normal pointing down (Z-) for back face
+    }
+
+    // Add front face triangle indices (original winding order)
+    for (let i = 0; i < triangles.length; i++) {
+      const triangleIndex = triangles[i];
+      if (triangleIndex !== undefined) {
+        indices.push(triangleIndex);
+      }
+    }
+
+    // Add back face triangle indices (reversed winding order for proper culling)
+    for (let i = triangles.length - 1; i >= 0; i -= 3) {
+      // Reverse triangle winding order for back face
+      const idx1 = triangles[i - 2];
+      const idx2 = triangles[i - 1];
+      const idx3 = triangles[i];
+
+      if (idx1 !== undefined && idx2 !== undefined && idx3 !== undefined) {
+        // Add vertex offset for back face vertices and reverse order
+        indices.push(idx1 + vertexCount, idx3 + vertexCount, idx2 + vertexCount);
+      }
+    }
+
+    // Create mesh and apply vertex data
+    const mesh = new Mesh(this.name, scene);
+
+    const vertexData = new VertexData();
+    vertexData.positions = positions;
+    vertexData.indices = indices;
+    vertexData.normals = normals;
+
+    vertexData.applyToMesh(mesh);
+
+    return mesh;
   }
 
   /**

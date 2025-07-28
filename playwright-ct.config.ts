@@ -1,8 +1,5 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -10,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   testDir: './',
   /* The base directory, relative to the config file, for snapshot files created with toMatchSnapshot and toHaveScreenshot. */
-  snapshotDir: './__snapshots__',
+  snapshotDir: './',
   /* Maximum time one test can run for. */
   timeout: 10 * 1000,
   /* Run tests in files in parallel */
@@ -23,41 +20,32 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
-  testMatch: /.*\.vspec\.tsx/,
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  testMatch: 'src/**/*.vspec.tsx',
+  // testMatch: 'src/features/visual-testing/*.vspec.tsx', // Match test files
+  updateSnapshots: 'missing',
+
   use: {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
 
     /* Port to use for Playwright component endpoint. */
     ctPort: 3100,
-
-    /* Vite config for component testing */
-    ctViteConfig: {
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, './src'),
-        },
-      },
-    },
+    viewport: { width: 800, height: 800 },
+    screenshot: 'on',
   },
 
-  /* Configure projects for desktop browsers only */
+  /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium-desktop',
+      name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Desktop-specific viewport for Babylon.js testing
-        viewport: { width: 1280, height: 720 },
-        // Enable hardware acceleration for better 3D performance
+        headless: true,
+        screenshot: 'on',
+        video: 'on',
         launchOptions: {
-          args: [
-            '--enable-webgl',
-            '--enable-accelerated-2d-canvas',
-            '--enable-gpu-rasterization',
-            '--enable-oop-rasterization',
-          ],
+          // args: ["--headless","--no-sandbox","--use-angle=gl"]
+          args: ['--no-sandbox'],
         },
       },
     },

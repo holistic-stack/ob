@@ -817,25 +817,32 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    * @private
    */
   private createPolygonNode(node: TSNode, args: ast.Parameter[]): ast.PolygonNode {
-    const points: ast.Vector2D[] = []; // Default empty points
+    let points: ast.Vector2D[] = []; // Default empty points
     let paths: number[][] | undefined;
     let convexity = 1; // Default convexity
 
-    // Handle points parameter
-    const pointsParam = args.find((arg) => arg.name === 'points');
-    if (pointsParam) {
-      // This is a simplified implementation - in a real parser you'd need to
-      // properly extract the array of points from the parameter value
-      // For now, we'll create a basic structure
-    } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
-      // Handle case where points are provided as the first positional parameter
+    // Try to extract points from raw text as a fallback
+    const nodeText = node.text;
+
+    // Extract points using regex from the raw node text
+    const pointsMatch = nodeText.match(/points\s*=\s*(\[\s*\[[\d\s.,[\]-]+\]\s*\])/);
+    if (pointsMatch) {
+      points = this.parsePolygonPointsFromText(pointsMatch[1]);
+    } else {
+      // Fallback to parameter extraction
+      const pointsParam =
+        args.find((arg) => arg.name === 'points') ||
+        (args.length >= 1 && args[0] && args[0].name === undefined ? args[0] : undefined);
+
+      if (pointsParam) {
+        points = this.extractPolygonPoints(pointsParam);
+      }
     }
 
     // Handle paths parameter
     const pathsParam = args.find((arg) => arg.name === 'paths');
     if (pathsParam) {
-      // This is a simplified implementation - in a real parser you'd need to
-      // properly extract the array of paths from the parameter value
+      paths = this.extractPolygonPaths(pathsParam);
     }
 
     // Extract convexity parameter
@@ -992,5 +999,168 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       ...(fn !== undefined && { $fn: fn }),
       location: getLocation(node),
     };
+  }
+
+  /**
+   * Extract polygon points from a parameter
+   * Handles arrays of 2D points like [[0,0], [10,0], [5,8.66]]
+   */
+  private extractPolygonPoints(param: ast.Parameter): ast.Vector2D[] {
+    if (!param?.value) {
+      return [];
+    }
+
+    // Handle array of arrays (most common case for polygon points)
+    if (Array.isArray(param.value)) {
+      const points: ast.Vector2D[] = [];
+
+      for (const item of param.value) {
+        if (Array.isArray(item) && item.length >= 2) {
+          // Extract x, y coordinates from each point
+          const x = typeof item[0] === 'number' ? item[0] : 0;
+          const y = typeof item[1] === 'number' ? item[1] : 0;
+          points.push([x, y]);
+        }
+      }
+
+      return points;
+    }
+
+    // Handle string representation like "[[0,0], [10,0], [5,8.66]]"
+    if (typeof param.value === 'string') {
+      console.log('[DEBUG] extractPolygonPoints: trying to parse string:', param.value);
+      try {
+        // Simple regex to extract point arrays
+        const pointMatches = param.value.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/g);
+        if (pointMatches) {
+          console.log('[DEBUG] extractPolygonPoints: found point matches:', pointMatches);
+          const points: ast.Vector2D[] = [];
+
+          for (const pointMatch of pointMatches) {
+            const coords = pointMatch.match(/([\d.+-]+)/g);
+            if (coords && coords.length >= 2) {
+              const x = parseFloat(coords[0]);
+              const y = parseFloat(coords[1]);
+              if (!isNaN(x) && !isNaN(y)) {
+                points.push([x, y]);
+                console.log('[DEBUG] extractPolygonPoints: parsed point from string:', [x, y]);
+              }
+            }
+          }
+
+          console.log('[DEBUG] extractPolygonPoints: final points from string:', points);
+          return points;
+        }
+      } catch (error) {
+        // If parsing fails, return empty array
+        console.warn('Failed to parse polygon points from string:', param.value);
+      }
+    }
+
+    // Handle the case where Tree-sitter flattened the array structure
+    // If we have a flat array of numbers, try to reconstruct the 2D points
+    if (Array.isArray(param.value) && param.value.every((item) => typeof item === 'number')) {
+      console.log(
+        '[DEBUG] extractPolygonPoints: detected flattened array, trying to reconstruct 2D points'
+      );
+      // For now, let's try a simple approach - assume pairs of numbers are x,y coordinates
+      const flatArray = param.value as number[];
+      const points: ast.Vector2D[] = [];
+
+      for (let i = 0; i < flatArray.length; i += 2) {
+        if (i + 1 < flatArray.length) {
+          const x = flatArray[i];
+          const y = flatArray[i + 1];
+          points.push([x, y]);
+          console.log('[DEBUG] extractPolygonPoints: reconstructed point:', [x, y]);
+        }
+      }
+
+      console.log('[DEBUG] extractPolygonPoints: reconstructed points:', points);
+      return points;
+    }
+
+    return [];
+  }
+
+  /**
+   * Extract polygon paths from a parameter
+   * Handles arrays of path indices like [[0,1,2], [3,4,5]]
+   */
+  private extractPolygonPaths(param: ast.Parameter): number[][] | undefined {
+    if (!param?.value) return undefined;
+
+    // Handle array of arrays (path indices)
+    if (Array.isArray(param.value)) {
+      const paths: number[][] = [];
+
+      for (const item of param.value) {
+        if (Array.isArray(item)) {
+          const path: number[] = [];
+          for (const index of item) {
+            if (typeof index === 'number') {
+              path.push(index);
+            }
+          }
+          if (path.length > 0) {
+            paths.push(path);
+          }
+        }
+      }
+
+      return paths.length > 0 ? paths : undefined;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Parse polygon points directly from text representation
+   * Handles text like "[[0,0], [10,0], [5,8.66]]"
+   */
+  private parsePolygonPointsFromText(text: string): ast.Vector2D[] {
+    try {
+      // Remove whitespace and parse as JSON
+      const cleanText = text.replace(/\s+/g, '');
+      const parsed = JSON.parse(cleanText);
+
+      if (Array.isArray(parsed)) {
+        const points: ast.Vector2D[] = [];
+
+        for (const item of parsed) {
+          if (Array.isArray(item) && item.length >= 2) {
+            const x = typeof item[0] === 'number' ? item[0] : parseFloat(item[0]);
+            const y = typeof item[1] === 'number' ? item[1] : parseFloat(item[1]);
+
+            if (!isNaN(x) && !isNaN(y)) {
+              points.push([x, y]);
+            }
+          }
+        }
+
+        return points;
+      }
+    } catch (error) {
+      // Fallback to regex parsing
+      const pointMatches = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/g);
+      if (pointMatches) {
+        const points: ast.Vector2D[] = [];
+
+        for (const pointMatch of pointMatches) {
+          const coords = pointMatch.match(/([\d.+-]+)/g);
+          if (coords && coords.length >= 2) {
+            const x = parseFloat(coords[0]);
+            const y = parseFloat(coords[1]);
+            if (!isNaN(x) && !isNaN(y)) {
+              points.push([x, y]);
+            }
+          }
+        }
+
+        return points;
+      }
+    }
+
+    return [];
   }
 }
