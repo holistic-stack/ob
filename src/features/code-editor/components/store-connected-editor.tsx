@@ -266,7 +266,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     isDirty = false,
     parsingErrors = [],
     parsingWarnings = [],
-    enableRealTimeParsing = false
+    enableRealTimeParsing = false,
   } = storeState;
 
   // Store actions - use useShallow for actions

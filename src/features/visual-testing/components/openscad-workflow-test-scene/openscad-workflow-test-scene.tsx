@@ -111,19 +111,19 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
 
     console.log = (...args) => {
       const message = `[LOG] ${args.join(' ')}`;
-      setConsoleMessages(prev => [...prev, message]);
+      setConsoleMessages((prev) => [...prev, message]);
       originalConsoleLog(...args);
     };
 
     console.warn = (...args) => {
       const message = `[WARN] ${args.join(' ')}`;
-      setConsoleMessages(prev => [...prev, message]);
+      setConsoleMessages((prev) => [...prev, message]);
       originalConsoleWarn(...args);
     };
 
     console.error = (...args) => {
       const message = `[ERROR] ${args.join(' ')}`;
-      setConsoleMessages(prev => [...prev, message]);
+      setConsoleMessages((prev) => [...prev, message]);
       originalConsoleError(...args);
     };
 
@@ -163,7 +163,12 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
           beta: Math.PI / 2,
         };
       case 'back':
-        return { ...baseConfig, position: new Vector3(0, 0, -50), alpha: Math.PI, beta: Math.PI / 2 };
+        return {
+          ...baseConfig,
+          position: new Vector3(0, 0, -50),
+          alpha: Math.PI,
+          beta: Math.PI / 2,
+        };
       case 'isometric':
       default:
         return {
@@ -174,8 +179,6 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
         };
     }
   }, [cameraAngle, autoCenterCamera]);
-
-
 
   /**
    * Handle scene ready - parse OpenSCAD and render
@@ -227,9 +230,10 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
         // Step 4: Convert AST to BabylonJS Meshes
         const conversionResult = await converter.convertAST(ast);
         if (!conversionResult.success) {
-          const errorMsg = conversionResult.success === false
-            ? (conversionResult.error?.message || String(conversionResult.error) || 'Unknown error')
-            : 'Unknown error';
+          const errorMsg =
+            conversionResult.success === false
+              ? conversionResult.error?.message || String(conversionResult.error) || 'Unknown error'
+              : 'Unknown error';
           throw new Error(`Failed to convert AST: ${errorMsg}`);
         }
 
@@ -262,9 +266,10 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
               `[DEBUG][OpenSCADWorkflowTestScene] Mesh ${index} generated with blue material`
             );
           } else {
-            const errorMsg = meshResult.success === false
-              ? (meshResult.error?.message || String(meshResult.error) || 'Unknown error')
-              : 'Unknown error';
+            const errorMsg =
+              meshResult.success === false
+                ? meshResult.error?.message || String(meshResult.error) || 'Unknown error'
+                : 'Unknown error';
             logger.error(
               `[ERROR][OpenSCADWorkflowTestScene] Failed to generate mesh ${index}: ${errorMsg}`
             );
@@ -310,9 +315,7 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
               `[DEBUG][OpenSCADWorkflowTestScene] Camera auto-centered on meshes: center=${center.toString()}, distance=${distance}`
             );
           } catch (error) {
-            logger.warn(
-              `[WARN][OpenSCADWorkflowTestScene] Failed to auto-center camera: ${error}`
-            );
+            logger.warn(`[WARN][OpenSCADWorkflowTestScene] Failed to auto-center camera: ${error}`);
           }
         }
 
@@ -332,7 +335,14 @@ export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps>
         logger.error('[ERROR][OpenSCADWorkflowTestScene] Failed to initialize workflow:', error);
       }
     },
-    [openscadCode, onSceneReady, autoCenterCamera, show3DAxis, setAxisOverlayVisibility, cameraAngle]
+    [
+      openscadCode,
+      onSceneReady,
+      autoCenterCamera,
+      show3DAxis,
+      setAxisOverlayVisibility,
+      cameraAngle,
+    ]
   );
 
   /**

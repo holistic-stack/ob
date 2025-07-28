@@ -776,7 +776,7 @@ export const createAppStore = (
           trace: false, // Disable stack traces for performance
           traceLimit: 0,
         })
-      : withPersistence as any
+      : (withPersistence as any)
   );
 
   // Enhanced DevTools connection debugging and manual registration
@@ -842,7 +842,8 @@ export const createAppStore = (
               let lastUpdate = 0;
               store.subscribe((state) => {
                 const now = Date.now();
-                if (now - lastUpdate > 100) { // Throttle updates to every 100ms
+                if (now - lastUpdate > 100) {
+                  // Throttle updates to every 100ms
                   lastUpdate = now;
                   devtoolsConnection.send('store/update', {
                     config: state.config,
@@ -862,13 +863,14 @@ export const createAppStore = (
           const currentTheme = store.getState().config.theme;
           store.getState().updateConfig({ theme: currentTheme });
           logger.init('[DEVTOOLS] Store connection test successful');
-
         } catch (error) {
           logger.error('[DEVTOOLS] Manual registration failed:', error);
         }
       }, 300);
     } else {
-      logger.warn('[DEVTOOLS] Redux DevTools extension not found. Please install the browser extension.');
+      logger.warn(
+        '[DEVTOOLS] Redux DevTools extension not found. Please install the browser extension.'
+      );
     }
   }
 

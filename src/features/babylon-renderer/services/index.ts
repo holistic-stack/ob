@@ -94,7 +94,16 @@ export type {
   CameraControlError,
 } from './camera-control/index.js';
 export { CameraControlService } from './camera-control/index.js';
-
+export type {
+  CameraStateChangeEvent,
+  CameraStoreSyncConfig,
+  CameraStoreSyncError,
+  CameraStoreSyncErrorCode,
+  CameraStoreSyncMetrics,
+  CameraStoreSyncState,
+  DEFAULT_CAMERA_STORE_SYNC_CONFIG,
+} from './camera-store-sync/index.js';
+export { CameraStoreSyncService } from './camera-store-sync/index.js';
 export type {
   GizmoMode,
   TransformationEvent,

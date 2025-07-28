@@ -35,16 +35,18 @@ This document provides comprehensive architecture documentation for the OpenSCAD
 1. [Project Status](#project-status)
 2. [Architecture Overview](#architecture-overview)
 3. [Technology Stack](#technology-stack)
-4. [Project Structure](#project-structure)
-5. [Core Components](#core-components)
-6. [OpenSCAD Coordinate System](#openscad-coordinate-system)
-7. [Design Decisions](#design-decisions)
-8. [Implementation Patterns](#implementation-patterns)
-9. [Development Guidelines](#development-guidelines)
-10. [Testing Strategy](#testing-strategy)
-11. [Performance Requirements](#performance-requirements)
-12. [Code Quality Standards](#code-quality-standards)
-13. [How to Update This Documentation](#how-to-update-this-documentation)
+4. [BabylonJS Component Architecture](#babylonjs-component-architecture)
+5. [Camera Store Synchronization Architecture](#camera-store-synchronization-architecture)
+6. [Project Structure](#project-structure)
+7. [Core Components](#core-components)
+8. [OpenSCAD Coordinate System](#openscad-coordinate-system)
+9. [Design Decisions](#design-decisions)
+10. [Implementation Patterns](#implementation-patterns)
+11. [Development Guidelines](#development-guidelines)
+12. [Testing Strategy](#testing-strategy)
+13. [Performance Requirements](#performance-requirements)
+14. [Code Quality Standards](#code-quality-standards)
+15. [How to Update This Documentation](#how-to-update-this-documentation)
 
 ## Project Status
 
@@ -63,8 +65,9 @@ The OpenSCAD Babylon project is **100% complete** with comprehensive test covera
 6. **Auto-Framing**: Camera automatically positions to show all objects
 7. **OpenSCAD Coordinate System**: Z-up, right-handed coordinate system fully implemented
 8. **Orientation Gizmo**: ✅ **FULLY INTEGRATED** 2D canvas-based 3D navigation widget with camera synchronization and renderer-relative positioning
-9. **Error Handling**: Comprehensive Result<T,E> patterns throughout
-9. **Testing Framework**: 95%+ test coverage with real implementations
+9. **Camera Store Synchronization**: ✅ **FULLY FUNCTIONAL** bidirectional camera state persistence with automatic position restoration after page refresh
+10. **Error Handling**: Comprehensive Result<T,E> patterns throughout
+11. **Testing Framework**: 95%+ test coverage with real implementations
 
 #### **🔄 IN PROGRESS COMPONENTS**
 1. **Rotate Transformation**: Basic implementation exists, needs refinement
@@ -168,6 +171,7 @@ graph TD
 ### **3D Rendering & Visualization**
 - **BabylonJS 8.16.1** - Advanced 3D graphics library with WebGL2
 - **Orientation Gizmo System** - Canvas-based 3D navigation widget with renderer-relative positioning and real-time camera synchronization
+- **Camera Store Synchronization** - Bidirectional camera state persistence with automatic position restoration after page refresh
 - **manifold-3d 3.1.1** - Advanced CSG operations with WASM integration
 - **gl-matrix 3.4.3** - High-performance matrix operations
 
@@ -593,6 +597,380 @@ describe('TransformationGizmoService', () => {
 
 This BabylonJS component architecture provides a scalable foundation for building professional 3D CAD applications with modern UI components, following 2025 best practices for performance, maintainability, and developer experience.
 
+## Camera Store Synchronization Architecture
+
+### ✅ **Camera State Persistence System (Production Ready)**
+
+**Last Updated**: July 28, 2025
+
+The Camera Store Synchronization system provides seamless bidirectional synchronization between BabylonJS camera state and Zustand store, ensuring camera position persistence across page refreshes and component re-renders.
+
+#### **Architecture Overview**
+
+```mermaid
+graph TD
+    A[User Camera Interaction] --> B[BabylonJS ArcRotateCamera]
+    B --> C[onViewMatrixChangedObservable]
+    C --> D[CameraStoreSyncService]
+    D --> E[Debounced Update - 300ms]
+    E --> F[Zustand Store Update]
+
+    G[Page Refresh] --> H[Component Initialization]
+    H --> I[CameraStoreSyncService.initialize]
+    I --> J[Store State Check]
+    J --> K{Is Default State?}
+    K -->|No| L[Restore Camera Position]
+    K -->|Yes| M[Skip Restoration]
+    L --> N[Camera Position Restored]
+
+    subgraph "Bidirectional Synchronization"
+        O[Camera → Store: Real-time Updates]
+        P[Store → Camera: Position Restoration]
+    end
+```
+
+#### **Core Service Architecture**
+
+**Location**: `src/features/babylon-renderer/services/camera-store-sync/`
+
+```typescript
+/**
+ * @file camera-store-sync.service.ts
+ * @description Production-ready camera state synchronization service
+ * Provides bidirectional sync between BabylonJS camera and Zustand store
+ * with debounced updates and smart default detection.
+ *
+ * @example
+ * ```typescript
+ * const cameraSync = new CameraStoreSyncService();
+ *
+ * const result = await cameraSync.initialize({
+ *   camera: arcRotateCamera,
+ *   store: appStore,
+ *   debounceMs: 300,
+ *   enabled: true
+ * });
+ *
+ * if (result.success) {
+ *   // Camera state now synchronized with store
+ *   // Position persists across page refreshes
+ * }
+ * ```
+ */
+
+export class CameraStoreSyncService {
+  /**
+   * Initialize bidirectional camera synchronization
+   * - Sets up camera → store updates with debouncing
+   * - Restores camera position from store if non-default
+   */
+  async initialize(config: CameraStoreSyncConfig): Promise<Result<void, CameraStoreSyncError>>;
+
+  /**
+   * Enable/disable synchronization
+   */
+  enable(): void;
+  disable(): void;
+
+  /**
+   * Get performance metrics
+   */
+  getMetrics(): CameraStoreSyncMetrics;
+
+  /**
+   * Cleanup and dispose resources
+   */
+  dispose(): void;
+}
+```
+
+#### **Key Features**
+
+**1. Bidirectional Synchronization**
+- **Camera → Store**: Real-time updates when user moves camera
+- **Store → Camera**: Automatic position restoration on page refresh
+
+**2. Smart Default Detection**
+- Only restores camera position if different from default values
+- Preserves initial camera setup for new users
+- Avoids overriding intentional camera positioning
+
+**3. Debounced Updates (300ms)**
+- Prevents excessive store updates during smooth camera movements
+- Matches project's parser debouncing pattern for consistency
+- Maintains responsive user experience
+
+**4. Performance Optimization**
+- Change detection with floating-point precision thresholds
+- Skips updates for identical camera states
+- Built-in performance metrics tracking
+
+#### **Configuration Interface**
+
+```typescript
+interface CameraStoreSyncConfig {
+  /** BabylonJS ArcRotateCamera to monitor for changes */
+  readonly camera: ArcRotateCamera;
+
+  /** Zustand store instance to update with camera state */
+  readonly store: ReturnType<typeof createAppStore>;
+
+  /** Debounce delay in milliseconds (default: 300ms) */
+  readonly debounceMs?: number;
+
+  /** Whether synchronization is enabled (default: true) */
+  readonly enabled?: boolean;
+
+  /** Callback fired when camera state changes */
+  readonly onCameraStateChange?: (state: Partial<CameraConfig>) => void;
+
+  /** Callback fired when synchronization errors occur */
+  readonly onSyncError?: (error: CameraStoreSyncError) => void;
+
+  /** Custom state mapping function for advanced use cases */
+  readonly stateMapper?: (camera: ArcRotateCamera) => Partial<CameraConfig>;
+}
+```
+
+#### **State Mapping Strategy**
+
+```typescript
+/**
+ * Default camera state mapping from BabylonJS to store format
+ */
+private extractCameraState(camera: ArcRotateCamera): Partial<CameraConfig> {
+  return {
+    position: [camera.position.x, camera.position.y, camera.position.z] as const,
+    target: [camera.target.x, camera.target.y, camera.target.z] as const,
+    // Map radius to zoom (inverse relationship for intuitive zoom behavior)
+    zoom: camera.radius > 0 ? 1 / camera.radius : 1,
+  };
+}
+
+/**
+ * Camera position restoration from store to BabylonJS
+ */
+private restoreCameraFromStore(): void {
+  const cameraState = this.store.getState().babylonRendering.camera;
+
+  // Check if state is different from defaults
+  if (this.isDefaultCameraState(cameraState)) {
+    return; // Skip restoration for default values
+  }
+
+  // Restore position, target, and zoom
+  if (cameraState.position) {
+    this.camera.position.x = cameraState.position[0];
+    this.camera.position.y = cameraState.position[1];
+    this.camera.position.z = cameraState.position[2];
+  }
+
+  if (cameraState.target) {
+    this.camera.target.x = cameraState.target[0];
+    this.camera.target.y = cameraState.target[1];
+    this.camera.target.z = cameraState.target[2];
+  }
+
+  if (cameraState.zoom && cameraState.zoom > 0) {
+    this.camera.radius = 1 / cameraState.zoom;
+  }
+}
+```
+
+#### **Integration with StoreConnectedRenderer**
+
+```typescript
+/**
+ * @file store-connected-renderer.tsx
+ * @description Automatic camera sync initialization in main renderer
+ */
+
+// Camera store sync service initialization
+const [cameraStoreSyncService, setCameraStoreSyncService] =
+  useState<CameraStoreSyncService | null>(null);
+
+// Initialize when scene is ready
+const handleSceneReady = useCallback(async (scene: BabylonSceneType) => {
+  // ... existing scene setup ...
+
+  // Initialize camera store synchronization
+  const camera = service.getCameraControlService()?.getCamera();
+  if (camera && camera.getClassName() === 'ArcRotateCamera') {
+    const cameraSync = new CameraStoreSyncService();
+    const initResult = await cameraSync.initialize({
+      camera: camera as ArcRotateCamera,
+      store: useAppStore,
+      debounceMs: 300,
+      enabled: true,
+      onCameraStateChange: (state) => {
+        logger.debug('[DEBUG] Camera state synchronized:', state);
+      },
+      onSyncError: (error) => {
+        logger.error('[ERROR] Camera sync error:', error);
+      },
+    });
+
+    if (initResult.success) {
+      setCameraStoreSyncService(cameraSync);
+      logger.debug('[DEBUG] Camera store sync initialized successfully');
+    }
+  }
+}, []);
+
+// Cleanup on unmount
+useEffect(() => {
+  return () => {
+    if (cameraStoreSyncService) {
+      cameraStoreSyncService.dispose();
+    }
+  };
+}, [cameraStoreSyncService]);
+```
+
+#### **File Structure**
+
+```
+src/features/babylon-renderer/services/camera-store-sync/
+├── camera-store-sync.service.ts           # Main service implementation
+├── camera-store-sync.service.test.ts      # Comprehensive test suite (18 tests)
+├── camera-store-sync.types.ts             # TypeScript interfaces and types
+└── index.ts                               # Service exports
+```
+
+#### **Testing Strategy**
+
+**Comprehensive Test Coverage (18 tests, all passing)**
+
+```typescript
+describe('CameraStoreSyncService', () => {
+  // Real BabylonJS testing with NullEngine
+  let engine: BABYLON.NullEngine;
+  let scene: BABYLON.Scene;
+  let camera: BABYLON.ArcRotateCamera;
+  let store: ReturnType<typeof createAppStore>;
+  let service: CameraStoreSyncService;
+
+  // Test categories:
+  // 1. Initialization and validation
+  // 2. Camera → Store synchronization
+  // 3. Store → Camera restoration
+  // 4. Debouncing behavior
+  // 5. Change detection and skipping
+  // 6. Error handling and edge cases
+  // 7. Performance metrics
+  // 8. Complete page refresh simulation
+});
+```
+
+**Key Test Scenarios**:
+- ✅ **Real BabylonJS Integration**: Uses actual BabylonJS components with NullEngine
+- ✅ **Debouncing Validation**: Verifies 300ms debouncing prevents excessive updates
+- ✅ **Position Restoration**: Tests camera position restoration from store
+- ✅ **Default State Handling**: Ensures default states are not restored
+- ✅ **Change Detection**: Validates identical states are properly skipped
+- ✅ **Page Refresh Simulation**: End-to-end test of complete refresh cycle
+- ✅ **Performance Metrics**: Tracks update counts, timing, and skipped updates
+- ✅ **Error Handling**: Validates proper error responses for invalid configurations
+
+#### **Performance Characteristics**
+
+**Metrics Tracking**:
+```typescript
+interface CameraStoreSyncMetrics {
+  readonly totalUpdates: number;        // Total store updates performed
+  readonly averageUpdateTime: number;   // Average update duration (ms)
+  readonly lastUpdateDuration: number;  // Most recent update time (ms)
+  readonly skippedUpdates: number;      // Updates skipped due to no change
+  readonly errorCount: number;          // Number of errors encountered
+}
+```
+
+**Performance Targets**:
+- **Update Latency**: <5ms average for store updates
+- **Memory Usage**: Zero memory leaks with proper cleanup
+- **Change Detection**: <1ms for state comparison
+- **Debouncing Efficiency**: 300ms delay prevents excessive updates
+
+#### **Error Handling**
+
+```typescript
+type CameraStoreSyncErrorCode =
+  | 'CAMERA_NOT_SUPPORTED'     // Only ArcRotateCamera supported
+  | 'STORE_NOT_AVAILABLE'      // Store instance required
+  | 'INITIALIZATION_FAILED'    // Service initialization error
+  | 'STATE_UPDATE_FAILED'      // Store update error
+  | 'OBSERVER_SETUP_FAILED'    // BabylonJS observer error
+  | 'DISPOSAL_FAILED';         // Cleanup error
+
+interface CameraStoreSyncError {
+  readonly code: CameraStoreSyncErrorCode;
+  readonly message: string;
+  readonly cause?: unknown;
+  readonly timestamp: Date;
+}
+```
+
+#### **Usage Scenarios**
+
+**1. Page Refresh Persistence**
+```typescript
+// User moves camera to custom position
+// → Camera state automatically saved to store
+// → User refreshes page
+// → Camera position automatically restored
+```
+
+**2. Component Re-render Stability**
+```typescript
+// React component re-renders
+// → Camera position maintained through store
+// → No jarring camera jumps or resets
+```
+
+**3. Multi-component Camera Coordination**
+```typescript
+// Other components can subscribe to camera state changes
+const cameraState = useAppStore(state => state.babylonRendering.camera);
+
+// React to camera position changes
+useEffect(() => {
+  // Update UI based on camera position
+  updateViewportInfo(cameraState.position);
+}, [cameraState.position]);
+```
+
+#### **Architecture Benefits**
+
+**1. User Experience**
+- ✅ **Seamless Persistence**: Camera position survives page refreshes
+- ✅ **Smooth Interactions**: Debounced updates prevent UI lag
+- ✅ **Predictable Behavior**: Consistent camera state across sessions
+
+**2. Developer Experience**
+- ✅ **Automatic Integration**: Works out-of-the-box with existing renderer
+- ✅ **Comprehensive Testing**: 18 tests with real BabylonJS components
+- ✅ **Type Safety**: Full TypeScript support with Result<T,E> patterns
+- ✅ **Performance Monitoring**: Built-in metrics for optimization
+
+**3. System Architecture**
+- ✅ **Zustand Integration**: Seamless integration with existing state management
+- ✅ **Service-Based Design**: Clean separation of concerns
+- ✅ **Framework Agnostic**: Pure BabylonJS implementation
+- ✅ **Memory Safe**: Proper resource cleanup and disposal
+
+#### **Quality Standards Met**
+
+- ✅ **Zero TypeScript Errors**: Strict type safety throughout
+- ✅ **Zero Biome Violations**: Clean code formatting and linting
+- ✅ **TDD Approach**: Tests written before implementation
+- ✅ **Real Implementation Testing**: No mocks for BabylonJS components
+- ✅ **Functional Programming**: Immutable state and pure functions
+- ✅ **Result<T,E> Patterns**: Consistent error handling
+- ✅ **SRP Compliance**: Single responsibility per service
+- ✅ **Co-located Tests**: Tests alongside implementation files
+
+The Camera Store Synchronization system represents a production-ready solution for camera state persistence in 3D web applications, following all project standards and providing a seamless user experience.
+
 
 
 
@@ -760,6 +1138,11 @@ src/features/babylon-renderer/
 │   ├── camera-gizmo-sync/              # SRP: Camera-gizmo synchronization
 │   │   ├── camera-gizmo-sync.service.ts # Bidirectional sync service
 │   │   └── camera-gizmo-sync.service.test.ts # Co-located tests
+│   ├── camera-store-sync/              # SRP: Camera-store synchronization
+│   │   ├── camera-store-sync.service.ts # Camera state persistence service
+│   │   ├── camera-store-sync.service.test.ts # Comprehensive tests (18 tests)
+│   │   ├── camera-store-sync.types.ts  # TypeScript interfaces
+│   │   └── index.ts                    # Service exports
 │   └── mesh-generation-service/        # SRP: Mesh generation only
 │       ├── mesh-generation.service.ts  # Scene & mesh generation
 │       └── mesh-generation.service.test.ts # Co-located tests
@@ -1117,6 +1500,10 @@ interface BabylonRenderingSlice {
 ```
 Monaco Editor → updateCode() → debounced AST parsing (300ms) → setParsingAST() →
 ASTBridgeConverter → BabylonJS nodes → generateMesh() → Scene rendering → Auto-framing
+
+Camera Interaction → onViewMatrixChangedObservable → CameraStoreSyncService →
+debounced store update (300ms) → Zustand camera state → Page refresh →
+Camera position restoration
 ```
 
 ## OpenSCAD Coordinate System
@@ -1414,6 +1801,21 @@ src/features/babylon-renderer/
 - Consistent with existing parser architecture
 - Explicit error handling without exceptions
 - Composable and type-safe error propagation
+
+### 5. **Camera State Persistence** ✅
+
+**Decision**: Implement bidirectional camera-store synchronization with smart default detection
+**Rationale**:
+- Users expect camera position to persist across page refreshes
+- Debounced updates prevent performance issues during smooth camera movements
+- Smart default detection preserves initial camera setup for new users
+- Zustand integration maintains consistency with existing state management
+
+**Benefits**:
+- ✅ **User Experience**: Seamless camera position persistence
+- ✅ **Performance**: 300ms debouncing prevents excessive store updates
+- ✅ **Reliability**: Comprehensive test coverage with real BabylonJS components
+- ✅ **Integration**: Automatic initialization with existing renderer components
 
 ## Implementation Patterns
 

@@ -175,6 +175,7 @@ import {
   selectTransformationGizmoMode,
 } from '../../../store/selectors';
 import type { BabylonSceneService } from '../../services/babylon-scene-service';
+import { CameraStoreSyncService } from '../../services/camera-store-sync/camera-store-sync.service.js';
 import type { BabylonSceneProps } from '../babylon-scene';
 import { BabylonScene } from '../babylon-scene';
 import { CameraControls } from '../camera-controls';
@@ -314,6 +315,8 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
   const sceneRef = useRef<BabylonSceneType | null>(null);
   const [isSceneReady, setIsSceneReady] = useState(false);
   const [sceneService, setSceneService] = useState<BabylonSceneService | null>(null);
+  const [cameraStoreSyncService, setCameraStoreSyncService] =
+    useState<CameraStoreSyncService | null>(null);
   const lastASTRef = useRef<readonly ASTNode[] | null>(null);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -510,6 +513,38 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       if (service) {
         setSceneService(service);
         logger.debug('[DEBUG][StoreConnectedRenderer] Scene service captured for camera controls');
+
+        // Initialize camera store synchronization
+        const camera = service.getCameraControlService()?.getCamera();
+        if (camera && camera.getClassName() === 'ArcRotateCamera') {
+          const cameraSync = new CameraStoreSyncService();
+          const initResult = await cameraSync.initialize({
+            camera: camera as BABYLON.ArcRotateCamera,
+            store: useAppStore as ReturnType<
+              typeof import('../../../store/app-store.js').createAppStore
+            >,
+            debounceMs: 300,
+            enabled: true,
+            onCameraStateChange: (state) => {
+              logger.debug('[DEBUG][StoreConnectedRenderer] Camera state synchronized:', state);
+            },
+            onSyncError: (error) => {
+              logger.error('[ERROR][StoreConnectedRenderer] Camera sync error:', error);
+            },
+          });
+
+          if (initResult.success) {
+            setCameraStoreSyncService(cameraSync);
+            logger.debug(
+              '[DEBUG][StoreConnectedRenderer] Camera store sync initialized successfully'
+            );
+          } else {
+            logger.error(
+              '[ERROR][StoreConnectedRenderer] Failed to initialize camera store sync:',
+              initResult.error
+            );
+          }
+        }
       }
 
       // Set scene reference in the store for AST rendering
@@ -706,8 +741,14 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
       if (renderTimeoutRef.current) {
         clearTimeout(renderTimeoutRef.current);
       }
+
+      // Cleanup camera store sync service
+      if (cameraStoreSyncService) {
+        cameraStoreSyncService.dispose();
+        logger.debug('[DEBUG][StoreConnectedRenderer] Camera store sync service disposed');
+      }
     };
-  }, []);
+  }, [cameraStoreSyncService]);
 
   /**
    * Render status overlay
