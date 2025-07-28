@@ -260,8 +260,14 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     }))
   );
 
-  const { code, selection, isDirty, parsingErrors, parsingWarnings, enableRealTimeParsing } =
-    storeState;
+  const {
+    code = '',
+    selection,
+    isDirty = false,
+    parsingErrors = [],
+    parsingWarnings = [],
+    enableRealTimeParsing = false
+  } = storeState;
 
   // Store actions - use useShallow for actions
   const storeActions = useAppStore(
@@ -300,7 +306,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   const debouncedUpdateCode = useMemo(
     () =>
       debounce((newCode: string) => {
-        logger.debug(`[DEBOUNCED] Store update: ${newCode.length} characters`);
+        logger.debug(`[DEBOUNCED] Store update: ${newCode?.length || 0} characters`);
 
         // Always update - let the store handle duplicate detection
         updateCode(newCode);
@@ -382,7 +388,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
   useEffect(() => {
     // Only log when non-code state changes occur to reduce keystroke overhead
     logger.debug('Store state updated:', {
-      codeLength: code.length,
+      codeLength: code?.length || 0,
       isDirty,
       errorCount: parsingErrors.length,
       warningCount: parsingWarnings.length,
@@ -391,11 +397,11 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     });
   }, [
     isDirty,
-    parsingErrors.length,
-    parsingWarnings.length,
+    parsingErrors?.length || 0,
+    parsingWarnings?.length || 0,
     enableRealTimeParsing,
     selection,
-    code.length,
+    code?.length || 0,
   ]); // Removed 'code' dependency to reduce keystroke overhead
 
   /**
@@ -404,7 +410,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
    * Optimized to only trigger when parsing mode changes, not on every keystroke.
    */
   useEffect(() => {
-    if (!enableRealTimeParsing && code.length > 0) {
+    if (!enableRealTimeParsing && (code?.length || 0) > 0) {
       logger.debug('Manual parsing trigger - real-time parsing disabled');
       // Manual parsing can be triggered here if needed
       // For now, we rely on the store's debounced parsing
@@ -443,7 +449,7 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
               {parsingWarnings.length !== 1 ? 's' : ''}
             </span>
           )}
-          <span className="text-gray-400">{code.length} chars</span>
+          <span className="text-gray-400">{code?.length || 0} chars</span>
         </div>
       </div>
 

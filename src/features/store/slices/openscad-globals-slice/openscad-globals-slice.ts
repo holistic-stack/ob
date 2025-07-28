@@ -452,12 +452,14 @@ function validateDebug(debug: Partial<OpenSCADDebug>): OpenSCADGlobalsValidation
  *
  * @param set - Zustand set function for state updates
  * @param get - Zustand get function for state access
+ * @param config - Configuration object (currently unused but required for consistency)
  * @returns Complete OpenSCAD globals slice
  */
-export const createOpenSCADGlobalsSlice: StateCreator<AppStore, [], [], OpenSCADGlobalsActions> = (
-  set,
-  get
-) => ({
+export const createOpenSCADGlobalsSlice = (
+  set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
+  get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
+  _config: Record<string, never> = {}
+): OpenSCADGlobalsActions => ({
   // Actions only - state is managed in createInitialState
   updateGeometryResolution: (resolution) => {
     const errors = validateGeometryResolution(resolution);
