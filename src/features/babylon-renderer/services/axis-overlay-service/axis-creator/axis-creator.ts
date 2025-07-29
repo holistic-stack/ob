@@ -14,6 +14,7 @@ import {
 } from '@babylonjs/core';
 import { createLogger } from '../../../../../shared/services/logger.service';
 import type { Result } from '../../../../../shared/types/result.types';
+import { OPENSCAD_FALLBACK } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 const logger = createLogger('AxisCreator');
 
@@ -90,7 +91,7 @@ export function createInfiniteAxis(
       {
         height: config.length * 2, // Full length from negative to positive
         diameter: config.diameter,
-        tessellation: 8,
+        tessellation: OPENSCAD_FALLBACK.MIN_TESSELLATION,
       },
       scene
     );

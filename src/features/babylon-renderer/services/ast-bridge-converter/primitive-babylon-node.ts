@@ -31,6 +31,7 @@ import {
 import earcut from 'earcut';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
+import { OPENSCAD_FALLBACK } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 import type {
   ASTNode,
@@ -241,7 +242,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     // Apply flat shading to make angular edges visible for low-poly spheres
     // This is crucial for OpenSCAD compatibility where coarse resolution should show facets
-    if (segments <= 16) {
+    if (segments <= OPENSCAD_FALLBACK.FLAT_SHADING_THRESHOLD) {
       sphere.convertToFlatShadedMesh();
     }
 
@@ -466,8 +467,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         const discMesh = MeshBuilder.CreateDisc(
           this.name,
           {
-            radius: 5, // Default radius
-            tessellation: 8, // Simple octagon
+            radius: OPENSCAD_FALLBACK.DEFAULT_RADIUS,
+            tessellation: OPENSCAD_FALLBACK.MIN_TESSELLATION,
             sideOrientation: 2,
           },
           scene

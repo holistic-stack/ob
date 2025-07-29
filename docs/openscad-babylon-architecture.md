@@ -1078,6 +1078,8 @@ src/
 │   └── ui-components/          # Reusable UI components
 ├── shared/                     # Shared utilities and components (146 tests)
 │   ├── components/             # Reusable UI components
+│   ├── constants/              # Centralized application constants
+│   │   └── openscad-globals/   # OpenSCAD global variables and tessellation constants
 │   ├── hooks/                  # Custom React hooks
 │   ├── types/                  # Shared TypeScript types (Result<T,E>)
 │   ├── utils/                  # Pure utility functions
@@ -1180,7 +1182,75 @@ src/features/openscad-parser/
 
 ## Core Components
 
-### 1. **Bridge Pattern Implementation**
+### 1. **Centralized OpenSCAD Global Variables System** ✅ **PRODUCTION READY**
+
+**Last Updated**: July 29, 2025
+
+The OpenSCAD Babylon project implements a comprehensive centralized constants system for managing OpenSCAD global variables ($fn, $fa, $fs) and related configuration values. This system ensures consistency across the entire application and eliminates magic numbers.
+
+#### **Architecture Components**
+
+**Centralized Constants** (`src/shared/constants/openscad-globals/`)
+- Single source of truth for all OpenSCAD global variable defaults
+- Immutable constants with Object.freeze() and TypeScript readonly types
+- Grouped constants for different domains (tessellation, viewport, debug, fallback)
+- Comprehensive utility functions for fragment calculation and validation
+
+**Key Constants Groups:**
+```typescript
+// Primary OpenSCAD defaults (official specification values)
+OPENSCAD_GLOBALS = {
+  DEFAULT_FN: 0,    // Number of fragments (0 = auto-calculate)
+  DEFAULT_FA: 12,   // Minimum angle in degrees
+  DEFAULT_FS: 2,    // Minimum fragment size in units
+  DEFAULT_T: 0,     // Animation time step
+}
+
+// Tessellation-specific constants
+OPENSCAD_TESSELLATION = {
+  FN: 0, FA: 12, FS: 2
+}
+
+// Fallback values for error recovery
+OPENSCAD_FALLBACK = {
+  MIN_TESSELLATION: 8,           // Simple octagon for fallback geometry
+  DEFAULT_RADIUS: 5,             // Default radius for placeholder shapes
+  FLAT_SHADING_THRESHOLD: 16,    // Apply flat shading for low-poly meshes
+}
+```
+
+#### **Integration Points**
+
+**Zustand Store Integration**
+- OpenSCAD globals slice imports centralized constants
+- Maintains backward compatibility with existing API
+- Type-safe integration with comprehensive validation
+
+**BabylonJS Mesh Generation**
+- Primitive renderers use centralized constants for fallback scenarios
+- Axis overlay services use consistent tessellation values
+- Eliminates hardcoded magic numbers throughout rendering pipeline
+
+**Utility Functions**
+```typescript
+// Fragment calculation following OpenSCAD specification
+calculateFragments(radius, fn, fa, fs): number
+
+// Validation for tessellation parameters
+isValidTessellationValue(value, type): boolean
+```
+
+#### **Benefits**
+
+**Consistency**: Single source of truth prevents inconsistent default values
+**Maintainability**: Centralized updates propagate throughout the application
+**Type Safety**: Comprehensive TypeScript types with readonly enforcement
+**Performance**: Object.freeze() enables efficient change detection
+**Testing**: 100% test coverage with comprehensive validation scenarios
+
+This centralized system provides a solid foundation for OpenSCAD global variable management that follows functional programming principles and enables consistent tessellation quality across all primitive rendering.
+
+### 2. **Bridge Pattern Implementation**
 
 The project successfully implements the **Bridge Pattern** to preserve the existing OpenSCAD parser while adding BabylonJS rendering capabilities.
 

@@ -239,21 +239,28 @@ import type {
   OpenSCADModuleSystem,
   OpenSCADViewport,
 } from './openscad-globals-slice.types.js';
+import {
+  OPENSCAD_GLOBALS,
+  OPENSCAD_VIEWPORT,
+  OPENSCAD_MODULE_SYSTEM,
+  OPENSCAD_DEBUG,
+} from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 /**
  * @constant OPENSCAD_DEFAULTS
  * @description Default values for OpenSCAD global variables based on OpenSCAD specifications.
+ * Uses centralized constants from shared/constants/openscad-globals for consistency.
  */
 export const OPENSCAD_DEFAULTS: OpenSCADGlobalsDefaults = {
-  $fn: undefined,
-  $fa: 12,
-  $fs: 2,
-  $t: 0,
-  $vpr: [55, 0, 25] as const,
-  $vpt: [0, 0, 0] as const,
-  $vpd: 140,
-  $children: 0,
-  $preview: true,
+  $fn: undefined, // OpenSCAD uses undefined for auto-calculation
+  $fa: OPENSCAD_GLOBALS.DEFAULT_FA,
+  $fs: OPENSCAD_GLOBALS.DEFAULT_FS,
+  $t: OPENSCAD_GLOBALS.DEFAULT_T,
+  $vpr: OPENSCAD_VIEWPORT.ROTATION,
+  $vpt: OPENSCAD_VIEWPORT.TRANSLATION,
+  $vpd: OPENSCAD_VIEWPORT.DISTANCE,
+  $children: OPENSCAD_MODULE_SYSTEM.CHILDREN,
+  $preview: OPENSCAD_DEBUG.PREVIEW,
   lastUpdated: 0,
   isModified: false,
 } as const;
