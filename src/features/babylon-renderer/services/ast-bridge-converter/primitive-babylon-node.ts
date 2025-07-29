@@ -31,7 +31,11 @@ import {
 import earcut from 'earcut';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
-import { OPENSCAD_FALLBACK } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
+import {
+  OPENSCAD_FALLBACK,
+  OPENSCAD_GLOBALS,
+  calculateFragments,
+} from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 import type {
   ASTNode,
@@ -527,36 +531,55 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
-   * Extract sphere segments for tessellation using OpenSCAD global variables
+   * Resolve tessellation parameters following OpenSCAD inheritance rules.
+   * Implements the precedence: local parameters → global variables → OpenSCAD defaults
+   *
+   * @param localFn - Local $fn parameter from primitive (undefined if not specified)
+   * @param localFa - Local $fa parameter from primitive (undefined if not specified)
+   * @param localFs - Local $fs parameter from primitive (undefined if not specified)
+   * @returns Resolved tessellation parameters with proper inheritance
+   */
+  private resolveTessellationParameters(
+    localFn?: number,
+    localFa?: number,
+    localFs?: number
+  ): { fn: number; fa: number; fs: number } {
+    // Apply OpenSCAD inheritance rules: local → global → defaults
+    const resolvedFn = localFn ?? this.openscadGlobals.$fn ?? OPENSCAD_GLOBALS.DEFAULT_FN;
+    const resolvedFa = localFa ?? this.openscadGlobals.$fa ?? OPENSCAD_GLOBALS.DEFAULT_FA;
+    const resolvedFs = localFs ?? this.openscadGlobals.$fs ?? OPENSCAD_GLOBALS.DEFAULT_FS;
+
+    logger.debug(
+      `[RESOLVE_TESSELLATION] Local: $fn=${localFn}, $fa=${localFa}, $fs=${localFs} | ` +
+      `Global: $fn=${this.openscadGlobals.$fn}, $fa=${this.openscadGlobals.$fa}, $fs=${this.openscadGlobals.$fs} | ` +
+      `Resolved: $fn=${resolvedFn}, $fa=${resolvedFa}, $fs=${resolvedFs}`
+    );
+
+    return { fn: resolvedFn, fa: resolvedFa, fs: resolvedFs };
+  }
+
+  /**
+   * Extract sphere segments for tessellation using OpenSCAD global variable inheritance
    */
   private extractSphereSegments(): number {
     const sphereNode = this.originalOpenscadNode as SphereNode;
     const radius = this.extractSphereRadius();
 
-    // Check for local $fn first (node-specific override)
-    const localFn = (sphereNode as SphereNode & { $fn?: number }).$fn;
-    if (localFn !== undefined) {
-      return localFn;
-    }
+    // Get local tessellation parameters from the sphere node
+    const localFn = sphereNode.$fn;
+    const localFa = sphereNode.$fa;
+    const localFs = sphereNode.$fs;
 
-    // Use OpenSCAD global variables for fragment calculation
-    const globals = this.openscadGlobals;
+    // Resolve parameters using OpenSCAD inheritance rules
+    const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
 
-    // Calculate fragments according to OpenSCAD specification
-    const fragmentsFromFn = globals.$fn || 0;
-    const fragmentsFromFa = globals.$fa ? Math.ceil(360 / globals.$fa) : Infinity;
-    const fragmentsFromFs = globals.$fs
-      ? Math.ceil((2 * Math.PI * radius) / globals.$fs)
-      : Infinity;
+    // Use the centralized fragment calculation function
+    const finalFragments = calculateFragments(radius, fn, fa, fs);
 
-    // OpenSCAD uses the minimum of calculated values for best quality
-    const calculatedFragments = Math.max(
-      fragmentsFromFn,
-      Math.min(fragmentsFromFa, fragmentsFromFs)
+    logger.debug(
+      `[EXTRACT_SPHERE_SEGMENTS] Sphere segments calculated: ${finalFragments} ` +
+      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
     );
-
-    // Ensure minimum of 3 fragments for valid geometry
-    const finalFragments = Math.max(3, calculatedFragments);
 
     return finalFragments;
   }
@@ -595,11 +618,29 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
-   * Extract cylinder segments for tessellation
+   * Extract cylinder segments for tessellation using OpenSCAD global variable inheritance
    */
   private extractCylinderSegments(): number {
     const cylinderNode = this.originalOpenscadNode as CylinderNode;
-    return cylinderNode.$fn ?? 32; // Default segments
+    const radius = this.extractCylinderRadius();
+
+    // Get local tessellation parameters from the cylinder node
+    const localFn = cylinderNode.$fn;
+    const localFa = cylinderNode.$fa;
+    const localFs = cylinderNode.$fs;
+
+    // Resolve parameters using OpenSCAD inheritance rules
+    const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
+
+    // Use the centralized fragment calculation function
+    const finalFragments = calculateFragments(radius, fn, fa, fs);
+
+    logger.debug(
+      `[EXTRACT_CYLINDER_SEGMENTS] Cylinder segments calculated: ${finalFragments} ` +
+      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
+    );
+
+    return finalFragments;
   }
 
   /**
@@ -620,36 +661,27 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
-   * Extract circle segments for tessellation using OpenSCAD global variables
+   * Extract circle segments for tessellation using OpenSCAD global variable inheritance
    */
   private extractCircleSegments(): number {
     const circleNode = this.originalOpenscadNode as CircleNode;
     const radius = this.extractCircleRadius();
 
-    // Check for local $fn first (node-specific override)
+    // Get local tessellation parameters from the circle node
     const localFn = circleNode.$fn;
-    if (localFn !== undefined) {
-      return localFn;
-    }
+    const localFa = circleNode.$fa;
+    const localFs = circleNode.$fs;
 
-    // Use OpenSCAD global variables for fragment calculation
-    const globals = this.openscadGlobals;
+    // Resolve parameters using OpenSCAD inheritance rules
+    const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
 
-    // Calculate fragments according to OpenSCAD specification
-    const fragmentsFromFn = globals.$fn || 0;
-    const fragmentsFromFa = globals.$fa ? Math.ceil(360 / globals.$fa) : Infinity;
-    const fragmentsFromFs = globals.$fs
-      ? Math.ceil((2 * Math.PI * radius) / globals.$fs)
-      : Infinity;
+    // Use the centralized fragment calculation function
+    const finalFragments = calculateFragments(radius, fn, fa, fs);
 
-    // OpenSCAD uses the minimum of calculated values for best quality
-    const calculatedFragments = Math.max(
-      fragmentsFromFn,
-      Math.min(fragmentsFromFa, fragmentsFromFs)
+    logger.debug(
+      `[EXTRACT_CIRCLE_SEGMENTS] Circle segments calculated: ${finalFragments} ` +
+      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
     );
-
-    // Ensure minimum of 3 fragments for valid geometry
-    const finalFragments = Math.max(3, calculatedFragments);
 
     return finalFragments;
   }
