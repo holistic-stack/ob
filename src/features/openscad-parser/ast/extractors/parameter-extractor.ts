@@ -175,6 +175,121 @@ export function isExpressionNode(value: ast.ParameterValue): value is ast.Expres
  * }
  * ```
  */
+/**
+ * Extract a number parameter or preserve parameter reference for later binding.
+ * This function supports module parameter binding by preserving identifier references
+ * when concrete values cannot be extracted.
+ *
+ * @param param - The parameter object containing the value to extract
+ * @param errorHandler - Optional error handler for expression evaluation and logging
+ * @returns The extracted numeric value, parameter reference string, or null if extraction fails
+ */
+export function extractNumberParameterOrReference(
+  param: ast.Parameter,
+  errorHandler?: ErrorHandler
+): number | string | null {
+  if (!param?.value) {
+    return null;
+  }
+
+  // Handle number as raw value
+  if (typeof param.value === 'number') {
+    return param.value;
+  }
+
+  // Handle expression node
+  if (isExpressionNode(param.value)) {
+    // Handle identifier expressions (parameter references)
+    if (param.value.expressionType === 'identifier') {
+      const identifierNode = param.value as ast.IdentifierNode;
+      // Return the parameter name for later binding
+      return identifierNode.name;
+    }
+
+    if (param.value.expressionType === 'literal') {
+      const literalNode = param.value as ast.LiteralNode;
+      // Check if the literal value is a valid number (not null or undefined)
+      if (typeof literalNode.value === 'number' && !Number.isNaN(literalNode.value)) {
+        return literalNode.value;
+      } else {
+        return null;
+      }
+    }
+
+    if (param.value.expressionType === 'unary') {
+      const unaryExpr = param.value as ast.UnaryExpressionNode;
+      console.log(
+        `[extractNumberParameterOrReference] DEBUG - Unary expression: ${unaryExpr.operator}`
+      );
+      if (
+        unaryExpr.operator === '-' &&
+        unaryExpr.operand.expressionType === 'literal' &&
+        typeof (unaryExpr.operand as ast.LiteralNode).value === 'number'
+      ) {
+        const unaryResult = -(unaryExpr.operand as ast.LiteralNode).value;
+        console.log(
+          `[extractNumberParameterOrReference] DEBUG - Unary expression result: ${unaryResult}`
+        );
+        return unaryResult;
+      }
+    }
+
+    // Handle binary expressions directly
+    if (param.value.expressionType === 'binary' && errorHandler) {
+      console.log(
+        `[extractNumberParameterOrReference] DEBUG - Attempting to evaluate binary expression:`,
+        JSON.stringify(param.value, null, 2)
+      );
+
+      try {
+        const evaluationResult = evaluateBinaryExpression(param.value as ast.BinaryExpressionNode);
+        console.log(
+          `[extractNumberParameterOrReference] DEBUG - Expression evaluation result: ${evaluationResult}`
+        );
+
+        if (typeof evaluationResult === 'number' && !Number.isNaN(evaluationResult)) {
+          return evaluationResult;
+        } else {
+          console.log(
+            `[extractNumberParameterOrReference] WARN - Expression did not evaluate to a number: ${evaluationResult}`
+          );
+        }
+      } catch (error) {
+        console.log(
+          `[extractNumberParameterOrReference] ERROR - Expression evaluation failed: ${error}`
+        );
+      }
+    } else if (param.value.expressionType === 'binary') {
+      console.log(
+        `[extractNumberParameterOrReference] DEBUG - Binary expression found but no error handler provided`
+      );
+    }
+  }
+
+  // Try to parse the value as a number if it's a string
+  if (typeof param.value === 'string') {
+    console.log(
+      `[extractNumberParameterOrReference] DEBUG - param.value is string, attempting parseFloat: '${param.value}'`
+    );
+    const num = parseFloat(param.value);
+    if (!Number.isNaN(num)) {
+      console.log(`[extractNumberParameterOrReference] DEBUG - parseFloat successful: ${num}`);
+      return num;
+    } else {
+      console.log(
+        `[extractNumberParameterOrReference] WARN - parseFloat returned NaN for string: '${param.value}'`
+      );
+      // Return the string as a potential parameter reference
+      return param.value;
+    }
+  }
+
+  console.log(
+    `[extractNumberParameterOrReference] END - Could not extract number or reference. Returning null.`
+  );
+  return null;
+}
+
 export function extractNumberParameter(
   param: ast.Parameter,
   errorHandler?: ErrorHandler

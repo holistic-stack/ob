@@ -71,7 +71,10 @@ import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
 import { extractArguments } from './argument-extractor.js';
-import { extractNumberParameter } from './parameter-extractor.js';
+import {
+  extractNumberParameter,
+  extractNumberParameterOrReference,
+} from './parameter-extractor.js';
 
 /**
  * @function extractSphereNode
@@ -95,8 +98,8 @@ export function extractSphereNode(
   }
 
   // Initialize parameters with default values as per OpenSCAD specification.
-  let radius: number = 1; // Default radius is 1
-  let diameter: number | undefined;
+  let radius: number | string = 1; // Default radius is 1, can be parameter reference
+  let diameter: number | string | undefined;
   let fn: number | undefined;
   let fa: number | undefined;
   let fs: number | undefined;
@@ -117,7 +120,7 @@ export function extractSphereNode(
 
   // First, process positional parameters. The first positional parameter is typically the radius.
   if (args.length > 0 && args[0] && !args[0].name) {
-    const radiusValue = extractNumberParameter(args[0]);
+    const radiusValue = extractNumberParameterOrReference(args[0]);
     if (radiusValue !== null) {
       radius = radiusValue;
     }
@@ -130,22 +133,28 @@ export function extractSphereNode(
 
     // Handle 'r' parameter (named radius).
     if (arg.name === 'r') {
-      const radiusValue = extractNumberParameter(arg);
+      const radiusValue = extractNumberParameterOrReference(arg);
       if (radiusValue !== null) {
         radius = radiusValue;
       } else {
-        // If radius value is not a valid number, it's ignored.
+        // If radius value is not a valid number or reference, it's ignored.
       }
     }
     // Handle 'd' parameter (named diameter).
     // In OpenSCAD, if both r and d are specified, d takes precedence.
     else if (arg.name === 'd') {
-      const diameterValue = extractNumberParameter(arg);
+      const diameterValue = extractNumberParameterOrReference(arg);
       if (diameterValue !== null) {
         diameter = diameterValue;
-        radius = diameterValue / 2; // Set radius based on diameter, as diameter overrides radius.
+        // Only calculate radius if diameter is a number, not a parameter reference
+        if (typeof diameterValue === 'number') {
+          radius = diameterValue / 2; // Set radius based on diameter, as diameter overrides radius.
+        } else {
+          // If diameter is a parameter reference, store it and let module resolution handle it
+          radius = diameterValue; // Use the parameter reference
+        }
       } else {
-        // If diameter value is not a valid number, it's ignored.
+        // If diameter value is not a valid number or reference, it's ignored.
       }
     }
     // Handle special `$fn` parameter.

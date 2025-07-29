@@ -91,22 +91,55 @@ function getNodeText(node: TSNode, sourceCode?: string): string {
  * @returns {ast.ParameterValue} The converted parameter value, or `null` if conversion is not possible.
  */
 function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
+  console.log(
+    `[convertValueToParameterValue] DEBUG - Converting value:`,
+    JSON.stringify(value, null, 2)
+  );
+
   if (value.type === 'number') {
     // Ensure we have a valid numeric value before parsing
     const numericValue = value.value;
+    console.log(
+      `[convertValueToParameterValue] DEBUG - Number value: "${numericValue}", type: ${typeof numericValue}`
+    );
+
     if (numericValue === null || numericValue === undefined) {
+      console.log(
+        `[convertValueToParameterValue] DEBUG - Number value is null/undefined, returning null`
+      );
       return null;
     }
+
+    // Check for empty string
+    if (typeof numericValue === 'string' && numericValue.trim() === '') {
+      console.log(
+        `[convertValueToParameterValue] DEBUG - Number value is empty string, returning null`
+      );
+      return null;
+    }
+
     const parsedValue =
       typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+    console.log(
+      `[convertValueToParameterValue] DEBUG - Parsed value: ${parsedValue}, isNaN: ${Number.isNaN(parsedValue)}`
+    );
+
     if (Number.isNaN(parsedValue)) {
+      console.log(`[convertValueToParameterValue] DEBUG - Parsed value is NaN, returning null`);
       return null;
     }
-    return {
+
+    const result = {
       type: 'expression',
       expressionType: 'literal',
       value: parsedValue,
     } as ast.LiteralNode;
+
+    console.log(
+      `[convertValueToParameterValue] DEBUG - Returning literal node:`,
+      JSON.stringify(result, null, 2)
+    );
+    return result;
   } else if (value.type === 'boolean') {
     return {
       type: 'expression',
@@ -129,32 +162,86 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
       name: value.value as string,
     } as ast.IdentifierNode;
   } else if (value.type === 'vector') {
-    const vectorValues = (value.value as ast.Value[]).map((v) => {
-      if (v.type === 'number') {
-        const numericValue = v.value;
-        if (numericValue === null || numericValue === undefined) {
-          return 0; // Default for null/undefined values in vector context
-        }
-        const parsedValue =
-          typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
-        return Number.isNaN(parsedValue) ? 0 : parsedValue;
-      }
-      return 0; // Default for non-numeric elements in a vector context
-    });
+    const vectorElements = value.value as ast.Value[];
 
-    // Check if it's intended to be an ExpressionNode (VectorExpressionNode)
-    // This part is tricky as ast.Value for 'vector' is different from ast.VectorExpressionNode
-    // For now, let's assume if it's from ast.Value, it's a direct vector, not an expression node.
-    if (vectorValues.length === 2) {
-      return vectorValues as ast.Vector2D;
-    } else if (vectorValues.length >= 3) {
-      return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+    // Check if any elements are identifiers that need to be preserved for parameter substitution
+    const hasIdentifiers = vectorElements.some((v) => v.type === 'identifier');
+
+    if (hasIdentifiers) {
+      // Create a vector expression node that preserves identifiers
+      const elements = vectorElements.map((v) => {
+        if (v.type === 'identifier') {
+          return {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: v.value as string,
+          } as ast.IdentifierNode;
+        } else if (v.type === 'number') {
+          const numericValue = v.value;
+          if (numericValue === null || numericValue === undefined) {
+            return {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 0,
+            } as ast.LiteralNode;
+          }
+          const parsedValue =
+            typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+          return {
+            type: 'expression',
+            expressionType: 'literal',
+            value: Number.isNaN(parsedValue) ? 0 : parsedValue,
+          } as ast.LiteralNode;
+        }
+        // Default for other types
+        return {
+          type: 'expression',
+          expressionType: 'literal',
+          value: 0,
+        } as ast.LiteralNode;
+      });
+
+      const vectorExpressionNode = {
+        type: 'expression',
+        expressionType: 'vector',
+        elements: elements,
+      } as ast.VectorExpressionNode;
+
+      console.log(
+        `[convertValueToParameterValue] DEBUG - Created VectorExpressionNode:`,
+        JSON.stringify(vectorExpressionNode, null, 2)
+      );
+
+      return vectorExpressionNode;
+    } else {
+      // All elements are numeric, convert to simple vector
+      const vectorValues = vectorElements.map((v) => {
+        if (v.type === 'number') {
+          const numericValue = v.value;
+          if (numericValue === null || numericValue === undefined) {
+            return 0; // Default for null/undefined values in vector context
+          }
+          const parsedValue =
+            typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+          return Number.isNaN(parsedValue) ? 0 : parsedValue;
+        }
+        return 0; // Default for non-numeric elements in a vector context
+      });
+
+      // Check if it's intended to be an ExpressionNode (VectorExpressionNode)
+      // This part is tricky as ast.Value for 'vector' is different from ast.VectorExpressionNode
+      // For now, let's assume if it's from ast.Value, it's a direct vector, not an expression node.
+      if (vectorValues.length === 2) {
+        return vectorValues as ast.Vector2D;
+      } else if (vectorValues.length >= 3) {
+        return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+      }
+      // Fallback for empty or 1-element vectors, or if conversion is ambiguous
+      // OpenSCAD allows single numbers to be treated as vectors in some contexts, but ParameterValue expects specific types.
+      // Returning an empty VectorExpressionNode or null might be alternatives.
+      // For now, returning a default vector to avoid crashes, but this needs review.
+      return [0, 0, 0] as ast.Vector3D; // Default fallback, consider implications
     }
-    // Fallback for empty or 1-element vectors, or if conversion is ambiguous
-    // OpenSCAD allows single numbers to be treated as vectors in some contexts, but ParameterValue expects specific types.
-    // Returning an empty VectorExpressionNode or null might be alternatives.
-    // For now, returning a default vector to avoid crashes, but this needs review.
-    return [0, 0, 0] as ast.Vector3D; // Default fallback, consider implications
   } else if (value.type === 'range') {
     // Create an expression node for range
     const rangeNode: ast.RangeExpressionNode = {
@@ -725,8 +812,14 @@ export function extractValue(
       );
       return null;
     }
-    case 'number': // Changed from 'number_literal'
-      return { type: 'number', value: valueNode.text };
+    case 'number': {
+      // Changed from 'number_literal'
+      const numberText = getNodeText(valueNode, sourceCode);
+      console.log(
+        `[extractValue] DEBUG - Number node: text="${numberText}", sourceCode="${sourceCode?.slice(0, 50)}..."`
+      );
+      return { type: 'number', value: numberText };
+    }
 
     case 'string': // Add support for 'string' node type (new grammar)
     case 'string_literal': {

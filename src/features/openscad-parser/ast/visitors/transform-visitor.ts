@@ -793,11 +793,39 @@ export class TransformVisitor extends BaseASTVisitor {
    */
   private createTranslateNode(node: TSNode, args: ast.Parameter[]): ast.TranslateNode {
     // Default vector (3D)
-    let v: ast.Vector2D | ast.Vector3D = [0, 0, 0];
+    let v: ast.Vector2D | ast.Vector3D | ast.VectorExpressionNode = [0, 0, 0];
+
+    console.log(
+      `[TransformVisitor.createTranslateNode] DEBUG - Processing translate node with ${args.length} arguments`,
+      JSON.stringify(args, null, 2)
+    );
 
     // Extract vector parameter (first positional or named 'v')
     for (const arg of args) {
       if ((!arg.name && args.indexOf(arg) === 0) || arg.name === 'v') {
+        console.log(
+          `[TransformVisitor.createTranslateNode] DEBUG - Processing arg:`,
+          JSON.stringify(arg, null, 2)
+        );
+
+        // Check if the value is a VectorExpressionNode with identifiers
+        if (
+          typeof arg.value === 'object' &&
+          arg.value !== null &&
+          'type' in arg.value &&
+          arg.value.type === 'expression' &&
+          'expressionType' in arg.value &&
+          arg.value.expressionType === 'vector'
+        ) {
+          // Preserve the VectorExpressionNode for parameter substitution
+          v = arg.value as ast.VectorExpressionNode;
+
+          console.log(
+            `[TransformVisitor.createTranslateNode] DEBUG - Preserving VectorExpressionNode for parameter substitution:`,
+            JSON.stringify(v, null, 2)
+          );
+          break;
+        }
         // Try to extract as vector first
         const vector = extractVectorParameter(arg);
         if (vector) {

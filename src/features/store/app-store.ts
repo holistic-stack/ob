@@ -832,7 +832,7 @@ export const createAppStore = (
                 editor: { isDirty: store.getState().editor.isDirty },
                 parsing: { isLoading: store.getState().parsing.isLoading },
                 babylonRendering: {
-                  isInitialized: store.getState().babylonRendering.engine.isInitialized,
+                  isInitialized: store.getState().babylonRendering.engine?.isInitialized || false,
                   isRendering: store.getState().babylonRendering.isRendering,
                 },
               };
@@ -850,7 +850,7 @@ export const createAppStore = (
                     editor: { isDirty: state.editor.isDirty },
                     parsing: { isLoading: state.parsing.isLoading },
                     babylonRendering: {
-                      isInitialized: state.babylonRendering.engine.isInitialized,
+                      isInitialized: state.babylonRendering.engine?.isInitialized || false,
                       isRendering: state.babylonRendering.isRendering,
                     },
                   });

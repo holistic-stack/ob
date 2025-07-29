@@ -11,7 +11,7 @@ import { MeshBuilder, StandardMaterial } from '@babylonjs/core';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 
-import type { ASTNode, SourceLocation } from '../../../openscad-parser/ast/ast-types';
+import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
 import {
   type BabylonJSError,
   BabylonJSNode,

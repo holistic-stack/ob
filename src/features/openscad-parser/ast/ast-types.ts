@@ -364,10 +364,10 @@ export interface CubeNode extends BaseNode {
  */
 export interface SphereNode extends BaseNode {
   type: 'sphere';
-  r?: number;
-  d?: number;
-  radius?: number;
-  diameter?: number;
+  r?: number | string; // Support parameter references
+  d?: number | string; // Support parameter references
+  radius?: number | string; // Support parameter references
+  diameter?: number | string; // Support parameter references
   $fn?: number;
   $fa?: number;
   $fs?: number;
@@ -378,13 +378,13 @@ export interface SphereNode extends BaseNode {
  * @description Represents a `cylinder()` primitive in OpenSCAD.
  *
  * @property {'cylinder'} type - The node type.
- * @property {number} h - The height of the cylinder.
- * @property {number} [r] - The radius of the cylinder.
- * @property {number} [r1] - The bottom radius of the cylinder.
- * @property {number} [r2] - The top radius of the cylinder.
- * @property {number} [d] - The diameter of the cylinder.
- * @property {number} [d1] - The bottom diameter of the cylinder.
- * @property {number} [d2] - The top diameter of the cylinder.
+ * @property {number | string} h - The height of the cylinder. Can be a parameter reference.
+ * @property {number | string} [r] - The radius of the cylinder. Can be a parameter reference.
+ * @property {number | string} [r1] - The bottom radius of the cylinder. Can be a parameter reference.
+ * @property {number | string} [r2] - The top radius of the cylinder. Can be a parameter reference.
+ * @property {number | string} [d] - The diameter of the cylinder. Can be a parameter reference.
+ * @property {number | string} [d1] - The bottom diameter of the cylinder. Can be a parameter reference.
+ * @property {number | string} [d2] - The top diameter of the cylinder. Can be a parameter reference.
  * @property {boolean} [center] - Whether the cylinder is centered at the origin.
  * @property {number} [$fn] - Number of fragments for cylinder resolution.
  * @property {number} [$fa] - Fragment angle for cylinder resolution.
@@ -392,13 +392,13 @@ export interface SphereNode extends BaseNode {
  */
 export interface CylinderNode extends BaseNode {
   type: 'cylinder';
-  h: number;
-  r?: number;
-  r1?: number;
-  r2?: number;
-  d?: number;
-  d1?: number;
-  d2?: number;
+  h: number | string;
+  r?: number | string;
+  r1?: number | string;
+  r2?: number | string;
+  d?: number | string;
+  d1?: number | string;
+  d2?: number | string;
   center?: boolean;
   $fn?: number;
   $fa?: number;
@@ -563,12 +563,12 @@ export interface ErrorHandler {
  * @description Represents a `translate()` transformation in OpenSCAD.
  *
  * @property {'translate'} type - The node type.
- * @property {number[]} v - The translation vector [x, y, z].
+ * @property {number[] | VectorExpressionNode} v - The translation vector [x, y, z] or a vector expression with identifiers.
  * @property {ASTNode[]} [children] - The child nodes to transform.
  */
 export interface TranslateNode extends BaseNode {
   type: 'translate';
-  v: number[];
+  v: number[] | VectorExpressionNode;
   children?: ASTNode[];
 }
 

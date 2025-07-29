@@ -65,6 +65,7 @@ import { extractArguments } from './argument-extractor.js';
 import {
   extractBooleanParameter,
   extractNumberParameter,
+  extractNumberParameterOrReference,
   extractVectorParameter,
 } from './parameter-extractor.js';
 
@@ -154,8 +155,8 @@ export function extractCubeNode(
           size = 1; // Explicitly re-assign default.
         }
       } else {
-        // If not a vector, attempt to extract as a single number (scalar size).
-        const numberValue = arg ? extractNumberParameter(arg, errorHandler) : null;
+        // If not a vector, attempt to extract as a single number or preserve parameter reference (scalar size).
+        const numberValue = arg ? extractNumberParameterOrReference(arg, errorHandler) : null;
         if (numberValue !== null) {
           size = numberValue;
         } else {

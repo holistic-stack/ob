@@ -85,12 +85,12 @@ function convertExtractedValueToParameterValue(
     return convertValueToParameterValue(value);
   }
 
-  // Default fallback
-  return {
-    type: 'expression',
-    expressionType: 'literal',
-    value: '',
-  } as ast.LiteralNode;
+  // Default fallback - return null instead of empty literal to avoid empty values
+  console.log(
+    `[convertExtractedValueToParameterValue] WARN - Unhandled value type, returning null:`,
+    value
+  );
+  return null;
 }
 
 /**
@@ -99,8 +99,42 @@ function convertExtractedValueToParameterValue(
  * @returns A ParameterValue object
  */
 function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
+  console.log(
+    `[base-ast-visitor convertValueToParameterValue] DEBUG - Converting value:`,
+    JSON.stringify(value, null, 2)
+  );
+  console.log(
+    `[base-ast-visitor convertValueToParameterValue] DEBUG - Stack trace:`,
+    new Error().stack
+  );
+
   if (value.type === 'number') {
-    return parseFloat(value.value as string);
+    const numericValue = value.value as string;
+    console.log(
+      `[base-ast-visitor convertValueToParameterValue] DEBUG - Number value: "${numericValue}", type: ${typeof numericValue}`
+    );
+
+    // Check for empty string due to Tree-sitter memory corruption
+    if (typeof numericValue === 'string' && numericValue.trim() === '') {
+      console.log(
+        `[base-ast-visitor convertValueToParameterValue] DEBUG - Number value is empty string, returning null`
+      );
+      return null;
+    }
+
+    const parsedValue = parseFloat(numericValue);
+    console.log(
+      `[base-ast-visitor convertValueToParameterValue] DEBUG - Parsed value: ${parsedValue}, isNaN: ${Number.isNaN(parsedValue)}`
+    );
+
+    if (Number.isNaN(parsedValue)) {
+      console.log(
+        `[base-ast-visitor convertValueToParameterValue] DEBUG - Parsed value is NaN, returning null`
+      );
+      return null;
+    }
+
+    return parsedValue;
   } else if (value.type === 'boolean') {
     return value.value === 'true';
   } else if (value.type === 'string') {
@@ -108,19 +142,66 @@ function convertValueToParameterValue(value: ast.Value): ast.ParameterValue {
   } else if (value.type === 'identifier') {
     return value.value as string;
   } else if (value.type === 'vector') {
-    const vectorValues = (value.value as ast.Value[]).map((v) => {
-      if (v.type === 'number') {
-        return parseFloat(v.value as string);
-      }
-      return 0;
-    });
+    const vectorElements = value.value as ast.Value[];
 
-    if (vectorValues.length === 2) {
-      return vectorValues as ast.Vector2D;
-    } else if (vectorValues.length >= 3) {
-      return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+    // Check if any elements are identifiers that need to be preserved for parameter substitution
+    const hasIdentifiers = vectorElements.some((v) => v.type === 'identifier');
+
+    if (hasIdentifiers) {
+      // Create a vector expression node that preserves identifiers
+      const elements = vectorElements.map((v) => {
+        if (v.type === 'identifier') {
+          return {
+            type: 'expression',
+            expressionType: 'identifier',
+            name: v.value as string,
+          } as ast.IdentifierNode;
+        } else if (v.type === 'number') {
+          const numericValue = v.value;
+          if (numericValue === null || numericValue === undefined) {
+            return {
+              type: 'expression',
+              expressionType: 'literal',
+              value: 0,
+            } as ast.LiteralNode;
+          }
+          const parsedValue =
+            typeof numericValue === 'string' ? parseFloat(numericValue) : Number(numericValue);
+          return {
+            type: 'expression',
+            expressionType: 'literal',
+            value: Number.isNaN(parsedValue) ? 0 : parsedValue,
+          } as ast.LiteralNode;
+        }
+        // Default for other types
+        return {
+          type: 'expression',
+          expressionType: 'literal',
+          value: 0,
+        } as ast.LiteralNode;
+      });
+
+      return {
+        type: 'expression',
+        expressionType: 'vector',
+        elements: elements,
+      } as ast.VectorExpressionNode;
+    } else {
+      // All elements are numeric, convert to simple vector
+      const vectorValues = vectorElements.map((v) => {
+        if (v.type === 'number') {
+          return parseFloat(v.value as string);
+        }
+        return 0;
+      });
+
+      if (vectorValues.length === 2) {
+        return vectorValues as ast.Vector2D;
+      } else if (vectorValues.length >= 3) {
+        return [vectorValues[0], vectorValues[1], vectorValues[2]] as ast.Vector3D;
+      }
+      return 0; // Default fallback
     }
-    return 0; // Default fallback
   } else if (value.type === 'range') {
     // Create an expression node for range
     return {
@@ -294,21 +375,12 @@ export abstract class BaseASTVisitor implements ASTVisitor {
     const argsNode = node.childForFieldName('arguments');
     const extractedArgs = argsNode ? extractArguments(argsNode, undefined, this.source) : [];
 
-    // Convert ExtractedParameter[] to Parameter[]
+    // The extractedArgs are already ast.Parameter[] with proper values
     const args: ast.Parameter[] = extractedArgs.map((arg) => {
-      if ('name' in arg) {
-        // Named argument
-        return {
-          name: arg.name,
-          value: convertExtractedValueToParameterValue(arg.value as unknown as ExtractedParameter),
-        };
-      } else {
-        // Positional argument
-        return {
-          name: '', // Positional arguments have an empty name
-          value: convertExtractedValueToParameterValue(arg as ExtractedParameter),
-        };
-      }
+      return {
+        name: arg.name || undefined, // Use undefined for positional arguments instead of empty string
+        value: arg.value, // Use the value directly as it's already properly converted
+      };
     });
     // Process based on function name
     let astNode = this.createASTNodeForFunction(node, functionName, args);

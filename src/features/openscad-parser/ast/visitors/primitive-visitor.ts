@@ -69,6 +69,7 @@ import { extractCubeNode } from '../extractors/cube-extractor.js';
 import {
   extractBooleanParameter,
   extractNumberParameter,
+  extractNumberParameterOrReference,
   extractVectorParameter,
 } from '../extractors/parameter-extractor.js';
 import { extractSphereNode } from '../extractors/sphere-extractor.js';
@@ -412,8 +413,8 @@ export class PrimitiveVisitor extends BaseASTVisitor {
               // No-op: This block was for debugging and had an empty statement.
             }
           } else {
-            // If not a vector, try to extract as a number
-            const sizeValue = extractNumberParameter(arg);
+            // If not a vector, try to extract as a number or preserve parameter reference
+            const sizeValue = extractNumberParameterOrReference(arg);
             if (sizeValue !== null) {
               size = sizeValue;
             } else {
@@ -544,9 +545,9 @@ export class PrimitiveVisitor extends BaseASTVisitor {
    */
   private createCylinderNode(node: TSNode, args: ast.Parameter[]): ast.CylinderNode | null {
     // Default values
-    let height = 1;
-    let radius1 = 1;
-    let radius2 = 1;
+    let height: number | string = 1;
+    let radius1: number | string = 1;
+    let radius2: number | string = 1;
     let center = false;
     let fa: number | undefined;
     let fs: number | undefined;
@@ -555,13 +556,13 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     // Extract height parameter
     const heightParam = args.find((arg) => arg.name === undefined || arg.name === 'h');
     if (heightParam) {
-      const heightValue = extractNumberParameter(heightParam);
+      const heightValue = extractNumberParameterOrReference(heightParam);
       if (heightValue !== null) {
         height = heightValue;
       }
     } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
       // Handle case where height is provided as the first positional parameter
-      const heightValue = extractNumberParameter(args[0]);
+      const heightValue = extractNumberParameterOrReference(args[0]);
       if (heightValue !== null) {
         height = heightValue;
       }
@@ -570,26 +571,40 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     // Handle diameter parameters first (they take precedence over radius)
     const diameterParam = args.find((arg) => arg.name === 'd');
     if (diameterParam) {
-      const diameterValue = extractNumberParameter(diameterParam);
+      const diameterValue = extractNumberParameterOrReference(diameterParam);
       if (diameterValue !== null) {
-        radius1 = diameterValue / 2;
-        radius2 = diameterValue / 2;
+        if (typeof diameterValue === 'number') {
+          radius1 = diameterValue / 2;
+          radius2 = diameterValue / 2;
+        } else {
+          // For string identifiers, we'll need to handle division during parameter substitution
+          radius1 = diameterValue;
+          radius2 = diameterValue;
+        }
       }
     }
 
     const diameter1Param = args.find((arg) => arg.name === 'd1');
     if (diameter1Param) {
-      const diameter1Value = extractNumberParameter(diameter1Param);
+      const diameter1Value = extractNumberParameterOrReference(diameter1Param);
       if (diameter1Value !== null) {
-        radius1 = diameter1Value / 2;
+        if (typeof diameter1Value === 'number') {
+          radius1 = diameter1Value / 2;
+        } else {
+          radius1 = diameter1Value;
+        }
       }
     }
 
     const diameter2Param = args.find((arg) => arg.name === 'd2');
     if (diameter2Param) {
-      const diameter2Value = extractNumberParameter(diameter2Param);
+      const diameter2Value = extractNumberParameterOrReference(diameter2Param);
       if (diameter2Value !== null) {
-        radius2 = diameter2Value / 2;
+        if (typeof diameter2Value === 'number') {
+          radius2 = diameter2Value / 2;
+        } else {
+          radius2 = diameter2Value;
+        }
       }
     }
 
@@ -597,14 +612,14 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     if (!diameterParam && !diameter1Param && !diameter2Param) {
       const radiusParam = args.find((arg) => arg.name === 'r');
       if (radiusParam) {
-        const radiusValue = extractNumberParameter(radiusParam);
+        const radiusValue = extractNumberParameterOrReference(radiusParam);
         if (radiusValue !== null) {
           radius1 = radiusValue;
           radius2 = radiusValue;
         }
       } else if (args.length >= 2 && args[1] && args[1].name === undefined) {
         // Handle case where radius is provided as the second positional parameter
-        const radiusValue = extractNumberParameter(args[1]);
+        const radiusValue = extractNumberParameterOrReference(args[1]);
         if (radiusValue !== null) {
           radius1 = radiusValue;
           radius2 = radiusValue;
@@ -614,7 +629,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       // Check for specific radius1 and radius2 parameters (override general radius)
       const radius1Param = args.find((arg) => arg.name === 'r1');
       if (radius1Param) {
-        const radius1Value = extractNumberParameter(radius1Param);
+        const radius1Value = extractNumberParameterOrReference(radius1Param);
         if (radius1Value !== null) {
           radius1 = radius1Value;
         }
@@ -622,7 +637,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
       const radius2Param = args.find((arg) => arg.name === 'r2');
       if (radius2Param) {
-        const radius2Value = extractNumberParameter(radius2Param);
+        const radius2Value = extractNumberParameterOrReference(radius2Param);
         if (radius2Value !== null) {
           radius2 = radius2Value;
         }

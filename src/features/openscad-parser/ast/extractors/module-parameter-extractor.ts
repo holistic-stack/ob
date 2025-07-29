@@ -193,28 +193,49 @@ export function extractModuleParametersFromText(paramsText: string): ast.ModuleP
  * @function extractDefaultValue
  * @description Extracts the default value from a Tree-sitter `default_value` node.
  * It handles various literal types (numbers, strings, booleans) and array literals.
+ * Returns proper AST node structures for module parameter binding.
  *
  * @param {TSNode} defaultValueNode - The Tree-sitter node representing the default value.
- * @returns {ast.ParameterValue} The extracted default value.
+ * @returns {ast.ParameterValue} The extracted default value as an AST node.
  */
 function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
   // Handle different types of default values
   switch (defaultValueNode.type) {
     case 'number':
-      return parseFloat(defaultValueNode.text);
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: parseFloat(defaultValueNode.text),
+        location: getLocation(defaultValueNode),
+      } as ast.LiteralNode;
 
     case 'string':
       // Remove quotes from string
-      return defaultValueNode.text.replace(/^["']|["']$/g, '');
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: defaultValueNode.text.replace(/^["']|["']$/g, ''),
+        location: getLocation(defaultValueNode),
+      } as ast.LiteralNode;
 
     case 'true':
-      return true;
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: true,
+        location: getLocation(defaultValueNode),
+      } as ast.LiteralNode;
 
     case 'false':
-      return false;
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: false,
+        location: getLocation(defaultValueNode),
+      } as ast.LiteralNode;
 
     case 'array_literal':
-      return extractArrayLiteral(defaultValueNode);
+      return extractArrayLiteralAsExpression(defaultValueNode);
 
     case 'expression':
       return {
@@ -222,11 +243,16 @@ function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
         expressionType: 'literal',
         value: defaultValueNode.text,
         location: getLocation(defaultValueNode),
-      };
+      } as ast.LiteralNode;
 
     default:
-      // For other types, return the text as is
-      return defaultValueNode.text;
+      // For other types, return as literal expression
+      return {
+        type: 'expression',
+        expressionType: 'literal',
+        value: defaultValueNode.text,
+        location: getLocation(defaultValueNode),
+      } as ast.LiteralNode;
   }
 }
 
@@ -266,6 +292,66 @@ function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
     // Default to [0, 0, 0] if no valid values found
     return [0, 0, 0] as ast.Vector3D;
   }
+}
+
+/**
+ * @function extractArrayLiteralAsExpression
+ * @description Extracts values from a Tree-sitter `array_literal` node and converts them into a VectorExpressionNode.
+ * This function returns proper AST node structures for module parameter binding.
+ *
+ * @param {TSNode} arrayNode - The Tree-sitter node representing the array literal.
+ * @returns {ast.VectorExpressionNode} The extracted array values as a VectorExpressionNode.
+ */
+function extractArrayLiteralAsExpression(arrayNode: TSNode): ast.VectorExpressionNode {
+  const elements: ast.ExpressionNode[] = [];
+
+  // Process each element in the array
+  for (let i = 0; i < arrayNode.namedChildCount; i++) {
+    const elementNode = arrayNode.namedChild(i);
+    if (!elementNode) continue;
+
+    if (elementNode.type === 'number') {
+      elements.push({
+        type: 'expression',
+        expressionType: 'literal',
+        value: parseFloat(elementNode.text),
+        location: getLocation(elementNode),
+      } as ast.LiteralNode);
+    } else if (elementNode.type === 'expression' && elementNode.text.match(/^-?\d+(\.\d+)?$/)) {
+      // Handle expressions that are just numbers
+      elements.push({
+        type: 'expression',
+        expressionType: 'literal',
+        value: parseFloat(elementNode.text),
+        location: getLocation(elementNode),
+      } as ast.LiteralNode);
+    } else {
+      // For other types, create a literal with the text value
+      elements.push({
+        type: 'expression',
+        expressionType: 'literal',
+        value: elementNode.text,
+        location: getLocation(elementNode),
+      } as ast.LiteralNode);
+    }
+  }
+
+  // Ensure we have at least 3 elements for a 3D vector
+  while (elements.length < 3) {
+    elements.push({
+      type: 'expression',
+      expressionType: 'literal',
+      value: 0,
+      location: getLocation(arrayNode),
+    } as ast.LiteralNode);
+  }
+
+  return {
+    type: 'expression',
+    expressionType: 'vector',
+    elements: elements,
+    location: getLocation(arrayNode),
+  } as ast.VectorExpressionNode;
 }
 
 /**

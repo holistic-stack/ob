@@ -201,18 +201,21 @@ export class OpenscadParser {
    */
   private applyGrammarWorkarounds(code: string, initialAST: ASTNode[]): ASTNode[] {
     try {
+      // First, fix module body truncation by moving misplaced statements
+      const enhancedAST = this.fixModuleBodyTruncation(code, initialAST);
+
       // Check if Tree-sitter has truncated the input by comparing expected vs actual statements
       const expectedStatements = this.countExpectedStatements(code);
-      const actualStatements = initialAST.length;
+      const actualStatements = enhancedAST.length;
       const hasTruncatedParsing = actualStatements < expectedStatements;
 
       // If Tree-sitter truncated the input, use line-by-line parsing fallback
       if (hasTruncatedParsing) {
-        return this.parseLineByLineFallbackWithStandalonePrimitives(code, initialAST);
+        return this.parseLineByLineFallbackWithStandalonePrimitives(code, enhancedAST);
       }
 
       // Check if we need to apply workarounds by looking for incomplete transform nodes
-      const hasIncompleteTransforms = initialAST.some(
+      const hasIncompleteTransforms = enhancedAST.some(
         (node) =>
           this.isTransformNode(node) &&
           'children' in node &&
@@ -222,11 +225,11 @@ export class OpenscadParser {
 
       if (!hasIncompleteTransforms) {
         // No workarounds needed
-        return initialAST;
+        return enhancedAST;
       }
 
       // Apply the transform-primitive association workaround
-      return this.associateTransformsWithPrimitives(code, initialAST);
+      return this.associateTransformsWithPrimitives(code, enhancedAST);
     } catch (error) {
       // If workarounds fail, return the original AST
       console.error('[ERROR][OpenscadParser] Grammar workaround failed:', error);
@@ -249,10 +252,249 @@ export class OpenscadParser {
   }
 
   /**
+   * @method fixModuleBodyTruncation
+   * @description Fixes module body truncation by moving statements that should be inside module bodies
+   * from the top level to their correct location within the module.
+   *
+   * @param {string} code - The original OpenSCAD source code.
+   * @param {ASTNode[]} ast - The initial AST to fix.
+   * @returns {ASTNode[]} The fixed AST with statements moved to correct module bodies.
+   * @private
+   */
+  private fixModuleBodyTruncation(code: string, ast: ASTNode[]): ASTNode[] {
+    try {
+      console.log('[DEBUG] fixModuleBodyTruncation called with AST length:', ast.length);
+
+      // Find module definitions in the AST
+      const moduleNodes = ast.filter((node) => node.type === 'module_definition');
+      console.log('[DEBUG] Found module nodes:', moduleNodes.length);
+
+      if (moduleNodes.length === 0) {
+        return ast; // No modules to fix
+      }
+
+      // For each module, check if there are statements that should be in its body
+      const fixedAST = [...ast];
+
+      for (const moduleNode of moduleNodes) {
+        if (
+          moduleNode.type === 'module_definition' &&
+          'body' in moduleNode &&
+          Array.isArray(moduleNode.body)
+        ) {
+          console.log('[DEBUG] Processing module:', moduleNode.name);
+          console.log('[DEBUG] Current module body length:', moduleNode.body.length);
+
+          // Find the module's location in the source code
+          const moduleLocation = moduleNode.location;
+          if (!moduleLocation) {
+            console.log('[DEBUG] No location for module, skipping');
+            continue;
+          }
+
+          // Extract the module's source code to analyze its expected body
+          const moduleSource = this.extractModuleSource(code, moduleLocation);
+          console.log('[DEBUG] Extracted module source:', moduleSource);
+          if (!moduleSource) continue;
+
+          // Count statements that should be in the module body
+          const expectedBodyStatements = this.countModuleBodyStatements(moduleSource);
+          const actualBodyStatements = moduleNode.body.length;
+          console.log(
+            '[DEBUG] Expected body statements:',
+            expectedBodyStatements,
+            'Actual:',
+            actualBodyStatements
+          );
+
+          if (actualBodyStatements < expectedBodyStatements) {
+            // Find statements that should be moved into this module
+            const statementsToMove = this.findStatementsToMoveToModule(
+              fixedAST,
+              moduleNode,
+              expectedBodyStatements - actualBodyStatements
+            );
+            console.log(
+              '[DEBUG] Statements to move:',
+              statementsToMove.length,
+              statementsToMove.map((s) => s.type)
+            );
+
+            // Move the statements into the module body
+            if (statementsToMove.length > 0) {
+              moduleNode.body.push(...statementsToMove);
+              console.log(
+                '[DEBUG] Added statements to module body. New length:',
+                moduleNode.body.length
+              );
+
+              // Remove the moved statements from the top level
+              for (const stmt of statementsToMove) {
+                const index = fixedAST.indexOf(stmt);
+                if (index > -1) {
+                  fixedAST.splice(index, 1);
+                  console.log('[DEBUG] Removed statement from top level at index:', index);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      console.log('[DEBUG] Final AST length after fix:', fixedAST.length);
+      return fixedAST;
+    } catch (error) {
+      console.error('[ERROR][OpenscadParser] Failed to fix module body truncation:', error);
+      return ast; // Return original AST if fixing fails
+    }
+  }
+
+  /**
+   * @method extractModuleSource
+   * @description Extracts the source code for a module definition based on its location.
+   *
+   * @param {string} code - The full source code.
+   * @param {SourceLocation} moduleLocation - The location of the module in the source.
+   * @returns {string | null} The module source code or null if extraction fails.
+   * @private
+   */
+  private extractModuleSource(code: string, moduleLocation: SourceLocation): string | null {
+    try {
+      const lines = code.split('\n');
+      const startLine = moduleLocation.start.line;
+      const endLine = moduleLocation.end.line;
+
+      if (startLine < 0 || endLine >= lines.length || startLine > endLine) {
+        return null;
+      }
+
+      // Extract the module lines
+      const moduleLines = lines.slice(startLine, endLine + 1);
+      return moduleLines.join('\n');
+    } catch (error) {
+      console.error('[ERROR][OpenscadParser] Failed to extract module source:', error);
+      return null;
+    }
+  }
+
+  /**
+   * @method countModuleBodyStatements
+   * @description Counts the expected number of statements in a module body.
+   *
+   * @param {string} moduleSource - The module source code.
+   * @returns {number} The expected number of statements in the module body.
+   * @private
+   */
+  private countModuleBodyStatements(moduleSource: string): number {
+    try {
+      // Find the opening brace of the module body
+      const openBraceIndex = moduleSource.indexOf('{');
+      if (openBraceIndex === -1) {
+        return 0;
+      }
+
+      // Extract the body content (everything between braces)
+      const bodyStart = openBraceIndex + 1;
+      const closeBraceIndex = moduleSource.lastIndexOf('}');
+      if (closeBraceIndex === -1 || closeBraceIndex <= bodyStart) {
+        return 0;
+      }
+
+      const bodyContent = moduleSource.substring(bodyStart, closeBraceIndex).trim();
+      if (!bodyContent) {
+        return 0;
+      }
+
+      // Count statements by counting semicolons and transform statements
+      let statementCount = 0;
+
+      // Count semicolon-terminated statements
+      const semicolonMatches = bodyContent.match(/;/g);
+      if (semicolonMatches) {
+        statementCount += semicolonMatches.length;
+      }
+
+      return statementCount;
+    } catch (error) {
+      console.error('[ERROR][OpenscadParser] Failed to count module body statements:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * @method findStatementsToMoveToModule
+   * @description Finds statements that should be moved from the top level into a module body.
+   *
+   * @param {ASTNode[]} ast - The current AST.
+   * @param {ASTNode} moduleNode - The module node to move statements into.
+   * @param {number} expectedCount - The number of statements expected to be moved.
+   * @returns {ASTNode[]} The statements that should be moved into the module.
+   * @private
+   */
+  private findStatementsToMoveToModule(
+    ast: ASTNode[],
+    moduleNode: ASTNode,
+    expectedCount: number
+  ): ASTNode[] {
+    try {
+      const statementsToMove: ASTNode[] = [];
+
+      // Find the index of the module in the AST
+      const moduleIndex = ast.indexOf(moduleNode);
+      if (moduleIndex === -1) {
+        return statementsToMove;
+      }
+
+      // Look for statements immediately following the module that should be part of its body
+      for (
+        let i = moduleIndex + 1;
+        i < ast.length && statementsToMove.length < expectedCount;
+        i++
+      ) {
+        const statement = ast[i];
+
+        // Check if this statement should be part of the module body
+        // For now, we'll move transform statements and primitive statements
+        if (this.shouldMoveToModuleBody(statement)) {
+          statementsToMove.push(statement);
+        } else {
+          // Stop if we encounter a statement that shouldn't be in the module
+          break;
+        }
+      }
+
+      return statementsToMove;
+    } catch (error) {
+      console.error('[ERROR][OpenscadParser] Failed to find statements to move:', error);
+      return [];
+    }
+  }
+
+  /**
+   * @method shouldMoveToModuleBody
+   * @description Determines if a statement should be moved into a module body.
+   *
+   * @param {ASTNode} statement - The statement to check.
+   * @returns {boolean} True if the statement should be moved to module body.
+   * @private
+   */
+  private shouldMoveToModuleBody(statement: ASTNode): boolean {
+    // Move transform statements and primitive statements
+    return (
+      this.isTransformNode(statement) ||
+      this.isPrimitiveNode(statement) ||
+      statement.type === 'sphere' ||
+      statement.type === 'cube' ||
+      statement.type === 'cylinder'
+    );
+  }
+
+  /**
    * @method countExpectedStatements
-   * @description Counts the expected number of statements in the code to detect parsing truncation by Tree-sitter.
+   * @description Counts the expected number of top-level statements in the code to detect parsing truncation by Tree-sitter.
+   * This method only counts statements at the top level, not statements inside module bodies.
    * @param {string} code - The OpenSCAD code.
-   * @returns {number} The expected number of statements.
+   * @returns {number} The expected number of top-level statements.
    * @private
    */
   private countExpectedStatements(code: string): number {
@@ -270,8 +512,10 @@ export class OpenscadParser {
       // Split by lines and count statements
       const lines = code.split('\n');
       let statementCount = 0;
-      let insideBlock = false;
+      let insideModuleBlock = false;
+      let insideOtherBlock = false;
       let braceDepth = 0;
+      let moduleDepth = 0;
 
       for (const line of lines) {
         const trimmedLine = line.trim();
@@ -281,37 +525,62 @@ export class OpenscadParser {
           continue;
         }
 
+        // Check if this line starts a module definition
+        const isModuleStart = trimmedLine.match(/^module\s+\w+\s*\([^)]*\)\s*\{?/);
+
         // Track brace depth to detect if we're inside a block
         for (const char of trimmedLine) {
           if (char === '{') {
             braceDepth++;
-            insideBlock = true;
+            if (isModuleStart) {
+              moduleDepth++;
+              insideModuleBlock = true;
+            } else if (braceDepth > moduleDepth) {
+              insideOtherBlock = true;
+            }
           } else if (char === '}') {
             braceDepth--;
+            if (braceDepth < moduleDepth) {
+              moduleDepth = braceDepth;
+              if (moduleDepth === 0) {
+                insideModuleBlock = false;
+              }
+            }
             if (braceDepth === 0) {
-              insideBlock = false;
+              insideOtherBlock = false;
             }
           }
         }
 
-        // Only count top-level statements (not inside blocks)
-        if (!insideBlock && braceDepth === 0) {
-          // Count statements ending with semicolon
-          if (trimmedLine.endsWith(';')) {
-            statementCount++;
-            console.log('[DEBUG] Counted semicolon statement:', trimmedLine);
-          }
+        // Count only top-level statements (not statements inside module bodies)
+        const shouldCount = !insideModuleBlock && !insideOtherBlock;
 
-          // Count transform statements (even without semicolon)
-          if (trimmedLine.match(/^(translate|rotate|scale|mirror|multmatrix|color|offset)\s*\(/)) {
+        if (shouldCount) {
+          // Count module definitions
+          if (isModuleStart) {
             statementCount++;
-            console.log('[DEBUG] Counted transform statement:', trimmedLine);
+            console.log('[DEBUG] Counted top-level module definition:', trimmedLine);
           }
-
-          // Count block statements
-          if (trimmedLine.match(/^(union|difference|intersection|hull|minkowski)\s*\(/)) {
+          // Count statements ending with semicolon (but avoid double-counting transforms)
+          else if (trimmedLine.endsWith(';')) {
             statementCount++;
-            console.log('[DEBUG] Counted block statement:', trimmedLine);
+            console.log('[DEBUG] Counted top-level semicolon statement:', trimmedLine);
+          }
+          // Count transform statements only if they don't end with semicolon (to avoid double-counting)
+          else if (
+            trimmedLine.match(/^(translate|rotate|scale|mirror|multmatrix|color|offset)\s*\(/) &&
+            !trimmedLine.endsWith(';')
+          ) {
+            statementCount++;
+            console.log('[DEBUG] Counted top-level transform statement:', trimmedLine);
+          }
+          // Count block statements only if they don't end with semicolon (to avoid double-counting)
+          else if (
+            trimmedLine.match(/^(union|difference|intersection|hull|minkowski)\s*\(/) &&
+            !trimmedLine.endsWith(';')
+          ) {
+            statementCount++;
+            console.log('[DEBUG] Counted top-level block statement:', trimmedLine);
           }
         }
       }
@@ -672,7 +941,7 @@ export class OpenscadParser {
    * @private
    */
   private createSyntheticCube(location: SourceLocation, sourceLine?: string): ASTNode {
-    let size: number | [number, number, number] = 1; // default (OpenSCAD standard)
+    let size: number | [number, number, number] | string = 1; // default (OpenSCAD standard)
     let center = false; // default
 
     if (sourceLine) {
@@ -699,13 +968,19 @@ export class OpenscadParser {
               const z = parseFloat(components[2] || '0');
               if (!Number.isNaN(x) && !Number.isNaN(y) && !Number.isNaN(z)) {
                 size = [x, y, z];
+              } else {
+                // If any component is not a number, treat as variable reference
+                size = sizeParam;
               }
             }
           } else {
-            // Scalar size
+            // Scalar size - check if it's a number or variable
             const scalarSize = parseFloat(sizeParam);
             if (!Number.isNaN(scalarSize)) {
               size = scalarSize;
+            } else {
+              // Keep as variable reference
+              size = sizeParam;
             }
           }
 
@@ -739,7 +1014,7 @@ export class OpenscadParser {
    * @private
    */
   private createSyntheticSphere(location: SourceLocation, sourceLine?: string): ASTNode {
-    let radius = 5; // default
+    let radius: number | string = 5; // default
 
     if (sourceLine) {
       try {
@@ -752,6 +1027,9 @@ export class OpenscadParser {
           const parsedRadius = parseFloat(radiusParam);
           if (!Number.isNaN(parsedRadius)) {
             radius = parsedRadius;
+          } else {
+            // Keep as variable reference
+            radius = radiusParam;
           }
         }
       } catch (error) {

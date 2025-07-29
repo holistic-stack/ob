@@ -469,12 +469,51 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.TranslateNode {
-    // Extract vector parameter
-    let vector: [number, number, number] = [0, 0, 0];
+    // Extract vector parameter - preserve original structure for parameter substitution
+    let vector: any = [0, 0, 0]; // Default fallback
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
 
     if (vectorParam?.value) {
-      if (Array.isArray(vectorParam.value) && vectorParam.value.length >= 2) {
+      // Debug: Log the actual structure of vectorParam.value
+      this.errorHandler.logInfo(
+        `[ModuleVisitor.createTranslateNode] DEBUG - vectorParam.value structure: ${JSON.stringify(vectorParam.value, null, 2)}`,
+        'ModuleVisitor.createTranslateNode',
+        node
+      );
+      this.errorHandler.logInfo(
+        `[ModuleVisitor.createTranslateNode] DEBUG - vectorParam.value.type: ${vectorParam.value?.type}`,
+        'ModuleVisitor.createTranslateNode',
+        node
+      );
+      this.errorHandler.logInfo(
+        `[ModuleVisitor.createTranslateNode] DEBUG - vectorParam.value.expressionType: ${vectorParam.value?.expressionType}`,
+        'ModuleVisitor.createTranslateNode',
+        node
+      );
+      this.errorHandler.logInfo(
+        `[ModuleVisitor.createTranslateNode] DEBUG - Is VectorExpressionNode?: ${vectorParam.value?.type === 'expression' && vectorParam.value?.expressionType === 'vector'}`,
+        'ModuleVisitor.createTranslateNode',
+        node
+      );
+
+      // Check if the value is a VectorExpressionNode with identifiers
+      if (
+        typeof vectorParam.value === 'object' &&
+        vectorParam.value !== null &&
+        'type' in vectorParam.value &&
+        vectorParam.value.type === 'expression' &&
+        'expressionType' in vectorParam.value &&
+        vectorParam.value.expressionType === 'vector'
+      ) {
+        // Preserve the VectorExpressionNode for parameter substitution
+        vector = vectorParam.value;
+
+        this.errorHandler.logInfo(
+          `[ModuleVisitor.createTranslateNode] Preserving VectorExpressionNode for parameter substitution`,
+          'ModuleVisitor.createTranslateNode',
+          node
+        );
+      } else if (Array.isArray(vectorParam.value) && vectorParam.value.length >= 2) {
         if (vectorParam.value.length === 2) {
           // 2D vector, Z should default to 0
           // Ensure we're working with numbers
@@ -489,17 +528,35 @@ export class ModuleVisitor extends BaseASTVisitor {
           );
         } else {
           // 3D vector
-          // Ensure we're working with numbers
-          const x = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 0;
-          const y = typeof vectorParam.value[1] === 'number' ? vectorParam.value[1] : 0;
-          const z = typeof vectorParam.value[2] === 'number' ? vectorParam.value[2] : 0;
-          vector = [x, y, z];
-
-          this.errorHandler.logInfo(
-            `[ModuleVisitor.createTranslateNode] Using 3D vector [${x}, ${y}, ${z}]`,
-            'ModuleVisitor.createTranslateNode',
-            node
+          // Check if elements are identifiers (preserve them) or numbers (use them)
+          const elements = vectorParam.value.slice(0, 3); // Take first 3 elements
+          const hasIdentifiers = elements.some(
+            (el) =>
+              typeof el === 'object' && el !== null && 'type' in el && el.type === 'identifier'
           );
+
+          if (hasIdentifiers) {
+            // Preserve the array with identifiers for parameter substitution
+            vector = elements;
+
+            this.errorHandler.logInfo(
+              `[ModuleVisitor.createTranslateNode] Preserving vector with identifiers for parameter substitution`,
+              'ModuleVisitor.createTranslateNode',
+              node
+            );
+          } else {
+            // All elements are numbers, use them directly
+            const x = typeof elements[0] === 'number' ? elements[0] : 0;
+            const y = typeof elements[1] === 'number' ? elements[1] : 0;
+            const z = typeof elements[2] === 'number' ? elements[2] : 0;
+            vector = [x, y, z];
+
+            this.errorHandler.logInfo(
+              `[ModuleVisitor.createTranslateNode] Using 3D vector [${x}, ${y}, ${z}]`,
+              'ModuleVisitor.createTranslateNode',
+              node
+            );
+          }
         }
       } else if (typeof vectorParam.value === 'number') {
         // Handle case where a single number is provided
@@ -514,16 +571,7 @@ export class ModuleVisitor extends BaseASTVisitor {
       }
     }
 
-    // For testing purposes, hardcode some values based on the node text
-    if (node.text.includes('[1, 2, 3]')) {
-      vector = [1, 2, 3];
-    } else if (node.text.includes('[1,0,0]')) {
-      vector = [1, 0, 0];
-    } else if (node.text.includes('v=[3,0,0]')) {
-      vector = [3, 0, 0];
-    } else if (node.text.includes('[0,0,10]')) {
-      vector = [0, 0, 10];
-    }
+    // Removed hardcoded test values to allow proper VectorExpressionNode processing
 
     // Special handling for test cases
     if (children.length === 0) {
@@ -538,7 +586,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
     return {
       type: 'translate',
-      v: vector, // Use v property to match the TranslateNode interface
+      v: vector, // Preserve original structure (may contain identifiers)
       children,
       location: getLocation(node),
     };
