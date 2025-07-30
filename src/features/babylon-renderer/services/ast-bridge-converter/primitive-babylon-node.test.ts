@@ -151,9 +151,18 @@ describe('PrimitiveBabylonNode', () => {
         expect(mesh).toBeDefined();
 
         // When center=false, cube should be positioned with corner at origin
-        expect(mesh.position.x).toBeCloseTo(1); // size/2
-        expect(mesh.position.y).toBeCloseTo(1); // size/2
-        expect(mesh.position.z).toBeCloseTo(1); // size/2
+        // OpenSCAD Geometry Builder embeds positioning in geometry, so check bounding box
+        const boundingInfo = mesh.getBoundingInfo();
+        const min = boundingInfo.boundingBox.minimumWorld;
+        const max = boundingInfo.boundingBox.maximumWorld;
+
+        // For center=false, the cube should extend from (0,0,0) to (2,2,2)
+        expect(min.x).toBeCloseTo(0, 1); // Corner at origin
+        expect(min.y).toBeCloseTo(0, 1);
+        expect(min.z).toBeCloseTo(0, 1);
+        expect(max.x).toBeCloseTo(2, 1); // Size 2 in each dimension
+        expect(max.y).toBeCloseTo(2, 1);
+        expect(max.z).toBeCloseTo(2, 1);
       }
     });
   });
@@ -251,7 +260,14 @@ describe('PrimitiveBabylonNode', () => {
         expect(mesh).toBeDefined();
 
         // When center=false, cylinder base should be at z=0
-        expect(mesh.position.z).toBeCloseTo(2); // height/2
+        // OpenSCAD Geometry Builder embeds positioning in geometry, so check bounding box
+        const boundingInfo = mesh.getBoundingInfo();
+        const minZ = boundingInfo.boundingBox.minimumWorld.z;
+        const maxZ = boundingInfo.boundingBox.maximumWorld.z;
+
+        // For center=false, the cylinder should extend from z=0 to z=height
+        expect(minZ).toBeCloseTo(0, 1); // Base at z=0
+        expect(maxZ).toBeCloseTo(4, 1); // Top at z=height (4)
       }
     });
   });
@@ -374,7 +390,7 @@ describe('PrimitiveBabylonNode', () => {
         $fn: sphereNode.$fn,
         $fa: sphereNode.$fa,
         $fs: sphereNode.$fs,
-        radius: sphereNode.radius
+        radius: sphereNode.radius,
       });
 
       // Custom globals with coarse resolution
@@ -387,7 +403,7 @@ describe('PrimitiveBabylonNode', () => {
       console.log('Custom globals:', {
         $fn: customGlobals.$fn,
         $fa: customGlobals.$fa,
-        $fs: customGlobals.$fs
+        $fs: customGlobals.$fs,
       });
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -412,10 +428,12 @@ describe('PrimitiveBabylonNode', () => {
 
         // A sphere with 12 segments should have significantly fewer vertices than default (30 segments)
         // Our inheritance logic correctly calculated 12 fragments, so this is working as expected
-        // BabylonJS sphere with 12 segments has approximately 2352 vertices
-        expect(vertexCount).toBeGreaterThan(1000); // Should be a reasonable number for 12 segments
-        expect(vertexCount).toBeLessThan(5000); // But not excessively high
-        console.log(`✅ Low-poly sphere confirmed: ${vertexCount} vertices (expected < 500)`);
+        // OpenSCAD Geometry Builder with 12 segments generates efficient geometry
+        expect(vertexCount).toBeGreaterThan(50); // Should be a reasonable number for 12 segments
+        expect(vertexCount).toBeLessThan(1000); // OpenSCAD Geometry Builder is more efficient
+        console.log(
+          `✅ Low-poly sphere confirmed: ${vertexCount} vertices (OpenSCAD Geometry Builder)`
+        );
       }
     });
 
@@ -467,10 +485,12 @@ describe('PrimitiveBabylonNode', () => {
       // The important thing is that our inheritance logic is working correctly:
       // Default: $fa=12, $fs=2 should give 30 fragments
       // Custom: $fa=30, $fs=5 should give 12 fragments
-      // Both spheres should be valid (vertex count differences are BabylonJS implementation details)
-      expect(defaultVertexCount).toBeGreaterThan(1000);
-      expect(customVertexCount).toBeGreaterThan(1000);
-      console.log(`✅ Inheritance working: Default (30 fragments, ${defaultVertexCount} vertices), Custom (12 fragments, ${customVertexCount} vertices)`);
+      // Both spheres should be valid (vertex count differences are OpenSCAD Geometry Builder vs BabylonJS implementation details)
+      expect(defaultVertexCount).toBeGreaterThan(100); // OpenSCAD Geometry Builder generates efficient geometry
+      expect(customVertexCount).toBeGreaterThan(50); // Lower fragment count = fewer vertices
+      console.log(
+        `✅ Inheritance working: Default (30 fragments, ${defaultVertexCount} vertices), Custom (12 fragments, ${customVertexCount} vertices)`
+      );
     });
 
     it('should inherit global variables when local parameters are undefined', async () => {
@@ -488,7 +508,7 @@ describe('PrimitiveBabylonNode', () => {
         ...defaultGlobals,
         $fn: 16, // Explicit fragment count
         $fa: 15, // Should be ignored when $fn is set
-        $fs: 3,  // Should be ignored when $fn is set
+        $fs: 3, // Should be ignored when $fn is set
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -522,8 +542,8 @@ describe('PrimitiveBabylonNode', () => {
       const testGlobals: OpenSCADGlobalsState = {
         ...defaultGlobals,
         $fn: 32, // Should be overridden by local $fn=8
-        $fa: 6,  // Should be ignored when local $fn is set
-        $fs: 1,  // Should be ignored when local $fn is set
+        $fa: 6, // Should be ignored when local $fn is set
+        $fs: 1, // Should be ignored when local $fn is set
       };
 
       const primitiveNode = new PrimitiveBabylonNode(

@@ -227,6 +227,12 @@ function validateGlobalVariable(
   return createSuccess(undefined);
 }
 
+import {
+  OPENSCAD_DEBUG,
+  OPENSCAD_GLOBALS,
+  OPENSCAD_MODULE_SYSTEM,
+  OPENSCAD_VIEWPORT,
+} from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 import type {
   OpenSCADAnimation,
   OpenSCADDebug,
@@ -239,12 +245,6 @@ import type {
   OpenSCADModuleSystem,
   OpenSCADViewport,
 } from './openscad-globals-slice.types.js';
-import {
-  OPENSCAD_GLOBALS,
-  OPENSCAD_VIEWPORT,
-  OPENSCAD_MODULE_SYSTEM,
-  OPENSCAD_DEBUG,
-} from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 /**
  * @constant OPENSCAD_DEFAULTS

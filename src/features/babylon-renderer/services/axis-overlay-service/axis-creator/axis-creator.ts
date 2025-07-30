@@ -12,9 +12,9 @@ import {
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core';
+import { OPENSCAD_FALLBACK } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 import { createLogger } from '../../../../../shared/services/logger.service';
 import type { Result } from '../../../../../shared/types/result.types';
-import { OPENSCAD_FALLBACK } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
 
 const logger = createLogger('AxisCreator');
 

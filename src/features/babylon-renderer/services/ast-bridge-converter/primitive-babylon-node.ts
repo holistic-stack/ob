@@ -29,13 +29,13 @@ import {
   VertexData,
 } from '@babylonjs/core';
 import earcut from 'earcut';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { tryCatch } from '../../../../shared/utils/functional/result';
 import {
+  calculateFragments,
   OPENSCAD_FALLBACK,
   OPENSCAD_GLOBALS,
-  calculateFragments,
 } from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
+import { createLogger } from '../../../../shared/services/logger.service';
+import { tryCatch } from '../../../../shared/utils/functional/result';
 
 import type {
   ASTNode,
@@ -118,53 +118,51 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    * Generate proper BabylonJS mesh for the primitive type
    */
   async generateMesh(): Promise<NodeGenerationResult> {
-    return tryCatch(
-      () => {
-        if (!this.scene) {
-          throw this.createError('NO_SCENE', 'Scene is required for mesh generation');
-        }
+    try {
+      if (!this.scene) {
+        throw this.createError('NO_SCENE', 'Scene is required for mesh generation');
+      }
 
-        const mesh = this.createPrimitiveMesh();
+      const mesh = await this.createPrimitiveMesh();
 
-        // Set basic properties
-        mesh.id = `${this.name}_${Date.now()}`;
-        mesh.name = this.name;
+      // Set basic properties
+      mesh.id = `${this.name}_${Date.now()}`;
+      mesh.name = this.name;
 
-        // Add metadata
-        mesh.metadata = {
-          isPrimitive: true,
-          primitiveType: this.primitiveType,
-          parameters: this.parameters,
-          sourceLocation: this.sourceLocation,
-          generatedAt: new Date().toISOString(),
-        };
+      // Add metadata
+      mesh.metadata = {
+        isPrimitive: true,
+        primitiveType: this.primitiveType,
+        parameters: this.parameters,
+        sourceLocation: this.sourceLocation,
+        generatedAt: new Date().toISOString(),
+      };
 
-        // Apply default material for visibility
-        const defaultMaterial = new StandardMaterial(`${this.name}_default_material`, this.scene);
-        defaultMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Light gray (OpenSCAD default)
-        defaultMaterial.specularColor = new Color3(0.2, 0.2, 0.2); // Low specular for matte finish
-        mesh.material = defaultMaterial;
+      // Apply default material for visibility
+      const defaultMaterial = new StandardMaterial(`${this.name}_default_material`, this.scene);
+      defaultMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Light gray (OpenSCAD default)
+      defaultMaterial.specularColor = new Color3(0.2, 0.2, 0.2); // Low specular for matte finish
+      mesh.material = defaultMaterial;
 
-        logger.debug(
-          `[GENERATE] Applied default material to ${this.primitiveType} mesh: ${mesh.id}`
-        );
+      logger.debug(`[GENERATE] Applied default material to ${this.primitiveType} mesh: ${mesh.id}`);
 
-        return mesh;
-      },
-      (error) => {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return this.createError(
+      return { success: true, data: mesh };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        error: this.createError(
           'MESH_GENERATION_FAILED',
           `Failed to generate ${this.primitiveType} mesh: ${errorMessage}`
-        );
-      }
-    );
+        ),
+      };
+    }
   }
 
   /**
    * Create the appropriate primitive mesh based on type
    */
-  private createPrimitiveMesh(): AbstractMesh {
+  private async createPrimitiveMesh(): Promise<AbstractMesh> {
     const scene = this.scene;
     if (!scene) {
       throw new Error('Scene is required');
@@ -172,11 +170,11 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     switch (this.primitiveType) {
       case 'cube':
-        return this.createCubeMesh(scene);
+        return await this.createCubeMesh(scene);
       case 'sphere':
-        return this.createSphereMesh(scene);
+        return await this.createSphereMesh(scene);
       case 'cylinder':
-        return this.createCylinderMesh(scene);
+        return await this.createCylinderMesh(scene);
       case 'polyhedron':
         return this.createPolyhedronMesh(scene);
       case 'circle':
@@ -191,96 +189,252 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
   }
 
   /**
-   * Create cube mesh with OpenSCAD-compatible parameters
+   * Create cube mesh with OpenSCAD-compatible parameters using new geometry builder
    */
-  private createCubeMesh(scene: Scene): AbstractMesh {
+  private async createCubeMesh(scene: Scene): Promise<AbstractMesh> {
     const size = this.extractCubeSize();
     const center = this.extractCubeCenter();
 
-    const mesh = MeshBuilder.CreateBox(
-      this.name,
-      {
-        width: size.x,
-        height: size.y,
-        depth: size.z,
-      },
-      scene
-    );
+    // Use the new OpenSCAD geometry builder instead of BabylonJS built-in
+    try {
+      // Import the geometry builder services with correct paths
+      const { CubeGeneratorService } = await import(
+        '@/features/openscad-geometry-builder/services/primitive-generators/3d-primitives/cube-generator'
+      );
+      const { BabylonMeshBuilderService } = await import(
+        '@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder'
+      );
 
-    // Apply OpenSCAD center behavior
-    if (!center) {
-      // OpenSCAD default: cube is positioned with one corner at origin
-      mesh.position.x = size.x / 2;
-      mesh.position.y = size.y / 2;
-      mesh.position.z = size.z / 2;
+      // Create services
+      const cubeGenerator = new CubeGeneratorService();
+      const meshBuilder = new BabylonMeshBuilderService();
+
+      // Generate cube geometry using OpenSCAD-compatible algorithm
+      const cubeResult = cubeGenerator.generateCubeFromParameters({
+        size,
+        center,
+      });
+
+      if (!cubeResult.success) {
+        throw new Error(`Cube generation failed: ${cubeResult.error.message}`);
+      }
+
+      // Convert to BabylonJS mesh
+      const meshResult = meshBuilder.createPolyhedronMesh(cubeResult.data, scene, this.name);
+
+      if (!meshResult.success) {
+        throw new Error(`Mesh creation failed: ${meshResult.error.message}`);
+      }
+
+      logger.debug(
+        `[CUBE_SUCCESS] Generated cube using OpenSCAD Geometry Builder: ${meshResult.data.getTotalVertices()} vertices`
+      );
+      return meshResult.data;
+    } catch (error) {
+      // Fallback to old method if new geometry builder fails
+      logger.warn(`[CUBE_FALLBACK] Using BabylonJS built-in cube due to error: ${error}`);
+
+      const mesh = MeshBuilder.CreateBox(
+        this.name,
+        {
+          width: size.x,
+          height: size.y,
+          depth: size.z,
+        },
+        scene
+      );
+
+      // Apply OpenSCAD center behavior
+      if (!center) {
+        // OpenSCAD default: cube is positioned with one corner at origin
+        mesh.position.x = size.x / 2;
+        mesh.position.y = size.y / 2;
+        mesh.position.z = size.z / 2;
+      }
+      // If center=true, mesh is already centered at origin (BabylonJS default)
+
+      return mesh;
     }
-    // If center=true, mesh is already centered at origin (BabylonJS default)
-
-    return mesh;
   }
 
   /**
-   * Create sphere mesh with OpenSCAD-compatible parameters
+   * Create sphere mesh with OpenSCAD-compatible parameters using new geometry builder
    *
    * @param scene - BabylonJS scene for mesh creation
    * @returns AbstractMesh representing the sphere
    *
    * @example
    * ```typescript
-   * const sphere = this.createSphereMesh(scene);
+   * const sphere = await this.createSphereMesh(scene);
    * // Creates sphere with radius and tessellation based on OpenSCAD globals
    * ```
    */
-  private createSphereMesh(scene: Scene): AbstractMesh {
+  private async createSphereMesh(scene: Scene): Promise<AbstractMesh> {
+    const sphereNode = this.originalOpenscadNode as SphereNode;
+
+    // Extract sphere parameters safely
     const radius = this.extractSphereRadius();
-    const segments = this.extractSphereSegments();
 
-    const sphere = MeshBuilder.CreateSphere(
-      this.name,
-      {
-        diameter: radius * 2,
-        segments: segments,
-      },
-      scene
-    );
+    // Get local tessellation parameters from the sphere node (safely handle undefined)
+    const localFn = sphereNode.$fn;
+    const localFa = sphereNode.$fa;
+    const localFs = sphereNode.$fs;
 
-    // Apply flat shading to make angular edges visible for low-poly spheres
-    // This is crucial for OpenSCAD compatibility where coarse resolution should show facets
-    if (segments <= OPENSCAD_FALLBACK.FLAT_SHADING_THRESHOLD) {
-      sphere.convertToFlatShadedMesh();
+    // Resolve parameters using OpenSCAD inheritance rules
+    const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
+
+    // Use the new OpenSCAD geometry builder instead of BabylonJS built-in
+    try {
+      // Import the geometry builder services with correct paths
+      const { SphereGeneratorService } = await import(
+        '@/features/openscad-geometry-builder/services/primitive-generators/3d-primitives/sphere-generator'
+      );
+      const { FragmentCalculatorService } = await import(
+        '@/features/openscad-geometry-builder/services/fragment-calculator'
+      );
+      const { BabylonMeshBuilderService } = await import(
+        '@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder'
+      );
+
+      // Create services
+      const fragmentCalculator = new FragmentCalculatorService();
+      const sphereGenerator = new SphereGeneratorService(fragmentCalculator);
+      const meshBuilder = new BabylonMeshBuilderService();
+
+      // Generate sphere geometry using OpenSCAD-compatible algorithm
+      const sphereResult = sphereGenerator.generateSphereFromParameters({
+        radius,
+        fn,
+        fa,
+        fs,
+      });
+
+      if (!sphereResult.success) {
+        throw new Error(`Sphere generation failed: ${sphereResult.error.message}`);
+      }
+
+      // Convert to BabylonJS mesh
+      const meshResult = meshBuilder.createPolyhedronMesh(sphereResult.data, scene, this.name);
+
+      if (!meshResult.success) {
+        throw new Error(`Mesh creation failed: ${meshResult.error.message}`);
+      }
+
+      logger.debug(
+        `[SPHERE_SUCCESS] Generated sphere using OpenSCAD Geometry Builder: ${meshResult.data.getTotalVertices()} vertices`
+      );
+      return meshResult.data;
+    } catch (error) {
+      // Fallback to old method if new geometry builder fails
+      logger.warn(`[SPHERE_FALLBACK] Using BabylonJS built-in sphere due to error: ${error}`);
+
+      const segments = this.extractSphereSegments();
+      const sphere = MeshBuilder.CreateSphere(
+        this.name,
+        {
+          diameter: radius * 2,
+          segments: segments,
+        },
+        scene
+      );
+
+      // Apply flat shading to make angular edges visible for low-poly spheres
+      if (segments <= OPENSCAD_FALLBACK.FLAT_SHADING_THRESHOLD) {
+        sphere.convertToFlatShadedMesh();
+      }
+
+      return sphere;
     }
-
-    return sphere;
   }
 
   /**
-   * Create cylinder mesh with OpenSCAD-compatible parameters
+   * Create cylinder mesh with OpenSCAD-compatible parameters using new geometry builder
    */
-  private createCylinderMesh(scene: Scene): AbstractMesh {
+  private async createCylinderMesh(scene: Scene): Promise<AbstractMesh> {
+    const cylinderNode = this.originalOpenscadNode as CylinderNode;
+
+    // Extract cylinder parameters
     const height = this.extractCylinderHeight();
     const radius = this.extractCylinderRadius();
     const center = this.extractCylinderCenter();
-    const segments = this.extractCylinderSegments();
 
-    const mesh = MeshBuilder.CreateCylinder(
-      this.name,
-      {
-        height: height,
-        diameterTop: radius * 2,
-        diameterBottom: radius * 2,
-        tessellation: segments,
-      },
-      scene
-    );
+    // Get local tessellation parameters from the cylinder node
+    const localFn = cylinderNode.$fn;
+    const localFa = cylinderNode.$fa;
+    const localFs = cylinderNode.$fs;
 
-    // Apply OpenSCAD center behavior
-    if (!center) {
-      // OpenSCAD default: cylinder base at z=0
-      mesh.position.z = height / 2;
+    // Resolve parameters using OpenSCAD inheritance rules
+    const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
+
+    // Use the new OpenSCAD geometry builder instead of BabylonJS built-in
+    try {
+      // Import the geometry builder services with correct paths
+      const { CylinderGeneratorService } = await import(
+        '@/features/openscad-geometry-builder/services/primitive-generators/3d-primitives/cylinder-generator'
+      );
+      const { FragmentCalculatorService } = await import(
+        '@/features/openscad-geometry-builder/services/fragment-calculator'
+      );
+      const { BabylonMeshBuilderService } = await import(
+        '@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder'
+      );
+
+      // Create services
+      const fragmentCalculator = new FragmentCalculatorService();
+      const cylinderGenerator = new CylinderGeneratorService(fragmentCalculator);
+      const meshBuilder = new BabylonMeshBuilderService();
+
+      // Generate cylinder geometry using OpenSCAD-compatible algorithm
+      const cylinderResult = cylinderGenerator.generateCylinderFromParameters({
+        height,
+        r1: radius,
+        r2: radius,
+        center,
+        fn,
+        fa,
+        fs,
+      });
+
+      if (!cylinderResult.success) {
+        throw new Error(`Cylinder generation failed: ${cylinderResult.error.message}`);
+      }
+
+      // Convert to BabylonJS mesh
+      const meshResult = meshBuilder.createPolyhedronMesh(cylinderResult.data, scene, this.name);
+
+      if (!meshResult.success) {
+        throw new Error(`Mesh creation failed: ${meshResult.error.message}`);
+      }
+
+      logger.debug(
+        `[CYLINDER_SUCCESS] Generated cylinder using OpenSCAD Geometry Builder: ${meshResult.data.getTotalVertices()} vertices`
+      );
+      return meshResult.data;
+    } catch (error) {
+      // Fallback to old method if new geometry builder fails
+      logger.warn(`[CYLINDER_FALLBACK] Using BabylonJS built-in cylinder due to error: ${error}`);
+
+      const segments = this.extractCylinderSegments();
+      const mesh = MeshBuilder.CreateCylinder(
+        this.name,
+        {
+          height: height,
+          diameterTop: radius * 2,
+          diameterBottom: radius * 2,
+          tessellation: segments,
+        },
+        scene
+      );
+
+      // Apply OpenSCAD center behavior
+      if (!center) {
+        // OpenSCAD default: cylinder base at z=0
+        mesh.position.z = height / 2;
+      }
+      // If center=true, mesh is already centered at origin (BabylonJS default)
+
+      return mesh;
     }
-    // If center=true, mesh is already centered at origin (BabylonJS default)
-
-    return mesh;
   }
 
   /**
@@ -520,11 +674,23 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const sphereNode = this.originalOpenscadNode as SphereNode;
 
     if (sphereNode.radius !== undefined) {
-      return sphereNode.radius;
+      // Handle both number and string (parameter reference) cases
+      if (typeof sphereNode.radius === 'number') {
+        return sphereNode.radius;
+      }
+      // For parameter references, we'd need module resolution - use default for now
+      logger.warn(`[SPHERE_RADIUS] Parameter reference not resolved: ${sphereNode.radius}`);
+      return 1;
     }
 
     if (sphereNode.diameter !== undefined) {
-      return sphereNode.diameter / 2;
+      // Handle both number and string (parameter reference) cases
+      if (typeof sphereNode.diameter === 'number') {
+        return sphereNode.diameter / 2;
+      }
+      // For parameter references, we'd need module resolution - use default for now
+      logger.warn(`[SPHERE_DIAMETER] Parameter reference not resolved: ${sphereNode.diameter}`);
+      return 1;
     }
 
     return 1; // Default radius
@@ -544,15 +710,20 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     localFa?: number,
     localFs?: number
   ): { fn: number; fa: number; fs: number } {
+    // Safely access openscadGlobals with fallback to defaults
+    const globalFn = this.openscadGlobals?.$fn;
+    const globalFa = this.openscadGlobals?.$fa;
+    const globalFs = this.openscadGlobals?.$fs;
+
     // Apply OpenSCAD inheritance rules: local → global → defaults
-    const resolvedFn = localFn ?? this.openscadGlobals.$fn ?? OPENSCAD_GLOBALS.DEFAULT_FN;
-    const resolvedFa = localFa ?? this.openscadGlobals.$fa ?? OPENSCAD_GLOBALS.DEFAULT_FA;
-    const resolvedFs = localFs ?? this.openscadGlobals.$fs ?? OPENSCAD_GLOBALS.DEFAULT_FS;
+    const resolvedFn = localFn ?? globalFn ?? OPENSCAD_GLOBALS.DEFAULT_FN;
+    const resolvedFa = localFa ?? globalFa ?? OPENSCAD_GLOBALS.DEFAULT_FA;
+    const resolvedFs = localFs ?? globalFs ?? OPENSCAD_GLOBALS.DEFAULT_FS;
 
     logger.debug(
       `[RESOLVE_TESSELLATION] Local: $fn=${localFn}, $fa=${localFa}, $fs=${localFs} | ` +
-      `Global: $fn=${this.openscadGlobals.$fn}, $fa=${this.openscadGlobals.$fa}, $fs=${this.openscadGlobals.$fs} | ` +
-      `Resolved: $fn=${resolvedFn}, $fa=${resolvedFa}, $fs=${resolvedFs}`
+        `Global: $fn=${globalFn}, $fa=${globalFa}, $fs=${globalFs} | ` +
+        `Resolved: $fn=${resolvedFn}, $fa=${resolvedFa}, $fs=${resolvedFs}`
     );
 
     return { fn: resolvedFn, fa: resolvedFa, fs: resolvedFs };
@@ -578,7 +749,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     logger.debug(
       `[EXTRACT_SPHERE_SEGMENTS] Sphere segments calculated: ${finalFragments} ` +
-      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
+        `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
     );
 
     return finalFragments;
@@ -589,7 +760,17 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    */
   private extractCylinderHeight(): number {
     const cylinderNode = this.originalOpenscadNode as CylinderNode;
-    return cylinderNode.h ?? 1; // Default height
+    const height = cylinderNode.h;
+
+    if (height !== undefined) {
+      if (typeof height === 'number') {
+        return height;
+      }
+      // For parameter references, we'd need module resolution - use default for now
+      logger.warn(`[CYLINDER_HEIGHT] Parameter reference not resolved: ${height}`);
+    }
+
+    return 1; // Default height
   }
 
   /**
@@ -599,11 +780,21 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const cylinderNode = this.originalOpenscadNode as CylinderNode;
 
     if (cylinderNode.r !== undefined) {
-      return cylinderNode.r;
+      if (typeof cylinderNode.r === 'number') {
+        return cylinderNode.r;
+      }
+      // For parameter references, we'd need module resolution - use default for now
+      logger.warn(`[CYLINDER_RADIUS] Parameter reference not resolved: ${cylinderNode.r}`);
+      return 1;
     }
 
     if (cylinderNode.d !== undefined) {
-      return cylinderNode.d / 2;
+      if (typeof cylinderNode.d === 'number') {
+        return cylinderNode.d / 2;
+      }
+      // For parameter references, we'd need module resolution - use default for now
+      logger.warn(`[CYLINDER_DIAMETER] Parameter reference not resolved: ${cylinderNode.d}`);
+      return 1;
     }
 
     return 1; // Default radius
@@ -637,7 +828,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     logger.debug(
       `[EXTRACT_CYLINDER_SEGMENTS] Cylinder segments calculated: ${finalFragments} ` +
-      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
+        `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
     );
 
     return finalFragments;
@@ -680,7 +871,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
 
     logger.debug(
       `[EXTRACT_CIRCLE_SEGMENTS] Circle segments calculated: ${finalFragments} ` +
-      `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
+        `(radius=${radius}, $fn=${fn}, $fa=${fa}, $fs=${fs})`
     );
 
     return finalFragments;
