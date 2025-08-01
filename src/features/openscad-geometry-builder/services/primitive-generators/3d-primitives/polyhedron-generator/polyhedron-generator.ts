@@ -42,11 +42,7 @@ import type {
   Vector3,
 } from '../../../../types/geometry-data';
 import type { PolyhedronParameters } from '../../../../types/primitive-parameters';
-import {
-  convertVertexArraysToVector3,
-  createGeometryData,
-  createGeometryMetadata,
-} from '../../../../utils/geometry-helpers';
+import { createGeometryData, createGeometryMetadata } from '../../../../utils/geometry-helpers';
 import {
   validateFaceIndices,
   validateNonEmptyArray,
@@ -145,7 +141,10 @@ export class PolyhedronGeneratorService {
    */
   generatePolyhedronFromParameters(params: PolyhedronParameters): PolyhedronResult {
     try {
-      const result = this.generatePolyhedron(params.points as any, params.faces);
+      const result = this.generatePolyhedron(
+        params.points as readonly (readonly number[])[],
+        params.faces
+      );
 
       if (result.success && params.convexity !== undefined) {
         // Update convexity parameter in metadata

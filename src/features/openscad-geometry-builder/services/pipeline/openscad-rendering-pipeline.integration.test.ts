@@ -128,7 +128,7 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         expect(meshes.length).toBe(6);
 
         // Validate mesh naming consistency
-        meshes.forEach((mesh, index) => {
+        meshes.forEach((mesh, _index) => {
           expect(mesh.name).toMatch(/^integration-test-\d+$/);
         });
 

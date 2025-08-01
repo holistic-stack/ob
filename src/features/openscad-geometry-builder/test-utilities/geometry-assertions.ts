@@ -9,7 +9,7 @@
  */
 
 import { expect } from 'vitest';
-import type { Vector3 } from '../types/geometry-data';
+import type { GeometryData, Vector3 } from '../types/geometry-data';
 
 /**
  * Validate that a geometry object has the expected structure
@@ -18,7 +18,7 @@ import type { Vector3 } from '../types/geometry-data';
  * @param options - Validation options
  */
 export function expectValidGeometry(
-  geometry: any,
+  geometry: GeometryData,
   options: {
     hasVertices?: boolean;
     hasFaces?: boolean;
@@ -183,7 +183,7 @@ export function expectValidNormals(
  * @param expectedProperties - Expected properties in parameters
  */
 export function expectValidMetadata(
-  metadata: any,
+  metadata: GeometryData['metadata'],
   expectedType?: string,
   expectedProperties?: string[]
 ): void {
@@ -216,7 +216,7 @@ export function expectValidMetadata(
  * @param expected - Expected properties
  */
 export function expectGeometryProperties(
-  geometry: any,
+  geometry: GeometryData,
   expected: {
     vertexCount?: number;
     faceCount?: number;

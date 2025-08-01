@@ -6,7 +6,6 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAppStore } from '../../app-store.js';
-import type { AppStore } from '../../types/store.types.js';
 
 // Mock ResizeObserver for testing environment
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

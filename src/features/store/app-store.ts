@@ -714,7 +714,7 @@ export const createAppStore = (
   // Create store with optimized DevTools configuration for large state
   const store = create<AppStore>()(
     options.enableDevtools
-      ? devtools(withPersistence as any, {
+      ? devtools(withPersistence, {
           enabled: true,
           name: 'OpenSCAD App Store',
           anonymousActionType: 'openscad/action',
@@ -724,7 +724,7 @@ export const createAppStore = (
               function: false,
               symbol: false,
             },
-            replacer: (key: string, value: any) => {
+            replacer: (key: string, value: unknown) => {
               // Optimize large objects for DevTools
               if (key === 'ast' && Array.isArray(value) && value.length > 10) {
                 return `[Array(${value.length}) - truncated for DevTools]`;
@@ -738,34 +738,35 @@ export const createAppStore = (
               return value;
             },
           },
-          actionSanitizer: (action: any) => ({
+          actionSanitizer: (action: { type?: string; payload?: unknown }) => ({
             type: action.type || 'openscad/action',
             timestamp: Date.now(),
             // Don't include large payloads in action logs
             payload: action.payload ? '[payload hidden for performance]' : undefined,
           }),
-          stateSanitizer: (state: any) => {
+          stateSanitizer: (state: unknown) => {
             try {
+              const typedState = state as AppState;
               return {
                 // Only include essential state for DevTools to reduce memory usage
-                config: state?.config || {},
+                config: typedState?.config || {},
                 editor: {
-                  isDirty: state?.editor?.isDirty || false,
-                  cursorPosition: state?.editor?.cursorPosition || { line: 1, column: 1 },
-                  codeLength: state?.editor?.code?.length || 0,
+                  isDirty: typedState?.editor?.isDirty || false,
+                  cursorPosition: typedState?.editor?.cursorPosition || { line: 1, column: 1 },
+                  codeLength: typedState?.editor?.code?.length || 0,
                 },
                 parsing: {
-                  isLoading: state?.parsing?.isLoading || false,
-                  errors: state?.parsing?.errors?.slice(0, 3) || [], // Limit errors shown
-                  astNodeCount: state?.parsing?.ast?.length || 0,
+                  isLoading: typedState?.parsing?.isLoading || false,
+                  errors: typedState?.parsing?.errors?.slice(0, 3) || [], // Limit errors shown
+                  astNodeCount: typedState?.parsing?.ast?.length || 0,
                 },
                 babylonRendering: {
-                  isInitialized: state?.babylonRendering?.engine?.isInitialized || false,
-                  isRendering: state?.babylonRendering?.isRendering || false,
-                  meshCount: state?.babylonRendering?.meshes?.length || 0,
-                  camera: state?.babylonRendering?.camera || {},
+                  isInitialized: typedState?.babylonRendering?.engine?.isInitialized || false,
+                  isRendering: typedState?.babylonRendering?.isRendering || false,
+                  meshCount: typedState?.babylonRendering?.meshes?.length || 0,
+                  camera: typedState?.babylonRendering?.camera || {},
                 },
-                openscadGlobals: state?.openscadGlobals || {},
+                openscadGlobals: typedState?.openscadGlobals || {},
               };
             } catch (error) {
               console.warn('[DEVTOOLS] State sanitization error:', error);
@@ -776,13 +777,14 @@ export const createAppStore = (
           trace: false, // Disable stack traces for performance
           traceLimit: 0,
         })
-      : (withPersistence as any)
+      : withPersistence
   );
 
   // Enhanced DevTools connection debugging and manual registration
   if (options.enableDevtools && typeof window !== 'undefined') {
-    const hasExtension = !!(window as any).__REDUX_DEVTOOLS_EXTENSION__;
-    const extensionCompose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
+    const windowWithDevTools = window as WindowWithDevTools;
+    const hasExtension = !!windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION__;
+    const extensionCompose = windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
 
     logger.init('[DEVTOOLS] Redux DevTools configuration:', {
       hasExtension,
@@ -798,7 +800,7 @@ export const createAppStore = (
 
         try {
           // Force store registration with optimized configuration
-          const devtoolsExtension = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
+          const devtoolsExtension = windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION__;
           if (devtoolsExtension && typeof devtoolsExtension.connect === 'function') {
             const devtoolsConnection = devtoolsExtension.connect({
               name: 'OpenSCAD App Store',
@@ -808,7 +810,7 @@ export const createAppStore = (
                   function: false,
                   symbol: false,
                 },
-                replacer: (key: string, value: any) => {
+                replacer: (key: string, value: unknown) => {
                   // Optimize for performance - truncate large objects
                   if (key === 'ast' && Array.isArray(value)) {
                     return value.length > 10 ? `[AST with ${value.length} nodes]` : value;
@@ -874,16 +876,26 @@ export const createAppStore = (
     }
   }
 
+  // Extend Window interface for DevTools
+  interface WindowWithDevTools extends Window {
+    __ZUSTAND_STORE__?: typeof store;
+    __OPENSCAD_STORE__?: typeof store;
+    __REDUX_STORES__?: Record<string, typeof store>;
+    __REDUX_DEVTOOLS_EXTENSION__?: unknown;
+    __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: unknown;
+  }
+
   // Expose store globally for DevTools detection (critical for extension recognition)
   if (options.enableDevtools && typeof window !== 'undefined') {
-    (window as any).__ZUSTAND_STORE__ = store;
-    (window as any).__OPENSCAD_STORE__ = store;
+    const windowWithDevTools = window as WindowWithDevTools;
+    windowWithDevTools.__ZUSTAND_STORE__ = store;
+    windowWithDevTools.__OPENSCAD_STORE__ = store;
 
     // Also expose the store in a way that Redux DevTools can detect
-    if (!(window as any).__REDUX_STORES__) {
-      (window as any).__REDUX_STORES__ = {};
+    if (!windowWithDevTools.__REDUX_STORES__) {
+      windowWithDevTools.__REDUX_STORES__ = {};
     }
-    (window as any).__REDUX_STORES__['OpenSCAD App Store'] = store;
+    windowWithDevTools.__REDUX_STORES__['OpenSCAD App Store'] = store;
   }
 
   return store;

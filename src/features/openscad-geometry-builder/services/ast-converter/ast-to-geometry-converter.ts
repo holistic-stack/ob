@@ -227,7 +227,7 @@ export class ASTToGeometryConverterService {
   /**
    * Convert cube AST node to geometry data
    */
-  private convertCubeNode(node: CubeNode, globals: GlobalVariables): ConversionResult {
+  private convertCubeNode(node: CubeNode, _globals: GlobalVariables): ConversionResult {
     try {
       // Extract parameters with proper fallbacks
       const size = node.size || 1;
@@ -351,7 +351,7 @@ export class ASTToGeometryConverterService {
   /**
    * Convert square AST node to geometry data
    */
-  private convertSquareNode(node: SquareNode, globals: GlobalVariables): ConversionResult {
+  private convertSquareNode(node: SquareNode, _globals: GlobalVariables): ConversionResult {
     try {
       // Extract parameters with proper fallbacks
       const size = node.size || 1;
@@ -383,7 +383,7 @@ export class ASTToGeometryConverterService {
   /**
    * Convert polygon AST node to geometry data
    */
-  private convertPolygonNode(node: PolygonNode, globals: GlobalVariables): ConversionResult {
+  private convertPolygonNode(node: PolygonNode, _globals: GlobalVariables): ConversionResult {
     try {
       // Extract parameters with proper fallbacks
       const points = node.points || [];
@@ -397,7 +397,13 @@ export class ASTToGeometryConverterService {
       }));
 
       // Generate polygon geometry
-      const polygonParameters: any = {
+      interface PolygonParameters {
+        points: Vector2D[];
+        convexity: number;
+        paths?: number[][];
+      }
+
+      const polygonParameters: PolygonParameters = {
         points: vector2DPoints,
         convexity,
       };

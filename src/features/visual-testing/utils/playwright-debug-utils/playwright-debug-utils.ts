@@ -221,7 +221,7 @@ const shouldLogNetworkRequest = (url: string, config: Required<DebugConfig>): bo
  * ```
  */
 export const logTestInfo = async (
-  page: Page,
+  _page: Page,
   message: string,
   testName?: string
 ): Promise<void> => {
@@ -251,14 +251,19 @@ export const capturePerformanceMetrics = async (
   renderTime: number;
   domContentLoaded: number;
   loadComplete: number;
-  memoryUsage?: number;
+  memoryUsage?: number | undefined;
 }> => {
   const context = testName ? `[${testName}]` : '';
 
   try {
     const performanceTiming = await page.evaluate(() => {
       const timing = performance.timing;
-      const memory = (performance as any).memory;
+      interface PerformanceWithMemory extends Performance {
+        memory?: {
+          usedJSHeapSize: number;
+        };
+      }
+      const memory = (performance as PerformanceWithMemory).memory;
 
       return {
         renderTime: timing.loadEventEnd - timing.navigationStart,

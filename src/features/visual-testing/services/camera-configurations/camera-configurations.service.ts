@@ -148,7 +148,7 @@ export const applyCameraConfiguration = async (
     logger.debug(`[DEBUG][CameraConfiguration] Camera configured for ${config.angle} view`);
 
     return { success: true, data: undefined };
-  } catch (error) {
+  } catch (_error) {
     return { success: false, error: 'CONFIGURATION_FAILED' as CameraConfigurationError };
   }
 };

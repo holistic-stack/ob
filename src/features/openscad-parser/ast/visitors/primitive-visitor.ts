@@ -415,7 +415,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           } else {
             // If not a vector, try to extract as a number or preserve parameter reference
             const sizeValue = extractNumberParameterOrReference(arg);
-            if (sizeValue !== null) {
+            if (sizeValue !== null && typeof sizeValue === 'number') {
               size = sizeValue;
             } else {
               // No-op: This block was for debugging and had an empty statement.
@@ -557,13 +557,19 @@ export class PrimitiveVisitor extends BaseASTVisitor {
     const heightParam = args.find((arg) => arg.name === undefined || arg.name === 'h');
     if (heightParam) {
       const heightValue = extractNumberParameterOrReference(heightParam);
-      if (heightValue !== null) {
+      if (
+        heightValue !== null &&
+        (typeof heightValue === 'number' || typeof heightValue === 'string')
+      ) {
         height = heightValue;
       }
     } else if (args.length >= 1 && args[0] && args[0].name === undefined) {
       // Handle case where height is provided as the first positional parameter
       const heightValue = extractNumberParameterOrReference(args[0]);
-      if (heightValue !== null) {
+      if (
+        heightValue !== null &&
+        (typeof heightValue === 'number' || typeof heightValue === 'string')
+      ) {
         height = heightValue;
       }
     }
@@ -613,14 +619,20 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       const radiusParam = args.find((arg) => arg.name === 'r');
       if (radiusParam) {
         const radiusValue = extractNumberParameterOrReference(radiusParam);
-        if (radiusValue !== null) {
+        if (
+          radiusValue !== null &&
+          (typeof radiusValue === 'number' || typeof radiusValue === 'string')
+        ) {
           radius1 = radiusValue;
           radius2 = radiusValue;
         }
       } else if (args.length >= 2 && args[1] && args[1].name === undefined) {
         // Handle case where radius is provided as the second positional parameter
         const radiusValue = extractNumberParameterOrReference(args[1]);
-        if (radiusValue !== null) {
+        if (
+          radiusValue !== null &&
+          (typeof radiusValue === 'number' || typeof radiusValue === 'string')
+        ) {
           radius1 = radiusValue;
           radius2 = radiusValue;
         }
@@ -630,7 +642,10 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       const radius1Param = args.find((arg) => arg.name === 'r1');
       if (radius1Param) {
         const radius1Value = extractNumberParameterOrReference(radius1Param);
-        if (radius1Value !== null) {
+        if (
+          radius1Value !== null &&
+          (typeof radius1Value === 'number' || typeof radius1Value === 'string')
+        ) {
           radius1 = radius1Value;
         }
       }
@@ -638,7 +653,10 @@ export class PrimitiveVisitor extends BaseASTVisitor {
       const radius2Param = args.find((arg) => arg.name === 'r2');
       if (radius2Param) {
         const radius2Value = extractNumberParameterOrReference(radius2Param);
-        if (radius2Value !== null) {
+        if (
+          radius2Value !== null &&
+          (typeof radius2Value === 'number' || typeof radius2Value === 'string')
+        ) {
           radius2 = radius2Value;
         }
       }
@@ -1056,7 +1074,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
             if (coords && coords.length >= 2) {
               const x = parseFloat(coords[0]);
               const y = parseFloat(coords[1]);
-              if (!isNaN(x) && !isNaN(y)) {
+              if (!Number.isNaN(x) && !Number.isNaN(y)) {
                 points.push([x, y]);
                 console.log('[DEBUG] extractPolygonPoints: parsed point from string:', [x, y]);
               }
@@ -1066,7 +1084,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           console.log('[DEBUG] extractPolygonPoints: final points from string:', points);
           return points;
         }
-      } catch (error) {
+      } catch (_error) {
         // If parsing fails, return empty array
         console.warn('Failed to parse polygon points from string:', param.value);
       }
@@ -1147,7 +1165,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
             const x = typeof item[0] === 'number' ? item[0] : parseFloat(item[0]);
             const y = typeof item[1] === 'number' ? item[1] : parseFloat(item[1]);
 
-            if (!isNaN(x) && !isNaN(y)) {
+            if (!Number.isNaN(x) && !Number.isNaN(y)) {
               points.push([x, y]);
             }
           }
@@ -1155,7 +1173,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
         return points;
       }
-    } catch (error) {
+    } catch (_error) {
       // Fallback to regex parsing
       const pointMatches = text.match(/\[\s*([\d.+-]+)\s*,\s*([\d.+-]+)\s*\]/g);
       if (pointMatches) {
@@ -1166,7 +1184,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
           if (coords && coords.length >= 2) {
             const x = parseFloat(coords[0]);
             const y = parseFloat(coords[1]);
-            if (!isNaN(x) && !isNaN(y)) {
+            if (!Number.isNaN(x) && !Number.isNaN(y)) {
               points.push([x, y]);
             }
           }

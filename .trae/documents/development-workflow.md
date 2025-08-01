@@ -1,18 +1,68 @@
 # OpenSCAD Babylon Development Workflow
 
+## Project Overview
+
+This is a **production-ready** web-based 3D model editor that uses OpenSCAD syntax for real-time 3D visualization with BabylonJS rendering. The project follows bulletproof-react architecture with feature-based organization and strict performance requirements.
+
+## Technology Stack
+
+### Core Framework
+- **React 19.0.0** with concurrent features
+- **TypeScript 5.8.3** with strict mode
+- **Vite 6.0.0** for development and build
+- **pnpm** as package manager
+
+### 3D Rendering & Parsing
+- **BabylonJS 8.16.1** for 3D graphics and scene management
+- **Monaco Editor 0.52.2** with OpenSCAD syntax highlighting
+- **web-tree-sitter 0.25.3** for OpenSCAD parsing
+- **OpenSCAD coordinate system**: Z-up, right-handed
+
+### State Management
+- **Zustand 5.0.5** for application state
+- **Immer 10.1.1** for immutable updates
+- **Reselect 5.1.1** for memoized selectors
+
+### Quality & Testing Tools
+- **Biome 2.0.6** for linting and formatting
+- **Vitest 1.6.1** for unit and integration testing
+- **Playwright 1.53.0** for E2E and visual regression testing
+
+## Architecture Overview
+
+### 4-Layer Architecture
+1. **OpenSCAD Parser Layer**: Tree-sitter grammar, visitor pattern, error recovery
+2. **BabylonJS-Extended AST Layer**: OpenSCADNode extends BABYLON.AbstractMesh
+3. **Mesh Generation Layer**: BabylonJS Mesh Builder, CSG operations
+4. **Scene Management Layer**: BABYLON.Scene integration, camera controls, lighting
+
+### Feature-Based Organization
+```
+src/
+├── features/                    # Feature-based modules
+│   ├── babylon-renderer/        # BabylonJS 3D rendering
+│   ├── code-editor/            # Monaco editor integration
+│   ├── openscad-parser/        # AST parsing integration
+│   └── store/                  # Zustand state management
+├── shared/                     # Shared utilities and components
+│   ├── components/             # Reusable UI components
+│   ├── hooks/                  # Custom React hooks
+│   ├── types/                  # Shared TypeScript types
+│   ├── utils/                  # Pure utility functions
+│   └── services/               # Shared services
+└── test/                       # Test utilities and setup
+```
+
 ## Development Environment Setup
 
 ### Prerequisites
-
-- **Node.js 22.14.0+** (LTS version)
-- **pnpm 10.10.0+** (Package manager)
-- **VS Code** (Recommended IDE)
+- **Node.js 22.14.0+**
+- **pnpm 10.10.0+** (package manager)
 - **Git** for version control
 
-### Initial Setup
-
+### Installation
 ```bash
-# Clone repository
+# Clone the repository
 git clone <repository-url>
 cd openscad-babylon
 
@@ -21,485 +71,172 @@ pnpm install
 
 # Start development server
 pnpm dev
-
-# Run tests
-pnpm test
-
-# Type checking
-pnpm typecheck
-
-# Code quality check
-pnpm biome:check
 ```
-
-### VS Code Extensions
-
-- **Biome**: Code formatting and linting
-- **TypeScript Importer**: Auto-import management
-- **Error Lens**: Inline error display
-- **GitLens**: Git integration
-- **Thunder Client**: API testing
 
 ## Development Commands
 
-### Core Commands
-
+### Core Development
 ```bash
-# Development server (http://localhost:5173)
+# Start development server with hot reload
 pnpm dev
 
-# Production build
+# Build for production
 pnpm build
 
 # Type checking
 pnpm typecheck
-
-# Run all tests
-pnpm test
-
-# Test with coverage
-pnpm test:coverage
-
-# Test in watch mode
-pnpm test:watch
-
-# E2E tests
-pnpm test:ct
-
-# Visual regression tests
-pnpm test:visual
 ```
 
-### Code Quality Commands
-
+### Testing Commands
 ```bash
-# Check code quality (lint + format)
-pnpm biome:check
+# Run all unit tests
+pnpm test
 
-# Fix auto-fixable issues
+# Run tests with memory optimization
+pnpm test:memory-safe
+
+# Run tests with coverage report
+pnpm test:coverage
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run visual regression tests
+pnpm test:visual
+
+# Update visual test snapshots
+pnpm test:visual:update
+
+# Run component tests with Playwright
+pnpm test:ct
+```
+
+### Code Quality
+```bash
+# Run Biome linting and formatting
 pnpm biome:fix
-
-# Format code
-pnpm biome:format
 
 # Lint only
 pnpm biome:lint
-```
 
-### Validation Commands
+# Format only
+pnpm biome:format
 
-```bash
 # Validate types
 pnpm validate:types
-
-# Validate code quality
-pnpm validate:quality
-
-# Validate everything
-pnpm validate:all
-
-# Validate complete pipeline
-pnpm validate
 ```
 
-## Development Workflow
-
-### 1. Feature Development Process
-
-#### Step 1: Create Feature Branch
-
+### Specialized Testing
 ```bash
-git checkout -b feature/your-feature-name
+# Test specific features
+pnpm test:code-editor
+pnpm validate:pipeline
+
+# Run Storybook for component development
+pnpm storybook
 ```
 
-#### Step 2: Set Up Feature Structure
+## Performance Requirements
 
-```bash
-# Create feature directory
-mkdir -p src/features/your-feature
-cd src/features/your-feature
+### Rendering Performance
+- **Target**: <16ms render times for 60fps
+- **Memory Management**: Proper disposal of BabylonJS resources
+- **Hot Reload**: <100ms development reload times
+- **Test Coverage**: 95%+ across all features
 
-# Create standard structure
-mkdir components hooks services types utils __tests__
-touch index.ts
-```
+### Monitoring
+- Real-time performance metrics in development
+- Automated performance regression testing
+- Memory usage tracking for 3D scenes
 
-#### Step 3: Implement with TDD
-
-```typescript
-// 1. Write test first
-// your-feature.test.ts
-describe('YourFeature', () => {
-  it('should do something', () => {
-    // Test implementation
-  });
-});
-
-// 2. Implement minimal code to pass
-// your-feature.ts
-export function yourFeature() {
-  // Minimal implementation
-}
-
-// 3. Refactor and improve
-// Enhance implementation while keeping tests green
-```
-
-#### Step 4: Validate Implementation
-
-```bash
-# Run tests
-pnpm test src/features/your-feature
-
-# Type check
-pnpm typecheck
-
-# Code quality
-pnpm biome:check
-
-# Integration test
-pnpm test:ct
-```
-
-### 2. Code Review Process
-
-#### Pre-Review Checklist
-
-- [ ] All tests pass
-- [ ] Type checking passes
-- [ ] Code quality checks pass
-- [ ] Feature is documented
-- [ ] Integration tests added
-- [ ] Performance impact assessed
-
-#### Review Guidelines
-
-- **Architecture**: Does it follow bulletproof-react patterns?
-- **Performance**: Does it meet <16ms render requirements?
-- **Type Safety**: Are all types explicit and correct?
-- **Error Handling**: Uses Result<T,E> pattern?
-- **Testing**: Comprehensive test coverage?
-- **Documentation**: Clear and up-to-date?
-
-### 3. Debugging Workflow
-
-#### Common Issues and Solutions
-
-**TypeScript Errors**
-```bash
-# Check specific file
-npx tsc --noEmit src/path/to/file.ts
-
-# Check all files
-pnpm typecheck
-
-# Clear TypeScript cache
-rm -rf .tsbuildinfo*
-```
-
-**Test Failures**
-```bash
-# Run specific test
-pnpm test src/path/to/test.test.ts
-
-# Run with verbose output
-pnpm test --reporter=verbose
-
-# Run with coverage
-pnpm test:coverage
-
-# Debug test
-pnpm test --inspect-brk
-```
-
-**Performance Issues**
-```bash
-# Profile rendering
-# Add performance markers in code
-console.time('render');
-// rendering code
-console.timeEnd('render');
-
-# Use React DevTools Profiler
-# Monitor BabylonJS Inspector
-```
-
-**Build Issues**
-```bash
-# Clear all caches
-rm -rf node_modules/.vite
-rm -rf dist
-pnpm install
-
-# Check bundle size
-pnpm build
-npx vite-bundle-analyzer dist
-```
-
-## Code Quality Standards
+## Coding Standards
 
 ### TypeScript Guidelines
+- **Strict mode enabled**: No `any` types, explicit return types
+- **Result<T,E> pattern**: For error handling instead of throwing exceptions
+- **Branded types**: For type safety
+- **Functional programming**: Pure functions, immutable data structures
 
-```typescript
-// ✅ Good: Explicit types
-function parseOpenSCAD(code: string): Result<OpenSCADNode, ParseError> {
-  // Implementation
-}
+### File Organization
+- **Co-located tests**: Every component/function has adjacent `.test.ts` file
+- **Files under 500 lines**: Split large files into smaller, focused modules
+- **Single Responsibility Principle**: Each file has one clear purpose
+- **Index files**: Use `index.ts` for clean exports
 
-// ❌ Bad: Implicit any
-function parseOpenSCAD(code) {
-  // Implementation
-}
+### Testing Practices
+- **Real implementations**: No mocks for core functionality (BabylonJS, OpenSCAD parser)
+- **NullEngine for BabylonJS**: Use `BABYLON.NullEngine()` for headless testing
+- **Property-based testing**: Use fast-check for edge cases
+- **Visual regression**: Playwright screenshot comparisons
 
-// ✅ Good: Branded types
-type NodeId = string & { __brand: 'NodeId' };
+## Git Workflow
 
-// ✅ Good: Result pattern
-function riskyOperation(): Result<Data, Error> {
-  try {
-    const data = doSomething();
-    return { success: true, data };
-  } catch (error) {
-    return { success: false, error };
-  }
-}
+### Branch Strategy
+- **main**: Production-ready code
+- **feature/***: Feature development branches
+- **fix/***: Bug fix branches
+- **docs/***: Documentation updates
 
-// ❌ Bad: Throwing exceptions
-function riskyOperation(): Data {
-  return doSomething(); // May throw
-}
-```
+### Commit Standards
+- Use conventional commits format
+- Include performance impact in commit messages
+- Reference issue numbers when applicable
 
-### React Guidelines
+### Pre-commit Checks
+- Biome formatting and linting
+- TypeScript type checking
+- Unit test execution
+- Performance regression checks
 
-```typescript
-// ✅ Good: Functional component with explicit props
-interface ComponentProps {
-  value: string;
-  onChange: (value: string) => void;
-}
+## Development Best Practices
 
-function Component({ value, onChange }: ComponentProps) {
-  // Implementation
-}
+### BabylonJS Integration
+- **AbstractMesh extension**: All OpenSCAD nodes extend BABYLON.AbstractMesh
+- **Scene management**: Centralized scene lifecycle management
+- **Memory management**: Proper disposal of meshes and materials
+- **Performance optimization**: Efficient mesh generation and CSG operations
 
-// ✅ Good: Custom hook
-function useFeature() {
-  const [state, setState] = useState();
-  // Hook logic
-  return { state, setState };
-}
+### OpenSCAD Parser
+- **Framework-agnostic**: Parser independent of React
+- **Error recovery**: Graceful handling of syntax errors
+- **Real-time parsing**: Debounced parsing for editor changes
+- **AST validation**: Comprehensive validation of parsed structures
 
-// ✅ Good: Error boundary
-function FeatureWithErrorBoundary() {
-  return (
-    <ErrorBoundary>
-      <Feature />
-    </ErrorBoundary>
-  );
-}
-```
+### State Management
+- **Zustand slices**: Feature-based state organization
+- **Immutable updates**: Using Immer for state changes
+- **Memoized selectors**: Using Reselect for performance
+- **Middleware**: Logging and persistence middleware
 
-### Performance Guidelines
+## Debugging and Troubleshooting
 
-```typescript
-// ✅ Good: Memoization
-const expensiveValue = useMemo(() => {
-  return computeExpensiveValue(props);
-}, [props.dependency]);
-
-// ✅ Good: Debouncing
-const debouncedUpdate = useCallback(
-  debounce((value: string) => {
-    updateValue(value);
-  }, 300),
-  []
-);
-
-// ✅ Good: Resource cleanup
-useEffect(() => {
-  const resource = createResource();
-  return () => resource.dispose();
-}, []);
-```
-
-## Testing Strategy
-
-### Test Organization
-
-```
-src/features/feature-name/
-├── components/
-│   ├── component.tsx
-│   └── component.test.tsx          # Co-located unit tests
-├── hooks/
-│   ├── use-hook.ts
-│   └── use-hook.test.ts           # Co-located unit tests
-├── services/
-│   ├── service.ts
-│   └── service.test.ts            # Co-located unit tests
-└── __tests__/
-    ├── feature.integration.test.ts # Integration tests
-    └── feature.e2e.test.ts        # E2E tests
-```
-
-### Test Types
-
-**Unit Tests**
-```typescript
-// Test individual functions
-describe('parseOpenSCAD', () => {
-  it('should parse valid cube syntax', () => {
-    const result = parseOpenSCAD('cube([1, 2, 3]);');
-    expect(result.success).toBe(true);
-  });
-});
-
-// Test React components
-describe('OpenSCADEditor', () => {
-  it('should display syntax errors', async () => {
-    render(<OpenSCADEditor value="invalid" />);
-    expect(await screen.findByText(/error/i)).toBeInTheDocument();
-  });
-});
-```
-
-**Integration Tests**
-```typescript
-// Test feature interactions
-describe('Editor to Renderer Integration', () => {
-  it('should update 3D scene when code changes', async () => {
-    const { getByRole } = render(<App />);
-    const editor = getByRole('textbox');
-    
-    await userEvent.type(editor, 'cube([2, 2, 2]);');
-    
-    // Verify scene updates
-    await waitFor(() => {
-      expect(getSceneMeshCount()).toBe(1);
-    });
-  });
-});
-```
-
-**E2E Tests**
-```typescript
-// Test complete user workflows
-test('complete modeling workflow', async ({ page }) => {
-  await page.goto('/');
-  
-  // Type OpenSCAD code
-  await page.fill('[data-testid="editor"]', 'cube([1, 1, 1]);');
-  
-  // Verify 3D rendering
-  await expect(page.locator('[data-testid="scene"]')).toBeVisible();
-  
-  // Take screenshot for visual regression
-  await expect(page).toHaveScreenshot('cube-render.png');
-});
-```
-
-### Performance Testing
-
-```typescript
-// Performance benchmarks
-describe('Rendering Performance', () => {
-  it('should render cube in <16ms', async () => {
-    const start = performance.now();
-    
-    const result = await renderOpenSCAD('cube([1, 1, 1]);');
-    
-    const duration = performance.now() - start;
-    expect(duration).toBeLessThan(16);
-  });
-});
-```
-
-## Deployment Workflow
-
-### Pre-Deployment Checklist
-
-- [ ] All tests pass
-- [ ] Type checking passes
-- [ ] Code quality checks pass
-- [ ] Performance benchmarks pass
-- [ ] Visual regression tests pass
-- [ ] Documentation updated
-- [ ] Changelog updated
-
-### Build Process
-
-```bash
-# Production build
-pnpm build
-
-# Analyze bundle
-npx vite-bundle-analyzer dist
-
-# Test production build
-npx serve dist
-```
-
-### Performance Monitoring
-
-```typescript
-// Add performance monitoring
-function trackPerformance(operation: string, duration: number) {
-  if (duration > 16) {
-    console.warn(`Performance warning: ${operation} took ${duration}ms`);
-  }
-}
-
-// Monitor render times
-const renderStart = performance.now();
-// rendering code
-const renderDuration = performance.now() - renderStart;
-trackPerformance('render', renderDuration);
-```
-
-## Troubleshooting Guide
+### Development Tools
+- **BabylonJS Inspector**: For 3D scene debugging
+- **React DevTools**: For component state inspection
+- **Zustand DevTools**: For state management debugging
+- **Monaco Editor**: Built-in debugging features
 
 ### Common Issues
+- **Memory leaks**: Check BabylonJS resource disposal
+- **Performance issues**: Use performance profiling tools
+- **Parser errors**: Check tree-sitter grammar and error recovery
+- **Type errors**: Ensure strict TypeScript compliance
 
-**Module Resolution Errors**
-```bash
-# Check tsconfig paths
-cat tsconfig.json | grep paths
+## Continuous Integration
 
-# Verify file exists
-ls -la src/path/to/module
+### Automated Checks
+- TypeScript compilation
+- Biome linting and formatting
+- Unit and integration tests
+- Visual regression tests
+- Performance benchmarks
+- Security vulnerability scanning
 
-# Clear module cache
-rm -rf node_modules/.cache
-```
+### Quality Gates
+- Zero TypeScript errors
+- Zero Biome violations
+- 95%+ test coverage
+- Performance thresholds met
+- All tests passing
 
-**Memory Issues**
-```bash
-# Increase Node.js memory
-export NODE_OPTIONS="--max-old-space-size=4096"
-
-# Monitor memory usage
-node --inspect-brk node_modules/.bin/vite
-```
-
-**BabylonJS Issues**
-```typescript
-// Check WebGL support
-if (!BABYLON.Engine.isSupported()) {
-  console.error('WebGL not supported');
-}
-
-// Monitor memory leaks
-scene.onDisposeObservable.add(() => {
-  console.log('Scene disposed');
-});
-```
-
-### Debug Tools
-
-- **React DevTools**: Component inspection
-- **BabylonJS Inspector**: 3D scene debugging
-- **Chrome DevTools**: Performance profiling
-- **VS Code Debugger**: Breakpoint debugging
-
-This workflow ensures consistent, high-quality development practices across the OpenSCAD Babylon project.
+This workflow ensures consistent, high-quality development while maintaining the performance and reliability standards required for a production 3D modeling application.

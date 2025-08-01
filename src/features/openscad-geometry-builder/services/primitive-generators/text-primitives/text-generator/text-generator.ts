@@ -341,7 +341,6 @@ export class TextGeneratorService {
       case 'right':
         x = -layout.totalWidth;
         break;
-      case 'left':
       default:
         x = 0;
         break;

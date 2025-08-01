@@ -1,8 +1,50 @@
 {
   "project_name": "openscad-babylon",
+  "description": "Production-ready web-based 3D model editor using OpenSCAD syntax with BabylonJS rendering",
   "language": "typescript",
   "framework": "react",
+  "architecture": "bulletproof-react",
   "testing_framework": "vitest",
   "source_directory": "src",
-  "component_directory": "src/shared/components"
+  "component_directory": "src/shared/components",
+  "features_directory": "src/features",
+  "tech_stack": {
+    "frontend": {
+      "react": "19.0.0",
+      "typescript": "5.8.3",
+      "vite": "6.0.0",
+      "babylonjs": "8.16.1",
+      "monaco_editor": "0.52.2",
+      "web_tree_sitter": "0.25.3"
+    },
+    "state_management": {
+      "zustand": "5.0.5",
+      "immer": "10.1.1",
+      "reselect": "5.1.1"
+    },
+    "quality_tools": {
+      "biome": "2.0.6",
+      "vitest": "1.6.1",
+      "playwright": "1.53.0"
+    }
+  },
+  "architecture_layers": [
+    "OpenSCAD Parser Layer",
+    "BabylonJS-Extended AST Layer",
+    "Mesh Generation Layer",
+    "Scene Management Layer"
+  ],
+  "core_features": ["babylon-renderer", "code-editor", "openscad-parser", "store"],
+  "performance_targets": {
+    "render_time": "<16ms",
+    "test_coverage": "95%+",
+    "hot_reload": "<100ms"
+  },
+  "coding_standards": {
+    "typescript_strict": true,
+    "functional_programming": true,
+    "result_pattern": true,
+    "co_located_tests": true,
+    "file_size_limit": 500
+  }
 }

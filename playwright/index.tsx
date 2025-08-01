@@ -6,10 +6,16 @@
  * to match the main React application environment.
  */
 
+// Add custom properties to XMLHttpRequest for Playwright logging
+declare global {
+  interface XMLHttpRequest {
+    _playwrightUrl: string;
+    _playwrightMethod: string;
+  }
+}
+
 // Import hooks for component testing setup
 import { afterMount, beforeMount } from '@playwright/experimental-ct-react/hooks';
-// Import React for component wrapping
-import React from 'react';
 
 // Import global styles
 import '../src/index.css';
@@ -23,19 +29,19 @@ const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 const originalConsoleInfo = console.info;
 
-console.log = (...args: any[]) => {
+console.log = (...args: unknown[]) => {
   originalConsoleLog('[PLAYWRIGHT][CONSOLE][LOG]', ...args);
 };
 
-console.error = (...args: any[]) => {
+console.error = (...args: unknown[]) => {
   originalConsoleError('[PLAYWRIGHT][CONSOLE][ERROR]', ...args);
 };
 
-console.warn = (...args: any[]) => {
+console.warn = (...args: unknown[]) => {
   originalConsoleWarn('[PLAYWRIGHT][CONSOLE][WARN]', ...args);
 };
 
-console.info = (...args: any[]) => {
+console.info = (...args: unknown[]) => {
   originalConsoleInfo('[PLAYWRIGHT][CONSOLE][INFO]', ...args);
 };
 
@@ -63,24 +69,22 @@ if (typeof window !== 'undefined') {
   const originalXHROpen = XMLHttpRequest.prototype.open;
   const originalXHRSend = XMLHttpRequest.prototype.send;
 
-  XMLHttpRequest.prototype.open = function (method: string, url: string, ...args: any[]) {
-    (this as any)._playwrightUrl = url;
-    (this as any)._playwrightMethod = method;
+  XMLHttpRequest.prototype.open = function (method: string, url: string, ...args: unknown[]) {
+    this._playwrightUrl = url;
+    this._playwrightMethod = method;
     console.log(`[PLAYWRIGHT][NETWORK][XHR] ${method} ${url}`);
     return originalXHROpen.call(this, method, url, ...args);
   };
 
-  XMLHttpRequest.prototype.send = function (...args: any[]) {
+  XMLHttpRequest.prototype.send = function (...args: unknown[]) {
     this.addEventListener('load', () => {
       console.log(
-        `[PLAYWRIGHT][NETWORK][XHR_RESPONSE] ${this.status} ${this.statusText} ${(this as any)._playwrightUrl}`
+        `[PLAYWRIGHT][NETWORK][XHR_RESPONSE] ${this.status} ${this.statusText} ${this._playwrightUrl}`
       );
     });
 
     this.addEventListener('error', () => {
-      console.error(
-        `[PLAYWRIGHT][NETWORK][XHR_ERROR] Failed to load ${(this as any)._playwrightUrl}`
-      );
+      console.error(`[PLAYWRIGHT][NETWORK][XHR_ERROR] Failed to load ${this._playwrightUrl}`);
     });
 
     return originalXHRSend.call(this, ...args);

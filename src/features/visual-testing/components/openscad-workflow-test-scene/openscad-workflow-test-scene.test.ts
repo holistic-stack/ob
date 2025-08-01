@@ -18,7 +18,6 @@ import { beforeEach, describe, expect, type MockedFunction, test, vi } from 'vit
 import { OpenSCADRenderingPipelineService } from '../../../openscad-geometry-builder/services/pipeline/openscad-rendering-pipeline';
 import { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import {
-  OpenSCADWorkflowTestScene,
   type OpenSCADWorkflowTestSceneProps,
   ProcessingStatus,
   useOpenSCADWorkflow,
@@ -135,13 +134,11 @@ describe('OpenSCADWorkflowTestScene', () => {
         data: [mockMesh],
       });
 
-      const onMeshesGenerated = vi.fn();
-      const onStatusUpdate = vi.fn();
+      const _onMeshesGenerated = vi.fn();
+      const _onStatusUpdate = vi.fn();
 
       // ACT: Process OpenSCAD code
-      const { result } = renderHook(() =>
-        useOpenSCADWorkflow(defaultProps.openscadCode, defaultProps.babylonScene)
-      );
+      renderHook(() => useOpenSCADWorkflow(defaultProps.openscadCode, defaultProps.babylonScene));
 
       // Wait for processing to complete
       await act(async () => {
@@ -165,7 +162,7 @@ describe('OpenSCADWorkflowTestScene', () => {
         error: 'Syntax error at line 1',
       });
 
-      const onError = vi.fn();
+      const _onError = vi.fn();
 
       // ACT: Process invalid OpenSCAD code
       const { result } = renderHook(() =>

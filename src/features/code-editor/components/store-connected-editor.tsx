@@ -397,11 +397,11 @@ export const StoreConnectedEditor: React.FC<StoreConnectedEditorProps> = ({
     });
   }, [
     isDirty,
-    parsingErrors?.length || 0,
-    parsingWarnings?.length || 0,
     enableRealTimeParsing,
     selection,
-    code?.length || 0,
+    code?.length,
+    parsingErrors.length,
+    parsingWarnings.length,
   ]); // Removed 'code' dependency to reduce keystroke overhead
 
   /**

@@ -9,23 +9,14 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '@/shared/types/result.types';
+import { isSuccess } from '@/shared/types/result.types';
 import {
-  createInvalidSphereParameters,
-  createSphereTestParameters,
-  createSphereTestParametersFn3,
-  expectError,
-  expectGeometryProperties,
   expectInvalidParametersError,
   expectPerformance,
-  expectSuccess,
   expectSuccessfulGeometry,
-  expectValidGeometry,
   expectValidMetadata,
-  expectValidNormals,
   expectValidVertices,
 } from '../../../../test-utilities';
-import type { SphereGeometryData } from '../../../../types/geometry-data';
 import { FragmentCalculatorService } from '../../../fragment-calculator';
 import { SphereGeneratorService } from './sphere-generator';
 

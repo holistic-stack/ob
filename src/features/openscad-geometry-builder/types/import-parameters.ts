@@ -248,7 +248,9 @@ export function validateImportParameters(params: ImportParameters): ImportValida
   if (params.origin !== undefined) {
     if (!Array.isArray(params.origin) || params.origin.length !== 2) {
       errors.push('Origin must be an array of two numbers [x, y]');
-    } else if (!params.origin.every((coord) => typeof coord === 'number' && isFinite(coord))) {
+    } else if (
+      !params.origin.every((coord) => typeof coord === 'number' && Number.isFinite(coord))
+    ) {
       errors.push('Origin coordinates must be finite numbers');
     }
   }

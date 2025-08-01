@@ -65,17 +65,13 @@ const createError = <E>(error: E): Result<never, E> => ({ success: false, error 
  * @returns Result with variable name and value, or error
  */
 function extractGlobalVariableFromAssignment(
-  node: any
-): Result<{ variable: string; value: any }, string> {
+  node: Record<string, unknown>
+): Result<{ variable: string; value: unknown }, string> {
   try {
     // Handle assign_statement nodes (OpenSCAD parser format)
     if (node.type === 'assign_statement' && node.assignments) {
       for (const assignment of node.assignments) {
-        if (
-          assignment.variable &&
-          assignment.variable.name &&
-          assignment.variable.name.startsWith('$')
-        ) {
+        if (assignment.variable?.name?.startsWith('$')) {
           const variableName = assignment.variable.name;
           const value = extractValueFromExpression(assignment.value);
           return createSuccess({ variable: variableName, value });
@@ -86,11 +82,7 @@ function extractGlobalVariableFromAssignment(
     // Handle assignment_statement nodes (alternative format)
     if (node.type === 'assignment_statement' && node.assignments) {
       for (const assignment of node.assignments) {
-        if (
-          assignment.variable &&
-          assignment.variable.name &&
-          assignment.variable.name.startsWith('$')
-        ) {
+        if (assignment.variable?.name?.startsWith('$')) {
           const variableName = assignment.variable.name;
           const value = extractValueFromExpression(assignment.value);
           return createSuccess({ variable: variableName, value });
@@ -122,7 +114,7 @@ function extractGlobalVariableFromAssignment(
  * @param expression - Expression AST node
  * @returns Numeric value
  */
-function extractValueFromExpression(expression: any): number {
+function extractValueFromExpression(expression: Record<string, unknown>): number {
   if (!expression) return 0;
 
   if (expression.type === 'expression' && expression.expressionType === 'literal') {
@@ -157,7 +149,7 @@ function extractValueFromExpression(expression: any): number {
  */
 function validateGlobalVariable(
   variable: string,
-  value: any
+  value: unknown
 ): Result<void, OpenSCADGlobalsValidationError> {
   switch (variable) {
     case '$fn':
@@ -239,7 +231,6 @@ import type {
   OpenSCADGeometryResolution,
   OpenSCADGlobalsActions,
   OpenSCADGlobalsDefaults,
-  OpenSCADGlobalsSlice,
   OpenSCADGlobalsState,
   OpenSCADGlobalsValidationError,
   OpenSCADModuleSystem,
@@ -464,7 +455,7 @@ function validateDebug(debug: Partial<OpenSCADDebug>): OpenSCADGlobalsValidation
  */
 export const createOpenSCADGlobalsSlice = (
   set: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[0],
-  get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
+  _get: Parameters<StateCreator<AppStore, [['zustand/immer', never]], [], AppStore>>[1],
   _config: Record<string, never> = {}
 ): OpenSCADGlobalsActions => ({
   // Actions only - state is managed in createInitialState
@@ -582,7 +573,7 @@ export const createOpenSCADGlobalsSlice = (
     }
 
     if (errors.length > 0) {
-      return createError(errors[0]!);
+      return createError(errors[0]);
     }
 
     set((state) => ({
@@ -664,9 +655,9 @@ export const createOpenSCADGlobalsSlice = (
    * Extract and apply global variables from OpenSCAD AST nodes.
    * Processes assignment nodes for special variables like $fs, $fa, $fn, etc.
    */
-  extractGlobalsFromAST: (ast: ReadonlyArray<any>) => {
+  extractGlobalsFromAST: (ast: ReadonlyArray<Record<string, unknown>>) => {
     set((state) => {
-      const extractedGlobals: Record<string, any> = {};
+      const extractedGlobals: Record<string, unknown> = {};
       const errors: OpenSCADGlobalsValidationError[] = [];
 
       // Process each AST node to find global variable assignments

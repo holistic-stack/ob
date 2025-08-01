@@ -110,7 +110,7 @@ describe('OffsetOperationsService', () => {
           expect(result.data.metadata.primitiveType).toBe('2d-polygon');
           // Expanded circle should have larger area
           const originalArea = Math.PI * 5 * 5; // π * r²
-          const expectedArea = Math.PI * (5 + 2) * (5 + 2); // π * (r + offset)²
+          const _expectedArea = Math.PI * (5 + 2) * (5 + 2); // π * (r + offset)²
           // For polygonal approximations, verify area increased significantly
           expect(result.data.metadata.area).toBeGreaterThan(originalArea);
           expect(result.data.metadata.area).toBeGreaterThan(120); // Reasonable lower bound

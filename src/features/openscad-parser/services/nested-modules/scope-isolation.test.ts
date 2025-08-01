@@ -21,7 +21,6 @@ import { describe, expect, it } from 'vitest';
 import type { ASTNode, ModuleDefinitionNode } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
-import { createSourceLocation } from '../test-utils.js';
 
 describe('Scope Isolation in Nested Modules', () => {
   describe('Same-named modules in different scopes', () => {

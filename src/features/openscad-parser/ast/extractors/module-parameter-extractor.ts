@@ -264,7 +264,7 @@ function extractDefaultValue(defaultValueNode: TSNode): ast.ParameterValue {
  * @param {TSNode} arrayNode - The Tree-sitter node representing the array literal.
  * @returns {ast.Vector2D | ast.Vector3D} The extracted array values as a 2D or 3D vector.
  */
-function extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
+function _extractArrayLiteral(arrayNode: TSNode): ast.Vector2D | ast.Vector3D {
   const values: number[] = [];
 
   // Process each element in the array

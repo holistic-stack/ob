@@ -207,7 +207,7 @@ describe('Canvas Ready Utils', () => {
       vi.mocked(mockCanvas.getContext).mockReturnValue({} as WebGLRenderingContext);
 
       // Simulate the evaluation function
-      const evaluationFunction = (selector: string) => {
+      const evaluationFunction = (_selector: string) => {
         const canvas = mockCanvas; // In real scenario, this would be document.querySelector(selector)
         if (!canvas) return false;
 
@@ -232,7 +232,7 @@ describe('Canvas Ready Utils', () => {
       // Mock failed WebGL context
       vi.mocked(mockCanvas.getContext).mockReturnValue(null);
 
-      const evaluationFunction = (selector: string) => {
+      const evaluationFunction = (_selector: string) => {
         const canvas = mockCanvas;
         if (!canvas) return false;
 

@@ -24,10 +24,10 @@ import {
 
 // Mock Playwright page object
 const createMockPage = () => {
-  const listeners: Record<string, Function[]> = {};
+  const listeners: Record<string, ((...args: any[]) => void)[]> = {};
 
   return {
-    on: vi.fn((event: string, callback: Function) => {
+    on: vi.fn((event: string, callback: (...args: any[]) => void) => {
       if (!listeners[event]) {
         listeners[event] = [];
       }
@@ -75,7 +75,7 @@ const createMockRequest = (method: string, url: string, resourceType = 'xhr') =>
 });
 
 // Mock network response
-const createMockResponse = (status: number, statusText: string, url: string) => ({
+const _createMockResponse = (status: number, statusText: string, url: string) => ({
   status: () => status,
   statusText: () => statusText,
   url: () => url,

@@ -120,7 +120,7 @@ export const runVisualTest = async (
     babylonTimeout?: number;
   } = {}
 ): Promise<void> => {
-  const { captureMetrics = false, babylonTimeout = 10000 } = options;
+  const { captureMetrics = false } = options;
 
   try {
     await logTestInfo(page, `Starting visual test: ${testName}`, testName);

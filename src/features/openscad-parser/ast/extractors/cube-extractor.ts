@@ -64,7 +64,6 @@ import { getLocation } from '../utils/location-utils.js';
 import { extractArguments } from './argument-extractor.js';
 import {
   extractBooleanParameter,
-  extractNumberParameter,
   extractNumberParameterOrReference,
   extractVectorParameter,
 } from './parameter-extractor.js';

@@ -244,7 +244,7 @@ export interface OpenSCADGlobalsActions {
    * @returns Result indicating success or extraction errors
    */
   extractGlobalsFromAST: (
-    ast: ReadonlyArray<any>
+    ast: ReadonlyArray<ASTNode>
   ) => Result<void, OpenSCADGlobalsValidationError[]>;
 }
 

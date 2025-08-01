@@ -115,7 +115,7 @@ export const createTestModuleCall = (
 ): ModuleInstantiationNode => ({
   type: 'module_instantiation',
   name,
-  args: args.map((value, index) => ({
+  args: args.map((value, _index) => ({
     name: undefined,
     value: value as ParameterValue,
   })),

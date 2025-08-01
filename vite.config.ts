@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 
 import path from 'node:path';
-import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -38,7 +37,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@': path.resolve(__dirname, './src'),
+      '@openscad/parser': path.resolve(
+        __dirname,
+        './node_modules/@holistic-stack/openscad-parser/dist/index.js'
+      ),
     },
   },
   optimizeDeps: {

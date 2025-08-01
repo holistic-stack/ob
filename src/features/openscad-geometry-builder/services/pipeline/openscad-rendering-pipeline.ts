@@ -31,13 +31,9 @@ import { error, success } from '../../../../shared/utils/functional/result';
 import type { ASTNode, AssignStatementNode } from '../../../openscad-parser/core/ast-types';
 import {
   ASTToGeometryConverterService,
-  type ConversionError,
   type GlobalVariables,
 } from '../ast-converter/ast-to-geometry-converter';
-import {
-  GeometryToMeshConverterService,
-  type MeshConversionError,
-} from '../mesh-converter/geometry-to-mesh-converter';
+import { GeometryToMeshConverterService } from '../mesh-converter/geometry-to-mesh-converter';
 
 const logger = createLogger('OpenSCADRenderingPipelineService');
 

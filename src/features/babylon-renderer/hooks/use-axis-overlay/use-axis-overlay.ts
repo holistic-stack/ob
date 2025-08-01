@@ -380,7 +380,10 @@ export function useAxisOverlay(): UseAxisOverlayReturn {
         logger.error('[ERROR][useAxisOverlay] Cleanup error:', error);
       }
     };
-  }, []); // Empty dependency array - only run on unmount
+  }, [
+    // Reset store state
+    resetAxisOverlay,
+  ]); // Empty dependency array - only run on unmount
 
   return {
     service: serviceRef.current,

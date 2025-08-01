@@ -308,7 +308,8 @@ export function SimpleOrientationGizmo({
       const center = new Vector3(options.size / 2, options.size / 2, 0);
 
       for (const layer of layers) {
-        const position = layer.position!;
+        if (!layer.position) continue;
+        const position = layer.position;
         const isSelected = selectedAxisRef.current === layer;
         const isFront = position.z >= -0.01;
 

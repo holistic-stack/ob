@@ -471,7 +471,7 @@ export class STLImporterService {
     // Check for NaN or infinite values
     for (let i = 0; i < mesh.vertices.length; i++) {
       const vertex = mesh.vertices[i];
-      if (!isFinite(vertex.x) || !isFinite(vertex.y) || !isFinite(vertex.z)) {
+      if (!Number.isFinite(vertex.x) || !Number.isFinite(vertex.y) || !Number.isFinite(vertex.z)) {
         errors.push(`Invalid vertex at index ${i}: contains NaN or infinite values`);
       }
     }

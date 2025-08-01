@@ -2,28 +2,20 @@
 
 ## Overview
 
-This document provides comprehensive API reference for the OpenSCAD Babylon project, including all public interfaces, types, and usage examples.
+This document provides comprehensive API documentation for the OpenSCAD Babylon project. The project follows a feature-based architecture with strict TypeScript, functional programming patterns, and BabylonJS integration.
 
 ## Core Types
 
-### Result<T, E> Pattern
+### Result Pattern
 
 ```typescript
-/**
- * Result type for explicit error handling
- * @template T Success data type
- * @template E Error type
- */
+// Core Result type for error handling
 type Result<T, E> = 
   | { success: true; data: T }
   | { success: false; error: E };
 
-// Usage examples
-function parseCode(code: string): Result<AST, ParseError> {
-  // Implementation
-}
-
-function renderMesh(node: OpenSCADNode): Result<BABYLON.Mesh, RenderError> {
+// Usage in all API functions
+function apiFunction(): Result<ReturnType, ErrorType> {
   // Implementation
 }
 ```
@@ -31,752 +23,791 @@ function renderMesh(node: OpenSCADNode): Result<BABYLON.Mesh, RenderError> {
 ### Branded Types
 
 ```typescript
-/**
- * Branded types for type safety
- */
+// Domain-specific ID types
 type NodeId = string & { __brand: 'NodeId' };
 type MeshId = string & { __brand: 'MeshId' };
 type SceneId = string & { __brand: 'SceneId' };
+type UserId = string & { __brand: 'UserId' };
 
 // Factory functions
-function createNodeId(value: string): NodeId {
-  return value as NodeId;
-}
-
-function createMeshId(value: string): MeshId {
-  return value as MeshId;
-}
+function createNodeId(value: string): NodeId;
+function createMeshId(value: string): MeshId;
+function createSceneId(value: string): SceneId;
+function createUserId(value: string): UserId;
 ```
 
 ### Error Types
 
 ```typescript
-/**
- * Base error class
- */
-abstract class OpenSCADError extends Error {
-  abstract readonly code: string;
-  abstract readonly category: ErrorCategory;
+// Base error interface
+interface BaseError {
+  message: string;
+  code: string;
+  timestamp: Date;
 }
 
-/**
- * Parse error for syntax issues
- */
-class ParseError extends OpenSCADError {
-  readonly code = 'PARSE_ERROR';
-  readonly category = ErrorCategory.Parse;
-  
-  constructor(
-    message: string,
-    public readonly line?: number,
-    public readonly column?: number
-  ) {
-    super(message);
-  }
+// Specific error types
+interface ParseError extends BaseError {
+  code: 'PARSE_ERROR';
+  location?: {
+    line: number;
+    column: number;
+  };
+  syntaxError?: string;
 }
 
-/**
- * Render error for 3D rendering issues
- */
-class RenderError extends OpenSCADError {
-  readonly code = 'RENDER_ERROR';
-  readonly category = ErrorCategory.Render;
-  
-  constructor(
-    message: string,
-    public readonly nodeId?: NodeId
-  ) {
-    super(message);
-  }
+interface RenderError extends BaseError {
+  code: 'RENDER_ERROR';
+  meshId?: MeshId;
+  babylonError?: string;
 }
 
-/**
- * Validation error for AST validation
- */
-class ValidationError extends OpenSCADError {
-  readonly code = 'VALIDATION_ERROR';
-  readonly category = ErrorCategory.Validation;
+interface ValidationError extends BaseError {
+  code: 'VALIDATION_ERROR';
+  field?: string;
+  expectedType?: string;
 }
 
-/**
- * Performance error for performance violations
- */
-class PerformanceError extends OpenSCADError {
-  readonly code = 'PERFORMANCE_ERROR';
-  readonly category = ErrorCategory.Performance;
-  
-  constructor(
-    message: string,
-    public readonly actualTime: number,
-    public readonly expectedTime: number
-  ) {
-    super(message);
-  }
+interface PerformanceError extends BaseError {
+  code: 'PERFORMANCE_ERROR';
+  duration: number;
+  threshold: number;
 }
 ```
 
-## OpenSCAD AST API
+## OpenSCAD Parser API
 
-### Base Node Interface
+### OpenSCADParser Class
 
 ```typescript
-/**
- * Base interface for all OpenSCAD nodes
- */
-interface OpenSCADNodeBase {
-  readonly id: NodeId;
-  readonly type: OpenSCADNodeType;
-  readonly children: readonly OpenSCADNode[];
-  readonly parent?: OpenSCADNode;
-  readonly metadata: NodeMetadata;
+class OpenSCADParser {
+  /**
+   * Initialize the parser with tree-sitter grammar
+   * @returns Promise that resolves when parser is ready
+   */
+  init(): Promise<void>;
+  
+  /**
+   * Parse OpenSCAD code into AST
+   * @param code - OpenSCAD source code
+   * @returns Result containing AST or parse error
+   */
+  parse(code: string): Result<OpenSCADNode, ParseError>;
+  
+  /**
+   * Validate OpenSCAD syntax without full parsing
+   * @param code - OpenSCAD source code
+   * @returns Result containing validation status
+   */
+  validate(code: string): Result<boolean, ValidationError>;
+  
+  /**
+   * Get syntax errors from last parse operation
+   * @returns Array of syntax errors with locations
+   */
+  getSyntaxErrors(): ParseError[];
+  
+  /**
+   * Dispose parser resources
+   */
+  dispose(): void;
 }
+```
 
-/**
- * Abstract base class for OpenSCAD nodes
- */
-abstract class OpenSCADNode extends BABYLON.AbstractMesh implements OpenSCADNodeBase {
-  abstract readonly type: OpenSCADNodeType;
+### OpenSCAD Node Types
+
+```typescript
+// Base node interface
+abstract class OpenSCADNode extends BABYLON.AbstractMesh {
+  protected _nodeType: OpenSCADNodeType;
+  protected _parameters: Record<string, unknown>;
+  
+  constructor(
+    name: string,
+    scene: BABYLON.Scene,
+    nodeType: OpenSCADNodeType,
+    parameters?: Record<string, unknown>
+  );
+  
+  /**
+   * Evaluate node to generate BabylonJS mesh
+   * @returns Result containing mesh or render error
+   */
   abstract evaluate(): Result<BABYLON.Mesh, RenderError>;
-  abstract clone(): OpenSCADNode;
-  abstract validate(): Result<void, ValidationError>;
   
-  // Node management
-  addChild(child: OpenSCADNode): void;
-  removeChild(child: OpenSCADNode): void;
-  getChildren(): readonly OpenSCADNode[];
+  /**
+   * Get the OpenSCAD node type
+   * @returns Node type identifier
+   */
+  abstract getOpenSCADType(): OpenSCADNodeType;
   
-  // Traversal
-  traverse(visitor: NodeVisitor): void;
-  find(predicate: (node: OpenSCADNode) => boolean): OpenSCADNode | null;
+  /**
+   * Clone the node with new name and parent
+   * @param name - New node name
+   * @param newParent - Optional new parent node
+   * @returns Cloned node instance
+   */
+  abstract clone(name: string, newParent?: BABYLON.Node): OpenSCADNode;
   
-  // Serialization
-  toJSON(): NodeJSON;
-  static fromJSON(json: NodeJSON): OpenSCADNode;
-}
-```
-
-### Node Types
-
-```typescript
-/**
- * OpenSCAD node type enumeration
- */
-enum OpenSCADNodeType {
-  // Primitives
-  Cube = 'cube',
-  Sphere = 'sphere',
-  Cylinder = 'cylinder',
-  Polyhedron = 'polyhedron',
+  /**
+   * Get node parameters (read-only)
+   * @returns Immutable parameters object
+   */
+  getParameters(): Readonly<Record<string, unknown>>;
   
-  // 2D Primitives
-  Square = 'square',
-  Circle = 'circle',
-  Polygon = 'polygon',
-  
-  // Transformations
-  Translate = 'translate',
-  Rotate = 'rotate',
-  Scale = 'scale',
-  Mirror = 'mirror',
-  Multmatrix = 'multmatrix',
-  
-  // Boolean Operations
-  Union = 'union',
-  Difference = 'difference',
-  Intersection = 'intersection',
-  
-  // Extrusion
-  LinearExtrude = 'linear_extrude',
-  RotateExtrude = 'rotate_extrude',
-  
-  // Control Flow
-  For = 'for',
-  If = 'if',
-  Let = 'let',
-  
-  // Modules
-  Module = 'module',
-  ModuleCall = 'module_call',
-  
-  // Functions
-  Function = 'function',
-  FunctionCall = 'function_call'
+  /**
+   * Update node parameters
+   * @param parameters - New parameters to merge
+   * @returns Result indicating success or validation error
+   */
+  updateParameters(parameters: Partial<Record<string, unknown>>): Result<void, ValidationError>;
 }
 ```
 
 ### Primitive Nodes
 
 ```typescript
-/**
- * Cube primitive node
- */
+// Cube primitive
 class CubeNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Cube;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly size: BABYLON.Vector3 = new BABYLON.Vector3(1, 1, 1),
-    public readonly center: boolean = false
-  ) {
-    super(name, scene);
-  }
+    size: [number, number, number]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
-  
-  clone(): CubeNode {
-    return new CubeNode(this.name, this.getScene(), this.size, this.center);
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'cube';
+  clone(name: string, newParent?: BABYLON.Node): CubeNode;
 }
 
-/**
- * Sphere primitive node
- */
+// Sphere primitive
 class SphereNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Sphere;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly radius: number = 1,
-    public readonly fragments?: number
-  ) {
-    super(name, scene);
-  }
+    radius: number,
+    segments?: number
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'sphere';
+  clone(name: string, newParent?: BABYLON.Node): SphereNode;
 }
 
-/**
- * Cylinder primitive node
- */
+// Cylinder primitive
 class CylinderNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Cylinder;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly height: number = 1,
-    public readonly radius1: number = 1,
-    public readonly radius2?: number,
-    public readonly center: boolean = false,
-    public readonly fragments?: number
-  ) {
-    super(name, scene);
-  }
+    height: number,
+    radius1: number,
+    radius2?: number,
+    segments?: number
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'cylinder';
+  clone(name: string, newParent?: BABYLON.Node): CylinderNode;
 }
 ```
 
 ### Transform Nodes
 
 ```typescript
-/**
- * Translate transformation node
- */
+// Translation transform
 class TranslateNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Translate;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly translation: BABYLON.Vector3
-  ) {
-    super(name, scene);
-  }
+    translation: [number, number, number]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Apply translation to children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'translate';
+  clone(name: string, newParent?: BABYLON.Node): TranslateNode;
 }
 
-/**
- * Rotate transformation node
- */
+// Rotation transform
 class RotateNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Rotate;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly rotation: BABYLON.Vector3
-  ) {
-    super(name, scene);
-  }
+    rotation: [number, number, number]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Apply rotation to children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'rotate';
+  clone(name: string, newParent?: BABYLON.Node): RotateNode;
 }
 
-/**
- * Scale transformation node
- */
+// Scale transform
 class ScaleNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Scale;
-  
   constructor(
     name: string,
     scene: BABYLON.Scene,
-    public readonly scale: BABYLON.Vector3
-  ) {
-    super(name, scene);
-  }
+    scale: [number, number, number]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Apply scaling to children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'scale';
+  clone(name: string, newParent?: BABYLON.Node): ScaleNode;
 }
 ```
 
-### CSG Nodes
+### CSG Operation Nodes
 
 ```typescript
-/**
- * Union boolean operation node
- */
+// Union operation
 class UnionNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Union;
+  constructor(
+    name: string,
+    scene: BABYLON.Scene,
+    children: OpenSCADNode[]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Perform boolean union on children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'union';
+  clone(name: string, newParent?: BABYLON.Node): UnionNode;
+  
+  addChild(child: OpenSCADNode): void;
+  removeChild(child: OpenSCADNode): boolean;
+  getChildren(): readonly OpenSCADNode[];
 }
 
-/**
- * Difference boolean operation node
- */
+// Difference operation
 class DifferenceNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Difference;
+  constructor(
+    name: string,
+    scene: BABYLON.Scene,
+    children: OpenSCADNode[]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Perform boolean difference on children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'difference';
+  clone(name: string, newParent?: BABYLON.Node): DifferenceNode;
 }
 
-/**
- * Intersection boolean operation node
- */
+// Intersection operation
 class IntersectionNode extends OpenSCADNode {
-  readonly type = OpenSCADNodeType.Intersection;
+  constructor(
+    name: string,
+    scene: BABYLON.Scene,
+    children: OpenSCADNode[]
+  );
   
-  evaluate(): Result<BABYLON.Mesh, RenderError> {
-    // Perform boolean intersection on children
-  }
+  evaluate(): Result<BABYLON.Mesh, RenderError>;
+  getOpenSCADType(): 'intersection';
+  clone(name: string, newParent?: BABYLON.Node): IntersectionNode;
 }
 ```
 
-## Parser API
+## BabylonJS Renderer API
 
-### Parser Manager
-
-```typescript
-/**
- * Main parser interface
- */
-interface IOpenSCADParser {
-  parse(code: string): Result<OpenSCADNode, ParseError>;
-  validate(ast: OpenSCADNode): Result<void, ValidationError>;
-  getErrors(): readonly ParseError[];
-}
-
-/**
- * Parser manager implementation
- */
-class ParserManager implements IOpenSCADParser {
-  private parser: Parser;
-  private language: Language;
-  
-  /**
-   * Initialize the parser
-   */
-  async initialize(): Promise<Result<void, ParserError>> {
-    // Implementation
-  }
-  
-  /**
-   * Parse OpenSCAD code to AST
-   */
-  parse(code: string): Result<OpenSCADNode, ParseError> {
-    // Implementation
-  }
-  
-  /**
-   * Validate AST structure
-   */
-  validate(ast: OpenSCADNode): Result<void, ValidationError> {
-    // Implementation
-  }
-  
-  /**
-   * Get current parsing errors
-   */
-  getErrors(): readonly ParseError[] {
-    // Implementation
-  }
-}
-```
-
-### AST Processor
+### SceneManager Class
 
 ```typescript
-/**
- * AST processing utilities
- */
-class ASTProcessor {
+class SceneManager {
   /**
-   * Convert tree-sitter node to OpenSCAD node
+   * Create scene manager with canvas element
+   * @param canvas - HTML canvas element for rendering
+   * @param options - Optional scene configuration
    */
-  static processNode(node: SyntaxNode, scene: BABYLON.Scene): Result<OpenSCADNode, ProcessError> {
-    // Implementation
-  }
+  constructor(canvas: HTMLCanvasElement, options?: SceneOptions);
   
   /**
-   * Optimize AST for rendering
+   * Get the BabylonJS scene instance
+   * @returns Scene instance
    */
-  static optimize(ast: OpenSCADNode): Result<OpenSCADNode, OptimizationError> {
-    // Implementation
-  }
+  getScene(): BABYLON.Scene;
   
   /**
-   * Flatten AST for efficient processing
+   * Get the BabylonJS engine instance
+   * @returns Engine instance
    */
-  static flatten(ast: OpenSCADNode): OpenSCADNode[] {
-    // Implementation
-  }
-}
-```
-
-## Renderer API
-
-### Scene Manager
-
-```typescript
-/**
- * Scene management interface
- */
-interface ISceneManager {
-  initialize(canvas: HTMLCanvasElement): Result<void, RenderError>;
-  render(ast: OpenSCADNode): Result<PerformanceMetrics, RenderError>;
+  getEngine(): BABYLON.Engine;
+  
+  /**
+   * Add mesh to scene with proper management
+   * @param mesh - Mesh to add
+   * @param id - Optional mesh identifier
+   * @returns Result indicating success or error
+   */
+  addMesh(mesh: BABYLON.Mesh, id?: MeshId): Result<void, RenderError>;
+  
+  /**
+   * Remove mesh from scene
+   * @param meshId - Mesh identifier
+   * @returns Result indicating success or error
+   */
+  removeMesh(meshId: MeshId): Result<void, RenderError>;
+  
+  /**
+   * Clear all meshes from scene
+   * @returns Result indicating success or error
+   */
+  clearScene(): Result<void, RenderError>;
+  
+  /**
+   * Update scene with new AST
+   * @param ast - OpenSCAD AST root node
+   * @returns Result indicating success or error
+   */
+  updateScene(ast: OpenSCADNode): Result<void, RenderError>;
+  
+  /**
+   * Resize scene to match canvas
+   * @returns Result indicating success or error
+   */
+  resize(): Result<void, RenderError>;
+  
+  /**
+   * Dispose scene and engine resources
+   */
   dispose(): void;
-  getScene(): BABYLON.Scene | null;
-}
-
-/**
- * BabylonJS scene manager
- */
-class BabylonSceneManager implements ISceneManager {
-  private engine: BABYLON.Engine | null = null;
-  private scene: BABYLON.Scene | null = null;
-  private camera: BABYLON.Camera | null = null;
-  
-  /**
-   * Initialize the 3D scene
-   */
-  initialize(canvas: HTMLCanvasElement): Result<void, RenderError> {
-    // Implementation
-  }
-  
-  /**
-   * Render OpenSCAD AST to 3D scene
-   */
-  render(ast: OpenSCADNode): Result<PerformanceMetrics, RenderError> {
-    // Implementation
-  }
-  
-  /**
-   * Dispose of all resources
-   */
-  dispose(): void {
-    // Implementation
-  }
-  
-  /**
-   * Get the current scene
-   */
-  getScene(): BABYLON.Scene | null {
-    return this.scene;
-  }
 }
 ```
 
-### Mesh Converter
+### MeshGenerator Class
 
 ```typescript
-/**
- * Mesh conversion utilities
- */
-class MeshConverter {
+class MeshGenerator {
   /**
-   * Convert OpenSCAD node to BabylonJS mesh
+   * Generate BabylonJS mesh from OpenSCAD node
+   * @param node - OpenSCAD node to convert
+   * @param scene - Target BabylonJS scene
+   * @returns Result containing mesh or render error
    */
-  static convertToMesh(node: OpenSCADNode): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
+  static generateMesh(
+    node: OpenSCADNode, 
+    scene: BABYLON.Scene
+  ): Result<BABYLON.Mesh, RenderError>;
   
   /**
-   * Apply transformations to mesh
+   * Apply CSG operation to meshes
+   * @param operation - CSG operation type
+   * @param meshes - Input meshes
+   * @param scene - Target scene
+   * @returns Result containing resulting mesh
    */
-  static applyTransform(
-    mesh: BABYLON.Mesh,
-    transform: BABYLON.Matrix
-  ): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
+  static applyCSGOperation(
+    operation: 'union' | 'difference' | 'intersection',
+    meshes: BABYLON.Mesh[],
+    scene: BABYLON.Scene
+  ): Result<BABYLON.Mesh, RenderError>;
   
   /**
-   * Optimize mesh for rendering
+   * Optimize mesh for performance
+   * @param mesh - Mesh to optimize
+   * @returns Result containing optimized mesh
    */
-  static optimizeMesh(mesh: BABYLON.Mesh): Result<BABYLON.Mesh, RenderError> {
-    // Implementation
-  }
+  static optimizeMesh(mesh: BABYLON.Mesh): Result<BABYLON.Mesh, RenderError>;
 }
 ```
 
-### CSG Operations
+## Code Editor API
+
+### EditorManager Class
 
 ```typescript
-/**
- * CSG operations using manifold-3d
- */
-class CSGOperations {
+class EditorManager {
   /**
-   * Perform boolean union
+   * Initialize Monaco editor with OpenSCAD support
+   * @param container - HTML element to contain editor
+   * @param options - Editor configuration options
    */
-  static union(meshes: BABYLON.Mesh[]): Result<BABYLON.Mesh, CSGError> {
-    // Implementation
-  }
+  constructor(container: HTMLElement, options?: EditorOptions);
   
   /**
-   * Perform boolean difference
+   * Get current editor content
+   * @returns Current OpenSCAD code
    */
-  static difference(
-    base: BABYLON.Mesh,
-    subtract: BABYLON.Mesh
-  ): Result<BABYLON.Mesh, CSGError> {
-    // Implementation
-  }
+  getValue(): string;
   
   /**
-   * Perform boolean intersection
+   * Set editor content
+   * @param value - OpenSCAD code to set
+   * @returns Result indicating success or error
    */
-  static intersection(meshes: BABYLON.Mesh[]): Result<BABYLON.Mesh, CSGError> {
-    // Implementation
-  }
+  setValue(value: string): Result<void, ValidationError>;
+  
+  /**
+   * Get current cursor position
+   * @returns Cursor position with line and column
+   */
+  getCursorPosition(): { line: number; column: number };
+  
+  /**
+   * Set cursor position
+   * @param position - Target position
+   * @returns Result indicating success or error
+   */
+  setCursorPosition(position: { line: number; column: number }): Result<void, ValidationError>;
+  
+  /**
+   * Add syntax error markers
+   * @param errors - Array of parse errors to display
+   * @returns Result indicating success or error
+   */
+  setErrorMarkers(errors: ParseError[]): Result<void, ValidationError>;
+  
+  /**
+   * Clear all error markers
+   * @returns Result indicating success or error
+   */
+  clearErrorMarkers(): Result<void, ValidationError>;
+  
+  /**
+   * Register content change callback
+   * @param callback - Function to call on content change
+   */
+  onContentChange(callback: (content: string) => void): void;
+  
+  /**
+   * Register cursor position change callback
+   * @param callback - Function to call on cursor move
+   */
+  onCursorChange(callback: (position: { line: number; column: number }) => void): void;
+  
+  /**
+   * Dispose editor resources
+   */
+  dispose(): void;
 }
 ```
 
-## Store API
+## State Management API
 
-### State Interface
+### Store Interfaces
 
 ```typescript
-/**
- * Application state interface
- */
-interface AppState {
-  editor: EditorState;
-  parsing: ParsingState;
-  scene: SceneState;
-  ui: UIState;
-}
-
-/**
- * Editor state
- */
-interface EditorState {
+// Editor state slice
+interface EditorSlice {
   content: string;
-  cursorPosition: number;
+  cursorPosition: { line: number; column: number };
   syntaxErrors: ParseError[];
-  isModified: boolean;
-}
-
-/**
- * Parsing state
- */
-interface ParsingState {
-  ast: OpenSCADNode | null;
-  isValid: boolean;
-  errors: ParseError[];
-  isLoading: boolean;
-  lastParseTime: number;
-}
-
-/**
- * Scene state
- */
-interface SceneState {
-  meshes: BABYLON.Mesh[];
-  camera: CameraState;
-  performance: PerformanceMetrics;
-  isRendering: boolean;
-}
-```
-
-### Store Actions
-
-```typescript
-/**
- * Store action interface
- */
-interface StoreActions {
-  // Editor actions
-  setEditorContent: (content: string) => void;
-  setCursorPosition: (position: number) => void;
+  isReadOnly: boolean;
+  
+  // Actions
+  setContent: (content: string) => void;
+  setCursorPosition: (position: { line: number; column: number }) => void;
   setSyntaxErrors: (errors: ParseError[]) => void;
-  
-  // Parsing actions
-  setAST: (ast: OpenSCADNode | null) => void;
-  setParsingErrors: (errors: ParseError[]) => void;
-  setParsingLoading: (loading: boolean) => void;
-  
-  // Scene actions
-  setMeshes: (meshes: BABYLON.Mesh[]) => void;
-  setCameraState: (camera: CameraState) => void;
-  setPerformanceMetrics: (metrics: PerformanceMetrics) => void;
-  setRendering: (rendering: boolean) => void;
-}
-```
-
-## React Components API
-
-### Editor Component
-
-```typescript
-/**
- * OpenSCAD editor component props
- */
-interface OpenSCADEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  onCursorChange?: (position: number) => void;
-  errors?: ParseError[];
-  readOnly?: boolean;
-  theme?: 'light' | 'dark';
-  fontSize?: number;
-  showLineNumbers?: boolean;
-  showMinimap?: boolean;
+  setReadOnly: (readOnly: boolean) => void;
 }
 
-/**
- * OpenSCAD editor component
- */
-function OpenSCADEditor(props: OpenSCADEditorProps): JSX.Element {
-  // Implementation
-}
-```
-
-### Scene Component
-
-```typescript
-/**
- * 3D scene component props
- */
-interface BabylonSceneProps {
+// Parser state slice
+interface ParserSlice {
   ast: OpenSCADNode | null;
-  onRenderComplete?: (metrics: PerformanceMetrics) => void;
-  onError?: (error: RenderError) => void;
-  width?: number;
-  height?: number;
-  antialias?: boolean;
-  showInspector?: boolean;
+  parseState: 'idle' | 'parsing' | 'success' | 'error';
+  parseProgress: number;
+  parseError: ParseError | null;
+  
+  // Actions
+  setAST: (ast: OpenSCADNode | null) => void;
+  setParseState: (state: 'idle' | 'parsing' | 'success' | 'error') => void;
+  setParseProgress: (progress: number) => void;
+  setParseError: (error: ParseError | null) => void;
 }
 
-/**
- * BabylonJS scene component
- */
-function BabylonScene(props: BabylonSceneProps): JSX.Element {
-  // Implementation
+// Scene state slice
+interface SceneSlice {
+  meshes: Map<MeshId, BABYLON.Mesh>;
+  sceneId: SceneId;
+  renderState: 'idle' | 'rendering' | 'success' | 'error';
+  renderError: RenderError | null;
+  
+  // Actions
+  addMesh: (id: MeshId, mesh: BABYLON.Mesh) => void;
+  removeMesh: (id: MeshId) => void;
+  clearMeshes: () => void;
+  setRenderState: (state: 'idle' | 'rendering' | 'success' | 'error') => void;
+  setRenderError: (error: RenderError | null) => void;
 }
+
+// Combined app state
+type AppState = EditorSlice & ParserSlice & SceneSlice;
 ```
 
-## Hooks API
+### Store Selectors
 
-### Parser Hook
+```typescript
+// Memoized selectors for performance
+const selectEditorContent = (state: AppState) => state.content;
+const selectSyntaxErrors = (state: AppState) => state.syntaxErrors;
+const selectAST = (state: AppState) => state.ast;
+const selectMeshes = (state: AppState) => state.meshes;
+
+// Computed selectors
+const selectIsValidCode = createSelector(
+  [selectAST, selectSyntaxErrors],
+  (ast, errors) => ast !== null && errors.length === 0
+);
+
+const selectRenderableNodes = createSelector(
+  [selectAST],
+  (ast) => ast ? extractRenderableNodes(ast) : []
+);
+
+const selectErrorCount = createSelector(
+  [selectSyntaxErrors],
+  (errors) => errors.length
+);
+```
+
+## React Hooks API
+
+### Core Hooks
 
 ```typescript
 /**
- * OpenSCAD parser hook
+ * Hook for OpenSCAD parsing functionality
+ * @returns Parser state and actions
  */
-function useOpenSCADParser() {
-  const parse = useCallback((code: string) => {
-    // Implementation
-  }, []);
-  
-  const validate = useCallback((ast: OpenSCADNode) => {
-    // Implementation
-  }, []);
-  
-  return {
-    parse,
-    validate,
-    isLoading: false,
-    errors: []
-  };
-}
+function useOpenSCADParser(): {
+  parseState: 'idle' | 'parsing' | 'success' | 'error';
+  ast: OpenSCADNode | null;
+  errors: ParseError[];
+  parseCode: (code: string) => Promise<void>;
+  clearErrors: () => void;
+};
+
+/**
+ * Hook for BabylonJS scene management
+ * @param canvasRef - Ref to canvas element
+ * @returns Scene manager and state
+ */
+function useBabylonScene(canvasRef: RefObject<HTMLCanvasElement>): {
+  scene: BABYLON.Scene | null;
+  engine: BABYLON.Engine | null;
+  sceneManager: SceneManager | null;
+  isReady: boolean;
+};
+
+/**
+ * Hook for Monaco editor integration
+ * @param containerRef - Ref to editor container
+ * @param options - Editor options
+ * @returns Editor manager and state
+ */
+function useMonacoEditor(
+  containerRef: RefObject<HTMLElement>,
+  options?: EditorOptions
+): {
+  editor: EditorManager | null;
+  isReady: boolean;
+  content: string;
+  cursorPosition: { line: number; column: number };
+};
+
+/**
+ * Hook for debounced operations
+ * @param callback - Function to debounce
+ * @param delay - Debounce delay in milliseconds
+ * @returns Debounced function
+ */
+function useDebounce<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): T;
+
+/**
+ * Hook for performance monitoring
+ * @param operationName - Name of operation to monitor
+ * @returns Performance measurement functions
+ */
+function usePerformanceMonitor(operationName: string): {
+  startMeasurement: () => void;
+  endMeasurement: () => number;
+  getAverageTime: () => number;
+  getLastTime: () => number;
+};
 ```
 
-### Scene Hook
+## Utility Functions
+
+### Validation Utilities
 
 ```typescript
 /**
- * BabylonJS scene hook
+ * Validate OpenSCAD syntax
+ * @param code - OpenSCAD code to validate
+ * @returns Result with validation status
  */
-function useBabylonScene(canvasRef: RefObject<HTMLCanvasElement>) {
-  const [scene, setScene] = useState<BABYLON.Scene | null>(null);
-  const [engine, setEngine] = useState<BABYLON.Engine | null>(null);
-  
-  const render = useCallback((ast: OpenSCADNode) => {
-    // Implementation
-  }, [scene]);
-  
-  return {
-    scene,
-    engine,
-    render,
-    isReady: scene !== null
-  };
-}
+function validateOpenSCADSyntax(code: string): Result<boolean, ValidationError>;
+
+/**
+ * Validate node parameters
+ * @param nodeType - Type of OpenSCAD node
+ * @param parameters - Parameters to validate
+ * @returns Result with validation status
+ */
+function validateNodeParameters(
+  nodeType: OpenSCADNodeType,
+  parameters: Record<string, unknown>
+): Result<boolean, ValidationError>;
+
+/**
+ * Check if coordinates are valid
+ * @param coords - Coordinate array to validate
+ * @returns True if coordinates are valid
+ */
+function isValidCoordinates(coords: number[]): boolean;
 ```
 
-## Performance Metrics
+### Conversion Utilities
 
 ```typescript
 /**
- * Performance metrics interface
+ * Convert OpenSCAD coordinates to BabylonJS
+ * @param coords - OpenSCAD coordinates [x, y, z]
+ * @returns BabylonJS Vector3
  */
-interface PerformanceMetrics {
-  parseTime: number;        // Parse time in milliseconds
-  renderTime: number;       // Render time in milliseconds
-  meshCount: number;        // Number of meshes in scene
-  triangleCount: number;    // Total triangle count
-  memoryUsage: number;      // Memory usage in MB
-  fps: number;             // Frames per second
-}
+function openSCADToBabylon(coords: [number, number, number]): BABYLON.Vector3;
 
 /**
- * Performance monitoring utilities
+ * Convert BabylonJS coordinates to OpenSCAD
+ * @param vector - BabylonJS Vector3
+ * @returns OpenSCAD coordinates [x, y, z]
  */
-class PerformanceMonitor {
-  static startTiming(operation: string): () => number {
-    // Implementation
-  }
-  
-  static getMemoryUsage(): number {
-    // Implementation
-  }
-  
-  static getFPS(): number {
-    // Implementation
-  }
-}
+function babylonToOpenSCAD(vector: BABYLON.Vector3): [number, number, number];
+
+/**
+ * Convert degrees to radians
+ * @param degrees - Angle in degrees
+ * @returns Angle in radians
+ */
+function degreesToRadians(degrees: number): number;
+
+/**
+ * Convert radians to degrees
+ * @param radians - Angle in radians
+ * @returns Angle in degrees
+ */
+function radiansToDegrees(radians: number): number;
 ```
 
-This API reference provides comprehensive documentation for all public interfaces in the OpenSCAD Babylon project.
+### Performance Utilities
+
+```typescript
+/**
+ * Measure function execution time
+ * @param fn - Function to measure
+ * @param name - Optional name for logging
+ * @returns Function result and execution time
+ */
+function measurePerformance<T>(
+  fn: () => T,
+  name?: string
+): { result: T; duration: number };
+
+/**
+ * Create memoized function with custom equality
+ * @param fn - Function to memoize
+ * @param equalityFn - Custom equality function
+ * @returns Memoized function
+ */
+function createMemoizedFunction<TArgs extends any[], TReturn>(
+  fn: (...args: TArgs) => TReturn,
+  equalityFn?: (a: TArgs, b: TArgs) => boolean
+): (...args: TArgs) => TReturn;
+
+/**
+ * Debounce function calls
+ * @param fn - Function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function
+ */
+function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): T;
+```
+
+## Constants and Enums
+
+### OpenSCAD Node Types
+
+```typescript
+type OpenSCADNodeType = 
+  // Primitives
+  | 'cube'
+  | 'sphere'
+  | 'cylinder'
+  | 'polyhedron'
+  | 'polygon'
+  | 'circle'
+  | 'square'
+  // Transforms
+  | 'translate'
+  | 'rotate'
+  | 'scale'
+  | 'mirror'
+  | 'multmatrix'
+  // CSG Operations
+  | 'union'
+  | 'difference'
+  | 'intersection'
+  // Extrusions
+  | 'linear_extrude'
+  | 'rotate_extrude'
+  // Control Flow
+  | 'for'
+  | 'if'
+  | 'let'
+  // Functions
+  | 'function'
+  | 'module'
+  // Modifiers
+  | 'modifier'
+  // Import
+  | 'import'
+  | 'include'
+  | 'use';
+```
+
+### Performance Constants
+
+```typescript
+// Performance thresholds
+const PERFORMANCE_THRESHOLDS = {
+  RENDER_TIME_MS: 16, // Target 60fps
+  PARSE_TIME_MS: 100,
+  MESH_GENERATION_MS: 50,
+  SCENE_UPDATE_MS: 32
+} as const;
+
+// Memory limits
+const MEMORY_LIMITS = {
+  MAX_VERTICES: 100000,
+  MAX_FACES: 200000,
+  MAX_NODES: 1000,
+  MAX_SCENE_SIZE_MB: 100
+} as const;
+```
+
+### Error Codes
+
+```typescript
+const ERROR_CODES = {
+  // Parse errors
+  SYNTAX_ERROR: 'PARSE_001',
+  INVALID_TOKEN: 'PARSE_002',
+  UNEXPECTED_EOF: 'PARSE_003',
+  
+  // Render errors
+  MESH_GENERATION_FAILED: 'RENDER_001',
+  CSG_OPERATION_FAILED: 'RENDER_002',
+  SCENE_UPDATE_FAILED: 'RENDER_003',
+  
+  // Validation errors
+  INVALID_PARAMETERS: 'VALIDATION_001',
+  MISSING_REQUIRED_FIELD: 'VALIDATION_002',
+  TYPE_MISMATCH: 'VALIDATION_003',
+  
+  // Performance errors
+  RENDER_TIME_EXCEEDED: 'PERFORMANCE_001',
+  MEMORY_LIMIT_EXCEEDED: 'PERFORMANCE_002',
+  COMPLEXITY_LIMIT_EXCEEDED: 'PERFORMANCE_003'
+} as const;
+```
+
+This API reference provides comprehensive documentation for all public interfaces in the OpenSCAD Babylon project, following functional programming principles and strict type safety.

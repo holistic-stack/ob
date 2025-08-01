@@ -164,6 +164,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../../../shared/config/debounce-config.js';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
+import { ArcRotateCamera, Scene } from '@babylonjs/core';
 import { useAppStore } from '../../../store/app-store';
 import {
   selectGizmoIsVisible,
@@ -519,7 +520,7 @@ export const StoreConnectedRenderer: React.FC<StoreConnectedRendererProps> = ({
         if (camera && camera.getClassName() === 'ArcRotateCamera') {
           const cameraSync = new CameraStoreSyncService();
           const initResult = await cameraSync.initialize({
-            camera: camera as BABYLON.ArcRotateCamera,
+            camera: camera as ArcRotateCamera,
             store: useAppStore as ReturnType<
               typeof import('../../../store/app-store.js').createAppStore
             >,

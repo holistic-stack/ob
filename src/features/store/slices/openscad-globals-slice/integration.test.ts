@@ -6,7 +6,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createAppStore } from '../../app-store.js';
-import type { AppStore } from '../../types/store.types.js';
 
 describe('OpenSCAD Globals Store Integration', () => {
   let store: ReturnType<typeof createAppStore>;

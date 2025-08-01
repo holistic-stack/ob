@@ -357,15 +357,11 @@ describe('Edge Cases in Nested Modules', () => {
           ModuleResolverErrorCode.INVALID_AST,
           ModuleResolverErrorCode.MODULE_NOT_FOUND,
         ]).toContain(result.error?.code);
-        if (!result.success) {
-          expect(result.error?.message).toBeDefined();
-        }
-      } else {
+        expect(result.error?.message).toBeDefined();
+      } else if (result.success) {
         // If it succeeds, verify the result is correct
-        if (result.success) {
-          expect(result.data).toHaveLength(1);
-          expect(result.data?.[0]?.type).toBe('sphere');
-        }
+        expect(result.data).toHaveLength(1);
+        expect(result.data?.[0]?.type).toBe('sphere');
       }
     });
   });

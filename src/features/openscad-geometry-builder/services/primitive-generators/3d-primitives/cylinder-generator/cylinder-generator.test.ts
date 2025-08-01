@@ -10,7 +10,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { isError, isSuccess } from '@/shared/types/result.types';
-import type { CylinderGeometryData } from '../../../../types/geometry-data';
 import { FragmentCalculatorService } from '../../../fragment-calculator';
 import { CylinderGeneratorService } from './cylinder-generator';
 

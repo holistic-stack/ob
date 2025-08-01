@@ -5,7 +5,7 @@
  * Uses real OpenSCAD parser instances and BabylonJS NullEngine (no mocks).
  */
 
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type {
   DifferenceNode,
@@ -46,7 +46,7 @@ vi.mock('@babylonjs/core', async () => {
 vi.mock('../babylon-csg2-service', () => ({
   BabylonCSG2Service: vi.fn().mockImplementation(() => ({
     init: vi.fn().mockReturnValue({ success: true }), // Synchronous return
-    union: vi.fn().mockImplementation(async (meshA, meshB) => {
+    union: vi.fn().mockImplementation(async (meshA, _meshB) => {
       const { Mesh } = await import('@babylonjs/core');
       const resultMesh = new Mesh('mock_union_result', meshA.getScene());
       resultMesh.metadata = { isCSGOperation: true, csgType: 'union' };
@@ -62,7 +62,7 @@ vi.mock('../babylon-csg2-service', () => ({
         },
       };
     }),
-    difference: vi.fn().mockImplementation(async (meshA, meshB) => {
+    difference: vi.fn().mockImplementation(async (meshA, _meshB) => {
       const { Mesh } = await import('@babylonjs/core');
       const resultMesh = new Mesh('mock_difference_result', meshA.getScene());
       resultMesh.metadata = { isCSGOperation: true, csgType: 'difference' };
@@ -78,7 +78,7 @@ vi.mock('../babylon-csg2-service', () => ({
         },
       };
     }),
-    intersection: vi.fn().mockImplementation(async (meshA, meshB) => {
+    intersection: vi.fn().mockImplementation(async (meshA, _meshB) => {
       const { Mesh } = await import('@babylonjs/core');
       const resultMesh = new Mesh('mock_intersection_result', meshA.getScene());
       resultMesh.metadata = { isCSGOperation: true, csgType: 'intersection' };
@@ -562,12 +562,8 @@ describe('CSGBabylonNode', () => {
       const cubeCode = 'cube([2, 2, 2]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode(
-        'child_cube',
-        scene,
-        cubeAst[0]!,
-        OPENSCAD_DEFAULTS
-      );
+      if (!cubeAst[0]) throw new Error('Expected cube AST node');
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const sphereCode = 'sphere(r=1);';
       const sphereAst = parser.parseAST(sphereCode);

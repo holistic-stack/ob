@@ -85,7 +85,7 @@ function createDottedLine(
    * @see https://github.com/BabylonJS/Babylon.js/issues/performance-dashed-lines
    */
   const lineLength =
-    points.length >= 2 ? Vector3.Distance(points[0]!, points[points.length - 1]!) : 10;
+    points.length >= 2 ? Vector3.Distance(points[0], points[points.length - 1]) : 10;
   const dashCount = Math.min(20, Math.max(5, Math.floor(lineLength / 10))); // 5-20 dashes max
 
   const dashedLine = MeshBuilder.CreateDashedLines(

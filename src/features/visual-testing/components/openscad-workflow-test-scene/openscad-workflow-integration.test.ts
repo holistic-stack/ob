@@ -65,7 +65,7 @@ describe('OpenSCAD Workflow Integration Tests', () => {
 
     test('should handle null babylonScene gracefully', () => {
       // ARRANGE: Test with null scene
-      const openscadCode = 'sphere(5);';
+      const _openscadCode = 'sphere(5);';
       const babylonScene = null;
 
       // ACT: This would normally call the hook, but we'll test the logic

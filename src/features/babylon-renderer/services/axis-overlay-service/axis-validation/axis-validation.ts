@@ -38,46 +38,46 @@ export const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 /**
  * Core validation utilities
  */
-export class AxisValidationUtils {
+export namespace AxisValidationUtils {
   /**
    * Validate that a value is a finite number
    */
-  static isFiniteNumber(value: unknown): value is number {
+  export function isFiniteNumber(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value);
   }
 
   /**
    * Validate that a value is a positive number
    */
-  static isPositiveNumber(value: unknown, allowZero = false): value is number {
+  export function isPositiveNumber(value: unknown, allowZero = false): value is number {
     return AxisValidationUtils.isFiniteNumber(value) && (allowZero ? value >= 0 : value > 0);
   }
 
   /**
    * Validate that a value is within a specified range
    */
-  static isInRange(value: number, min: number, max: number, inclusive = true): boolean {
+  export function isInRange(value: number, min: number, max: number, inclusive = true): boolean {
     return inclusive ? value >= min && value <= max : value > min && value < max;
   }
 
   /**
    * Validate that a value is a non-empty string
    */
-  static isNonEmptyString(value: unknown): value is string {
+  export function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0;
   }
 
   /**
    * Validate that a value is a boolean
    */
-  static isBoolean(value: unknown): value is boolean {
+  export function isBoolean(value: unknown): value is boolean {
     return typeof value === 'boolean';
   }
 
   /**
    * Validate that a scene is valid and not null
    */
-  static isValidScene(scene: unknown): scene is Scene {
+  export function isValidScene(scene: unknown): scene is Scene {
     return (
       scene !== null &&
       scene !== undefined &&
@@ -90,7 +90,7 @@ export class AxisValidationUtils {
   /**
    * Validate RGB color values
    */
-  static validateRgbColor(color: unknown): AxisResult<RGBColor> {
+  export function validateRgbColor(color: unknown): AxisResult<RGBColor> {
     if (!Array.isArray(color)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError('Color must be an array', 'color', 'color')
@@ -139,7 +139,7 @@ export class AxisValidationUtils {
   /**
    * Validate pixel width value
    */
-  static validatePixelWidth(
+  export function validatePixelWidth(
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
@@ -184,7 +184,7 @@ export class AxisValidationUtils {
   /**
    * Validate opacity value
    */
-  static validateOpacity(
+  export function validateOpacity(
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
@@ -216,7 +216,7 @@ export class AxisValidationUtils {
   /**
    * Validate axis length value
    */
-  static validateAxisLength(
+  export function validateAxisLength(
     value: unknown,
     options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
   ): AxisResult<number> {
@@ -258,7 +258,7 @@ export class AxisValidationUtils {
   /**
    * Validate scene object
    */
-  static validateScene(scene: unknown): AxisResult<Scene> {
+  export function validateScene(scene: unknown): AxisResult<Scene> {
     if (!AxisValidationUtils.isValidScene(scene)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError('Invalid or null scene provided', 'scene', 'scene')
@@ -271,7 +271,7 @@ export class AxisValidationUtils {
   /**
    * Validate resolution array
    */
-  static validateResolution(resolution: unknown): AxisResult<readonly [number, number]> {
+  export function validateResolution(resolution: unknown): AxisResult<readonly [number, number]> {
     if (!Array.isArray(resolution)) {
       return AxisResultUtils.failure(
         AxisErrorFactory.createValidationError(

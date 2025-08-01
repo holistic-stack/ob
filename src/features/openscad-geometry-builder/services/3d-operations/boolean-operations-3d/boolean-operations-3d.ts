@@ -524,8 +524,8 @@ export class BooleanOperations3DService {
    * Create intersection result for non-overlapping meshes (empty result)
    */
   private createEmptyIntersectionResult(
-    meshA: Geometry3DData,
-    meshB: Geometry3DData
+    _meshA: Geometry3DData,
+    _meshB: Geometry3DData
   ): BaseGeometryData {
     // For non-overlapping meshes, return minimal result
     const minimalVertices: Vector3[] = [

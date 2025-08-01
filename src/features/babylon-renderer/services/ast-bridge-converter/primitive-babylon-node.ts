@@ -596,7 +596,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       // Position at Z=0 (2D shape in 3D space)
       mesh.position.z = 0;
       return mesh;
-    } catch (error) {
+    } catch (_error) {
       // Built-in triangulation failed, try manual earcut
 
       // If built-in triangulation fails, try manual earcut triangulation
@@ -618,7 +618,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
         const mesh = this.createCustomPolygonMesh(shape, triangles, scene);
         mesh.position.z = 0;
         return mesh;
-      } catch (earcutError) {
+      } catch (_earcutError) {
         // Manual earcut failed, use fallback
 
         // Final fallback: create a simple disc as placeholder

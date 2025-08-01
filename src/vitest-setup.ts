@@ -74,15 +74,14 @@ if (typeof HTMLCanvasElement !== 'undefined') {
     try {
       if (originalGetAttribute && typeof originalGetAttribute === 'function') {
         return originalGetAttribute.call(this, name);
+      }
+      // Fallback: get from data attributes or canvas properties
+      if (name === 'width') {
+        return this.width.toString();
+      } else if (name === 'height') {
+        return this.height.toString();
       } else {
-        // Fallback: get from data attributes or canvas properties
-        if (name === 'width') {
-          return this.width.toString();
-        } else if (name === 'height') {
-          return this.height.toString();
-        } else {
-          return this.dataset[name] || null;
-        }
+        return this.dataset[name] || null;
       }
     } catch {
       // Graceful fallback for any getAttribute errors

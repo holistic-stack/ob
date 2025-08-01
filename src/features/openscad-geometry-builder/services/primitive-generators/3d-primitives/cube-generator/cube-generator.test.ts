@@ -10,7 +10,6 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { isError, isSuccess } from '@/shared/types/result.types';
-import type { CubeGeometryData } from '../../../../types/geometry-data';
 import { CubeGeneratorService } from './cube-generator';
 
 describe('CubeGeneratorService', () => {

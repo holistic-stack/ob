@@ -311,23 +311,23 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
           });
         }
 
-        // // Initialize axis overlay if scene has a camera
-        // const camera = scene.activeCamera;
-        // if (camera) {
-        //   try {
-        //     const axisOverlayResult = await initializeAxisOverlay(scene, camera);
-        //     if (!axisOverlayResult.success && axisOverlayResult.error) {
-        //       logger.error(
-        //         '[ERROR][BabylonScene] Axis overlay initialization failed:',
-        //         axisOverlayResult.error.message
-        //       );
-        //     } else {
-        //       logger.debug('[DEBUG][BabylonScene] Axis overlay initialized successfully');
-        //     }
-        //   } catch (error) {
-        //     logger.error('[ERROR][BabylonScene] Axis overlay initialization error:', error);
-        //   }
-        // }
+        // Initialize axis overlay if scene has a camera
+        const camera = scene.activeCamera;
+        if (camera) {
+          try {
+            const axisOverlayResult = await initializeAxisOverlay(scene, camera);
+            if (!axisOverlayResult.success && axisOverlayResult.error) {
+              logger.error(
+                '[ERROR][BabylonScene] Axis overlay initialization failed:',
+                axisOverlayResult.error.message
+              );
+            } else {
+              logger.debug('[DEBUG][BabylonScene] Axis overlay initialized successfully');
+            }
+          } catch (error) {
+            logger.error('[ERROR][BabylonScene] Axis overlay initialization error:', error);
+          }
+        }
 
         onSceneReady?.(scene);
       },
@@ -409,13 +409,33 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
       logger.end('[END][BabylonScene] Cleanup complete');
     };
   }, [
-    // Minimal dependencies to prevent infinite recreation loop
-    // Only primitive values that don't change frequently are included
     config.antialias,
     config.enablePhysics,
     config.enableInspector,
     camera.type,
-  ]); // CRITICAL: Only primitive values to prevent infinite recreation
+    onSceneReady,
+    onEngineReady,
+    onRenderLoop,
+    onMeshSelected,
+    initializeAxisOverlay,
+    updateDynamicTicks,
+    inspectorService,
+    hideInspector,
+    camera.alpha,
+    camera.beta,
+    camera.fov,
+    camera.maxZ,
+    camera.minZ,
+    camera.position,
+    camera.radius,
+    camera.target,
+    config.adaptToDeviceRatio,
+    config.backgroundColor,
+    config.environmentIntensity,
+    config.imageProcessingEnabled,
+    lighting.ambient,
+    lighting.directional,
+  ]);
 
   /**
    * @performance Removed problematic dependencies that caused infinite loops:
@@ -464,7 +484,7 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
 
     // Note: Camera and lighting updates would require more complex logic
     // For now, we prioritize preventing engine recreation over dynamic updates
-  }, [config.backgroundColor, config.environmentIntensity, config.imageProcessingEnabled]); // Only update configuration, don't recreate engine
+  }, [config]);
 
   /**
    * Render the canvas element

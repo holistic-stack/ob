@@ -124,7 +124,6 @@ interface ResolutionContext {
   /** Scoped module registry for nested modules */
   scopedRegistry: ModuleRegistryInterface;
   /** Source code for Tree-sitter text extraction */
-  sourceCode?: string;
 }
 
 /**
@@ -207,7 +206,7 @@ export class ModuleResolver implements ModuleResolverInterface {
    * @throws {ModuleResolverError} When referenced modules are not found
    * @throws {ModuleResolverError} When maximum recursion depth is exceeded
    */
-  resolveAST(ast: ASTNode[], sourceCode?: string): Result<ASTNode[], ModuleResolverError> {
+  resolveAST(ast: ASTNode[]): Result<ASTNode[], ModuleResolverError> {
     if (!Array.isArray(ast)) {
       return {
         success: false,
@@ -229,9 +228,8 @@ export class ModuleResolver implements ModuleResolverInterface {
       const resolutionContext: ResolutionContext = {
         depth: 0,
         resolutionStack: [],
-        variableScope: new Map(),
+        variableScope: new Map<string, unknown>(),
         scopedRegistry: this.moduleRegistry, // Use the main registry for top-level scope
-        sourceCode, // Pass the source code for Tree-sitter text extraction
       };
 
       const resolvedNodes: ASTNode[] = [];
@@ -375,7 +373,10 @@ export class ModuleResolver implements ModuleResolverInterface {
    */
   private getChildNodes(node: ASTNode): ASTNode[] {
     // Most transform and CSG nodes have a 'children' property
-    const nodeWithChildren = node as any;
+    const nodeWithChildren = node as ASTNode & {
+      children?: ASTNode[];
+      body?: ASTNode[];
+    };
     if (nodeWithChildren.children && Array.isArray(nodeWithChildren.children)) {
       return nodeWithChildren.children;
     }
@@ -392,7 +393,11 @@ export class ModuleResolver implements ModuleResolverInterface {
    * Set child nodes on a composite node
    */
   private setChildNodes(node: ASTNode, children: ASTNode[]): void {
-    const nodeWithChildren = node as any;
+    // Use type assertion to ensure the node has children or body properties
+    const nodeWithChildren = node as ASTNode & {
+      children?: ASTNode[];
+      body?: ASTNode[];
+    };
 
     // Most transform and CSG nodes use 'children' property
     if ('children' in nodeWithChildren) {
@@ -482,9 +487,9 @@ export class ModuleResolver implements ModuleResolverInterface {
     const newContext: ResolutionContext = {
       depth: context.depth + 1,
       resolutionStack: [...context.resolutionStack, moduleName],
-      variableScope: new Map(context.variableScope), // Copy parent scope
+      variableScope: new Map<string, unknown>(context.variableScope), // Copy parent scope
       scopedRegistry: localRegistry, // Use local registry for nested modules
-      sourceCode: context.sourceCode, // Pass through the source code
+      sourceCode: context.sourceCode ?? undefined, // Pass through the source code
     };
 
     // Bind parameters from instantiation.args to moduleDefinition.parameters
@@ -512,7 +517,9 @@ export class ModuleResolver implements ModuleResolverInterface {
     );
     for (let i = 0; i < moduleDefinition.body.length; i++) {
       const bodyNode = moduleDefinition.body[i];
-      console.log(`  [${i}] type=${bodyNode.type}`, JSON.stringify(bodyNode, null, 2));
+      if (bodyNode) {
+        console.log(`  [${i}] type=${bodyNode.type}`, JSON.stringify(bodyNode, null, 2));
+      }
     }
 
     // Apply parameter substitution to module body
@@ -527,7 +534,9 @@ export class ModuleResolver implements ModuleResolverInterface {
     );
     for (let i = 0; i < substitutedBody.length; i++) {
       const bodyNode = substitutedBody[i];
-      console.log(`  [${i}] type=${bodyNode.type}`, JSON.stringify(bodyNode, null, 2));
+      if (bodyNode) {
+        console.log(`  [${i}] type=${bodyNode.type}`, JSON.stringify(bodyNode, null, 2));
+      }
     }
 
     // Recursively resolve the substituted module body
@@ -671,7 +680,10 @@ export class ModuleResolver implements ModuleResolverInterface {
   /**
    * Recursively substitute parameters in an AST node and its children
    */
-  private substituteParametersRecursive(node: any, bindings: Map<string, ParameterValue>): void {
+  private substituteParametersRecursive(
+    node: unknown,
+    bindings: Map<string, ParameterValue>
+  ): void {
     if (!node || typeof node !== 'object') {
       return;
     }
@@ -701,8 +713,10 @@ export class ModuleResolver implements ModuleResolverInterface {
     // Handle identifier nodes that might be parameter references
     if (node.type === 'identifier' && typeof node.name === 'string' && bindings.has(node.name)) {
       // Replace the identifier with the bound value
-      const value = bindings.get(node.name)!;
-      this.replaceNodeWithValue(node, value);
+      const value = bindings.get(node.name);
+      if (value !== undefined) {
+        this.replaceNodeWithValue(node, value);
+      }
       return;
     }
 
@@ -732,7 +746,7 @@ export class ModuleResolver implements ModuleResolverInterface {
    * Substitute parameters in primitive node properties (size, radius, etc.)
    */
   private substituteParametersInPrimitiveProperties(
-    node: any,
+    node: Record<string, unknown>,
     bindings: Map<string, ParameterValue>
   ): void {
     // Skip if node is null or undefined
@@ -896,7 +910,7 @@ export class ModuleResolver implements ModuleResolverInterface {
   /**
    * Replace a node with a parameter value
    */
-  private replaceNodeWithValue(node: any, value: ParameterValue): void {
+  private replaceNodeWithValue(node: Record<string, unknown>, value: ParameterValue): void {
     console.log(`[ModuleResolver] DEBUG - replaceNodeWithValue:`, JSON.stringify(value, null, 2));
 
     // Preserve the original node type if it exists
@@ -910,8 +924,12 @@ export class ModuleResolver implements ModuleResolverInterface {
     }
 
     // Handle expression nodes with literal values
-    if (typeof value === 'object' && value !== null && (value as any).type === 'expression') {
-      const expr = value as any;
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      (value as Record<string, unknown>).type === 'expression'
+    ) {
+      const expr = value as Record<string, unknown>;
       if (expr.expressionType === 'literal') {
         // Extract the actual value from the literal expression
         const actualValue = expr.value;
@@ -925,7 +943,7 @@ export class ModuleResolver implements ModuleResolverInterface {
         } else if (typeof actualValue === 'string') {
           // Try to parse as number first
           const numValue = Number(actualValue);
-          if (!isNaN(numValue)) {
+          if (!Number.isNaN(numValue)) {
             // Keep original type if it exists, otherwise set to 'number'
             if (!originalType) {
               node.type = 'number';
@@ -989,21 +1007,21 @@ export class ModuleResolver implements ModuleResolverInterface {
   /**
    * Extract the actual value from a bound parameter, handling expression objects
    */
-  private extractActualValue(boundValue: ParameterValue): any {
+  private extractActualValue(boundValue: ParameterValue): string | number | boolean | null {
     // Handle expression nodes with literal values
     if (
       typeof boundValue === 'object' &&
       boundValue !== null &&
-      (boundValue as any).type === 'expression'
+      (boundValue as Record<string, unknown>).type === 'expression'
     ) {
-      const expr = boundValue as any;
+      const expr = boundValue as Record<string, unknown>;
       if (expr.expressionType === 'literal') {
         // Extract the actual value from the literal expression
         const actualValue = expr.value;
         if (typeof actualValue === 'string') {
           // Try to parse as number first
           const numValue = Number(actualValue);
-          if (!isNaN(numValue)) {
+          if (!Number.isNaN(numValue)) {
             return numValue;
           }
           // Return as string if not a number
@@ -1032,27 +1050,27 @@ export class ModuleResolver implements ModuleResolverInterface {
     // Handle different node types
     switch (node.type) {
       case 'number':
-        return (node as any).value || 0;
+        return (node as { value?: number }).value || 0;
       case 'boolean':
-        return (node as any).value || false;
+        return (node as { value?: boolean }).value || false;
       case 'string':
-        return (node as any).value || '';
+        return (node as { value?: string }).value || '';
       case 'vector':
-        return (node as any).elements || [];
+        return (node as { elements?: unknown[] }).elements || [];
       case 'identifier':
         // For identifiers in default values, return the name as a string
         // This will be resolved later if it's a variable reference
-        return (node as any).name || '';
+        return (node as { name?: string }).name || '';
       case 'expression': {
         // Handle expression nodes - check if it's a literal expression
-        const expr = node as any;
+        const expr = node as Record<string, unknown>;
         if (expr.expressionType === 'literal') {
           // Try to parse the literal value
           const value = expr.value;
           if (typeof value === 'string') {
             // Try to parse as number first
             const numValue = Number(value);
-            if (!isNaN(numValue)) {
+            if (!Number.isNaN(numValue)) {
               return numValue;
             }
             // Return as string if not a number
@@ -1061,13 +1079,13 @@ export class ModuleResolver implements ModuleResolverInterface {
           return value;
         }
         // For other expression types, return the node itself
-        return node as any;
+        return node as ParameterValue;
       }
       default:
         console.log(`[ModuleResolver] DEBUG - Unknown node type: ${node.type}`);
         // For complex expressions, return the node itself
         // This allows for more complex default value expressions
-        return node as any;
+        return node as ParameterValue;
     }
   }
 }

@@ -189,7 +189,7 @@ export class Primitive2DFactory {
         default:
           return error({
             type: 'INVALID_PARAMETERS',
-            message: `Unknown primitive type in batch request: ${request.type}`,
+            message: `Unknown primitive type in batch request: ${(request as { type: string }).type}`,
             details: { request },
           });
       }

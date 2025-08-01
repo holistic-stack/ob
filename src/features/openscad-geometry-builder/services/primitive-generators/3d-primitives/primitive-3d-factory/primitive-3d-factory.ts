@@ -46,7 +46,7 @@
  */
 
 import type { Result } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import { error } from '../../../../../../shared/utils/functional/result';
 import type {
   CubeGeometryData,
   CylinderGeometryData,
@@ -231,7 +231,7 @@ export class Primitive3DFactory {
         default:
           result = error({
             type: 'INVALID_PARAMETERS',
-            message: `Unknown primitive type in batch: ${(request as any).type}`,
+            message: `Unknown primitive type in batch: ${(request as { type: string }).type}`,
             details: { request },
           });
       }

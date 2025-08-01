@@ -51,8 +51,6 @@ export interface TransformationGizmoProps {
   readonly onTransformationComplete?: (event: TransformationEvent) => void;
   /** Callback fired when gizmo encounters an error */
   readonly onError?: (error: TransformationGizmoError) => void;
-  /** Optional CSS class name */
-  readonly className?: string;
 }
 
 /**
@@ -69,7 +67,6 @@ export function TransformationGizmo({
   config,
   onTransformationComplete,
   onError,
-  className,
 }: TransformationGizmoProps): React.JSX.Element | null {
   const serviceRef = useRef<TransformationGizmoService | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -220,5 +217,4 @@ TransformationGizmo.defaultProps = {
   config: undefined,
   onTransformationComplete: undefined,
   onError: undefined,
-  className: undefined,
 } as const;

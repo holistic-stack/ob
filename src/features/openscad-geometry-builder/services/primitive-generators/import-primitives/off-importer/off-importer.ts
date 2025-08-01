@@ -161,7 +161,7 @@ export class OFFImporterService {
       const countsLine = lines[1];
       const counts = countsLine.split(/\s+/).map(Number);
 
-      if (counts.length < 3 || counts.some(isNaN)) {
+      if (counts.length < 3 || counts.some(Number.isNaN)) {
         return error({
           type: 'COMPUTATION_ERROR',
           message: 'invalid OFF counts line: expected "vertexCount faceCount edgeCount"',
@@ -195,7 +195,7 @@ export class OFFImporterService {
           });
         }
 
-        if (coords.length < 3 || coords.some(isNaN)) {
+        if (coords.length < 3 || coords.some(Number.isNaN)) {
           return error({
             type: 'COMPUTATION_ERROR',
             message: `invalid vertex at line ${lineIndex + 1}: expected 3 coordinates`,
@@ -225,7 +225,7 @@ export class OFFImporterService {
         const faceLine = lines[lineIndex];
         const faceData = faceLine.split(/\s+/).map(Number);
 
-        if (faceData.length < 1 || isNaN(faceData[0])) {
+        if (faceData.length < 1 || Number.isNaN(faceData[0])) {
           return error({
             type: 'COMPUTATION_ERROR',
             message: `invalid face at line ${lineIndex + 1}: missing vertex count`,
@@ -419,7 +419,7 @@ export class OFFImporterService {
     // Check for NaN or infinite values
     for (let i = 0; i < mesh.vertices.length; i++) {
       const vertex = mesh.vertices[i];
-      if (!isFinite(vertex.x) || !isFinite(vertex.y) || !isFinite(vertex.z)) {
+      if (!Number.isFinite(vertex.x) || !Number.isFinite(vertex.y) || !Number.isFinite(vertex.z)) {
         errors.push(`invalid vertex at index ${i}: contains NaN or infinite values`);
       }
     }

@@ -9,7 +9,7 @@
  * ```
  */
 
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appStoreInstance } from '../../../store/app-store';
 import { DEFAULT_GIZMO_CONFIG, GizmoPosition } from '../../types/orientation-gizmo.types';
@@ -127,10 +127,8 @@ describe('GizmoConfigPanel', () => {
       const onPositionChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onPositionChange={onPositionChange} />);
 
-      const allBottomLeftButtons = screen.getAllByRole('button', { name: /bottom left/i });
-      const bottomLeftButton = allBottomLeftButtons[0];
-      expect(bottomLeftButton).toBeDefined();
-      fireEvent.click(bottomLeftButton!);
+      const bottomLeftButton = screen.getByRole('button', { name: /bottom left/i });
+      fireEvent.click(bottomLeftButton);
 
       expect(onPositionChange).toHaveBeenCalledWith(GizmoPosition.BOTTOM_LEFT);
       expect(appStoreInstance.getState().babylonRendering.gizmo.position).toBe(
@@ -165,7 +163,9 @@ describe('GizmoConfigPanel', () => {
       const allMediumButtons = screen.getAllByRole('button', { name: 'Medium' });
       const mediumButton = allMediumButtons[0];
       expect(mediumButton).toBeDefined();
-      fireEvent.click(mediumButton!);
+      if (mediumButton) {
+        fireEvent.click(mediumButton);
+      }
 
       expect(onConfigChange).toHaveBeenCalledWith(expect.objectContaining({ size: 90 }));
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(90);
@@ -210,12 +210,8 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const allVibrantButtons = screen.getAllByRole('button', {
-        name: /apply vibrant color theme/i,
-      });
-      const vibrantButton = allVibrantButtons[0];
-      expect(vibrantButton).toBeDefined();
-      fireEvent.click(vibrantButton!);
+      const vibrantButton = screen.getByRole('button', { name: /apply vibrant color theme/i });
+      fireEvent.click(vibrantButton);
 
       expect(onConfigChange).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -238,17 +234,17 @@ describe('GizmoConfigPanel', () => {
       expect(advancedButton).toBeDefined();
 
       // Initially collapsed
-      expect(advancedButton!).toHaveAttribute('aria-expanded', 'false');
+      expect(advancedButton).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText('Custom Colors')).not.toBeInTheDocument();
 
       // Expand
-      fireEvent.click(advancedButton!);
-      expect(advancedButton!).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.click(advancedButton);
+      expect(advancedButton).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByText('Custom Colors')).toBeInTheDocument();
 
       // Collapse
-      fireEvent.click(advancedButton!);
-      expect(advancedButton!).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(advancedButton);
+      expect(advancedButton).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText('Custom Colors')).not.toBeInTheDocument();
     });
 
@@ -307,10 +303,8 @@ describe('GizmoConfigPanel', () => {
       const onConfigChange = vi.fn();
       render(<GizmoConfigPanel {...defaultProps} onConfigChange={onConfigChange} />);
 
-      const allResetButtons = screen.getAllByRole('button', { name: /reset to default settings/i });
-      const resetButton = allResetButtons[0];
-      expect(resetButton).toBeDefined();
-      fireEvent.click(resetButton!);
+      const resetButton = screen.getByRole('button', { name: /reset to default settings/i });
+      fireEvent.click(resetButton);
 
       expect(onConfigChange).toHaveBeenCalledWith(DEFAULT_GIZMO_CONFIG);
       expect(appStoreInstance.getState().babylonRendering.gizmo.config).toEqual(
@@ -379,7 +373,9 @@ describe('GizmoConfigPanel', () => {
       const allTopLeftButtons = screen.getAllByRole('button', { name: /top left/i });
       const topLeftButton = allTopLeftButtons[0];
       expect(topLeftButton).toBeDefined();
-      fireEvent.click(topLeftButton!);
+      if (topLeftButton) {
+        fireEvent.click(topLeftButton);
+      }
 
       expect(onPositionChange).toHaveBeenCalledWith(GizmoPosition.TOP_LEFT);
     });

@@ -16,7 +16,6 @@ import {
   calculateFragmentsWithErrorHandling,
   calculateVectorLength,
   convertVertexArraysToVector3,
-  createGeometryData,
   createGeometryMetadata,
   generateNormalsFromPositions,
   isApproximatelyEqual,
