@@ -404,7 +404,10 @@ describe('GizmoConfigPanel', () => {
       const extraLargeButton = allExtraLargeButtons.find((button) =>
         button.closest('.space-y-3, [class*="space-x-2"]')
       );
-      expect(extraLargeButton).toHaveClass('bg-blue-50');
+      expect(extraLargeButton).toBeInTheDocument();
+      if (extraLargeButton) {
+        expect(extraLargeButton).toHaveClass('bg-blue-50');
+      }
 
       // Verify the store has the correct updated config
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(150);
@@ -421,7 +424,10 @@ describe('GizmoConfigPanel', () => {
       const mediumButton = allMediumButtons.find((button) =>
         button.closest('.space-y-3, [class*="space-x-2"]')
       );
-      expect(mediumButton).toHaveClass('bg-blue-50');
+      expect(mediumButton).toBeInTheDocument();
+      if (mediumButton) {
+        expect(mediumButton).toHaveClass('bg-blue-50');
+      }
 
       // Verify the store has the correct default config
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(

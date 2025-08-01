@@ -38,6 +38,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@/shared': path.resolve(__dirname, './src/shared'),
+      '@/features': path.resolve(__dirname, './src/features'),
+      '@/components': path.resolve(__dirname, './src/components'),
       '@openscad/parser': path.resolve(
         __dirname,
         './node_modules/@holistic-stack/openscad-parser/dist/index.js'

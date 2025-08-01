@@ -77,7 +77,6 @@ describe.skip('TransformationGizmo', () => {
         selectedMesh: testMesh,
         mode: 'rotation',
         config: { size: 2.0 },
-        className: 'test-gizmo',
       });
       expect(container.firstChild).toBeNull();
     });

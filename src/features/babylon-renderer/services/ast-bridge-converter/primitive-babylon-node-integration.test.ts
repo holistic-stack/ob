@@ -11,10 +11,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type {
   CubeNode,
   CylinderNode,
-  OpenSCADGlobalsState,
   SphereNode,
-} from '@/features/openscad-parser/types';
-import { isError, isSuccess } from '@/shared/types';
+} from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
+import { isError, isSuccess } from '@/shared/types/result.types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
 describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () => {
@@ -55,9 +55,10 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
         type: 'sphere',
         r: 5,
         $fn: 8,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 10, offset: 10 },
+        },
       };
 
       // Create primitive node
@@ -98,9 +99,10 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
         type: 'sphere',
         r: 5,
         $fn: 3,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 10, offset: 10 },
+        },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -131,9 +133,12 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
     it('should generate cube using OpenSCAD Geometry Builder', async () => {
       const cubeNode: CubeNode = {
         type: 'cube',
-        size: { x: 2, y: 4, z: 6 },
+        size: [2, 4, 6],
         center: true,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 15, offset: 15 },
+        },
       };
 
       const primitiveNode = new PrimitiveBabylonNode('test-cube', scene, cubeNode, openscadGlobals);
@@ -158,13 +163,12 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
         type: 'cylinder',
         h: 10,
         r: 3,
-        r1: undefined,
-        r2: undefined,
         center: false,
         $fn: 8,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 20, offset: 20 },
+        },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -194,9 +198,10 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
         type: 'sphere',
         r: -5, // Invalid negative radius
         $fn: 8,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 10, offset: 10 },
+        },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -210,7 +215,7 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
 
       // Should either succeed with fallback or fail gracefully
       if (isError(result)) {
-        expect(result.error.type).toBeDefined();
+        expect(result.error.code).toBeDefined();
         expect(result.error.message).toContain('sphere');
       } else {
         // If it succeeds, it should be using fallback
@@ -225,9 +230,10 @@ describe('PrimitiveBabylonNode Integration with OpenSCAD Geometry Builder', () =
         type: 'sphere',
         r: 5,
         $fn: 16,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: {
+          start: { line: 1, column: 0, offset: 0 },
+          end: { line: 1, column: 10, offset: 10 },
+        },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(

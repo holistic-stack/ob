@@ -1,17 +1,15 @@
-focus to fix `pnpm build` issues; perform batch updates as preference;
-after each file update fix all failing tests, biome lint issues and typescript issues;
+TASK: fix biome lint issues and typescript issues;
  
-continue Following the Implementation Plan 
-Open  tasks/babylon-architecture.md and work through tasks sequentially by priority level. For each task, update its status from "Not Started" to "In Progress" when you begin, then to "Completed" when finished. Always run the validation commands provided in each section to verify your work meets the success criteria before marking tasks complete.  
- 
-Incremental Progress Tracking 
-After completing each task, immediately update the task table in  tasks/babylon-architecture.md with the new status and current date. Document any issues encountered in the "Risk" section by updating the likelihood/impact if risks materialize, and add new risks if discovered. Commit your changes with descriptive messages following the pattern: feat(babylon): complete [task-name] - [brief description]. This creates a clear audit trail and allows rollback to any previous state if needed. 
- 
-Maintaining Quality Standards 
-Before marking any task complete, run the validation checklist provided for that task (type-check, tests, build verification). If validation fails, keep the task status as "In Progress" and document the blocking issues. Update the "Conclusion" section weekly with current progress summary, any scope changes, and next week's priorities. This workflow ensures the plan remains a living document that accurately reflects project state and guides decision-making throughout the implementation. 
+for more system context:
 --- 
- 
+# Project guidelines and context
+docs\typescript-guidelines.md
+docs\openscad-babylon-architecture.md
+docs\bulletproof-react-structure.md
+tasks\refactory-architecture.md 
+
 ## Coding Best Practices 
+IMPORTANT ALWAYS run `pnpm type-check` and `pnpm biome:fix` after each incremental change to AVOID CREATE NEW compilation errors and Biome violations;
  
 ### General Principles 
 - DO NOT USE MOCKS for OpenscadParser; 
@@ -19,16 +17,21 @@ Before marking any task complete, run the validation checklist provided for that
 - Follow TDD with small changes and avoid mocks in tests 
 - No `any` types in TypeScript; use kebab-case for filenames 
 - Apply Single Responsibility Principle (SRP) 
-- Prioritize readability over clever code 
+- Prioritize readability over clever code
 - Follow best typescripts patterns in docs\typescript-guidelines.md; 
+KEEP updated docs\openscad-babylon-architecture.md,docs\typescript-guidelines.md and docs\bulletproof-react-structure.md with the changes and project progress; 
 ALWAYS USE DRY and KISS rules and algoritm improvements, split the code in smaller and manageable code, reason multiple options of improvements; 
 use SRP of solid for any function and utils, use TDD approach; 
 search in the web for more context; 
 MUST avoid biome lint issues and typescript issues; 
 Follow bulletproof-react architecture patterns;  
-Maintain zero TypeScript compilation errors and zero Biome violations; 
+Maintain zero TypeScript compilation errors and zero Biome violations;
+BabylonJs, Openscad parser MUST be react agnostic/independent using functional programming and SRP; 
 do not use __tests__ folder, use: 
 EACH SRP file must have its own folder and the its tests should be in the same folder, e.g. of file structure: 
+Must have global variables centralized in single constants file, to increase reusability and managebility of the project configuration;;
+All configuration files must be centralize to increase reusability and managebility of the project configuration;
+Before name, services, classes variables etc, think about the naming, it must be self explanatory and easy to understand its proporse; 
  
 ```jsx 
 new-srp-file/ 
@@ -113,7 +116,7 @@ describe("OpenSCADParser", () => {
 - Minimize DOM manipulations and optimize 3D operations 
  
 ## Documentation Best Practices 
-- Add JSDoc comments to all code elements with descriptions and examples 
+- IMPORTANT!!!!! Add JSDoc comments to all code elements with descriptions and examples 
 - Use `@example` tag and `@file` tag for module descriptions 
 - Document why code works a certain way, not just what it does 
 - Include architectural decisions, limitations, and edge cases 
@@ -130,3 +133,5 @@ describe("OpenSCADParser", () => {
 ## Continuous Integration 
 - Ensure all code passes tests, linting, and type checking 
 - Use feature branches and maintain clean commit history 
+
+ 

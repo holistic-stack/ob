@@ -164,7 +164,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../../../shared/config/debounce-config.js';
 import { createLogger } from '../../../../shared/services/logger.service';
 import type { ASTNode } from '../../../openscad-parser/core/ast-types';
-import { ArcRotateCamera, Scene } from '@babylonjs/core';
+import type { ArcRotateCamera } from '@babylonjs/core';
 import { useAppStore } from '../../../store/app-store';
 import {
   selectGizmoIsVisible,
