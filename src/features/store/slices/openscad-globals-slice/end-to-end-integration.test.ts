@@ -16,7 +16,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 describe('OpenSCAD Global Variables End-to-End Integration', () => {
-  let store: AppStore;
+  let store: ReturnType<typeof createAppStore>;
 
   beforeEach(() => {
     store = createAppStore();

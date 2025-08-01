@@ -471,12 +471,3 @@ export function createStandardCylinderConfig(
     opacity: DEFAULT_AXIS_PARAMS.OPACITY,
   };
 }
-
-/**
- * @deprecated Use individual functions instead of AxisConfigHelpers class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisConfigHelpers = {
-  createSketchUpScreenSpaceConfig,
-  createStandardCylinderConfig,
-};

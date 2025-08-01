@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ModuleDefinitionNode } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
+import { createSourceLocation } from '../test-utils.js';
 import { ScopedRegistryService } from './scoped-registry.service.js';
 
 describe('ScopedRegistryService', () => {
@@ -16,7 +17,7 @@ describe('ScopedRegistryService', () => {
       type: 'expression',
       expressionType: 'identifier',
       name,
-      location: { line: 1, column: 1 },
+      location: createSourceLocation(1, 1, 1, 1, 10, 9),
     },
     parameters: [],
     body: [
@@ -24,10 +25,10 @@ describe('ScopedRegistryService', () => {
         type: 'cube',
         size: 10,
         center: false,
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 20, 2, 15, 12),
       },
     ],
-    location: { line: 1, column: 1 },
+    location: createSourceLocation(1, 1, 1, 3, 1, 30),
   });
 
   describe('createScopedRegistry', () => {
@@ -46,7 +47,9 @@ describe('ScopedRegistryService', () => {
       // Should be able to find parent module
       const lookupResult = scopedRegistry.lookup('parentModule');
       expect(lookupResult.success).toBe(true);
-      expect(lookupResult.data?.name.name).toBe('parentModule');
+      if (lookupResult.success) {
+        expect(lookupResult.data?.name.name).toBe('parentModule');
+      }
     });
 
     it('should prioritize local modules over parent modules', () => {
@@ -65,7 +68,9 @@ describe('ScopedRegistryService', () => {
       const lookupResult = scopedRegistry.lookup('sharedName');
       expect(lookupResult.success).toBe(true);
       // Local module should be returned (same reference)
-      expect(lookupResult.data).toBe(localModule);
+      if (lookupResult.success) {
+        expect(lookupResult.data).toBe(localModule);
+      }
     });
 
     it('should maintain scope isolation (parent cannot see child modules)', () => {

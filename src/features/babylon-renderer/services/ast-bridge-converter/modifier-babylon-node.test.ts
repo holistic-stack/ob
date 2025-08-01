@@ -7,6 +7,7 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ModifierBabylonNode, type ModifierType } from './modifier-babylon-node';
@@ -47,7 +48,7 @@ describe('ModifierBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       expect(cubeAst[0]).toBeDefined();
       if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const modifierNode = new ModifierBabylonNode(
         'test_disable',
@@ -81,14 +82,19 @@ describe('ModifierBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       expect(cubeAst[0]).toBeDefined();
       if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const sphereCode = 'sphere(5);';
       const sphereAst = parser.parseAST(sphereCode);
       expect(sphereAst.length).toBeGreaterThan(0);
       expect(sphereAst[0]).toBeDefined();
       if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
+      const sphereNode = new PrimitiveBabylonNode(
+        'child_sphere',
+        scene,
+        sphereAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const modifierNode = new ModifierBabylonNode(
         'test_disable_multiple',
@@ -119,7 +125,7 @@ describe('ModifierBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       expect(cubeAst[0]).toBeDefined();
       if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const modifierNode = new ModifierBabylonNode(
         'test_show_only',
@@ -151,7 +157,12 @@ describe('ModifierBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       expect(sphereAst[0]).toBeDefined();
       if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
+      const sphereNode = new PrimitiveBabylonNode(
+        'child_sphere',
+        scene,
+        sphereAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const modifierNode = new ModifierBabylonNode(
         'test_debug',
@@ -183,7 +194,12 @@ describe('ModifierBabylonNode', () => {
       expect(cylinderAst.length).toBeGreaterThan(0);
       expect(cylinderAst[0]).toBeDefined();
       if (!cylinderAst[0]) throw new Error('cylinderAst[0] is undefined');
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAst[0]);
+      const cylinderNode = new PrimitiveBabylonNode(
+        'child_cylinder',
+        scene,
+        cylinderAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const modifierNode = new ModifierBabylonNode(
         'test_background',
@@ -215,7 +231,7 @@ describe('ModifierBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       expect(cubeAst[0]).toBeDefined();
       if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const modifierNode = new ModifierBabylonNode(
         'test_modifier_validation',
@@ -277,7 +293,12 @@ describe('ModifierBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       expect(sphereAst[0]).toBeDefined();
       if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAst[0]);
+      const sphereNode = new PrimitiveBabylonNode(
+        'child_sphere',
+        scene,
+        sphereAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const originalNode = new ModifierBabylonNode(
         'original_show_only',
@@ -326,7 +347,7 @@ describe('ModifierBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       expect(cubeAst[0]).toBeDefined();
       if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0]);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
       const modifierNode = new ModifierBabylonNode(
         'debug_background',

@@ -8,6 +8,7 @@
 import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { OpenSCADGlobalsState } from '../slices/openscad-globals-slice/openscad-globals-slice.types';
 import type { AppState, BabylonRenderingState } from '../types/store.types';
 import {
   selectAllErrors,
@@ -83,6 +84,19 @@ describe('Store Selectors', () => {
         selectedMesh: null,
         transformationGizmoMode: 'position' as any,
       },
+      openscadGlobals: {
+        $fn: undefined,
+        $fa: 12,
+        $fs: 2,
+        $t: 0,
+        $vpr: [55, 0, 25] as const,
+        $vpt: [0, 0, 0] as const,
+        $vpd: 140,
+        $children: 0,
+        $preview: true,
+        lastUpdated: 0,
+        isModified: false,
+      } as OpenSCADGlobalsState,
       config: {
         debounceMs: 300,
         enableAutoSave: false,

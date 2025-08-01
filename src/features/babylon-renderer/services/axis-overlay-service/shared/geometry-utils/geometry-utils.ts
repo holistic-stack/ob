@@ -198,21 +198,3 @@ export function isValidLength(length: number): boolean {
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
-
-/**
- * @deprecated Use individual functions instead of GeometryUtils class
- * Temporary compatibility export for backward compatibility
- */
-export const GeometryUtils = {
-  calculateAxisEndpoints,
-  calculateFullAxisEndpoints,
-  getAxisRotation,
-  getAxisDirection,
-  normalizeDirection,
-  calculateDistance,
-  createLinePoints,
-  createAxisLinePoints,
-  isValidDirection,
-  isValidLength,
-  clamp,
-};

@@ -19,7 +19,7 @@
  * - Complete workflow from OpenSCAD code to 3D visualization
  */
 
-import { Color3 } from '@babylonjs/core';
+import { NullEngine, Scene } from '@babylonjs/core';
 import { expect, test } from '@playwright/experimental-ct-react';
 import {
   runBabylonVisualTest,
@@ -32,15 +32,14 @@ test.describe('Polygon Primitive OpenSCAD Workflow Visual Regression', () => {
     const testName = 'polygon-workflow-top-view';
 
     await runBabylonVisualTest(page, testName, async () => {
+      // Create a mock BabylonJS scene for testing
+      const engine = new NullEngine();
+      const scene = new Scene(engine);
+
       const component = await mount(
         <OpenSCADWorkflowTestScene
           openscadCode="polygon(points=[[0,0], [10,0], [5,8.66]]);"
-          cameraAngle="top"
-          showOrientationGizmo={true}
-          show3DAxis={false}
-          backgroundColor={new Color3(1.0, 1.0, 1.0)}
-          autoCenterCamera={true}
-          enableLogging={true}
+          babylonScene={scene}
         />
       );
 
@@ -48,6 +47,10 @@ test.describe('Polygon Primitive OpenSCAD Workflow Visual Regression', () => {
         'polygon-workflow-top-view.png',
         STANDARD_SCREENSHOT_OPTIONS
       );
+
+      // Cleanup
+      scene.dispose();
+      engine.dispose();
     });
   });
 });

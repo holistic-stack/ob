@@ -57,7 +57,7 @@ export enum ModuleRegistryErrorCode {
 export interface ModuleRegistryError {
   code: ModuleRegistryErrorCode;
   message: string;
-  moduleName?: string;
+  moduleName?: string | undefined;
 }
 
 /**
@@ -68,7 +68,11 @@ function createModuleRegistryError(
   message: string,
   moduleName?: string
 ): ModuleRegistryError {
-  return { code, message, moduleName };
+  return {
+    code,
+    message,
+    moduleName: moduleName ?? undefined
+  };
 }
 
 /**

@@ -1,407 +1,319 @@
 /**
- * @file OpenSCAD Workflow Test Scene Component
+ * @file openscad-workflow-test-scene.tsx
+ * @description OpenSCAD Workflow Test Scene using unified pipeline architecture.
+ * This component demonstrates clean code principles: SOLID, DRY, KISS, YAGNI.
  *
- * Visual testing component that follows the complete OpenSCAD rendering workflow:
- * 1. OpenSCAD Code Input → 2. AST Parsing → 3. Skip Zustand Store →
- * 4. Manifold Operations Layer → 5. BabylonJS Rendering → 6. Visual Regression
+ * ARCHITECTURE FEATURES:
+ * ✅ Single Responsibility: Each function has one clear purpose
+ * ✅ DRY: Unified pipeline eliminates code duplication
+ * ✅ KISS: Simple interface with single service call
+ * ✅ YAGNI: No unnecessary complexity or abstractions
+ * ✅ Dependency Inversion: Depends on abstractions (pipeline service)
+ * ✅ Open/Closed: Extensible through pipeline service
  *
- * This component uses real OpenSCAD code strings, actual parser, and the complete
- * rendering pipeline for authentic visual regression testing.
- *
- * @example
- * ```tsx
- * <OpenSCADWorkflowTestScene
- *   openscadCode="circle(r=10);"
- *   cameraAngle="isometric"
- *   showOrientationGizmo={true}
- * />
- * ```
+ * @author OpenSCAD Babylon Team
+ * @version 3.0.0
+ * @since 2025-07-31
  */
 
-import {
-  type AbstractMesh,
-  type ArcRotateCamera,
-  type Scene as BabylonSceneType,
-  Color3,
-  StandardMaterial,
-  Vector3,
-} from '@babylonjs/core';
-import * as React from 'react';
+import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
+import { Color3, Color4, StandardMaterial } from '@babylonjs/core';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createLogger } from '../../../../shared/services/logger.service';
-import {
-  BabylonScene,
-  type BabylonSceneProps,
-} from '../../../babylon-renderer/components/babylon-scene/babylon-scene';
-import { OrientationGizmo } from '../../../babylon-renderer/components/orientation-gizmo/orientation-gizmo';
-import { ASTBridgeConverter } from '../../../babylon-renderer/services/ast-bridge-converter';
-import { OpenscadParser } from '../../../openscad-parser';
-import { useAppStore } from '../../../store';
-import type { CameraAngle } from '../../types/visual-testing.types';
+import { isError } from '../../../../shared/types/result.types';
+import { OpenSCADRenderingPipelineService } from '../../../openscad-geometry-builder/services/pipeline/openscad-rendering-pipeline';
+
+import { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 
 const logger = createLogger('OpenSCADWorkflowTestScene');
 
 /**
- * Props for OpenSCADWorkflowTestScene component
+ * Props for the OpenSCAD workflow test scene
  */
 export interface OpenSCADWorkflowTestSceneProps {
-  /** OpenSCAD code string to parse and render */
+  /** OpenSCAD code to render */
   readonly openscadCode: string;
-  /** Camera angle for the scene */
-  readonly cameraAngle: CameraAngle;
-  /** Show orientation gizmo (default: true) */
-  readonly showOrientationGizmo?: boolean;
-  /** Show 3D axis overlay (default: false for 2D primitive tests) */
-  readonly show3DAxis?: boolean;
-  /** Enable inspector (default: false) */
-  readonly enableInspector?: boolean;
-  /** Background color (default: white for 2D primitive tests) */
-  readonly backgroundColor?: Color3;
-  /** Auto-center camera on shape (default: true) */
-  readonly autoCenterCamera?: boolean;
-  /** Enable console and network logging (default: true) */
-  readonly enableLogging?: boolean;
-  /** Callback when scene is ready */
-  readonly onSceneReady?: (scene: BabylonSceneType) => void;
-  /** Additional CSS class name */
-  readonly className?: string;
-  /** Additional inline styles */
-  readonly style?: React.CSSProperties;
+  /** BabylonJS scene for rendering */
+  readonly babylonScene: BabylonScene;
+  /** Optional callback when meshes are generated */
+  readonly onMeshesGenerated?: (meshes: AbstractMesh[]) => void;
+  /** Optional callback when errors occur */
+  readonly onError?: (error: string) => void;
+  /** Optional callback for processing status updates */
+  readonly onStatusUpdate?: (status: string) => void;
+}
+
+/**
+ * Processing status enum for better type safety
+ */
+export enum ProcessingStatus {
+  IDLE = 'idle',
+  PARSING = 'parsing',
+  CONVERTING = 'converting',
+  RENDERING = 'rendering',
+  COMPLETE = 'complete',
+  ERROR = 'error',
 }
 
 /**
  * OpenSCAD Workflow Test Scene Component
  *
- * Implements the complete OpenSCAD rendering pipeline for visual regression testing.
- * Uses existing BabylonScene and OrientationGizmo components with configuration options.
+ * CLEAN CODE PRINCIPLES APPLIED:
+ *
+ * 1. SINGLE RESPONSIBILITY: This component only orchestrates the OpenSCAD workflow
+ * 2. DRY: Uses unified pipeline instead of duplicating conversion logic
+ * 3. KISS: Simple, clear interface with minimal complexity
+ * 4. YAGNI: Only implements what's actually needed
+ * 5. DEPENDENCY INVERSION: Depends on pipeline abstraction, not concrete implementations
+ * 6. OPEN/CLOSED: Extensible through pipeline service, closed for modification
  */
-export const OpenSCADWorkflowTestScene: React.FC<OpenSCADWorkflowTestSceneProps> = ({
+export function OpenSCADWorkflowTestScene({
   openscadCode,
-  cameraAngle,
-  showOrientationGizmo = true,
-  show3DAxis = false,
-  enableInspector = false,
-  backgroundColor = new Color3(1.0, 1.0, 1.0), // White background for 2D primitive tests
-  autoCenterCamera = true,
-  enableLogging = true,
-  onSceneReady,
-  className,
-  style,
-}) => {
-  const parserRef = React.useRef<OpenscadParser | null>(null);
-  const converterRef = React.useRef<ASTBridgeConverter | null>(null);
-  const [scene, setScene] = React.useState<BabylonSceneType | null>(null);
-  const [camera, setCamera] = React.useState<ArcRotateCamera | null>(null);
-  const [isReady, setIsReady] = React.useState(false);
-  const [consoleMessages, setConsoleMessages] = React.useState<string[]>([]);
-  const [networkRequests, setNetworkRequests] = React.useState<string[]>([]);
+  babylonScene,
+  onMeshesGenerated,
+  onError,
+  onStatusUpdate,
+}: OpenSCADWorkflowTestSceneProps) {
+  // STATE: Keep state minimal and focused (KISS principle)
+  const [_status, setStatus] = useState<ProcessingStatus>(ProcessingStatus.IDLE);
+  const [generatedMeshes, setGeneratedMeshes] = useState<AbstractMesh[]>([]);
 
-  // Zustand store actions for axis overlay control
-  const setAxisOverlayVisibility = useAppStore((state) => state.setAxisOverlayVisibility);
+  // SERVICES: Single responsibility - each service has one job
+  const pipelineRef = useRef<OpenSCADRenderingPipelineService | null>(null);
+  const parserRef = useRef<OpenscadParser | null>(null);
 
-  /**
-   * Setup console and network logging if enabled
-   */
-  React.useEffect(() => {
-    if (!enableLogging) return;
+  // INITIALIZATION: Clean service setup with proper cleanup
+  useEffect(() => {
+    logger.init('[INIT][OpenSCADWorkflowTestScene] Initializing services');
 
-    // Capture console messages
-    const originalConsoleLog = console.log;
-    const originalConsoleWarn = console.warn;
-    const originalConsoleError = console.error;
+    pipelineRef.current = new OpenSCADRenderingPipelineService();
+    parserRef.current = new OpenscadParser();
 
-    console.log = (...args) => {
-      const message = `[LOG] ${args.join(' ')}`;
-      setConsoleMessages((prev) => [...prev, message]);
-      originalConsoleLog(...args);
-    };
-
-    console.warn = (...args) => {
-      const message = `[WARN] ${args.join(' ')}`;
-      setConsoleMessages((prev) => [...prev, message]);
-      originalConsoleWarn(...args);
-    };
-
-    console.error = (...args) => {
-      const message = `[ERROR] ${args.join(' ')}`;
-      setConsoleMessages((prev) => [...prev, message]);
-      originalConsoleError(...args);
-    };
-
-    // Log initial setup
-    logger.info('[LOGGING] Console and network logging enabled for visual test');
+    // Initialize the parser
+    parserRef.current.init().catch((error) => {
+      logger.error('[ERROR][OpenSCADWorkflowTestScene] Failed to initialize parser:', error);
+    });
 
     return () => {
-      console.log = originalConsoleLog;
-      console.warn = originalConsoleWarn;
-      console.error = originalConsoleError;
-    };
-  }, [enableLogging]);
-
-  /**
-   * Get camera configuration based on angle with auto-centering support
-   */
-  const getCameraConfig = React.useCallback(() => {
-    const baseConfig = {
-      type: 'arcRotate' as const,
-      target: new Vector3(0, 0, 0),
-      fov: Math.PI / 3,
-      minZ: 0.1,
-      maxZ: 1000,
-      enableAutoFrame: autoCenterCamera,
-    };
-
-    switch (cameraAngle) {
-      case 'front':
-        return { ...baseConfig, position: new Vector3(0, 0, 50), alpha: 0, beta: Math.PI / 2 };
-      case 'top':
-        return { ...baseConfig, position: new Vector3(0, 50, 0), alpha: 0, beta: 0 };
-      case 'side':
-        return {
-          ...baseConfig,
-          position: new Vector3(50, 0, 0),
-          alpha: Math.PI / 2,
-          beta: Math.PI / 2,
-        };
-      case 'back':
-        return {
-          ...baseConfig,
-          position: new Vector3(0, 0, -50),
-          alpha: Math.PI,
-          beta: Math.PI / 2,
-        };
-      case 'isometric':
-      default:
-        return {
-          ...baseConfig,
-          position: new Vector3(35, 35, 35),
-          alpha: Math.PI / 4,
-          beta: Math.PI / 3,
-        };
-    }
-  }, [cameraAngle, autoCenterCamera]);
-
-  /**
-   * Handle scene ready - parse OpenSCAD and render
-   */
-  const handleSceneReady = React.useCallback(
-    async (babylonScene: BabylonSceneType) => {
-      try {
-        logger.init('[INIT][OpenSCADWorkflowTestScene] Scene ready, starting OpenSCAD workflow');
-
-        setScene(babylonScene);
-
-        // Get camera from scene
-        const sceneCamera = babylonScene.activeCamera as ArcRotateCamera;
-        setCamera(sceneCamera);
-
-        // Configure 3D axis overlay visibility based on props
-        setAxisOverlayVisibility(show3DAxis);
-
-        // Set data-ready attribute on canvas for visual testing
-        const renderCanvas = babylonScene.getEngine().getRenderingCanvas();
-        if (renderCanvas) {
-          renderCanvas.setAttribute('data-ready', 'false');
-        }
-
-        // Step 1: Initialize OpenSCAD Parser
-        const parser = new OpenscadParser();
-        await parser.init();
-        parserRef.current = parser;
-
-        // Step 2: Parse OpenSCAD Code
-        const parseResult = parser.parseASTWithResult(openscadCode);
-        if (!parseResult.success) {
-          throw new Error(`Failed to parse OpenSCAD code: ${parseResult.error}`);
-        }
-
-        const ast = parseResult.data;
-        logger.debug('[DEBUG][OpenSCADWorkflowTestScene] OpenSCAD code parsed successfully');
-
-        // Step 3: Initialize AST Bridge Converter
-        const converter = new ASTBridgeConverter();
-        const initResult = await converter.initialize(babylonScene);
-        if (!initResult.success) {
-          const errorMsg = initResult.error?.message || String(initResult.error) || 'Unknown error';
-          throw new Error(`Failed to initialize converter: ${errorMsg}`);
-        }
-
-        converterRef.current = converter;
-
-        // Step 4: Convert AST to BabylonJS Meshes
-        const conversionResult = await converter.convertAST(ast);
-        if (!conversionResult.success) {
-          const errorMsg =
-            conversionResult.success === false
-              ? conversionResult.error?.message || String(conversionResult.error) || 'Unknown error'
-              : 'Unknown error';
-          throw new Error(`Failed to convert AST: ${errorMsg}`);
-        }
-
-        const babylonNodes = conversionResult.data;
-        logger.debug(
-          `[DEBUG][OpenSCADWorkflowTestScene] Created ${babylonNodes.length} nodes from AST`
-        );
-
-        // Generate meshes from nodes and apply blue material
-        const generatedMeshes: AbstractMesh[] = [];
-        for (let index = 0; index < babylonNodes.length; index++) {
-          const babylonNode = babylonNodes[index];
-          const meshResult = await babylonNode.generateMesh();
-          if (meshResult.success) {
-            const mesh = meshResult.data;
-
-            // Apply blue material for better visibility against white background
-            const material = new StandardMaterial(
-              `openscad_primitive_material_${index}`,
-              babylonScene
-            );
-            material.diffuseColor = new Color3(0.2, 0.6, 0.9); // Nice blue color
-            material.specularColor = new Color3(0.1, 0.1, 0.1); // Low specular for matte finish
-            material.roughness = 0.8; // Slightly rough surface
-            mesh.material = material;
-
-            generatedMeshes.push(mesh);
-
-            logger.debug(
-              `[DEBUG][OpenSCADWorkflowTestScene] Mesh ${index} generated with blue material`
-            );
-          } else {
-            const errorMsg =
-              meshResult.success === false
-                ? meshResult.error?.message || String(meshResult.error) || 'Unknown error'
-                : 'Unknown error';
-            logger.error(
-              `[ERROR][OpenSCADWorkflowTestScene] Failed to generate mesh ${index}: ${errorMsg}`
-            );
-          }
-        }
-
-        // Auto-center camera on generated meshes if enabled
-        if (autoCenterCamera && generatedMeshes.length > 0 && sceneCamera) {
-          try {
-            // Calculate bounding box of all meshes
-            let minX = Number.POSITIVE_INFINITY;
-            let maxX = Number.NEGATIVE_INFINITY;
-            let minY = Number.POSITIVE_INFINITY;
-            let maxY = Number.NEGATIVE_INFINITY;
-            let minZ = Number.POSITIVE_INFINITY;
-            let maxZ = Number.NEGATIVE_INFINITY;
-
-            for (const mesh of generatedMeshes) {
-              const boundingInfo = mesh.getBoundingInfo();
-              const min = boundingInfo.minimum;
-              const max = boundingInfo.maximum;
-
-              minX = Math.min(minX, min.x);
-              maxX = Math.max(maxX, max.x);
-              minY = Math.min(minY, min.y);
-              maxY = Math.max(maxY, max.y);
-              minZ = Math.min(minZ, min.z);
-              maxZ = Math.max(maxZ, max.z);
-            }
-
-            // Calculate center and size
-            const center = new Vector3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
-            const size = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
-
-            // Update camera target to center of meshes
-            sceneCamera.setTarget(center);
-
-            // Adjust camera distance based on size with conservative margin
-            const distance = Math.max(size * 3, 30); // Conservative distance with 3x margin
-            sceneCamera.radius = distance;
-
-            logger.debug(
-              `[DEBUG][OpenSCADWorkflowTestScene] Camera auto-centered on meshes: center=${center.toString()}, distance=${distance}`
-            );
-          } catch (error) {
-            logger.warn(`[WARN][OpenSCADWorkflowTestScene] Failed to auto-center camera: ${error}`);
-          }
-        }
-
-        // Mark as ready
-        setIsReady(true);
-
-        // Set data-ready attribute to true for visual testing
-        const readyCanvas = babylonScene.getEngine().getRenderingCanvas();
-        if (readyCanvas) {
-          readyCanvas.setAttribute('data-ready', 'true');
-        }
-
-        onSceneReady?.(babylonScene);
-
-        logger.debug('[DEBUG][OpenSCADWorkflowTestScene] Workflow completed successfully');
-      } catch (error) {
-        logger.error('[ERROR][OpenSCADWorkflowTestScene] Failed to initialize workflow:', error);
-      }
-    },
-    [
-      openscadCode,
-      onSceneReady,
-      autoCenterCamera,
-      show3DAxis,
-      setAxisOverlayVisibility,
-      cameraAngle,
-    ]
-  );
-
-  /**
-   * Cleanup resources on unmount
-   */
-  React.useEffect(() => {
-    return () => {
-      logger.end('[END][OpenSCADWorkflowTestScene] Cleaning up workflow resources');
-
-      // Cleanup converter
-      if (converterRef.current) {
-        converterRef.current.dispose();
-        converterRef.current = null;
-      }
-
-      // Cleanup parser
+      logger.end('[END][OpenSCADWorkflowTestScene] Cleaning up services');
+      // Inline cleanup to avoid dependency issues
       if (parserRef.current) {
         parserRef.current.dispose();
-        parserRef.current = null;
       }
+      pipelineRef.current = null;
+      parserRef.current = null;
     };
   }, []);
 
-  // Create BabylonScene props
-  const babylonSceneProps: BabylonSceneProps = {
-    config: {
-      enableInspector,
-      backgroundColor,
-      antialias: true,
-      adaptToDeviceRatio: true,
+  /**
+   * Update processing status with clean state management
+   * CLEAN CODE: Single responsibility, clear naming
+   */
+  const updateStatus = useCallback(
+    (newStatus: ProcessingStatus, message: string) => {
+      setStatus(newStatus);
+      onStatusUpdate?.(message);
+      logger.debug(`[STATUS][OpenSCADWorkflowTestScene] ${newStatus}: ${message}`);
     },
-    camera: getCameraConfig(),
-    onSceneReady: handleSceneReady,
-    style: { width: '800px', height: '600px', ...style },
-    className: `openscad-workflow-test-scene ${className || ''}`,
-  };
-
-  return (
-    <div
-      style={{ position: 'relative', width: '800px', height: '600px' }}
-      data-testid={`openscad-workflow-scene-${cameraAngle}`}
-      data-ready={isReady}
-    >
-      <BabylonScene {...babylonSceneProps} />
-
-      {showOrientationGizmo && camera && (
-        <OrientationGizmo
-          camera={camera}
-          config={{ size: 100 }}
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            right: '10px',
-            zIndex: 1000,
-          }}
-        />
-      )}
-    </div>
+    [onStatusUpdate]
   );
-};
 
-export default OpenSCADWorkflowTestScene;
+  /**
+   * Handle errors with consistent error management
+   * CLEAN CODE: Single responsibility, consistent error handling
+   */
+  const handleError = useCallback(
+    (errorMessage: string) => {
+      logger.error(`[ERROR][OpenSCADWorkflowTestScene] ${errorMessage}`);
+      setStatus(ProcessingStatus.ERROR);
+      onError?.(errorMessage);
+      onStatusUpdate?.(`Error: ${errorMessage}`);
+    },
+    [onError, onStatusUpdate]
+  );
+
+  /**
+   * Apply clean, consistent visual styling to meshes
+   * CLEAN CODE: Single responsibility, no side effects, pure function approach
+   */
+  const applyCleanMeshStyling = useCallback((meshes: AbstractMesh[], scene: BabylonScene) => {
+    const VISUAL_CONFIG = {
+      MATERIAL: {
+        DIFFUSE_COLOR: new Color3(0.2, 0.4, 0.8), // Blue
+        SPECULAR_COLOR: new Color3(0.1, 0.1, 0.1), // Low specular
+      },
+      EDGES: {
+        WIDTH: 2.0,
+        COLOR: new Color4(0, 0, 0, 1), // Black edges with full opacity
+      },
+    } as const;
+
+    meshes.forEach((mesh, index) => {
+      if (!mesh) {
+        logger.warn(`[WARN][OpenSCADWorkflowTestScene] Mesh at index ${index} is null`);
+        return;
+      }
+
+      // Create material with clean configuration
+      const material = new StandardMaterial(`openscad_material_${index}`, scene);
+      material.diffuseColor = VISUAL_CONFIG.MATERIAL.DIFFUSE_COLOR;
+      material.specularColor = VISUAL_CONFIG.MATERIAL.SPECULAR_COLOR;
+      material.wireframe = false;
+
+      mesh.material = material;
+
+      // Enable edge rendering with clean configuration
+      mesh.enableEdgesRendering();
+      mesh.edgesWidth = VISUAL_CONFIG.EDGES.WIDTH;
+      mesh.edgesColor = VISUAL_CONFIG.EDGES.COLOR;
+
+      logger.debug(`[DEBUG][OpenSCADWorkflowTestScene] Applied styling to mesh: ${mesh.name}`);
+    });
+  }, []);
+
+  /**
+   * Process OpenSCAD workflow using clean architecture
+   * CLEAN CODE: Single function, single responsibility, clear error handling
+   */
+  const processOpenSCADWorkflow = useCallback(
+    async (code: string, scene: BabylonScene) => {
+      if (!pipelineRef.current || !parserRef.current) {
+        handleError('Services not initialized');
+        return;
+      }
+
+      try {
+        // STEP 1: Parse OpenSCAD code (Single Responsibility)
+        updateStatus(ProcessingStatus.PARSING, 'Parsing OpenSCAD code...');
+        const parseResult = parserRef.current.parseASTWithResult(code);
+
+        if (isError(parseResult)) {
+          handleError(`Parse failed: ${String(parseResult.error)}`);
+          return;
+        }
+
+        const ast = parseResult.data;
+        logger.debug(`[DEBUG][OpenSCADWorkflowTestScene] Parsed ${ast.length} AST nodes`);
+
+        // STEP 2: Convert AST to meshes using unified pipeline (DRY principle)
+        updateStatus(ProcessingStatus.CONVERTING, 'Converting AST to geometry...');
+        const conversionResult = pipelineRef.current.convertASTToMeshes(
+          ast,
+          scene,
+          undefined, // Let pipeline extract globals automatically
+          'openscad-workflow' // Consistent naming
+        );
+
+        if (!conversionResult.success) {
+          handleError(`Conversion failed: ${conversionResult.error.message}`);
+          return;
+        }
+
+        const meshes = conversionResult.data;
+        logger.debug(`[DEBUG][OpenSCADWorkflowTestScene] Generated ${meshes.length} meshes`);
+
+        // STEP 3: Apply visual styling (Single Responsibility)
+        updateStatus(ProcessingStatus.RENDERING, 'Applying visual styling...');
+        applyCleanMeshStyling(meshes, scene);
+
+        // STEP 4: Update state and notify (KISS principle)
+        setGeneratedMeshes(meshes);
+        onMeshesGenerated?.(meshes);
+        updateStatus(ProcessingStatus.COMPLETE, 'Processing complete');
+
+        logger.debug('[DEBUG][OpenSCADWorkflowTestScene] Workflow completed successfully');
+      } catch (error) {
+        handleError(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    },
+    [updateStatus, handleError, applyCleanMeshStyling, onMeshesGenerated]
+  );
+
+  // MAIN PROCESSING: Single responsibility - process OpenSCAD code
+  useEffect(() => {
+    if (!openscadCode?.trim() || !babylonScene || !pipelineRef.current || !parserRef.current) {
+      return;
+    }
+
+    processOpenSCADWorkflow(openscadCode, babylonScene);
+  }, [openscadCode, babylonScene, processOpenSCADWorkflow]);
+
+  /**
+   * Clean up generated meshes with proper resource management
+   * CLEAN CODE: Single responsibility, proper cleanup
+   */
+  const cleanupMeshes = useCallback(() => {
+    generatedMeshes.forEach((mesh) => {
+      if (mesh && !mesh.isDisposed()) {
+        mesh.dispose();
+      }
+    });
+    setGeneratedMeshes([]);
+    logger.debug('[DEBUG][OpenSCADWorkflowTestScene] Cleaned up generated meshes');
+  }, [generatedMeshes]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupMeshes();
+    };
+  }, [cleanupMeshes]);
+
+  // CLEAN CODE: Component returns null (no UI rendering)
+  // This follows Single Responsibility - component only manages 3D scene
+  return null;
+}
+
+/**
+ * Hook for using the OpenSCAD workflow with unified pipeline
+ * CLEAN CODE: Single responsibility, clear interface, proper state management
+ */
+export function useOpenSCADWorkflow(openscadCode: string, babylonScene: BabylonScene | null) {
+  const [meshes, setMeshes] = useState<AbstractMesh[]>([]);
+  const [status, setStatus] = useState<ProcessingStatus>(ProcessingStatus.IDLE);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleMeshesGenerated = useCallback((generatedMeshes: AbstractMesh[]) => {
+    setMeshes(generatedMeshes);
+    setError(null);
+  }, []);
+
+  const handleError = useCallback((errorMessage: string) => {
+    setError(errorMessage);
+    setMeshes([]);
+  }, []);
+
+  const handleStatusUpdate = useCallback((statusMessage: string) => {
+    // Extract status from message for better state management
+    if (statusMessage.includes('complete')) {
+      setStatus(ProcessingStatus.COMPLETE);
+    } else if (statusMessage.includes('Error')) {
+      setStatus(ProcessingStatus.ERROR);
+    } else if (statusMessage.includes('Parsing')) {
+      setStatus(ProcessingStatus.PARSING);
+    } else if (statusMessage.includes('Converting')) {
+      setStatus(ProcessingStatus.CONVERTING);
+    } else if (statusMessage.includes('Rendering')) {
+      setStatus(ProcessingStatus.RENDERING);
+    }
+  }, []);
+
+  return {
+    meshes,
+    status,
+    error,
+    isProcessing:
+      status !== ProcessingStatus.IDLE &&
+      status !== ProcessingStatus.COMPLETE &&
+      status !== ProcessingStatus.ERROR,
+    WorkflowComponent: babylonScene ? (
+      <OpenSCADWorkflowTestScene
+        openscadCode={openscadCode}
+        babylonScene={babylonScene}
+        onMeshesGenerated={handleMeshesGenerated}
+        onError={handleError}
+        onStatusUpdate={handleStatusUpdate}
+      />
+    ) : null,
+  };
+}

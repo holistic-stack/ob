@@ -20,9 +20,13 @@
  * @since 2025-07-29
  */
 
+// AST and Pipeline Services
+export * from './services/ast-converter';
 // Core Services
 export * from './services/fragment-calculator';
 export * from './services/geometry-bridge';
+export * from './services/mesh-converter';
+export * from './services/pipeline';
 // 2D Primitive Generators
 export * from './services/primitive-generators/2d-primitives';
 // 3D Primitive Generators

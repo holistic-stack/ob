@@ -33,7 +33,7 @@ import {
   calculateFragments,
   OPENSCAD_FALLBACK,
   OPENSCAD_GLOBALS,
-} from '@/shared/constants/openscad-globals/openscad-globals.constants.js';
+} from '../../../../shared/constants/openscad-globals/openscad-globals.constants';
 import { createLogger } from '../../../../shared/services/logger.service';
 import { tryCatch } from '../../../../shared/utils/functional/result';
 

@@ -132,7 +132,9 @@ export interface NormalizedImportParameters {
 /**
  * Default import parameters matching OpenSCAD defaults
  */
-export const DEFAULT_IMPORT_PARAMETERS: Required<Omit<ImportParameters, 'file' | 'width' | 'height' | 'id' | 'layer'>> = {
+export const DEFAULT_IMPORT_PARAMETERS: Required<
+  Omit<ImportParameters, 'file' | 'width' | 'height' | 'id' | 'layer'>
+> = {
   convexity: 1,
   center: false,
   scale: 1.0,
@@ -246,7 +248,7 @@ export function validateImportParameters(params: ImportParameters): ImportValida
   if (params.origin !== undefined) {
     if (!Array.isArray(params.origin) || params.origin.length !== 2) {
       errors.push('Origin must be an array of two numbers [x, y]');
-    } else if (!params.origin.every(coord => typeof coord === 'number' && isFinite(coord))) {
+    } else if (!params.origin.every((coord) => typeof coord === 'number' && isFinite(coord))) {
       errors.push('Origin coordinates must be finite numbers');
     }
   }

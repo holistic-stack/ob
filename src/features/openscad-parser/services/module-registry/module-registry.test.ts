@@ -105,7 +105,9 @@ describe('ModuleRegistry', () => {
       const result = registry.lookup('mycube');
 
       expect(result.success).toBe(true);
-      expect(result.data?.name.name).toBe('mycube');
+      if (result.success) {
+        expect(result.data?.name.name).toBe('mycube');
+      }
     });
 
     it('should return error for non-existent module', () => {
@@ -191,11 +193,11 @@ describe('ModuleRegistry', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'mycube',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 14, 6),
         },
         parameters: [],
         body: [],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 20, 19),
       };
 
       registry.register(moduleDefinition);
@@ -217,11 +219,11 @@ describe('ModuleRegistry', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'mycube',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 14, 6),
         },
         parameters: [],
         body: [],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 20, 19),
       };
 
       registry.register(moduleDefinition);

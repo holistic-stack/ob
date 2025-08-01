@@ -32,7 +32,6 @@
 import type { Result } from '../../../../../../shared/types/result.types';
 import { isError } from '../../../../../../shared/types/result.types';
 import { error, success } from '../../../../../../shared/utils/functional/result';
-import { ERROR_MESSAGES, FRAGMENT_CONSTANTS, VALIDATION_CONSTANTS } from '../../../../constants';
 import type { GeometryGenerationError, SphereGeometryData } from '../../../../types/geometry-data';
 import type { SphereParameters } from '../../../../types/primitive-parameters';
 import {
@@ -159,7 +158,13 @@ export class SphereGeneratorService {
   generateSphereFromParameters(params: SphereParameters): SphereResult {
     try {
       // Check cache first using normalized parameters
-      const cacheKey = this.geometryCache.generateCacheKey('sphere-params', params);
+      const cacheKey = this.geometryCache.generateCacheKey('sphere-params', {
+        radius: params.radius,
+        diameter: params.diameter,
+        fn: params.fn,
+        fs: params.fs,
+        fa: params.fa,
+      });
       const cachedResult = this.geometryCache.getCachedGeometry(cacheKey);
 
       if (cachedResult.success) {
@@ -177,13 +182,13 @@ export class SphereGeneratorService {
       }
       const radius = radiusResult.data;
 
-      // Calculate fragments using fragment calculator
+      // Calculate fragments using fragment calculator with default values
       const fragmentResult = calculateFragmentsWithErrorHandling(
         this.fragmentCalculator,
         radius,
-        params.fn,
-        params.fs,
-        params.fa
+        params.fn ?? 0, // Default to 0 (use fs/fa calculation)
+        params.fs ?? 2, // Default fragment size
+        params.fa ?? 12 // Default fragment angle
       );
 
       if (isError(fragmentResult)) {
@@ -235,32 +240,46 @@ export class SphereGeneratorService {
   }
 
   /**
-   * Generate faces connecting sphere rings
-   * Creates quad faces between adjacent rings following OpenSCAD pattern
+   * Generate faces for sphere following exact OpenSCAD algorithm
+   * Creates top cap, side faces, and bottom cap like OpenSCAD primitives.cc
    */
   private generateSphereFaces(fragments: number, numRings: number): readonly (readonly number[])[] {
     const faces: number[][] = [];
 
-    // Connect adjacent rings with quad faces
+    // Top cap face using first ring vertices (like OpenSCAD line 211-214)
+    const topCapFace: number[] = [];
+    for (let i = 0; i < fragments; i++) {
+      topCapFace.push(i);
+    }
+    faces.push(topCapFace);
+
+    // Side faces: Connect adjacent rings with quad faces (like OpenSCAD line 216-225)
     for (let ring = 0; ring < numRings - 1; ring++) {
       for (let fragment = 0; fragment < fragments; fragment++) {
         const currentRingStart = ring * fragments;
         const nextRingStart = (ring + 1) * fragments;
-
         const nextFragment = (fragment + 1) % fragments;
 
-        // Create quad face connecting two rings
-        // Vertices are ordered for correct winding
+        // Create quad face following OpenSCAD vertex order
         const face = [
-          currentRingStart + fragment, // Current ring, current fragment
-          currentRingStart + nextFragment, // Current ring, next fragment
-          nextRingStart + nextFragment, // Next ring, next fragment
-          nextRingStart + fragment, // Next ring, current fragment
+          currentRingStart + nextFragment, // i*num_fragments+(r+1)%num_fragments
+          currentRingStart + fragment, // i*num_fragments+r
+          nextRingStart + fragment, // (i+1)*num_fragments+r
+          nextRingStart + nextFragment, // (i+1)*num_fragments+(r+1)%num_fragments
         ];
 
         faces.push(face);
       }
     }
+
+    // Bottom cap face using last ring vertices (like OpenSCAD line 227-230)
+    const bottomCapFace: number[] = [];
+    const lastRingStart = (numRings - 1) * fragments;
+    for (let i = 0; i < fragments; i++) {
+      // Reverse order for correct winding (like OpenSCAD: num_rings * num_fragments - i - 1)
+      bottomCapFace.push(lastRingStart + fragments - i - 1);
+    }
+    faces.push(bottomCapFace);
 
     return Object.freeze(faces.map((face) => Object.freeze(face)));
   }
@@ -275,9 +294,16 @@ export class SphereGeneratorService {
     vertexCount: number;
     faceCount: number;
     triangleCount: number;
+    capFaces: number;
+    sideFaces: number;
   } {
     const fragments = sphereData.metadata.parameters.fragments;
     const rings = Math.floor((fragments + 1) / 2);
+
+    // Face breakdown: 2 cap faces + (rings-1)*fragments side faces
+    const capFaces = 2; // Top and bottom caps
+    const sideFaces = (rings - 1) * fragments; // Quad faces between rings
+    const totalFaces = capFaces + sideFaces;
 
     return {
       radius: sphereData.metadata.parameters.radius,
@@ -285,7 +311,9 @@ export class SphereGeneratorService {
       rings,
       vertexCount: sphereData.vertices.length,
       faceCount: sphereData.faces.length,
-      triangleCount: sphereData.faces.length * 2, // Each quad becomes 2 triangles
+      triangleCount: totalFaces, // Each face becomes triangles during tessellation
+      capFaces,
+      sideFaces,
     };
   }
 }

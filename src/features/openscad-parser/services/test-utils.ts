@@ -8,6 +8,7 @@ import type {
   ASTNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
+  ParameterValue,
   Position,
   SourceLocation,
 } from '../ast/ast-types.js';
@@ -114,7 +115,10 @@ export const createTestModuleCall = (
 ): ModuleInstantiationNode => ({
   type: 'module_instantiation',
   name,
-  args,
+  args: args.map((value, index) => ({
+    name: undefined,
+    value: value as ParameterValue,
+  })),
   location: createSourceLocation(5, 1, 50, 5, name.length + 3, 50 + name.length + 3),
 });
 

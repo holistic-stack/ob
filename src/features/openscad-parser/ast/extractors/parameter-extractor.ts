@@ -78,6 +78,7 @@
 
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
+import { evaluateBinaryExpression } from '../utils/ast-evaluator.js';
 
 /**
  * Check if a value is an expression node.
@@ -244,14 +245,18 @@ export function extractNumberParameterOrReference(
       try {
         const evaluationResult = evaluateBinaryExpression(param.value as ast.BinaryExpressionNode);
         console.log(
-          `[extractNumberParameterOrReference] DEBUG - Expression evaluation result: ${evaluationResult}`
+          `[extractNumberParameterOrReference] DEBUG - Expression evaluation result: ${JSON.stringify(evaluationResult)}`
         );
 
-        if (typeof evaluationResult === 'number' && !Number.isNaN(evaluationResult)) {
-          return evaluationResult;
+        if (
+          evaluationResult.success &&
+          typeof evaluationResult.value === 'number' &&
+          !Number.isNaN(evaluationResult.value)
+        ) {
+          return evaluationResult.value;
         } else {
           console.log(
-            `[extractNumberParameterOrReference] WARN - Expression did not evaluate to a number: ${evaluationResult}`
+            `[extractNumberParameterOrReference] WARN - Expression did not evaluate to a number: ${JSON.stringify(evaluationResult)}`
           );
         }
       } catch (error) {

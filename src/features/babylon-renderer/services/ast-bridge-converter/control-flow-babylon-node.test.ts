@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { ForLoopNode, IfNode } from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import { ControlFlowBabylonNode } from './control-flow-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -17,6 +18,21 @@ describe('ControlFlowBabylonNode', () => {
   let parser: OpenscadParser;
   let engine: NullEngine;
   let scene: Scene;
+
+  // Default OpenSCAD globals for testing
+  const defaultGlobals: OpenSCADGlobalsState = {
+    $fn: undefined,
+    $fa: 12,
+    $fs: 2,
+    $t: 0,
+    $vpr: [55, 0, 25] as const,
+    $vpt: [0, 0, 0] as const,
+    $vpd: 140,
+    $children: 0,
+    $preview: true,
+    lastUpdated: 0,
+    isModified: false,
+  };
 
   beforeEach(async () => {
     // Create real OpenSCAD parser instance (no mocks)
@@ -56,7 +72,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_for_loop', scene, forLoopNode, [
         cubeNode,
@@ -86,7 +102,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode(
         'test_for_loop_multi',
@@ -118,7 +134,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_if_statement', scene, ifNode, [
         cubeNode,
@@ -147,7 +163,12 @@ describe('ControlFlowBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereAstNode = sphereAst[0];
       if (!sphereAstNode) throw new Error('Expected sphere AST node');
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
+      const sphereNode = new PrimitiveBabylonNode(
+        'child_sphere',
+        scene,
+        sphereAstNode,
+        defaultGlobals
+      );
 
       const controlFlowNode = new ControlFlowBabylonNode('test_if_complex', scene, ifNode, [
         sphereNode,
@@ -181,7 +202,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode('test_for_expression', scene, forNode, [
         cubeNode,
@@ -215,7 +236,12 @@ describe('ControlFlowBabylonNode', () => {
       expect(cylinderAst.length).toBeGreaterThan(0);
       const cylinderAstNode = cylinderAst[0];
       if (!cylinderAstNode) throw new Error('Expected cylinder AST node');
-      const cylinderNode = new PrimitiveBabylonNode('child_cylinder', scene, cylinderAstNode);
+      const cylinderNode = new PrimitiveBabylonNode(
+        'child_cylinder',
+        scene,
+        cylinderAstNode,
+        defaultGlobals
+      );
 
       const controlFlowNode = new ControlFlowBabylonNode('test_if_statement', scene, ifNode, [
         cylinderNode,
@@ -245,7 +271,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode(
         'test_for_validation',
@@ -296,7 +322,12 @@ describe('ControlFlowBabylonNode', () => {
       expect(sphereAst.length).toBeGreaterThan(0);
       const sphereAstNode = sphereAst[0];
       if (!sphereAstNode) throw new Error('Expected sphere AST node');
-      const sphereNode = new PrimitiveBabylonNode('child_sphere', scene, sphereAstNode);
+      const sphereNode = new PrimitiveBabylonNode(
+        'child_sphere',
+        scene,
+        sphereAstNode,
+        defaultGlobals
+      );
 
       const originalNode = new ControlFlowBabylonNode('original_for', scene, forNode, [sphereNode]);
 
@@ -343,7 +374,7 @@ describe('ControlFlowBabylonNode', () => {
       expect(cubeAst.length).toBeGreaterThan(0);
       const cubeAstNode = cubeAst[0];
       if (!cubeAstNode) throw new Error('Expected cube AST node');
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode);
+      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAstNode, defaultGlobals);
 
       const controlFlowNode = new ControlFlowBabylonNode('debug_if', scene, ifNode, [cubeNode]);
 

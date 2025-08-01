@@ -9,7 +9,7 @@ import { createAppStore } from '../../app-store.js';
 import type { AppStore } from '../../types/store.types.js';
 
 describe('OpenSCAD Globals Store Integration', () => {
-  let store: AppStore;
+  let store: ReturnType<typeof createAppStore>;
 
   beforeEach(() => {
     store = createAppStore();
@@ -59,8 +59,10 @@ describe('OpenSCAD Globals Store Integration', () => {
 
       if (!result.success) {
         expect(result.error).toHaveLength(2);
-        expect(result.error[0].variable).toBe('$fn');
-        expect(result.error[1].variable).toBe('$fa');
+        if (result.error.length >= 2 && result.error[0] && result.error[1]) {
+          expect(result.error[0].variable).toBe('$fn');
+          expect(result.error[1].variable).toBe('$fa');
+        }
       }
 
       // State should remain unchanged

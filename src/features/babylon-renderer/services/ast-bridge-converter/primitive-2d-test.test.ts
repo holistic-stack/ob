@@ -8,6 +8,7 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { CircleNode, SquareNode } from '../../../openscad-parser/ast/ast-types';
+import { createSourceLocation } from '../../../openscad-parser/services/test-utils';
 import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -46,7 +47,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const circleNode: CircleNode = {
         type: 'circle',
         r: 10,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode('test-circle', scene, circleNode, mockGlobals);
@@ -67,7 +68,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
         type: 'circle',
         r: 30,
         $fn: 5,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -98,7 +99,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const circleNode: CircleNode = {
         type: 'circle',
         r: 30,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -122,7 +123,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const circleNode: CircleNode = {
         type: 'circle',
         d: 20, // diameter = 20, radius = 10
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -148,7 +149,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const squareNode: SquareNode = {
         type: 'square',
         size: 10,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode('test-square', scene, squareNode, mockGlobals);
@@ -168,7 +169,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const squareNode: SquareNode = {
         type: 'square',
         size: [10, 20],
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -193,7 +194,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
         type: 'square',
         size: [10, 20],
         center: true,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -219,7 +220,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const circleNode: CircleNode = {
         type: 'circle',
         r: 10,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -237,7 +238,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const circleNode: CircleNode = {
         type: 'circle',
         r: -5,
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -258,7 +259,7 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       const squareNode: SquareNode = {
         type: 'square',
         size: [10, 20],
-        location: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        location: createSourceLocation(1, 1, 0, 1, 10, 9),
       };
 
       const primitiveNode = new PrimitiveBabylonNode(

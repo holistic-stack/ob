@@ -16,7 +16,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 describe('Real-World OpenSCAD Global Variables → Sphere Mesh Generation', () => {
-  let store: AppStore;
+  let store: ReturnType<typeof createAppStore>;
 
   beforeEach(() => {
     store = createAppStore();

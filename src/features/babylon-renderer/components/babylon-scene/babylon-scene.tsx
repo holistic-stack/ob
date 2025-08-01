@@ -311,23 +311,23 @@ export const BabylonScene: React.FC<BabylonSceneProps> = ({
           });
         }
 
-        // Initialize axis overlay if scene has a camera
-        const camera = scene.activeCamera;
-        if (camera) {
-          try {
-            const axisOverlayResult = await initializeAxisOverlay(scene, camera);
-            if (!axisOverlayResult.success && axisOverlayResult.error) {
-              logger.error(
-                '[ERROR][BabylonScene] Axis overlay initialization failed:',
-                axisOverlayResult.error.message
-              );
-            } else {
-              logger.debug('[DEBUG][BabylonScene] Axis overlay initialized successfully');
-            }
-          } catch (error) {
-            logger.error('[ERROR][BabylonScene] Axis overlay initialization error:', error);
-          }
-        }
+        // // Initialize axis overlay if scene has a camera
+        // const camera = scene.activeCamera;
+        // if (camera) {
+        //   try {
+        //     const axisOverlayResult = await initializeAxisOverlay(scene, camera);
+        //     if (!axisOverlayResult.success && axisOverlayResult.error) {
+        //       logger.error(
+        //         '[ERROR][BabylonScene] Axis overlay initialization failed:',
+        //         axisOverlayResult.error.message
+        //       );
+        //     } else {
+        //       logger.debug('[DEBUG][BabylonScene] Axis overlay initialized successfully');
+        //     }
+        //   } catch (error) {
+        //     logger.error('[ERROR][BabylonScene] Axis overlay initialization error:', error);
+        //   }
+        // }
 
         onSceneReady?.(scene);
       },

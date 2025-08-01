@@ -695,65 +695,6 @@ vi.mocked(fetch).mockImplementation((url) => {
 });
 
 /**
- * @function resetMatrixServiceSingletons
- * @description Resets any singleton instances related to matrix services for clean test isolation.
- * This function is currently a no-op as complex matrix services have been removed or simplified.
- * @returns {Promise<void>} A promise that resolves when the reset is complete.
- * @deprecated This function is largely deprecated as the underlying services have been simplified.
- * @example
- * ```typescript
- * beforeEach(async () => {
- *   await resetMatrixServiceSingletons();
- * });
- * ```
- */
-export async function resetMatrixServiceSingletons(): Promise<void> {
-  logger.debug('Matrix service singletons reset (simplified - no complex services)');
-}
-
-/**
- * @function initializeMatrixServicesForTest
- * @description Initializes simplified mock matrix services for testing purposes.
- * This function provides mock implementations for services that were previously complex,
- * ensuring tests can run without heavy dependencies.
- * @returns {Promise<{ serviceContainer: unknown; integrationService: unknown; }>} A promise that resolves with mock service objects.
- * @deprecated This function is deprecated in favor of more lightweight test setups to prevent hanging issues.
- * @example
- * ```typescript
- * test('should perform a matrix operation', async () => {
- *   const { integrationService } = await initializeMatrixServicesForTest();
- *   const result = await integrationService.performRobustInversion();
- *   expect(result.success).toBe(true);
- * });
- * ```
- */
-export async function initializeMatrixServicesForTest(): Promise<{
-  serviceContainer: unknown;
-  integrationService: unknown;
-}> {
-  logger.debug('Initializing simplified matrix services for test');
-
-  const mockServiceContainer = {
-    getService: () => null,
-    isHealthy: () => true,
-    shutdown: () => Promise.resolve(),
-  };
-
-  const mockIntegrationService = {
-    convertMatrix4ToMLMatrix: () => Promise.resolve({ success: true, data: { result: null } }),
-    performRobustInversion: () => Promise.resolve({ success: true, data: { result: null } }),
-    computeRobustNormalMatrix: () => Promise.resolve({ success: true, data: { result: null } }),
-  };
-
-  logger.debug('✅ Simplified matrix services initialized for test');
-
-  return {
-    serviceContainer: mockServiceContainer,
-    integrationService: mockIntegrationService,
-  };
-}
-
-/**
  * @section Memory Management for Tests
  * @description This section provides utilities for managing memory during test runs,
  * crucial for preventing memory leaks and ensuring consistent test performance.

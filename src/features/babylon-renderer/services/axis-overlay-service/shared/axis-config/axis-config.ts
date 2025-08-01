@@ -238,14 +238,3 @@ export function createCoordinateAxesConfig(baseConfig: CoordinateAxesConfig): Co
     ...baseConfig,
   };
 }
-
-/**
- * @deprecated Use individual functions instead of AxisConfigUtils class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisConfigUtils = {
-  createLineConfig: createLineAxisConfig,
-  createCylinderConfig: createCylinderAxisConfig,
-  isValidConfig: isValidAxisConfig,
-  createCoordinateAxesConfig,
-};

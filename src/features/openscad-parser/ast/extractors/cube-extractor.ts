@@ -157,7 +157,7 @@ export function extractCubeNode(
       } else {
         // If not a vector, attempt to extract as a single number or preserve parameter reference (scalar size).
         const numberValue = arg ? extractNumberParameterOrReference(arg, errorHandler) : null;
-        if (numberValue !== null) {
+        if (numberValue !== null && typeof numberValue === 'number') {
           size = numberValue;
         } else {
           // If neither a valid vector nor a number, fallback to default size.

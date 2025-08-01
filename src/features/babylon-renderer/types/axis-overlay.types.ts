@@ -143,7 +143,7 @@ export interface IAxisOverlayService {
  * Default axis overlay configuration
  */
 export const DEFAULT_AXIS_OVERLAY_CONFIG: AxisOverlayConfig = {
-  isVisible: true,
+  isVisible: false, // Hidden by default for cleaner screenshots
   showTicks: false, // SketchUp style: no tick marks
   showLabels: false, // SketchUp style: no labels
   tickInterval: 1.0, // Keep for compatibility but not used

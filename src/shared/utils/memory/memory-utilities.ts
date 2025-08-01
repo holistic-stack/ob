@@ -383,8 +383,11 @@ export class MemoryMonitor {
     if (this.snapshots.length < 3) return 'stable';
 
     const recent = this.snapshots.slice(-3);
-    const first = recent[0].usagePercentage;
-    const last = recent[recent.length - 1].usagePercentage;
+    const first = recent[0]?.usagePercentage;
+    const last = recent[recent.length - 1]?.usagePercentage;
+
+    if (first === undefined || last === undefined) return 'stable';
+
     const diff = last - first;
 
     if (diff > 5) return 'increasing';
@@ -404,7 +407,10 @@ export class MemoryMonitor {
     let increasingCount = 0;
 
     for (let i = 1; i < recent.length; i++) {
-      if (recent[i].usagePercentage > recent[i - 1].usagePercentage) {
+      const current = recent[i];
+      const previous = recent[i - 1];
+
+      if (current && previous && current.usagePercentage > previous.usagePercentage) {
         increasingCount++;
       }
     }
@@ -462,11 +468,11 @@ export class ResourceLifecycleManager {
     const now = Date.now();
     const candidates: string[] = [];
 
-    for (const [id, entry] of this.trackedResources.entries()) {
+    Array.from(this.trackedResources.entries()).forEach(([id, entry]) => {
       if (now - entry.createdAt > maxAgeMs) {
         candidates.push(id);
       }
-    }
+    });
 
     return candidates;
   }

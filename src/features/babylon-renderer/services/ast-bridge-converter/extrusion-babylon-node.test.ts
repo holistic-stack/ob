@@ -7,6 +7,7 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { LinearExtrudeNode, RotateExtrudeNode } from '../../../openscad-parser/ast/ast-types';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
@@ -56,7 +57,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(circleAst.length).toBeGreaterThan(0);
       expect(circleAst[0]).toBeDefined();
       if (!circleAst[0]) throw new Error('circleAst[0] is undefined');
-      const circleNode = new PrimitiveBabylonNode('child_circle', scene, circleAst[0]);
+      const circleNode = new PrimitiveBabylonNode(
+        'child_circle',
+        scene,
+        circleAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_linear_extrude',
@@ -89,7 +95,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(squareAst.length).toBeGreaterThan(0);
       expect(squareAst[0]).toBeDefined();
       if (!squareAst[0]) throw new Error('squareAst[0] is undefined');
-      const squareNode = new PrimitiveBabylonNode('child_square', scene, squareAst[0]);
+      const squareNode = new PrimitiveBabylonNode(
+        'child_square',
+        scene,
+        squareAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_linear_extrude_center',
@@ -120,7 +131,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(circleAst.length).toBeGreaterThan(0);
       expect(circleAst[0]).toBeDefined();
       if (!circleAst[0]) throw new Error('circleAst[0] is undefined');
-      const circleNode = new PrimitiveBabylonNode('child_circle', scene, circleAst[0]);
+      const circleNode = new PrimitiveBabylonNode(
+        'child_circle',
+        scene,
+        circleAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_linear_extrude_twist',
@@ -152,7 +168,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(translateAst.length).toBeGreaterThan(0);
       expect(translateAst[0]).toBeDefined();
       if (!translateAst[0]) throw new Error('translateAst[0] is undefined');
-      const translateNode = new PrimitiveBabylonNode('child_translate', scene, translateAst[0]);
+      const translateNode = new PrimitiveBabylonNode(
+        'child_translate',
+        scene,
+        translateAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_rotate_extrude',
@@ -184,7 +205,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(translateAst.length).toBeGreaterThan(0);
       expect(translateAst[0]).toBeDefined();
       if (!translateAst[0]) throw new Error('translateAst[0] is undefined');
-      const translateNode = new PrimitiveBabylonNode('child_translate', scene, translateAst[0]);
+      const translateNode = new PrimitiveBabylonNode(
+        'child_translate',
+        scene,
+        translateAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_rotate_extrude_angle',
@@ -215,7 +241,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(translateAst.length).toBeGreaterThan(0);
       expect(translateAst[0]).toBeDefined();
       if (!translateAst[0]) throw new Error('translateAst[0] is undefined');
-      const translateNode = new PrimitiveBabylonNode('child_translate', scene, translateAst[0]);
+      const translateNode = new PrimitiveBabylonNode(
+        'child_translate',
+        scene,
+        translateAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_rotate_extrude_fn',
@@ -247,7 +278,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(circleAst.length).toBeGreaterThan(0);
       expect(circleAst[0]).toBeDefined();
       if (!circleAst[0]) throw new Error('circleAst[0] is undefined');
-      const circleNode = new PrimitiveBabylonNode('child_circle', scene, circleAst[0]);
+      const circleNode = new PrimitiveBabylonNode(
+        'child_circle',
+        scene,
+        circleAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'test_linear_extrude_validation',
@@ -313,7 +349,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(squareAst.length).toBeGreaterThan(0);
       expect(squareAst[0]).toBeDefined();
       if (!squareAst[0]) throw new Error('squareAst[0] is undefined');
-      const squareNode = new PrimitiveBabylonNode('child_square', scene, squareAst[0]);
+      const squareNode = new PrimitiveBabylonNode(
+        'child_square',
+        scene,
+        squareAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const originalNode = new ExtrusionBabylonNode(
         'original_linear_extrude',
@@ -365,7 +406,12 @@ describe('ExtrusionBabylonNode', () => {
       expect(translateAst.length).toBeGreaterThan(0);
       expect(translateAst[0]).toBeDefined();
       if (!translateAst[0]) throw new Error('translateAst[0] is undefined');
-      const translateNode = new PrimitiveBabylonNode('child_translate', scene, translateAst[0]);
+      const translateNode = new PrimitiveBabylonNode(
+        'child_translate',
+        scene,
+        translateAst[0],
+        OPENSCAD_DEFAULTS
+      );
 
       const extrusionNode = new ExtrusionBabylonNode(
         'debug_rotate_extrude',

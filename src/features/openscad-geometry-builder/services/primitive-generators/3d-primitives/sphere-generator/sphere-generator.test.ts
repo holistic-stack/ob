@@ -96,14 +96,22 @@ describe('SphereGeneratorService', () => {
         if (isSuccess(result)) {
           const sphere = result.data;
 
-          // For 2 rings with 3 fragments each, we should have 3 quad faces
-          // connecting the rings (each quad becomes 2 triangles)
-          expect(sphere.faces).toHaveLength(3);
+          // For 2 rings with 3 fragments each, we should have:
+          // - 2 cap faces (top and bottom triangles)
+          // - 3 side faces (quads connecting the rings)
+          // Total: 5 faces
+          expect(sphere.faces).toHaveLength(5);
 
-          // Each face should be a quad (4 vertices)
-          for (const face of sphere.faces) {
-            expect(face).toHaveLength(4);
+          // First face should be top cap (triangle with 3 vertices)
+          expect(sphere.faces[0]).toHaveLength(3);
+
+          // Middle faces should be side quads (4 vertices each)
+          for (let i = 1; i < sphere.faces.length - 1; i++) {
+            expect(sphere.faces[i]).toHaveLength(4);
           }
+
+          // Last face should be bottom cap (triangle with 3 vertices)
+          expect(sphere.faces[sphere.faces.length - 1]).toHaveLength(3);
 
           // Verify face indices are valid
           for (const face of sphere.faces) {
@@ -128,8 +136,8 @@ describe('SphereGeneratorService', () => {
           // Each ring has 8 vertices, so total = 32 vertices
           expect(sphere.vertices).toHaveLength(32);
           expect(sphere.normals).toHaveLength(32);
-          // 3 connections between 4 rings, each with 8 fragments = 3 * 8 = 24 quad faces
-          expect(sphere.faces).toHaveLength(24);
+          // 2 cap faces + 3 connections between 4 rings × 8 fragments = 2 + 24 = 26 faces
+          expect(sphere.faces).toHaveLength(26);
         }
       });
 
@@ -144,8 +152,8 @@ describe('SphereGeneratorService', () => {
           // Each ring has 6 vertices, so total = 18 vertices
           expect(sphere.vertices).toHaveLength(18);
           expect(sphere.normals).toHaveLength(18);
-          // 2 connections between 3 rings, each with 6 fragments = 2 * 6 = 12 quad faces
-          expect(sphere.faces).toHaveLength(12);
+          // 2 cap faces + 2 connections between 3 rings × 6 fragments = 2 + 12 = 14 faces
+          expect(sphere.faces).toHaveLength(14);
         }
       });
 
@@ -158,7 +166,7 @@ describe('SphereGeneratorService', () => {
 
         expectSuccessfulGeometry(sphere, {
           vertexCount: 64 * 32, // For $fn=64: num_rings = (64 + 1) / 2 = 32 rings
-          faceCount: 1984, // 31 connections between 32 rings, each with 64 fragments = 31 * 64 = 1984 quad faces
+          faceCount: 1986, // 2 cap faces + 31 connections between 32 rings × 64 fragments = 2 + 1984 = 1986 faces
         });
       });
     });

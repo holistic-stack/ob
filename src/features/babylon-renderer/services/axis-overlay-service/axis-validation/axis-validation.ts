@@ -438,12 +438,3 @@ export function sanitizeAxisConfig(config: Record<string, unknown>): Record<stri
 
   return sanitized;
 }
-
-/**
- * @deprecated Use individual functions instead of AxisConfigValidation class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisConfigValidation = {
-  validateAxisConfig,
-  sanitizeConfig: sanitizeAxisConfig,
-};

@@ -1,5 +1,6 @@
 import process from 'node:process';
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
+import viteConfig from './vite.config';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -32,6 +33,9 @@ export default defineConfig({
     ctPort: 3100,
     viewport: { width: 800, height: 800 },
     screenshot: 'on',
+
+    /* Use the same Vite config as the main app */
+    ctViteConfig: viteConfig,
   },
 
   /* Configure projects for major browsers */

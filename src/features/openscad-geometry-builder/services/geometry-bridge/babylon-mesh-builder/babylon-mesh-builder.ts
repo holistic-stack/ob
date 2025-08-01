@@ -23,6 +23,7 @@
 import * as BABYLON from '@babylonjs/core';
 import type { Result } from '../../../../../shared/types/result.types';
 import { error, success } from '../../../../../shared/utils/functional/result';
+import type { Geometry2DData } from '../../../types/2d-geometry-data';
 import type { BaseGeometryData, Geometry3DData } from '../../../types/geometry-data';
 
 /**
@@ -98,6 +99,79 @@ export class BabylonMeshBuilderService {
         },
       });
     }
+  }
+
+  /**
+   * Create a BabylonJS mesh from 2D geometry data using CreatePolygon
+   *
+   * @param geometryData - The 2D geometry data to convert
+   * @param scene - The BabylonJS scene to add the mesh to
+   * @param name - Optional name for the mesh (auto-generated if not provided)
+   * @returns Result containing the created mesh or an error
+   */
+  createPolygonMesh(geometryData: Geometry2DData, scene: BABYLON.Scene, name?: string): MeshResult {
+    try {
+      // Validate geometry data
+      const validationResult = this.validate2DGeometry(geometryData);
+      if (!validationResult.success) {
+        return validationResult as MeshResult;
+      }
+
+      // Generate name if not provided
+      const meshName = name || this.generateMeshName(geometryData.metadata.primitiveType);
+
+      // Convert 2D vertices to BabylonJS Vector3 points (Z=0)
+      const points = geometryData.vertices.map(
+        (vertex) => new BABYLON.Vector3(vertex.x, vertex.y, 0)
+      );
+
+      // Create the mesh using BabylonJS CreatePolygon for proper triangulation
+      const mesh = BABYLON.MeshBuilder.CreatePolygon(
+        meshName,
+        {
+          shape: points,
+          sideOrientation: BABYLON.Mesh.DOUBLESIDE, // Double-sided for visibility
+        },
+        scene
+      );
+
+      // Ensure the mesh is properly initialized
+      mesh.refreshBoundingInfo();
+
+      return success(mesh);
+    } catch (err) {
+      return error({
+        type: 'BABYLON_ERROR',
+        message: `Failed to create BabylonJS polygon mesh: ${err instanceof Error ? err.message : String(err)}`,
+        details: {
+          primitiveType: geometryData.metadata.primitiveType,
+          vertexCount: geometryData.vertices.length,
+        },
+      });
+    }
+  }
+
+  /**
+   * Validate 2D geometry data before mesh creation
+   */
+  private validate2DGeometry(geometryData: Geometry2DData): Result<void, MeshCreationError> {
+    // Check for empty geometry
+    if (geometryData.vertices.length === 0) {
+      return error({
+        type: 'INVALID_GEOMETRY',
+        message: 'Cannot create mesh from empty 2D geometry data',
+      });
+    }
+
+    // Check minimum vertices for a polygon
+    if (geometryData.vertices.length < 3) {
+      return error({
+        type: 'INVALID_GEOMETRY',
+        message: `2D polygon must have at least 3 vertices, got ${geometryData.vertices.length}`,
+      });
+    }
+
+    return success(undefined);
   }
 
   /**

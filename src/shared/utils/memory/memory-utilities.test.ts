@@ -22,23 +22,33 @@ import {
 } from './memory-utilities';
 
 // Mock resource for testing
-const createMockResource = (type: string, size: number = 1000) => ({
-  type,
-  id: `${type}-${Math.random()}`,
-  metadata: { estimatedSizeMB: size / (1024 * 1024) },
-  dispose: vi.fn(),
-  geometry:
-    type === 'mesh'
-      ? {
-          getVerticesData: vi.fn(() => new Float32Array(size)),
-          getIndices: vi.fn(() => new Uint32Array(size / 4)),
-        }
-      : undefined,
-  getSize:
-    type === 'texture'
-      ? vi.fn(() => ({ width: Math.sqrt(size), height: Math.sqrt(size) }))
-      : undefined,
-});
+const createMockResource = (type: string, size: number = 1000) => {
+  const baseResource = {
+    type,
+    id: `${type}-${Math.random()}`,
+    metadata: { estimatedSizeMB: size / (1024 * 1024) },
+    dispose: vi.fn(),
+  };
+
+  if (type === 'mesh') {
+    return {
+      ...baseResource,
+      geometry: {
+        getVerticesData: vi.fn(() => new Float32Array(size)),
+        getIndices: vi.fn(() => new Uint32Array(size / 4)),
+      },
+    };
+  }
+
+  if (type === 'texture') {
+    return {
+      ...baseResource,
+      getSize: vi.fn(() => ({ width: Math.sqrt(size), height: Math.sqrt(size) })),
+    };
+  }
+
+  return baseResource;
+};
 
 // Mock performance.memory for testing
 const mockPerformanceMemory = (usedMB: number, totalMB: number) => {

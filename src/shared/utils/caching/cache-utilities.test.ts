@@ -264,7 +264,7 @@ describe('CacheLimitsEnforcer', () => {
       const toRemove = enforcer.enforceMemoryLimits(entries, 3);
 
       expect(toRemove.length).toBeGreaterThanOrEqual(1);
-      if (toRemove.length > 0) {
+      if (toRemove.length > 0 && toRemove[0]) {
         expect(toRemove[0].key).toBe('old');
       }
     });
@@ -301,7 +301,9 @@ describe('CacheLimitsEnforcer', () => {
       const expired = enforcer.findExpiredEntries(entries, 5000); // 5 second max age
 
       expect(expired.length).toBe(1);
-      expect(expired[0].key).toBe('expired');
+      if (expired.length > 0 && expired[0]) {
+        expect(expired[0].key).toBe('expired');
+      }
     });
   });
 });

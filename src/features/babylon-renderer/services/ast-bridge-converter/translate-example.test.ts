@@ -6,6 +6,7 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type { CubeNode, TranslateNode } from '../../../openscad-parser/ast/ast-types.js';
 import type { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
@@ -84,7 +85,12 @@ describe('OpenSCAD Translate Example', () => {
     expect(cubeAst[0]).toBeDefined();
     expect(cubeAst[0]).toBeDefined();
     if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-    const cubeNode = new PrimitiveBabylonNode('translated_cube', scene, cubeAst[0]);
+    const cubeNode = new PrimitiveBabylonNode(
+      'translated_cube',
+      scene,
+      cubeAst[0],
+      OPENSCAD_DEFAULTS
+    );
 
     // Create the transformation node
     const transformationNode = new TransformationBabylonNode(
@@ -122,7 +128,12 @@ describe('OpenSCAD Translate Example', () => {
     expect(sphereAst.length).toBeGreaterThan(0);
     expect(sphereAst[0]).toBeDefined();
     if (!sphereAst[0]) throw new Error('sphereAst[0] is undefined');
-    const sphereNode = new PrimitiveBabylonNode('example_sphere', scene, sphereAst[0]);
+    const sphereNode = new PrimitiveBabylonNode(
+      'example_sphere',
+      scene,
+      sphereAst[0],
+      OPENSCAD_DEFAULTS
+    );
 
     // Parse translate + cube
     const translateAst = parser.parseAST(translateCode);
@@ -135,7 +146,7 @@ describe('OpenSCAD Translate Example', () => {
     expect(cubeAst.length).toBeGreaterThan(0);
     expect(cubeAst[0]).toBeDefined();
     if (!cubeAst[0]) throw new Error('cubeAst[0] is undefined');
-    const cubeNode = new PrimitiveBabylonNode('example_cube', scene, cubeAst[0]);
+    const cubeNode = new PrimitiveBabylonNode('example_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
 
     // Create transformation node
     const transformationNode = new TransformationBabylonNode(

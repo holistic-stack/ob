@@ -171,19 +171,6 @@ export function createAxisErrorFromUnknown(
 }
 
 /**
- * @deprecated Use individual functions instead of AxisErrorFactory class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisErrorFactory = {
-  createCreationError: createAxisCreationError,
-  createConfigurationError: createAxisConfigurationError,
-  createRenderError: createAxisRenderError,
-  createValidationError: createAxisValidationError,
-  createShaderError: createAxisShaderError,
-  fromUnknownError: createAxisErrorFromUnknown,
-};
-
-/**
  * Error handling utilities
  */
 /**
@@ -278,18 +265,6 @@ export function getAxisErrorUserFriendlyMessage(error: AxisError): string {
 }
 
 /**
- * @deprecated Use individual functions instead of AxisErrorUtils class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisErrorUtils = {
-  isAxisError,
-  isAxisErrorOfType,
-  formatError: formatAxisError,
-  extractContext: extractAxisErrorContext,
-  getUserFriendlyMessage: getAxisErrorUserFriendlyMessage,
-};
-
-/**
  * Result type for operations that can fail
  */
 export type AxisResult<T> = { success: true; data: T } | { success: false; error: AxisError };
@@ -337,15 +312,3 @@ export function isAxisFailure<T>(
 ): result is { success: false; error: AxisError } {
   return !result.success;
 }
-
-/**
- * @deprecated Use individual functions instead of AxisResultUtils class
- * Temporary compatibility export for backward compatibility
- */
-export const AxisResultUtils = {
-  success: createAxisSuccess,
-  failure: createAxisFailure,
-  failureFromUnknown: createAxisFailureFromUnknown,
-  isSuccess: isAxisSuccess,
-  isFailure: isAxisFailure,
-};

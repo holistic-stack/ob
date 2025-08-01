@@ -16,7 +16,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 describe('OpenSCAD Sphere Resolution Demo', () => {
-  let store: AppStore;
+  let store: ReturnType<typeof createAppStore>;
 
   beforeEach(() => {
     store = createAppStore();
