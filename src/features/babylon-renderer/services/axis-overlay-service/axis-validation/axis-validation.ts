@@ -438,3 +438,51 @@ export function sanitizeAxisConfig(config: Record<string, unknown>): Record<stri
 
   return sanitized;
 }
+
+/**
+ * Configuration validation utilities
+ * Follows SRP by providing only configuration validation functionality
+ */
+export const AxisConfigValidation = {
+  /**
+   * Validate axis configuration
+   */
+  validateAxisConfig,
+
+  /**
+   * Validate configuration property
+   */
+  validateConfigProperty,
+
+  /**
+   * Sanitize axis configuration
+   */
+  sanitizeAxisConfig,
+
+  /**
+   * Validate with default options
+   */
+  validateWithDefaults: (config: Record<string, unknown>) => {
+    return validateAxisConfig(config, { strict: false });
+  },
+
+  /**
+   * Validate with strict options
+   */
+  validateStrict: (config: Record<string, unknown>) => {
+    return validateAxisConfig(config, { strict: true });
+  },
+
+  /**
+   * Check if configuration is valid
+   */
+  isValidConfig: (config: Record<string, unknown>): boolean => {
+    const result = validateAxisConfig(config, { strict: false });
+    return AxisResultUtils.isSuccess(result);
+  },
+
+  /**
+   * Sanitize configuration (alias for compatibility)
+   */
+  sanitizeConfig: sanitizeAxisConfig,
+} as const;

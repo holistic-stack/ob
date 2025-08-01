@@ -159,6 +159,118 @@ export function getAllAxisColors3(scheme: AxisColorScheme = 'STANDARD'): Record<
 }
 
 /**
+ * Utility functions for axis color operations
+ * Follows SRP by providing only color-related utility functions
+ */
+export const AxisColorUtils = {
+  /**
+   * Validate if RGB values are in valid range [0, 1]
+   */
+  isValidRgb: (rgb: RGBColor): boolean => {
+    return rgb.every((value) => value >= 0 && value <= 1);
+  },
+
+  /**
+   * Validate if RGBA values are in valid range [0, 1]
+   */
+  isValidRgba: (rgba: RGBAColor): boolean => {
+    return rgba.every((value) => value >= 0 && value <= 1);
+  },
+
+  /**
+   * Convert RGB to Color3
+   */
+  rgbToColor3,
+
+  /**
+   * Convert RGBA to Color3
+   */
+  rgbaToColor3,
+
+  /**
+   * Convert Color3 to RGB
+   */
+  color3ToRgb,
+
+  /**
+   * Get axis color from scheme
+   */
+  getAxisColor,
+
+  /**
+   * Get axis color as Color3
+   */
+  getAxisColor3,
+
+  /**
+   * Get all axis colors from scheme
+   */
+  getAllAxisColors,
+
+  /**
+   * Get all axis colors as Color3 objects
+   */
+  getAllAxisColors3,
+
+  /**
+   * Validate color scheme exists
+   */
+  isValidColorScheme: (scheme: string): scheme is AxisColorScheme => {
+    return scheme in AXIS_COLOR_SCHEMES;
+  },
+
+  /**
+   * Get available color schemes
+   */
+  getAvailableSchemes: (): AxisColorScheme[] => {
+    return Object.keys(AXIS_COLOR_SCHEMES) as AxisColorScheme[];
+  },
+
+  /**
+   * Clamp RGB values to valid range [0, 1]
+   */
+  clampRgb: (rgb: RGBColor): RGBColor => {
+    return [
+      Math.max(0, Math.min(1, rgb[0])),
+      Math.max(0, Math.min(1, rgb[1])),
+      Math.max(0, Math.min(1, rgb[2])),
+    ] as const;
+  },
+
+  /**
+   * Clamp RGBA values to valid range [0, 1]
+   */
+  clampRgba: (rgba: RGBAColor): RGBAColor => {
+    return [
+      Math.max(0, Math.min(1, rgba[0])),
+      Math.max(0, Math.min(1, rgba[1])),
+      Math.max(0, Math.min(1, rgba[2])),
+      Math.max(0, Math.min(1, rgba[3])),
+    ] as const;
+  },
+
+  /**
+   * Dim a color by reducing its brightness
+   */
+  dimColor: (rgb: RGBColor, factor: number = 0.7): RGBColor => {
+    const clampedFactor = Math.max(0, Math.min(1, factor));
+    return [rgb[0] * clampedFactor, rgb[1] * clampedFactor, rgb[2] * clampedFactor] as const;
+  },
+
+  /**
+   * Brighten a color by increasing its brightness
+   */
+  brightenColor: (rgb: RGBColor, factor: number = 1.3): RGBColor => {
+    const clampedFactor = Math.max(1, factor);
+    return [
+      Math.min(1, rgb[0] * clampedFactor),
+      Math.min(1, rgb[1] * clampedFactor),
+      Math.min(1, rgb[2] * clampedFactor),
+    ] as const;
+  },
+} as const;
+
+/**
  * Default color configuration
  */
 export const DEFAULT_AXIS_COLORS = getAllAxisColors('STANDARD');

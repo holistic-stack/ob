@@ -8,11 +8,7 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type {
-  CubeNode,
-  CylinderNode,
-  SphereNode,
-} from '@/features/openscad-parser';
+import type { CubeNode, CylinderNode, SphereNode } from '@/features/openscad-parser';
 import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
 import { isError, isSuccess } from '@/shared/types/result.types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';

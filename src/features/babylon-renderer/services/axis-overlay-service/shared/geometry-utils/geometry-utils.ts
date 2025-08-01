@@ -198,3 +198,74 @@ export function isValidLength(length: number): boolean {
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
+
+/**
+ * Utility functions for geometric calculations in axis rendering
+ * Follows SRP by providing only geometry-related utility functions
+ */
+export const GeometryUtils = {
+  /**
+   * Calculate axis endpoints
+   */
+  calculateAxisEndpoints,
+
+  /**
+   * Calculate full axis endpoints
+   */
+  calculateFullAxisEndpoints,
+
+  /**
+   * Get axis rotation
+   */
+  getAxisRotation,
+
+  /**
+   * Get axis direction
+   */
+  getAxisDirection,
+
+  /**
+   * Normalize direction vector
+   */
+  normalizeDirection,
+
+  /**
+   * Calculate distance between points
+   */
+  calculateDistance,
+
+  /**
+   * Create line points
+   */
+  createLinePoints,
+
+  /**
+   * Create axis line points
+   */
+  createAxisLinePoints,
+
+  /**
+   * Validate direction vector
+   */
+  isValidDirection,
+
+  /**
+   * Validate length value
+   */
+  isValidLength,
+
+  /**
+   * Clamp value between bounds
+   */
+  clamp,
+
+  /**
+   * Standard axis directions
+   */
+  STANDARD_AXIS_DIRECTIONS,
+
+  /**
+   * Standard axis rotations
+   */
+  STANDARD_AXIS_ROTATIONS,
+} as const;

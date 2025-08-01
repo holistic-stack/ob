@@ -30,6 +30,10 @@ import {
 } from '../axis-constants/axis-constants';
 import { AxisErrorFactory, type AxisResult, AxisResultUtils } from '../axis-errors/axis-errors';
 import { AxisValidationUtils } from '../axis-validation/axis-validation';
+import type {
+  CylinderAxisConfig as SharedCylinderAxisConfig,
+  LineAxisConfig as SharedLineAxisConfig,
+} from '../shared/axis-config/axis-config';
 
 /**
  * Configuration for axis creation
@@ -456,14 +460,33 @@ export function createSketchUpScreenSpaceConfig(
 }
 
 /**
+ * Create a standard line configuration
+ */
+export function createStandardLineConfig(
+  origin: Vector3 = Vector3.Zero(),
+  length: number = DEFAULT_AXIS_PARAMS.LENGTH,
+  pixelWidth: number = DEFAULT_AXIS_PARAMS.PIXEL_WIDTH
+): Omit<SharedLineAxisConfig, 'name' | 'direction' | 'color'> {
+  return {
+    type: 'line',
+    origin,
+    length,
+    pixelWidth,
+    isDotted: false,
+    opacity: DEFAULT_AXIS_PARAMS.OPACITY,
+  };
+}
+
+/**
  * Create a standard cylinder configuration
  */
 export function createStandardCylinderConfig(
   origin: Vector3 = Vector3.Zero(),
   length: number = DEFAULT_AXIS_PARAMS.LENGTH,
   diameter: number = DEFAULT_AXIS_PARAMS.CYLINDER_DIAMETER
-): Omit<CylinderAxisConfig, 'name' | 'direction' | 'color'> {
+): Omit<SharedCylinderAxisConfig, 'name' | 'direction' | 'color'> {
   return {
+    type: 'cylinder',
     origin,
     length,
     diameter,
@@ -471,3 +494,60 @@ export function createStandardCylinderConfig(
     opacity: DEFAULT_AXIS_PARAMS.OPACITY,
   };
 }
+
+/**
+ * Helper functions for axis configuration
+ * Follows SRP by providing only configuration helper functionality
+ */
+export const AxisConfigHelpers = {
+  /**
+   * Create standard line configuration
+   */
+  createStandardLineConfig,
+
+  /**
+   * Create standard cylinder configuration
+   */
+  createStandardCylinderConfig,
+
+  /**
+   * Create default axis creator
+   */
+  createDefaultAxisCreator: defaultAxisCreator,
+
+  /**
+   * Create SketchUp screen space configuration
+   */
+  createSketchUpScreenSpaceConfig,
+
+  /**
+   * Validate axis configuration
+   */
+  validateAxisConfig: (
+    config: Partial<SharedLineAxisConfig | SharedCylinderAxisConfig>
+  ): boolean => {
+    if (!config.origin || !config.length || config.length <= 0) {
+      return false;
+    }
+
+    if ('pixelWidth' in config && config.pixelWidth !== undefined && config.pixelWidth <= 0) {
+      return false;
+    }
+
+    if ('diameter' in config && config.diameter !== undefined && config.diameter <= 0) {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Get default parameters
+   */
+  getDefaultParams: () => DEFAULT_AXIS_PARAMS,
+
+  /**
+   * Get screen space constants
+   */
+  getScreenSpaceConstants: () => SCREEN_SPACE_CONSTANTS,
+} as const;
