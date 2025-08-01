@@ -6,7 +6,10 @@
 
 import { describe, expect, it } from 'vitest';
 import type { ModuleDefinitionNode } from '../../ast/ast-types.js';
-import { ModuleRegistry } from '../module-registry/module-registry.js';
+import {
+  ModuleRegistry,
+  type ModuleRegistryInterface,
+} from '../module-registry/module-registry.js';
 import { createSourceLocation } from '../test-utils.js';
 import { ScopedRegistryService } from './scoped-registry.service.js';
 
@@ -219,7 +222,7 @@ describe('ScopedRegistryService', () => {
     it('should enforce maximum inheritance depth', () => {
       const service = new ScopedRegistryService({ maxInheritanceDepth: 3 });
 
-      let currentRegistry = new ModuleRegistry();
+      let currentRegistry: ModuleRegistryInterface = new ModuleRegistry();
 
       // Create chain up to the limit
       for (let i = 0; i < 3; i++) {

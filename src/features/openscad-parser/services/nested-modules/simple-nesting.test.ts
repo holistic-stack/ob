@@ -23,6 +23,7 @@ import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
 import {
   createNestedTestModule,
+  createSourceLocation,
   createTestCube,
   createTestModuleCall,
   createTestSphere,
@@ -80,7 +81,7 @@ describe('Simple Nested Module Support', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'inner',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [
@@ -92,20 +93,20 @@ describe('Simple Nested Module Support', () => {
                 type: 'cube',
                 size: 5,
                 center: false,
-                location: { line: 3, column: 25 },
+                location: createSourceLocation(3, 25, 125, 3, 35, 135),
               },
             ],
-            location: { line: 3, column: 5 },
+            location: createSourceLocation(3, 5, 105, 3, 15, 115),
           },
         ],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const nestedModuleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'inner',
         args: [],
-        location: { line: 5, column: 3 },
+        location: createSourceLocation(5, 3, 203, 5, 13, 213),
       };
 
       const outerModuleDefinition: ModuleDefinitionNode = {
@@ -114,18 +115,18 @@ describe('Simple Nested Module Support', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [nestedModuleDefinition, nestedModuleCall],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const outerModuleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'outer',
         args: [],
-        location: { line: 7, column: 1 },
+        location: createSourceLocation(7, 1, 301, 7, 11, 311),
       };
 
       const inputAST: ASTNode[] = [outerModuleDefinition, outerModuleCall];
@@ -152,17 +153,17 @@ describe('Simple Nested Module Support', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'inner1',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [
           {
             type: 'sphere',
             radius: 5,
-            location: { line: 2, column: 25 },
+            location: createSourceLocation(2, 25, 75, 2, 35, 85),
           },
         ],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const inner2Definition: ModuleDefinitionNode = {
@@ -171,7 +172,7 @@ describe('Simple Nested Module Support', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'inner2',
-          location: { line: 3, column: 11 },
+          location: createSourceLocation(3, 11, 111, 3, 21, 121),
         },
         parameters: [],
         body: [
@@ -179,24 +180,24 @@ describe('Simple Nested Module Support', () => {
             type: 'cube',
             size: 10,
             center: false,
-            location: { line: 3, column: 25 },
+            location: createSourceLocation(3, 25, 125, 3, 35, 135),
           },
         ],
-        location: { line: 3, column: 3 },
+        location: createSourceLocation(3, 3, 103, 3, 13, 113),
       };
 
       const inner1Call: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'inner1',
         args: [],
-        location: { line: 4, column: 3 },
+        location: createSourceLocation(4, 3, 153, 4, 13, 163),
       };
 
       const inner2Call: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'inner2',
         args: [],
-        location: { line: 5, column: 3 },
+        location: createSourceLocation(5, 3, 203, 5, 13, 213),
       };
 
       const outerModuleDefinition: ModuleDefinitionNode = {
@@ -205,18 +206,18 @@ describe('Simple Nested Module Support', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [inner1Definition, inner2Definition, inner1Call, inner2Call],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const outerModuleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'outer',
         args: [],
-        location: { line: 7, column: 1 },
+        location: createSourceLocation(7, 1, 301, 7, 11, 311),
       };
 
       const inputAST: ASTNode[] = [outerModuleDefinition, outerModuleCall];

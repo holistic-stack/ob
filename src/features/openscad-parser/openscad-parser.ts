@@ -453,7 +453,11 @@ export class OpenscadParser {
       ) {
         const statement = ast[i];
 
-        // Check if this statement should be part of the module body
+        // Check if statement exists and should be part of the module body
+        if (!statement) {
+          break;
+        }
+
         // For now, we'll move transform statements and primitive statements
         if (this.shouldMoveToModuleBody(statement)) {
           statementsToMove.push(statement);

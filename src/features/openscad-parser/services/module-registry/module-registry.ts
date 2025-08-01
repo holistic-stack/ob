@@ -71,7 +71,7 @@ function createModuleRegistryError(
   return {
     code,
     message,
-    moduleName: moduleName ?? undefined
+    moduleName: moduleName ?? undefined,
   };
 }
 

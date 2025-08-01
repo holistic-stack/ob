@@ -18,6 +18,7 @@ import type {
 } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver, ModuleResolverErrorCode } from '../module-resolver/module-resolver.js';
+import { createSourceLocation } from '../test-utils.js';
 
 describe('Edge Cases in Nested Modules', () => {
   describe('Empty modules', () => {
@@ -29,18 +30,18 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'inner',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [], // Empty body
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const nestedModuleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'inner',
         args: [],
-        location: { line: 3, column: 3 },
+        location: createSourceLocation(3, 3, 103, 3, 13, 113),
       };
 
       const outerModule: ModuleDefinitionNode = {
@@ -49,18 +50,18 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [emptyNestedModule, nestedModuleCall],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const outerCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'outer',
         args: [],
-        location: { line: 5, column: 1 },
+        location: createSourceLocation(5, 1, 201, 5, 11, 211),
       };
 
       const inputAST: ASTNode[] = [outerModule, outerCall];
@@ -70,7 +71,9 @@ describe('Edge Cases in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(0); // Empty module produces no output
+      if (result.success) {
+        expect(result.data).toHaveLength(0); // Empty module produces no output
+      }
     });
 
     it('should handle module with only empty nested modules', () => {
@@ -81,11 +84,11 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'empty1',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const empty2: ModuleDefinitionNode = {
@@ -94,11 +97,11 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'empty2',
-          location: { line: 3, column: 11 },
+          location: createSourceLocation(3, 11, 111, 3, 21, 121),
         },
         parameters: [],
         body: [],
-        location: { line: 3, column: 3 },
+        location: createSourceLocation(3, 3, 103, 3, 13, 113),
       };
 
       const outerModule: ModuleDefinitionNode = {
@@ -107,7 +110,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -117,16 +120,16 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'empty1',
             args: [],
-            location: { line: 4, column: 3 },
+            location: createSourceLocation(4, 3, 153, 4, 13, 163),
           },
           {
             type: 'module_instantiation',
             name: 'empty2',
             args: [],
-            location: { line: 5, column: 3 },
+            location: createSourceLocation(5, 3, 203, 5, 13, 213),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const inputAST: ASTNode[] = [
@@ -135,7 +138,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'outer',
           args: [],
-          location: { line: 7, column: 1 },
+          location: createSourceLocation(7, 1, 301, 7, 11, 311),
         },
       ];
 
@@ -144,7 +147,9 @@ describe('Edge Cases in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(0);
+      if (result.success) {
+        expect(result.data).toHaveLength(0);
+      }
     });
   });
 
@@ -157,7 +162,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'a',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [
@@ -165,10 +170,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'b',
             args: [],
-            location: { line: 2, column: 20 },
+            location: createSourceLocation(2, 20, 70, 2, 30, 80),
           },
         ],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const moduleB: ModuleDefinitionNode = {
@@ -177,7 +182,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'b',
-          location: { line: 3, column: 11 },
+          location: createSourceLocation(3, 11, 111, 3, 21, 121),
         },
         parameters: [],
         body: [
@@ -185,10 +190,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'a',
             args: [],
-            location: { line: 3, column: 20 },
+            location: createSourceLocation(3, 20, 120, 3, 30, 130),
           },
         ],
-        location: { line: 3, column: 3 },
+        location: createSourceLocation(3, 3, 103, 3, 13, 113),
       };
 
       const outerModule: ModuleDefinitionNode = {
@@ -197,7 +202,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -207,10 +212,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'a',
             args: [],
-            location: { line: 4, column: 3 },
+            location: createSourceLocation(4, 3, 153, 4, 13, 163),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const inputAST: ASTNode[] = [
@@ -219,7 +224,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'outer',
           args: [],
-          location: { line: 6, column: 1 },
+          location: createSourceLocation(6, 1, 251, 6, 11, 261),
         },
       ];
 
@@ -228,8 +233,10 @@ describe('Edge Cases in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(ModuleResolverErrorCode.CIRCULAR_DEPENDENCY);
-      expect(result.error?.message).toContain('Circular dependency detected');
+      if (!result.success) {
+        expect(result.error?.code).toBe(ModuleResolverErrorCode.CIRCULAR_DEPENDENCY);
+        expect(result.error?.message).toContain('Circular dependency detected');
+      }
     });
   });
 
@@ -242,7 +249,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -250,10 +257,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'nonExistent',
             args: [],
-            location: { line: 2, column: 3 },
+            location: createSourceLocation(2, 3, 53, 2, 13, 63),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const inputAST: ASTNode[] = [
@@ -262,7 +269,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'outer',
           args: [],
-          location: { line: 4, column: 1 },
+          location: createSourceLocation(4, 1, 151, 4, 11, 161),
         },
       ];
 
@@ -271,8 +278,10 @@ describe('Edge Cases in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(ModuleResolverErrorCode.MODULE_NOT_FOUND);
-      expect(result.error?.message).toContain("Module 'nonExistent' not found");
+      if (!result.success) {
+        expect(result.error?.code).toBe(ModuleResolverErrorCode.MODULE_NOT_FOUND);
+        expect(result.error?.message).toContain("Module 'nonExistent' not found");
+      }
     });
   });
 
@@ -332,7 +341,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'level50',
           args: [],
-          location: { line: 100, column: 1 },
+          location: createSourceLocation(100, 1, 4951, 100, 11, 4961),
         },
       ];
 
@@ -348,11 +357,15 @@ describe('Edge Cases in Nested Modules', () => {
           ModuleResolverErrorCode.INVALID_AST,
           ModuleResolverErrorCode.MODULE_NOT_FOUND,
         ]).toContain(result.error?.code);
-        expect(result.error?.message).toBeDefined();
+        if (!result.success) {
+          expect(result.error?.message).toBeDefined();
+        }
       } else {
         // If it succeeds, verify the result is correct
-        expect(result.data).toHaveLength(1);
-        expect(result.data?.[0]?.type).toBe('sphere');
+        if (result.success) {
+          expect(result.data).toHaveLength(1);
+          expect(result.data?.[0]?.type).toBe('sphere');
+        }
       }
     });
   });
@@ -366,7 +379,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'valid',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 61, 2, 21, 71),
         },
         parameters: [],
         body: [
@@ -374,10 +387,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'cube',
             size: 3,
             center: false,
-            location: { line: 2, column: 25 },
+            location: createSourceLocation(2, 25, 75, 2, 35, 85),
           },
         ],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 53, 2, 13, 63),
       };
 
       const outerModule: ModuleDefinitionNode = {
@@ -386,7 +399,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'outer',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -395,16 +408,16 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'valid',
             args: [],
-            location: { line: 3, column: 3 },
+            location: createSourceLocation(3, 3, 103, 3, 13, 113),
           },
           {
             type: 'module_instantiation',
             name: 'invalid', // This doesn't exist
             args: [],
-            location: { line: 4, column: 3 },
+            location: createSourceLocation(4, 3, 153, 4, 13, 163),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const inputAST: ASTNode[] = [
@@ -413,7 +426,7 @@ describe('Edge Cases in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'outer',
           args: [],
-          location: { line: 6, column: 1 },
+          location: createSourceLocation(6, 1, 251, 6, 11, 261),
         },
       ];
 
@@ -423,8 +436,10 @@ describe('Edge Cases in Nested Modules', () => {
 
       // Should fail on the first invalid module call
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe(ModuleResolverErrorCode.MODULE_NOT_FOUND);
-      expect(result.error?.message).toContain("Module 'invalid' not found");
+      if (!result.success) {
+        expect(result.error?.code).toBe(ModuleResolverErrorCode.MODULE_NOT_FOUND);
+        expect(result.error?.message).toContain("Module 'invalid' not found");
+      }
     });
   });
 
@@ -508,7 +523,9 @@ describe('Edge Cases in Nested Modules', () => {
       const memDiff = memAfter - memBefore;
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(10);
+      if (result.success) {
+        expect(result.data).toHaveLength(10);
+      }
 
       // Memory usage should be reasonable (less than 10MB for this test)
       expect(memDiff).toBeLessThan(10 * 1024 * 1024);

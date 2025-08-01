@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest';
 import type { ASTNode, ModuleDefinitionNode } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
+import { createSourceLocation } from '../test-utils.js';
 
 describe('Scope Isolation in Nested Modules', () => {
   describe('Same-named modules in different scopes', () => {
@@ -129,15 +130,17 @@ describe('Scope Isolation in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(2);
+      if (result.success) {
+        expect(result.data).toHaveLength(2);
 
-      const sphereNodes = result.data?.filter((node: ASTNode) => node.type === 'sphere') || [];
-      const cubeNodes = result.data?.filter((node: ASTNode) => node.type === 'cube') || [];
+        const sphereNodes = result.data?.filter((node: ASTNode) => node.type === 'sphere') || [];
+        const cubeNodes = result.data?.filter((node: ASTNode) => node.type === 'cube') || [];
 
-      expect(sphereNodes).toHaveLength(1);
-      expect(cubeNodes).toHaveLength(1);
-      expect((sphereNodes[0] as any)?.radius).toBe(5);
-      expect((cubeNodes[0] as any)?.size).toBe(10);
+        expect(sphereNodes).toHaveLength(1);
+        expect(cubeNodes).toHaveLength(1);
+        expect((sphereNodes[0] as any)?.radius).toBe(5);
+        expect((cubeNodes[0] as any)?.size).toBe(10);
+      }
     });
   });
 
@@ -222,10 +225,12 @@ describe('Scope Isolation in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('cylinder');
-      expect((result.data?.[0] as any)?.height).toBe(10);
-      expect((result.data?.[0] as any)?.radius).toBe(3);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data?.[0]?.type).toBe('cylinder');
+        expect((result.data?.[0] as any)?.height).toBe(10);
+        expect((result.data?.[0] as any)?.radius).toBe(3);
+      }
     });
   });
 
@@ -308,9 +313,11 @@ describe('Scope Isolation in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('cube'); // Should be cube, not sphere
-      expect((result.data?.[0] as any)?.size).toBe(5); // Should be 5, not 100
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data?.[0]?.type).toBe('cube'); // Should be cube, not sphere
+        expect((result.data?.[0] as any)?.size).toBe(5); // Should be 5, not 100
+      }
     });
   });
 
@@ -414,9 +421,11 @@ describe('Scope Isolation in Nested Modules', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('sphere');
-      expect((result.data?.[0] as any)?.radius).toBe(7);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data?.[0]?.type).toBe('sphere');
+        expect((result.data?.[0] as any)?.radius).toBe(7);
+      }
     });
   });
 });

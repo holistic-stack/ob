@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ASTNode, ModuleDefinitionNode, ModuleInstantiationNode } from '../ast/ast-types.js';
 import { ModuleRegistry } from './module-registry/module-registry.js';
 import { ModuleResolver } from './module-resolver/module-resolver.js';
+import { createSourceLocation } from './test-utils.js';
 
 describe('Module System End-to-End', () => {
   describe('User Example 1: Simple module with sphere', () => {
@@ -18,24 +19,24 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'moduleName',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
           {
             type: 'sphere',
             radius: 10,
-            location: { line: 2, column: 3 },
+            location: createSourceLocation(2, 3, 53, 2, 13, 63),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const moduleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'moduleName',
         args: [],
-        location: { line: 4, column: 1 },
+        location: createSourceLocation(4, 1, 151, 4, 11, 161),
       };
 
       const inputAST: ASTNode[] = [moduleDefinition, moduleCall];
@@ -82,7 +83,7 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'moduleName',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -97,18 +98,18 @@ describe('Module System End-to-End', () => {
                     type: 'cube',
                     size: 15,
                     center: true,
-                    location: { line: 4, column: 7 },
+                    location: createSourceLocation(4, 7, 157, 4, 17, 167),
                   },
                   {
                     type: 'sphere',
                     radius: 10,
-                    location: { line: 5, column: 7 },
+                    location: createSourceLocation(5, 7, 207, 5, 17, 217),
                   },
                 ],
-                location: { line: 3, column: 5 },
+                location: createSourceLocation(3, 5, 105, 3, 15, 115),
               },
             ],
-            location: { line: 2, column: 3 },
+            location: createSourceLocation(2, 3, 53, 2, 13, 63),
           },
           {
             type: 'intersection',
@@ -117,15 +118,15 @@ describe('Module System End-to-End', () => {
                 type: 'cube',
                 size: 15,
                 center: true,
-                location: { line: 9, column: 5 },
+                location: createSourceLocation(9, 5, 405, 9, 15, 415),
               },
               {
                 type: 'sphere',
                 radius: 10,
-                location: { line: 10, column: 5 },
+                location: createSourceLocation(10, 5, 455, 10, 15, 465),
               },
             ],
-            location: { line: 8, column: 3 },
+            location: createSourceLocation(8, 3, 353, 8, 13, 363),
           },
           {
             type: 'translate',
@@ -138,28 +139,28 @@ describe('Module System End-to-End', () => {
                     type: 'cube',
                     size: 15,
                     center: true,
-                    location: { line: 14, column: 7 },
+                    location: createSourceLocation(14, 7, 657, 14, 17, 667),
                   },
                   {
                     type: 'sphere',
                     radius: 10,
-                    location: { line: 15, column: 7 },
+                    location: createSourceLocation(15, 7, 707, 15, 17, 717),
                   },
                 ],
-                location: { line: 13, column: 5 },
+                location: createSourceLocation(13, 5, 605, 13, 15, 615),
               },
             ],
-            location: { line: 12, column: 3 },
+            location: createSourceLocation(12, 3, 553, 12, 13, 563),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const moduleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'moduleName',
         args: [],
-        location: { line: 19, column: 1 },
+        location: createSourceLocation(19, 1, 901, 19, 11, 911),
       };
 
       const inputAST: ASTNode[] = [moduleDefinition, moduleCall];
@@ -187,7 +188,7 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'mycube',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -195,31 +196,31 @@ describe('Module System End-to-End', () => {
             type: 'cube',
             size: 10,
             center: false,
-            location: { line: 2, column: 3 },
+            location: createSourceLocation(2, 3, 53, 2, 13, 63),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const call1: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'mycube',
         args: [],
-        location: { line: 4, column: 1 },
+        location: createSourceLocation(4, 1, 151, 4, 11, 161),
       };
 
       const call2: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'mycube',
         args: [],
-        location: { line: 5, column: 1 },
+        location: createSourceLocation(5, 1, 201, 5, 11, 211),
       };
 
       const call3: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'mycube',
         args: [],
-        location: { line: 6, column: 1 },
+        location: createSourceLocation(6, 1, 251, 6, 11, 261),
       };
 
       const inputAST: ASTNode[] = [moduleDefinition, call1, call2, call3];
@@ -247,7 +248,7 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'basicCube',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 18, 18),
         },
         parameters: [],
         body: [
@@ -255,10 +256,10 @@ describe('Module System End-to-End', () => {
             type: 'cube',
             size: 10,
             center: false,
-            location: { line: 2, column: 3 },
+            location: createSourceLocation(2, 3, 53, 2, 13, 63),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const doubleCube: ModuleDefinitionNode = {
@@ -267,7 +268,7 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'doubleCube',
-          location: { line: 5, column: 8 },
+          location: createSourceLocation(5, 8, 208, 5, 18, 218),
         },
         parameters: [],
         body: [
@@ -275,23 +276,23 @@ describe('Module System End-to-End', () => {
             type: 'module_instantiation',
             name: 'basicCube',
             args: [],
-            location: { line: 6, column: 3 },
+            location: createSourceLocation(6, 3, 253, 6, 13, 263),
           },
           {
             type: 'module_instantiation',
             name: 'basicCube',
             args: [],
-            location: { line: 7, column: 3 },
+            location: createSourceLocation(7, 3, 303, 7, 13, 313),
           },
         ],
-        location: { line: 5, column: 1 },
+        location: createSourceLocation(5, 1, 201, 5, 11, 211),
       };
 
       const moduleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'doubleCube',
         args: [],
-        location: { line: 10, column: 1 },
+        location: createSourceLocation(10, 1, 451, 10, 11, 461),
       };
 
       const inputAST: ASTNode[] = [basicCube, doubleCube, moduleCall];
@@ -317,7 +318,7 @@ describe('Module System End-to-End', () => {
         type: 'cube',
         size: 5,
         center: false,
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 11, 11),
       };
 
       const moduleDefinition: ModuleDefinitionNode = {
@@ -326,7 +327,7 @@ describe('Module System End-to-End', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'mycube',
-          location: { line: 3, column: 8 },
+          location: createSourceLocation(3, 8, 108, 3, 18, 118),
         },
         parameters: [],
         body: [
@@ -334,30 +335,30 @@ describe('Module System End-to-End', () => {
             type: 'cube',
             size: 10,
             center: false,
-            location: { line: 4, column: 3 },
+            location: createSourceLocation(4, 3, 153, 4, 13, 163),
           },
         ],
-        location: { line: 3, column: 1 },
+        location: createSourceLocation(3, 1, 101, 3, 11, 111),
       };
 
       const directSphere = {
         type: 'sphere',
         radius: 3,
-        location: { line: 6, column: 1 },
+        location: createSourceLocation(6, 1, 251, 6, 11, 261),
       };
 
       const moduleCall: ModuleInstantiationNode = {
         type: 'module_instantiation',
         name: 'mycube',
         args: [],
-        location: { line: 7, column: 1 },
+        location: createSourceLocation(7, 1, 301, 7, 11, 311),
       };
 
       const directCylinder = {
         type: 'cylinder',
         h: 10,
         r: 2,
-        location: { line: 8, column: 1 },
+        location: createSourceLocation(8, 1, 351, 8, 11, 361),
       };
 
       const inputAST: ASTNode[] = [
